@@ -1,0 +1,62 @@
+<STYLE>
+	<VERSION>
+		<TYPE>Ribbon</TYPE>
+	</VERSION>
+	<DESCRIPTION>
+		<NAME>Blue</NAME>
+	</DESCRIPTION>
+	<COLORREF>
+		<BaseBack>202,182,235</BaseBack>
+		<RibbonBarBack>202,182,235</RibbonBarBack>
+		<MenuBack>255, 255, 255</MenuBack>
+		<MenuBorder>122,104,152</MenuBorder>
+		<HighlightBack>225,215,242</HighlightBack>
+		<BaseBorder>181,163,211</BaseBorder>
+		<DarkHighlight>209,195,231</DarkHighlight>
+		<BaseText>91,89,94</BaseText>
+		<Category>225,215,242</Category>
+		<CategoryText>91,89,94</CategoryText>
+
+		<RibbonSliderZoom>48,49,53</RibbonSliderZoom>
+		<LightBorder>208,200,223</LightBorder>
+		<MenuItemBorder>208,200,223</MenuItemBorder>
+		<DarkBorder>128,113,152</DarkBorder>
+		<DisableBack>246,244,249</DisableBack>
+		<PanleTab>255,255,255</PanleTab>
+		<ControlBarCaption>202,182,235</ControlBarCaption>
+
+		<HighlightCaptinButton>208,200,223</HighlightCaptinButton>
+		<PressCaptinButton>225,215,242</PressCaptinButton>
+		<PressCloseCaptinButton>171, 201, 237</PressCloseCaptinButton>
+		<HighlightCloseCaptinButton>208,200,223</HighlightCloseCaptinButton>
+
+		<HighlightButton>189,155,246</HighlightButton>
+		<PressButton>155,123,207</PressButton>
+		<CheckButton>175,143,230</CheckButton>
+		<CheckHighlight>189,155,246</CheckHighlight>
+
+
+		<FormatTab>186,161,226</FormatTab>
+		<FormatTabText>123,5,124</FormatTabText>
+		<FormatTabLine>181,213,252</FormatTabLine>
+		<CategoryCaptionBack>186,161,226</CategoryCaptionBack>
+		<CategoryCaptionTobLine>167,129,227</CategoryCaptionTobLine>
+
+		<MenuHighlightText>72,72,72</MenuHighlightText>
+		<MenuText>0,0,0</MenuText>
+
+		<HighlightText>0,114,198</HighlightText>
+		<DisableText>137,123,159</DisableText>
+		<CategoryTabHightText>108,42,110</CategoryTabHightText>
+		<RibbonSliderZoom>40,40,40</RibbonSliderZoom>
+		<ZoomSliderLine>180,180,180</ZoomSliderLine>
+
+		<MainPanel>111,70,149</MainPanel>
+		<MainPanelBtnHight>94,51,135</MainPanelBtnHight>
+		<MainPanelText>255,255,255</MainPanelText>
+		<MainPanelBtnCheck>133,93,173</MainPanelBtnCheck>
+
+		<MDITab>202,182,235</MDITab>
+		<MDIActiveTab>225,215,242</MDIActiveTab>
+	</COLORREF>
+</STYLE>

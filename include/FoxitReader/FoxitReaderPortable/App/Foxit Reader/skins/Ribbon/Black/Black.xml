@@ -1,0 +1,62 @@
+<STYLE>
+	<VERSION>
+		<TYPE>Ribbon</TYPE>
+	</VERSION>
+	<DESCRIPTION>
+		<NAME>Blue</NAME>
+	</DESCRIPTION>
+	<COLORREF>
+		<BaseBack>67,67,67</BaseBack>
+		<MenuBack>255, 255, 255</MenuBack>
+		<MenuBorder>37,37,37</MenuBorder>
+		<HighlightBack>71,71,71</HighlightBack>
+		<BaseBorder>100,100,100</BaseBorder>
+		<DarkHighlight>37,37,37</DarkHighlight>
+		<BaseText>175,175,175</BaseText>
+		<Category>188,192,195</Category>
+		<CategoryText>68,69,71</CategoryText>
+
+		<LightBorder>162,162,162</LightBorder>
+		<MenuItemBorder>62,162,162</MenuItemBorder>
+		<DarkBorder>37,37,37</DarkBorder>
+		<DisableBack>155,155,155</DisableBack>
+		<PanleTab>188,208,235</PanleTab>
+		<ControlBarCaption>67,67,67</ControlBarCaption>
+
+		<HighlighCaptinButton>101,101,101</HighlighCaptinButton>
+		<PressCaptinButton>71,71,71</PressCaptinButton>
+
+		<PressCloseCaptinButton>71,71,71</PressCloseCaptinButton>
+		<HighlighCloseCaptinButton>101,101,101</HighlighCloseCaptinButton>
+
+		<HighlightButton>210,210,210</HighlightButton>
+		<PressButton>138,138,138</PressButton>
+		<CheckButton>164,169,172</CheckButton>
+		<CheckHighlight>210,210,210</CheckHighlight>
+
+
+		<FormatTab>92,78,30</FormatTab>
+		<FormatTabText>225,225,225</FormatTabText>
+		<FormatTabLine>224,147,33</FormatTabLine>
+		<CategoryCaptionBack>100,100,100</CategoryCaptionBack>
+		<CategoryCaptionTobLine>173,173,173</CategoryCaptionTobLine>
+
+		<MenuHighlightText>0,0,0</MenuHighlightText>
+		<MenuText>0,0,0</MenuText>
+
+		<HighlighText>73,73,73</HighlighText>
+		<DisableText>105,105,105</DisableText>
+		<CategoryTabHightText>255,255,255</CategoryTabHightText>
+		<RibbonSliderZoom>240,240,240</RibbonSliderZoom>
+		<ZoomSliderLine>100,100,100</ZoomSliderLine>
+
+		<MainPanel>58,58,58</MainPanel>
+		<MainPanelBtnHight>39,39,39</MainPanelBtnHight>
+		<MainPanelText>255,255,255</MainPanelText>
+		<MainPanelBtnCheck>82,82,82</MainPanelBtnCheck>
+		<RibbonBarBack>67,67,67</RibbonBarBack>
+
+		<MDITab>137,137,137</MDITab>
+		<MDIActiveTab>218,218,218</MDIActiveTab>
+	</COLORREF>
+</STYLE>

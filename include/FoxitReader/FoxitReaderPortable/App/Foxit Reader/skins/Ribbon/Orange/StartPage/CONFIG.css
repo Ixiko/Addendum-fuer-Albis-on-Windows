@@ -1,0 +1,116 @@
+@charset "utf-8";
+body{
+	background-color:#A5A5A5;
+	background-image:url(body_bg.jpg);
+	background-repeat:repeat-x;	
+}
+.top_tb {
+	border: 1px solid #E6CC6D;	
+	background-image:url(top_tb_bg.jpg);	
+	background-repeat:repeat-x;
+}
+.pagination {
+     font-size: 11px;
+	 float:right;
+	 display:none;
+}
+        
+.pagination a {
+    text-decoration: none;
+	border: solid 1px #93B7D7;
+	color: #111;
+}
+
+.pagination a, .pagination span {
+    display: block;
+    float: left;
+    padding: 1px 5px;
+    margin-right: 5px;
+	margin-bottom: 5px;
+}
+
+.pagination .current {
+    background: #F38514;
+    color: #fff;
+	border: solid 1px #eee;
+}
+
+.pagination .current.prev, .pagination .current.next{
+	color:#000;
+	border-color:#93B7D7;
+	background:#CBDDF5;
+}
+.menu_lefttop{
+	color:#fff;	
+}
+#content_left{
+	background-image:url(history_winbg.jpg);
+	background-repeat:no-repeat; 
+}
+
+.border1{
+ border:solid 1px #E6CC6D;
+}
+
+.fg{	
+	BACKGROUND: url(line.jpg) no-repeat;
+}
+.tab_border{
+	border-left:solid 1px #8AA3CB;
+	border-right:solid 1px #8AA3CB;
+	background-image:url(right_move_bg.jpg);
+		
+}
+
+a{
+ text-decoration:none;
+}
+a:link{
+	color:#111;	
+}
+a:visited {
+	color: #222;
+}
+a:hover {
+	color:#444;
+}
+.button_register{
+	background:url(sign_up.jpg) no-repeat;
+	width:190px;
+	height:27px;
+	cursor:pointer;
+}
+.tabs-nav {
+	background:url(right_move_bg.jpg) repeat-x;
+	width:663px;
+	border-right:1px solid #E6CC6D;
+}
+.tabs-nav a {
+     color: #27537a;
+}
+
+.tabs-nav a, .tabs-nav a span {
+    background: url(tab.png) no-repeat;
+	
+}
+.tabs-nav .tabs-selected a {
+    color: #fff;
+}
+.tabs-container {	
+    border: 1px solid #E6CC6D;   
+	background:url(show_con_bg.jpg) repeat-x;
+	background-color:#F8F0D9;
+}
+.sub_content_left,.sub_content_right{
+	background-color:#fff;	
+	border:1px solid #F8F0D9;
+}
+.sub_content_left h3, .sub_content_right h3{
+	background-color:#F8F0D9;	
+}
+#content_left_r2{
+	border: 1px solid #E6CC6D;
+}
+.cBox{
+	background-color:#F8F0D9;	
+}

@@ -1,0 +1,15 @@
+﻿{"Ulcus": {
+    "ve": {
+      "dia":"Akutes Ulcus ventriculi mit Blutung {K25.0G}|Akutes Ulcus ventriculi mit Perforation {K25.1}|Akutes Ulcus ventriculi mit Blutung und Perforation {K25.2}|Akutes Ulcus ventriculi ohne Komplikation {K25.3}|Chronisches oder nicht näher bezeichnetes Ulcus ventriculi mit Blutung {K25.4}|Chronisches oder nicht näher bezeichnetes Ulcus ventriculi mit Perforation {K25.5}|Chronisches oder nicht näher bezeichnetes Ulcus ventriculi mit Blutung und Perforation {K25.6}|Chronisches Ulcus ventriculi ohne Komplikation {K25.7G}|Helicobacter pylori [H. pylori] als Ursache von Krankheiten, die in anderen Kapiteln klassifiziert sind {!B98.0G}",
+      "option":"M"
+    },
+    "du": {
+      "dia":"Akutes Ulcus duodeni mit Blutung {K26.0G}|Akutes Ulcus duodeni mit Perforation {K26.1G}|Akutes Ulcus duodeni mit Blutung und Perforation {K26.2G}|Akutes Ulcus duodeni ohne Blutung oder Perforation {K26.3G}|Chronisches oder nicht näher bezeichnetes Ulcus duodeni mit Blutung {K26.4G}|Chronisches oder nicht näher bezeichnetes Ulcus duodeni mit Perforation {K26.5G}|Chronisches oder nicht näher bezeichnetes Ulcus duodeni mit Perforation {K26.5G}|Chronisches Ulcus duodeni ohne Blutung oder Perforation {K26.7G}|Helicobacter pylori [H. pylori] als Ursache von Krankheiten, die in anderen Kapiteln klassifiziert sind {!B98.0G}",
+      "option":"M"
+    },
+    "cr": {
+      "dia":"Ulcus cruris nicht klassifiziert {L97G}|Varizen der unteren Extremitäten mit Ulzeration {I83.0G}|Varizen der unteren Extremitäten mit Ulzeration und Entzündung {I83.2G}",
+      "option":"MS"
+    }
+  }
+}

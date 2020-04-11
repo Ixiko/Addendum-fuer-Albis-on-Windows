@@ -1,0 +1,110 @@
+@charset "utf-8";
+#content_left_bottom table td{
+	text-align:center;
+	font-size:12px;
+	color:#4E4E4E;
+}
+#content_left_bottom span,#content_left_bottom b{
+	color:#6C266C;
+}
+/*PhantomPDF after purchase*/
+#content_right_top table .after_purchase_intro{
+	padding-top:15px;
+	padding-left:50px;	
+	font-size:12px;
+	font-weight:700;
+	color:#4E4E4E;
+}
+
+#content_right_top table .after_purchase_intro ul{
+	margin:0px;
+	padding:5px 10px 5px 30px;
+}
+#content_right_top table .after_purchase_intro ul li{
+	padding:5px 0;
+}
+.after_purchase_intro p{
+	margin:0;
+	padding:5px 0;	
+}
+/*PhantomPDF during trial*/
+#content_right_top table .trial_intro{
+	padding-left:50px;
+	padding-top:20px;
+	font-size:12px;
+	font-weight:700;
+	color:#4E4E4E;
+}
+.trial_intro p{
+	padding:7px;
+	margin:0;
+}
+.trail_expired_table tr td{
+	color:#4E4E4E;
+}
+.trail_expired_table .intro_top{
+	line-height:18px;
+	
+}
+.trail_expired_table{
+	font-weight:700;
+}
+.trail_expired_table .c1{
+	font-family: Open Sans, Tahoma, Arial, sans-serif;
+	font-size:12px;
+	color:#6C266C;
+}
+.trail_expired_table ul{
+	margin:0;
+	padding:5px 10px 5px 25px;
+	color:#6C266C;
+}
+
+.trail_expired_table ul li{
+	padding:3px 0;	
+}
+/*reader*/
+.reader_register{
+	color:#eb6b10;
+	font-size:12px;
+	text-decoration:underline;
+}
+.reader_table tr td{
+	font-weight:500;
+	color:#494949;
+	font-size:12px;
+}
+.reader_table .intro{
+	line-height:20px;
+	font-family: Open Sans, Arial,Tahoma, sans-serif;
+	color:#494949;
+	font-size:12px;
+}
+
+.reader_table ul{
+	margin:0;
+	padding:5px 10px 5px 15px;
+	color:#494949;
+}
+.reader_table ul li{
+	padding:2px 0;
+	font-size:12px;
+}
+#content_left_bottom .get_support{
+	
+	padding: 0 20px;
+	line-height: 25px;
+	font-weight:500;
+}
+#content_left_bottom .get_support .p1{
+	color:#6C266C;
+}
+
+.btn {
+	background-color: #6C266C;
+	color: #FFFFFF;
+	cursor: pointer;
+}
+.reader_table .upgrade_now{
+	padding:10px 90px 0 0;
+}

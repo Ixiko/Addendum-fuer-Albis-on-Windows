@@ -1,0 +1,145 @@
+html{
+    font-size: 16px;
+}
+button,
+input,
+optgroup,
+select,
+textarea {
+    margin: 0;
+    font: inherit;
+
+}
+body{
+    font-family: Segoe UI, tahoma, arial, sans-serif;
+    font-size: 0.8em;
+}
+.break-word{
+    word-wrap : break-word ;
+}
+ul{
+    padding-left: 0;
+}
+ul li {
+    list-style: none;
+}
+.header li {
+    display: inline-block;
+}
+.container{
+    margin: 5px 25px;
+}
+.container-header{
+    font-size: 1.4em;
+}
+.dl-horizontal{
+
+}
+.dl-horizontal dt {
+    float: left;
+    width: 160px;
+    overflow: hidden;
+    clear: left;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.dl-horizontal dd {
+    margin-left: 180px;
+    overflow:auto;
+    _height:1%
+}
+.dl-horizontal dd>div{
+    display: inline-block;
+    width: 48%;
+    float: left;
+}
+.dl-horizontal dd>div:last-child{
+    width: 48%;
+    float: right;
+}
+dt, dd {
+    line-height: 2.2;
+}
+.table {
+    width: 100%;
+    max-width: 100%;
+    border-spacing: 0;
+    border-collapse: collapse;
+}
+.bordered{
+
+}
+table thead{
+    background: -webkit-linear-gradient(#fff, #f1f2f3); /* Safari 5.1 - 6.0 */
+    background: -o-linear-gradient(#fff, #f1f2f3); /* Opera 11.1 - 12.0 */
+    background: -moz-linear-gradient(#fff, #f1f2f3); /* Firefox 3.6 - 15 */
+    background: linear-gradient(#fff, #f1f2f3); /* 标准的语�?*/
+}
+.table-bordered>tbody>tr>th, .table-bordered>tfoot>tr>th, .table-bordered>tbody>tr>td, .table-bordered>tfoot>tr>td {
+    border: 1px solid #d5d5d5;
+    font-weight: inherit;
+}
+.table-bordered>thead>tr>th, .table-bordered>thead>tr>td{
+	border: 1px solid #d5d5d5;
+	font-weight: 400;
+}
+.table-wrap .caption{
+    border-top: 2px dotted #828790;
+    padding: 10px 0 20px;
+}
+.table-wrap .caption>.caption-wrap{
+    display: inline-block;
+	width: 45%;
+	float: left;
+}
+.table-wrap .caption>.caption-info{
+    float: right;
+    padding-right: 25px;
+    display: inline-block;
+	text-align: right;
+	width: 45%;
+}
+.footer{
+    text-align: right;
+    margin: 25px;
+}
+.footer>div{
+    display: block;
+    margin: 0 15px;
+}
+img + a,img{
+   vertical-align: middle;
+}
+img{
+    width: 20px;
+    height: 20px;
+}
+.loading{
+    position: absolute;
+    margin: auto;
+    display: block;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%);
+}
+.po-re{
+    position: relative;
+    left: 0;
+    right: 0;
+}
+.clearfix{
+    overflow:hidden;
+    _zoom:1;
+}
+
+/*a:link {color: blue}*/
+/*a:visited {color: blue}*/
+
+.a {
+	color: blue;
+	text-decoration: underline;
+}
+.a:hover {
+	cursor: pointer;
+}

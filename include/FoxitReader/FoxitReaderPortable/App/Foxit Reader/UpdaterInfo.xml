@@ -1,0 +1,20 @@
+<updater_info>
+    <module name="Foxit Spell Check Language" version="2.2.0.505">
+        <file path="M:\Praxis\Skripte\Skripte Neu\Addendum für AlbisOnWindows\include\FoxitReader\FoxitReaderPortable\App\Foxit Reader\lex\accent.tlx" />
+        <file path="M:\Praxis\Skripte\Skripte Neu\Addendum für AlbisOnWindows\include\FoxitReader\FoxitReaderPortable\App\Foxit Reader\lex\correct.tlx" />
+        <file path="M:\Praxis\Skripte\Skripte Neu\Addendum für AlbisOnWindows\include\FoxitReader\FoxitReaderPortable\App\Foxit Reader\lex\ssceam.tlx" />
+        <file path="M:\Praxis\Skripte\Skripte Neu\Addendum für AlbisOnWindows\include\FoxitReader\FoxitReaderPortable\App\Foxit Reader\lex\ssceam2.clx" />
+        <file path="M:\Praxis\Skripte\Skripte Neu\Addendum für AlbisOnWindows\include\FoxitReader\FoxitReaderPortable\App\Foxit Reader\lex\sscebr.tlx" />
+        <file path="M:\Praxis\Skripte\Skripte Neu\Addendum für AlbisOnWindows\include\FoxitReader\FoxitReaderPortable\App\Foxit Reader\lex\sscebr2.clx" />
+        <file path="M:\Praxis\Skripte\Skripte Neu\Addendum für AlbisOnWindows\include\FoxitReader\FoxitReaderPortable\App\Foxit Reader\lex\ssceca.tlx" />
+        <file path="M:\Praxis\Skripte\Skripte Neu\Addendum für AlbisOnWindows\include\FoxitReader\FoxitReaderPortable\App\Foxit Reader\lex\ssceca2.clx" />
+        <file path="M:\Praxis\Skripte\Skripte Neu\Addendum für AlbisOnWindows\include\FoxitReader\FoxitReaderPortable\App\Foxit Reader\lex\tech.tlx" />
+        <file path="M:\Praxis\Skripte\Skripte Neu\Addendum für AlbisOnWindows\include\FoxitReader\FoxitReaderPortable\App\Foxit Reader\lex\userdic.tlx" />
+    </module>
+    <module name="Foxit Cloud" version="9.3.0.917">
+        <file path="M:\Praxis\Skripte\Skripte Neu\Addendum für AlbisOnWindows\include\FoxitReader\FoxitReaderPortable\App\Foxit Reader\plugins\FoxitDrive.fpi" />
+    </module>
+    <module name="U3DBrowser" version="9.3.0.10809">
+        <file path="M:\Praxis\Skripte\Skripte Neu\Addendum für AlbisOnWindows\include\FoxitReader\FoxitReaderPortable\App\Foxit Reader\plugins\U3DBrowser.fpi" />
+    </module>
+</updater_info>

@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DefaultPluginsList version="1">
+	<Plugin Name="FoxitInnerPluginFoxitUpdater"
+		FriendlyName="FoxitUpdater"
+		Description=""
+		PIPath="Updater.fpi"
+		LoadBehavior="0"
+		MinVersion="9.3.0.0"
+	/>
+
+	<Plugin Name="FoxitInnerPluginPlgDynLoader"
+		FriendlyName="PlgDynLoader"
+		Description=""
+		PIPath="PlgDynLoader.fpi"
+		LoadBehavior="0"
+		MinVersion="9.3.0.0"
+	/>
+
+	<Plugin Name="FoxitInnerPluginCommentsSummary"
+		FriendlyName="CommentsSummary"
+		Description=""
+		PIPath="CommentsSummary.fpi"
+		LoadBehavior="9"
+		MinVersion="2.1.8.0"
+	/>
+
+	<Plugin Name="FoxitInnerPluginComparePDF"
+		FriendlyName="ComparePDF"
+		Description=""
+		PIPath="ComparePDF.fpi"
+		LoadBehavior="9"
+		MinVersion="1.0.5.0"
+	/>
+
+	<Plugin Name="FoxitInnerPluginDocuSign"
+		FriendlyName="DocuSign"
+		Description=""
+		PIPath="docusign_plugin.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+
+	<Plugin Name="FileOpen"
+		FriendlyName="FileOpen"
+		Description=""
+		PIPath="FileOpen.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+
+	<Plugin Name="FoxitInnerPluginFoxitRMS_V2"
+		FriendlyName="FoxitRMS_V2"
+		Description=""
+		PIPath="FRMSPlgV2.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+
+	<Plugin Name="FoxitInnerPluginWip"
+		FriendlyName="WIP"
+		Description=""
+		PIPath="WIP.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+		CanNotDisable="1"
+	/>
+
+
+	<Plugin Name="FoxitInnerPluginIntegrateWithSP"
+		FriendlyName="IntegrateWithSP"
+		Description=""
+		PIPath="IntegrateWithSP.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+
+	<Plugin Name="FoxitInnerPluginPageEditor"
+		FriendlyName="Edit Object"
+		Description=""
+		PIPath="PageEditor.fpi"
+		LoadBehavior="3"
+		MinVersion="2.2.4.0"
+	/>
+
+	<Plugin Name="FoxitInnerPluginCPDFOCLink"
+		FriendlyName="FoxitInnerPluginCPDFOCLink"
+		Description=""
+		PIPath="CPDFOCLink.fpi"
+		LoadBehavior="3"
+		MinVersion="9.2.0.0"
+	/>
+
+	<Plugin Name="FoxitInnerPluginReadOutLoud"
+		FriendlyName="Speech"
+		Description=""
+		PIPath="Speech.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+
+	<Plugin Name="FoxitInnerPluginShareReview"
+		FriendlyName="ShareReview"
+		Description=""
+		PIPath="ShareReviewPlugin.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+	
+	<Plugin Name="CusIntelRMSPlg"
+		FriendlyName="CusIntelRMSPlg"
+		Description=""
+		PIPath="CusIntelRMSPlg.fpi"
+		LoadBehavior="3"
+		MinVersion=""
+	/>
+
+	<Plugin Name="FoxitInnerMetaDataHandling"
+		FriendlyName="FoxitInnerMetaDataHandling"
+		Description=""
+		PIPath="MetaDataHandling.fpi"
+		LoadBehavior="3"
+		MinVersion=""
+	/>
+
+	<Plugin Name="FoxitInnerPluginOneDrive"
+		FriendlyName="OneDrive"
+		Description=""
+		PIPath="OneDrivePlugin.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+	
+	<Plugin Name="FoxitInnerPluginOneDriveForBusiness"
+		FriendlyName="OneDriveForBusiness"
+		Description=""
+		PIPath="OneDriveForBusiness.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+
+	<Plugin Name="FoxitInnerPluginGoogleDrive"
+		FriendlyName="GoogleDrive"
+		Description=""
+		PIPath="GoogleDrivePlugin.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+	
+	<Plugin Name="FoxitInnerPluginDropboxPlugin"
+		FriendlyName="DropboxPlugin"
+		Description=""
+		PIPath="DropboxPlugin.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+
+	<Plugin Name="FoxitInnerPluginBoxPlugin"
+		FriendlyName="BoxPlugin"
+		Description=""
+		PIPath="BoxPlugin.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+	
+	<Plugin Name="FoxitInnerPluginActionWizard"
+		FriendlyName="FoxitInnerPluginActionWizard"
+		Description=""
+		PIPath="ActionWizard.fpi"
+		LoadBehavior="9"
+		MinVersion="1.0.3.0"
+	/>
+	
+	<Plugin Name="FoxitInnerPluginOFDViewer"
+		FriendlyName="FoxitOFDViewer"
+		Description=""
+		PIPath="OFDViewer.fpi"
+		LoadBehavior="9"
+		MinVersion="1.0.0.0"
+	/>
+
+	<Plugin Name="FoxitInnerPluginEpubViewer"
+		FriendlyName="Epub Viewer"
+		Description=""
+		PIPath="EpubViewer.fpi"
+		LoadBehavior="9"
+		MinVersion="1.0.0.512"
+	/>
+
+	<Plugin Name="FoxitInnerPluginConnectedPDFDRM"
+		FriendlyName="ConnectedPDF DRM"
+		Description="ConnectedPDF DRM"
+		PIPath="ConnectedPDFDRM.fpi"
+		LoadBehavior="3"
+		MinVersion="9.3.0.0"
+		CanNotDisable="1"
+	/>
+	<Plugin Name="FoxitInnerPluginFoxitAccountManagement"
+		FriendlyName="FoxitInnerPluginFoxitAccountManagement"
+		Description=""
+		PIPath="FoxitAccountManagement.fpi"
+		LoadBehavior="3"
+		MinVersion="9.3.0.0"
+	/>
+	
+	<Plugin Name="FoxitInnerPluginConnectedPDF"
+		FriendlyName="FoxitInnerPluginConnectedPDF"
+		Description=""
+		PIPath="ConnectedPDFPlugin.fpi"
+		LoadBehavior="3"
+		MinVersion="9.3.0.0"
+		CanNotDisable="1"
+	/>
+
+	<Plugin Name="FoxitInnerPluginBrowser"
+		FriendlyName="FoxitInnerPluginBrowser"
+		Description=""
+		PIPath="Browser.fpi"
+		LoadBehavior="3"
+		MinVersion="2.0.17.0"
+	/>
+	
+	<Plugin Name="FoxitInnerPluginFoxitDrive"
+		FriendlyName="FoxitInnerPluginFoxitDrive"
+		Description=""
+		PIPath="FoxitDrive.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+	
+	<Plugin Name="FoxitInnerPluginLicenseManager"
+		FriendlyName="FoxitInnerPluginLicenseManager"
+		Description=""
+		PIPath="LicenseManager.fpi"
+		LoadBehavior="3"
+		MinVersion="2.0.1.0"
+	/>
+	
+	<Plugin Name="FoxitInnerPluginSubscribe"
+		FriendlyName="FoxitInnerPluginSubscribe"
+		Description=""
+		PIPath="Subscribe.fpi"
+		LoadBehavior="3"
+		MinVersion="9.3.0.0"
+	/>
+	
+	<Plugin Name="FoxitInnerPluginNetDocuments"
+		FriendlyName="NetDocuments"
+		Description=""
+		PIPath="NetDocuments.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+	
+	<Plugin Name="FoxitInnerPluginU3DBrowser"
+		FriendlyName="U3DBrowser"
+		Description=""
+		PIPath="U3DBrowser.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+
+	<Plugin Name="FoxitInnerPluginDwg2Pdf"
+		FriendlyName="Dwg2Pdf"
+		Description=""
+		PIPath="Dwg2Pdf.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+	
+	<Plugin Name="FoxitInnerPluginiManageWork"
+		FriendlyName="iManageWork Integration"
+		Description="iManageWork Integration"
+		PIPath="iManageWork.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+	
+	<Plugin Name="FoxitInnerPluginNdOffice"
+		FriendlyName="NdOffice"
+		Description="NdOffice"
+		PIPath="NdOffice.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+
+	<Plugin Name="FoxitInnerPluginContentSyndication"
+		FriendlyName="FoxitInnerPluginContentSyndication"
+		Description=""
+		PIPath="ContentSyndication.fpi"
+		LoadBehavior="3"
+		MinVersion="1.0.9.801"
+		CanNotDisable="1"
+	/>
+	
+	<Plugin Name="FoxitInnerPluginOpenText"
+		FriendlyName="OpenText Integration"
+		Description=""
+		PIPath="OpenText.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+	
+	<Plugin Name="AmanoTimeStamp"
+		FriendlyName="AmanoTimeStamp"
+		Description="AmanoTimeStamp Plug-in enables generation and verification of RFC3161 timestamp through Amano Timestamp Service."
+		PIPath="e-timing\AmanoTimeStamp.fpi"
+		LoadBehavior="3"
+		MinVersion="1.1.1.1413"
+	/>
+
+	<Plugin Name="ACPPlugin"
+		FriendlyName="ACPPlugin"
+		Description="ACP Plug-in enables DRM through Active Content Protection (ACP) server."
+		PIPath="acpplugin.fpi"
+		LoadBehavior="3"
+		MinVersion="1.1.1.1527"
+	/>
+
+	<Plugin Name="FoxitInnerPluginDocumentum"
+		FriendlyName="Documentum Integration"
+		Description=""
+		PIPath="Documentum.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+
+	<Plugin Name="FoxitInnerPluginEgnytePlugin"
+		FriendlyName="EgnytePlugin"
+		Description=""
+		PIPath="EgnytePlugin.fpi"
+		LoadBehavior="9"
+		MinVersion="1.0.0.0"
+	/>
+	<Plugin Name="FoxitInnerPluginWorldox"
+		FriendlyName="Worldox Integration"
+		Description=""
+		PIPath="Worldox.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+
+	<Plugin Name="FoxitInnerPluginContentSuite"
+		FriendlyName="ContentSuite Integration"
+		Description="ContentSuite Integration"
+		PIPath="ContentSuite.fpi"
+		LoadBehavior="9"
+		MinVersion="9.3.0.0"
+	/>
+</DefaultPluginsList>

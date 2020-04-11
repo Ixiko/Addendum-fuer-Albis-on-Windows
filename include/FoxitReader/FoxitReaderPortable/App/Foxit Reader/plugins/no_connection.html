@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en-US" style="height: 100%;">
+	<head>
+		<meta charset="UTF-8">
+	</head>
+<body scroll="no" oncontextmenu="return false;" style="height: 100%;">
+
+<script type="text/javascript">
+// 防止 拖进去的 元素 打开另外一个网页
+var handler = function(e) {
+	e.preventDefault();
+	return false;
+};
+if(document.addEventListener) {
+	document.addEventListener('drop', handler, true);
+	document.addEventListener('dragover', handler, true);
+	document.addEventListener('dragenter', handler, true);
+	document.addEventListener('dragleave', handler, true);
+} else {
+	document.ondrop = handler;
+	document.ondragover = handler;
+	document.ondragenter = handler;
+	document.ondragleave = handler;
+}
+
+function stopEventHandle(event) {
+	event.cancelBubble = true;
+	event.returnValue = false;
+	if ( event.stopPropagation ) {
+		event.stopPropagation();
+	}
+	return false;
+}
+window.onkeydown = function(event){
+	event = event || window.event;
+	if (event.keyCode == 116) {
+		//屏蔽F5刷新网页功能
+		event.keyCode = 0;
+		return stopEventHandle(event);
+	}
+};
+window.onmousewheel = function(event){
+	event = event || window.event;
+	if (event.ctrlKey) {
+		//屏蔽Ctrl+滚轮的缩放页面
+		return stopEventHandle(event);
+	}
+};
+
+window.etCallJs = function(){return "";}
+window.onload = function (){
+	var param = "";
+	var url = window.location.href;
+	var index = url.indexOf("?");
+	if (index != -1) {
+		param = url.substring(index + 1);
+	}
+	if (param && param != "") {
+		var pObj = document.getElementById(param);
+		if (pObj) {
+			pObj.style.display = "block";
+		}
+		if(param == "ja-JP") {
+			document.body.style.fontFamily="Meiryo";
+			document.getElementById("divid").style.fontFamily="Meiryo";
+			var pLists=document.getElementsByTagName("p");
+			for(var i=0; i<pLists.length; i++) {
+				var obj = pLists[i];
+				if(obj){
+					obj.style.fontFamily="Meiryo";
+				}
+			}
+		}
+	}
+};
+</script>
+
+<div id="divid" style="text-align:center; margin-top:10px; margin-bottom:10px; font-family: Segoe UI, tahoma, arial, sans-serif; font-size:14px;">
+<!--English - United States(en-US)-->
+<p id="en-US"> An active network connection is needed to perform this action. </p>
+<!--Spanish - Latin American(es-419)-->
+<p id="en-419"> Una conexión de red activa es necesaria para realizar esta acción. </p>
+<!--German - Germany(de-DE)-->
+<p id="de-DE"> eine aktive internetverbindung notwendig ist, das zu machen. </p>
+<!--French - France(fr-FR)-->
+<p id="fr-FR"> un réseau actif le cadre nécessaire à cette action. </p>
+<!--Chinese - China(zh-CN)-->
+<p id="zh-CN"> 网路连接失败，无法完成操作。 </p>
+<!--Japanese - Japan(ja-JP)-->
+<p id="ja-JP"> この操作を実行するには、アクティブなネットワーク接続が必要です。 </p>
+<!--Korean - Korea(ko-KR)-->
+<p id="ko-KR" style="display: none;"> 이 작업은 네트워크가 연결되어야 합니다. </p>
+<!--zh-HK	Chinese - Hong Kong SAR(zh-HK)-->
+<p id="zh-HK" style="display: none;"> 由於網絡問題無法完成操作。 </p>
+<!--zh-TW	Chinese - Taiwan(zh-TW)-->
+<p id="zh-TW" style="display: none;"> 由於網路問題，因此無法完成此作業。 </p>
+<!--Russian - Russia(ru-RU)-->
+<p id="ru-RU" style="display: none;"> Не удалось завершить эту операцию из-за ошибки сети. </p>
+<!--Portuguese - Brazil(pt-BR)-->
+<p id="pt-BR" style="display: none;"> Não foi possível concluir essa operação devido a um erro de rede. </p>
+<!--Polish - Poland(pl-PL)-->
+<p id="pl-PL" style="display: none;"> Nie można ukończyć operacji ze względu na błąd sieci. </p>
+<!--Dutch - The Netherlands(nl-NL)-->
+<p id="nl-NL" style="display: none;"> Deze handeling kan niet worden voltooid vanwege een netwerkfout. </p>
+<!--Italian - Italy(it-IT)-->
+<p id="it-IT" style="display: none;"> Non è stato possibile completare l'operazione a causa di un errore di rete. </p>
+</div>
+
+</body>
+</html>

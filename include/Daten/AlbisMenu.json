@@ -1,0 +1,903 @@
+{"AlbisMenu": {
+	"Patient":   	{
+		"Neu": "57600",
+		"Öffnen": "32768",
+		"Öffnen per Chipkarte (Gerät 1)": "32801",
+		"Öffnen per Chipkarte (Gerät 2)": "34597",
+		"Öffnen per Chipkarte (Gerät 3)": "34596",
+		"Schließen": "57602",
+		"Schließen + Öffnen": "32907",
+		"HzV-Teilnahmestatus prüfen": {
+				"Dieser Patient": "34801",
+				"Alle Patienten": "34802"
+		}
+		"S3C-Medikationsplan": {
+			"Aktuellen Medikationsplan abrufen": "35188"
+		}
+		"Tagesprotokoll": {
+			"Hinzufügen": "32955",
+			"Entfernen": "32953"
+		}
+		"Löschen": "32872",
+		"Anrufen": "33299",
+		"Laboranforderungen": "32982",
+		"Schein": {
+			"Neu": "32788",
+			"Ändern": "32789",
+			"Löschen": "32868",
+			"Diagnosen bearbeiten": "32870",
+			"Externe Laborleistungen": "33242",
+			"Aktualisieren": "33016",
+			"Vorheriger": "32869",
+			"Nächste": "32866",
+			"Archivieren": "33005",
+			"Reaktivieren": "33006",
+			"In EBM 2000plus konvertieren": "34268"
+		}
+		"Stammdaten": {
+			"Abrechnungsassistent": "34811",
+			"Personalien": "32774",
+			"Dauerdiagnosen": "32776",
+			"Dauermedikamente": "32777",
+			"Cave!": "32778",
+			"Kontrolltermine	": "32775",
+			"Krankengeschichte": "32830",
+			"Patientenbild": "33317",
+			"Patientengruppen": "34362",
+			"Familie": "34075",
+			"Therapiesitzungen": "34199",
+			"Antikoagulantien-Pass": "34869"
+		}
+		"Überweisungsärzte ": "33012",
+		"Service": {
+			"Axa	PHV": "61262"
+		}
+		"Suchen": "57636",
+		"Weitersuchen": "57640",
+		"Aufgaben": {
+			"Neu Aufgabe erstellen": "34684",
+			"Aufgabenliste anzeigen": "34685"
+		}
+		"Augenarztmodul": "34421",
+		"Hausbesuch": "33134"
+		"Kassenbuch": {
+			"Kassenbuch anzeigen": "34978",
+			"Manuelle Buchung": "34979"
+		}
+		"Listen": {
+			"Geburtstage": "33102",
+			"Kontrolltermine": "32859",
+			"Patientenliste": "32822",
+			"Termine": "34096"
+		}
+		"Nachrichten": {
+			"Nachrichten anzeigen": "33274",
+			"Nachrichten versenden": "33277"
+		}
+		"Stoppuhr": {
+			"Neue Uhr": "34090",
+			"Aktive Stoppuhren anzeigen": "34091"
+		}
+		"Terminkalender": "33004",
+		"ToDoListe": {
+			"In ToDo-Liste": "33229",
+			"ToDo-Liste ": "33225"
+		}
+		"Röntgenbuch": {
+			"Neuer Eintrag": "33314",
+			"Ansicht": "33315"
+		}
+		"Wartezimmer": {
+			"In Wartezimmer": "32945",
+			"Wartezimmer": "32924"
+		}
+		"Datei anzeigen": "33030",
+		"Drucken": "57607",
+		"Druckereinrichtung": "57606",
+		"Seitenvorschau": "57609",
+		"Spooler": "32929",
+		"Logout": "32922",
+		"Beenden": "57665",
+		"1 Patient": "57616",
+		"2 Patient": "57617",
+		"3 Patient": "57618",
+		"4 Patient": "57619",
+		"5 Patient": "57620",
+		"6 Patient": "57621",
+		"7 Patient": "57622",
+		"8 Patient": "57623",
+		"9 Patient": "57624",
+		"10 Patient": "57625",
+		"11 Patient": "57626",
+		"12 Patient": "57627"
+		}
+
+	"Formular": {
+		"Abrechnungsschein (5)": "33204",
+		"Ambulantes Operieren": "33063",
+		"Anfrage zum Zusammenhang von Arbeitsunfähigkeitszeiten (53)": "34733",
+		"Anfrage zur Zuständigkeit einer anderen Krankenkasse (50)": "34756",
+		"Anfrage zur Zuständigkeit eines sonstigen Kostenträgers (51)": "34761",
+		"AU (1)": "32814",
+		"Privat-AU": "32832",
+		"Anfrage bei Fortbestehen der AU (52)": "34675",
+		"Arztanfrage - Bericht des behandelnden Arztes (41)": "34682",
+		"Ärztlicher Kurzbericht": "34627",
+		"Ärztliches Gutachten": "33271",
+		"Aufkleber": "33053",
+		"Behandlungsplan zur künstlichen Befruchtung (70)": "34665",
+		"Bescheinigung Belastungsgrenze bei Feststellung schwerw. chron. Krankheit (55)": "34688",
+		"Bescheinigung für die Krankengeldzahlung (17)": "34712",
+		"BG": {
+			"F1030  - Augenarztbericht	(A14a)": "33001",
+			"F1102  - Auskunft Kopfverletzung": "33856",
+			"F1050  - Ärztliche Unfallmeldung	(A13)": "32995",
+			"F6050  - Hautarztbericht	(A20a)": "32999",
+			"F6150  - Hautarztbericht BK 5101": "34330",
+			"F6052 -  Hautarztbericht Verlauf": "34331",
+			"F1040  - HNO-Arztbericht (A14b)": "33002",
+						"  Kopfverletzung (A9a)": "33000",
+			"F1120  - Neurologischer Befundbericht  (A9)": "32994",
+			"F2900  - Überweisung BG": "33019",
+			"F1100  - Auskunft Behandlung": "34798",
+			"F1000  - Durchgangsarztbericht (D13)": "32996",
+			"F1010  - Handverletzungen (D(H)13e)": "32993",
+			"F1002  - Ergänzungsbericht Kopfverletzungen": "34403",
+			"F1004  - Kniebinnenschaden (D(H)13b)": "32998",
+			"F1006  - Ergänzungsbericht Stromunfall": "34394",
+			"F2106  - Nachschaubericht (D9a)": "32992",
+			"F1008  - Schwere Verbrennungen (D(H)13d)": "32991",
+			"F2100  - Zwischenbericht": "34103",
+			"F2902  - Überweisung des D-/H-Arztes/Handchirurgen": "34193",
+			"F1114  - Ausführliche Auskunft": "34432",
+			"F3110  - Belastungserprobung": "34414",
+			"F3112  - Arbeitsplatzbeschreibung": "34415",
+			"F1020  - H-Arzt-Bericht	 (H13)": "32997",
+			"F2108  - Verlaufsbericht H-Arzt": "33848",
+			"F2400  - Krankengymnastik ": "33171",
+			"F2402 - Verordnung Ergotherapie": "61229",
+			"F2404 - Verordnung VOSE": "35024",
+			"F2410  - Verordnung EAP": "34068",
+			"F2222  - Veränderungen bes.Heilbeh. (K(D)10)": "32990",
+			"F6000  - Anzeige Berufskrankheit": "34058",
+			"F2150 - Verordnung zur Durchführung einer BGSW": "35021",
+			"F2280 - Kurzbericht Psychotherapeutenverfahren": "35029"
+		}
+		"DMP": {
+			"Asthma bronchiale - Erst-Doku": "34383",
+			"Asthma bronchiale - Folge-Doku": "34384",
+			"Brustkrebs - Erst-Doku": "34094",
+			"Brustkrebs - Folge-Doku": "34095",
+			"COPD - Erst-Doku": "34386",
+			"COPD - Folge-Doku": "34387",
+			"Diab.mell. Typ I - Erst-Doku": "34345",
+			"Diab.mell. Typ I - Folge-Doku": "34347",
+			"Diab.mell. Typ II - Erst-Doku": "34081",
+			"Diab.mell. Typ II - Folge-Doku": "34082",
+			"KHK - Erst-Doku": "34249",
+			"KHK - Folge-Doku": "34250"
+		}
+		"eHautkrebs-Screening Dermatologe": "34504",
+		"eHautkrebs-Screening Nicht-Dermatologe": "34505",
+		"Erstantrag besondere Arzneimitteltherapie (71)": "34625",
+		"Folge-Behandlungsplan zur künstlichen Befruchtung (70A)": "34701",
+		"Formularkopf": "32815",
+		"Früherkennungs-Koloskopie (38a)": "33991",
+		"Früherkennungs-Koloskopie (38b)": "34398",
+		"Gesundheitsvorsorge (30)": "33212",
+		"Häusliche Pflege (12)": "32854",
+		"Heilmittelverordnungen": {
+			"13a - HMV Phys. Therapie": "33311",
+			"14a - HMV Logopädie": "33312",
+			"18a - HMV Ergotherapie": "33313"
+		}
+		"Hörgeräteversorgung (QSHGV)": {
+			"Vorverordnung/Verordnung": "35073",
+			"Nachverordnung": "35074"
+		}
+		"Hörhilfe (15)": "33214",
+		"Jugendgesundheitsuntersuchung": "33322",
+		"Kinder-AU (21)": "33017",
+		"Krankenbeförderung (4)": "32926",
+		"Krankenhauseinweisung (2)":	"32837",
+		"Krebsvorsorge (40)": "32855",
+		"Kurarztformulare": {
+			"Kurarztschein": "33987",
+			"Kurbericht": "33275",
+			"Verordnung des Kurarztes": "33892",
+			"Anregung einer ambul. Vorsorgeleistung in anerk. Kurorten(25)": "34646"
+		}
+		"Mit-/Weiterbehandlung": "32848",
+		"Mutterschaftsgeld bei Frühgeburten (9)":		"34493",
+		"Notfall-/Vertretungsschein (19)": "32858",
+		"Patientenausweis": "33003",
+		"Patientenerklärung Europäische Krankenversicherung": "35201",
+		"Patientenquittung": "34072",
+		"Poliklinik-Berechtigungsschein": "33007",
+		"Praxisgebühr-Quittung": "34104",
+		"Präventionsempfehlung (36)": "62318",
+		"Psychotherapie": {
+			"Konsiliarbericht (22)": "33240",
+			"Antrag des Versicherten - PTV 1": "34303",
+			"Angaben des Therapeuten - PTV 2": "34304",
+			"Leitfaden zum Erstellen des Berichts an die/den Gutachterin/Gutachter - PTV 3": "62316",
+			"Stellungnahme des Gutachters - PTV 5": "34460",
+			"Unterlagen für den Gutachter - PTV 8": "62315",
+			"Patienteninformation Ambulante Psychotherapie - PTV 10…": "62317",
+			"Patienteninformation Ambulante Sprechstunde - PTV 11": "35195",
+			"Anzeige Akutbehandlung/Beendigung einer Psychotherapie - PTV 12": "35197"
+		}
+		"Rehabilitation": {
+			"Antrag auf Kostenübernahme (Muster 56)": "34235",
+			"Einleitung Reha (Muster 60)": "34261",
+			"Verordnung Palliativversorgung (63)": "34624",
+			"Beratung Reha (Muster 61 - Teil A)": "35181",
+			"Verordnung Reha (Muster 61 - Teil B-D)": "34282"
+		}
+		"Rentenversicherung": {
+			"Honorar - Abrechnung Befundberichte": "34806",
+			"Befundbericht Rehabilitationsantrag": "34828"
+		}
+		"Rezepte": {
+			"BTM-Rezept": "34771",
+			"Grünes Rezept": "34219",
+			"Kassenrezept": "32797",
+			"Privatrezept": "32845",
+			"Sprechstundenbedarfsrezept": "33088",
+			"T-Rezept": "34623",
+			"Verordnungsplan": "34078",
+			"Verordnungscenter": "34748"
+		}
+		"Scribor": "33055",
+		"Sehhilfen": {
+			"Sehhilfenverordnung (Muster 8)": "32857",
+			"Verordnung v. vergrößernden Sehhilfen (Muster 8a)": "34200"
+		}
+		"Soziotherapie": {
+			"Soziotherapeutischer Betreuungsplan (27)": "34747",
+			"Verordnung Soziotherapie (26)": "34739",
+			"Verordnung Überw. z. Indikationsstellung (28)": "34768"
+		}
+		"U3 - Hüftsonographie": "34299",
+		"Überweisungen": {
+			"Überweisungsschein": "32813",
+			"Überweisung BG (F2900)": "33019",
+			"Überweisung KOV": "32863",
+			"Überweisung Labor (10)": "33238",
+			"Anforderungsschein Labor (10a)": "34487",
+			"Überweisung Privat": "34804",
+			"Überweisung Psychotherapie": "33239"
+		}
+		"VET (3)": "33123",
+		"Weiterverordnung besondere Arzneimitteltherapie (71A)": "34626",
+		"Wiedereingliederungsplan (20)": "33018"
+	}
+
+	"Extern": {
+		"Arztbrief": "32829",
+		"Grafischer Befund": "32960",
+		"CGM ORGANIZER": {
+			"CGM ORGANIZER": "34514",
+			"CGM ORGANIZER Dashboard": "34515",
+		}
+		"Labor": {
+			"Laborbuch": "34162",
+			"Daten holen": "32965",
+			"Daten anzeigen": "32970",
+			"Manuelle Eingabe": "32983",
+			"Neue Anforderung": "34171",
+			"Auftrag an eine Laborgemeinschaft": "33078",
+			"CGM LABORDER": {
+				"CGM LABORDER-Auftrag erstellen": "34632",
+				"CGM LABORDER-Auftragsimport": "34631",
+				"CGM LABORDER starten": "34852"
+			}
+			"Elektronische Überweisung": "33079",
+			"LDT-Export": {
+				"Vorbereiten": "33083",
+				"Prüfmodul": "33084",
+				"Protokolle": "33085",
+				"Disketten erstellen": "33086"
+			}
+			"CGM CHANNEL Praxischeck": "61292"
+		}
+		"Archivierungsmanager": "33101",
+		"Hausbesuchsmodul": "34642",
+		"DALE-UV": {
+			"DALE-UV Versand": "34923",
+			"DALE-UV gesendetete Berichte": "34925",
+			"Auf neue Nachrichten prüfen": "34936",
+			"DALE-UV Statusprüfung": "34937",
+			"Sendungsverfolgung öffnen": "35182"
+		}
+		"ImpfDocNE": {
+			"Sitzung starten": "35207",
+			"Patientenstatus": "35208",
+			"Impfpass anzeigen": "35221",
+			"Impfen": "35220",
+			"Verwaltung": {
+				"Lager": "35230",
+				"Recall": "35214",
+				"Statistik": "35216",
+				"Info": "35218",
+				"Einstellung": "35219"
+			}
+		}
+		"CGM PRAXISARCHIV": {
+			"Datenquellen": "33130",
+			"Dokumente zuordnen": "33139",
+			"Dicom zuordnen": "35045",
+			"Dokumentenauswahl": "34092",
+			"PRINT  SAFE": "35084"
+		}
+		"CGM PRAXISTIMER": {
+			"Starten": "34177",
+			"Wartezimmer": "34178",
+			"Terminsuche": "34179",
+			"Termine anzeigen": "34222"
+		}
+		"CGM CONNECT": {
+			"Login Chat": "61266",
+			"Logout Chat": "61270",
+			"Login Praxis": "61276",
+			"Logout Praxis": "61277",
+			"Daten holen": "61278",
+			"manuelle Registrierung": {
+				"Arztkonto": "61267",
+				"Praxiskonto": "61269"
+			}
+		}
+		"CGM eARZTBRIEF": {
+		}
+		"CGM eCOCKPIT": "61293",
+		"telemed": {
+			"Arztbrief senden": "33128",
+			"Arztbriefe holen": "33129",
+			"Mail senden": "33138",
+			"Labordaten holen": "33155",
+			"telemed": "33250",
+			"Bonitätsprüfung": "34294",
+			"RehaGuide": "34413"
+		}
+		"telemed.net": {
+			"Chat": "34353",
+			"Nachrichten holen": "34354",
+			"User abmelden": "34355",
+			"Account löschen": "34352"
+		}
+		"WKB Impfmodul": {
+			"Sitzung starten": "34276",
+			"Impfen": "34308",
+			"Notfall": "34329",
+			"Impfpass": "34348",
+			"Patientenstatus": "34297",
+			"Lager": "34277",
+			"Recall": "34278",
+			"Statistik": "34279",
+			"Infodienst": "34280"
+		}
+		"CGM LIFE": {
+		}
+		"Demonstrationen": {
+			"CGM PRAXISARCHIV": "33173",
+			"telemed": "33175",
+			"Ims": "33871"
+		}
+		"CGM ASSIST": {
+			"Letzte Meldung": "61230",
+			"Merkzettel": "34483",
+			"Einstellungen": "34485",
+			"Zuweiserportal Konfiguration": "59155",
+			"Hilfe": "34486"
+		}
+		"Barrierefreie Arztpraxis ": "61291",
+		"Arriba": "59153",
+		"Spiro NDD": "6018",
+		"Ruhe-EKG": "6011",
+		"Ergometrie": "6012",
+		"LZRR": "6013",
+		"Lufu": "6014",
+		"D-doc": "6010",
+		"Labor anrufen": "6016",
+		"Scannen": "6015",
+		"Laborauftrag": "6017"
+	}
+
+	"Abrechnung": {
+		"Vorbereiten": "32944",
+		"KBV-Prüfprogramm": "32943",
+		"Protokolle": "32941",
+		"Onlineversand": "61247",
+		"Quittung anzeigen": "34053",
+		"Datenträger erstellen": "32800",
+		"Quartal": {
+			"Archivieren": "32839",
+			"Reaktivieren": "32841"
+		}
+		"Scheinprüfung": "32862",
+		"AODT": {
+			"Vorbereiten": "33073",
+			"Prüfmodul": "33074",
+			"Protokolle": "33075",
+			"Disketten erstellen": "33076",
+			"Archivieren": "33295",
+			"Reaktivieren": "33296"
+		}
+		"NDT": {
+			"Vorbereiten": "34218",
+			"Datenträger erstellen": "34226"
+		}
+		"SADT Archivieren": {
+			"Archivieren": "34465",
+			"Reaktivieren": "34466"
+		}
+		"Praxisgebühr": {
+			"Alle Praxisgebühr": "34125",
+			"Offene Praxisgebühr": "34117",
+			"Bezahlte Praxisgebühr": "34118",
+			"Heute bar bezahlte Praxisgebühr": "34126",
+			"Gemahnte Praxisgebühr": "34119",
+			"Gelöschte Praxisgebühr": "34225",
+			"Stornierte Zahlungen": "34120"
+		}
+		"Integrierte Versorgung": {
+			"Verwaltung": "59446",
+			"Patientenstatus": "34363",
+			"ToDo-Liste": "34302",
+			"Patiententeilnahmeverzeichnis": "35198",
+			"Freischalten": "34311",
+			"Update": "34312",
+			"Info": "34365"
+		}
+		"Score Dokumentation": {
+			"Bortezomib": "62313",
+			"CHA2-DS2-VASc": "35178",
+			"HAS-BLED": "35179"
+		}
+		"Studienverwaltung": {
+			"Verwaltung": "35145",
+			"Patientenstatus": "35144",
+			"Freischalten": "35143",
+			"Update": "35142",
+			"Info": "35141"
+		}
+		"eHautkrebs-Screening": {
+			"Export": "34508",
+			"Auf Datenträger kopieren": "34509",
+			"Protokolle": "34510",
+			"Bestätigungsschreiben anzeigen": "34785",
+			"eVersandliste anzeigen": "34784"
+		}
+		"Früherkennungskoloskopie": {
+			"Export": "34395",
+			"Auf Datenträger kopieren": "34396",
+			"Protokolle": "34397",
+			"Bestätigungsschreiben anzeigen": "34786",
+			"eVersandliste anzeigen": "34787",
+			"Erinnerungsliste": "34399"
+		}
+		"Hörgeräteversorgung": {
+			"Export": "35075",
+			"Auf Datenträger kopieren": "35076",
+			"Dokumentationsübersicht": "35081",
+			"Wiederversand": "35091"
+		}
+		"Direktabrechnung": {
+			"Vorbereiten": "34561",
+			"Archivieren": "34568",
+			"Reaktivieren": "34569",
+			"Datenträger erstellen": "34630"
+		}
+		"Verordnungsdatenexport": {
+			"Hausarztzentrierte Versorgung": "35212",
+			"S3C": "35115"
+		}
+	}
+
+	"Privat": {
+		"Drucken": "32888",
+		"Mahnen": "32958",
+		"Überweisungsträger drucken": "33071",
+		"Listen": {
+			"Auswahlliste": "33023",
+			"Behandlungsliste": "32891",
+			"Ausgangsbuch": "33125",
+			"Offene Posten": "32892",
+			"Mahnliste": {
+				"Alle": "33145",
+				"Mahnstufe 1": "33142",
+				"Mahnstufe 2": "33143",
+				"Mahnstufe 3": "33144",
+				"Mahnbescheid": "34192",
+				"Fällige": "33850"
+			}
+			"Quittungsliste": "32893",
+			"Stornierte Restbeträge": "34864",
+			"Journal": "32894",
+			"Stornierte": "33851",
+			"Buchungsliste": "33841",
+			"Rechnungen  Buchungen": "33842",
+			"Rechnungen  Mahnungen": "33844",
+			"Kostenplan": "34067",
+			"Faktorzuordnungen": "34155",
+			"Quittungsliste löschen": "32895",
+			"Sachkostenaufstellung": "34080",
+			"KH-Abschlag- und Vorteilsausgleich": "34156"
+		}
+		"privadis": {
+			"Vorbereiten": "35030",
+			"Versenden": "35031",
+			"Erneut versenden": "35032",
+			"Datenträger erstellen": "35033",
+			"Versandstatus prüfen": "35036",
+			"Rechnungen quittieren": "35034",
+			"Onlineportal": "35035",
+			"Bonitätsprüfung": "35049",
+			"Kaufanfrage": "35050",
+			"Zahlungsverhalten": "35133",
+			"Einwilligungserklärung": "35051",
+			"Informationen zu privadis": "35040",
+			"Potenzialassistent": "61268"
+		}
+		"CGM eABRECHNUNG": {
+			"Aktivieren": "61271",
+			"Deaktivieren": "61272",
+			"Versenden": "61273",
+			"Statistik": "61274",
+			"Archiv": "61275",
+			"Dokumente": {
+				"Patienteninformation": "35170",
+				"Praxisinformation": "35171",
+				"Datenschutzerklärung": "35172",
+				"Musterrechnung": "35173"
+			}
+		}
+		"CGM eRECHNUNG": {
+			"Institution": {
+				"Aktivieren": "61283",
+				"Deaktivieren": "61284",
+				"Historie": "61286"
+			}
+			"Patient": {
+				"Aktivieren": "61288"
+			}
+		}
+		"mediserv": {
+			"Abrechnungsdatei erstellen": "33156",
+			"Abrechnungsdatei senden": "33157",
+			"Rechnungen quittieren": "33158",
+			"Kontoauszug": "33177"
+		}
+		"PAD": {
+			"Vorbereiten": "32948",
+			"Datenträger erstellen": "32950",
+			"Rechnungen quittieren": "33024"
+		}
+		"Lastschrift": {
+			"Erstellen": "34124",
+			"Quittieren": "34112"
+		}
+		"GNR-/Diagnosenkontrolle": "33062"
+	}
+
+	"IGeL": {
+		"ALBIS IGeL": "34077",
+		"IGeL Config": "34097",
+		"IGeL Calc": "34098",
+		"IGeL Web": "34099"
+	}
+
+	"Statistik": {
+		"Anerkannte Psychotherapie": "34470",
+		"BG-Statistik": "33252",
+		"Bonus-Malus": "34427",
+		"Diagnosenstatistik": "33249",
+		"Dienstleister": {
+			"IQ - Premium": {
+				"IQ - Premium-Daten prüfen": "34087",
+				"IQ - Premium-Datei erstellen": "34085",
+				"IQ - Premium-Datei senden": "34086",
+				"Verknüpfungsinformationen": "34084"
+			}
+		}
+		"Freie Statistik": "32961",
+		"Hausarztzentrierte Versorgung": {
+			"Praxisübergabe": "35191"
+		}
+		"Leistungsstatistik": {
+			"APK-Liste": "34471",
+			"Arztfallstatistik": "34565",
+			"EBM 2000plus/2009 Ziffernstatistik": "34293",
+			"Kooperationszuschlag": "35009",
+			"Laborstatistik": "35120",
+			"RLV-2009": "34562",
+			"Knappschaft": "35052",
+			"EBM 2000plus Auswertung HVM": "34287",
+			"EBM 2000plus Fallzählung": {
+				"Fallzählung RLV": "34335",
+				"Fallzählung Laborgrundgebühr u. Wirtschaftlichkeitsbonus": "34336",
+				"Fallzählung Grundgebühr/Bereitschaftspauschale": "34338"
+			}
+			"EBM 2000plus Laborausschlussliste": "34292",
+			"EBM 2000plus Scheinzahlliste": "34291",
+			"EBM 2000plus Umsatz-/Punkteverteilung": "34290",
+			"Grafische Auswertung": "34314",
+			"EBM 96": "33140",
+			"Grafische Auswertung": "33141",
+			"Punktzahlstatistik": "34093"
+		}
+		"Medikamenten- und Verordnungsstatistik": "32918",
+		"Offene Komplexe": "34273",
+		"Potenzialassistent": "61233",
+		"Privatstatistik": "33118",
+		"Richtgrößenstatistik": "33203",
+		"Smart-Xchange": "59154",
+		"Tagesprotokoll": "32802",
+		"Überweisungen (eingehend)": "33160",
+		"Zeitstatistik": "34260",
+		"mehr Statistiken": "34262"
+	}
+
+	"Stammdaten": {
+		"Adressen": "33211",
+		"Benutzerverwaltung": {
+			"Benutzerkennwort ändern": "34088",
+			"Benutzerverwaltung": "32921"
+		}
+		"BG/KH": "32916",
+		"Diagnosen": {
+			"Diagnosencenter": "61216",
+			"ICD10": "32966"
+		}
+		"Direktabrechnung": {
+			"Hausarztzentrierte Versorgung": {
+				"Gebührenordnung": "34524",
+				"Aktualisieren": "34526",
+				"Benutzerziffern aktualisieren": "34528",
+				"Scheindaten aktualisieren": "34530",
+				"GNR übersetzen": "34532"
+			}
+		}
+		"EBM": {
+			"EBM 2000plus/2009": {
+				"Gebührenordnung": "34230",
+				"Aktualisieren": "34231",
+				"Scheindaten aktualisieren": "34288"
+			}
+			"EBM 96": {
+				"Gebührenordnung": "33011",
+				"Aktualisieren": "33215",
+				"Laborkennziffern": "33253",
+				"Patientenquittung": "34108"
+			}
+			"EBM alt": "32790"
+		}
+		"Fachrichtungen": "33010",
+		"GOÄ": {
+			"Alt": "32791",
+			"Neu": "33013",
+			"BG/UV": "33307",
+			"Aktualisieren": "33216"
+		}
+		"Hausbesuch": "33231",
+		"ifap": {
+			"ifap praxisCENTER": "34407",
+			"ifap Arzneimitteldatenbank": "34408"
+		}
+		"Karteikarte": {
+			"Befundmasken": "32933",
+			"Bildvorlagen": "32959",
+			"Karteikartenfilter": "32940",
+			"Karteikartenkürzel": "32816",
+			"Kontrolltermine": "33126",
+			"Textvorlagen": "32833"
+		}
+		"Kleine Listen": {
+			"Diagnosen": "32932",
+			"Indikationsschlüssel": "34274",
+			"Medikamente": "32939"
+		}
+		"Krankenkassen": "32799",
+		"Labor": {
+			"Gruppen": "32969",
+			"Ketten": "32985",
+			"Labor": "32962",
+			"Parameter": "32964",
+			"Anzeigeparameter": "33324",
+			"Zuordnungen": "34170",
+			"Ringversuchszertifikate": "34991"
+		}
+		"Leistungsketten": "32849",
+		"OPS": {
+			"EBM": "34259",
+			"Direktabrechnung": "35183"
+		}
+		"Pager": "33300",
+		"Patientengruppen": {
+			"Patientengruppen": "34360",
+			"Patienten zuordnen": "34385"
+		}
+		"PKV-Unternehmen": "33056",
+		"Postleitzahlen": "33059",
+		"Praxisdaten": "32850",
+		"Praxisgruppen": "34446",
+		"Rechnungsarten": "32792",
+		"ToDo-Liste": "33226",
+		"Überweisungsärzte": "32936",
+		"Zusatzstamm": "32915",
+		"GNR-Zusatzliste..": "33009",
+		"Praxisbudgets": "33112"
+	}
+
+	"Optionen": {
+		"Abrechnung": "32798",
+		"ALBIS.MOBILE": "61294",
+		"Antikoagulantien-Pass": "34996",
+		"Arbeitsplatz": "32851",
+		"Arztbrief": "32937",
+		"Aufgabenliste": "34709",
+		"Augenarztmodul": "34420",
+		"Betreuungsstrukturvertrag": "35116",
+		"Bildvorlagen": "33232",
+		"Biometriedaten": "34833",
+		"CGM BMP": "62314",
+		"CGM Heilmittelkatalog": "35203",
+		"CGM LABORDER": "34634",
+		"CGM LIFE": "34076",
+		"CGM PRAXISARCHIV": "35085",
+		"CGM PRAXISTIMER": "34187",
+		"DALE-UV": "34856",
+		"Diagnosen": "32988",
+		"DMP-Assist": "34754",
+		"Formulare": "32927",
+		"Geräte": {
+			"Chipkartenleser\Konnektoren": "32876",
+			"Drucker": "32928",
+			"Kassenschublade": "34139",
+			"Modem": "32968"
+		}
+		"Hausbesuchsmodul": "33114",
+		"HZV": "34997",
+		"ifap": "34316",
+		"ifap impfCENTER": "34977",
+		"ImpfDocNE": "35204",
+		"IMS": "34074",
+		"Karteikarte": "32930",
+		"Kassenbuch": "34980",
+		"Kleine Listen": "33117",
+		"Labor": "32971",
+		"Nachrichten / Kommunikation": "33278",
+		"OPS": "34426",
+		"Patientenfenster": "32886",
+		"Privatliquidation": "33022",
+		"Programmdatum": "32852",
+		"Regionale Feiertage": "32920",
+		"Röntgenbuch": "33855",
+		"Schein": "33020",
+		"Schriftarten": "32821",
+		"Scribor": "33082",
+		"Statistik": {
+			"Arztfallstatistik": "34566",
+			"Bonus-Malus": "34428",
+			"EBM 2000plus": "34286",
+			"Einstellungen": "32877",
+			"Fallwerte": "32882",
+			"Leistungsgruppen": "32883",
+			"Praxis-/Zusatzbudgets": "33116",
+			"Richtgrößen": "33200",
+			"RLV-2009": "59149",
+			"Teilbudgets": "33070",
+			"Verordnungen": "32884",
+			"Verzeichnisse Excel": "33151",
+			"Zuzahlungsbeträge": "33202",
+			"GOÄ-Kapitel": "33205"
+		}
+		"Stempel": "32819",
+		"Terminkalender": "33015",
+		"Verordnungen": "61218",
+		"Versorgungsprogramme": "34788",
+		"Wartezimmer": "32938",
+		"WKB Impfmodul": "34123",
+		"Zeitintervalle": "32925",
+		"Wartung": "34635"
+	}
+
+	"Ansicht	": {
+		"Funktionsleiste": {
+			"Patient": "59425",
+			"Edit": "59426",
+			"Anamnese": "59427",
+			"Ansicht": "59428",
+			"Formular": "59429",
+			"Weitere Formulare": "59440",
+			"Karteikartenkürzel": "59441",
+			"Freie Statistik": "34659",
+			"Nachrichten": "59432",
+			"CGM PRAXISARCHIV": "35089",
+			"CGM PRAXISTIMER": "59433",
+			"Privatliquidation": "35068",
+			"EBM 2000plus Tagesprofil": "7103",
+			"i:blister": "61217",
+			"ifap impfCENTER": "61232",
+			"CGM Assist": "34489",
+			"Praxiswelt": "34490",
+			"CGM ORGANIZER": "34513",
+			"CGM LABORDER": "34656",
+			"Integrierte Versorgung": "59444",
+			"Versorgungsprogramm": "59447",
+			"WKB Impfmodul": "34284",
+			"Cyberknife": "59448",
+			"DALE-UV": "34948",
+			"CGM LIFE eSERVICE": "61231",
+			"HZV": "35095",
+			"Arztzuordnung": "59456",
+			"CGM Visuals": "61279",
+			"Doc4Life": "35205",
+			"Anpassen": {
+				"Patient": "34141",
+				"Edit": "34142",
+				"Anamnese": "34143",
+				"Ansicht": "34144",
+				"Formular": "34145",
+				"Weitere Formulare": "34289",
+				"Karteikartenkürzel": "34315",
+				"Freie Statistik": "34660",
+				"Nachrichten": "34149",
+				"CGM PRAXISTIMER": "34180",
+				"Privatliquidation": "35070",
+				"ifap impfCENTER": "61234",
+				"CGM Assist": "61236",
+				"CGM ORGANIZER": "61253",
+				"CGM LABORDER": "34658",
+				"Cyberknife": "59449",
+				"DALE-UV": "34950",
+				"WKB Impfmodul": "34298",
+				"ImpfDocNE": "34301",
+				"Versorgungsprogramm": "61249",
+				"CGM LIFE eSERVICE": "35187",
+				"HZV": "35103",
+				"Arztzuordnung": "35117",
+				"Menü": "34191"
+			}
+			"Große Symbole ": "33983"
+		}
+		"Statuszeile": "59393",
+		"Nur Stammdaten": "32810",
+		"Geteilt": "32811",
+		"Nur Dokumentation": "32812",
+		"Filterregister anwählen": "34637",
+		"Überlappend": "57650",
+		"Nebeneinander": "57651",
+		"Symbole anordnen": "57649",
+		"Verankern": {
+			"Links": "33219",
+			"Rechts": "33220",
+			"Oben": "33221",
+			"Unten": "33222",
+			"Aufheben": "33224"
+		}
+		"Alle schließen": "32843",
+		"Inhalt": "57668",
+		"Index": "57666",
+		"Tipp des Tages": "33172",
+		"Handbuch": "33258",
+		"Infoseiten ": "33235",
+		"KV Spezifika": "33268",
+		"EBM 2009": "34237",
+		"Heilmittelkatalog": {
+			"Ridler Datentechnik": "33316"
+		}
+		"CGM LABORDER Praxischeck": "61258",
+		"Gesamtübersicht Ambulante Kodierrichtlinien": "34777",
+		"ALBIS Vertriebs- und Servicepartner": "33272",
+		"Service-Mail an Hotline": "34056",
+		"Über": "57664"
+	}
+}
+
+}
+
+
+
+
+

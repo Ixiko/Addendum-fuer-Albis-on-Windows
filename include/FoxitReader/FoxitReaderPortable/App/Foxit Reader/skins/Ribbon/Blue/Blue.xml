@@ -1,0 +1,61 @@
+<STYLE>
+	<VERSION>
+		<TYPE>Ribbon</TYPE>
+	</VERSION>
+	<DESCRIPTION>
+		<NAME>Blue</NAME>
+	</DESCRIPTION>
+	<COLORREF>
+		<BaseBack>181,213,252</BaseBack>
+		<RibbonBarBack>181,213,252</RibbonBarBack>
+		<MenuBack>255, 255, 255</MenuBack>
+		<MenuBorder>121, 142, 171</MenuBorder>
+		<HighlightBack>212,230,254</HighlightBack>
+		<BaseBorder>148,173,204</BaseBorder>
+		<DarkHighlight>171, 201, 237</DarkHighlight>
+		<BaseText>60,74,85</BaseText>
+		<Category>212,230,254</Category>
+		<CategoryText>60,74,85</CategoryText>
+		
+		
+		<LightBorder>199,214,233</LightBorder>
+		<MenuItemBorder>153,174,201</MenuItemBorder>
+		<DarkBorder>132,130,167</DarkBorder>
+		<PanelTab>255,255,255</PanelTab>
+		<DisableBack>188,208,235</DisableBack>
+		<ControlBarCaption>181,213,252</ControlBarCaption>
+
+		<HighlightCaptinButton>221,236,255</HighlightCaptinButton>
+		<PressCaptinButton>147,185,235</PressCaptinButton>
+		<PressCloseCaptinButton>147,185,235</PressCloseCaptinButton>
+		<HighlightCloseCaptinButton>221,236,255</HighlightCloseCaptinButton>
+		
+		<HighlightButton>156,199,254</HighlightButton>
+		<PressButton>123,173,236</PressButton>
+		<CheckButton>134,187,255</CheckButton>
+		<CheckHighlight>156,199,254</CheckHighlight>
+
+		<FormatTab>154,196,241</FormatTab>
+		<FormatTabText>30,102,192</FormatTabText>
+		<FormatTabLine>181,213,252</FormatTabLine>
+		<CategoryCaptionBack>154,196,241</CategoryCaptionBack>
+		<CategoryCaptionTobLine>123,171,231</CategoryCaptionTobLine>
+
+		<MenuHighlightText>73,73,73</MenuHighlightText>
+		<MenuText>0,0,0</MenuText>
+	
+		<HighlightText>0,0,0</HighlightText>
+		<DisableText>120,141,168</DisableText>
+		<CategoryTabHightText>30,102,192</CategoryTabHightText>
+		<RibbonSliderZoom>40,40,40</RibbonSliderZoom>
+		<ZoomSliderLine>180,180,180</ZoomSliderLine>
+
+		<MainPanel>56,99,169</MainPanel>
+		<MainPanelBtnHight>32,81,152</MainPanelBtnHight>
+		<MainPanelText>255,255,255</MainPanelText>
+		<MainPanelBtnCheck>69,119,194</MainPanelBtnCheck>
+
+		<MDITab>181,213,252</MDITab>
+		<MDIActiveTab>212,230,254</MDIActiveTab>
+	</COLORREF>
+</STYLE>

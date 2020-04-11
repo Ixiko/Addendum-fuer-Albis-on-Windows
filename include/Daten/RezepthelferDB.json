@@ -1,0 +1,222 @@
+﻿{
+	"1":{
+		"Beschreibung": "Kompressionsstr\u00fcmpfe verordnen",
+		"Bezeichner": "Kompressionsstr\u00fcmpfe, L\u00e4nge: Unterschenkel, Fußspitze: geschlossen",
+		"Medikamente": [
+			"Paar Kompressionsstr\u00fcmpfe KKL 2",
+			"Unterschenkellang mit geschlossener Fu\u00dfspitze",
+			"Diagnose: Varizen der unteren Extremit\u00e4ten bds.",
+			"",
+			"",
+			""
+		],
+		"Optionen": "",
+		"RezeptTyp": "Hilfsmittel",
+		"Zusaetze": [
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		]
+	},
+	"2":{
+		"Beschreibung": "Kompressionsstr\u00fcmpfe verordnen",
+		"Bezeichner": "Kompressionsstr\u00fcmpfe, L\u00e4nge: Unterschenkel, Fußspitze: offen",
+		"Medikamente": [
+			"Paar Kompressionsstr\u00fcmpfe KKL 2",
+			"Unterschenkellang mit offener Fu\u00dfspitze",
+			"Diagnose: Varizen der unteren Extremit\u00e4ten bds.",
+			"",
+			"",
+			""
+		],
+		"Optionen": "",
+		"RezeptTyp": "Hilfsmittel",
+		"Zusaetze": [
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		]
+	},
+	"3":{
+		"Beschreibung": "Kompressionsstr\u00fcmpfe verordnen",
+		"Bezeichner": "Kompressionsstr\u00fcmpfe, L\u00e4nge: Oberschenkel, Fußspitze: offen",
+		"Medikamente": [
+			"Paar Kompressionsstr\u00fcmpfe KKL 2",
+			"Oberschenkellang mit offener Fu\u00dfspitze",
+			"Diagnose: Varizen der unteren Extremit\u00e4ten bds.",
+			"",
+			"",
+			""
+		],
+		"Optionen": "",
+		"RezeptTyp": "Hilfsmittel",
+		"Zusaetze": [
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		]
+	},
+	"4":{
+		"Beschreibung": "Kompressionsstr\u00fcmpfe verordnen",
+		"Bezeichner": "Kompressionsstr\u00fcmpfe, L\u00e4nge: Oberschenkel, Fußspitze: geschlossen",
+		"Medikamente": [
+			"Paar Kompressionsstr\u00fcmpfe KKL 2",
+			"Oberschenkellang mit geschlossener Fu\u00dfspitze",
+			"Diagnose: Varizen der unteren Extremit\u00e4ten bds.",
+			"",
+			"",
+			""
+		],
+		"Optionen": "",
+		"RezeptTyp": "Hilfsmittel",
+		"Zusaetze": [
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		]
+	},
+	"5":{
+		"Beschreibung": "ein Oberarmblutdruckme\u00dfger\u00e4t",
+		"Bezeichner": "Blutdruckmessger\u00e4t",
+		"Medikamente": [
+			"vollautomatisches Oberarmblutdruckme\u00dfger\u00e4t",
+			"Dgn: schwer einstellbarer Bluthochdruck",
+			"",
+			"",
+			"",
+			""
+		],
+		"Optionen": "",
+		"RezeptTyp": "Hilfsmittel",
+		"Zusaetze": [
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		]
+	},
+	"6":{
+		"Beschreibung": "Handgelenkschiene z.B. bei Carpaltunnelsyndrom",
+		"Bezeichner": "Handgelenkschiene",
+		"Medikamente": [
+			"Handgelenksschiene rechts",
+			"Dgn: Carpal-Tunnel-Syndrom",
+			"",
+			"",
+			"",
+			""
+		],
+		"Optionen": "",
+		"RezeptTyp": "Hilfsmittel",
+		"Zusaetze": [
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		]
+	},
+	"7":{
+		"Beschreibung": "BORT Handgelenksschiene bei Carpaltunnelsyndrom",
+		"Bezeichner": "Handgelenksschiene BORT CTS",
+		"Medikamente": [
+			"BORT Handgelenksschiene Pos.Nr. 05.07.02.3013",
+			"Dgn: Carpaltunnelsyndrom ... Hand",
+			"",
+			"",
+			"",
+			""
+		],
+		"Optionen": "",
+		"RezeptTyp": "Hilfsmittel",
+		"Zusaetze": [
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		]
+	},
+	"8":{
+		"Beschreibung": "Verschreibung eines Inhaliergerätes für Patienten mit häufigen Lungeninfekten",
+		"Bezeichner": "Ultrasschallfeinvernebler",
+		"Medikamente": [
+			"Ultraschallfeinvernebler mit Zubehör",
+			"Dgn: rezidivierende pulmonale Infekt bei ...",
+			"",
+			"",
+			"",
+			""
+		],
+		"Optionen": "",
+		"RezeptTyp": "Hilfsmittel",
+		"Zusaetze": [
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		]
+	},
+	"9":{
+		"Beschreibung": "Verbandsschuhe für diverse Indikationen",
+		"Bezeichner": "1 Paar Verbandsschuhe",
+		"Medikamente": [
+			"1 Paar Verbandschuhe",
+			"Dgn: Ulcera der Zehen bds.",
+			"",
+			"",
+			"",
+			""
+		],
+		"Optionen": "",
+		"RezeptTyp": "Hilfsmittel",
+		"Zusaetze": [
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		]
+	},
+	"10":{
+		"Beschreibung": "meine Standard-Medikamente zur Therapie einer exacerbierten COPD",
+		"Bezeichner": "exacerbierte COPD (Medikamentenliste)",
+		"Medikamente": [
+			"Prednisolon 10mg GALEN TAB N1 20 St",
+			"Prednisolon 20mg GALEN TAB N1 20 St",
+			"Salbutamol 1A Pharma 0.1mg DOS N2 2 St",
+			"Foster 100/6\u00b5g 120 Huebe DOS N2 1 St",
+			"Roxithromycin 300 Heumann FTA N1 7 St",
+			""
+		],
+		"Optionen": "Einnahmeplan",
+		"RezeptTyp": "",
+		"Zusaetze": [
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		]
+	}
+}

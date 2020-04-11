@@ -1,0 +1,40 @@
+### Captured HotKey's like Strg+F9 and Strg+Shift
+([A-Za-z]+\+[A-Za-z0-9]+)
+
+### Captures HotKey's like Strg+Shift+N and Strg+Shift+F11
+([A-Za-z]+\+[A-Za-z0-9]+\+[A-Za-z0-9]+)
+
+### Captures HotKey's like  Strg+Alt+Shift+U and Strg+Alt+Shift+F8
+([A-Za-z]+\+[A-Za-z0-9]+\+[A-Za-z0-9]+\+[A-Za-z0-9])
+
+### Captures HotKey's like F1....F9
+(\s[A-Z][0-9]\s)
+
+### Captures HotKey's like F10,F11,F12....
+(\s[A-Z][0-9]+\s)
+
+### Captures all signs between to including tabs
+## examples: Öffnen per Chipkarte (Gerät 1)			32801
+						SchließenSchließen + Öffnen				32803
+						HzV-Teilnahmestatus prüfen				32905
+						In EBM 2000plus konvertieren			32916
+##
+
+\t([A-Za-zßüäöÜäö!]+)
+\t([A-Za-zßüäöÜäö!\-0-9\s]+)\w+\t
+\t([A-Za-zßüäöÜäö!\-0-9\s\(\)]+)\w+\t
+\t([A-Za-zßüäöÜäö\)\(+!\-0-9\s)]+)\w+\t
+<shortest regex string to find all chars beetween to tabs>
+\t(.+)\t
+((?<=(\t))(.+)(?=\t))
+[^\t](.+)[^\t]
+[^\t]+((A-Z)*)[^\t][^\d]
+[^\t]+[^\t][\D][^\t]+
+[^\t]+.+[^\t][\D][^\t] und "\0":
+
+### Captures the numbers
+("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)
+(([0-9])+(\.{0,1}([0-9]))*)+
+
+### Captures only tabs
+\t([^\w]*)\t
