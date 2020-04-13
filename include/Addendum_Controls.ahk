@@ -683,7 +683,7 @@ SetError(ErrorValue, ReturnValue) {                                             
 
 ;\/\/\/\ Funktionen prüfen die erfolgreiche Durchführung ihrer SteuerelementeInteraktion /\/\/\/
 
-VerifiedClick(CName, WTitle:="", WText:="", WinID:="", WaitClose := false) {  	;-- 4 verschiedene Methoden um auf ein Control zu klicken
+VerifiedClick(CName, WTitle:="", WText:="", WinID:="", WaitClose:=false) {   	;-- 4 verschiedene Methoden um auf ein Control zu klicken
 
 		tmm:= A_TitleMatchMode, cd:=A_ControlDelay, EL:= 0
 		SetTitleMatchMode, 2
@@ -736,7 +736,7 @@ VerifiedClick(CName, WTitle:="", WText:="", WinID:="", WaitClose := false) {  	;
 return (EL = 0 ? 1 : 0)
 }
 
-VerifiedCheck(CName, WTitle:="", WText:="", WinID:="", CheckIt := 1) {        	;-- Fensteraktivierung + ControlDelay auf -1 + Kontrolle ob das Control wirklich checked ist jetzt
+VerifiedCheck(CName, WTitle:="", WText:="", WinID:="", CheckIt:=true) {        	;-- Fensteraktivierung + ControlDelay auf -1 + Kontrolle ob das Control wirklich checked ist jetzt
 
 		; 02.08.2018 - neuer Parameter: CheckIt. Wenn dieser 1, also gesetzt ist, wird ein Häkchen gesetzt , bei 'false' entfernt.
 		; die Funktion prüft nicht, ob das Setzen oder Entfernen überhaupt notwendig ist, wenn es schon gesetzt oder nicht gesetzt ist
@@ -780,11 +780,13 @@ VerifiedCheck(CName, WTitle:="", WText:="", WinID:="", CheckIt := 1) {        	;
 			Control	, % command,, % CName, % WTitle, % WText
             sleep, 50
 			ControlGet, isChecked, checked,, % CName, % WTitle, % WText
-			sleep, 50
 		} until (isChecked = CheckIt)
 
 		SetControlDelay	, % cd
 		SetTitleMatchMode, % tmm
+
+		If ChecktIt
+			return (isChecked = CheckIt ? true : false)
 
 return ErrorLevel
 }
@@ -882,7 +884,7 @@ VerifiedSetText(CName:="", NewText:="", WTitle :="", delay:=200, WText:="") { 	;
 
 	} until (ControlGetText(CName, WTitle, WText) = NewText)
 
-return WTitle
+return (ControlGetText(CName, WTitle, WText) = NewText ? true : false)
 }
 
 UpSizeControl(WinTitle, WinClass, UpSizedControl, ExpandDown                      	;-- changes the width and height of a control element and repositions the controls below and to the right of it

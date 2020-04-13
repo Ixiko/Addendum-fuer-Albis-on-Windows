@@ -2,13 +2,13 @@
 
 #### Extends the possibilities through surface analysis and manipulation
 
-### Version 1.27 vom 03.02.2020
+### Version 1.29 vom 09.04.2020
 lauffähig ab Autohotkey_H-Version  1.1.32.00 Unicode 64bit - es sind Autohotkey_L sowie Autohotkey_H (Multithread Unicode 64bit - Version) notwendig, geschrieben für Albis ab Version 18.40
 
 ![](Docs\Trenner.png)
 
 ### DIES IST KEINE OFFIZIELLE ERWEITERUNG FÜR ALBIS!
-#### Der Hersteller der Praxissoftware Albis*, die Compugroup AG, hat mit dieser Software nichts zu tun, geschweige denn, wurde diese offiziell durch die CompuGroup AG legitimiert!
+##### Der Hersteller der Praxissoftware Albis*, die Compugroup AG, hat mit dieser Software nichts zu tun, geschweige denn, wurde diese offiziell durch die CompuGroup AG legitimiert!
 ###### * Arztinformationssystem (AIS), Arztsoftware, Praxissoftware, Praxisverwaltungssoftware, Praxisverwaltungssystem (PVS), Praxismanagementsoftware oder Ordinationsmanagementsoftware
 <br>
 
@@ -38,6 +38,16 @@ lauffähig ab Autohotkey_H-Version  1.1.32.00 Unicode 64bit - es sind Autohotkey
 <h3> &#9733 alternatives Tagesprotokoll </h3>
 * nach Computern getrenntes Tagesprotokoll. Dies könnte für einzelne Analysen interessant sein
 
+<h3> &#9733 Anzeige v. PDF Dokumenten und JPG-Bilder im  Vorlagenverzeichnis </h3>
+
+* werden bei jedem Patienten im Albis-Patientenfenster angezeigt
+* Befunde können dann von dort ohne Umweg in die Patientenakte importiert werden
+* das **Posteingangsdatum** (Erstellungsdatum der Datei) wird beim Import in die Patientenakte berücksichtigt
+
+<h3> &#9733 Unterstützung der PDF-Signierung </h3>
+
+durch Druck auf einen Hotkey wird die aktuell im FoxitReader geöffnete PDF Datei signiert. (eine Signatur müssen Sie vorher im FoxitReader erstellt haben). Dadurch ist sogar eine ***gesetzeskonforme und rechtssichere Signierung*** der Dateien möglich. **Achtung:** es gibt keine kostenlose Software zur digitalen Signierung. Den [FoxitReader](https://www.foxitsoftware.com/de/pdf-reader/) müssen Sie bei professioneller Nutzung liszensieren lassen! Ebenso die genutzten Command-Line-Tools - [xpdf-Tools](http://www.xpdfreader.com/) und pdftk.
+
 <h3> &#9733 Menusuche </h3>
 * Finden und Aufrufen von Menupunkten im Albismenu
 
@@ -57,7 +67,11 @@ lauffähig ab Autohotkey_H-Version  1.1.32.00 Unicode 64bit - es sind Autohotkey
 - integrierter Abruf von Laborwerten
 
 <h3> &#9733 Kontextsensitive Texterweiterungen </h3>
-* Erkennung des Kontext in der Krankenakte anhand der Albiskürzel (z.B. lko, dia, bef, info). Damit sind *on-the-fly* Texterweiterungen wie bei den *Auto-ICD-Diagnosen* möglich.
+* Erkennung des Kontext in der Krankenakte anhand der Albiskürzel (z.B. lko, dia, bef, info). 
+
+<h3> &#9733 Unterstützung des Laborabrufes </h3>
+- Übernimmt automatisch nach manuellem Start des Laborabrufes die weiteren Vorgänge bis hin zum Übertragen der Befunde ins Laborblatt
+
 
 <h3> &#9733 Funktionsbibliothek für eigene Skriptentwicklung </h3>
 * **106 Funktionen** zur Steuerung von Albis sind für die Entwicklung eigener Skripte vorhanden 
@@ -68,14 +82,9 @@ lauffähig ab Autohotkey_H-Version  1.1.32.00 Unicode 64bit - es sind Autohotkey
 
 **<u>Der Posteingang für Befunde</u>**
 
-- **Auflistung** aller neuen Befunde oder nur **patientenbezogene Anzeige** von Neueingängen
-- **Anzeige** in **alphabetischer** oder nach **Posteingangsdatum** von **Patientenname**, **Untersuchungsart**, **Untersuchungsdatum** und **Anzahl der PDF-Seiten** in der App-Oberfläche
-- **PDF-Befunde** können per einfachem Klick als **Vorschau** angezeigt werden 
-- **Umbenennen** oder **Löschen** von Dateien sind direkt aus der App möglich
-- **Übertragen der Befunde** direkt aus der Oberfläche heraus in die richtigen Patientenakten (Skript gleicht Tipfehler von Patientennamen aus)
-- das **Posteingangsdatum** wird auch beim Import in die Patientenakte berücksichtigt
-- **Unterstützung der Signierung** einer oder mehrerer PDF-Dateien (eine Signatur müssen Sie vorher im FoxitReader erstellen - mit oder ohne Passwort). Dadurch ist sogar eine ***gesetzeskonforme und rechtssichere Signierung*** der Dateien möglich. - **Achtung:** es gibt keine kostenlose Software zur digitalen Signierung. Den [FoxitReader](https://www.foxitsoftware.com/de/pdf-reader/) müssen Sie bei professioneller Nutzung liszensieren lassen! Ebenso die genutzten Command-Line-Tools - [xpdf-Tools](http://www.xpdfreader.com/) und pdftk.
-- weitere Funktionen und am liebsten automatisierte Routinen für Dateibenennung (Erkennen von Patientennamen im OCR-Text, Absender und Untersuchungsart) sind in Planung oder im Testbetrieb 
+- **Auflistung** neuer Befunde (pdf oder jpg) eines Patienten über ein direkt in das Patientenfenster eingeblendetes Gui
+- **Import der Befunde** von hier direkt in die Patientenakte 
+- das **Posteingangsdatum** (Erstellungsdatum der Datei) wird beim Import in die Patientenakte berücksichtigt
 
 <br>
 
@@ -97,7 +106,7 @@ lauffähig ab Autohotkey_H-Version  1.1.32.00 Unicode 64bit - es sind Autohotkey
 Erstellen Sie ein Tagesprotokoll und nutzen Sie diese Modul um von der Compugroup nicht abgedeckte Regeln zu möglichen Abrechnungsziffern zu entwerfen oder nutzen Sie das Skript um Patienten bestimmten Gruppen zuzuordnen oder um eine erweiterte Statistik durchführen zu können
 <br>fertige Statistiken:
 
-- **freie Statistik** - mittels *RegEx* in Tagesprotokollen suchen 
+- **freie Statistik** - mittels *RegEx* in Tagesprotokollen suchen (nur Gui fertig)
 - **Patienten für die Vorsorgeliste suchen** - findet Patienten bei denen eine Vorsorgeuntersuchung (GVU und/oder Hautkrebsscreening durchgeführt werden kann)
 - **nach fehlenden GB Ziffern suchen** - erstellt eine Liste von Patienten bei denen der geriatrische Basiskomplex noch nicht abgerechnet wurde
 - **fehlende Chronikerziffern** - erstellt eine Liste von Patienten bei denen die Ziffern 03220 oder 03221 nicht abgerechnet wurden, obwohl dies in den Vorquartalen erfolgt war 
@@ -122,7 +131,7 @@ Erstellen Sie ein Tagesprotokoll und nutzen Sie diese Modul um von der Compugrou
 
 **<u>Die Automatisierung für den Abruf der Laborwerte</u>**
 
-- der Abruf der Laborwerte ist jetzt teilautomatisiert im Addendum-Skript integriert
+- der Abruf der Laborwerte ist jetzt teilautomatisiert und ins Addendum-Skript integriert
 - Skript erkennt einzelne Abschnitte des Abrufs von Labordaten und übernimmt dann die immer wieder kehrenden Eingabetätigkeiten
 
 - erkannt werden:
@@ -169,7 +178,7 @@ Erstellen Sie ein Tagesprotokoll und nutzen Sie diese Modul um von der Compugrou
 
 - Lassen Sie die Skripte am besten in den Ordnern in denen diese nach Entpacken sind, da die Programmbibliotheken per relativem Pfadbezug hinzugeladen werden
 
-- es lohnt sich nicht ein einzelnes Skript herunter zu laden, da Bezüge und Aufrufe untereinander bestehen, manche Skripte kommunizieren auch untereinander. Geplant ist eine Art Serverskript welches den Datenaustausch zwischen den einzelnen Computern erleichtern wird.
+- es lohnt sich nicht ein einzelnes Skript herunter zu laden, da Bezüge und Aufrufe untereinander bestehen, manche Skripte kommunizieren auch untereinander. 
 
 - **DENKEN** sie immer an den **BACKUP** ihrer wichtigen Daten!
 
@@ -192,7 +201,7 @@ Erleichtern Sie den Datendiebstahl nicht! Die Daten haben nicht nur im DarkNet e
 
 DIE SKRIPTE SCHREIBEN NICHTS IN IHRE DATENBANK! NOCH LESEN SIE ETWAS AUS IHRER DATENBANK AUS! SIE MACHEN DAS, WAS SIE AUCH TÄGLICH MACHEN: SIE ARBEITEN *!AUSSCHLIESSLICH!* MIT DER PROGRAMMOBERFLÄCHE! ES GIBT AUCH KEINERLEI FUNKTIONEN DIE IRGENDETWAS IN DEN AKTEN ODER IN IHREN DATEN LÖSCHEN WÜRDEN OHNE MINDESTENS ZUVOR EIN BACKUP DESSEN ANZULEGEN! ES WIRD KEINE INTERNETVERBINDUNG BENÖTIGT! DIE SKRIPTE VERSENDEN KEINE DATEN ÜBER DAS INTERNET AN IRGENDWEN!
 
-Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem normalen Texteditor lesen (Einschränkung: 2 Funktionen mit Maschinencode (Assembler) - einsehbar im Autohotkey-Forum). Es ist nicht notwendig die Skripte zu kompilieren *(in eine exe-Datei umzuwandeln)*!
+Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem normalen Texteditor lesen (Einschränkung: 2 Funktionen mit Maschinencode (Assembler) - einsehbar im Autohotkey-Forum). 
 
 #### *RECHTLICHE HINWEISE UND DIE LIZENSIERUNGSBEDINGUNGEN FINDEN SIE AM ENDE DES DOKUMENTES!*
 

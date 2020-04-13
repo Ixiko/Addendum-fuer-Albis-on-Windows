@@ -117,8 +117,6 @@ Beispiel:| **08.12.2018** | **F+** | IPC - Inter Process Communication - zwische
 		global AutoDocCalled	:= 0                                      	; flag für AutoDoc Funktion welche nicht mehrfach gestartet werden kann (liest mehrfach aus der Ini aber nie richtig)
 		global GVU                	:= Object()                           	; enthält Daten für die Vorsorgeautomatisierung
 		global Mdi                	:= Object()                            	; enthält Daten zu den MDI-Controls in Albis (Addendum_Albis.ahk)
-		;global WinStack         	:= Object()                           	; Sammler für geöffnete Fenster
-		;WinStack.FoxitReader 	:= Object()
 		global ScanPool        	:= Object()                            	; enthält die Dateinnamen aller im BefundOrdner vorhandenen Dateien
 
 		global dpiF               	:= screenDims().DPI / 96       	; DPI Factor
@@ -367,7 +365,31 @@ Beispiel:| **08.12.2018** | **F+** | IPC - Inter Process Communication - zwische
 		ReadInfoWindowSettings()
 	;}
 
+	; Praxisdaten                                             	;{       für Outlook, Telegram Nachrichtenhandling
 
+		Addendum.Praxis := Object()
+		Addendum.Praxis.Name            	:= IniReadExt("Allgemeines", "PraxisName")
+		Addendum.Praxis.Strasse           	:= IniReadExt("Allgemeines", "Strasse")
+		Addendum.Praxis.PLZ                	:= IniReadExt("Allgemeines", "PLZ")
+		Addendum.Praxis.Ort                	:= IniReadExt("Allgemeines", "Ort")
+		Addendum.Praxis.Sprechstunde     	:= IniReadExt("Allgemeines", "Sprechstunde")
+		Addendum.Praxis.Email                 := []
+		Addendum.Praxis.Urlaub             	:= []
+
+		Loop
+			If !InStr((tmp :=  IniReadExt("Allgemeines", "EMail" A_Index)), "ERROR")
+				Addendum.Praxis.Email.Push(tmp)
+			else
+				break
+
+		Loop
+			If !InStr((tmp :=  IniReadExt("Allgemeines", "Urlaub" A_Index)), "ERROR")
+				Addendum.Praxis.Urlaub.Push(tmp)
+			else
+				break
+
+
+	;}
 	;}
 
 	;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1016,21 +1038,32 @@ InChronicList() {
 			If (PatID = ChronikerID)
 				return
 
+	; Nutzer abfragen ob Pat. aufgenommen werden soll
 		hinweis := "Pat: " oPat[PatID].Nn ", " oPat[PatID].Vn ", geb. am: " oPc[PatID].Gd "`n"
 		hinweis .= "ist nicht als Chroniker vermerkt.`nMöchten Sie automatisch alle Eintragungen`ninnerhalb von Albis vornehmen lassen?"
 
-		MsgBox, 0x1024, Addendum für Albis on Windows, % hinweis
+		MsgBox, 0x1024, Addendum für Albis on Windows, % hinweis, 10
 		IfMsgBox, Yes
+		If (PatID = AlbisAktuellePatID())
 		{
+				ChronCb	:= false
+				Indikation	:= false
+				PatGruppe:= false
+
+			; Ziffer der Liste hinzufügen und in die Datei speichern
+				Addendum.Chroniker.Push(PatID)
+				FileAppend, % PatID "`n", % Addendum.DBPath "\DB_Chroniker.txt"
+
+			; Patientengruppierung vornehmen  ;{
 
 				failed := false
 
-			; Patientengruppierung vornehmen  ;{
 				Albismenu("34362", "Patientengruppen für ahk_class #32770")
 				ControlGet, result, List, , % "SysListView321", % "Patientengruppen für ahk_class #32770"
+
 				If !InStr(result, GruppenName) {
 
-							PraxTT("Patient ist nicht der Chronikergruppe zugeordnet", "3 3")
+							PraxTT("Patient ist nicht der Chronikergruppe zugeordnet", "3 2")
 
 						; click auf NEU
 							VerifiedClick("Button2", "Patientengruppen für ahk_class #32770")
@@ -1050,13 +1083,13 @@ InChronicList() {
 											break
 										}
 
-									PraxTT("Zeile: " ListBoxRow, "3 3")
-
 									If (ListBoxRow > 0) 	{
 
 										; den Listboxeintrag mit der Chronikergruppe auswählen
 											VerifiedChoose("Listbox1", "ahk_id " hwnd, ListBoxRow)
 											VerifiedClick("Button1",  "ahk_id " hwnd)
+
+											PatGruppe := true
 
 									} else
 											failed := true
@@ -1073,6 +1106,7 @@ InChronicList() {
 
 						; drückt auf Abbrechen
 							VerifiedClick("Button7", "Patientengruppen für ahk_class #32770", "", "", true)
+							Sleep 200
 							If WinExist("Patientengruppen für ahk_class #32770")
 								WinClose, % "Patientengruppen für ahk_class #32770"
 
@@ -1086,6 +1120,56 @@ InChronicList() {
 				}
 
 			;}
+
+			; Chroniker Häkchen setzen und bei Ausnahmeindikation (weitere Informationen) diese Ziffer hinzufügen ;{
+
+				failed        	:= false
+				hPersonalien := Albismenu("32774", "Daten von ahk_class #32770") ; Menu 'Personalien'
+
+				If hPersonalien {
+
+						If VerifiedCheck("Chroniker"                      	, "ahk_id " hPersonalien)
+							ChronCb := true
+
+					; weitere Information für nächsten Dialog drücken
+						  VerifiedClick("Weitere In&formationen..."	, "ahk_id " hPersonalien)
+						WinWait, % "ahk_class #32770", % "Adresse des", 2
+
+						If (hInformationen := WinExist("ahk_class #32770 ahk_exe albis", "Ausnahmeindikation")) {
+
+							; Feldinhalt wird ausgelesen, bei fehlender Eintragung wird die Ziffer hinzugefügt
+								ControlGetText, ctext, Edit14, % "ahk_id " hInformationen
+								If !InStr(ctext, "03220") {
+
+										ctext := LTrim(ctext "-03220", "-")
+
+										If VerifiedSetText("Edit14", cText, "ahk_class #32770", 200, "Ausnahmeindikation")
+											indikation := true
+
+										ControlFocus	, 					  % "Edit14", % "ahk_id " hInformationen
+										ControlSend	, % "{Enter}"	, % "Edit14", % "ahk_id " hInformationen
+
+								}
+
+							; Fenster schliessen falls noch geöffnet
+								If WinExist("ahk_class #32770", "Ausnahmeindikation") {
+									ControlClick, Ok	, % "ahk_id " hInformationen
+									WinWaitClose		, % "ahk_id " hInformationen,, 2
+								}
+
+						}
+
+						; Fenster "Daten von " schliessen
+							If WinExist("Daten von", "Anrede")
+								VerifiedClick("Button30", "ahk_id " hPersonalien)
+				}
+
+			;}
+
+				processed := "1. Chronikergruppe     : " (PatGruppe 	? "hinzugefügt" 	: "nicht hinzugefügt") "`n"
+				processed .= "2. Chronikerhäkchen   : " (ChronCb 	? "gesetzt"     	: "nicht gesetzt") "`n"
+				processed .= "2. Ausnahmeindikation: " (indikation 	? "Lk eingefügt"	: "Lk nicht eingefügt") "`n"
+				PraxTT("Eingruppierung abgeschlossen.`n" processed, "6 3")
 
 		}
 
@@ -3718,7 +3802,12 @@ EventHook_WinHandler:                                                           
 							EHWHStatus := false
 							return
 				}
-				else If InStr(EHWText, "Patient hat in diesem Quartal")                                                                  	; in Abhängigkeit des Client wird das Fenster sofort oder verzögert geschlossen
+				else If InStr(EHWText, "ALBIS wartet auf Rückgabedatei")                                                                 	; in Abhängigkeit des Client wird das Fenster sofort oder verzögert geschlossen
+				{
+						If Instr(compname, "Labor")
+							VerifiedClick("Button1", "ahk_class #32770", "ALBIS wartet auf Rückgabedatei")
+				}
+				else If InStr(EHWText, "Patient hat in diesem Quartal")                                                                   	; in Abhängigkeit des Client wird das Fenster sofort oder verzögert geschlossen
 				{
 						VerifiedClick("Button1", "ALBIS ahk_class #32770", "Patient hat in diesem Quartal")
 						EHWHStatus := false
