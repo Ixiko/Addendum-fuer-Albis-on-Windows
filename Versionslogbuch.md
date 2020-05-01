@@ -104,20 +104,22 @@
 | **12.02.2020** | **F+** | nutzt man den FoxitReader lässt sich mit einer einzigen Taste der komplette Vorgang zum Signieren eines Dokumentes starten. Was vorher nicht zuverlässig mit dem ScanPool-Skript funktionierte, läuft jetzt so schnell, das ich den Vorgang optisch ausgebremst halte. Du drückst Deine Wunschtaste im aktiviertem Foxit-Fenster, der Mauszeiger bewegt sich zum Dokumentbereich, zieht dort den Bereich für Dein voreingestelltes PDF-Sign auf, alle folgenden Dialoge samt Checkboxen, Buttons werden gedrückt, die Datei wird mit allen Sicherheitsnachfragen gespeichert und die signierte Datei wird danach sofort geschlossen. Existiert noch ein geöffnetes FoxitReader Fenster wird dieses nach vorne geholt und Du kannst gleich weiterlesen! Zeit für den gesamten Vorgang max. 5s (ausgebremst) - notwendige Eingriffe ein Druck auf eine Taste! That's RPA! ..... und falls Du das nicht brauchst schaltest Du es einfach über das Tray-Menu oder die Addendum.ini aus!  (V1.28) |
 | **12.02.2020** | **F~** | Signieren beschleunigt, RPA Abbrüche beseitigt  |
 | **31.03.2020** | **F~** | Labelfehler bei Ausführung auf einem unbekanntem Client beseitigt, Addendum_Reload/Addendum/Addendum_Monitor/Addendum_Starter - für ausschließlichen Ausführung des Addendum.ahk Skriptes mit AutohotkeyH eingestellt  |
-| **01.04.2020** | **F+** | Addendum_Protocol: ein hinterneinander auftretender Fehlercode wird nicht gesendet und auch nicht protokolliert, damit wie es bei mir vorgekommen ist, nicht über Nacht alle 3-5Sekunden derselbe Fehler gemeldet wird |
 | **04.04.2020** | **F~** | Importvorgang für PDF Datei deutlich (um das circa 5fache) beschleunigt, Erkennung der Dialoge verbessert |
 | **04.04.2020** | **F+** | signierter FoxitTab wird je nach Einstellung automatisch geschlossen |
 | **05.04.2020** | **F+** | der Dateipfad signierter PDF-Dateien wenn diese nach Albis importiert wurden wird zusammen mit der PatientenID in eine Textdatei gespeichert. Dies ist für ein schnelleres Wiederauffinden/Zusammenstellen alle Patientenbefunde gedacht. |
 | **05.04.2020** | **F~** | Addendum_Starter.ahk verbessert: AddendumMonitor.ahk wird nicht mehr doppelt gestartet, wenn es im Hintergrund läuft, falls das Addendum-Skript noch läuft wird gefragt ob es neu gestartet werden soll  |
-| **07.04.2020** | **F~** | öffnen einer Patientenakte aus dem Windows Dateiexplorer heraus, mit Linksklick eine mit einem Patientennamen versehene PDF Datei auswählen und per F6 wird die zugehörige Akte geöffnet, dies erleichtert den Import von Befunden, nicht erkannte Personennamen werden über den Aufruf der ersten 2 Buchstaben des Zu- und Vornamen über den Patient öffnen Dialog in Albis gesucht und bei passenden Namen zum Öffnen angeboten  V1.29 |
+| **07.04.2020** | **F~** | ***** *Öffnen einer Patientenakte aus dem Windows Dateiexplorer heraus*<br>mit Linksklick eine mit einem Patientennamen versehene PDF Datei  auswählen und per F6 wird die zugehörige Akte geöffnet, dies erleichtert den Import von Befunden, nicht erkannte Personennamen werden über den Aufruf der ersten 2 Buchstaben des Zu- und Vornamen über den Patient öffnen Dialog in Albis gesucht und bei passenden Namen zum Öffnen angeboten  **V1.29** |
+| **16.04.2020** | **F~** | kleiner Fehler häufige Wirkung. Addendum hat seine Toolbar mehrfach starten können. Die Toolbar wird jetzt erfolgreich geschlossen, wenn Albis beendet wird. |
+| **21.04.2020** | **F~** | das ***Infofenster*** (Fenster mit Befunden des Patienten) wird nur noch in der Karteikarte gezeichnet und kann im Tray-Menu aus- oder eingeschaltet werden. |
+| **24.04.2020** | **F+** | ***** das Infofester hat jetzt ein Journal erhalten, dort werden alle vorliegenden Befunde im Bildvorlagenverzeichnis (Menu Optionen/Bildvorlagen) aufgelistet. Per Doppelklick startet man die Ansicht über seinen PDF-Viewer. Über ein Rechtsklickmenu lassen sich die Dateien umbenennen, löschen, mit ihrem PDF-Reader ansehen oder man kann sich die zugehörige Patientenakte öffnen lassen. **V1.30** |
+| **29.04.2020** | **F~** | ***** Anzeigeverbesserungen des Infofenster<br>***** die aktuellste FindText-Bibliothek aus dem AHK-Forum wird verwendet, Geschwindigkeits und Erkennungsgenauigkeit ist wesentlich besser jetzt (gebraucht für die Automatisierung des Signartur setzen Vorganges einer PDF Datei)<br>***** verbesserte Erkennung von Speichern unter bestätigen Dialogen des FoxitReader |
+
 
 ![](D:/Eigene Dateien/Eigene Dokumente/AutoIt Scripte/GitHub/Addendum-fuer-Albis-on-Windows/Docs/Trenner_klein.png)
 
 ## ![AddendumFunctions](Docs\Icons\AddendumFunctions.png) Addendum Funktionsbibliotheken (..\Include)
 
 ##### .                                                       *Addendum_**.ahk*
-
-Addendum_Albis.ahk
 
 |     Datum      |  Teil   | Beschreibung                                                 |
 | :------------: | :-----: | :----------------------------------------------------------- |
@@ -276,8 +278,17 @@ Addendum_Albis.ahk
 | **30.01.2020** | **F+** | **AlbisImportiereBild()** - importiert eine jpg Datei in eine Patientenakte |
 | **30.01.2020** | **F~** | **AlbisImportierePdf()** - Performance verbessert, **AlbisUebertrageGrafischenBefund()** und **AlbisKarteikartenFocus()** - Fehlerrückgabe angepasst, Performance und Zuverlässigkeit deutlich verbessert |
 | **03.02.2020** | **F+** | **IfapVerordnung()** - Medikamente lassen sich per Kurzform über einen Funktionsaufruf mit Hilfe von ifap verordnen, dazu muss eine PZN des entsprechenden Medikamentes hinterlegt sein. die Funktion druckt automatisch (auf Nutzernachfrage) zum Medikament hinterlegte Word-Dokumente ohne das Microsoft Word sichtbar wird. Damit erhalten Sie die Möglichkeit selbst entworfene Dosierungsangaben und Patientenhinweise automatisch mit der Medikamentenverordnung auszudrucken oder sie es wird ein Dokument ausgedruckt, welches der Patient z.B. als Einverständniserklärung unterschreiben muss. Sie können auch mehrere Dokumente mit einer Verordnung ausdrucken. Dazu müssen diese aber alle in einem Verzeichnis auf ihrer Festplatte liegen. |
+| **01.04.2020** | **F+** | **Addendum_Protocol** - ein hinterneinander auftretender Fehlercode wird nicht gesendet und auch nicht protokolliert, damit wie es bei mir vorgekommen ist, nicht über Nacht alle 3-5Sekunden derselbe Fehler gemeldet wird |
+| **09.04.2020** | **F+** | **Addendum_DB** - ReadDbf(dbfPath) - rudimentäre Funktion zum Auslesen aller Datensätze einer DBASE Datei. Gibt eine Textvariable zurück die im Anschluss durchsucht oder geparsed werden kann. |
+| **24.04.2020** | **F+** | **Addendum_Controls** - LV_SortArrow Funktion zum visuellen Anzeigen der Sortierungsrichtung in einer Listview  |
+| **28.04.2020** | **F~** | **Addendum_Protocol** - bessere Fehlerausgabe (Layout) und reduzierte Fehlerausgaben (Wiederholungsvermeidung)  |
+| **28.04.2020** | **F+** | **Addendum_Albis** - <br>**AlbisActivateMDIChild(MDITitle)** - aktiviert ein MDI-Child Fenster <br>**AlbisListeSpeichern** - speichert eine in Albis geöffnete Liste in ein gewünschtes Verzeichnis |
+| **28.04.2020** | **F+** | **Addendum_DB** - eigenes Tagesprotokoll speichert mit der PatientenID die Uhrzeit des Patientenaufrufes. |
+
+<br>
 
 ![Praxomat.png](Docs/Icons/Abrechnungshelfer.png) Abrechnungshelfer
+
 | Datum          | Teil     | Beschreibung                                                 |
 | -------------- | -------- | ------------------------------------------------------------ |
 |  **16.12.2019**  |  auswertbare Tagesprotokolle werden als auswählbare Baumstruktur (Treeview) angezeigt und können einzeln oder insgesamt ausgewählt werden. |

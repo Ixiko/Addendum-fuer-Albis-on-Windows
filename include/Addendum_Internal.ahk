@@ -1,15 +1,16 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 04.04.2020 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 27.04.2020 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; INTERNE FUNKTIONEN                                                                                                                                                                                                                          	(15)
+; INTERNE FUNKTIONEN                                                                                                                                                                                                                          	(16)
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; (01) TimeCode                                    	(02) PrintArr                                  	(03) GetHex                                  	(04) GetDec                                  	(05) MCodeU
 ; (06) SetWinEventHook                         	(07) UnhookWinEvent                    	(08) StdOutToVar                          	(09) dirgetparent                           	(10) IsProcessElevated
-; (11) RunAsTask                                   	(12) Json2Obj                               	(13) IniReadExt                              	(14) hk
+; (11) RunAsTask                                   	(12) Json2Obj                               	(13) IniReadExt                              	(14) hk                                          	(15) Errorbox
+; (15) RegRead
 ;1
 TimeCode(DaT) {                                                                                                                  	;-- used for protokoll functions - Month & Time (DaT) = 1 - it's clear!
 
@@ -105,7 +106,7 @@ UnhookWinEvent(hWinEventHook, HookProcAdr) {
 	DllCall( "GlobalFree", "Ptr", HookProcAdr ) ; free up allocated memory for RegisterCallback
 }
 ;8
-StdoutToVar(sCmd, sEncoding:="UTF-8", sDir:="", ByRef nExitCode:=0) {
+StdoutToVar(sCmd, sEncoding:="UTF-8", sDir:="", ByRef nExitCode:=0) {                               	;-- cmdline Ausgabe in einen String umleiten
     DllCall( "CreatePipe",           PtrP,hStdOutRd, PtrP,hStdOutWr, Ptr,0, UInt,0 )
     DllCall( "SetHandleInformation", Ptr,hStdOutWr, UInt,1, UInt,1                 )
 
@@ -332,7 +333,7 @@ Json2Obj( str ) {                                                               
 IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="") {                                                  	;-- eigene IniRead funktion für Addendum
 
 	; beim ersten Aufruf !nur! Übergabe des ini Pfades mit dem Parameter SectionOrFullFilePath
-	; Funktion übersetzt eine geschriebene 1 oder 0 in Wahrheitswerte
+	; Funktion übersetzt eine aus der ini gelesene "1" oder eine "0" als Wahrheitswerte, also "true" oder "false"
 
 		static WorkIni
 
@@ -351,7 +352,7 @@ IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="") {                  
 
 	; Bearbeiten des Wertes vor Rückgabe
 		If InStr(OutPutVar, "ERROR")
-			If (StrLen(DefaultValue) > 0)
+			If (StrLen(DefaultValue) > 0) ; Defaultwert vorhanden, dann diesen Schreiben und Zurückgeben
 				IniWrite, % (OutPutVar := DefaultValue), % WorkIni, % SectionOrFullFilePath, % key
 			else
 				return "ERROR"
@@ -423,5 +424,13 @@ ErrorBox(ErrorString, CallingScript:="", Screenshot:=false) {                   
 
 	FileAppend, % Zeitstempel Computer Skript SC ErrorString "`n", % logpath "\Errorbox.txt"
 
+}
+;16
+RegRead64(path, subkey, valuename:="")	{                                                                           	;-- 64bit RegRead wrapper
+
+	SetRegView 64
+	RegRead, value, % path, % subkey, % valuename
+
+return value
 }
 

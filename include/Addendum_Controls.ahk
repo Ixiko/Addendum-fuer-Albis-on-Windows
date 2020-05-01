@@ -1,9 +1,9 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 13.02.2020 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 24.04.2020 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+ListLines, Off
 ; CONTROLS                                                                                                                                                                                                                                        	(40)
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; GetClassName                                	Control_GetClassNN                     	GetClassNN                                  	GetFocusedControl                        	GetFocusedControlHwnd
@@ -14,7 +14,7 @@
 ; VerifiedClick                                    	VerifiedCheck                                	VerifiedChoose                              	VerifiedSetFocus                            	VerifiedSetText
 ; UpSizeControl
 ; LV_EX_FindString                             	LV_GetItemState                            	LV_GetItemState2                          	LV_GetItemText                             	LV_ItemText
-; LVM_GetText                                   	LVM_GetNext                                	LV_MouseGetCellPos
+; LVM_GetText                                   	LVM_GetNext                                	LV_MouseGetCellPos							LV_SortArrow
 ; RichEdit_FindText                             	RE_FindText                                   	RE_GetSel                                     	RE_GetTextLength                          	RE_ReplaceSel
 ; RE_ScrollCaret                                 	RE_SetSel
 ;_________________________________________________________________________________________________________________________________________________________
@@ -192,7 +192,7 @@ GetButtonType(hwndButton) {                                                     
 Controls(Control, command, WinTitle
 , HiddenText:=true, HiddenWin:=true, MatchModeSpeed:="slow") {                	;-- Universalfunktion für Steuerelemente
 
-	; ********	    ********		Funktion wächst und gedeiht, nachgegossen am 13.02.2020
+	; ********	    ********		Funktion wächst und gedeiht, nachgegossen am 28.04.2020
 	;***	     *    ***	    ***	dependencies: 	Function: ClientToScreen()
 	;***             ***      ***                        	Function: KeyValueObjectFromLists()
 	;***             ***      ***
@@ -221,7 +221,7 @@ Controls(Control, command, WinTitle
 		SetTitleMatchMode    	, % MatchModeSpeed
 		CoordMode              	, Mouse	, Screen
 		CoordMode              	, Pixel	, Screen
-		sleep, 10       	;CoordMode needs a pause to update - https://www.autohotkey.com/boards/viewtopic.php?f=14&t=38467
+		sleep, 10          	; CoordMode needs a pause to update - https://www.autohotkey.com/boards/viewtopic.php?f=14&t=38467
 	;}
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
@@ -229,8 +229,8 @@ Controls(Control, command, WinTitle
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
 		RegExMatch(Control, "[a-zA-Z#]+", class)
 
-		If !InStr(knWinTitle, WinTitle)
-		{
+		If !InStr(knWinTitle, WinTitle) 		{
+
 				knWinTitle	:= WinTitle
 				knWinText := ( WinText = "" ) ? 0 : WinText
 				WinTitle	:= RegExMatch(WinTitle, "^0x[\w]+$")	? ("ahk_id " WinTitle)	: (WinTitle)
@@ -240,6 +240,7 @@ Controls(Control, command, WinTitle
 				WinGet, cClasses	, ControlList			, % WinTitle, ;% WinText                            ; use this for example: "ahk_id " hWin
 				WinGet, cHwnds	, ControlListHwnd	, % WinTitle, ;% WinText
 				Ctrl := KeyValueObjectFromLists(cClasses, cHwnds, "`n", "", "", "", "")                	; ergibt ein Object mit ClassNN als key und handle als value
+
 		}
 	;}
 
@@ -382,7 +383,7 @@ Controls(Control, command, WinTitle
 		else if InStr(command, "Send")                            	{
 				if class in Edit,RichEdit
 				{
-                    RegExMatch(command, "i)(?<=ControlSend\s).*", keys)
+                    RegExMatch(command, "i)(?<=ControlSend|Send\s+).*", keys)
                     ControlSend,, % keys, % "ahk_id " Ctrl[(Control)]
 				}
 		}
@@ -1214,6 +1215,38 @@ LV_MouseGetCellPos(ByRef LV_CurrRow, ByRef LV_CurrCol, LV_LView) {
 	CoordMode, MOUSE, % mMode
 
 return
+}
+
+LV_SortArrow(h, c, d="") {
+
+	; LV_SortArrow by Solar. http://www.autohotkey.com/forum/viewtopic.php?t=69642
+	; h = ListView handle
+	; c = 1 based index of the column
+	; d = Optional direction to set the arrow. "asc" or "up". "desc" or "down".
+
+	static ptr, ptrSize, lvColumn, LVM_GETCOLUMN, LVM_SETCOLUMN
+	if (!ptr)
+		ptr := A_PtrSize ? ("ptr", ptrSize := A_PtrSize) : ("uint", ptrSize := 4)
+		,LVM_GETCOLUMN := A_IsUnicode ? (4191, LVM_SETCOLUMN := 4192) : (4121, LVM_SETCOLUMN := 4122)
+		,VarSetCapacity(lvColumn, ptrSize + 4), NumPut(1, lvColumn, "uint")
+	c -= 1, DllCall("SendMessage", ptr, h, "uint", LVM_GETCOLUMN, "uint", c, ptr, &lvColumn)
+	if ((fmt := NumGet(lvColumn, 4, "int")) & 1024) {
+		if (d && d = "asc" || d = "up")
+			return
+		NumPut(fmt & ~1024 | 512, lvColumn, 4, "int")
+	} else if (fmt & 512) {
+		if (d && d = "desc" || d = "down")
+			return
+		NumPut(fmt & ~512 | 1024, lvColumn, 4, "int")
+	} else {
+		Loop % DllCall("SendMessage", ptr, DllCall("SendMessage", ptr, h, "uint", 4127), "uint", 4608)
+			if ((i := A_Index - 1) != c)
+				DllCall("SendMessage", ptr, h, "uint", LVM_GETCOLUMN, "uint", i, ptr, &lvColumn)
+				,NumPut(NumGet(lvColumn, 4, "int") & ~1536, lvColumn, 4, "int")
+				,DllCall("SendMessage", ptr, h, "uint", LVM_SETCOLUMN, "uint", i, ptr, &lvColumn)
+		NumPut(fmt | (d && d = "desc" || d = "down" ? 512 : 1024), lvColumn, 4, "int")
+	}
+	return DllCall("SendMessage", ptr, h, "uint", LVM_SETCOLUMN, "uint", c, ptr, &lvColumn)
 }
 
 ;\/\/ RICHEDIT \/\/

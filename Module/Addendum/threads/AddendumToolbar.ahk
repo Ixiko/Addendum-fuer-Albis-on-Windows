@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . .                                                                                                                                                          	. . . . . . . . . .
 ; . . . . . . . . .                                                             	ADDENDUM  TOOLBAR                                                     	. . . . . . . . . .
-											                			 Version:="0.5" , vom:="28.01.2020"
+											                			 Version:="0.6" , vom:="29.04.2020"
 ; . . . . . . . . .                                                                                                                                                         	. . . . . . . . . .
 ; . . . . . . . . .  ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"	. . . . . . . . . .
 ; . . . . . . . . .         BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE         	. . . . . . . . . .
@@ -22,6 +22,7 @@
 ;   HINWEIS: dieses Skript wird von Addendum.ahk als eigener Thread gestartet! Es läßt sich aber auch allein ausführen.
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
+; 	Skripteinstellungen                                                 	;{
 	#SingleInstance Force
 	#NoEnv
 	#NoTrayIcon
@@ -30,21 +31,22 @@
 	SetWorkingDir %A_ScriptDir%
 	SetBatchLines -1
 	CoordMode, ToolTip, Screen
+;}
 
-; Script Icon laden
-	hIBitmap:= Create_Addendum_ico(true)
-
-;	VARIABLEN werden festgelegt
+;	VARIABLEN werden festgelegt                                 	;{
+	hIBitmap:= Create_Addendum_ico(true)                                                                          	; Script Icon laden
 	global AlbisID       	:= WinExist("ahk_class OptoAppClass")
 	global AddendumDir	:= FileOpen("C:\albiswin.loc\AddendumDir","r").Read()
 	global oATb				:= Object()
 	global compname 	:= StrReplace(A_ComputerName, "-")                                                	; der Name des Computer auf dem das Skript läuft
 	global Auth           	:= Object()
 			  Auth.Module	:= Object()
+;}
 
-;	verhindert eine mehrfache Ausführung des Skriptes
+;	verhindert eine mehrfache Ausführung des Skriptes 	;{
 	If WinExist("Addendum AlbisToolbar ahk_class AutoHotkeyGui")
 	    ExitApp
+;}
 
 ;	startet die Toolbar
 	Addendum_Toolbar()
@@ -96,8 +98,22 @@ Addendum_Toolbar() {
 	; wird nur fortgesetzt wenn das Albisprogrammfenster vorhanden ist (wartet 3min auf Albis)
 		while, !WinExist("ahk_class OptoAppClass")		{
 				Sleep, 1000
-				If A_Index > 180
+				If (A_Index > 180)
 					ExitApp
+		}
+
+	; wartet bis das Albisfenster fertig erstellt worden ist (AfxControlbar1401 ist vorhanden)
+		Loop {
+			; wartet bis die Albistoolbar angezeigt wird
+				ControlGet, AlbisOwner, HWND,, AfxControlBar1401, ahk_class OptoAppClass
+				If AlbisOwner
+					break
+			; 500ms warten, aber unterbrechbar lassen
+				Loop {
+					Sleep, 50
+					If (A_Index > 9)
+						break
+				}
 		}
 
 	; neue Toolbar mit Albis verbinden
@@ -112,6 +128,7 @@ Addendum_Toolbar() {
 		MsgNum := DllCall("RegisterWindowMessage", Str, "SHELLHOOK")
 		OnMessage(MsgNum, "RedrawToolbar")
 
+	; Hotkey festlegen
 		fnCheckOverlap := Func("CheckOverlap")
 		Hotkey, If, ToolbarWasMoved()
 		Hotkey, ~LButton Up, % fnCheckOverlap
@@ -220,7 +237,7 @@ CheckOverlap() {
 
 	    IsOverlapped	:= false
 
-	; Albis ist minimiert, dann nichts ändern
+	; Albis ist minimiert wenn x<-20 oder y<-20 ist, dann braucht die Funktion nicht ausgeführt werden
 		aw := GetWindowSpot(AlbisWinID())
 		If (aw.X < -20) || (aw.Y < -20)
 			return

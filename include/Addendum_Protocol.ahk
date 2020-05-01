@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 01.04.2020 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 27.04.2020 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -18,6 +18,8 @@ FehlerProtokoll(Exception, MsgToTelegram:= 1) {                                 
 	; 01.04.2020 - it happens that an error was detected all 3-5 second over night. function stores the last exception and compares it with the new one, if its matches they function will immediatly return,
 	;						remark: it will not send a message or write the exception to the protocol file!
 
+	; dependancies: \lib\crypt.ahk
+
 	; static
 		static lastExceptionObject
 		static lastExceptionText
@@ -30,6 +32,10 @@ FehlerProtokoll(Exception, MsgToTelegram:= 1) {                                 
 		q          	:= Chr(0x22)                        	; 0x22 = "
 		Range   	:= 3                                      	; means +- lines to print to errorlog (if I change the code the exeception.line is not corresponding later)
 
+		IniRead, lastMsg, % Addendum.AddendumIni, % compname, % "letzte_Fehlermeldung"
+		RegExMatch(lastMsg, "^\s*time\:\s*(?<time>\d+)\shash\:\s(?<hash>\w+)", msg)
+
+
 	; protocol filename
 		protocol	:= Addendum["AddendumDir"] "\logs'n'data\ErrorLogs\Fehlerprotokoll-" A_MM A_YYYY ".txt"
 
@@ -37,14 +43,6 @@ FehlerProtokoll(Exception, MsgToTelegram:= 1) {                                 
 		FormatTime, time, % A_Now, dd.MM.yyyy HH:mm:ss
 
 	; loads and analyze last written exception to supress an excess of sending error messages
-		If FileExist(protocol) {
-
-				FileRead, lastProtocol, % protocol
-				RegExMatch(lastProtocol, "m)(\<\/(?<Nr>\d+)\>)\n$", lastMessage)
-				RegExMatch(lastProtocol, "m)(\<" lastMessageNr "\>)(?<text>.*)(\<\/" lastMessageNr "\>)", lastMessage)
-
-		} else
-				lastMessageNr := 1
 
 	; generates a readable protocol
 		If IsObject(Exception)  	{
@@ -58,34 +56,40 @@ FehlerProtokoll(Exception, MsgToTelegram:= 1) {                                 
 			faultLine	:= StrSplit(faultFile, "`n", "`r")
 
 			Loop, % Range
-				faultcode .= "`t`t`t" SubStr("00000" (startLine+A_Index), -4) ": " faultLine[(startLine+A_Index)] "`n"
+				faultcode .= "`t`t`t" SubStr("00000" (startLine+A_Index), -4) ": " q faultLine[(startLine+A_Index)] q "`n"
 			faultcode	:= RTrim(faultcode, "`n")
 
 			eMsg	:= RegexReplace(exception.Message, "(\{)", q "$1" q)
 			eMsg 	:= RegexReplace(eMsg, "(\})", q "$1" q )
 			eMsg1	:= RegExReplace(eMsg, "Action\:", "Action  `t:")
-			eMsg1	:= RegExReplace(eMsg, "Params\:", "Params `t:")
+			eMsg1	:= RegExReplace(eMsg1, "Params\:", "Params `t:")
 			eMsg2	:= RegExReplace(eMsg, "Action\:", "                           `tAction`t:")
-			eMsg2	:= RegExReplace(eMsg, "Params\:", "                           `t$1")
-			RegExMatch(exception.Message, "^.*\:", reason)
+			eMsg2	:= RegExReplace(eMsg2, "Params\:", "                           `t$1")
+			RegExMatch(exception.Message, "^(.*?)\:", reason)
 
 		; generates output text (the first is for telegram , the second is stored in protocol file )
 			towrite1 :=	"Skript   `t: " A_ScriptName ", timecode: " time	"`n"
 			towrite1 .=	"Client   `t: "                    	A_ComputerName	"`n"
-			towrite1 .=	"Reason `t: "                    	eMsg                   		"`n"
+			towrite1 .=	"Reason`t: "                    	eMsg                   		"`n"
 
-			towrite2 :=	"<" lastMessageNr ">`n"
-			towrite2 .=	"Skript   `t: " A_ScriptName ", timecode: " time ", Client: " A_ComputerName "`n"
-			towrite2 .=	"Reason `t:" reason "`n"
-			towrite2 :=	"{`n`tSkriptpfad        `t: "	Exception.File      	"`n"
-			towrite2 .=	"`tFehler bei Zeile`t: "     	Exception.Line      	"`n"
-			towrite2 .=	"`t"                                  	faultcode             	"`n"
-			towrite2 .=	"`tFehlermeldung`t: "     	eMsg2                 	"`n"
-			towrite2 .=	"`tAuslöser         `t: "       	Exception.What   	"`n"
-			towrite2 .=	"`tzusätzl. Info   `t: "        	Exception.Extra    	"`n"
-			towrite2 .=	"`tA_LastError     `t: "       	A_LastError          	"`n"
-			towrite2 .=	"`tLast ErrorLevel `t: "      	ErrorLevel            	"`n"
-			towrite2 .=	"}  </" lastMessageNr ">`n"
+			towrite2 :=	"MsgNr`t: "                    	lastMessageNr   	 "`n"
+			towrite2 .=	"Skript   `t: " 						A_ScriptName		 ", "
+			towrite2 .=	"timecode: " 		       			time                   	 ", "
+			towrite2 .= 	"Client: " 							A_ComputerName "`n"
+			towrite2 .=	"Reason `t:"                   	reason1             	 "`n"
+			towrite2 :=	"{`n`tSkriptpfad        `t: "	Exception.File      	 "`n"
+			towrite2 .=	"`tFehler bei Zeile`t: "     	Exception.Line      	 "`n"
+			towrite2 .=	"`t"                                  	faultcode             	 "`n"
+			towrite2 .=	"`tFehlermeldung`t: "     	eMsg2                 	 "`n"
+			towrite2 .=	"`tAuslöser         `t: "       	Exception.What   	 "`n"
+			towrite2 .=	"`tzusätzl. Info   `t: "        	Exception.Extra    	 "`n"
+			towrite2 .=	"`tA_LastError     `t: "       	A_LastError          	 "`n"
+			towrite2 .=	"`tLast ErrorLevel `t: "      	ErrorLevel            	 "`n"
+			towrite2 .=	"}`n"
+
+		; hash parts of informations to prevent sending every second an error msg
+			hashthis := A_ScriptName "," A_ComputerName "," Exception.File "," Exception.Line "," faultcode
+			newHash	:= CryptHash(&hashthis, StrLen(hashthis), "MD5")
 
 		; save this exception object
 			lastException := exception
@@ -105,7 +109,7 @@ FehlerProtokoll(Exception, MsgToTelegram:= 1) {                                 
 				RegExMatch(Exception, "[A-Z]:[\w\\_\säöüÄÖÜ.]+\.ahk", SkriptPfad)
 
 			; generates output text
-				towrite1 :=   "Fehler im Skript`t: "      	SkriptName1
+				towrite1 :=   "Fehler im Skript`t: "       	SkriptName1
 				towrite1 .=	" - timecode: "               	time
 				towrite1 .=	", Client: "                      	A_ComputerName
 				towrite1 .=	", "                                	eMsg1                 	"`n"
@@ -117,10 +121,19 @@ FehlerProtokoll(Exception, MsgToTelegram:= 1) {                                 
 				towrite2 .=	"`tLast ErrorLevel`t: "     	ErrorLevel            	"`n"
 				towrite2 .=	"}`n"
 
+			; hash parts of informations to prevent sending every second an error msg
+				hashthis := SkriptName1 "," A_ComputerName "," SkriptPfad "," xcptn_LineNr "," eMsg1
+				newHash	:= CryptHash(&hashthis, StrLen(hashthis), "MD5")
+
 		}
+
+	; compare this message with last one
+		If ((A_TickCount - msgTime) < 10000) || (msgHash = newHash)
+			return
 
 	; save generated protocol
 		FileAppend, % towrite1 towrite2, % protocol
+		IniWrite, A_TickCount " " newHash, % Addendum.AddendumIni, % compname, % "letzte_Fehlermeldung"
 
 	; sends a message to preferred telegram bot option is set
 		If (MsgToTelegram > 0) && IsObject(Addendum.Telegram) &&
@@ -196,3 +209,35 @@ TrayTip(Title, Msg, Seconds:=2) {
 	TrayTip, % Title, % Msg, % Seconds
 }
 
+;intern
+CryptHash(pData, nSize, SID = "CRC32", nInitial = 0) {
+	CALG_SHA := CALG_SHA1 := 1 + CALG_MD5 := 0x8003
+	If Not	CALG_%SID%
+	{
+		FormatI := A_FormatInteger
+		SetFormat, Integer, H
+		sHash := DllCall("ntdll\RtlComputeCrc32", "Uint", nInitial, "Uint", pData, "Uint", nSize, "Uint")
+		SetFormat, Integer, %FormatI%
+		StringUpper,	sHash, sHash
+		StringReplace,	sHash, sHash, X, 000000
+		Return	SubStr(sHash,-7)
+	}
+
+	DllCall("advapi32\CryptAcquireContextA", "UintP", hProv, "Uint", 0, "Uint", 0, "Uint", 1, "Uint", 0xF0000000)
+	DllCall("advapi32\CryptCreateHash", "Uint", hProv, "Uint", CALG_%SID%, "Uint", 0, "Uint", 0, "UintP", hHash)
+	DllCall("advapi32\CryptHashData", "Uint", hHash, "Uint", pData, "Uint", nSize, "Uint", 0)
+	DllCall("advapi32\CryptGetHashParam", "Uint", hHash, "Uint", 2, "Uint", 0, "UintP", nSize, "Uint", 0)
+	VarSetCapacity(HashVal, nSize, 0)
+	DllCall("advapi32\CryptGetHashParam", "Uint", hHash, "Uint", 2, "Uint", &HashVal, "UintP", nSize, "Uint", 0)
+	DllCall("advapi32\CryptDestroyHash", "Uint", hHash)
+	DllCall("advapi32\CryptReleaseContext", "Uint", hProv, "Uint", 0)
+
+	FormatI := A_FormatInteger
+	SetFormat, Integer, H
+	Loop,	%nSize%
+		sHash .= SubStr(*(&HashVal + A_Index - 1), -1)
+	SetFormat, Integer, %FormatI%
+	StringReplace,	sHash, sHash, x, 0, All
+	StringUpper,	sHash, sHash
+	Return	sHash
+}

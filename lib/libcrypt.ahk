@@ -1,5 +1,4 @@
 LC_Version := "0.0.21.01"
-
 LC_ASCII2Bin(s,pretty:=0) {
 	r:=""
 	Loop, % l:=StrLen(s)
@@ -13,15 +12,13 @@ LC_ASCII2Bin(s,pretty:=0) {
 	}
 	return r
 }
-
 LC_Ascii2Bin2(Ascii) {
 	for each, Char in StrSplit(Ascii)
 	Loop, 8
 		Out .= !!(Asc(Char) & 1 << 8-A_Index)
 	return Out
 }
- 
-LC_Bin2Ascii(Bin) {
+ LC_Bin2Ascii(Bin) {
 	Bin := RegExReplace(Bin, "[^10]")
 	Loop, % StrLen(Bin) / 8
 	{
@@ -31,18 +28,15 @@ LC_Bin2Ascii(Bin) {
 	}
 	return Out
 }
-
 LC_BinStr_EncodeText(Text, Pretty=False, Encoding="UTF-8") {
 	VarSetCapacity(Bin, StrPut(Text, Encoding))
 	LC_BinStr_Encode(BinStr, Bin, StrPut(Text, &Bin, Encoding)-1, Pretty)
 	return BinStr
 }
-
 LC_BinStr_DecodeText(Text, Encoding="UTF-8") {
 	Len := LC_BinStr_Decode(Bin, Text)
 	return StrGet(&Bin, Len, Encoding)
 }
-
 LC_BinStr_Encode(ByRef Out, ByRef In, InLen, Pretty=False) {
 	Loop, % InLen
 	{
@@ -54,7 +48,6 @@ LC_BinStr_Encode(ByRef Out, ByRef In, InLen, Pretty=False) {
 	}
 	; Out := RegExReplace(Out, "(\d{8})", "$1 ") ; For example, this
 }
-
 LC_BinStr_Decode(ByRef Out, ByRef In) {
 	ByteCount := StrLen(In)/8
 	VarSetCapacity(Out, ByteCount, 0)
@@ -67,44 +60,28 @@ LC_BinStr_Decode(ByRef Out, ByRef In) {
 		NumPut(Byte, Out, A_Index-1, "UChar")
 	}
 }
-
-
-LC_Base64_EncodeText(Text,Encoding="UTF-8")
-{
+LC_Base64_EncodeText(Text,Encoding="UTF-8"){
 	VarSetCapacity(Bin, StrPut(Text, Encoding))
 	LC_Base64_Encode(Base64, Bin, StrPut(Text, &Bin, Encoding)-1)
 	return Base64
 }
-
-LC_Base64_DecodeText(Text,Encoding="UTF-8")
-{
+LC_Base64_DecodeText(Text,Encoding="UTF-8"){
 	Len := LC_Base64_Decode(Bin, Text)
 	return StrGet(&Bin, Len, Encoding)
 }
-
-LC_Base64_Encode(ByRef Out, ByRef In, InLen)
-{
+LC_Base64_Encode(ByRef Out, ByRef In, InLen){
 	return LC_Bin2Str(Out, In, InLen, 0x40000001)
 }
-
-LC_Base64_Decode(ByRef Out, ByRef In)
-{
+LC_Base64_Decode(ByRef Out, ByRef In){
 	return LC_Str2Bin(Out, In, 0x1)
 }
-
-
-LC_Bin2Hex(ByRef Out, ByRef In, InLen, Pretty=False)
-{
+LC_Bin2Hex(ByRef Out, ByRef In, InLen, Pretty=False){
 	return LC_Bin2Str(Out, In, InLen, Pretty ? 0xb : 0x4000000c)
 }
-
-LC_Hex2Bin(ByRef Out, ByRef In)
-{
+LC_Hex2Bin(ByRef Out, ByRef In){
 	return LC_Str2Bin(Out, In, 0x8)
 }
-
-LC_Bin2Str(ByRef Out, ByRef In, InLen, Flags)
-{
+LC_Bin2Str(ByRef Out, ByRef In, InLen, Flags){
 	DllCall("Crypt32.dll\CryptBinaryToString", "Ptr", &In
 	, "UInt", InLen, "UInt", Flags, "Ptr", 0, "UInt*", OutLen)
 	VarSetCapacity(Out, OutLen * (1+A_IsUnicode))
@@ -112,9 +89,7 @@ LC_Bin2Str(ByRef Out, ByRef In, InLen, Flags)
 	, "UInt", InLen, "UInt", Flags, "Str", Out, "UInt*", OutLen)
 	return OutLen
 }
-
-LC_Str2Bin(ByRef Out, ByRef In, Flags)
-{
+LC_Str2Bin(ByRef Out, ByRef In, Flags){
 	DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &In, "UInt", StrLen(In)
 	, "UInt", Flags, "Ptr", 0, "UInt*", OutLen, "Ptr", 0, "Ptr", 0)
 	VarSetCapacity(Out, OutLen)
@@ -122,12 +97,10 @@ LC_Str2Bin(ByRef Out, ByRef In, Flags)
 	, "UInt", Flags, "Str", Out, "UInt*", OutLen, "Ptr", 0, "Ptr", 0)
 	return OutLen
 }
-
-; 
+;
 ; Version: 2014.03.06-1518, jNizM
 ; see https://en.wikipedia.org/wiki/Caesar_cipher
 ; ===================================================================================
-
 LC_Caesar(string, num := 2) {
     ret := c := ""
     loop, parse, string
@@ -142,7 +115,6 @@ LC_Caesar(string, num := 2) {
     }
     return ret
 }
-
 LC_CalcAddrHash(addr, length, algid, byref hash = 0, byref hashlength = 0) {
 	static h := [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "a", "b", "c", "d", "e", "f"]
 	static b := h.minIndex()
@@ -217,7 +189,6 @@ LC_CalcFileHash(filename, algid, continue = 0, byref hash = 0, byref hashlength 
 	}
 	return h
 }
-
 LC_CRC32(string, encoding = "UTF-8") {
 	chrlength := (encoding = "CP1200" || encoding = "UTF-16") ? 2 : 1
 	length := (StrPut(string, encoding) - 1) * chrlength
@@ -270,7 +241,6 @@ LC_FileCRC32(sFile := "", cSz := 4) {
 	SetFormat, Integer, %A_FI%
 	return CRC32, DllCall("Kernel32.dll\FreeLibrary", "Ptr", hMod)
 }
-
 ;from joedf : fork-fusion of jNizM+Laszlo's functions [to_decimal()+ToBase()]
 LC_To_Dec(b, n) { ; 1 < b <= 36, n >= 0
 	d:=0
@@ -302,7 +272,6 @@ LC_Hex2Dec(x) {
 LC_Numvert(num,from,to) { ; from joedf : http://ahkscript.org/boards/viewtopic.php?f=6&t=6363
     return LC_From_Dec(to,LC_To_Dec(from,num))
 }
-
 ;
 ; Date Updated:
 ;	Friday, November 23rd, 2012 - Tuesday, February 10th, 2015
@@ -310,7 +279,7 @@ LC_Numvert(num,from,to) { ; from joedf : http://ahkscript.org/boards/viewtopic.p
 ; Script Function:
 ;	Function Library to Encrypt / Decrypt in Div2 (by Joe DF)
 ;	Div2 was invented with a friend for fun, back in ~2010.
-;	The string is "divided" in 2 during encryption. It is a 
+;	The string is "divided" in 2 during encryption. It is a
 ;	simple reordering of the characters in a string. The was
 ; 	to have a human-readable/decryptable message.
 ;
@@ -318,7 +287,6 @@ LC_Numvert(num,from,to) { ; from joedf : http://ahkscript.org/boards/viewtopic.p
 ;	AutoTrim should turned off, for the encryption to work properly
 ;	because, in Div2, <spaces> and <New lines> count as a character.
 ;
-
 LC_Div2_encode(input, WithAutoTrim:=1, numproc:=1) {
 	if (WithAutoTrim)
 		StringReplace,input,input,%A_Space%,_,A
@@ -343,7 +311,6 @@ LC_Div2_encode(input, WithAutoTrim:=1, numproc:=1) {
 	}
 	return final
 }
-
 LC_Div2_decode(input, WithAutoTrim:=1, numproc:=1) {
 	if (WithAutoTrim)
 		StringReplace,input,input,%A_Space%,_,A
@@ -351,14 +318,14 @@ LC_Div2_decode(input, WithAutoTrim:=1, numproc:=1) {
 	{
 		i := 1, final:="", inputlen := StrLen(input)
 		loop, % loopc := ceil(inputlen * (1/2))
-		{	
+		{
 			if (i <= inputlen)
 				final .= SubStr(input,i,1)
 			i += 2
 		}
 		i := inputlen
 		loop, %loopc%
-		{		
+		{
 			if (i <= inputlen) {
 				if (mod(SubStr(i,0,1)+0,2)==1) {
 					if (i != 1)
@@ -373,8 +340,6 @@ LC_Div2_decode(input, WithAutoTrim:=1, numproc:=1) {
 	}
 	return final
 }
-
-
 LC_HMAC(Key, Message, Algo := "MD5") {
 	static Algorithms := {MD2:    {ID: 0x8001, Size:  64}
 						, MD4:    {ID: 0x8002, Size:  64}
@@ -435,7 +400,6 @@ LC_HMAC(Key, Message, Algo := "MD5") {
 	}
 	return LC_CalcAddrHash(&opad, BlockSize + InnerHashLen, AlgID)
 }
-
 LC_MD2(string, encoding = "UTF-8") {
 	return LC_CalcStringHash(string, 0x8001, encoding)
 }
@@ -448,7 +412,6 @@ LC_FileMD2(filename) {
 LC_AddrMD2(addr, length) {
 	return LC_CalcAddrHash(addr, length, 0x8001)
 }
-
 LC_MD4(string, encoding = "UTF-8") {
 	return LC_CalcStringHash(string, 0x8002, encoding)
 }
@@ -461,7 +424,6 @@ LC_FileMD4(filename) {
 LC_AddrMD4(addr, length) {
 	return LC_CalcAddrHash(addr, length, 0x8002)
 }
-
 LC_MD5(string, encoding = "UTF-8") {
 	return LC_CalcStringHash(string, 0x8003, encoding)
 }
@@ -474,12 +436,9 @@ LC_FileMD5(filename) {
 LC_AddrMD5(addr, length) {
 	return LC_CalcAddrHash(addr, length, 0x8003)
 }
-
 ;nnnik's custom encryption algorithm
 ;Version 2.1 of the encryption/decryption functions
-
-LC_nnnik21_encryptStr(str="",pass="")
-{
+LC_nnnik21_encryptStr(str="",pass=""){
 	If !(enclen:=(strput(str,"utf-16")*2))
 		return "Error: Nothing to Encrypt"
 	If !(passlen:=strput(pass,"utf-8")-1)
@@ -493,9 +452,7 @@ LC_nnnik21_encryptStr(str="",pass="")
 	LC_Base64_Encode(Text, encbin, enclen)
 	return Text
 }
-
-LC_nnnik21_decryptStr(str="",pass="")
-{
+LC_nnnik21_decryptStr(str="",pass=""){
 	If !((strput(str,"utf-16")*2))
 		return "Error: Nothing to Decrypt"
 	If !((passlen:=strput(pass,"utf-8")-1))
@@ -506,10 +463,7 @@ LC_nnnik21_decryptStr(str="",pass="")
 	LC_nnnik21__decryptbin(&encbin,enclen,&passbin,passlen)
 	return StrGet(&encbin,"utf-16")
 }
-
-
-LC_nnnik21_encryptbin(pBin1,sBin1,pBin2,sBin2)
-{
+LC_nnnik21_encryptbin(pBin1,sBin1,pBin2,sBin2){
 	b:=0
 	Loop % sBin1/4
 	{
@@ -529,7 +483,6 @@ LC_nnnik21_encryptbin(pBin1,sBin1,pBin2,sBin2)
 		}
 	}
 }
-
 LC_nnnik21__decryptbin(pBin1,sBin1,pBin2,sBin2){
 	Loop % sBin2/4
 	{
@@ -550,8 +503,6 @@ LC_nnnik21__decryptbin(pBin1,sBin1,pBin2,sBin2){
 		b:=(a+b)*a
 	}
 }
-
-
 LC_RC4_Encrypt(Data,Pass) {
 	Format:=A_FormatInteger,b:=0,j:=0,Key:=Object(),sBox:=Object()
 	SetFormat,Integer,Hex
@@ -567,7 +518,6 @@ LC_RC4_Encrypt(Data,Pass) {
 	SetFormat,Integer,%Format%
 	Return Result
 }
-
 LC_RC4_Decrypt(Data,Pass) {
 	b:=0,j:=0,x:="0x",Key:=Object(),sBox:=Object()
 	VarSetCapacity(Result,StrLen(Data)//2)
@@ -580,7 +530,6 @@ LC_RC4_Decrypt(Data,Pass) {
 		,Result.=Chr((x . SubStr(Data,(2*A_Index)-1,2))^sBox[k])
 	Return Result
 }
-
 LC_RC4(RC4Data,RC4Pass) { ; Thanks Rajat for original, Updated Libcrypt version
 	; http://www.autohotkey.com/board/topic/570-rc4-encryption/page-2#entry25712
 	ATrim:=A_AutoTrim,BLines:=A_BatchLines,RC4PassLen:=StrLen(RC4Pass),Key:=Object(),sBox:=Object(),b:=0,RC4Result:="",i:=0,j:=0
@@ -596,7 +545,6 @@ LC_RC4(RC4Data,RC4Pass) { ; Thanks Rajat for original, Updated Libcrypt version
 	SetBatchlines, %BLines%
 	Return RC4Result
 }
-
 /*
 	- ROT5 covers the numbers 0-9.
 	- ROT13 covers the 26 upper and lower case letters of the Latin alphabet (A-Z, a-z).
@@ -605,13 +553,11 @@ LC_RC4(RC4Data,RC4Pass) { ; Thanks Rajat for original, Updated Libcrypt version
 			the following characters are included:
 			!"#$%&'()*+,-./:;<=>?[\]^_`{|}~
 */
-
 LC_Rot5(string) {
 	Loop, Parse, string
 		s .= (strlen((c:=A_LoopField)+0)?((c<5)?c+5:c-5):(c))
 	Return s
 }
-
 ; by Raccoon July-2009
 ; http://rosettacode.org/wiki/Rot-13#AutoHotkey
 LC_Rot13(string) {
@@ -626,13 +572,11 @@ LC_Rot13(string) {
 	}
 	Return s
 }
-
 LC_Rot18(string) {
 	return LC_Rot13(LC_Rot5(string))
 }
-
 ; adapted from http://langref.org/fantom+java+scala/strings/reversing-a-string/simple-substitution-cipher
-; from decimal 33 '!' through 126 '~', 94 
+; from decimal 33 '!' through 126 '~', 94
 LC_Rot47(string) {
 	Loop Parse, string
 	{
@@ -642,21 +586,18 @@ LC_Rot47(string) {
 	}
 	Return s
 }
-
 ; RSHash (Robert Sedgewick's string hashing algorithm)
 ; from jNizM
 ; https://autohotkey.com/boards/viewtopic.php?p=87929#p87929
-
 LC_RSHash(str) {
 	a := 0xF8C9, b := 0x5C6B7, h := 0
 	loop, parse, str
 		h := h * a + Asc(A_LoopField), a *= b
 	return (h & 0x7FFFFFFF)
 }
-
 LC_SecureSalted(salt, message, algo := "md5") {
 	hash := ""
-	saltedHash := %algo%(message . salt) 
+	saltedHash := %algo%(message . salt)
 	saltedHashR := %algo%(salt . message)
 	len := StrLen(saltedHash)
 	loop % len / 2
@@ -669,7 +610,6 @@ LC_SecureSalted(salt, message, algo := "md5") {
 	SetFormat, integer, dez
 	return hash
 }
-
 LC_SHA(string, encoding = "UTF-8") {
 	return LC_CalcStringHash(string, 0x8004, encoding)
 }
@@ -682,7 +622,6 @@ LC_FileSHA(filename) {
 LC_AddrSHA(addr, length) {
 	return LC_CalcAddrHash(addr, length, 0x8004)
 }
-
 LC_SHA256(string, encoding = "UTF-8") {
 	return LC_CalcStringHash(string, 0x800c, encoding)
 }
@@ -695,7 +634,6 @@ LC_FileSHA256(filename) {
 LC_AddrSHA256(addr, length) {
 	return LC_CalcAddrHash(addr, length, 0x800c)
 }
-
 LC_SHA384(string, encoding = "UTF-8") {
 	return LC_CalcStringHash(string, 0x800d, encoding)
 }
@@ -708,7 +646,6 @@ LC_FileSHA384(filename) {
 LC_AddrSHA384(addr, length) {
 	return LC_CalcAddrHash(addr, length, 0x800d)
 }
-
 LC_SHA512(string, encoding = "UTF-8") {
 	return LC_CalcStringHash(string, 0x800e, encoding)
 }
@@ -721,7 +658,6 @@ LC_FileSHA512(filename) {
 LC_AddrSHA512(addr, length) {
 	return LC_CalcAddrHash(addr, length, 0x800e)
 }
-
 ; Modified by GeekDude from http://goo.gl/0a0iJq
 LC_UriEncode(Uri, RE="[0-9A-Za-z]") {
 	VarSetCapacity(Var, StrPut(Uri, "UTF-8"), 0), StrPut(Uri, &Var, "UTF-8")
@@ -729,7 +665,6 @@ LC_UriEncode(Uri, RE="[0-9A-Za-z]") {
 		Res .= (Chr:=Chr(Code)) ~= RE ? Chr : Format("%{:02X}", Code)
 	Return, Res
 }
-
 LC_UriDecode(Uri) {
 	Pos := 1
 	While Pos := RegExMatch(Uri, "i)(%[\da-f]{2})+", Code, Pos)
@@ -743,22 +678,17 @@ LC_UriDecode(Uri) {
 	}
 	Return, Uri
 }
-
-;----------------------------------
-
+;---------------------------------
 LC_UrlEncode(Url) { ; keep ":/;?@,&=+$#."
 	return LC_UriEncode(Url, "[0-9a-zA-Z:/;?@,&=+$#.]")
 }
-
 LC_UrlDecode(url) {
 	return LC_UriDecode(url)
 }
 
-; 
-; Version: 2014.03.06-1518, jNizM
+; ; Version: 2014.03.06-1518, jNizM
 ; see https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher
 ; ===================================================================================
-
 LC_VigenereCipher(string, key, enc := 1) {
 	enc := "", DllCall("user32.dll\CharUpper", "Ptr", &string, "Ptr")
 	, string := RegExReplace(StrGet(&string), "[^A-Z]")
@@ -770,17 +700,14 @@ LC_VigenereCipher(string, key, enc := 1) {
 	}
 	return enc
 }
-
 LC_VigenereDecipher(string, key) {
 	dec := ""
 	loop, parse, key
 		dec .= Chr(26 - (Asc(A_LoopField) - 65) + 65)
 	return LC_VigenereCipher(string, dec)
 }
-
 ; FUnctions and algorithm by VxE
 ; intergrated into libcrypt.ahk with "LC_" prefixes
-
 /*
 ####################################################################################################
 ####################################################################################################
@@ -804,29 +731,23 @@ This encryption function also supports an 89-character map, which incorporates t
 between 0x20 and 0x7e, omitting 0x22, 0x27, 0x2C, 0x2F, 0x5C, and 0x60. This mode allows text value
 input to be encrypted as text without high-ascii characters or non-printable characters.
 */
-
 ; ##################################################################################################
 ; ## Function shortcuts
-
 LC_VxE_Encrypt89( key, byref message ) { ; ----------------------------------------------------------
    Return LC_VxE_Crypt( key, message, 1, "vxe89 len" StrLen( message ) << !!A_IsUnicode )
 } ; VxE_Encrypt89( key, byref message ) ----------------------------------------------------------
-
 LC_VxE_Decrypt89( key, byref message ) { ; ----------------------------------------------------------
    Return LC_VxE_Crypt( key, message, 0, "vxe89 len" StrLen( message ) << !!A_IsUnicode )
 } ; VxE_Decrypt89( key, byref message ) ----------------------------------------------------------
-
 LC_VxE_Encrypt251( key, byref message, len ) { ; ----------------------------------------------------
    Return LC_VxE_Crypt( key, message, 1, "len" len )
 } ; VxE_Encrypt251( key, byref message, len ) ----------------------------------------------------
-
 LC_VxE_Decrypt251( key, byref message, len ) { ; ----------------------------------------------------
    Return LC_VxE_Crypt( key, message, 0, "len" len )
 } ; VxE_Decrypt251( key, byref message, len ) ----------------------------------------------------
 
 ; ##################################################################################################
 ; ## The core function
-
 LC_VxE_Crypt( key, byref message, direction = 1, options="" ) { ; -----------------------------------
 ; Transorms the message. 'direction' indicates whether or not to decrypt or encrypt the message.
 ; However, since this algorithm is symmetrical, distinguishing between 'encrypt' and 'decrypt' is
@@ -845,7 +766,7 @@ LC_VxE_Crypt( key, byref message, direction = 1, options="" ) { ; --------------
    w := StrLen( key ) << !!A_IsUnicode
    ; 'w' holds the derived key, which is a 32-bit integer based on the key.
    ; Although this doesn't seem very entropic, remember that the map is also derived from the key.
-   
+
    If (UseVxE89) ; using the smaller map allows text-friendly encrypting since the small map is
       Loop 126 ; composed only of low-ascii printable characters
          If ( A_Index >= 32 && A_Index != 34 && A_Index != 39 && A_Index != 44
@@ -898,7 +819,6 @@ LC_VxE_Crypt( key, byref message, direction = 1, options="" ) { ; --------------
    }
    return length
 } ; VxE_Crypt( key, byref message, direction = 1, options="" ) -----------------------------------
-
 LC_XOR_Encrypt(str,key) {
 	EncLen:=StrPut(Str,"UTF-16")*2
 	VarSetCapacity(EncData,EncLen)
@@ -912,7 +832,6 @@ LC_XOR_Encrypt(str,key) {
 	LC_Base64_Encode(OutBase64, OutData, EncLen)
 	return OutBase64
 }
-
 LC_XOR_Decrypt(OutBase64,key) {
 	EncLen:=LC_Base64_Decode(OutData, OutBase64)
 
@@ -923,9 +842,7 @@ LC_XOR_Decrypt(OutBase64,key) {
 	LC_XOR(EncData,OutData,EncLen,PassData,PassLen)
 	return StrGet(&EncData,"UTF-16")
 }
-
-LC_XOR(byref OutData,byref EncData,EncLen,byref PassData,PassLen)
-{
+LC_XOR(byref OutData,byref EncData,EncLen,byref PassData,PassLen){
 	VarSetCapacity(OutData,EncLen)
 	Loop % EncLen
 		NumPut(NumGet(EncData,A_Index-1,"UChar")^NumGet(PassData,Mod(A_Index-1,PassLen),"UChar"),OutData,A_Index-1,"UChar")

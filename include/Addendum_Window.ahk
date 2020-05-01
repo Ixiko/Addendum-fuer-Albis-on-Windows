@@ -3,7 +3,7 @@
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
 ;                                                            	by Ixiko started in September 2017 - last change 04.04.2020 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+ListLines, Off
 ; FENSTER                                                                                                                                                                                                                                                   	(45)
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; (01) GetAncestor                             	(02) GetParentList	                         	(03) GetParent                              	(04) GetNextWindow                     	(05) GetWindowInfo
@@ -191,7 +191,7 @@ IsWindowVisible(hWnd) {
 	return DllCall("IsWindowVisible","Ptr", hWnd)
 }
 ;16
-CheckWindowStatus(hwnd, timeout=100) {                                                                					;-- check's if a window is responding or not responding (hung or crashed
+CheckWindowStatus(hwnd, timeout:=100) {                                                               					;-- check's if a window is responding or not responding (hung or crashed
 	NR_temp := 0 ; init
 return DllCall("SendMessageTimeout", "UInt", hwnd, "UInt", 0x0000, "Int", 0, "Int", 0, "UInt", 0x0002, "UInt", TimeOut, "UInt *", NR_temp)
 }

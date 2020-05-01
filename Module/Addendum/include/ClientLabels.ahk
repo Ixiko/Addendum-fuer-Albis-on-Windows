@@ -9,20 +9,12 @@ nopopup_SP1WS:	;{
 	noTrayOrphansWin10()
 	;HELP Taskbar für Praxomat
 	IfWinActive, ahk_class OptoAppClass
-		AlbisHotKeyHilfe(AddendumHelp, "")
-return
-;}
-
+		AlbisHotKeyHilfe(Addendum.Help, "")
+return ;}
 seldom_SP1WS: ;{
-
-	If ( TimeDiff("000000", "now", "m")=0 ) {
+	If ( TimeDiff("000000", "now", "m")=0 )
 						gosub SkriptReload
-		}
-
-return
-;}
-
-
+return ;}
 ;}
 
 ;*********************************************************************************************************
@@ -31,14 +23,12 @@ return
 nopopup_SP2:	;{
 	noTrayOrphansWin10()
 	;HELP Taskbar für Praxomat
-	IfWinActive, ahk_id %AlbisWinID%
-			AlbisHotKeyHilfe(AddendumHelp, PraxomatHelp)
-return
-;}
+	IfWinActive, ahk_class OptoAppClass
+			AlbisHotKeyHilfe(Addendum.Help, PraxomatHelp)
+return ;}
 seldom_SP2: ;{
 	SetTimer, seldom_SP2, Off
-return
-;}
+return ;}
 ;}
 
 ;*********************************************************************************************************
@@ -46,22 +36,19 @@ return
 ;*********************************************************************************************************;{
 nopopup_AnmeldungPC: ;{
 	noTrayOrphansWin10()
-	IfWinActive, ahk_id %AlbisWinID%
-		AlbisHotKeyHilfe(AddendumHelp, "")
-return
-
-;}
+	IfWinActive, ahk_class OptoAppClass
+		AlbisHotKeyHilfe(Addendum.Help, "")
+return ;}
 seldom_AnmeldungPC: ;{
-	SetTimer, seldom_AnmeldungPC, Off
-return
-;}
+	If (TimeDiff("000000", "now", "m") = 0)
+				gosub SkriptReload
+return ;}
 Wartezeit_AnmeldungPC: ;{
 
 
 
 return
 ;}
-
 ;}
 
 ;*********************************************************************************************************
@@ -69,8 +56,8 @@ return
 ;*********************************************************************************************************;{
 nopopup_LABOR: ;{
 	noTrayOrphansWin10()
-	IfWinActive, ahk_id %AlbisWinID%
-		AlbisHotKeyHilfe(AddendumHelp, "")
+	IfWinActive, ahk_class OptoAppClass
+		AlbisHotKeyHilfe(Addendum.Help, "")
 return
 ;}
 seldom_Labor: ;{
@@ -84,43 +71,34 @@ return
 ;*********************************************************************************************************;{
 nopopup_EKGPC: ;{
 	noTrayOrphansWin10()
-	IfWinActive, ahk_id %AlbisWinID%
-		AlbisHotKeyHilfe(AddendumHelp, "")
+	IfWinActive, ahk_class OptoAppClass
+		AlbisHotKeyHilfe(Addendum.Help, "")
 return
 ;}
-
-seldom_EKGPC:
-SetTimer, seldom_EKGPC, Off
-return
+seldom_EKGPC:	;{
+	SetTimer, seldom_EKGPC, Off
+return ;}
 ;}
 
+TimeDiff(time1, time2="now", output="m") {                                 ; errechne die Zeitdifferenz zwischen Zeit1 und Zeit2, Ausgabe in Minuten (output="m") oder Sekunden (output="s")
 
-/*
-	;wenn Wochentag=Mittwoch und es zwischen 8-12 Uhr ist, wird stündlich die Errinnerung gezeigt
-	If ( (A_WDay = Mittwoch) && (A_HOUR >7) && (A_HOUR <13) && (!A_HOUR == KofferAuffuellFlag) ) {
+	ListLines, Off
 
-				KofferAuffuellflag:= A_HOUR
-				;die letzte Anzeigestunde wird in der ini gespeichert
-				IniWrite, %KofferAuffuellflag%, %AddendumDir%\Addendum.ini, FUNKTION, KofferAuffuellflag
-				KofferAuffuellen()
-
-	} else if ( (!KofferAuffuellflag == "NA") && (A_WDAY <> 4) ) {
-
-				KofferAuffuellflag:= "NA"
-				IniWrite, %KofferAuffuellflag%, %AddendumDir%\Addendum.ini, FUNKTION, KofferAuffuellflag
-
+	if Instr(time2,"now") {
+			time2:= A_Now
+			FormatTime, time2,, HHmmss
 	}
-*/
 
-/*
-		;blendet zum Cave Fenster Informationen ein
-		If (CaveVonID:=WinExist("Cave! von"))  {
-					If (CTTExist=0)
-							AlbisCaveVonToolTip(compname, CaveVonID)
-		} else {
-				If (CTTExist=1) {
-							CTTExist=0
-							ToolTip,,,, 10
-				}
-		}
-*/
+	if Instr(time1,"000000")
+			time1:= "240000"
+
+	if Instr(output,"m")
+			timediff:= ( SubStr(time1,1,2)*60 + SubStr(time1,3,2) ) - ( SubStr(time2,1,2)*60 + SubStr(time2,3,2) )
+	else if Instr(output,"s")
+			timediff:= ( SubStr(time1,1,2)*3600 + SubStr(time1,3,2) + SubStr(time1,5,2) ) - ( SubStr(time2,1,2)*3600 + SubStr(time2,3,2)*60 + SubStr(time2,5,2) )
+
+
+return timediff
+}
+
+

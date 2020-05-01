@@ -132,8 +132,8 @@ Class JSONFile {
  *     Load() - see relevant documentation before method definition header
  *     Dump() - see relevant documentation before method definition header
  */
-class JSON
-{
+class JSON {
+
 	/**
 	 * Method: Load
 	 *     Parses a JSON string into an AHK value
@@ -145,10 +145,10 @@ class JSON
 	 *     reviver   [in, opt] - function object, similar to JavaScript's
 	 *                           JSON.parse() 'reviver' parameter
 	 */
-	class Load extends JSON.Functor
-	{
-		Call(self, ByRef text, reviver:="")
-		{
+	class Load extends JSON.Functor	{
+
+		Call(self, ByRef text, reviver:="")		{
+
 			this.rev := IsObject(reviver) ? reviver : false
 		; Object keys(and array indices) are temporarily stored in arrays so that
 		; we can enumerate them in the order they appear in the document/text instead
@@ -160,12 +160,12 @@ class JSON
 			     , json_value_or_array_closing := quot . "{[]01234567890-tfn"
 			     , object_key_or_object_closing := quot . "}"
 
-			key := ""
-			is_key := false
-			root := {}
-			stack := [root]
-			next := json_value
-			pos := 0
+			key    	:= ""
+			is_key 	:= false
+			root  	:= {}
+			stack 	:= [root]
+			next  	:= json_value
+			pos   	:= 0
 
 			while ((ch := SubStr(text, ++pos, 1)) != "") {
 				if InStr(" `t`r`n", ch)
@@ -278,22 +278,22 @@ class JSON
 			return this.rev ? this.Walk(root, "") : root[""]
 		}
 
-		ParseError(expect, ByRef text, pos, len:=1)
-		{
+		ParseError(expect, ByRef text, pos, len:=1)		{
+
 			static quot := Chr(34), qurly := quot . "}"
 
 			line := StrSplit(SubStr(text, 1, pos), "`n", "`r").Length()
 			col := pos - InStr(text, "`n",, -(StrLen(text)-pos+1))
 			msg := Format("{1}`n`nLine:`t{2}`nCol:`t{3}`nChar:`t{4}"
-			,     (expect == "")     ? "Extra data"
-			    : (expect == "'")    ? "Unterminated string starting at"
-			    : (expect == "\")    ? "Invalid \escape"
-			    : (expect == ":")    ? "Expecting ':' delimiter"
-			    : (expect == quot)   ? "Expecting object key enclosed in double quotes"
-			    : (expect == qurly)  ? "Expecting object key enclosed in double quotes or object closing '}'"
-			    : (expect == ",}")   ? "Expecting ',' delimiter or object closing '}'"
-			    : (expect == ",]")   ? "Expecting ',' delimiter or array closing ']'"
-			    : InStr(expect, "]") ? "Expecting JSON value or array closing ']'"
+			,     (expect == "")      	? "Extra data"
+			    : (expect == "'")     	? "Unterminated string starting at"
+			    : (expect == "\")    	? "Invalid \escape"
+			    : (expect == ":")    	? "Expecting ':' delimiter"
+			    : (expect == quot)	? "Expecting object key enclosed in double quotes"
+			    : (expect == qurly)  	? "Expecting object key enclosed in double quotes or object closing '}'"
+			    : (expect == ",}")   	? "Expecting ',' delimiter or object closing '}'"
+			    : (expect == ",]")   	? "Expecting ',' delimiter or array closing ']'"
+			    : InStr(expect, "]")   	? "Expecting JSON value or array closing ']'"
 			    :                      "Expecting JSON value(string, number, true, false, null, object or array)"
 			, line, col, pos)
 
@@ -301,8 +301,8 @@ class JSON
 			throw Exception(msg, offset, SubStr(text, pos, len))
 		}
 
-		Walk(holder, key)
-		{
+		Walk(holder, key)		{
+
 			value := holder[key]
 			if IsObject(value) {
 				for i, k in this.keys[value] {
@@ -317,6 +317,7 @@ class JSON
 
 			return this.rev.Call(holder, key, value)
 		}
+
 	}
 
 	/**
@@ -332,10 +333,9 @@ class JSON
 	 *     space     [in, opt] - similar to JavaScript's JSON.stringify()
 	 *                           'space' parameter
 	 */
-	class Dump extends JSON.Functor
-	{
-		Call(self, value, replacer:="", space:="")
-		{
+	class Dump extends JSON.Functor	{
+
+		Call(self, value, replacer:="", space:="")		{
 			this.rep := IsObject(replacer) ? replacer : ""
 
 			this.gap := ""
@@ -353,8 +353,7 @@ class JSON
 			return this.Str({"": value}, "")
 		}
 
-		Str(holder, key)
-		{
+		Str(holder, key)		{
 			value := holder[key]
 
 			if (this.rep)
@@ -418,8 +417,7 @@ class JSON
 				return ObjGetCapacity([value], 1)=="" ? value : this.Quote(value)
 		}
 
-		Quote(string)
-		{
+		Quote(string)		{
 			static quot := Chr(34), bashq := "\" . quot
 
 			if (string != "") {
@@ -439,6 +437,7 @@ class JSON
 
 			return quot . string . quot
 		}
+
 	}
 
 	/**
@@ -456,16 +455,16 @@ class JSON
 	 *     of code readability and convenience, it's better to do 'return JSON.Undefined'.
 	 *     Internally, the property returns a ComObject with the variant type of VT_EMPTY.
 	 */
-	Undefined[]
-	{
+	Undefined[]	{
+
 		get {
 			static empty := {}, vt_empty := ComObject(0, &empty, 1)
 			return vt_empty
 		}
 	}
 
-	class Functor
-	{
+	class Functor	{
+
 		__Call(method, ByRef arg, args*)
 		{
 		; When casting to Call(), use a new instance of the "function object"
@@ -477,4 +476,5 @@ class JSON
 				return (new this).Call(arg, args*)
 		}
 	}
+
 }

@@ -6,22 +6,8 @@
 ;                                                                                  	------------------------
 ;                                                	FÜR DAS AIS-ADDON: "ADDENDUM FÜR ALBIS ON WINDOWS"
 ;                                                                                  	------------------------
-;    		BY IXIKO STARTED IN SEPTEMBER 2017 - LAST CHANGE 20.12.2019 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
+;    		BY IXIKO STARTED IN SEPTEMBER 2017 - LAST CHANGE 28.04.2020 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-/* 							    		     	                     A DIARY OF "FUNCTION CHANGES"
- -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-RegEx ^\d ersetzen | **$1
-
-| **28.05.2018** | **F+** | **ReadPdfIndex()** - erstellt ein indiziertes Array mit dem Inhalt des Befundordners, gedacht für die Benutzung durch andere Skripte als ScanPool.ahk |
-
-
-*/
-/*							    						                                 TO-DO Liste
-
-
-*/
-
 ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;###############################################################################
 ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -196,7 +182,7 @@ PatDb(tObj, cmd:="") {																			        ;-- überprüft die Addendum Pa
 							TProtokoll.RemoveAt(Index)
 							continue
 					}
-					schreib .= Value ","
+					schreib .= Value "(" A_Hour ":" A_Min "),"
 					If ( hPraxomatGui := WinExist("PraxomatGui") )
 							Send_WM_COPYDATA("TPCount|" TPCount , hPraxomatGui)
 			}
@@ -274,7 +260,7 @@ ScanPoolArray(cmd, param:="", opt:="") {                    		;-- verarbeitet de
 					"ValidKeys"	- zählt die vorhandenen Datensätze, da auch manchmal leere Datensätze gespeichert wurden, werden nur nicht leere gezählt
 					"Find"	    	- sucht nach einem Dateinamen und gibt den Index zurück
 					"CountPages"- ermittelt die Gesamtzahl aller Seiten der Pdf-Dateien im BefundOrdner
-					"Reports"     	- fuzzy Personennamen Suche
+					"Reports"     	- fuzzy Personennamen Suche, param - Nachname Vorname (des Patienten)
 					"Signed"     	- erstellt einen Array in dem alle im Befundordner signierten Dateien aufgelistet sind (kontrolliert nicht ob neue Dateien hinzugefügt wurden)
 					"NotSigned"	- wie "Signed" nur alle bekannt unsignierten um diese auf eine vorhandene Signatur zu prüfen
 */
@@ -400,7 +386,7 @@ ScanPoolArray(cmd, param:="", opt:="") {                    		;-- verarbeitet de
 						a := StrDiff(SuchName, pdfNachname pdfVorname)
 						b := StrDiff(SuchName, pdfVorname pdfNachname)
 
-						If ((a < 0.15) || (b< 0.15))
+						If ((a < 0.12) || (b< 0.12))
 								Reports.Push(filename)
 			}
 
@@ -408,8 +394,11 @@ ScanPoolArray(cmd, param:="", opt:="") {                    		;-- verarbeitet de
 	}
 	else If InStr(cmd, "Refresh")       	{                       	;param: unbenutzt                                                	, Rückgabe: Wert        	- Anzahl neuer Funde
 
-			If InStr(param, "Tip")
+			If InStr(param, "Tip") {
 				PraxTT("ermittle neue Befunde im ScanPool", "0 3")
+				Sleep, 500
+			}
+
 			If InStr(A_ScriptName, "ScanPool")
 				newPDF:= RefreshPdfIndex(BefundOrdner)
 			else
@@ -514,14 +503,56 @@ return CountValidKeys(ScanPool)
 
 RefreshPdfIndex(BefundOrdner) {	                                   	;-- frischt das ScanPool Object auf
 
-		;Teile der Variablen sind globale Variablen
+	; globale Variabeln im aufrufenden Skript: ScanPool := Object()
+
+		static newPDFs  	:= 0
+		PageSum	:= 0
+		FileCount	:= 0
+
+	; Kopie des ScanPool-Objektes anlegen
+		tmpObj		:= Object()
+		tmpObj 	:= ScanPool
+
+	; ScanPool-Objekt leeren
+		ScanPool	:= Object()
+
+	; alle pdf Dokumente einlesen
+		PdfDirList:= ReadDir(BefundOrdner, "pdf")
+
+	;nicht mehr vorhandene Dateien aus dem Index nehmen
+		For key, val in tmpObj
+			If FileExist(BefundOrdner "\" StrSplit(val, "|").1)
+					ScanPool.Push(val)
+
+	;nach noch nicht aufgenommenen Dateien suchen
+		Loop, Parse, PdfDirList, `n, `r
+		{
+				If !ScanPoolArray("Find", A_LoopField)
+				{
+						FileGetSize, FSize, % BefundOrdner "\" A_LoopField, K
+						ScanPool.Push(A_LoopField "|" FSize "|" pages)
+						newPDFs ++
+						continue
+				}
+		}
+
+	;Sortieren der eingelesenen und aktualisierten Dateien
+		ScanPoolArray("Sort")
+		ScanPoolArray("Save")
+
+return newPDFs
+}
+
+RefreshPdfIndexAlt(BefundOrdner) {	                                   	;-- frischt das ScanPool Object auf
+
+		; globale Variabeln im aufrufenden Skript: ScanPool := Object()
 
 		static newPDFs  	:= 0
 		PageSum	:= 0
 		FileCount	:= 0
 		allfiles   	:= ""
 
-		PdfDirList:= ReadDir(BefundOrdner, "pdf")
+		MsgBox, % PdfDirList:= ReadDir(BefundOrdner, "pdf")
 
 	;nicht mehr vorhandene Dateien aus dem Index nehmen
 		For key, val in ScanPool
@@ -534,7 +565,7 @@ RefreshPdfIndex(BefundOrdner) {	                                   	;-- frischt 
 				If !ScanPoolArray("Find", A_LoopField)
 				{
 						FileGetSize, FSize, % BefundOrdner "\" A_LoopField, K
-						ScanPool.Push(A_LoopField . "|" . FSize . "|" . pages)
+						ScanPool.Push(A_LoopField "|" FSize "|" pages)
 						newPDFs ++
 						continue
 				}

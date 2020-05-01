@@ -2,7 +2,7 @@
 
 #### Extends the possibilities through surface analysis and manipulation
 
-### Version 1.29 vom 09.04.2020
+### Version 1.30 vom 29.04.2020
 lauffähig ab Autohotkey_H-Version  1.1.32.00 Unicode 64bit - es sind Autohotkey_L sowie Autohotkey_H (Multithread Unicode 64bit - Version) notwendig, geschrieben für Albis ab Version 18.40
 
 ![](Docs\Trenner.png)
@@ -25,6 +25,7 @@ lauffähig ab Autohotkey_H-Version  1.1.32.00 Unicode 64bit - es sind Autohotkey
 * Schließt diverse eher störende, wenig wichtige Fenster in Albis und zugehörigen Programmen
 
 <h3> &#9733 Fensterhandler</h3>
+
 - positioniert Fenster zur besseren Übersicht auf dem Monitor (bestimmte Bereich vom Albisfenster werden nicht verdeckt)
 - automatische Bestätigung von Dialognachfragen
 - erweitert automatisch Anzeige-Elemente in Albisdialogen für mehr Übersicht 
@@ -32,21 +33,22 @@ lauffähig ab Autohotkey_H-Version  1.1.32.00 Unicode 64bit - es sind Autohotkey
 <h3> &#9733 Auto-Login </h3>
 * kann auf Wunsch das Login in ihr Albisprogramm vornehmen
 
-<h3> &#9733 Patientendatenbank </h3>
-* für eine schnelle fehlertolerante Suche nach Patienten-Namen
+<h3> &#9733 Patientennamendatenbank </h3>
+
+* für eine schnelle fehlertolerante Suche nach Patienten
 
 <h3> &#9733 alternatives Tagesprotokoll </h3>
 * nach Computern getrenntes Tagesprotokoll. Dies könnte für einzelne Analysen interessant sein
 
-<h3> &#9733 Anzeige v. PDF Dokumenten und JPG-Bilder im  Vorlagenverzeichnis </h3>
+<h3> &#9733 Infofenster	</h3>
 
-* werden bei jedem Patienten im Albis-Patientenfenster angezeigt
+* wird bei jedem Patienten im Albis-Patientenfenster angezeigt
 * Befunde können dann von dort ohne Umweg in die Patientenakte importiert werden
 * das **Posteingangsdatum** (Erstellungsdatum der Datei) wird beim Import in die Patientenakte berücksichtigt
 
 <h3> &#9733 Unterstützung der PDF-Signierung </h3>
 
-durch Druck auf einen Hotkey wird die aktuell im FoxitReader geöffnete PDF Datei signiert. (eine Signatur müssen Sie vorher im FoxitReader erstellt haben). Dadurch ist sogar eine ***gesetzeskonforme und rechtssichere Signierung*** der Dateien möglich. **Achtung:** es gibt keine kostenlose Software zur digitalen Signierung. Den [FoxitReader](https://www.foxitsoftware.com/de/pdf-reader/) müssen Sie bei professioneller Nutzung liszensieren lassen! Ebenso die genutzten Command-Line-Tools - [xpdf-Tools](http://www.xpdfreader.com/) und pdftk.
+- durch Druck auf einen Hotkey wird die aktuell im FoxitReader geöffnete PDF Datei signiert. (eine Signatur müssen Sie vorher im FoxitReader erstellt haben). Dadurch ist sogar eine ***gesetzeskonforme und rechtssichere Signierung*** der Dateien möglich. **Achtung:** es gibt keine kostenlose Software zur digitalen Signierung. Den [FoxitReader](https://www.foxitsoftware.com/de/pdf-reader/) müssen Sie bei professioneller Nutzung liszensieren lassen! Ebenso die genutzten Command-Line-Tools - [xpdf-Tools](http://www.xpdfreader.com/) und pdftk.
 
 <h3> &#9733 Menusuche </h3>
 * Finden und Aufrufen von Menupunkten im Albismenu
@@ -63,28 +65,23 @@ durch Druck auf einen Hotkey wird die aktuell im FoxitReader geöffnete PDF Date
 <h3> &#9733 Rezepthelfer </h3>
 * Rezeptvorlagen erstellen und bei allen Patienten nutzen
 * Schnellverordnung von Medikamenten mit automatischem Druck eines Dosierschema (Worddokument)
-<h3> &#9733 Laborabruf </h3>
-- integrierter Abruf von Laborwerten
+<h3> &#9733 Anzeige von Beginn und Ende der Lohnfortzahlung  </h3>
+
+die berechneten Stichtage werden im oberen Teil der Arbeitsunfähigkeitsbescheinigung eingeblendet 
+
+![](D:\Eigene Dateien\Eigene Dokumente\AutoIt Scripte\GitHub\Addendum-fuer-Albis-on-Windows\Docs\AUFristen.png)
 
 <h3> &#9733 Kontextsensitive Texterweiterungen </h3>
-* Erkennung des Kontext in der Krankenakte anhand der Albiskürzel (z.B. lko, dia, bef, info). 
+* Erkennung des Kontext in der Krankenakte anhand der Albiskürzel (z.B. lko, dia, bef, info) und Bereitstellung von Texterweiterungen (muss definitiv komfortabler werden)
 
 <h3> &#9733 Unterstützung des Laborabrufes </h3>
-- Übernimmt automatisch nach manuellem Start des Laborabrufes die weiteren Vorgänge bis hin zum Übertragen der Befunde ins Laborblatt
+- Übernimmt automatisch nach manuellem Start des Laborabrufes die weiteren Vorgänge bis hin zum Übertragen der Befunde ins Laborblatt  (funktioniert nur teilweise)
 
 
 <h3> &#9733 Funktionsbibliothek für eigene Skriptentwicklung </h3>
 * **106 Funktionen** zur Steuerung von Albis sind für die Entwicklung eigener Skripte vorhanden 
 
-<br>
-
-# ![ScanPool.png](Docs/Icons/ScanPool.png) *ScanPool*
-
-**<u>Der Posteingang für Befunde</u>**
-
-- **Auflistung** neuer Befunde (pdf oder jpg) eines Patienten über ein direkt in das Patientenfenster eingeblendetes Gui
-- **Import der Befunde** von hier direkt in die Patientenakte 
-- das **Posteingangsdatum** (Erstellungsdatum der Datei) wird beim Import in die Patientenakte berücksichtigt
+- 
 
 <br>
 
@@ -106,41 +103,14 @@ durch Druck auf einen Hotkey wird die aktuell im FoxitReader geöffnete PDF Date
 Erstellen Sie ein Tagesprotokoll und nutzen Sie diese Modul um von der Compugroup nicht abgedeckte Regeln zu möglichen Abrechnungsziffern zu entwerfen oder nutzen Sie das Skript um Patienten bestimmten Gruppen zuzuordnen oder um eine erweiterte Statistik durchführen zu können
 <br>fertige Statistiken:
 
-- **freie Statistik** - mittels *RegEx* in Tagesprotokollen suchen (nur Gui fertig)
+- **freie Statistik** - mittels *RegEx* in Tagesprotokollen suchen (**!nur die Gui ist fertig!**)
 - **Patienten für die Vorsorgeliste suchen** - findet Patienten bei denen eine Vorsorgeuntersuchung (GVU und/oder Hautkrebsscreening durchgeführt werden kann)
 - **nach fehlenden GB Ziffern suchen** - erstellt eine Liste von Patienten bei denen der geriatrische Basiskomplex noch nicht abgerechnet wurde
 - **fehlende Chronikerziffern** - erstellt eine Liste von Patienten bei denen die Ziffern 03220 oder 03221 nicht abgerechnet wurden, obwohl dies in den Vorquartalen erfolgt war 
 - **neue Chroniker finden** - findet Patienten bei denen man die Ziffern 03220/03221 ansetzen kann. Das Skript nutzt dazu eine Liste von ICD-Schlüsselnummern des Bewertungsausschusses nach § 87 Absatz 1 SGB V, die nach Einschätzung der AG medizinische Grouperanpassung chronische Krankheiten kodieren.
 - **Dauerdiagnosenstatistik** - listet und zählt alle Dauerdiagnosen aus dem gewählten Tagesprotokoll, jede Diagnose beeinhaltet auch eine Liste der entsprechenden Patienten
 
-<br>
-
-# ![Dicom2Albis.png](Docs/Icons/Dicom2Albis.png)*Dicom2Albis*
-
-**<u>Umwandeln von DICOM DatenCD's mit Import in die Akte</u>** (im Moment nicht funktionsfähig)
-
-- öffnet eine DICOM CD, liest die Inhalte der DICOMDIR Datei 
-- konvertiert die DICOM Bilddateien ins JPEG-Format
-- beschriftet die Bilder mit Namen des Patienten, Datum der Untersuchung, Institutsbezeichnung, Untersuchungsart
-- überträgt die Bilder in die Patientenakte , setzt den richtigen Bezeichner z.B. 01.[Thorax 2 Ebenen-pa] Mustermann, Max als Eintrag in der Akte 
-- der komplette Ablauf kann, wenn gewünscht, komplett automatisiert ablaufen, sie müssen die CD nur einlegen und nach dem Auswerfen wieder dem Laufwerk entnehmen
-
-<br>
-
-# ![Laborabruf.png](Docs/Icons/LaborAbruf.png) *Laborabruf*
-
-**<u>Die Automatisierung für den Abruf der Laborwerte</u>**
-
-- der Abruf der Laborwerte ist jetzt teilautomatisiert und ins Addendum-Skript integriert
-- Skript erkennt einzelne Abschnitte des Abrufs von Labordaten und übernimmt dann die immer wieder kehrenden Eingabetätigkeiten
-
-- erkannt werden:
-
-  - Öffnen des Labordatenimport-Fensters z.B. nach Aufruf über den Menupunkt Extern/Labor/Daten importieren
-    - es wird alles eingetragen was benötigt wird und der Vorgang wird gestartet
-    - im Anschluss wird sofort das Laborbuch geöffent
-
-  - im Laborblatt werden nach Aufruf der Funktion ..alle ins Laborblatt.. , sämtliche sich dann öffnenden Dialoge automatisch bearbeitet.Es ist kein weiterer Eingriff durch den Nutzer notwendig.   
+- 
 
 <br>
 
@@ -168,6 +138,49 @@ Erstellen Sie ein Tagesprotokoll und nutzen Sie diese Modul um von der Compugrou
 
 <br>
 
+### <u>NICHT MEHR WEITERENTWICKELT WIRD</u>
+
+<br>
+
+### <img src="Docs/Icons/ScanPool.png" alt="ScanPool.png" style="zoom:80%;" /> *ScanPool* (in Addendum integriert)
+
+**<u>Der Posteingang für Befunde</u>**
+
+- **Auflistung** neuer Befunde (pdf oder jpg) eines Patienten über ein direkt in das Patientenfenster eingeblendetes Gui
+- **Import der Befunde** von hier direkt in die Patientenakte 
+- das **Posteingangsdatum** (Erstellungsdatum der Datei) wird beim Import in die Patientenakte berücksichtigt
+
+<br>
+
+### <img src="Docs/Icons/LaborAbruf.png" alt="Laborabruf.png" style="zoom:80%;" /> *Laborabruf* (teilweise in Addendum integriert)
+
+**<u>Die Automatisierung für den Abruf der Laborwerte</u>**
+
+- der Abruf der Laborwerte ist jetzt teilautomatisiert und ins Addendum-Skript integriert
+- Skript erkennt einzelne Abschnitte des Abrufs von Labordaten und übernimmt dann die immer wieder kehrenden Eingabetätigkeiten
+
+- erkannt werden:
+
+  - Öffnen des Labordatenimport-Fensters z.B. nach Aufruf über den Menupunkt Extern/Labor/Daten importieren
+    - es wird alles eingetragen was benötigt wird und der Vorgang wird gestartet
+    - im Anschluss wird sofort das Laborbuch geöffent
+
+  - im Laborblatt werden nach Aufruf der Funktion ..alle ins Laborblatt.. , sämtliche sich dann öffnenden Dialoge automatisch bearbeitet.Es ist kein weiterer Eingriff durch den Nutzer notwendig.   
+
+<br>
+
+### <img src="Docs/Icons/Dicom2Albis.png" alt="Dicom2Albis.png" style="zoom:80%;" />*Dicom2Albis* (kein Interesse mehr)
+
+**<u>Umwandeln von DICOM DatenCD's mit Import in die Akte</u>** (im Moment nicht funktionsfähig)
+
+- öffnet eine DICOM CD, liest die Inhalte der DICOMDIR Datei 
+- konvertiert die DICOM Bilddateien ins JPEG-Format
+- beschriftet die Bilder mit Namen des Patienten, Datum der Untersuchung, Institutsbezeichnung, Untersuchungsart
+- überträgt die Bilder in die Patientenakte , setzt den richtigen Bezeichner z.B. 01.[Thorax 2 Ebenen-pa] Mustermann, Max als Eintrag in der Akte 
+- der komplette Ablauf kann, wenn gewünscht, komplett automatisiert ablaufen, sie müssen die CD nur einlegen und nach dem Auswerfen wieder dem Laufwerk entnehmen
+
+- - 
+
 ![](Docs/Trenner.png)
 
 ## ![](../../../../../Eigene%20Dateien/Eigene%20Dokumente/AutoIt%20Scripte/GitHub/Addendum-fuer-Albis-on-Windows/Docs/Icons/Achtung.png) *WICHTIG*
@@ -183,19 +196,6 @@ Erstellen Sie ein Tagesprotokoll und nutzen Sie diese Modul um von der Compugrou
 - **DENKEN** sie immer an den **BACKUP** ihrer wichtigen Daten!
 
   
-
-## **Die Daten die wir im Rahmen unser Arbeit ermitteln gehören den Patienten und uns!**
-
- Es gibt viele Interessenten für die von uns erhobenen Daten. Der sogenannte Datenschutz ist eine Farce! Eine Verarbeitung von Patientendaten erfolgt schon seit Jahren außerhalb der gesetzlichen Regelungen 
-
-- individualisierte Daten zu unserem Verordnungsverhalten wurden angelegt
-
-- der neue Barcode auf jeder Medikamentenpackung ermöglicht nicht nur die Ermittlung der Herkunft der Medikamentenpackung (um Medikamentfälscher zu entlarven), sondern bei jedem Gang in die Apotheke wird der Barcode auch mit den zugehörigen Patientendaten erfasst (ein Verstoß gegen das Datenschutzgesetz) [DAZ](https://www.deutsche-apotheker-zeitung.de/news/artikel/2017/11/14/apotheker-muessen-sich-auf-securpharm-vorbereiten)
-
-
-Erleichtern Sie den Datendiebstahl nicht! Die Daten haben nicht nur im DarkNet einen hohen Wert! Schützen Sie ihre Patienten! Nehmen Sie deshalb Ihre PraxisComputer vom Internet!. Bestenfalls lassen sie diese nur noch per Hardware-Firewall ins Internet! Doch beherrschen Sie die Installation eines solchen? Virenscanner taugen nichts, wenn es um Datendiebstahl geht! 
-
-
 
 ## **Haben Sie keine Sorge vor dem Verlust von Praxisdaten durch die Verwendung der Skripte!**
 
@@ -226,9 +226,7 @@ Auswahlmöglichkeit aus voreingestellten Kategorien (in Patienten verständliche
 
 ![Menu-Suche](Docs/NeuerShiftF3Kalender.png)
 
-<br>
-
-<br>
+<br><br>
 
 ### ![Addendum](Docs/Icons/Addendum.png) <u>Menu-Suche</u>
 
@@ -348,9 +346,9 @@ Dies ist **"keine out of the box"** Lösung! Es müssen entsprechende Anpassunge
 
 DIE SKRIPTSAMMLUNG IST EIN HILFSANGEBOT AN NIEDERGELASSENE ÄRZTE. 
 
-KOMMERZIELLEN UNTERNEHMEN, DIE SICH MIT DER HERSTELLUNG, DEM VERTRIEB ODER WARTUNG VON SOFT- ODER HARDWARE BESCHÄFTIGEN IST JEGLICHER ZUGRIFF AUF DEN GESAMTEN INHALT ODER AUCH NUR TEILEN DES INHALTES UNTERSAGT!
+KOMMERZIELLEN UNTERNEHMEN, DIE SICH MIT DER HERSTELLUNG, DEM VERTRIEB ODER WARTUNG VON SOFT- ODER HARDWARE BESCHÄFTIGEN IST DIE NUTZUNG ALLER INHALTE ODER AUCH NUR TEILE DES INHALTES NUR NACH SCHRIFTLICHER ANFRAGE MIT ANGABEN DER NUTZUNGSGRÜNDE UND MEINER SCHRIFTLICHEN FREIGABE GESTATTET! UNBERÜHRT DAVON SIND DIE VON MIR BENUTZTEN FREMDBIBLIOTHEKEN!
 
-FIRMEN, DIE IM AUFTRAG DER CompuGroup-AG, HARD- UND SOFTWARE VON ÄRZTEN BETREUEN UND EINEN GUTEN RUF GENIESSEN, KÖNNEN NACH EMAIL-RÜCKSPRACHE DIE ANGEBOTENEN SKRIPTE FREI BENUTZEN. HIERZU MÜSSEN DIESE FIRMEN EINEN HINWEIS AUF IHRE HOMEPAGE MIT LINK ZUM GITHUB PORTAL VON Addendum FÜR AlbisOnWindows BEREITSTELLEN. JEGLICHES KÄUFLICHES GEBAHREN IST UNTERSAGT! ERLAUBT IST EIN OFFIZIELLES SUPPORTANGEBOT (ALS LIZENSIERTE FIRMA) FÜR Addendum für AlbisOnWindows AUF DER EIGENEN HOMEPAGE BEREITZUSTELLEN. EBENSO WIE ES ERLAUBT IST DIES NICHT ZU MACHEN.
+DIESES REPOSITORY DARF AUF EIGENEN SEITEN VERLINKT WERDEN.
 
 DIESE SOFTWARE IST **FREIE SOFTWARE**! (*!freie Software ist nicht dasselbe wie Open Source!*) 
 

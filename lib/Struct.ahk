@@ -1,87 +1,69 @@
-ListLines, Off
-/*           Library: Struct.ahk by HotKeyIt
-    Function: Struct
+;: Title: Struct.ahk by HotKeyIt
+;
 
- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    Description:
-        Struct is based on AHK_L Objects and supports both, ANSI and UNICODE version, so to use it you will require Lexikos AutoHotkey_L.exe
-        or other versions based on it that supports objects. Struct is used to create new structure.
-        You can create predefined structures that are saved as static variables inside the function or pass you own structure definition.
-        Struct.ahk supportes structure in structure as well as Arrays of structures and Vectors.
-        Visit http://www.autohotkey.com/forum/viewtopic.php?t=43049 at AutoHotkey forum, any feedback is welcome.
-
- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    Syntax: Struct(Structure_Definition,Address)
-
- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    Parameters:
-        General Design - Struct function will create Object(s) that will manage fields of structure(s), for example RC := Struct("RECT") creates a
-        RECT structure with fields left,top,right,bottom. To pass structure its pointer to a function or DllCall or SendMessage you will need to use
-        RC[""] or RC[].To access fields you can use usual Object syntax: RC.left, RC.right ...
-        To set a field of the structure use RC.top := 100.
-        Field types - All AutoHotkey and Windows Data Types are supported, AutoHotkey Data Types, Int, Uint, Int64, UInt64, Char, UChar, Short,
-        UShort, Fload and Double.Windows Data Types - note, TCHAR and CHAR return actual character rather than the value,
-        where UCHAR will return the value of character:
-
-                    Asc(char)ATOM,BOOL,BOOLEAN,BYTE,CHAR,COLORREF,DWORD,DWORDLONG,DWORD_PTR,DWORD32,DWORD64,
-                    FLOAT,HACCEL,HALF_PTR,HANDLE,HBITMAP,HBRUSH,HCOLORSPACE,HCONV,HCONVLIST,HCURSOR,HDC,HDDEDATA,HDESK,
-                    HDROP,HDWP,HENHMETAFILE,HFILE,HFONT,HGDIOBJ,HGLOBAL,HHOOK,HICON,HINSTANCE,HKEY,HKL,HLOCAL,HMENU,
-                    HMETAFILE,HMODULE,HMONITOR,HPALETTE,HPEN,HRESULT,HRGN,HRSRC,HSZ,HWINSTA,HWND,INT,INT_PTR,INT32,INT64,LANGID,
-                    LCID,LCTYPE,LGRPID,LONG,LONGLONG,LONG_PTR,LONG32,LONG64,LPARAM,LPBOOL,LPBYTE,LPCOLORREF,LPCSTR,LPCTSTR,
-                    LPCVOID,LPCWSTR,LPDWORD,LPHANDLE,LPINT,LPLONG,LPSTR,LPTSTR,LPVOID,LPWORD,LPWSTR,LRESULT,PBOOL,PBOOLEAN,
-                    PBYTE,PCHAR,PCSTR,PCTSTR,PCWSTR,PDWORD,PDWORDLONG,PDWORD_PTR,PDWORD32,PDWORD64,PFLOAT,PHALF_PTR,
-                    PHANDLE,PHKEY,PINT,PINT_PTR,PINT32,PINT64,PLCID,PLONG,PLONGLONG,PLONG_PTR,PLONG32,PLONG64,POINTER_32,
-                    POINTER_64,POINTER_SIGNED,POINTER_UNSIGNED,PSHORT,PSIZE_T,PSSIZE_T,PSTR,PTBYTE,PTCHAR,PTSTR,PUCHAR,PUHALF_PTR,
-                    PUINT,PUINT_PTR,PUINT32,PUINT64,PULONG,PULONGLONG,PULONG_PTR,PULONG32,PULONG64,PUSHORT,PVOID,PWCHAR,
-                    PWORD,PWSTR,SC_HANDLE,SC_LOCK,SERVICE_STATUS_HANDLE,SHORT,SIZE_T,SSIZE_T,TBYTE,TCHAR,UCHAR,UHALF_PTR,UINT,
-                    UINT_PTR,UINT32,UINT64,ULONG,ULONGLONG,ULONG_PTR,ULONG32,ULONG64,USHORT,USN,WCHAR,WORD,WPARAM
-
- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Mode - Description
-      User defined - To create a user defined structure you will need to pass a string of predefined types and field names.Default type is UInt,
-                              so for example for a RECT structure type can be omited: "left,top,right,left", which is the same as "Uint left,Uint top,Uint right,
-                              Uint bottom"You can also use Structure contstructor that can be obtained by calling Struct("")Using constructor you can define structures
-                              very similar to C#/C++ syntax, see example how to use.
-
-	   Global -           Global variables can be used to save structures, easily pass name of that variable as first parameter, e.g. Struct("MyStruct")
-                              where MyStruct must be a global variable with structure definition.
-
-        Static -            Struct() function holds some example structure definitions like RECT or POINT, to create such a structure you will need to pass a string containing
-                              the name of desired structure, same as for Global mode, for example p:=Struct("POINT").You can also define static structures dynamically,
-                              therefore enter Name of structure followed by : before structure definition, e.g. Struct("MyStruct:length,width").
-
-	   Array - To create an array of structures include a digit in the end of your string enclosed in squared brackets.For example "RECT[2]" would create
-                  an array of 2 structures.This feature can also be used for user defined arrays, for example "Int age,TCHAR name[10]".
-
-	   Union - Using {} you can create union, for example: AHKVar:="{Int64 ContentsInt64,Double ContentsDouble,object},...
-
-	   Pointer - To create a pointer you can use *, for example: CHR:="char *str" will hold a pointer to a character.
-                    Same way you can have a structure in structure so you can call for example Label.NextLabel.NextLabel.JumpToLine
-
-	   Other - Special call modes
-
-	   Struct:=Struct(StructObject,pointer) - Pass a pointer as second parameter to occupy existing strucure.
-
-	   size:=Struct(StructObject) - Pass a structure prevoiusly create with Struct() to receive the size of your sructure.
-
-	   ConstructorObj:=Struct("") - get contstructor object that can be used to define and create structures
-
- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    Return Value:
-        In create mode Structure Object is returned, else you can receive the size of your structure
-
- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    Remarks:
-		Sctruct_Count() and Struct_getVar() are used internally by Struct. , Struct_Get() and Struct_Put() are meta functions used to set and get fields of structure,
-        these do not need to be called by the user.NOTE!!! accessing a field that does not exist will crash your application, these errors are not catched for performance reasons.
-
- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    Related:
- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    Example:
-		file:Struct_Example.ahk
-*/
-
+; Function: Struct
+; Description:
+;      Struct is based on AHK_L Objects and supports both, ANSI and UNICODE version, so to use it you will require
+;		<a href=http://www.autohotkey.com/forum/viewtopic.php?t=43049>Lexikos AutoHotkey_L.exe</a> or other versions based on it that supports objects.
+;
+;Struct is used to create new structure. You can create predefined structures that are saved as static variables inside the function or pass you own structure definition.
+;Struct.ahk supportes structure in structure as well as Arrays of structures and Vectors.
+;Visit <a href=http://www.autohotkey.com/forum/viewtopic.php?t=43049>Struct.ahk at AutoHotkey</a> forum, any feedback is welcome.
+; Syntax: Struct(Structure_Definition,Address)
+; Parameters:
+;	   General Design -   Struct function will create Object(s) that will manage fields of structure(s), for example RC := Struct("RECT") creates a RECT structure with fields left,top,right,bottom.
+;                                   To pass structure its pointer to a function or DllCall or SendMessage you will need to use RC[""] or RC[].
+;                                   To access fields you can use usual Object syntax: RC.left, RC.right ...
+;									To set a field of the structure use RC.top := 100.
+;	   Field types - 			All AutoHotkey and Windows Data Types are supported
+; AutoHotkey Data Types
+; Int, Uint, Int64, UInt64, Char, UChar, Short, UShort, Fload and Double.
+;Windows Data Types
+; - note, TCHAR and CHAR return actual character rather than the value, where UCHAR will return the value of character: Asc(char)
+; ATOM,BOOL,BOOLEAN,BYTE,CHAR,COLORREF,DWORD,DWORDLONG,DWORD_PTR,
+; DWORD32,DWORD64,FLOAT,HACCEL,HALF_PTR,HANDLE,HBITMAP,HBRUSH,HCOLORSPACE,HCONV,HCONVLIST,HCURSOR,HDC,
+; HDDEDATA,HDESK,HDROP,HDWP,HENHMETAFILE,HFILE,HFONT,HGDIOBJ,HGLOBAL,HHOOK,HICON,HINSTANCE,HKEY,HKL,
+; HLOCAL,HMENU,HMETAFILE,HMODULE,HMONITOR,HPALETTE,HPEN,HRESULT,HRGN,HRSRC,HSZ,HWINSTA,HWND,INT,
+; INT_PTR,INT32,INT64,LANGID,LCID,LCTYPE,LGRPID,LONG,LONGLONG,LONG_PTR,LONG32,LONG64,LPARAM,LPBOOL,
+; LPBYTE,LPCOLORREF,LPCSTR,LPCTSTR,LPCVOID,LPCWSTR,LPDWORD,LPHANDLE,LPINT,LPLONG,LPSTR,LPTSTR,LPVOID,
+; LPWORD,LPWSTR,LRESULT,PBOOL,PBOOLEAN,PBYTE,PCHAR,PCSTR,PCTSTR,PCWSTR,PDWORD,PDWORDLONG,PDWORD_PTR,
+; PDWORD32,PDWORD64,PFLOAT,PHALF_PTR,PHANDLE,PHKEY,PINT,PINT_PTR,PINT32,PINT64,PLCID,PLONG,PLONGLONG,
+; PLONG_PTR,PLONG32,PLONG64,POINTER_32,POINTER_64,POINTER_SIGNED,POINTER_UNSIGNED,PSHORT,PSIZE_T,
+; PSSIZE_T,PSTR,PTBYTE,PTCHAR,PTSTR,PUCHAR,PUHALF_PTR,PUINT,PUINT_PTR,PUINT32,PUINT64,PULONG,PULONGLONG,
+; PULONG_PTR,PULONG32,PULONG64,PUSHORT,PVOID,PWCHAR,PWORD,PWSTR,SC_HANDLE,SC_LOCK,SERVICE_STATUS_HANDLE,
+; SHORT,SIZE_T,SSIZE_T,TBYTE,TCHAR,UCHAR,UHALF_PTR,UINT,UINT_PTR,UINT32,UINT64,ULONG,ULONGLONG,
+; ULONG_PTR,ULONG32,ULONG64,USHORT,USN,WCHAR,WORD,WPARAM
+;	   <b>Mode</b> - <b>Description</b>
+;	   User defined - To create a user defined structure you will need to pass a string of predefined types and field names.
+;Default type is UInt, so for example for a RECT structure type can be omited: <b>"left,top,right,left"</b>, which is the same as <b>"Uint left,Uint top,Uint right,Uint bottom"</b>
+;
+;You can also use Structure contstructor that can be obtained by calling Struct("")
+;Using constructor you can define structures very similar to C#/C++ syntax, see example how to use.
+;	   Global 	-  Global variables can be used to save structures, easily pass name of that variable as first parameter, e.g. Struct("MyStruct") where MyStruct must be a global variable with structure definition.
+;	   Static 	- 	Struct() function holds some example structure definitions like RECT or POINT, to create such a structure you will need to pass a string containing the name of desired structure,
+;					 	same as for Global mode, for example p:=Struct("POINT").
+;You can also define static structures dynamically, therefore enter Name of structure followed by : before structure definition, e.g. Struct("MyStruct:length,width").
+;	   Array - To create an array of structures include a digit in the end of your string enclosed in squared brackets.
+;For example "RECT[2]" would create an array of 2 structures.
+;This feature can also be used for user defined arrays, for example "Int age,TCHAR name[10]".
+;	   Union - Using {} you can create union, for example:
+;AHKVar:="{Int64 ContentsInt64,Double ContentsDouble,object},...
+;	   Pointer - To create a pointer you can use *, for example: CHR:="char *str" will hold a pointer to a character. Same way you can have a structure in structure so you can call for example Label.NextLabel.NextLabel.JumpToLine
+;	   <b>Other</b> - <b>Special call modes</b>
+;	   Struct:=Struct(StructObject,<b>pointer</b>) - Pass a pointer as second parameter to occupy existing strucure.
+;	   <b>size</b>:=Struct(StructObject) - Pass a structure prevoiusly create with Struct() to receive the size of your sructure.
+;	   <b>ConstructorObj</b>
+;:=Struct("") - get contstructor object that can be used to define and create structures
+; Return Value:
+;     In create mode Structure Object is returned, else you can receive the size of your structure
+; Remarks:
+;		Sctruct_Count() and Struct_getVar() are used internally by Struct. , Struct_Get() and Struct_Put() are meta functions used to set and get fields of structure, these do not need to be called by the user.
+;
+;<b>NOTE!!! accessing a field that does not exist will crash your application, these errors are not catched for performance reasons.</b>
+; Related:
+; Example:
+;		file:Struct_Example.ahk
+;
 
 Struct(_def,_obj="",_name="",_offset=0,_TypeArray=0,_Encoding=0){
 	static ;static mode, so structure definitions can be declared statically if waited
@@ -94,7 +76,8 @@ Struct(_def,_obj="",_name="",_offset=0,_TypeArray=0,_Encoding=0){
   ;Windows Data Types
   static VOID="PTR",TBYTE=A_IsUnicode?"USHORT":"UCHAR",TCHAR=A_IsUnicode?"USHORT":"UCHAR",HALF_PTR=A_PtrSize=8?"INT":"SHORT",UHALF_PTR=A_PtrSize=8?"UINT":"USHORT"
   			,INT32="Int",LONG="Int",LONG32="Int",LONGLONG="Int64",LONG64="Int64",USN="Int64",HFILE="PTR",HRESULT="PTR",INT_PTR="PTR",LONG_PTR="PTR",POINTER_64="PTR",POINTER_SIGNED="PTR"
-  			,BOOL="Int",SSIZE_T="PTR",WPARAM="PTR",BOOLEAN="UCHAR",BYTE="UCHAR",COLORREF="UInt",DWORD="UInt",DWORD32="UInt",LCID="UInt",LCTYPE="UInt",LGRPID="UInt",LRESULT="UInt",PBOOL="UInt",PBOOLEAN="UInt"
+  			,BOOL="Int",INT32="Int",LONG="Int",LONG32="Int",LONGLONG="Int64",LONG64="Int64",USN="Int64",HFILE="PTR",HRESULT="PTR",INT_PTR="PTR",LONG_PTR="PTR",POINTER_64="PTR",POINTER_SIGNED="PTR"
+  			,SSIZE_T="PTR",WPARAM="PTR",BOOLEAN="UCHAR",BYTE="UCHAR",COLORREF="UInt",DWORD="UInt",DWORD32="UInt",LCID="UInt",LCTYPE="UInt",LGRPID="UInt",LRESULT="UInt",PBOOL="UInt",PBOOLEAN="UInt"
   			,PBYTE="UInt",PCHAR="UInt",PCSTR="UInt",PCTSTR="UInt",PCWSTR="UInt",PDWORD="UInt",PDWORDLONG="UInt",PDWORD_PTR="UInt",PDWORD32="UInt",PDWORD64="UInt",PFLOAT="UInt",PHALF_PTR="UInt",UINT32="UInt"
   			,ULONG="UInt",ULONG32="UInt",DWORDLONG="UInt64",DWORD64="UInt64",ULONGLONG="UInt64",ULONG64="UInt64",DWORD_PTR="UPTR",HACCEL="UPTR",HANDLE="UPTR",HBITMAP="UPTR",HBRUSH="UPTR"
   			,HCOLORSPACE="UPTR",HCONV="UPTR",HCONVLIST="UPTR",HCURSOR="UPTR",HDC="UPTR",HDDEDATA="UPTR",HDESK="UPTR",HDROP="UPTR",HDWP="UPTR",HENHMETAFILE="UPTR",HFONT="UPTR",HGDIOBJ="UPTR",HGLOBAL="UPTR"
@@ -339,7 +322,6 @@ Struct(_def,_obj="",_name="",_offset=0,_TypeArray=0,_Encoding=0){
 }
 
 Struct_GetSize(_object,o=0){
-
   static PTR:=A_PtrSize,UPTR:=A_PtrSize,Short:=2,UShort:=2,Int:=4,UInt:=4,Int64:=8,UInt64:=8,Double:=8,Float:=4,Char:=1,Uchar:=1
   for _k,_v in _object
   {
@@ -384,7 +366,6 @@ Struct_Get(o,_k="",opt="~"){
 }
 
 Struct_Put(o,_k="",_v=9223372036854775809,opt="~"){
-
   If ((var:=_v)=9223372036854775809){
     Struct(o,0,2) ;set pointer back to offset
     ,o._SetCapacity("`n",0)
@@ -418,10 +399,9 @@ Struct_Put(o,_k="",_v=9223372036854775809,opt="~"){
 }
 
 Struct_getVar(var) {
-
   static getVarFuncHex:=(A_PtrSize=4)?"8B4C24088B0933C08379080375028B018B4C2404998901895104C3":"488B02837810037507488B00488901C348C70100000000C3"
          ,pcb,pFunc:=NumGet((pcb:=RegisterCallback("Struct_getVar"))+28+(A_PtrSize=4?0:20),0,"UInt")
-         ;,pcb:=DllCall("GlobalFree","UPTR",pCb),init:=Struct_getVar("")
+         ,pcb:=DllCall("GlobalFree","UPTR",pCb),init:=Struct_getVar("")
    if !(pbin := DllCall("GlobalAlloc","UPTR",0,"uint",StrLen(getVarFuncHex)//2))
       return 0
 	Loop % StrLen(getVarFuncHex)//2
