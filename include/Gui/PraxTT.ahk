@@ -1,5 +1,6 @@
 ﻿PraxTT(Textmsg, Params:="3 0 B") {																				;--Tooltip Ersatz im Addendum/Nutzer Design mit off-Timer Feature
 
+
 	/* FUNKTIONSBESCHREIBUNG,  last change: 25.09.2019
 	   *
 		*	Textmsg: 	Inhalt der Nachricht
@@ -11,8 +12,11 @@
 												A: Attached - relativ zu einem angegeben Fenster, S: Static - wird nicht ausgeblendet
 		*					Innerhalb des Textes addiert vergrößert ein #2 die Fontgröße um 2 Punkte usw. (neu seit d. 18.05.2019)
 		*
-		*	changes: 	01.06.2019 - Funktion gibt die Anzahl der Textzeilen der Gui zurück, damit können die Textzeilen später geändert werden ohne eine neue Gui erstellen zu müssen
-		*	             	11.06.2019 - Timer wird bei erneutem Funktionsaufruf beendet um das Schließen einer neuen Gui während des Aufbaus zu verhindern
+		*	changes: 	01.06.2019	- Funktion gibt die Anzahl der Textzeilen der Gui zurück, damit können die Textzeilen später geändert werden ohne eine neue Gui erstellen zu müssen
+		*	             	11.06.2019	- Timer wird bei erneutem Funktionsaufruf beendet um das Schließen einer neuen Gui während des Aufbaus zu verhindern
+		*	             	18.06.2020	- Params kann jetzt ein Objekt sein (noch nicht vollständig umgesetzt!).
+		*                                   	   Beispiel: PraxTT("Textnachricht", {timeout:3, zoom:0, position:"Bottom ahk_class OptoAppClass"} - OptoAppClass ist das Albisfenster
+		*                                    	- der ToolTip wird standardmäßig innerhalb des Albisfenster eingeblendet
 		*
 	   *
 	*/
@@ -34,7 +38,7 @@
 
 		global PraxTT, hPraxTT, PraxTTRunning, PraxTTDuration, PraxTTCounter1, PraxTTCounter2
 
-		Prax	    	:= Object()
+		Prax	   	:= Object()
 		controls	:= []
 	;}
 
@@ -72,9 +76,15 @@
 	}
 
 	  ; die Parameter verrechnen, erster Parameter ist wird ein statisches Fenster geschlossen
-		lifetime						:= StrSplit(Params, A_Space).1
-		FontSizeMultiplicator	:= StrSplit(Params, A_Space).2
-		ScreenPosition			:= StrSplit(Params, A_Space).3
+		If !IsObject(Params) {
+			lifetime						:= StrSplit(Params, A_Space).1
+			FontSizeMultiplicator	:= StrSplit(Params, A_Space).2
+			ScreenPosition			:= StrSplit(Params, A_Space).3
+		} else {
+			lifetime						:= Params.timeout
+			FontSizeMultiplicator	:= Params.zoom
+			ScreenPosition			:= Params.position
+		}
 
 	  ; Auflösung >2k dann wird der Gui-Text automatisch größer angezeigt
 		If A_ScreenWidth > 1920
@@ -150,28 +160,33 @@
 		Gui, PraxTT: Show, % "AutoSize Center NoActivate Hide"
 
 	  ; ermitteln der Fenstergrößen und Zentrieren des Textes
-		Prax    	:= GetWindowInfo(hPraxTT), 	controls	:= GetControls(hPraxTT)
-		Loop, % controls.MaxIndex() {
-				If (A_Index > 2)
-				{
-						Control, Style, +0x1,							   , % "ahk_id " controls[A_Index].Hwnd
-						ControlMove,, 0,	  , % Prax.WindowW,, % "ahk_id " controls[A_Index].Hwnd										;w - (2*MrgX)
+		Prax := GetWindowSpot(hPraxTT), controls := GetControls(hPraxTT)
+		Loop % controls.MaxIndex() {
+				If (A_Index > 2) {
+						Control, Style, +0x1,				   , % "ahk_id " controls[A_Index].Hwnd
+						ControlMove,, 0,, % Prax.W	  ,, % "ahk_id " controls[A_Index].Hwnd										;w - (2*MrgX)
 				}
 		}
 
 	  ; Abstand der letzten Textzeile zum unteren Fensterrand festlegen
-		max:= controls.MaxIndex()
+		max := controls.MaxIndex()
 		ControlGetPos,, LConY,,LConH,, % "ahk_id " controls[max].Hwnd
 
 	  ; Positionieren der Gui oberhalb der Taskbar
-		WinGetPos,, stY,,, ahk_class Shell_TrayWnd
-		Prax:= GetWindowInfo(hPraxTT)
-		SetWindowPos(hPraxTT, Prax.WindowX, ( stY - Prax.WindowH - 18), Prax.WindowW, Prax.WindowH) ;(LConY+cFontSize/2) )
+		Prax	:= GetWindowSpot(hPraxTT)
+		If InStr(WinGetMinMaxState(AlbisWinID()), "z") { ; Albisfenster ist maximiert
+			Albis	:= GetWindowSpot(AlbisWinID())
+			SetWindowPos(hPraxTT, Albis.X + Floor(Albis.CW/2) - Floor(Prax.CW/2), Albis.Y + Albis.H - Prax.H - 19, Prax.W, Prax.H) ;(LConY+cFontSize/2) )
+		} else {
+			WinGetPos,, stY,,, ahk_class Shell_TrayWnd
+			SetWindowPos(hPraxTT, Prax.WindowX, ( stY - Prax.WindowH - 18), Prax.WindowW, Prax.WindowH) ;(LConY+cFontSize/2) )
+		}
+
 
 	  ; erkennt das ein Counter gewünscht ist, matched 'Warte bis zu 10s ...' , matched nicht 'Der Prozeß hat 13.66s gebraucht'
 		Gui, PraxTT: Font, % "q5 s" cFontSize*0.8 " c" FontColor2, %Font%
-		Gui, PraxTT: Add, Text, % "x5 y" Prax.WindowH - 15 " vPraxTTCounter1 Center BackgroundTrans", ---
-		Gui, PraxTT: Add, Text, % "x5 y" Prax.WindowH - 15 " vPraxTTCounter2 Center BackgroundTrans", ---
+		Gui, PraxTT: Add, Text, % "x5 y" Prax.H - 15 " vPraxTTCounter1 Center BackgroundTrans", ---
+		Gui, PraxTT: Add, Text, % "x5 y" Prax.H - 15 " vPraxTTCounter2 Center BackgroundTrans", ---
 
 		If RegExMatch(TextMsg, "i)(?<=\s)\d+(?=s\s)", time) {
 			GuiControl, PraxTT:, PraxTTCounter1, % time "s"
@@ -181,8 +196,8 @@
 			GuiControl, PraxTT:, PraxTTCounter2, % "---"
 		}
 
-		GuiControl, MoveDraw, %hProgress%, % "w" (Prax.ClientW + MrgX) " h" ( TitleH + 3 )
-		GuiControl, MoveDraw, %hTitle%		, % "x" ((Prax.ClientW+ MrgX)//2-TitleW//2)
+		GuiControl, MoveDraw, %hProgress%, % "w" (Prax.CW + MrgX) " h" ( TitleH + 3 )
+		GuiControl, MoveDraw, %hTitle%		, % "x" ((Prax.CW+ MrgX)//2-TitleW//2)
 
 	  ; Einblenden mit Animation wenn keine Teamviewerverbindung besteht
 		Gui, PraxTT: Show, % "AutoSize NoActivate", % "PraxTT-Info"

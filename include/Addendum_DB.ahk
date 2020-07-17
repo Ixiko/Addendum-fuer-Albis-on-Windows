@@ -6,7 +6,7 @@
 ;                                                                                  	------------------------
 ;                                                	FÜR DAS AIS-ADDON: "ADDENDUM FÜR ALBIS ON WINDOWS"
 ;                                                                                  	------------------------
-;    		BY IXIKO STARTED IN SEPTEMBER 2017 - LAST CHANGE 28.04.2020 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
+;    		BY IXIKO STARTED IN SEPTEMBER 2017 - LAST CHANGE 24.06.2020 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;###############################################################################
@@ -144,24 +144,27 @@ GetFromPatDb(getString:="PatID|Gd", OnlyFirstMatch:=0, Nn:="", Vn:="", Gt:="", G
 return returnObj
 }
 
-PatDb(tObj, cmd:="") {																			        ;-- überprüft die Addendum Patientendatenbank und führt auch das alternative Tagesprotokoll
+PatDb(Pat, cmd:="") {																			        ;-- überprüft die Addendum Patientendatenbank und führt auch das alternative Tagesprotokoll
 
-			If !IsObject(tObj)
-				Exceptionhelper(A_ScriptName, "PatDb(tObj,cmd:="") {", "Die Funktion hat einen Fehler ausgelöst,`nweil kein Objekt übergeben wurde.", A_LineNumber)
+			If !IsObject(Pat)
+				Exceptionhelper(A_ScriptName, "PatDb(Pat,cmd:="") {", "Die Funktion hat einen Fehler ausgelöst,`nweil kein Objekt übergeben wurde.", A_LineNumber)
 
-			iPatID	:= tObj.ID
 
 		;fehlerhafte Funktionsaufrufe finden noch immer statt, warum?
-			If (!RegExMatch(iPatID, "^\d+$") || (StrLen(iPatID) = 0)) 									;abbrechen falls keine PatID ermittelt werden kann
+			PatID := Pat.ID
+			If (!RegExMatch(PatID, "^\d+$") || StrLen(PatID) = 0) 									;abbrechen falls keine PatID ermittelt werden kann
 					return
 
 		;Nn - Nachname, Vn - Vorname, Gt - Geschlecht, Gd - Geburtsdatum, Kk - Krankenkasse
-			If !oPat.Haskey(iPatID) {
-					oPat[iPatID] := {"Nn": (tObj.Nn), "Vn": (tOb.Vn), "Gt": (tObj.Gt), "Gd": (tObj.Gd), "Kk": (tObj.Kk)}
-					FileAppend, % iPatID ";" (tObj.Nn) ";" (tObj.Vn) ";" (tObj.Gt) ";" (tObj.Gd) ";" (tObj.Kk) ";`n", % Addendum.DBPath "\Patienten.txt", UTF-8
-					TrayTip, Addendum, % "neue PatID (Zähler: " oPat.Count() ") für die Addendumdatenbank:`n(" iPatID ") " tObj.Nn "," tObj.Vn, 1
+			If !oPat.Haskey(PatID) {
+
+					oPat[PatID] := {"Nn": Pat.Nn, "Vn": Pat.Vn, "Gt": Pat.Gt, "Gd": Pat.Gd, "Kk": Pat.Kk}
+
+					FileAppend, % PatID ";" Pat.Nn ";" Pat.Vn ";" Pat.Gt ";" Pat.Gd ";" Pat.Kk ";`n", % Addendum.DBPath "\Patienten.txt", UTF-8
+					TrayTip, Addendum, % "neue PatID (Zähler: " oPat.Count() ") für die Addendumdatenbank:`n(" PatID ") " Pat.Nn "," Pat.Vn, 1
+
 				; Praxomat zeigt den maximalen Index der Patienten in der 'Addendum-Patienten' Datenbank an
-					If ( hPraxomatGui:= WinExist("PraxomatGui") ) {
+					If ( hPraxomatGui:= WinExist("PraxomatGui ahk_class AuthotkeyGui") ) {
 							Send_WM_COPYDATA("PatDBCount|" oPat.Count() , hPraxomatGui)
 							Sleep, 500
 					}
@@ -169,25 +172,15 @@ PatDb(tObj, cmd:="") {																			        ;-- überprüft die Addendum Pa
 
 		;ermittelt ob diese Patientenakte heute schon aufgerufen wurden
 			For Index, Value in TProtokoll
-				 If InStr(Value, iPatID)
+				 If InStr(Value, PatID)
 								return
 
-		;wenn nicht wird die PatID zum Tagesprotokoll hinzugefügt und in der Datenbank vermerkt
-			TProtokoll.Push(iPatID)
-			TPCount := TProtokoll.Count()
-			TrayTip, Tagesprotokoll, % "neue ID für das Tagesprotokoll: (" iPatID ") " SplitStr[2] "`nZähler: " TPCount, 1
-			For Index, Value in TProtokoll
-			{
-					If (StrLen(Value) = 0) {
-							TProtokoll.RemoveAt(Index)
-							continue
-					}
-					schreib .= Value "(" A_Hour ":" A_Min "),"
-					If ( hPraxomatGui := WinExist("PraxomatGui") )
-							Send_WM_COPYDATA("TPCount|" TPCount , hPraxomatGui)
-			}
-
-			IniWrite, % RTrim(schreib, ","), % Addendum.TPFullPath, % SectionDate, % compname, UTF-8
+		;PatID wird dem Tagesprotokoll hinzugefügt und gespeichert
+			TProtokoll.Push(PatID)
+			IniAppend("<" PatID "(" A_Hour ":" A_Min ")>", Addendum.TPFullPath, SectionDate, compname)
+			TrayTip, Tagesprotokoll, % "neue ID für das Tagesprotokoll: (" PatID ") " oPat.Nn ", " oPat.Vn ", " oPat.Gd "`nZähler: " TProtokoll.Count(), 1
+			If ( hPraxomatGui := WinExist("PraxomatGui") )
+					Send_WM_COPYDATA("TPCount|" TProtokoll.Count() , hPraxomatGui)
 
 return
 }
@@ -543,106 +536,152 @@ RefreshPdfIndex(BefundOrdner) {	                                   	;-- frischt 
 return newPDFs
 }
 
-RefreshPdfIndexAlt(BefundOrdner) {	                                   	;-- frischt das ScanPool Object auf
-
-		; globale Variabeln im aufrufenden Skript: ScanPool := Object()
-
-		static newPDFs  	:= 0
-		PageSum	:= 0
-		FileCount	:= 0
-		allfiles   	:= ""
-
-		MsgBox, % PdfDirList:= ReadDir(BefundOrdner, "pdf")
-
-	;nicht mehr vorhandene Dateien aus dem Index nehmen
-		For key, val in ScanPool
-				If !InStr(PdfDirList, StrSplit(val, "|").1)
-						ScanPool.Delete(key)
-
-	;nach noch nicht aufgenommenen Dateien suchen
-		Loop, Parse, PdfDirList, `n, `r
-		{
-				If !ScanPoolArray("Find", A_LoopField)
-				{
-						FileGetSize, FSize, % BefundOrdner "\" A_LoopField, K
-						ScanPool.Push(A_LoopField "|" FSize "|" pages)
-						newPDFs ++
-						continue
-				}
-
-		}
-
-	;Sortieren der eingelesenen und aktualisierten Dateien
-		ScanPoolArray("Sort")
-		ScanPoolArray("Save")
-
-return newPDFs
-}
-
 ;}
 
 ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; DBASE
 ;--------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-ReadDbf(dbfPath) {                                                                                  ;-- liest die Datensätze einer .dbf Datei aus (*alpha version)
+ReadDbf(dbfPath, SaveTo:="", options:="") {                                                                           ;-- liest Datensätze aus einer DBASE Datei
 
-		; Funktion eigenet sich in diesem Zustand nur für kleinere Dateien bis maximal (getestet) 20MB
-		/*  Aufbau der Funktion:
+		/*  Beschreibung
 
-				- es werden als erstes Daten aus dem DBASE-Header gelesen
+				◦ es werden als erstes Daten aus dem DBASE-Header gelesen
 					1. die Anzahl der Datensätze
 					2. Header Länge
 					3. Länge eines Datensatzes
 
-				- wenn diese Daten ausgelesen sind, wird ab dem offset Header Länge 1 jeweils ein Datensatz als Textzeile ausgelesen und
-					in UTF-8 umgewandelt
+				◦ das Auslesen erfolgt Datensatzweise entweder in eine Datei (utf-8 konvertiert) oder in eine Variable
 
+				~~~~~~~~~~~~~ PARAMETER ~~~~~~~~~~~~~~
+
+				◦ SaveTo        	- 	ist der Parameter leer wird der Inhalt der DBASE Datei in eine Variable geladen
+							         		! ACHTUNG: 	große DBASE Dateien sollten nicht in den RAM eingelesen werden, wenn man bei Autohotkey
+									         						nicht vorher die	maximale Speichernutzung für eine Variable eingestellt hat (#MaxMem)
+				        				- 	enthält SaveTo einen Dateipfad mit Dateinamen wird der Datenbankinhalt ohne RAM Zwischenspeicherung
+						        			in eine .csv-Datei (mit Tabulatoren als Trennzeichen) konvertiert
+
+				◦ options          	- 	ein Objekt bestehend aus einer variablen Anzahl an key:value Paaren
+											◦ StartWithSet:      	Datensatznummer bei der mit dem Lesen begonnen werden soll
+																		bei Übergabe einer 0 wird bei einer bereits geöffneten Datei ab dem nächsten Datensatz fortgesetzt
+																		ein nicht vorhandener Parameter ist dasselbe als wenn eine 1 übergeben wird, der Lesezugriff erfolgt
+																		ab dem ersten Datensatz der DBASE Datei
+				                         	◦ MaxDataSets: 	 	maximale Anzahl zu lesender Datensätze, die Funktion wird bei Erreichen dieser Zahl beendet
+									                         			0 oder nicht vorhanden = die Anzahl der gelesenen Datensätze wird nicht begrenzt
+											◦ Search:            	nur die passenden Datensätze werden zurück gegeben
+											◦ CloseAfterRead:	der Lesezugriff auf die DBASE Datei wird nach dem Auslesen der Daten beendet (true oder false)
+
+				◦ Rückgabewert: 	UTF-8 String (0000x:Tabellenspalten getrennt durch Leerzeichen/Tabs `n)
+
+				◦ ANMERKUNG: 	korrekte Umwandlung getestet an PatGRArt.dbf, Nummern.dbf, befgonr.dbf, Patient.dbf
+											nicht funktionierend bei beftext.dbf
 
 		 */
 
-		if !dbf := FileOpen(file, "r", "CP1252") {
-				MsgBox, % "Dbf - FileOpen failed."
-				return
+	; Variablen
+		static WorkDb, ConvFile, appendix, CntDataSets, HeaderLen, LenDataSet, buffin, lastpos, lastDatensatz
+		static MB := 1024*1024 ; maximale Dateigröße der csv Datei (hier 1 MB)
+		static dbf
+
+	; Falls DBASE Datei noch nicht geöffnet ist, jetzt den Lesezugriff erstellen
+		If (WorkDb != dbfPath) {
+
+			If !(dbf := FileOpen(dbfPath, "r", "CP1252")) {
+				MsgBox, % "Dbf - file read failed."
+				return 0
+			}
+
+		; DBASE Header auslesen, DBASE Pfad speichern
+			CntDataSets 	:= SeekReadNum(dbf, 4	, 4, "Uint")     	; maximale Zahl der Datensätze
+			HeaderLen  	:= SeekReadNum(dbf, 8	, 2, "Uint") 		; Header Länge
+			LenDataSet	:= SeekReadNum(dbf, 10	, 2, "Uint")	    	; Länge eines Datensatzes
+			WorkDb    	:= dbfPath
+			VarSetCapacity(buffin, LenDataSet, 0) ; buffer vorbereiten
+			lastpos      	:= 0
+			lastDatensatz	:= 0
+			pos				:= HeaderLen
+
 		}
 
-		pos := 0
-		VarSetCapacity(buffin, 1000, 0)
+	; Konvertierungsdatei für Schreibzugriff öffnen
+		If (StrLen(SaveTo) > 0) && (ConvFile != SaveTo) {
+				ConvFile := SaveTo
+				appendix := 1
+				SaveToThis  := RegExReplace(SaveTo, "\.\w+$", "")
+				If !(cfile := FileOpen(SaveToThis appendix ".csv", "w", "UTF-8")) {
+					MsgBox, % SaveTo "`nfile write failed."
+					return 0
+				}
+		}
 
-	; Anzahl der Datensätze
-		pos += 5
-		dbf.Seek(pos - 1)
-		dbf.RawRead(buffin, 4)
-		CntDataSets 	:= NumGet(buffin, 0, "Uint")
+	; Leseposition festlegen
+		If (options.StartWithSet > 0)
+			pos := options.StartWithSet * LenDataSet
+		else ;if (!options.StartWithSet) && (lastpos = 0)
+			pos := lastpos + LenDataSet
 
-	; Header Länge
-		pos += 4
-		dbf.Seek(pos - 1)
-		dbf.RawRead(buffin, 2)
-		HeaderLen  	:= NumGet(buffin, 0, "Uint")
+		data := ""
+		;SciTEOutput(pos)
 
-	; Länge eines Datensatzes
-		pos += 2
-		dbf.Seek(pos - 1)
-		dbf.RawRead(buffin, 2)
-		LenDataSet	:= NumGet(buffin, 0, "Uint")
+	; Datei Leseschleife
+		while (!dbf.AtEOF) {
 
-		dbf.Seek(0, 0)
-		pos:= HeaderLen + 1
-		dbf.Seek(pos, 0)
+				datensatz := A_Index
+				ToolTip, % "Datensatz: " lastDatensatz + A_Index "/" CntDataSets
 
-		Loop, % CntDataSets
+				dbf.Seek(pos, 0)                                                	; Dateizeiger versetzen
+				pos += LenDataSet                                           	; Leseposition + eine Datensatzlänge
+				dbf.RawRead(buffin, LenDataSet)                        	; liest einen Datensatz
+				string := StrGet(&buffin, LenDataSet, "cp1252")
+				string := Trim(StrReplace(string, "`r`n", " "))
+				string := StrReplace(string, "`n", " ")
+
+				If (StrLen(String) = 0)
+						continue
+
+				If (StrLen(SaveToThis) > 0) {                               	; Daten in Konvertierungsdatei schreiben
+
+						cfile.Write("(" SubStr("0000000" pos, -5) ") " string "`n")
+						If (cfile.Length > MB) {
+							SciTEOutput("Dateilänge: " cfile.Length)
+							cfile.Close()
+							appendix ++
+							If (appendix > 3)
+								break
+							cfile := FileOpen(SaveToThis appendix ".csv", "w", "UTF-8")
+						}
+
+				}
+				else
+					data .= string "`n"
+
+				If options.MaxDataSets && (A_Index >= options.MaxDataSets)
+					break
+
+		}
+
+		lastDatensatz += Datensatz
+		lastpos := pos
+
+	; Dateizugriffe beenden
+		If dbf.AtEOF || options.CloseAfterRead
 		{
-				dbf.RawRead(buffin, LenDataSet)
-				pos += LenDataSet
-				If (A_Index = CntDataSets)
-					pos -= 1
-				data .= SubStr("0000" pos, -4) ":" StrGet(&buffin, LenDataSet + 1, 0) "`n"
-				dbf.Seek(pos)
+			data .= "###End of file"
+			dbf.Close()
 		}
 
-		dbf.Close()
+		If (StrLen(SaveToThis) > 0)
+				cfile.Close()
 
 return data
+}
+
+SeekReadNum(file, pos, len, Type) {
+
+	VarSetCapacity(buffin, len, 0)
+	file.Seek(pos)
+	file.RawRead(buffin, len)
+
+return NumGet(buffin, 0, Type)
 }
 
 ;}
@@ -757,17 +796,17 @@ FuzzyCompareNameLists(NamesArr, oPat, delta) {											;#### überarbeiten!
 
 	LPatList:=""
 
-	For iPatID in oPat
+	For PatID in oPat
 	{
-			sur:= oPat[iPatID].Nn
-			pre:= oPat[iPatID].Vn
+			sur:= oPat[PatID].Nn
+			pre:= oPat[PatID].Vn
 
 			distanceOne:= StrDiff(sur . pre, LName[1] . LNames[2])
 			distanceTwo:= StrDiff(sur . pre, LNames[2] . LNames[1])
 
 			If (distanceOne > delta) or (distanceTwo > delta)
 			{
-					LPatList.= sur . "`, " . pre . " (" . oPat[iPatID].Gt . ") (" . oPat[iPatID].Gd . ") (" . iPatID . ")`n"
+					LPatList.= sur . "`, " . pre . " (" . oPat[PatID].Gt . ") (" . oPat[PatID].Gd . ") (" . PatID . ")`n"
 			}
 	}
 

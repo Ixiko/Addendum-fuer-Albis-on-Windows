@@ -463,11 +463,11 @@ Acc_Parent(Acc) {
 }
 Acc_Child(Acc, ChildId=0) {
     try child := Acc.accChild(ChildId)
-    return child ? Acc_Query(child) :
+    return child ? Acc_Query(child) : ""
 }
 
-; thanks Lexikos - www.autohotkey.com/forum/viewtopic.php?t=81731&p=509530#509530
 Acc_Query(Acc) {
+    ; thanks Lexikos - www.autohotkey.com/forum/viewtopic.php?t=81731&p=509530#509530
     try return ComObj(9, ComObjQuery(Acc, "{618736e0-3c3d-11cf-810c-00aa00389b71}"), 1)
 }
 
@@ -630,10 +630,11 @@ acc_getRootElement(){
 }
 
 class ACC_ChildProxy {
+
     __New(oAccParent,id){
-        this.__accParent                   	:= oAccParent
+        this.__accParent                  	:= oAccParent
         this.__accChildID                	:= id
-        this.accDefaultAction    			:= oAccParent.accDefaultAction(id)
+        this.accDefaultAction    		:= oAccParent.accDefaultAction(id)
         this.accDescription            	:= oAccParent.accDescription(id)
         this.accHelp                        	:= oAccParent.accHelp(id)
         this.accHelpTopic              	:= oAccParent.accHelpTopic(id)

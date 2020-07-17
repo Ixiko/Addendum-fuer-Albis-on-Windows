@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . .                                                                                                                                                          	. . . . . . . . . .
 ; . . . . . . . . .                                                             	ADDENDUM  TOOLBAR                                                     	. . . . . . . . . .
-											                			 Version:="0.6" , vom:="29.04.2020"
+											                			 Version:="0.75" , vom:="11.06.2020"
 ; . . . . . . . . .                                                                                                                                                         	. . . . . . . . . .
 ; . . . . . . . . .  ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"	. . . . . . . . . .
 ; . . . . . . . . .         BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE         	. . . . . . . . . .
@@ -26,11 +26,17 @@
 	#SingleInstance Force
 	#NoEnv
 	#NoTrayIcon
-	;#InstallMouseHook
 
-	SetWorkingDir %A_ScriptDir%
-	SetBatchLines -1
-	CoordMode, ToolTip, Screen
+	SetWorkingDir 					, % A_ScriptDir
+	SetBatchLines					, -1
+	CoordMode						, ToolTip, Screen
+
+	DetectHiddenWindows   	, On
+	SetTitleMatchMode        	, 2	              	;Fast is default
+	SetTitleMatchMode        	, Fast        		;Fast is default
+
+	OnError("FehlerProtokoll")                      	; Funktion findet sich in \include\Addendum_Protocol.ahk
+
 ;}
 
 ;	VARIABLEN werden festgelegt                                 	;{
@@ -53,9 +59,19 @@
 
 return
 
-Addendum_Toolbar() {
+#If ToolbarWasMoved()
+#If
+
+Addendum_Toolbar() {                                                           	; Toolbar zeichnen
 
 		global
+
+	; wartet bis die Albistoolbars angezeigt werden
+		while !ControlGet("Hwnd",, "AfxControlBar1401", "ahk_id " AlbisWinID()) {
+				If (A_Index > 100)  ; Sicherheitsabbruch des Skriptes bei fehlender Albis Toolbar nach gewisser Zeit
+					ExitApp
+				Sleep, 2000
+		}
 
 	; Clientindividuelle Position der Toolbar auslesen
 		IniRead, TbIniPos, % AddendumDir "\Addendum.ini", % compname, % "AddendumToolbar_Position", % "x741 y0"
@@ -82,7 +98,7 @@ Addendum_Toolbar() {
 	; Toolbar hinzufügen
 		GuiControlGet, ATBMover, ATB: Pos, ATBMove
 		AdmTb                  	:= ToolbarCreate("OnToolbar", "ATB", TbButtonNames, ImageList, "AutoSize Flat List Tooltips", "", "x" (ATBMoverX + ATBMoverW + 1) " y0 h25")
-		oATb.hAdmTbGui  	:= hAdmTbGui
+		oATb.hAdmTb        	:= hAdmTbGui
 		oATb.hAdmToolbar	:= AdmTb.hwnd
 		ControlGetPos, tbwX,,,,, % "ahk_id " oATb.hAdmToolbar
 		oATb.TbW             	:= AdmTb.Width                           	;Toolbar width only
@@ -93,7 +109,7 @@ Addendum_Toolbar() {
 		oATb.hAlbisToolbars := ControlGet("Hwnd",, "AfxControlBar1401", "ahk_id " AlbisWinID())
 
 	; Gui Position anpassen
-		WinMove, % "ahk_id " oATb.hAdmTbGui,,,, % (tbwX + oATb.TbW + 2)
+		WinMove, % "ahk_id " oATb.hAdmTb,,,, % (tbwX + oATb.TbW + 2)
 
 	; wird nur fortgesetzt wenn das Albisprogrammfenster vorhanden ist (wartet 3min auf Albis)
 		while, !WinExist("ahk_class OptoAppClass")		{
@@ -117,14 +133,14 @@ Addendum_Toolbar() {
 		}
 
 	; neue Toolbar mit Albis verbinden
-		SetParentByID(oATb.hAlbisToolbars, oATb.hAdmTbGui)
+		SetParentByID(oATb.hAlbisToolbars, oATb.hAdmTb)
 
 	; wird benötigt um das manuelle Verschieben der Toolbar zu ermöglichen
 		OnMessage(0x200, "OnMouseMove")
 		OnMessage(0x201, "OnLButtonDown")
 
 	; Änderung der Albisfensterposition erkennen, damit die Toolbar nach Minimieren von Albis neu gezeichnet wird
-		DllCall("RegisterShellHookWindow", UInt, oATb.hAdmTbGui)
+		DllCall("RegisterShellHookWindow", UInt, oATb.hAdmTb)
 		MsgNum := DllCall("RegisterWindowMessage", Str, "SHELLHOOK")
 		OnMessage(MsgNum, "RedrawToolbar")
 
@@ -148,14 +164,18 @@ ATBGuiClose:
 ExitApp
 }
 
-#If ToolbarWasMoved()
-#If
-
-ToolbarWasMoved() {
+ToolbarWasMoved() {                                                            	; dummy Funktion
 	return oATb.WasMoved
 }
 
-OnToolbar(hWnd, Event, Text, Pos, Id) {
+ToolbarShowHide(TbStatus) {                                                    	; Addendum Toolbar anzeigen oder verstecken
+
+		Gui, ATB: Show	, % TbStatus
+
+return
+}
+
+OnToolbar(hWnd, Event, Text, Pos, Id) {                                   	; startet Module/Programme bei Klick auf ein Icon
 
     If (Event != "Click") {
         Return
@@ -173,22 +193,22 @@ OnToolbar(hWnd, Event, Text, Pos, Id) {
     }
 }
 
-OnLButtonDown(wparam, lparam, msg, hWMLbd) {
+OnLButtonDown(wparam, lparam, msg, hWMLbd) {                	; zum Verschieben der Toolbar
 	oATb.WasMoved := true
-    PostMessage, 0xA1, 2,,, % "ahk_id " oATb.hAdmTbGui
+    PostMessage, 0xA1, 2,,, % "ahk_id " oATb.hAdmTb
 return
 }
 
-OnMouseMove() {	                                                                      	; aktiviert die Toolbar sobald die Maus über dieser steht, damit die ToolTips angezeigt werden
+OnMouseMove() {	                                                                   	; aktiviert die Toolbar sobald die Maus über dieser steht, damit die ToolTips angezeigt werden
 
 	static fnCheckMousePos:= Func("OnMouseMove")
 
 	MouseGetPos,,, hWinMouseOver
 
-	If (GetDec(hWinMouseOver) = GetDec(oATb.hAdmTbGui))
+	If (GetDec(hWinMouseOver) = GetDec(oATb.hAdmTb))
 	{
-			If !WinActive("ahk_id " oATb.hAdmTbGui)
-				WinActivate, % "ahk_id " oATb.hAdmTbGui
+			If !WinActive("ahk_id " oATb.hAdmTb)
+				WinActivate, % "ahk_id " oATb.hAdmTb
 
 			SetTimer, % fnCheckMousePos, 100
 	}
@@ -207,72 +227,118 @@ OnMouseMove() {	                                                                
 
 }
 
-RedrawToolbar(lParam, wParam) {
+RedrawToolbar(lParam, wParam) {                                         	; zeichnet die Toolbar neu und speichert die Position in der Addendum.ini
 
 	static fnCheckOverlap:= Func("CheckOverlap")
 
 	hactiveWin:= WinExist("A")
-	WinGetClass, activeClass, A
-	If !InStr(activeClass, "OptoAppClass")
-		return 0
+	WinGetClass, activeClass, % "ahk_id " wParam
+	;If !InStr(activeClass, "OptoAppClass")
+	;	return 0
 
-	If lParam in 3,5,6
-	{
-			DllCall("SetWindowPos", "Ptr", oATb.hAdmTbGui, "Ptr", 0, "Int", oATb.X, "Int", 0, "Int", oATb.W, "Int", oATb.H, "UInt", 0x0004)
-			CheckOverlap()
-			If (oATb.X > 0) && (oATb.X < 1720)
-				IniWrite, % "x" oATb.X " y" oATb.Y, % AddendumDir "\Addendum.ini", % compname, % "AddendumToolbar_Position"
+	;ToolTip, % "lParam: " lParam "`n" GetHex(wParam) "`n" activeClass
+
+	If InStr(activeClass, "OptoAppClass") {
+
+			If lParam in 3,5,6
+			{
+
+				; Albisfenster minimiert dann Toolbar ausblenden und umgekehrt
+					aw := GetWindowSpot(AlbisWinID())
+					If (aw.X < -30) && (aw.Y < -30) || !WinExist("ahk_class OptoAppClass") {
+						ToolbarShowHide("Hide")
+						return 0
+					} else {
+						ToolbarShowHide("")
+					}
+
+				; Toolbar mit dem Albisfenster verschieben und die Position wieder anpassen
+					DllCall("SetWindowPos", "Ptr", oATb.hAdmTb, "Ptr", 0, "Int", oATb.X, "Int", 0, "Int", oATb.W, "Int", oATb.H, "UInt", 0x0004)
+					CheckOverlap()
+					If (oATb.X > 0) && (oATb.X < 1720)
+						IniWrite, % "x" oATb.X " y" oATb.Y, % AddendumDir "\Addendum.ini", % compname, % "AddendumToolbar_Position"
+
+			}
+
 	}
+
+	If (lParam = 2)   {                                                                     	; Albisfenster wurde geschlossen
+
+			If !WinExist("ahk_class OptoAppClass")
+				ToolbarShowHide("Hide")
+
+	} else if (lParam = 1)   {                                                                     	; Albisfenster wurde gestartet
+
+			If WinExist("ahk_class OptoAppClass")
+				ToolbarShowHide("")
+
+	}
+
 
 return 0
 }
 
-RunCheckOverlap: ;{
-    SetTimer, % fnCheckOverlap, -60
-return ;}
+CheckOverlap() {                                                                  	; verhindert das die Albis Toolbar Steuerelemente von der Toolbar überlagert werden
 
-CheckOverlap() {
-
-		static fnCheckOverlap:= Func("CheckOverlap")
-
-	    IsOverlapped	:= false
+		Tbars := Array()
 
 	; Albis ist minimiert wenn x<-20 oder y<-20 ist, dann braucht die Funktion nicht ausgeführt werden
 		aw := GetWindowSpot(AlbisWinID())
 		If (aw.X < -20) || (aw.Y < -20)
 			return
 
-	; prüft 25 ToolbarWindow32(3-28) auf Sichtbarkeit und Position
-		WinGetPos, tbX, tbY, tbW, tbH, % "ahk_id " oATb.hAdmTbGui
+	; akutelle Addendum Toolbar Position und Größe
+		WinGetPos, tbX, tbY, tbW, tbH, % "ahk_id " oATb.hAdmTb
+		tbY := 51 ; y position der ersten möglichen ToolbarWindow Reihe
 
-		Loop 27
-		{
-				ControlGet, nextControl, Hwnd,, % "ToolbarWindow32" A_Index, % "ahk_id " oATb.hAlbisToolbars
+	; sichtbare Albis Toolbars mit deren Positionen ermitteln und in Reihenfolge sortieren
+		WinGet, childList, ControlListHwnd, % "ahk_id " oATb.hAlbisToolbars
+		Loop, Parse, childList, `n
+			If IsWindowVisible(A_LoopField) {
 
-				classNN:= Control_GetClassNN(oATb.hAlbisToolbars, nextControl)
-				If !IsWindowVisible(nextControl) || !InStr(classNN, "ToolbarWindow")
-						continue
+					ControlGetPos, CX, CY, CW, CH,, % "ahk_id " A_LoopField
 
-				ControlGetPos, CX, CY, CW, CH,, % "ahk_id " nextControl
-				If RectOverlapsRect(CX, CY, CW, CH, tbX, tbY, tbW, tbH)
-						IsOverlapped := true, tbX_new := CX + CW - oATb.AlbisBW
+					If (tbY >= CY) && (tbY <= CY + CH) {									; && !(A_LoopField = oATb.hAdmTb)
+
+							If !Tbars.MaxIndex()
+								Tbars.Push({"id":A_LoopField, "X":CX, "Y":CY, "W":CW, "H":CH})
+							else
+							{
+									Loop % Tbars.MaxIndex() {
+											i:= A_Index
+											If (CX < Tbars[i].X) {
+												Tbars.InsertAt(i, {"id":A_LoopField, "X":CX, "Y":CY, "W":CW, "H":CH})
+												break
+											}
+									}
+									If (i+1 > Tbars.MaxIndex())
+										Tbars.Push({"id":A_LoopField, "X":CX, "Y":CY, "W":CW, "H":CH})
+							}
+
+					}
+
+			}
+
+			tbX_new := 1
+
+	; auf Überlappungen mit vorhanden Toolbars in Albis prüfen
+		Loop % Tbars.MaxIndex() {
+
+			If Overlaps(Tbars[A_Index].X, Tbars[A_Index].Y, Tbars[A_Index].W, Tbars[A_Index].H, tbX_new, tbY, tbW, tbH)
+				tbX_new := Tbars[A_Index].X + Tbars[A_Index].W + 1 ;- oATb.AlbisBW
+
 		}
 
-
 	; Fenster an die berechnete Position verschieben
-		If IsOverlapped
-			oATb.X	:= tbX_new
-		else
-			oATb.X	:= tbx
+		oATb.X	:= tbX_new - oATb.AlbisBW
 
-		DllCall("SetWindowPos", "Ptr", oATb.hAdmTbGui, "Ptr", 0, "Int", oATb.X, "Int", oATb.Y, "Int", oATb.W, "Int", oATb.H, "UInt", 0x0004)
+		DllCall("SetWindowPos", "Ptr", oATb.hAdmTb, "Ptr", 0, "Int", oATb.X, "Int", oATb.Y, "Int", oATb.W, "Int", oATb.H, "UInt", 0x0004)
 
-		;ToolTip, % "old pos: " tbx "," tbY "," tbW ", " tbH ", new x: " tbX_new ", IsOverlapped: " (IsOverlapped ? "true":"false") ", hGui: " oATb.hAdmTbGui "`n   oATb: " oATb.X ", " oATb.Y ", " oATb.W ", " oATb.H, 900, 0, 15
 
 return
 }
 
-LoadImageList(TbApps, Auth) {
+LoadImageList(TbApps, Auth) {                                              	; lädt die Icon's
 
 		ImageList := IL_Create(appCount+1)
 		Loop, Parse, TbApps, `,
@@ -283,7 +349,7 @@ LoadImageList(TbApps, Auth) {
 return ImageList
 }
 
-LoadClientApps(Auth, ByRef Buttons) {
+LoadClientApps(Auth, ByRef Buttons) {                                    	; erstellt die Button Liste für ToolbarCreate
 
 		If !IsObject(Auth)
 			ExitApp
@@ -303,7 +369,7 @@ LoadClientApps(Auth, ByRef Buttons) {
 return TbApps
 }
 
-AddendumClientAuth() {                                                               	; liest alle verfügbaren Addendum-Apps und die Authorisierung in ein Objekt
+AddendumClientAuth() {                                                           	; liest alle verfügbaren Addendum-Apps und die Authorisierung in ein Objekt
 
 	IniRead, AuthListe, % AddendumDir "\Addendum.ini", % compname, Module
 	If InStr(AuthListe, "Error")
@@ -318,11 +384,22 @@ AddendumClientAuth() {                                                          
 				break
 			else
 			{
-					Modul:= StrSplit(Modul, "|")
-					Auth.Module.Push({"Auth": Modul[1], "SkriptName": Modul[2], "SkriptPath": AddendumDir "\" Modul[3], "IconPath": AddendumDir "\" Modul[4]})
+					Modul := StrSplit(Modul, "|")
+
+				; relative Pfade werden als Pfade ins Addendum-Verzeichnis gewertet, alle anderen Pfade werden als absolut angesehen
+				; es lassen sich somit auch andere Programme von der Addendum Toolbar starten
+					If !RegExMatch(Modul[3], "^[A-Z]\:")
+						Modul[3] 	:= AddendumDir "\" Modul[3]
+					If !RegExMatch(Modul[4], "^[A-Z]\:")
+						Modul[4]    	:= AddendumDir "\" Modul[4]
+
+					Auth.Module.Push({"Auth": Modul[1], "SkriptName": Modul[2], "SkriptPath": Modul[3], "IconPath": Modul[4]})
+					;t.= "Auth: " Modul[1] "`nSkriptName: " Modul[2] "`nSkriptPath: " Modul[3] "`nIconPath: " Modul[4] "`n--------------------------------------------------------------------------------------------`n"
 			}
 
+
 	}
+	;MsgBox, % t
 
 return Auth
 }
@@ -447,7 +524,7 @@ _ToolbarHandler(hWnd) 	{
 
     %Handler%(hWnd, Event, Text, Pos, ButtonId)
 }
-GetWindowSpot(hWnd)  	{                                                                                                           	;-- like GetWindowInfo, but faster because it only returns position and sizes
+GetWindowSpot(hWnd)  	{                                                   	;-- like GetWindowInfo, but faster because it only returns position and sizes
     NumPut(VarSetCapacity(WINDOWINFO, 60, 0), WINDOWINFO)
     DllCall("GetWindowInfo", "Ptr", hWnd, "Ptr", &WINDOWINFO)
     wi := Object()
@@ -480,7 +557,7 @@ Control_GetClassNN(hWnd, hCtrl) {
  StringGetPos, LP, CN, `n, L%ErrorLevel%
  Return SubStr( CN, LP+2, InStr( CN, LF, 0, LP+2 ) -LP-2 )
 }
-AlbisWinID() {                            			                                    	;-- gibt die ID des übergeordneten Albisfenster zurück
+AlbisWinID() {                            		                                       	;-- gibt die ID des übergeordneten Albisfenster zurück
 	While !(AID := WinExist("ahk_class OptoAppClass"))
 	{
 			sleep, 50
@@ -489,52 +566,18 @@ AlbisWinID() {                            			                                   
 	}
 return GetHex(AID)
 }
-RectOverlapsRect(vX1, vY1, vW1, vH1, vX2, vY2, vW2, vH2, vOpt="") {
+Overlaps(vX1, vY1, vW1, vH1, vX2, vY2, vW2, vH2) {
 
-		/*    	DESCRIPTION
-
-				Link:             https://autohotkey.com/boards/viewtopic.php?t=30809
-				Author:        	jeeswg 20 Apr 2017, 11:43
-
-		*/
-
-	;if (A is left of B) [rightmost A is left of leftmost B]
-	;|| (A is right of B) [leftmost A is right of righttmost B]
-	;|| (A is is above B) [bottom of A is is above top of B]
-	;|| (A is is below B) [top of A is is below bottom of B]
-	;then A and B do not overlap
-
-	if InStr(vOpt, "x") ;reduce width and height values by 1
-		vW1 -= 1, vH1 -= 1, vW2 -= 1, vH2 -= 1
-
-	if InStr(vOpt, "e") ;(A = B) A equals B
-		if !(vX1 = vX2) || !(vY1 = vY2) || !(vW1 = vW2) || !(vH1 = vH2)
-			return 0
-		else
-			return 1
-
-	if InStr(vOpt, "r") ;coordinates are XYRB 'RECT style'
-		vR1 := vW1, vB1 := vH1, vR2 := vW2, vB2 := vH2
-	else
-		vR1 := vX1+vW1, vB1 := vY1+vH1, vR2 := vX2+vW2, vB2 := vY2+vH2
-
-	if InStr(vOpt, "c") ;(A contains B) A contains all of or is equal to B
-		if (vX2 < vX1) || (vY2 < vY1) || (vR2 > vR1) || (vH2 > vH1)
-			return 0
-		else
-			return 1
-
-	if InStr(vOpt, "w") ;(A within B) A is within or is equal to B
-		if (vX1 < vX2) || (vY1 < vY2) || (vR1 > vR2) || (vH1 > vH2)
-			return 0
-		else
-			return 1
-
-	;(A overlaps B)
-	if (vR1 < vX2) || (vX1 > vR2) || (vB1 < vY2) || (vY1 > vB2)
+	; X Rect2 liegt rechts neben X+W Rect1
+	If (vX2 > vX1+vW1)
 		return 0
-	else
+	; X Rect2 liegt rechts von X Rect1, aber nicht ausserhalb von W Rect1
+	If (vX2 >= vX1) && (vX2 <= vX1+vW1)
 		return 1
+	; X Rect2 liegt links von X Rect1, aber X+W Rect2 überlappt X Rect1
+	If ((vX2 < vX1) && (vX2 + vW2 > vX1))
+		return 1
+
 }
 GetHex(hwnd) {
 return Format("0x{:x}", hwnd)
@@ -582,6 +625,7 @@ Return hBitmap
 }
 ;}
 
-
+#include %A_ScriptDir%\..\..\lib\SciTEOutput.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_Protocol.ahk
 
 

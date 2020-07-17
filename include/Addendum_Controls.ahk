@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 24.04.2020 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 17.07.2020 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
 ; CONTROLS                                                                                                                                                                                                                                        	(40)
@@ -78,7 +78,7 @@ GetFocusedControlHwnd(hwnd:="A") {
 return FocusedControlId
 }
 
-GetFocusedControlClassNN(hwnd := "A") {
+GetFocusedControlClassNN(hwnd:="A") {
 	ControlGetFocus, FocusedControl, % hwnd = "A" ? "A" : "ahk_id " hwnd
 	ControlGet, FocusedControlId, Hwnd,, % FocusedControl, % "ahk_id " hwnd
 return Control_GetClassNN(hwnd, FocusedControlId)
@@ -101,8 +101,8 @@ GetChildHWND(ParentWindowID, ChildClassNN) {
 return DllCall("WindowFromPoint", "int", ChildX + ParentX, "int", ChildY + ParentY)
 }
 
-GetControls(hwnd, class_filter = "", type_filter = ""
-, info_filter = "hwnd,Pos,Enabled,Visible,Style,ExStyle") {			                      	  	;-- returns an array with ClassNN, ButtonTyp, Position.....
+GetControls(hwnd, class_filter:="", type_filter:=""
+, info_filter:="hwnd,Pos,Enabled,Visible,Style,ExStyle") {			                      	  	;-- returns an array with ClassNN, ButtonTyp, Position.....
 
 	;class_filter - comma separated list of classes you don't want to store
 	;type_filter - comma separated list of classes you don't want to store
@@ -192,11 +192,11 @@ GetButtonType(hwndButton) {                                                     
 Controls(Control, command, WinTitle
 , HiddenText:=true, HiddenWin:=true, MatchModeSpeed:="slow") {                	;-- Universalfunktion für Steuerelemente
 
-	; ********	    ********		Funktion wächst und gedeiht, nachgegossen am 28.04.2020
+	; ********	    ********		Funktion wächst und gedeiht, gegossen am 14.07.2020
 	;***	     *    ***	    ***	dependencies: 	Function: ClientToScreen()
 	;***             ***      ***                        	Function: KeyValueObjectFromLists()
-	;***             ***      ***
-	;***        *    ***      ***
+	;***             ***      ***                         	Function: VerifiedSetText() - [ ControlGetText() ]
+	;***        *    ***      ***                        	Function: VerifiedClick()
 	;  *******       ********
 	;
 	; BESCHREIBUNG: 	diese Funktion nutzt automatisch den richtigen Autohotkey Befehl um Steuerelemente anzusprechen.
@@ -234,7 +234,7 @@ Controls(Control, command, WinTitle
 				knWinTitle	:= WinTitle
 				knWinText := ( WinText = "" ) ? 0 : WinText
 				WinTitle	:= RegExMatch(WinTitle, "^0x[\w]+$")	? ("ahk_id " WinTitle)	: (WinTitle)
-                            		 RegExMatch(WinTitle, "^\d+$", digits)
+				RegExMatch(WinTitle, "^\d+$", digits)
 				WinTitle	:= StrLen(WinTitle) = StrLen(digits)     	? ("ahk_id " digits)  	: (WinTitle)
 
 				WinGet, cClasses	, ControlList			, % WinTitle, ;% WinText                            ; use this for example: "ahk_id " hWin
@@ -247,74 +247,78 @@ Controls(Control, command, WinTitle
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	; Befehlsbereich -
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-	    if InStr(command, "Hwnd") || InStr(command, "ID")	{   	; returns the handle for a ClassNN
+	    if RegExMatch(command, "Hwnd|ID")                  	{   	; returns the handle for a ClassNN
 				; empty Control parameter returns the array
 					If (StrLen(Control) = 0)
 						return Ctrl
 				; this returns the handle if Control fits to a key
                     else If Ctrl.HasKey(Control)
-						If Ctrl.HasKey(Control)
-							return Ctrl[(Control)]
+						return Ctrl[Control]
 				; this returns the handle if you don't want to use the ClassNN
 					else
-					   For ControlClass in Ctrl
+					   For ControlClass, ControlHwnd in Ctrl
 							If InStr(ControlClass, control)
-								return Ctrl[ControlClass]
+								return ControlHwnd
+								;return Ctrl[ControlClass]
 		}
 		else if InStr(command, "Click"	)                           	{   	; like ControlClick, you need the exactly name of classNN, but you can specify the method to use (MouseClick, ControlClick)
 
-                    	If InStr(control, "ToolbarWindow") 			{
+					If InStr(control, "ToolbarWindow") 			{
 
-                                   	ControlGetPos, cx, cy, cw, ch,, % "ahk_id " Ctrl[Control]
-                                   	ClientToScreen(Ctrl[Control], cx, xy)
+							ControlGetPos, cx, cy, cw, ch,, % "ahk_id " Ctrl[Control]
+							ClientToScreen(Ctrl[Control], cx, xy)
 
-                                    	If InStr(command, "Space")                            ;Controls("ToolbarWindow324", "Click use Spacebar", "ahk_exe notepad.exe")
-                                    	{
-                                    			ControlFocus,, % "ahk_id " Ctrl[(Control)]
-                                    			sleep, 400
-                                    			ControlSend,, {Space}, % "ahk_id " Ctrl[(Control)]
-                                    	}
-                                    	else if InStr(command, "ControlClick"	)		;Controls("ToolbarWindow324", "Click use Controlclick left", "ahk_exe notepad.exe")
-                                    	{
-                                    			RegExMatch(command, "i)(?<=ControlClick\s)\w+", Button)
-                                    			if Button in Left,Middle,Right
-                                                        ControlClick,, % "ahk_id " Ctrl[(Control)],, % Button, 1, NA
-                                    	}
-                                    	else if InStr(command, "MouseClick"	)		;Controls("ToolbarWindow324", "Click use MouseClick", "ahk_exe notepad.exe")
-                                    	{
-                                    			BlockInput, On
-                                    			MouseGetPos, mx, my
-                                    			ControlGetPos, cx, cy, cw, ch,, % "ahk_id " Ctrl[Control]
-                                    			ClientToScreen(Ctrl[Control], cx, xy)
-                                    			RegExMatch(command, "i)(?<=MouseClick\s)\w+", Button)
-                                    			if Button in Left,Middle,Right
-                                    				MouseClick, % Button, % (cx + cw - 50), % (cy + ch//2), 1, 0
-                                    			MouseMove, % mx, % my, 0
-                                    			BlockInput, Off
-                                    	}
-                    	}
-				 else if InStr(control, "Button")                            {
-                                	; 3 verschiedene Wege einen Buttonklick auszulösen
-                                    	ControlClick,, % "ahk_id " Ctrl[(Control)],, Left,, NA
-                                    	If ErrorLevel
-                                    	{
-                                    			ControlClick,, % "ahk_id " Ctrl[(Control)],, Left
-                                    			If ErrorLevel
-                                    			{
-                                                        PostMessage, 0x201, 1, 0,, % "ahk_id " Ctrl[(Control)] ;0x201 - WM_Click
-                                                        If ErrorLevel
-                                                        {
-                                                                BlockInput, On
-                                                        		MouseGetPos, mx, my
-                                                        		ControlGetPos,,, cw, ch,, % "ahk_id " Ctrl[Control]
-                                                        		ClientToScreen(Ctrl[Control], cx, cy)
-                                                        		MouseClick, Left, % (cx + cw//2) , % (cy + ch//2), 1, 0
-                                                        		MouseMove, % mx, % my, 0
-                                                        		BlockInput, Off
-                                                        }
-                                                }
-                            			}
-                    	}
+								If InStr(command, "Space")                            ;Controls("ToolbarWindow324", "Click use Spacebar", "ahk_exe notepad.exe")
+								{
+										ControlFocus,, % "ahk_id " Ctrl[Control]
+										sleep, 400
+										ControlSend,, {Space}, % "ahk_id " Ctrl[Control]
+								}
+								else if InStr(command, "ControlClick"	)		;Controls("ToolbarWindow324", "Click use Controlclick left", "ahk_exe notepad.exe")
+								{
+										RegExMatch(command, "i)(?<=ControlClick\s)\w+", Button)
+										if Button in Left,Middle,Right
+												ControlClick,, % "ahk_id " Ctrl[Control],, % Button, 1, NA
+								}
+								else if InStr(command, "MouseClick"	)		;Controls("ToolbarWindow324", "Click use MouseClick", "ahk_exe notepad.exe")
+								{
+										BlockInput, On
+										MouseGetPos, mx, my
+										ControlGetPos, cx, cy, cw, ch,, % "ahk_id " Ctrl[Control]
+										ClientToScreen(Ctrl[Control], cx, xy)
+										RegExMatch(command, "i)(?<=MouseClick\s)\w+", Button)
+										if Button in Left,Middle,Right
+											MouseClick, % Button, % (cx + cw - 50), % (cy + ch//2), 1, 0
+										MouseMove, % mx, % my, 0
+										BlockInput, Off
+								}
+
+				}
+				else if InStr(control, "Button")                            {
+
+							; 3 verschiedene Wege einen Buttonklick auszulösen
+								ControlClick,, % "ahk_id " Ctrl[Control],, Left,, NA
+								If ErrorLevel	{
+
+										ControlClick,, % "ahk_id " Ctrl[Control],, Left
+										If ErrorLevel	{
+
+												PostMessage, 0x201, 1, 0,, % "ahk_id " Ctrl[Control] ;0x201 - WM_Click
+												If ErrorLevel 	{
+
+														BlockInput, On
+														MouseGetPos, mx, my
+														ControlGetPos,,, cw, ch,, % "ahk_id " Ctrl[Control]
+														ClientToScreen(Ctrl[Control], cx, cy)
+														MouseClick, Left, % (cx + cw//2) , % (cy + ch//2), 1, 0
+														MouseMove, % mx, % my, 0
+														BlockInput, Off
+
+												}
+										}
+								}
+
+				}
 
 		}
 		else if InStr(command, "ControlClick")	                	{   	; clicks a control by its text or classNN and returns the ErrorLevel
@@ -352,9 +356,56 @@ Controls(Control, command, WinTitle
                     }
 
 		}
-		else if RegExMatch(command, "ControlPos")        	{   	; returns the controls position inside window
+		else if RegExMatch(command, "^ControlPos")       	{   	; returns the controls position inside window
 				ControlGetPos, x,y,w,h, % Control, % WinTitle, % WinText
 				return {"X":x, "Y":y, "W":w, "H":h}
+		}
+		else if RegExMatch(command, "^GetControls")     	{   	; try's to return all subcontrol hwnds (no treeversal)
+
+				found	:= false
+				HiddenControls := true
+				Childs	:= Array()
+
+				If !RegExMatch(command, ".*\+Hidden") {
+					GCHiddenTextStatus      := A_DetectHiddenText
+					GCHiddenWinStatus      := A_DetectHiddenWindows
+					DetectHiddenText      	, Off
+					DetectHiddenWindows	, Off
+					HiddenControls := false
+				}
+
+				If (StrLen(Control) > 0) {
+
+					For ControlClass, ControlHwnd in Ctrl
+						If InStr(ControlClass, Control) || InStr(ControlGetText(ControlHwnd), Control) {
+
+							WinTitle := "ahk_id " ControlHwnd
+							found := true
+							break
+
+					}
+
+					If !found
+						return 0
+
+				}
+
+				WinGet, childList, ControlListHwnd, % WinTitle
+
+				Loop, Parse, childList, `n
+				{
+					; auch verborgene Steuerelemente einsammeln
+						If HiddenControls
+							Childs.Push(A_LoopField)
+						else if IsWindowVisible(A_LoopField) ; oder nur sichtbare
+							Childs.Push(A_LoopField)
+				}
+
+				DetectHiddenText      	, % GCHiddenText=true ? "On":"Off"
+				DetectHiddenWindows	, % GCHiddenWin=true ? "On":"Off"
+
+				return Childs
+
 		}
 		else if InStr(command, "GetFocus")	                    	{   	; finds the focused control and returns it's ControlClassNN
 
@@ -372,13 +423,9 @@ Controls(Control, command, WinTitle
 		}
 		else if InStr(command, "GetText")                        	{
 				 If class in Edit,ToolbarWindow
-				{
-                    	ControlGetText, result,		 , % "ahk_id " Ctrl[(Control)]
-				}
+                    	ControlGetText, result,	 , % "ahk_id " Ctrl[Control]
 				else if class in ComboBox,ListBox,Listview,DropDownList
-				{
-                    	ControlGet, result, List	  ,,, % "ahk_id " Ctrl[(Control)]
-				}
+                    	ControlGet, result, List  ,,, % "ahk_id " Ctrl[Control]
 		}
 		else if InStr(command, "Send")                            	{
 				if class in Edit,RichEdit
@@ -417,6 +464,9 @@ Controls(Control, command, WinTitle
                     	knWinTitle	:= ""
                     	knWinText	:= 0
                     	return 1
+		}
+		else if InStr(command, "ControlCount")                   {  	; returns the count of all found controls
+					return Ctrl.Count()
 		}
 
 	;}
@@ -492,19 +542,18 @@ ControlFind(Control, command, WinTitle) {				                                   
 
 }
 
-ControlGet(Cmd, Value:= "", Control:= ""
-, WinTitle:= "", WinText:= "", ExcludeTitle:= "", ExcludeText:= "") {                    	;-- ControlGet als Funktion
-	ControlGet, v, % Cmd, % Value, % Control, % WinTitle, % WinText, % ExcludeTitle, % ExcludeText
+ControlGet(Cmd,Value:="",Ctrl:="",WTitle:="",WTxt:="",ExTitle:="",ExTxt:="") {	;-- ControlGet als Funktion
+	ControlGet, v, % Cmd, % Value, % Ctrl, % WTitle, % WTxt, % ExTitle, % ExTxt
 Return v
 }
 
-ControlGetText(Control = "", WinTitle = "", WinText = ""
-, ExcludeTitle = "", ExcludeText = "") {                                                             	;-- ControlGetText als Funktion
+ControlGetText(Control:="", WinTitle:="", WinText:=""
+, ExcludeTitle:="", ExcludeText:="") {                                                                 	;-- ControlGetText als Funktion
 	ControlGetText, v, %Control%, %WinTitle%, %WinText%, %ExcludeTitle%, %ExcludeText%
 	Return v
 }
 
-ControlGetFocus(hwnd) {
+ControlGetFocus(hwnd) {                                                                                	;-- gibt das Handle des fokussierten Steuerelementes zurück
 	ControlGetFocus, FocusedControl, % "ahk_id " hwnd
 	ControlGet, FocusedControlId, Hwnd,, %FocusedControl%, % "ahk_id " hwnd
 return FocusedControlId
@@ -566,7 +615,7 @@ ToolbarGetRect(hCtrl, Pos="", pQ="") {                                          
 	return (pQ = "x") ? x : (pQ = "y") ? y : (pQ = "w") ? r-x : (pQ = "h") ? b-y : x " " y " " r-x " " b-y
 }
 
-Toolbar_GetMaxSize(hCtrl, ByRef Width, ByRef Height) {
+Toolbar_GetMaxSize(hCtrl, ByRef Width, ByRef Height) {                                   	;-- zur Ermitlung der maximalen Größe einer Toolbar
 
     /*
              Function:   	GetMaxSize
@@ -653,7 +702,7 @@ TabCtrl_GetCurSel(HWND) {                             		                        
    Return (ErrorLevel + 1)
 }
 
-TabCtrl_GetItemText(HWND, Index = 0) {                                                        	;-- returns text of a tab
+TabCtrl_GetItemText(HWND, Index=0) {                                                        	;-- returns text of a tab
 
    Static TCM_GETITEM  := A_IsUnicode ? 0x133C : 0x1305 ; TCM_GETITEMW : TCM_GETITEMA
    Static TCIF_TEXT := 0x0001
@@ -682,9 +731,8 @@ SetError(ErrorValue, ReturnValue) {                                             
 }
 ;}
 
-;\/\/\/\ Funktionen prüfen die erfolgreiche Durchführung ihrer SteuerelementeInteraktion /\/\/\/
-
-VerifiedClick(CName, WTitle:="", WText:="", WinID:="", WaitClose:=false) {   	;-- 4 verschiedene Methoden um auf ein Control zu klicken
+;\/\/\/\ Funktionen prüfen die erfolgreiche Durchführung ihrer Interaktion mit Steuerelementen /\/\/\/
+VerifiedClick(CName, WTitle="", WText="", WinID="", WaitClose=false) {       	;-- 4 verschiedene Methoden um auf ein Control zu klicken
 
 		tmm:= A_TitleMatchMode, cd:=A_ControlDelay, EL:= 0
 		SetTitleMatchMode, 2
@@ -737,7 +785,7 @@ VerifiedClick(CName, WTitle:="", WText:="", WinID:="", WaitClose:=false) {   	;-
 return (EL = 0 ? 1 : 0)
 }
 
-VerifiedCheck(CName, WTitle:="", WText:="", WinID:="", CheckIt:=true) {        	;-- Fensteraktivierung + ControlDelay auf -1 + Kontrolle ob das Control wirklich checked ist jetzt
+VerifiedCheck(CName, WTitle="", WText="", WinID="", CheckIt=true) {          	;-- Fensteraktivierung + ControlDelay auf -1 + Kontrolle ob das Control wirklich checked ist jetzt
 
 		; 02.08.2018 - neuer Parameter: CheckIt. Wenn dieser 1, also gesetzt ist, wird ein Häkchen gesetzt , bei 'false' entfernt.
 		; die Funktion prüft nicht, ob das Setzen oder Entfernen überhaupt notwendig ist, wenn es schon gesetzt oder nicht gesetzt ist
@@ -765,7 +813,7 @@ VerifiedCheck(CName, WTitle:="", WText:="", WinID:="", CheckIt:=true) {        	
 
 		If !InStr(GetButtonType(hCName), "Checkbox")
 		{
-				PraxTT("Fehler in der Funktion VerifiedCheck()`n`nDas angesprochene Steuerelement`nist kein Standard-Checkbox!", "2 0")
+				PraxTT("Fehler in der Funktion VerifiedCheck()`n`nDas angesprochene Steuerelement`nist keine Standard-Checkbox!", "2 0")
 				return
 		}
 
@@ -792,18 +840,53 @@ VerifiedCheck(CName, WTitle:="", WText:="", WinID:="", CheckIt:=true) {        	
 return ErrorLevel
 }
 
-VerifiedChoose(CName, WTitle:="", EntryNr:= 1 ) {                                         	;-- wählt einen Listboxeintrag und prüft das dieser gesetzt wurde
+VerifiedChoose(CName, WTitle, EntryNr ) {                                                     	;-- wählt einen List- oder Comboboxeintrag
 
-	If RegExMatch(WTitle, "^0x[\w]+$")
+	; letzte Änderung: 17.07.2020
+
+	; für flexible Übergabe des Fenstertitel, von String, Dezimalzahl oder Hexzahl alles möglich
+		If RegExMatch(WTitle, "^0x[\w]+$")
 			WTitle	:= RegExMatch(WTitle, "^0x[\w]+$")	? ("ahk_id " WTitle)	: (WTitle)
 		else if RegExMatch(WTitle, "^\d+$", digits)
 			WTitle	:= StrLen(WTitle) = StrLen(digits)     	? ("ahk_id " digits)  	: (WTitle)
 		else
 			WTitle:= "ahk_id " WinID := GetHex(WinExist(WTitle, WText))
 
-	Control, Choose, % EntryNr, % CName, % WTitle
+	; Funktionsabbruch bei inkompatiblem Steuerelement
+		If !RegExMatch(CName, "^Listbox|ComboBox")
+			return 0
 
-return ErrorLevel
+	; Funktionsabbruch wenn Steuerelement nicht existiert
+		ControlGet, CHwnd, Hwnd, % CName, % WTitle
+		If !CHwnd
+			return 0
+
+	; Funktionsabbruch wenn EntryNr leer oder bei Übergabe einer Dezimalzahl kleiner gleich 0
+		If (StrLen(EntryNr) = 0) || (EntryNr <= 0)
+			return 0
+
+	; ermittelt die Einträge im Steuerelement
+		ControlGet, CtrlList, List,,, % "ahk_id " CHwnd
+		Items := StrSplit(CtrlList, "`n")
+
+	; Auswahl anhand der Positionsnummer setzen
+		If RegExMatch(EntryNr, "^\d+$") && {
+
+			;Abbruch wenn die Positionsnummer nicht existiert
+			If (Items.MaxIndex() < EntryNr)
+				return 0
+
+			Control, Choose, % EntryNr,, % "ahk_id " CHwnd
+			return ErrorLevel
+		}
+
+	; Auswahl anhand des übergebenen String setzen
+		For idx, item in List
+			If RegExMatch(A_LoopField, EntryNr) {
+				Control, Choose, % A_Index, % CName, % WTitle
+				return ErrorLevel
+			}
+
 }
 
 VerifiedSetFocus(CName, WTitle:="", WText:="", WinID:="") {                         	;-- setzt den Eingabefokus und überprüft das dieser auch gesetzt wurde
@@ -862,7 +945,7 @@ VerifiedSetFocus(CName, WTitle:="", WText:="", WinID:="") {                     
 return idx = 0 ? 1 : 0
 }
 
-VerifiedSetText(CName:="", NewText:="", WTitle :="", delay:=200, WText:="") { 	;-- erweiterte ControlSetText Funktion
+VerifiedSetText(CName="", NewText="", WTitle="", delay=200, WText="") {    	;-- erweiterte ControlSetText Funktion
 
 	; kontrolliert ob der Text tatsächlich eingefügt wurde und man kann noch eine Verzögerung übergeben
 	; delay = Zeit in ms zwischen den Versuchen
@@ -949,7 +1032,7 @@ return
 }
 
 ;\/\/\/\/\/\/\/\/\/\/ Listview Control Funktionen \/\/\/\/\/\/\/\/\/\/
-LV_EX_FindString(HLV, Str, Start := 0, Partial := False) {                       				;-- returns row number where find the string
+LV_EX_FindString(HLV, Str, Start := 0, Partial := False) {                       				;-- gibt die Zeilennummer zurück in welchem sich der gesuchte Text befindet
    ; LVM_FINDITEM -> http://msdn.microsoft.com/en-us/library/bb774903(v=vs.85).aspx
    Static LVM_FINDITEM := A_IsUnicode ? 0x1053 : 0x100D ; LVM_FINDITEMW : LVM_FINDITEMA
    Static LVFISize := 40
@@ -963,7 +1046,7 @@ LV_EX_FindString(HLV, Str, Start := 0, Partial := False) {                      
    Return (ErrorLevel > 0x7FFFFFFF ? 0 : ErrorLevel + 1)
 }
 
-LV_GetItemState(HLV, Row) {
+LV_GetItemState(HLV, Row) {                                                                         	;-- den Status einer Listviewzeile ermitteln
 
    Static LVM_GETITEMSTATE := 0x102C
    Static LVIS := {Cut: 0x04, DropHilited: 0x08, Focused: 0x01, Selected: 0x02, Checked: 0x2000}
@@ -980,7 +1063,7 @@ LV_GetItemState(HLV, Row) {
  Return False
 }
 
-LV_GetItemState2(HLV, Row) {
+LV_GetItemState2(HLV, Row) {                                                                        	;-- wie darüber, da LV_GetItemState nicht immer funktionierte
 
    Static LVM_GETITEMSTATE := 0x102C
    Static LVIS1 := {Cut: 0x04, DropHilited: 0x08, Focused: 0x01, Selected: 0x02, Checked: 0x2000}
@@ -1005,19 +1088,18 @@ LV_GetItemText(item_index, sub_index, ctrl_id, win_id) {                        
 		; https://autohotkey.com/board/topic/18299-reading-listview-of-another-app/    ----  code from Tigerite
 		MAX_TEXT:= 260
 		item_index -= 1
-        VarSetCapacity(szText, MAX_TEXT, 0)
-        VarSetCapacity(szClass, MAX_TEXT, 0)
-        ControlGet, hListView, Hwnd, , %ctrl_id%, ahk_id %win_id%
-        DllCall("GetClassName", UInt,hListView, Str,szClass, Int,MAX_TEXT)
-        if (DllCall("lstrcmpi", Str,szClass, Str,"SysListView32") == 0 || DllCall("lstrcmpi", Str,szClass, Str,"TListView") == 0)
-        {
+        VarSetCapacity(szText	, MAX_TEXT, 0)
+        VarSetCapacity(szClass	, MAX_TEXT, 0)
+        ControlGet, hListView, Hwnd, , % ctrl_id, % "ahk_id " win_id
+        DllCall("GetClassName", "UInt",hListView, "Str",szClass, "Int",MAX_TEXT)
+        if (DllCall("lstrcmpi", "Str",szClass, "Str","SysListView32") == 0 || DllCall("lstrcmpi", "Str",szClass, "Str","TListView") == 0)
             LV_ItemText(hListView, item_index, sub_index, szText, MAX_TEXT)
-        }
-        return %szText%
 
+return %szText%
 }
 
-LV_ItemText(hListView,iItem,iSubItem,ByRef lpString,nMaxCount) {                            		                            				;--
+LV_ItemText(hListView, iItem, iSubItem, ByRef lpString, nMaxCount) {            	;--
+
         ;const
         LVNULL                            	:= 0
         PROCESS_ALL_ACCESS 	:= 0x001F0FFF
@@ -1042,36 +1124,38 @@ LV_ItemText(hListView,iItem,iSubItem,ByRef lpString,nMaxCount) {                
         SIZEOF_POINTER             	:= 4
 
         ;var
-        result := 0
-        hProcess := LVNULL
-        dwProcessId := 0
+        result        	:= 0
+        hProcess    	:= LVNULL
+        dwProcessId	:= 0
 
-        if lpString <> LVNULL && nMaxCount > 0
-        {
-            DllCall("lstrcpy", Str,lpString, Str,"")
-            DllCall("GetWindowThreadProcessId", UInt, hListView, UIntP, dwProcessId)
-            hProcess := DllCall("OpenProcess", UInt, PROCESS_ALL_ACCESS, Int, false, UInt, dwProcessId)
-            if hProcess <> LVNULL
-            {
+        if (lpString <> LVNULL) && (nMaxCount > 0)        {
+
+            DllCall("lstrcpy", "Str",lpString, "Str","")
+            DllCall("GetWindowThreadProcessId", "UInt", hListView, "UIntP", dwProcessId)
+            hProcess := DllCall("OpenProcess", "UInt", PROCESS_ALL_ACCESS, "Int", false, "UInt", dwProcessId)
+            if (hProcess <> LVNULL)  {
+
                 ;var
-                lpProcessBuf := LVNULL
-                hMap := LVNULL
-                hKernel := DllCall("GetModuleHandle", Str,"kernel32.dll", UInt)
-                pVirtualAllocEx := DllCall("GetProcAddress", UInt,hKernel, Str,"VirtualAllocEx", UInt)
+                lpProcessBuf  	:= LVNULL
+                hMap            	:= LVNULL
+                hKernel         	:= DllCall("GetModuleHandle", Str,"kernel32.dll", UInt)
+                pVirtualAllocEx	:= DllCall("GetProcAddress", UInt,hKernel, Str,"VirtualAllocEx", UInt)
 
-                if pVirtualAllocEx == LVNULL
-                {
-                    hMap := DllCall("CreateFileMapping", UInt,INVALID_HANDLE_VALUE, Int,LVNULL, UInt,PAGE_READWRITE, UInt,0, UInt,SIZEOF_BUF, UInt)
-                    if hMap <> LVNULL
-                        lpProcessBuf := DllCall("MapViewOfFile", UInt,hMap, UInt,FILE_MAP_WRITE, UInt,0, UInt,0, UInt,0, UInt)
+                if (pVirtualAllocEx == LVNULL) {
+
+                    hMap := DllCall("CreateFileMapping", "UInt",INVALID_HANDLE_VALUE, "Int",LVNULL, "UInt",PAGE_READWRITE, "UInt",0, "UInt",SIZEOF_BUF, UInt)
+                    if (hMap <> LVNULL)
+                        lpProcessBuf := DllCall("MapViewOfFile", "UInt",hMap, "UInt",FILE_MAP_WRITE, "UInt",0, "UInt",0, "UInt",0, "UInt")
+
                 }
-                else
-                {
-                    lpProcessBuf := DllCall("VirtualAllocEx", UInt,hProcess, UInt,LVNULL, UInt,SIZEOF_BUF, UInt,MEM_COMMIT, UInt,PAGE_READWRITE)
+                else {
+
+                    lpProcessBuf := DllCall("VirtualAllocEx", "UInt",hProcess, "UInt",LVNULL, "UInt",SIZEOF_BUF, "UInt",MEM_COMMIT, "UInt",PAGE_READWRITE)
+
                 }
 
-                if lpProcessBuf <> LVNULL
-                {
+                if (lpProcessBuf <> LVNULL)   {
+
                     ;var
                     VarSetCapacity(buf, SIZEOF_BUF, 0)
 
@@ -1081,30 +1165,32 @@ LV_ItemText(hListView,iItem,iSubItem,ByRef lpString,nMaxCount) {                
                     InsertInteger(lpProcessBuf + SIZEOF_LV_ITEM, buf, LV_ITEM_pszText, SIZEOF_POINTER)
                     InsertInteger(SIZEOF_TEXT_BUF, buf, LV_ITEM_cchTextMax, SIZEOF_INT)
 
-                    if DllCall("WriteProcessMemory", UInt,hProcess, UInt,lpProcessBuf, UInt,&buf, UInt,SIZEOF_BUF, UInt,LVNULL) <> 0
-                        if DllCall("SendMessage", UInt,hListView, UInt,LVM_GETITEM, Int,0, Int,lpProcessBuf) <> 0
-                            if DllCall("ReadProcessMemory", UInt,hProcess, UInt,lpProcessBuf, UInt,&buf, UInt,SIZEOF_BUF, UInt,LVNULL) <> 0
-                            {
-                                DllCall("lstrcpyn", Str,lpString, UInt,&buf + SIZEOF_LV_ITEM, Int,nMaxCount)
-                                result := DllCall("lstrlen", Str,lpString)
+                    if (DllCall("WriteProcessMemory", "UInt",hProcess, "UInt",lpProcessBuf, "UInt",&buf, "UInt",SIZEOF_BUF, "UInt",LVNULL) <> 0)
+                        if (DllCall("SendMessage", "UInt",hListView, "UInt",LVM_GETITEM, "Int",0, "Int",lpProcessBuf) <> 0)
+                            if (DllCall("ReadProcessMemory", "UInt",hProcess, "UInt",lpProcessBuf, "UInt",&buf, "UInt",SIZEOF_BUF, "UInt",LVNULL) <> 0)  {
+                                DllCall("lstrcpyn", "Str",lpString, "UInt",&buf + SIZEOF_LV_ITEM, "Int",nMaxCount)
+                                result := DllCall("lstrlen", "Str",lpString)
                             }
                 }
 
-                if lpProcessBuf <> LVNULL
-                    if pVirtualAllocEx <> LVNULL
-                        DllCall("VirtualFreeEx", UInt,hProcess, UInt,lpProcessBuf, UInt,0, UInt,MEM_RELEASE)
+                if (lpProcessBuf <> LVNULL)
+                    if (pVirtualAllocEx <> LVNULL)
+                        DllCall("VirtualFreeEx", "UInt",hProcess, "UInt",lpProcessBuf, "UInt",0, "UInt",MEM_RELEASE)
                     else
-                        DllCall("UnmapViewOfFile", UInt,lpProcessBuf)
+                        DllCall("UnmapViewOfFile", "UInt",lpProcessBuf)
 
-                if hMap <> LVNULL
-                    DllCall("CloseHandle", UInt,hMap)
+                if (hMap <> LVNULL)
+                    DllCall("CloseHandle", "UInt",hMap)
 
-                DllCall("CloseHandle", UInt,hProcess)
+                DllCall("CloseHandle", "UInt",hProcess)
             }
+
         }
-        return result
-    }
-{ ;Sub	for LV_GetItemText and LV_GetText
+
+return result
+}
+;{Sub	for LV_GetItemText and LV_GetText
+
 ExtractInteger(ByRef pSource, pOffset = 0, pIsSigned = false, pSize = 4) {
 
 ; Original versions of ExtractInteger and InsertInteger provided by Chris
@@ -1118,8 +1204,7 @@ ExtractInteger(ByRef pSource, pOffset = 0, pIsSigned = false, pSize = 4) {
 
    SourceAddress := &pSource + pOffset  ; Get address and apply the caller's offset.
    result := 0  ; Init prior to accumulation in the loop.
-   Loop %pSize%  ; For each byte in the integer:
-   {
+   Loop % pSize { ; For each byte in the integer:
       result := result | (*SourceAddress << 8 * (A_Index - 1))  ; Build the integer from its bytes.
       SourceAddress += 1  ; Move on to the next byte.
    }
@@ -1128,43 +1213,51 @@ ExtractInteger(ByRef pSource, pOffset = 0, pIsSigned = false, pSize = 4) {
    ; Otherwise, convert the value (now known to be 32-bit) to its signed counterpart:
    return -(0xFFFFFFFF - result + 1)
 }
+
 InsertInteger(pInteger, ByRef pDest, pOffset = 0, pSize = 4) {
 ; To preserve any existing contents in pDest, only pSize number of bytes starting at pOffset
 ; are altered in it. The caller must ensure that pDest has sufficient capacity.
 
    mask := 0xFF  ; This serves to isolate each byte, one by one.
-   Loop %pSize%  ; Copy each byte in the integer into the structure as raw binary data.
-   {
-      DllCall("RtlFillMemory", UInt, &pDest + pOffset + A_Index - 1, UInt, 1  ; Write one byte.
-         , UChar, (pInteger & mask) >> 8 * (A_Index - 1))  ; This line is auto-merged with above at load-time.
+   Loop % pSize {  ; Copy each byte in the integer into the structure as raw binary data.
+      DllCall("RtlFillMemory"	, "UInt", &pDest + pOffset + A_Index - 1, "UInt", 1              	; Write one byte.
+			                        	, "UChar", (pInteger & mask) >> 8 * (A_Index - 1))              	; This line is auto-merged with above at load-time.
       mask := mask << 8  ; Set it up for isolation of the next byte.
    }
-}
+
 }
 
+;}
+
 LVM_GetText(h, r, c=1) {
+
 	;https://autohotkey.com/board/topic/41650-ahk-l-60-listview-handle-library-101/
-	r -= 1 ; convert to 0 based index
+	r -= 1                                                     	; convert to 0 based index
+
 	VarSetCapacity(t, 511, 1)
 	VarSetCapacity(lvItem, A_PtrSize * 7)
-	NumPut(1, lvItem, "uint") ; mask
-	NumPut(r, lvItem, A_PtrSize, "int") ; iItem
-	NumPut(c-1, lvItem, A_PtrSize * 2, "int") ; iSubItem
-	NumPut(&t, lvItem, A_PtrSize * 5, "ptr") ; pszText
-	NumPut(512, lvItem, A_PtrSize * 6) ; cchTextMax
+	NumPut(1 	, lvItem, "uint")                   	; mask
+	NumPut(r   	, lvItem, A_PtrSize, "int")      	; iItem
+	NumPut(c-1	, lvItem, A_PtrSize * 2, "int") 	; iSubItem
+	NumPut(&t	, lvItem, A_PtrSize * 5, "ptr") 	; pszText
+	NumPut(512	, lvItem, A_PtrSize * 6)         	; cchTextMax
+
 	If (A_IsUnicode)
 		DllCall("SendMessage", "uint", h, "uint", 4211, "uint", r, "ptr", &lvItem) ; LVM_GETITEMTEXTW
 	Else
 		DllCall("SendMessage", "uint", h, "uint", 4141, "uint", r, "ptr", &lvItem) ; LVM_GETITEMTEXTA
-	Return t
+
+Return t
 }
 
 LVM_GetNext(hLV, rLV=0, oLV=0) {
+
 	; hLV = ListView handle.
 	; rLV = 1 based index of the starting row for the flag search. Omit or 0 to find first occurance specified flags.
 	; oLV = Combination of one or more LVNI flags. See reference above.
 	;LVIS_SELECTED:=	2
-	Return DllCall("SendMessage", "uint", hLV, "uint", 4108, "uint", rLV-1, "uint", oLV) + 1 ; LVM_GETNEXTITEM
+
+Return DllCall("SendMessage", "uint", hLV, "uint", 4108, "uint", rLV-1, "uint", oLV) + 1 ; LVM_GETNEXTITEM
 }
 
 LV_MouseGetCellPos(ByRef LV_CurrRow, ByRef LV_CurrCol, LV_LView) {
@@ -1175,39 +1268,40 @@ LV_MouseGetCellPos(ByRef LV_CurrRow, ByRef LV_CurrCol, LV_LView) {
 
 	*/
 
-	static LVIR_LABEL                             := 0x0002                                                                  	;LVM_GETSUBITEMRECT constant - get label info
-	static LVM_GETITEMCOUNT      	:= 4100                                                                       	;gets total number of rows
-	static LVM_SCROLL                    	:= 4116                                                                       	;scrolls the listview
-	static LVM_GETTOPINDEX          	:= 4135                                                                       	;gets the first displayed row
-	static LVM_GETCOUNTPERPAGE 	:= 4136                                                                       	;gets number of displayed rows
-	static LVM_GETSUBITEMRECT    	:= 4152                                                                       	;gets cell width,height,x,y
+	static LVIR_LABEL                           := 0x0002                                                                    	; LVM_GETSUBITEMRECT constant - get label info
+	static LVM_GETITEMCOUNT      	:= 4100                                                                       	; gets total number of rows
+	static LVM_SCROLL                    	:= 4116                                                                       	; scrolls the listview
+	static LVM_GETTOPINDEX          	:= 4135                                                                       	; gets the first displayed row
+	static LVM_GETCOUNTPERPAGE 	:= 4136                                                                       	; gets number of displayed rows
+	static LVM_GETSUBITEMRECT    	:= 4152                                                                       	; gets cell width,height,x,y
 
-	ControlGetPos	, LV_lx, LV_ly, LV_lw, LV_lh 			, , ahk_id %LV_LView%                            	;get info on listview
-	SendMessage	, LVM_GETITEMCOUNT		, 0, 0, , ahk_id %LV_LView%
-	LV_TotalNumOfRows		:= ErrorLevel                                                                                 	;get total number of rows
-	SendMessage	, LVM_GETCOUNTPERPAGE	, 0, 0, , ahk_id %LV_LView%
-	LV_NumOfRows 			:= ErrorLevel                                                                                 	;get number of displayed rows
-	SendMessage	, LVM_GETTOPINDEX			, 0, 0, , ahk_id %LV_LView%
-	LV_topIndex               	:= ErrorLevel                                                                                 	;get first displayed row
+	ControlGetPos	, LV_lx, LV_ly, LV_lw, LV_lh 			, , % "ahk_id" LV_LView                          	; get info on listview
+	SendMessage	, LVM_GETITEMCOUNT		, 0, 0, , % "ahk_id" LV_LView
+	LV_TotalNumOfRows		:= ErrorLevel                                                                                 	; get total number of rows
+	SendMessage	, LVM_GETCOUNTPERPAGE	, 0, 0, , % "ahk_id" LV_LView
+	LV_NumOfRows 			:= ErrorLevel                                                                                 	; get number of displayed rows
+	SendMessage	, LVM_GETTOPINDEX			, 0, 0, , % "ahk_id" LV_LView
+	LV_topIndex               	:= ErrorLevel                                                                                 	; get first displayed row
 
 	mMode := A_CoordModeMouse
 	CoordMode, MOUSE, RELATIVE
 	MouseGetPos, LV_mx, LV_my
 	LV_mx -= LV_lx, LV_my -= LV_ly
-	VarSetCapacity(LV_XYstruct, 16, 0)                                                                                     	;create struct
+	VarSetCapacity(LV_XYstruct, 16, 0)                                                                                     	; create struct
 
-	Loop,% LV_NumOfRows + 1                                                                                              	;gets the current row and cell Y,H
-	{	LV_which := LV_topIndex + A_Index - 1                                                                         	;loop through each displayed row
-		NumPut(LVIR_LABEL, LV_XYstruct, 0)                                                                               	;get label info constant
-		NumPut(A_Index - 1, LV_XYstruct, 4)                                                                               	;subitem index
-		SendMessage, LVM_GETSUBITEMRECT, %LV_which%, &LV_XYstruct,, ahk_id %LV_LView% 	;get cell coords
-		LV_RowY 				:= NumGet(LV_XYstruct,4)                                                                 	;row upperleft y
-		LV_RowY2 			:= NumGet(LV_XYstruct,12)                                                               	;row bottomright y2
-		LV_currColHeight 	:= LV_RowY2 - LV_RowY                                                                    	;get cell height
-		If(LV_my <= LV_RowY + LV_currColHeight)                                                                   	;if mouse Y pos less than row pos + height
-		{	LV_currRow   := LV_which + 1                                                                                   	;1-based current row
-			LV_currRow0 := LV_which                                                                                          	;0-based current row, if needed
-			LV_currCol	:= 0                                                                                                     	;LV_currCol is not needed here, so I didn't do it! It will always be 0. See my ListviewInCellEditing function for details on finding LV_currCol if needed.
+	Loop,% LV_NumOfRows + 1                                                                                              	; gets the current row and cell Y,H
+	{	LV_which := LV_topIndex + A_Index - 1                                                                         	; loop through each displayed row
+		NumPut(LVIR_LABEL, LV_XYstruct, 0)                                                                               	; get label info constant
+		NumPut(A_Index - 1, LV_XYstruct, 4)                                                                               	; subitem index
+		SendMessage, LVM_GETSUBITEMRECT, %LV_which%, &LV_XYstruct,, ahk_id %LV_LView% 	; get cell coords
+		LV_RowY 				:= NumGet(LV_XYstruct,4)                                                                 	; row upperleft y
+		LV_RowY2 			:= NumGet(LV_XYstruct,12)                                                               	; row bottomright y2
+		LV_currColHeight 	:= LV_RowY2 - LV_RowY                                                                    	; get cell height
+		If(LV_my <= LV_RowY + LV_currColHeight)                                                                   	; if mouse Y pos less than row pos + height
+		{	LV_currRow   := LV_which + 1                                                                                   	; 1-based current row
+			LV_currRow0 := LV_which                                                                                          	; 0-based current row, if needed
+			LV_currCol	:= 0                                                                                                     	; LV_currCol is not needed here, so I didn't do it! It will always be 0.
+																																				; See my ListviewInCellEditing function for details on finding LV_currCol if needed.
 			return LV_currRow
 			Break
 		}
@@ -1246,7 +1340,8 @@ LV_SortArrow(h, c, d="") {
 				,DllCall("SendMessage", ptr, h, "uint", LVM_SETCOLUMN, "uint", i, ptr, &lvColumn)
 		NumPut(fmt | (d && d = "desc" || d = "down" ? 512 : 1024), lvColumn, 4, "int")
 	}
-	return DllCall("SendMessage", ptr, h, "uint", LVM_SETCOLUMN, "uint", c, ptr, &lvColumn)
+
+return DllCall("SendMessage", ptr, h, "uint", LVM_SETCOLUMN, "uint", c, ptr, &lvColumn)
 }
 
 ;\/\/ RICHEDIT \/\/
@@ -1294,7 +1389,7 @@ RE_FindText(hEdit, sText, cpMin=0, cpMax=-1, flags="") {
 Return ErrorLevel
 }
 
-RE_GetSel(hEdit) {	;-- Funktionen von HiEdit.ahk - diese funktionieren mit dem RichEdit-Control in Albis
+RE_GetSel(hEdit) {                                                                                         	;-- Funktionen von HiEdit.ahk - diese funktionieren mit dem RichEdit-Control in Albis
 	static EM_GETSEL=176
 	VarSetCapacity(s, 4), VarSetCapacity(e, 4)
 	SendMessage, EM_GETSEL, &s, &e,, ahk_id %hEdit%

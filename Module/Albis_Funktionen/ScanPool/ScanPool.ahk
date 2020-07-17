@@ -3492,6 +3492,24 @@ SpEvHook_WinHandler2:                     	;{
 return
 ;}
 
+SignatureHelper: ;{
+
+	activeTitle:= WinGetTitle( activeID:= WinExist("A") )
+	if (InStr(activeTitle, "Sign Document") or InStr(activeTitle, "Dokument signieren"))
+	{
+				SetTimer, SignatureHelper, Off
+				If !handlerrunning1
+				{
+						SpEHookHwnd1:= activeID
+						SetTimer, SpEvHook_WinHandler1, -0
+				}
+	}
+
+	activeTitle:= activeID:= ""
+
+return
+;}
+
 ;}	Speichern unter bestätigen
 
 ;---------------------------------------SHELLHOOK                                                        	;{

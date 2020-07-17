@@ -1,23 +1,23 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 04.04.2020 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 03.06.2020 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
-; FENSTER                                                                                                                                                                                                                                                   	(45)
+; FENSTER                                                                                                                                                                                                                                                   	(47)
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; (01) GetAncestor                             	(02) GetParentList	                         	(03) GetParent                              	(04) GetNextWindow                     	(05) GetWindowInfo
-; (06) GetWindowSpot                          	(07) GetWindow                               	(08) GetWindowPos                      	   	(09) SetWindowPos                           	(10) WinToClient
-; (11) ClientToWin                                	(12) ScreenToClient                          	(13) ClientToScreen
-; (14) IsWindow                                    	(15) IsWindowVisible                        	(16) CheckWindowStatus                  	(17) SetParentByID
-; (18) FindWindow                                	(19) MouseGetWinTitle
-; (20) WinForms_GetClassNN	           	(21) WinForms_GetElementID           	(22) Win32_SendMessage                	(23) IsClosed                                    	(24) FindChildWindow
-; (25) WinGetMinMaxState                    	(26) WaitForNewPopUpWindow        	(27) GetLastActivePopup                   	(28) WaitAndActivate                        	(29) ActivateAndWait
-; (30) FullScreenToggleUnderMouse      	(31) AnimateWindow                        	(31) IsResizable                                	(32) RectOverlapsRect
-; (33) WinGetTitle                                 	(34) WinGetClass                             	(35) WinGetText                               	(36) WinGet                                  	(37) Redraw
-; (38) MoveWinToCenterScreen             	(39) IsInsideVisibleArea
-; (40) getProcessName                         	(41) GetProcessProperties                 	(42) GetProcessNameFromID
-; (43) MonitorFromWindow                   	(44) GetMonitorInfo                       	(45) VerifiedWindowClose
+; (06) GetWindowSpot                          	(07) GetWindow                               	(08) GetWindowPos                      	   	(09) SetWindowPos                         	(10) WinMoveZ()
+; (11) WinToClient                              	(12) ClientToWin                              	(13) ScreenToClient                          	(14) ClientToScreen
+; (15) IsWindow                                    	(16) IsWindowVisible                        	(17) CheckWindowStatus                  	(18) SetParentByID
+; (19) FindWindow                                	(20) MouseGetWinTitle
+; (21) WinForms_GetClassNN	           	(22) WinForms_GetElementID           	(23) Win32_SendMessage                	(24) IsClosed                                    	(25) FindChildWindow
+; (26) WinGetMinMaxState                    	(27) WaitForNewPopUpWindow        	(28) GetLastActivePopup                   	(29) WaitAndActivate                        	(30) ActivateAndWait
+; (31) FullScreenToggleUnderMouse      	(32) AnimateWindow                        	(33) IsResizable                                	(34) RectOverlapsRect
+; (35) WinGetTitle                                 	(36) WinGetClass                             	(37) WinGetText                               	(38) WinGet                                  	(39) Redraw
+; (40) MoveWinToCenterScreen             	(41) IsInsideVisibleArea
+; (42) getProcessName                         	(43) GetProcessProperties                 	(44) GetProcessNameFromID
+; (45) MonitorFromWindow                   	(46) GetMonitorInfo                       	(47) VerifiedWindowClose
 ;1
 GetAncestor(hWnd, Flag := 2) {                                                                                                	;--
 	;1 - Parent , 2 - Root
@@ -50,7 +50,7 @@ return List
 }
 ;3
 GetParent(hWnd) {                                                                                                                     	;-- ermittelt das Parent Fenster
-	return DllCall("GetParent", "Ptr", hWnd, "Ptr")
+	return GetHex(DllCall("GetParent", "Ptr", hWnd, "Ptr"))
 }
 ;4
 GetNextWindow(hwnd, wCmd) {                                                                                                	;-- ermittelt die Fenster-Z Ordnung
@@ -142,6 +142,15 @@ SetWindowPos(hWnd, x, y, w, h, hWndInsertAfter := 0, uFlags := 0x40) {          
     Return DllCall("SetWindowPos", "Ptr", hWnd, "Ptr", hWndInsertAfter, "Int", x, "Int", y, "Int", w, "Int", h, "UInt", uFlags)
 }
 ;10
+WinMoveZ(hWnd, C, X, Y, W, H, Redraw:=0) {                                                                           	;-- WinMoveZ v0.5 by SKAN on D35V/D361 @ tiny.cc/winmovez
+Local V:=VarSetCapacity(R,48,0), A:=&R+16, S:=&R+24, E:=&R, NR:=&R+32, TPM_WORKAREA:=0x10000
+  C:=( C:=Abs(C) ) ? DllCall("SetRect", "Ptr",&R, "Int",X-C, "Int",Y-C, "Int",X+C, "Int",Y+C) : 0
+  DllCall("SetRect", "Ptr",&R+16, "Int",X, "Int",Y, "Int",W, "Int",H)
+  DllCall("CalculatePopupWindowPosition", "Ptr",A, "Ptr",S, "UInt",TPM_WORKAREA, "Ptr",E, "Ptr",NR)
+  X:=NumGet(NR+0,"Int"),  Y:=NumGet(NR+4,"Int")
+Return DllCall("MoveWindow", "Ptr",hWnd, "Int",X, "Int",Y, "Int",W, "Int",H, "Int",Redraw)
+}
+;11
 WinToClient(hwnd, ByRef x, ByRef y) {
 
     WinGetPos, wx, wy,,, ahk_id %hwnd%
@@ -153,7 +162,7 @@ WinToClient(hwnd, ByRef x, ByRef y) {
     y := NumGet(pt, 4, "int")
 
 }
-;11
+;12
 ClientToWin(hwnd, ByRef x, ByRef y) {                                                                 	     	    			;-- Convert client co-ordinates (cx,cy) to window co-ordinates (wx,wy) - Lexikos
 	;https://autohotkey.com/board/topic/24813-windows-information-is-it-possible/page-2?&#entry161431
     VarSetCapacity(pt, 8)
@@ -164,7 +173,7 @@ ClientToWin(hwnd, ByRef x, ByRef y) {                                           
     x := NumGet(pt, 0, "int") - wx
     y := NumGet(pt, 4, "int") - wy
 }
-;12
+;13
 ScreenToClient(hwnd, ByRef x, ByRef y) {
     VarSetCapacity(pt, 8)
     NumPut(x, pt, 0)
@@ -173,7 +182,7 @@ ScreenToClient(hwnd, ByRef x, ByRef y) {
     x := NumGet(pt, 0, "int")
     y := NumGet(pt, 4, "int")
 }
-;13
+;14
 ClientToScreen(hwnd, ByRef x, ByRef y) {
     VarSetCapacity(pt, 8)
     NumPut(x, pt, 0)
@@ -182,24 +191,24 @@ ClientToScreen(hwnd, ByRef x, ByRef y) {
     x := NumGet(pt, 0, "int")
     y := NumGet(pt, 4, "int")
 }
-;14
+;15
 IsWindow(hWnd) {                                                                                                                    		;-- wrapper for IsWindow DllCall
     Return DllCall("IsWindow", "Ptr", hWnd)
 }
-;15
+;16
 IsWindowVisible(hWnd) {
 	return DllCall("IsWindowVisible","Ptr", hWnd)
 }
-;16
+;17
 CheckWindowStatus(hwnd, timeout:=100) {                                                               					;-- check's if a window is responding or not responding (hung or crashed
 	NR_temp := 0 ; init
 return DllCall("SendMessageTimeout", "UInt", hwnd, "UInt", 0x0000, "Int", 0, "Int", 0, "UInt", 0x0002, "UInt", TimeOut, "UInt *", NR_temp)
 }
-;17
+;18
 SetParentByID(ParentID, ChildID) {                                                                                                 ;-- title text is the start of the title of the window, gui number is e.g. 99
     Return DllCall("SetParent", "uint", childID, "uint", ParentID) ; success = handle to previous parent, failure =null
 }
-;18
+;19
 FindWindow(WinTitle, WinClass:="", WinText:="", ParentTitle:="", ParentClass:="", DetectHiddenWins:="on", DectectHiddenTexts:="on") { ; Finds the requested window,and return it's ID
 	; 0 if it wasn't found or chosen from a list
 	; originally from Evan Casey Copyright (c) under MIT License.
@@ -254,13 +263,13 @@ FindWindow(WinTitle, WinClass:="", WinText:="", ParentTitle:="", ParentClass:=""
 
 return sSelectedWinID
 }
-;19
+;20
 MouseGetWinTitle() {                                                                                                                 	;-- ermittelt den Fenstertitel über das der Mauszeiger steht
 		MouseGetPos,x ,y , WinID, CId
 		WinGetTitle, WTitle, ahk_id %WinID%
 return WTitle
 }
-;20
+;21
 WinForms_GetClassNN(WinID, fromElement, ElementName) {                                                    	;-- schaut nach, welchen ClassNN ein WinForms-Element hat
 
 	; function by Ixiko 2018 last_change 28.01.2018
@@ -287,7 +296,7 @@ WinForms_GetClassNN(WinID, fromElement, ElementName) {                          
 	}
 
 }
-;21
+;22
 WinForms_GetElementID(WinID, ElementName) {  	                                                                   	;-- schaut nach welche ID das gesuchte Element hat - z.B. Name eines Buttons kann hier eingetragen werden
 
 	WinGet, CtrlListHwnd, ControlListHwnd, ahk_id %WinID%
@@ -302,7 +311,7 @@ WinForms_GetElementID(WinID, ElementName) {  	                                  
 
 return buttonID
 }
-;22
+;23
 Win32_SendMessage(win) {                                                                                                       	;-- for closing a window via SendMessage - win is a Hwnd
 	static wm_msgs := {"WM_CLOSE":0x0010, "WM_QUIT":0x0012, "WM_DESTROY":0x0002}
 	for k, v in wm_msgs {
@@ -314,12 +323,12 @@ Win32_SendMessage(win) {                                                        
 		return true
 	return false
 }
-;23
+;24
 IsClosed(win, wait) {                                                                                                                  	;-- waits until the specific window is closed
 	WinWaitClose, ahk_id %win%,, %wait%
 	return ((ErrorLevel = 1) ? False : True)
 }
-;24
+;25
 FindChildWindow(Parent, Child, DetectHiddenWindow="On") {                                                  	;-- finds childWindow Hwnds of the parent window
 
 /*                                                                                     	READ THIS FOR MORE INFORMATIONS
@@ -373,7 +382,7 @@ EnumChildWindow(hwnd, lParam) {                                                 
 return true  ; Tell EnumWindows() to continue until all windows have been enumerated.
 }
 ;}
-;25
+;26
 WinGetMinMaxState(hwnd) {                                                                                                			;-- get state if window ist maximized or minimized
 
 	; this function is from AHK-Forum: https://autohotkey.com/board/topic/13020-how-to-maximize-a-childdocument-window/
@@ -385,7 +394,7 @@ WinGetMinMaxState(hwnd) {                                                       
 
 return (zoomed>iconic) ? "z":"i"
 }
-;26
+;27
 WaitForNewPopUpWindow(ParentWinID, LastWinID, WaitTime, RequestedTitle:="") {   					;-- function waits for a new PopUpWindow for a given parent window and returns Title, Class, Text and Hwnd
 
 	/*		DESCRIPTION FOR WAITFORNEWPOPUPWINDOW        **last change: 22.06.2019**
@@ -439,11 +448,11 @@ WFNPUPWTT:
 	ToolTip,,,, 18
 return
 }
-;27
+;28
 GetLastActivePopup(hwnd) {                                                                                                 			;-- get the last active popup window
 	return DLLCall("GetLastActivePopup", "uint", hwnd)
 }
-;28
+;29
 WaitAndActivate(WinTitle, Debug:=0, DbgWhwnd:=0, delay:= 3) {                                				;-- wait for a window and the activates it
 
 		If (Debug =1) {
@@ -463,14 +472,14 @@ WaitAndActivate(WinTitle, Debug:=0, DbgWhwnd:=0, delay:= 3) {                   
 
 return ErrorLevel
 }
-;29
+;30
 ActivateAndWait(WinTitle, MaxSecondsToWait) {                                                                            	;--activates a window and wait for activation
 		If !WinActive(WinTitle)
 				WinActivate, % WinTitle
                     	WinWaitActive, % WinTitle, , % MaxSecondsToWait
 return ErrorLevel
 }
-;30
+;31
 FullScreenToggleUnderMouse(WT) {                                                                                            	;--for a pseudo fullscreen of a window
 
 		DetectHiddenWindows, On
@@ -491,31 +500,31 @@ FullScreenToggleUnderMouse(WT) {                                                
 			}
 
 }
-;31
+;32
 AnimateWindow(hWnd, Duration, Flag) {                                                                                     	;-- DllCall Wrapper für Windows interne Fensteranimation
 
 ;{ example DllCall("AnimateWindow,
 
-;	BLEND					:= 0x00080000	; Uses a fade effect.
-;	SLIDE					:= 0x00040000	; Uses slide animation. By default, roll animation is used.
-;	CENTER				:= 0x00000010	; Animate collapse/expand to/from middle.
-;	HIDE                   	:= 0x00010000	; Hides the window. By default, the window is shown.
-;	ACTIVATE				:= 0x00020000	; Activates the window. Do not use this value with AW_HIDE.
-;	HOR_POSITIVE		:= 0x00000001	; Animates the window from left to right.
-;	HOR_NEGATIVE	:= 0x00000002	; Animates the window from right to left.
-;	VER_POSITIVE		:= 0x00000004	; Animates the window from top to bottom.
-;	VER_NEGATIVE		:= 0x00000008	; Animates the window from bottom to top.
+;	    BLEND					:= 0x00080000	; Uses a fade effect.
+;	    SLIDE					:= 0x00040000	; Uses slide animation. By default, roll animation is used.
+;	    CENTER				:= 0x00000010	; Animate collapse/expand to/from middle.
+;	    HIDE                   	:= 0x00010000	; Hides the window. By default, the window is shown.
+;	    ACTIVATE				:= 0x00020000	; Activates the window. Do not use this value with AW_HIDE.
+;	    HOR_POSITIVE		:= 0x00000001	; Animates the window from left to right.
+;	    HOR_NEGATIVE	:= 0x00000002	; Animates the window from right to left.
+;	    VER_POSITIVE		:= 0x00000004	; Animates the window from top to bottom.
+;	    VER_NEGATIVE		:= 0x00000008	; Animates the window from bottom to top.
 
 ;}
 
 	Return DllCall("AnimateWindow", "UInt",hWnd, "Int",Duration, "UInt",Flag)
 }
-;32
+;33
 IsResizable() {                                                                                                                            	;-- feststellen ob das untersuchte Fenster in der Größe änderbar ist
     WinGet, Style, Style
     return (Style & 0x40000) ; WS_SIZEBOX
 }
-;33
+;34
 RectOverlapsRect(vX1, vY1, vW1, vH1, vX2, vY2, vW2, vH2, vOpt="") {                                          	;-- check if rectangles (windows) overlap
 
 		/*    	DESCRIPTION
@@ -563,7 +572,7 @@ RectOverlapsRect(vX1, vY1, vW1, vH1, vX2, vY2, vW2, vH2, vOpt="") {             
 	else
 		return 1
 }
-;34
+;35
 WinGetTitle( hwnd ) {                                                                                                                	;-- schnellere Fensterfunktion
 	if (hwnd is not Integer)
 			hwnd :=GetDec(hwnd)
@@ -573,7 +582,7 @@ WinGetTitle( hwnd ) {                                                           
 	wtitle := sClass, sClass := ""
 	Return wtitle
 }
-;35
+;36
 WinGetClass( hwnd ) {                                                                                                                	;-- schnellere Fensterfunktion
 	if (hwnd is not Integer)
 			hwnd :=GetDec(hwnd)
@@ -583,17 +592,17 @@ WinGetClass( hwnd ) {                                                           
 	sClass =
 	Return wclass
 }
-;36
+;37
 WinGetText( hwnd ) {                                                                                                                  	;-- Wrapper
 	WinGetText, wtext, % "ahk_id " hwnd
 Return wtext
 }
-;37
+;38
 WinGet( hwnd, cmd) {                                                                                                                	;-- Wrapper
 	WinGet, res, % cmd, % "ahk_id " hwnd
 return res
 }
-;37
+;39
 Redraw( hwnd ) {                                                                                                                      	;-- redraw's a window
    static RDW_ALLCHILDREN	:= 0x80, RDW_ERASE    	:= 0x4  , RDW_ERASENOW	:=0x200, RDW_FRAME                 	:=0x400	, RDW_INTERNALPAINT	:=0x2   	, RDW_INVALIDATE	:=0x1
    static RDW_NOCHILDREN	:= 0x40, RDW_NOERASE 	:= 0x20, RDW_NOFRAME 	:=0x800, RDW_NOINTERNALPAINT	:=0x10 	, RDW_UPDATENOW	:=0x100	, RDW_VALIDATE  	:=0x8
@@ -602,7 +611,7 @@ Redraw( hwnd ) {                                                                
    return DllCall("RedrawWindow", "uint", hwnd, "uint", 0, "uint", 0, "uint", style)
 }
 ; ---- Monitor ----
-;38
+;40
 MoveWinToCenterScreen(hWin) {                                                                                               	;-- moves a window to center of screen if its position is outside the visible screen area
 
 	; dependencies: GetWindowSpot(), GetMonitorIndexFromWindow(), screenDims()
@@ -618,7 +627,7 @@ MoveWinToCenterScreen(hWin) {                                                   
 
 return
 }
-;39
+;41
 IsInsideVisibleArea(x,y,w,h) {
 
   isVis:=0
@@ -631,7 +640,7 @@ IsInsideVisibleArea(x,y,w,h) {
   }
   return, IsVis
 }
-;40
+;41
 getProcessName(PID) { 			                                                            		                 					;-- get running processes with search using comma separated list
 
 		s := 100096  ; 100 KB will surely be HEAPS
@@ -666,7 +675,7 @@ getProcessName(PID) { 			                                                       
 	  DllCall("FreeLibrary", "Ptr", hModule)  ; unload the library to free memory
 	return n
 }
-;41
+;42
 GetProcessProperties(hwnd) {
 	Process:= Object()
 	WinGet PID, PID, % "ahk_id " hWnd
@@ -677,34 +686,34 @@ GetProcessProperties(hwnd) {
 	}
 	Return Process
 }
-;42
+;43
 GetProcessNameFromID(hwnd) {
 	Process:= Object()
 	Process:= GetProcessProperties(hwnd)
 	return Process.Name
 }
-;43
+;44
 MonitorFromWindow(Hwnd := 0) {
  return DllCall("User32.dll\MonitorFromWindow", "Ptr", Hwnd, "UInt", Hwnd?2:1)
 }
-;44
+;45
 GetMonitorInfo(hMonitor) {
     VarSetCapacity(MONITORINFOEX, 104)
     NumPut(104, &MONITORINFOEX, "UInt")
     if (!DllCall("User32.dll\GetMonitorInfoW", "Ptr", hMonitor, "UPtr", &MONITORINFOEX))
         return FALSE
-    return {  L:    	  NumGet(&MONITORINFOEX+ 4	, "Int")
-		    	, T:    	  NumGet(&MONITORINFOEX+ 8	, "Int")
-		    	, R:   	  NumGet(&MONITORINFOEX+12	, "Int")
-		    	, B:    	  NumGet(&MONITORINFOEX+16	, "Int")
-		    	, WL: 	  NumGet(&MONITORINFOEX+20	, "Int")
-		    	, WT: 	  NumGet(&MONITORINFOEX+24	, "Int")
-		    	, WR:	  NumGet(&MONITORINFOEX+28	, "Int")
-				, WB: 	  NumGet(&MONITORINFOEX+32	, "Int")
-		    	, Flags:   NumGet(&MONITORINFOEX+36	, "UInt")
-		    	, Name: StrGet(&MONITORINFOEX+40,64	, "UTF-16") }
+    return {  L:    	     NumGet(&MONITORINFOEX+ 4      	, "Int")
+		    	, T:    	     NumGet(&MONITORINFOEX+ 8      	, "Int")
+		    	, R:   	     NumGet(&MONITORINFOEX+12     	, "Int")
+		    	, B:    	     NumGet(&MONITORINFOEX+16     	, "Int")
+		    	, WL: 	     NumGet(&MONITORINFOEX+20     	, "Int")
+		    	, WT: 	     NumGet(&MONITORINFOEX+24     	, "Int")
+		    	, WR:	     NumGet(&MONITORINFOEX+28     	, "Int")
+				, WB: 	     NumGet(&MONITORINFOEX+32     	, "Int")
+		    	, Primary:   NumGet(&MONITORINFOEX+36    	, "UInt")
+		    	, Name: 	    StrGet(&MONITORINFOEX+40,64	, "UTF-16") }
 }
-;45
+;46
 VerifiedWindowClose(hwnd) {
 
 	If WinExist("ahk_id " hwnd)	{

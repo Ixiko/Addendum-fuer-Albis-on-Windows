@@ -1,32 +1,28 @@
-![Addendum.png](assets/AddendumLogoFlat.png)
+![Addendum.png](assets/AddendumLogo2020.png)
 
 #### Extends the possibilities through surface analysis and manipulation
 
-### Version 1.30 vom 29.04.2020
-lauffähig ab Autohotkey_H-Version  1.1.32.00 Unicode 64bit - es sind Autohotkey_L sowie Autohotkey_H (Multithread Unicode 64bit - Version) notwendig, geschrieben für Albis ab Version 18.40
+### Version 1.33 vom 17.07.2020
+lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* - es sind *Autohotkey_L* sowie *Autohotkey_H* (Multithread Unicode 64bit - Version) notwendig, geschrieben für Albis ab Version 18.40
 
-![](Docs\Trenner.png)
+![](Docs\TrennerExtraBreit.png)
 
 ### DIES IST KEINE OFFIZIELLE ERWEITERUNG FÜR ALBIS!
 ##### Der Hersteller der Praxissoftware Albis*, die Compugroup AG, hat mit dieser Software nichts zu tun, geschweige denn, wurde diese offiziell durch die CompuGroup AG legitimiert!
 ###### * Arztinformationssystem (AIS), Arztsoftware, Praxissoftware, Praxisverwaltungssoftware, Praxisverwaltungssystem (PVS), Praxismanagementsoftware oder Ordinationsmanagementsoftware
 <br>
 
-![](Docs/Trenner.png)
+![](Docs/TrennerExtraBreit.png)
 
 # ![Funktionen.png](Docs/Icons/Funktionen.png)  FUNKTIONSÜBERSICHT
-
-![](Docs/Trenner.png)
-<br>
-
-# ![Addendum.png](Docs/Icons/Addendum.png) *Addendum*
+## ![Addendum.png](Docs/Icons/Addendum.png) Addendum
 
 <h3> &#9733 PopupBlocker</h3>
 * Schließt diverse eher störende, wenig wichtige Fenster in Albis und zugehörigen Programmen
 
 <h3> &#9733 Fensterhandler</h3>
 
-- positioniert Fenster zur besseren Übersicht auf dem Monitor (bestimmte Bereich vom Albisfenster werden nicht verdeckt)
+- positioniert Fenster zur besseren Übersicht auf dem Monitor (bestimmte Bereiche im Albisfenster werden nicht mehr verdeckt)
 - automatische Bestätigung von Dialognachfragen
 - erweitert automatisch Anzeige-Elemente in Albisdialogen für mehr Übersicht 
 
@@ -35,16 +31,16 @@ lauffähig ab Autohotkey_H-Version  1.1.32.00 Unicode 64bit - es sind Autohotkey
 
 <h3> &#9733 Patientennamendatenbank </h3>
 
-* für eine schnelle fehlertolerante Suche nach Patienten
+* für eine schnelle und fehlertolerante Suche nach Patienten
 
 <h3> &#9733 alternatives Tagesprotokoll </h3>
 * nach Computern getrenntes Tagesprotokoll. Dies könnte für einzelne Analysen interessant sein
 
-<h3> &#9733 Infofenster	</h3>
+<h3> &#9733 Infofenster </h3>
 
-* wird bei jedem Patienten im Albis-Patientenfenster angezeigt
-* Befunde können dann von dort ohne Umweg in die Patientenakte importiert werden
-* das **Posteingangsdatum** (Erstellungsdatum der Datei) wird beim Import in die Patientenakte berücksichtigt
+* zeigt den Inhalt ihres Bildvorlagen-Dateiordners an (PDF, sowie Bilddateien)
+* Befund-/Bilddateien können von dort ohne Umweg in die Patientenakte importiert werden
+* Auflistung aller Karteikarten des Tages (letzte Patienten) 
 
 <h3> &#9733 Unterstützung der PDF-Signierung </h3>
 
@@ -62,126 +58,32 @@ lauffähig ab Autohotkey_H-Version  1.1.32.00 Unicode 64bit - es sind Autohotkey
   * **Addition** von einer **Woche** oder einem **Monat** in **Datumsfeldern**, anstatt nur einem Tag wie bisher 
   * **neuer Shift + F3 Kalender** zeigt mehrere Monate an 
 
+<h3> &#9733 erweitertes Kontextmenu </h3>
+
+- mehr Funktionen im Rechtsklick Menu in der Karteikarte. Bearbeiten (Anzeigen), Drucken, Exportieren, Versand als Fax, per Mail oder per Telegram 
+
 <h3> &#9733 Rezepthelfer </h3>
-* Rezeptvorlagen erstellen und bei allen Patienten nutzen
-* Schnellverordnung von Medikamenten mit automatischem Druck eines Dosierschema (Worddokument)
+
+* Rezeptvorlagen, z.B. mehrzeilige Hilfsmittelrezepte oder Verschreibung mehrerer Medikamente nach Auswahl einer Vorlage 
 <h3> &#9733 Anzeige von Beginn und Ende der Lohnfortzahlung  </h3>
 
-die berechneten Stichtage werden im oberen Teil der Arbeitsunfähigkeitsbescheinigung eingeblendet 
+- die berechneten Stichtage werden im oberen Teil der Arbeitsunfähigkeitsbescheinigung eingeblendet 
 
 ![](D:\Eigene Dateien\Eigene Dokumente\AutoIt Scripte\GitHub\Addendum-fuer-Albis-on-Windows\Docs\AUFristen.png)
 
 <h3> &#9733 Kontextsensitive Texterweiterungen </h3>
-* Erkennung des Kontext in der Krankenakte anhand der Albiskürzel (z.B. lko, dia, bef, info) und Bereitstellung von Texterweiterungen (muss definitiv komfortabler werden)
+* Erkennung des Kontext in der Karteikarte anhand des Albiskürzel (z.B. lko, dia, bef, info) mit Bereitstellung von Texterweiterungen 
 
 <h3> &#9733 Unterstützung des Laborabrufes </h3>
 - Übernimmt automatisch nach manuellem Start des Laborabrufes die weiteren Vorgänge bis hin zum Übertragen der Befunde ins Laborblatt  (funktioniert nur teilweise)
 
 
 <h3> &#9733 Funktionsbibliothek für eigene Skriptentwicklung </h3>
-* **106 Funktionen** zur Steuerung von Albis sind für die Entwicklung eigener Skripte vorhanden 
+* **107 Funktionen** zur Steuerung von Albis sind für die Entwicklung eigener Skripte vorhanden 
 
-- 
+  
 
-<br>
-
-# ![Hausbesuche.png](Docs/Icons/Hausbesuch.png) *Formularhelfer Hausbesuche*
-
-**<u>Ausdrucken von Rezepten/Über- und Einweisungen ohne gedrucktes Datum</u>**
-
-* ein Fenster mit 5 Formularen (Kassenrezept, Privatrezept, Krankenhauseinweisung, Krankenbeförderung, Überweisung)
-* Auswahl der Formularanzahl 0 für keine und maximal 9 (auch über die Zifferntastatur), nach Eingabe einer Ziffer rückt der Eingabefocus zum nächsten Feld weiter. Ist alles eingegeben, dann nur noch Enter drücken. Den Rest übernimmt das Skript. Es ruft die jeweiligen Formulare auf, entfernt wenn notwendig den Haken am Datumsfeld, setzt automatisch die Anzahl und drückt den Knopf für Drucken. 
-* im Addendumskript ist ein Hotstring hinterlegt (*FHelfer*). Diesen in irgendeinem Eingabefeld in Albis eingegeben und das Skript startet. 
-* 1 Mausklick, 7 Buchstabentasten, max. 5 Ziffern und 1xEnter müssen gedrückt werden. **Das wars!** Für einen Hausbesuch sind die Unterlagen vorbereitet. Optional kann für jeden Patienten noch sein Patientenstammblatt ausgedruckt werden. 
-
-<br>
-
-# ![Abrechnungshelfer.png](Docs/Icons/Abrechnungshelfer.png) *Abrechnungshelfer*
-
-**<u>mehr Statistiken, mehr Möglichkeiten der Automatisierung</u>**
-
-Erstellen Sie ein Tagesprotokoll und nutzen Sie diese Modul um von der Compugroup nicht abgedeckte Regeln zu möglichen Abrechnungsziffern zu entwerfen oder nutzen Sie das Skript um Patienten bestimmten Gruppen zuzuordnen oder um eine erweiterte Statistik durchführen zu können
-<br>fertige Statistiken:
-
-- **freie Statistik** - mittels *RegEx* in Tagesprotokollen suchen (**!nur die Gui ist fertig!**)
-- **Patienten für die Vorsorgeliste suchen** - findet Patienten bei denen eine Vorsorgeuntersuchung (GVU und/oder Hautkrebsscreening durchgeführt werden kann)
-- **nach fehlenden GB Ziffern suchen** - erstellt eine Liste von Patienten bei denen der geriatrische Basiskomplex noch nicht abgerechnet wurde
-- **fehlende Chronikerziffern** - erstellt eine Liste von Patienten bei denen die Ziffern 03220 oder 03221 nicht abgerechnet wurden, obwohl dies in den Vorquartalen erfolgt war 
-- **neue Chroniker finden** - findet Patienten bei denen man die Ziffern 03220/03221 ansetzen kann. Das Skript nutzt dazu eine Liste von ICD-Schlüsselnummern des Bewertungsausschusses nach § 87 Absatz 1 SGB V, die nach Einschätzung der AG medizinische Grouperanpassung chronische Krankheiten kodieren.
-- **Dauerdiagnosenstatistik** - listet und zählt alle Dauerdiagnosen aus dem gewählten Tagesprotokoll, jede Diagnose beeinhaltet auch eine Liste der entsprechenden Patienten
-
-- 
-
-<br>
-
-# ![Addendum.png](Docs/Icons/GVU.png) *Gesundheitsvorsorgeliste*
-
-**<u>automatisierte Formularerstellung</u>**
-
-*dieses Skript nutzt die zuvor erstellte **GVU-Formular-Liste** untersuchter Patienten*. 
-
-- **quartalsweise** und **datumsgenaue** Erstellung der Gesundheitsvorsorge- und der Hautkrebsscreeningformulare
-- die **Leistungskomplexe** werden automatisch erstellt und in die Akte geschrieben
-- nutzt einen Eintrag im **CaveVon**-Fenster um Ihnen den schnellen Überblick zu ermöglichen, wann die letzte Untersuchung war und wann die nächste fällig wäre
-
-***Wichtig***: *es erfolgt kein Zugriff auf die Albis-Datenbanken. Die Erstellung erfolgt vereinfacht ausgedrückt durch die Simulation von Maus und Tastatureingaben^1^.  In der vorherigen Version brauchte das Skript für circa 80 Formulare ungefähr 3 Stunden (wohl gemerkt! Es macht nichts anderes als ein Mensch, ist aber wesentlich schneller!). Wie lange brauchen Sie für diese Formularanzahl? Ich denke darüber haben Sie sich noch nie Gedanken gemacht.*
-
-^1^ mit ausschließlich simulierten Tasten- und Mauseingaben ist ein fehlerfreier Ablauf unmöglich. Das Skript verwendet nicht einen einzigen Befehl zum Senden von Tasten. Die Formularfelder werden ausschließlich direkt manipuliert. Dies macht das ganze aber auch deutlich aufwendiger. Mit einem reinen Maus- und Tastaturrekorder erreichen Sie niemals diesen hohen Grad an Zuverlässigkeit.
-
-*bitte lesen Sie die Anleitung zur Benutzung des Skriptes, sie finden diese in den ersten Zeilen des Skriptes selbst*
-
-<br>
-
-# ![Rezepthelfer.png](Docs/Icons/Rezepthelfer.png) *Schnellrezepte*
-
-![](D:\Eigene Dateien\Eigene Dokumente\AutoIt Scripte\GitHub\Addendum-fuer-Albis-on-Windows\Docs\Schnellrezepte.gif)
-
-<br>
-
-### <u>NICHT MEHR WEITERENTWICKELT WIRD</u>
-
-<br>
-
-### <img src="Docs/Icons/ScanPool.png" alt="ScanPool.png" style="zoom:80%;" /> *ScanPool* (in Addendum integriert)
-
-**<u>Der Posteingang für Befunde</u>**
-
-- **Auflistung** neuer Befunde (pdf oder jpg) eines Patienten über ein direkt in das Patientenfenster eingeblendetes Gui
-- **Import der Befunde** von hier direkt in die Patientenakte 
-- das **Posteingangsdatum** (Erstellungsdatum der Datei) wird beim Import in die Patientenakte berücksichtigt
-
-<br>
-
-### <img src="Docs/Icons/LaborAbruf.png" alt="Laborabruf.png" style="zoom:80%;" /> *Laborabruf* (teilweise in Addendum integriert)
-
-**<u>Die Automatisierung für den Abruf der Laborwerte</u>**
-
-- der Abruf der Laborwerte ist jetzt teilautomatisiert und ins Addendum-Skript integriert
-- Skript erkennt einzelne Abschnitte des Abrufs von Labordaten und übernimmt dann die immer wieder kehrenden Eingabetätigkeiten
-
-- erkannt werden:
-
-  - Öffnen des Labordatenimport-Fensters z.B. nach Aufruf über den Menupunkt Extern/Labor/Daten importieren
-    - es wird alles eingetragen was benötigt wird und der Vorgang wird gestartet
-    - im Anschluss wird sofort das Laborbuch geöffent
-
-  - im Laborblatt werden nach Aufruf der Funktion ..alle ins Laborblatt.. , sämtliche sich dann öffnenden Dialoge automatisch bearbeitet.Es ist kein weiterer Eingriff durch den Nutzer notwendig.   
-
-<br>
-
-### <img src="Docs/Icons/Dicom2Albis.png" alt="Dicom2Albis.png" style="zoom:80%;" />*Dicom2Albis* (kein Interesse mehr)
-
-**<u>Umwandeln von DICOM DatenCD's mit Import in die Akte</u>** (im Moment nicht funktionsfähig)
-
-- öffnet eine DICOM CD, liest die Inhalte der DICOMDIR Datei 
-- konvertiert die DICOM Bilddateien ins JPEG-Format
-- beschriftet die Bilder mit Namen des Patienten, Datum der Untersuchung, Institutsbezeichnung, Untersuchungsart
-- überträgt die Bilder in die Patientenakte , setzt den richtigen Bezeichner z.B. 01.[Thorax 2 Ebenen-pa] Mustermann, Max als Eintrag in der Akte 
-- der komplette Ablauf kann, wenn gewünscht, komplett automatisiert ablaufen, sie müssen die CD nur einlegen und nach dem Auswerfen wieder dem Laufwerk entnehmen
-
-- - 
-
-![](Docs/Trenner.png)
+![](Docs/TrennerExtraBreit.png)
 
 ## ![](../../../../../Eigene%20Dateien/Eigene%20Dokumente/AutoIt%20Scripte/GitHub/Addendum-fuer-Albis-on-Windows/Docs/Icons/Achtung.png) *WICHTIG*
 
@@ -207,105 +109,92 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
 
 <br>
 
-![](Docs/Trenner.png)
-
-## ![](Docs/Icons/Screenshot.png) Screenshots
+![](Docs/TrennerExtraBreit.png)
 
 <br>
 
-### ![](Docs/Icons/Addendum.png) <u>Dauermedikamentenfenster</u>
-
-Auswahlmöglichkeit aus voreingestellten Kategorien (in Patienten verständlichem Deutsch). Erreichbar nach Drücken (#) der ![](Docs/Icons/Raute.png) Taste in einer geöffneten Zeile. Die Kategorien lassen sich im Quelltext des Addendum.ahk-Skriptes jederzeit ändern. (an einer komfortableren Lösung wird gearbeitet). Mit der Tastenkombination (![](Docs\Icons\Key-White_Strg-Links.png)+ ![](Docs\Icons\hoch.png)oder![](Docs\Icons\runter.png)) lassen sich alle Einträge innerhalb der Ansicht verschieben.
+## ![](Docs/Icons/Addendum.png) <u>Dauermedikamentenfenster</u>
 
 ![](Docs/Dauermedikamente.png) 
 
-<br>
-<br>
+Auswahlmöglichkeit aus voreingestellten Kategorien (in Patienten verständlichem Deutsch). Erreichbar nach Drücken (#) der ![](Docs/Icons/Raute.png) Taste in einer geöffneten Zeile. Die Kategorien lassen sich im Quelltext des Addendum.ahk-Skriptes jederzeit ändern. (an einer komfortableren Lösung wird gearbeitet). Mit der Tastenkombination (![](Docs\Icons\Key-White_Strg-Links.png)+ ![](Docs\Icons\hoch.png)oder![](Docs\Icons\runter.png)) lassen sich alle Einträge innerhalb der Ansicht verschieben.
 
-### ![Addendum](Docs/Icons/Addendum.png) <u>neuer Shift+F3 Kalender</u>
+<img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
+
+## ![Addendum](Docs/Icons/Addendum.png) <u>neuer Shift+F3 Kalender</u>
 
 ![Menu-Suche](Docs/NeuerShiftF3Kalender.png)
 
-<br><br>
 
-### ![Addendum](Docs/Icons/Addendum.png) <u>Menu-Suche</u>
 
-Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu finden dauert meist ziemlich lange. Drücke ![](Docs/Icons/Alt.png) + ![](Docs/Icons/Key-White-M.png) für einen Suchdialog und öffne den Menupunkt von hier aus - Danke an *Lexikos* dem Author von Autohotkey für dieses wunderbare Skript. 
+<img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
+
+## ![Addendum](Docs/Icons/Addendum.png) <u>Menu-Suche</u>
 
 ![Menu-Suche](Docs/Menu_Suche.png)
 
-<br>
-
-* **<u>neue sinnvollere Albiskürzel</u>**
-- **Kopieren**, **Ausschneiden** und **Einfügen** ist jetzt mit den üblichen Kürzeln überall in Albis möglich 
-    - ![](Docs/Icons/Key-White_Strg-Links.png)+![](Docs/Icons/Key-White-c.png) - Kopieren
-    - ![](Docs/Icons/Key-White_Strg-Links.png)+![](Docs/Icons/Key-White-x.png) - Ausschneiden
-    - ![](Docs/Icons/Key-White_Strg-Links.png)+![](Docs/Icons/Key-White-v.png) - Einfügen
-  - **Schließen einer Akte:**    ![](Docs/Icons/Key-White_Strg-Links.png)+![](Docs/Icons/runter.png) 
-  - **Einstellen des aktuellen Tagesdatums:**   ![](Docs/Icons/Key-White_Strg-Links.png)+![](Docs/Icons/Alt.png)+![](Docs/Icons/F5.png) 
+Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu finden dauert meist ziemlich lange. Drücke ![](Docs/Icons/Alt.png) + ![](Docs/Icons/Key-White-M.png) für einen Suchdialog und öffne den Menupunkt von hier aus - Danke an *Lexikos* dem Author von Autohotkey für dieses wunderbare Skript. 
 
 
-<br>
 
-### ![](Docs/Icons/Dicom2Albis.png) <u>Dicom2Albis</u>
+<img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-In der jetzt vorliegenden Version wird der Inhalt einer DICOM-CD (bringen die Patienten ja häufig mit)  nahtlos in jpeg oder wmv umgewandelt. Die Integration in die Akte erfolgt mit den zugehörigen Metadaten (Bezeichnung) von der CD. Insgesamt sind nur max. 2 Klicks notwendig bis die Dateien in der Akte sind.<br>
-Allerdings gibt es noch ein paar Einschränkungen: 
+## ![Hotkey](Docs/Icons/Hotkey.png) <u>sinnvollere Albiskürzel</u>
 
-- für die Umwandlung von MRT,CT Serienaufnahmen wird das bisher kostenfreie Programm MicroDicom benötigt.
-- von gemischten CD's mit Röntgen und MRT/CT Sequenzen lassen sich die Röntgenbilder  noch nicht extrahieren das mache ich zu einem späteren Zeitpunkt.
+- **Kopieren**, **Ausschneiden** und **Einfügen** ist mit den üblichen Kürzeln überall in Albis möglich 
+    - **Kopieren:**                                      ![](Docs/Icons/Key-White_Strg-Links.png)+![](Docs/Icons/Key-White-c.png)
+    - **Ausschneiden: **                            ![](Docs/Icons/Key-White_Strg-Links.png)+![](Docs/Icons/X.png)
+    - **Einfügen:**                                       ![](Docs/Icons/Key-White_Strg-Links.png)+![](Docs/Icons/Key-White-v.png)
+  - **Schließen einer Karteikarte:**   ![](Docs/Icons/Alt.png)+![](Docs/Icons/runter.png) 
+  - **zur nächsten Karteikarte:**        ![](Docs/Icons/Alt.png)+![](Docs/Icons/hoch.png) 
+  - **Laborblatt zeigen:**                      ![](Docs/Icons/Alt.png)+![](Docs/Icons/rechts.png) 
+  - **Karteikarte zeigen:**                    ![](Docs/Icons/Alt.png)+![](Docs/Icons/Links.png) 
+  - **Einstellen des aktuellen Tagesdatums:**   ![](Docs/Icons/Alt.png)+![](Docs/Icons/F5.png) 
+  
+  
 
-![Screenshot-Dicom2Albis 1](Docs/Screenshot-Dicom1Albis.png)
+<img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-####  <u>einsortierte Bilder nach automatischer Benennung</u>
+## ![Hausbesuche.png](Docs/Icons/Hausbesuch.png) <u>Formularhelfer Hausbesuche</u>
 
-![Screenshot-Dicom2Albis 2](Docs/Screenshot-Dicom2Albis.png)
+**Ausdrucken von Rezepten/Über- und Einweisungen ohne gedrucktes Datum**
 
-<br>
-<br>
+![Formularhelfer](Docs/Formularhelfer.png)
 
-### ![](Docs/Icons/ScanPool.png) <u>ScanPool - Sammelordner für ungelesene Befunde</u>
+* ein Fenster mit 5 Formularen (Kassenrezept, Privatrezept, Krankenhauseinweisung, Krankenbeförderung, Überweisung)
+* Auswahl der Formularanzahl 0 für keine und maximal 9 (auch über die Zifferntastatur), nach Eingabe einer Ziffer rückt der Eingabefocus zum nächsten Feld weiter. Ist alles eingegeben, dann nur noch Enter drücken. Den Rest übernimmt das Skript. Es ruft die jeweiligen Formulare auf, entfernt wenn notwendig den Haken am Datumsfeld, setzt automatisch die Anzahl und drückt den Knopf für Drucken. 
+* im Addendumskript ist ein Hotstring hinterlegt (*FHelfer*). Diesen in irgendeinem Eingabefeld in Albis eingegeben und das Skript startet. 
+* 1 Mausklick, 7 Buchstabentasten, max. 5 Ziffern und 1xEnter müssen gedrückt werden. **Das wars!** Für einen Hausbesuch sind die Unterlagen vorbereitet. Optional kann für jeden Patienten noch sein Patientenstammblatt ausgedruckt werden. 
 
-**ScanPool** ist für die Nutzung der gewöhnlichen Akte gedacht. Das Skript unterstützt keine Archivsoftware! ScanPool erspart in diese!!
 
-#### <u>Was kann es?</u>
 
-1. **Anzeigen aller PDF-Dateien** aus dem Albis-Import-Ordner in Listenform.
-   1. es wird der Patientenname
-   2.  die Befundart (Krankenhausbericht, ambulanter Bericht) und
-   3. das Behandlungsdatum angezeigt
-2. **Sortierung der Anzeige**
-   1. Alphabetisch nach Patientenname
-   2. nach Posteingangsdatum (Erstellungsdatum der Datei)
-3. **eigene Pdf-Vorschau** - nach einfachem Klick auf eine Datei
-4. **automatisiertes Übertragen** der Datei in die richtige Patientenakte
-5. **Unterstützung für das Signieren** der Datei
+<img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-#### <u>Wozu brauche ich das?</u>
+##  ![Rezepthelfer.png](Docs/Icons/Rezepthelfer.png) <u>Schnellrezepte</u>
 
-1. Man erspart sich die Zeit die Papierbefunde bringen oder holen zu lassen.
-2. Die Befunde sind alphabetisch übersichtlich sortiert
-3. zugehörige Befunde eines Patienten sind immer gleichfarbig hinterlegt
+![](D:\Eigene Dateien\Eigene Dokumente\AutoIt Scripte\GitHub\Addendum-fuer-Albis-on-Windows\Docs\Schnellrezepte.gif)
 
-#### **<u>Wie funktioniert das?</u>**
 
-1. Drücken Sie den Hotkey (![](Docs\Icons\Key-White_Strg-Links.png)+![](Docs\Icons\F10.png)) oder wählen Sie das Skript über das Addendum-Traymenu aus, zeigt er Ihnen alle Befunde zum geöffneten Patienten an.
-2. Es ist natürlich auch möglich sich in einer Liste den gesamten Ordnerinhalt anzusehen. Durch die vorhandene Vorschaufunktion verzichte ich mittlerweile auf die Nutzung eines Pdf-Readers. 
-3. Der FoxitReader in der portablen Version wird für das automatisierte Signieren der Pdf-Datei (eine Signatur müssen Sie vorher im FoxitReader erstellen - auch eine mit Passwort). Dadurch ist sogar eine *gesetzeskonforme und rechtssichere Signierung* der Dateien möglich.
 
-Für die Zukunft und teilsweise vorbereitet sind Funktionen für ein automatisches Erstellen von zugehörigen Dateinamen (vielleicht auch Metadaten) aus dem mittels OCR erstellten Text. Dies war meine ursprüngliche Idee um die Angestellten und auch mich von unnötigem Verwaltungsaufwand zu befreien.
+<img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-<br>
-<br>
+### ![KontextMenu](Docs/Icons/KontextMenu.png) <u>Erweitertes Kontextmenu</u>
 
-### ![Hausbesuche.png](Docs/Icons/Hausbesuch.png) <u>Formularhelfer Hausbesuche</u>
+**mehr Funktionen im Rechtsklick Menu in der Karteikarte**
 
-![CavevonToolTip](Docs/Formularhelfer.png)
+![erweitertes Kontextmenu](Docs\erweitertes Kontextmenu.png)
 
-<br>
-<br>
+Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter anderem Öffnen eines Formulares zum Bearbeiten oder der direkte Ausdruck. Wenn Sie PDF-Dateien oder Bild-Dateien direkt in die Karteikarte ablegen, können Sie diese Dateien ebenso Anzeigen oder Ausdrucken lassen, aber die Dateien lassen sich auch in einen nach dem Patienten benannten Dateiordner exportieren (z.B. zur Erleichterung beim Arztwechsel) und da der Faxversand eigentlich auch nur ein Druckvorgang ist, geht auch das inklusive Abfrage der Faxnummer (wenn gewünscht)
 
-### ![](Docs/Icons/Monet.png) <u>MoNet: Monitor for your Network</u>
+
+
+<img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
+
+## ![](Docs/Icons/Monet.png) <u>MoNet 
+
+**Monitor for your Network**
+
+![Beispielbild des Monet Modules](Docs/Modul%20MoNet%20Screenshot.png)
 
 Statusanzeige der Computer in der Praxis (im Moment nur an oder aus). Bestimmte Computer können für den Zugriff gesperrt werden um versehentliches Herunterfahren zu vermeiden. Entsperren geht nur per Passwort.
 
@@ -320,25 +209,73 @@ Soll ein Clientkommunikationsmodul werden. angedachte Punkte:
 **Beispielbild des Netzwerkmonitors**. 
 Die IP-Adressen und Namen der Rechner müssen in der Addendum.ini hinterlegt sein
 
-![Beispielbild des Monet Modules](Docs/Modul%20MoNet%20Screenshot.png)
-
-<br>
 
 
-### ![](../../../../../Eigene%20Dateien/Eigene%20Dokumente/AutoIt%20Scripte/GitHub/Addendum-fuer-Albis-on-Windows/Docs/Icons/Monet.png) <u>Abrechnungshelfer - optimieren Sie Ihre Abrechnung</u>
+<img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
+
+## ![](../../../../../Eigene%20Dateien/Eigene%20Dokumente/AutoIt%20Scripte/GitHub/Addendum-fuer-Albis-on-Windows/Docs/Icons/Monet.png) <u>Abrechnungshelfer - optimieren Sie Ihre Abrechnung</u>
+
+<b>mehr Statistiken, mehr Möglichkeiten der Automatisierung</b>
 
 <img src="Docs/Screenshot-Abrechnungshelfer.png" alt="Screenshot Abrechnungshelfer" style="zoom: 100%;" />
 
-<br>
+Erstellen Sie ein Tagesprotokoll und nutzen Sie diese Modul um von der Compugroup nicht abgedeckte Regeln zu möglichen Abrechnungsziffern zu entwerfen oder nutzen Sie das Skript um Patienten bestimmten Gruppen zuzuordnen oder um eine erweiterte Statistik durchführen zu können
+<br>fertige Statistiken:
 
-![](Docs/Trenner.png)
+- **freie Statistik** - mittels *RegEx* in Tagesprotokollen suchen (**!nur die Gui ist fertig!**)
+- **Patienten für die Vorsorgeliste suchen** - findet Patienten bei denen eine Vorsorgeuntersuchung (GVU und/oder Hautkrebsscreening durchgeführt werden kann)
+- **nach fehlenden GB Ziffern suchen** - erstellt eine Liste von Patienten bei denen der geriatrische Basiskomplex noch nicht abgerechnet wurde
+- **fehlende Chronikerziffern** - erstellt eine Liste von Patienten bei denen die Ziffern 03220 oder 03221 nicht abgerechnet wurden, obwohl dies in den Vorquartalen erfolgt war 
+- **neue Chroniker finden** - findet Patienten bei denen man die Ziffern 03220/03221 ansetzen kann. Das Skript nutzt dazu eine Liste von ICD-Schlüsselnummern des Bewertungsausschusses nach § 87 Absatz 1 SGB V, die nach Einschätzung der AG medizinische Grouperanpassung chronische Krankheiten kodieren.
+- **Dauerdiagnosenstatistik** - listet und zählt alle Dauerdiagnosen aus dem gewählten Tagesprotokoll, jede Diagnose beeinhaltet auch eine Liste der entsprechenden Patienten
 
-# ![OutOfTheBox](Docs/Icons/OutOfTheBox.png)  <u>Kein "out of the box"</u>
+
+
+<img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
+
+## ![Laborabruf](Docs\Icons\LaborAbruf.png) Laborabruf (teilweise in Addendum integriert)
+
+**Die Automatisierung für den Abruf der Laborwerte**
+
+- der Abruf der Laborwerte ist jetzt teilautomatisiert und ins Addendum-Skript integriert
+- Skript erkennt einzelne Abschnitte des Abrufs von Labordaten und übernimmt dann die immer wieder kehrenden Eingabetätigkeiten
+
+- erkannt werden:
+
+  - Öffnen des Labordatenimport-Fensters z.B. nach Aufruf über den Menupunkt Extern/Labor/Daten importieren
+    - es wird alles eingetragen was benötigt wird und der Vorgang wird gestartet
+    - im Anschluss wird sofort das Laborbuch geöffent
+  - im Laborblatt werden nach Aufruf der Funktion ..alle ins Laborblatt.. , sämtliche sich dann öffnenden Dialoge automatisch bearbeitet.Es ist kein weiterer Eingriff durch den Nutzer notwendig.   
+
+
+
+<img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
+
+## ![GVU](Docs/Icons/GVU.png) Gesundheitsvorsorgeliste
+
+**automatisierte Formularerstellung**
+
+*dieses Skript nutzt die zuvor erstellte **GVU-Formular-Liste** untersuchter Patienten*. 
+
+- **quartalsweise** und **datumsgenaue** Erstellung der Gesundheitsvorsorge- und der Hautkrebsscreeningformulare
+- die **Leistungskomplexe** werden automatisch erstellt und in die Akte geschrieben
+- nutzt einen Eintrag im **CaveVon**-Fenster um Ihnen den schnellen Überblick zu ermöglichen, wann die letzte Untersuchung war und wann die nächste fällig wäre
+
+***Wichtig***: *es erfolgt kein Zugriff auf die Albis-Datenbanken. Die Erstellung erfolgt vereinfacht ausgedrückt durch die Simulation von Maus und Tastatureingaben^1^.  In der vorherigen Version brauchte das Skript für circa 80 Formulare ungefähr 3 Stunden (wohl gemerkt! Es macht nichts anderes als ein Mensch, ist aber wesentlich schneller!). Wie lange brauchen Sie für diese Formularanzahl? Ich denke darüber haben Sie sich noch nie Gedanken gemacht.*
+
+^1^ mit ausschließlich simulierten Tasten- und Mauseingaben ist ein fehlerfreier Ablauf unmöglich. Das Skript verwendet nicht einen einzigen Befehl zum Senden von Tasten. Die Formularfelder werden ausschließlich direkt manipuliert. Dies macht das ganze aber auch deutlich aufwendiger. Mit einem reinen Maus- und Tastaturrekorder erreichen Sie niemals diesen hohen Grad an Zuverlässigkeit.
+
+*bitte lesen Sie die Anleitung zur Benutzung des Skriptes, sie finden diese in den ersten Zeilen des Skriptes selbst*
+
+
+
+<img src="Docs/TrennerExtraBreit.png" style="zoom: 67%;" />
+
+# ![OutOfTheBox](Docs/Icons/OutOfTheBox.png)  <u>KEIN "OUT OF THE BOX"</u>
 
 Dies ist **"keine out of the box"** Lösung! Es müssen entsprechende Anpassungen an Ihre Praxisumgebung manuell in den Skripten vorgenommen werden. Entsprechende Kenntnisse in Programmier- oder Skriptsprachen sind hilfreich. Die Skripte basieren auf einer gemeinsamen speziellen Funktionsbibliothek (Praxomat_Functions.ahk) und weiteren Bibliotheken für AHK. Ich nutze keine Klassenbibliotheken, zum einen da ich in der Objekt orientieren Programmierung kaum wissen habe und zum anderen weil ich einfach davon ausgehe das OOP das es den meisten Kollegen auch so geht.
 <br>
-<br>
-![](Docs/Trenner.png)
+<img src="Docs/TrennerExtraBreit.png" style="zoom: 67%;" />
 
 # ![Paragraphen](Docs/Icons/Paragraphen.png) <u>RECHTLICHE HINWEISE</u>
 
@@ -356,7 +293,7 @@ DIE SAMMLUNG ENTHÄLT SKRIPTE/BIBLIOTHEKEN AUS ANDEREN QUELLEN. DAS COPYRIGHT SI
 <br>
 <br>
 
-![](Docs/Trenner_klein.png)
+<img src="Docs/TrennerExtraBreit.png" style="zoom: 67%;" />
 
 # ![Haftungsauschluss](Docs/Icons/Haftungsausschluss.png) <u>AGB’s / HAFTUNGSAUSSCHLUSS</u>
 
@@ -406,7 +343,7 @@ Die Inhalte und Skripte dürfen AUSSCHLIESSLICH NUR von Praxisinhabern, die zum 
 <br>
 <br>
 
-![](Docs/Trenner.png)
+<img src="Docs/TrennerExtraBreit.png" style="zoom: 67%;" />
 
 # ![Abschluss](Docs/Icons/Abschluss.png) <u>ABSCHLUSS</u>
 

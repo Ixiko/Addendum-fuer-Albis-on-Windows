@@ -1,5 +1,5 @@
 ﻿
-;{ -----------------  Addendum für Albis on Windows - Modul Gesundheitsvorsorgeliste.ahk V1.88 vom 25.06.2019 -  Ixiko
+;{ -----------------  Addendum für Albis on Windows - Modul Gesundheitsvorsorgeliste.ahk V1.89 vom 04.07.2020 -  Ixiko
 
 ; 	nur lauffähig ab der Albis Version 12.071.005 (CG hatte mit dieser Albisversion eine Änderung des "Cave! von" Fenster eingeführt
 ;   und nur lauffähig mit der jeweils aktuellen Autohotkey-Version zum Versionsdatum
@@ -23,9 +23,8 @@
 ;# 1.eine Start-Gui mit der Möglichkeit zum Ansehen einer GVU Liste um von dort direkt bei Fehlern zu den entsprechenden Patienten springen zu können
 ;#      und dann um die Formularerstellung zu starten
 ;# 4. Fehler mit folgendem Hinweis: das Fenster Leistungskette hat sich nicht geöffnet mit öffnen Sie es manuell...
-;| ** 07.01.2019** | **F~** | Zuverlässigkeit erhöht, Aufruf der Formulare erfolgt jetzt per Menubefehl nicht mehr per internem Albismakro,
-;                                             dafür erscheinen zwei Fenster weniger und das Erstellen der Dokumentation ist deutlich schneller |
-;| ** 03.10.2019** | **F+** | der seit 01.07.2019 geltenden Abrechnungsbedinung für die 01732 angepasst|
+;
+;
 
 ;}
 
@@ -668,28 +667,43 @@ Ortho1: 										;{	GVU und HKS-Formular werden automatisiert aufgerufen und be
 		AlbisSetzeProgrammDatum(lvar[1])																	;kein WaitAndActivate notwendig (hat diese Funktion integriert)
 		LV_Add("",  Substr("00" c++, -1) ": Datum geändert")
 
-	; HKS Formular wird aufgerufen
-		LV_Add("",  Substr("00" c++, -1) ": warte auf HKS-Formular")
-		If !hHKSWin:= AlbisFormular("eHKS_ND") {
-			while !(hHKSWin:=WinExist("Hautkrebsscreening - Nichtdermatologe ahk_class #32770") )
-			{
-					MsgBox,, Addendum für AlbisOnWindows, % MsgTxt006	;...Das HKS-Formular konnte nicht aufgerufen werden.... manuell öffnen
-					If MsgBox, No
-						ExitApp
-			}
+	; HKS Formular wird aufgerufen wenn Patient >= 35 Jahre
+		If (age >= minAlterEinmalig) {
+
+				LV_Add("",  Substr("00" c++, -1) ": warte auf HKS-Formular")
+				If !hHKSWin:= AlbisFormular("eHKS_ND") {
+					while !(hHKSWin:=WinExist("Hautkrebsscreening - Nichtdermatologe ahk_class #32770") ) 	{
+							MsgBox,, Addendum für AlbisOnWindows, % MsgTxt006	;...Das HKS-Formular konnte nicht aufgerufen werden.... manuell öffnen
+							If MsgBox, No
+								ExitApp
+					}
+				}
+
+			; Befüllen des Formulars
+				AlbisHautkrebsScreening("opb", true, true )
+				LV_Add("",  Substr("00" c++, -1) ": HKS Formular ausgefüllt")
+
+			; Daten/Leistungen in die Patientenakte eintragen
+				AlbisActivate(1)
+				AlbisSchreibeInKarteikarte("", lvar[1], "lko", "01732-01746")
+				LV_Add("",  Substr("00" c++, -1) ": Ziffern sind in die Akte eingetragen.")
+
+			; Cave! von Text
+				GVUText := "GVU/HKS " GVUMonat "^" GVUJahr ", "
+
+		}
+		else {	; jünger als 35 Jahre dann nur den GVU Komplex eintragen
+
+				AlbisActivate(1)
+				AlbisSchreibeInKarteikarte("", lvar[1], "lko", "01732")
+				LV_Add("",  Substr("00" c++, -1) ": Ziffer ist in die Akte eingetragen.")
+
+			; Cave! von Text
+				GVUText := "GVU " GVUMonat "^" GVUJahr ", "
+
 		}
 
-	; Befüllen des Formulars
-		AlbisHautkrebsScreening("opb", true, true )
-		LV_Add("",  Substr("00" c++, -1) ": HKS Formular ausgefüllt")
-
-	; Daten/Leistungen in die Patientenakte eintragen
-		AlbisActivate(1)
-		AlbisSchreibeInKarteikarte("", lvar[1], "lko", "01732-01746")
-		LV_Add("",  Substr("00" c++, -1) ": Ziffern sind in die Akte eingetragen.")
-
 	; cave Fenster - die Kürzel auffrischen   #########FEHLER
-		GVUText := "GVU/HKS " GVUMonat "`^" GVUJahr ", "
 		LV_Add("", "        " GVUText)
 		if (CZeile = "")											;CZeile ist die ursprüngliche cave 9 Zeile - war sie leer?
 				neueZeile	:= GVUText
@@ -708,7 +722,7 @@ Ortho1: 										;{	GVU und HKS-Formular werden automatisiert aufgerufen und be
 				LV_Add("", "Fenster: Prüfung EBM/KRW geschlossen")
 		}
 
-	; ersetzt nun die Zeile 9 im CaveVon! Fenster
+	; ersetzt oder schreibt in die Zeile 9 im CaveVon! Fenster - das Abrechnungsquartal der Komplexe
 		AlbisActivate(1)
 		ControlGetFocus, cFocus, % "ahk_id " AlbisWinID()
 		If InStr(cFocus, "Edit")
@@ -994,19 +1008,20 @@ Return
 
 	#include %A_ScriptDir%\..\..\include\Addendum_Albis.ahk
 	#include %A_ScriptDir%\..\..\include\Addendum_Controls.ahk
-	#include %A_ScriptDir%\..\..\include\Addendum_Window.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_DB.ahk
 	#include %A_ScriptDir%\..\..\include\Addendum_Gdip_Specials.ahk
-	#include %A_ScriptDir%\..\..\include\Addendum_Screen.ahk
 	#include %A_ScriptDir%\..\..\include\Addendum_Internal.ahk
 	#include %A_ScriptDir%\..\..\include\Addendum_Misc.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_DB.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_Protocol.ahk
 	#Include %A_ScriptDir%\..\..\include\Addendum_PdfHelper.ahk
-	#Include %A_ScriptDir%\..\..\lib\Sift.ahk
-	#Include %A_ScriptDir%\..\..\lib\RemoteBuf.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Protocol.ahk
+	#include %A_ScriptDir%\..\..\include\Addendum_Screen.ahk
+	#include %A_ScriptDir%\..\..\include\Addendum_Window.ahk
 	#include %A_ScriptDir%\..\..\lib\ACC.ahk
-	#include %A_ScriptDir%\..\..\lib\ini.ahk
 	#include %A_ScriptDir%\..\..\lib\GDIP_All.ahk
+	#include %A_ScriptDir%\..\..\lib\ini.ahk
+	#Include %A_ScriptDir%\..\..\lib\RemoteBuf.ahk
+	#Include %A_ScriptDir%\..\..\lib\SciTEOutput.ahk
+	#Include %A_ScriptDir%\..\..\lib\Sift.ahk
 	#include %A_ScriptDir%\..\..\include\Gui\PraxTT.ahk
 
 ;}

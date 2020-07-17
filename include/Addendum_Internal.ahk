@@ -1,16 +1,15 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 27.04.2020 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 08.06.2020 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; INTERNE FUNKTIONEN                                                                                                                                                                                                                          	(16)
+; INTERNE FUNKTIONEN                                                                                                                                                                                                                          	(14)
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; (01) TimeCode                                    	(02) PrintArr                                  	(03) GetHex                                  	(04) GetDec                                  	(05) MCodeU
-; (06) SetWinEventHook                         	(07) UnhookWinEvent                    	(08) StdOutToVar                          	(09) dirgetparent                           	(10) IsProcessElevated
-; (11) RunAsTask                                   	(12) Json2Obj                               	(13) IniReadExt                              	(14) hk                                          	(15) Errorbox
-; (15) RegRead
+; (01) TimeCode                                    	(02) PrintArr                                  	(03) GetHex                                  	(04) GetDec
+; (05) SetWinEventHook                         	(06) UnhookWinEvent                    	(07) StdOutToVar                          	(08) IsProcessElevated                         	(09) RunAsTask
+; (10) Json2Obj                                     	(11) IniReadExt                              	(12) IniAppend                              	(13) hk                                               	(14) Errorbox
 ;1
 TimeCode(DaT) {                                                                                                                  	;-- used for protokoll functions - Month & Time (DaT) = 1 - it's clear!
 
@@ -83,29 +82,15 @@ GetDec(hwnd) {                                                                  
 return Format("{:u}", hwnd)
 }
 ;5
-MCodeU(mcode) {                                                                                                                	;-- ist der gleiche Code wie MCode - wegen Vorkommen in anderer Bibliothek geändert
-static e := {1:4, 2:1}, c := (A_PtrSize=8) ? "x64" : "x86"
-if (!regexmatch(mcode, "^([0-9]+),(" c ":|.*?," c ":)([^,]+)", m))
-return
-if (!DllCall("crypt32\CryptStringToBinary", "str", m3, "uint", 0, "uint", e[m1], "ptr", 0, "uint*", s, "ptr", 0, "ptr", 0))
-return
-p := DllCall("GlobalAlloc", "uint", 0, "ptr", s, "ptr")
-if (c="x64")
-DllCall("VirtualProtect", "ptr", p, "ptr", s, "uint", 0x40, "uint*", op)
-if (DllCall("crypt32\CryptStringToBinary", "str", m3, "uint", 0, "uint", e[m1], "ptr", p, "uint*", s, "ptr", 0, "ptr", 0))
-return p
-DllCall("GlobalFree", "ptr", p)
-}
-;6
 SetWinEventHook(eventMin, eventMax, hmodWinEventProc, lpfnWinEventProc, idProcess, idThread, dwFlags) {
 	return DllCall("SetWinEventHook", "uint", eventMin, "uint", eventMax, "Uint", hmodWinEventProc	, "uint", lpfnWinEventProc, "uint", idProcess, "uint", idThread, "uint", dwFlags)
 }
-;7
+;6
 UnhookWinEvent(hWinEventHook, HookProcAdr) {
 	DllCall( "UnhookWinEvent", "Ptr", hWinEventHook )
 	DllCall( "GlobalFree", "Ptr", HookProcAdr ) ; free up allocated memory for RegisterCallback
 }
-;8
+;7
 StdoutToVar(sCmd, sEncoding:="UTF-8", sDir:="", ByRef nExitCode:=0) {                               	;-- cmdline Ausgabe in einen String umleiten
     DllCall( "CreatePipe",           PtrP,hStdOutRd, PtrP,hStdOutWr, Ptr,0, UInt,0 )
     DllCall( "SetHandleInformation", Ptr,hStdOutWr, UInt,1, UInt,1                 )
@@ -144,17 +129,7 @@ StdoutToVar(sCmd, sEncoding:="UTF-8", sDir:="", ByRef nExitCode:=0) {           
     DllCall( "CloseHandle",        Ptr,hStdOutRd                                   )
     Return sOutput
 }
-;9
-dirgetparent(path,parent:=1) {                                                                                              	;-- returns a string containing parent dir
-	path:=RTrim(path,"\")
-	while parent>=idx:=A_Index
-			Loop % path, 1
-				if (idx=parent)
-						return A_LoopFileDir (A_LoopFileDir?"\":"")
-				else if path:=A_LoopFileDir
-						break
-}
-;10
+;8
 IsProcessElevated(ProcessID) {                                                                                                	;-- ermittelt ob ein Prozess mit UAC-Virtualisierung läuft
     if !(hProcess := DllCall("OpenProcess", "uint", 0x0400, "int", 0, "uint", ProcessID, "ptr"))
         throw Exception("OpenProcess failed", -1)
@@ -164,7 +139,7 @@ IsProcessElevated(ProcessID) {                                                  
         throw Exception("GetTokenInformation failed", -1), DllCall("CloseHandle", "ptr", hToken) && DllCall("CloseHandle", "ptr", hProcess)
     return IsElevated, DllCall("CloseHandle", "ptr", hToken) && DllCall("CloseHandle", "ptr", hProcess)
 }
-;11
+;9
 RunAsTask() {                                                                                                                        	;-- automatische UAC Virtualisierung für Skripte
 
  ;  By SKAN,  http://goo.gl/yG6A1F,  CD:19/Aug/2014 | MD:22/Aug/2014
@@ -224,7 +199,7 @@ RunAsTask() {                                                                   
 
 Return TaskName, ErrorLevel := 0
 }
-;12
+;10
 Json2Obj( str ) {                                                                                                                    	;-- Uses a two-pass iterative approach to deserialize a json string
 
 	; Copyright © 2013 VxE. All rights reserved.
@@ -329,11 +304,12 @@ Json2Obj( str ) {                                                               
 
 	Return obj
 } ; json_toobj( str )
-;13
+;11
 IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="") {                                                  	;-- eigene IniRead funktion für Addendum
 
-	; beim ersten Aufruf !nur! Übergabe des ini Pfades mit dem Parameter SectionOrFullFilePath
-	; Funktion übersetzt eine aus der ini gelesene "1" oder eine "0" als Wahrheitswerte, also "true" oder "false"
+	; beim ersten Aufruf der Funktion !nur! Übergabe des ini Pfades mit dem Parameter SectionOrFullFilePath
+	; die Funktion behandelt einen geschriebenen Wert der "ja" oder "nein" ist, als Wahrheitswert, also true oder false
+	; letzte Änderung: 08.06.2020
 
 		static WorkIni
 
@@ -358,12 +334,21 @@ IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="") {                  
 				return "ERROR"
 		else if InStr(OutPutVar, "%AddendumDir%")
 				OutPutVar := StrReplace(OutPutVar, "%AddendumDir%", Addendum.AddendumDir)
-		else if RegExMatch(OutPutVar, "^\s*(1|0)[^\d]", bool)
-				OutPutVar := (bool = 1) ? true : false
+		else if RegExMatch(OutPutVar, "i)^\s*(ja|nein)\s*$", bool)
+				OutPutVar := (bool1= "ja") ? true : false
 
-return OutPutVar
+return Trim(OutPutVar)
 }
-;14
+;12
+IniAppend(value, filename, section, key) {                                                                                 	;-- vorhandenen Werten weitere Werte hinzufügen
+
+	IniRead, schreib, % filename, % section, % key
+	If Instr(schreib, "Error")
+		schreib:=""
+	IniWrite, % schreib . value, % filename, % section, % key	;, UTF-8
+
+}
+;13
 hk(keyboard:=0, mouse:=0, message:="", timeout:=3) {                                                       	;-- Tastatur- und/oder Mauseingriffe abschalten
 
 	;https://www.autohotkey.com/boards/viewtopic.php?f=6&t=33925
@@ -409,7 +394,7 @@ hkTimeoutTimer:
 
 Return
 }
-;15
+;14
 ErrorBox(ErrorString, CallingScript:="", Screenshot:=false) {                                                       	;-- eine Funktion um Daten ins Fehlerlogbuch zu schreiben
 
 	;Fehlerlogbuch V1.0 : Verzeichnis - logs'n'data\ErrorLogs\Errorbox.txt
@@ -424,13 +409,5 @@ ErrorBox(ErrorString, CallingScript:="", Screenshot:=false) {                   
 
 	FileAppend, % Zeitstempel Computer Skript SC ErrorString "`n", % logpath "\Errorbox.txt"
 
-}
-;16
-RegRead64(path, subkey, valuename:="")	{                                                                           	;-- 64bit RegRead wrapper
-
-	SetRegView 64
-	RegRead, value, % path, % subkey, % valuename
-
-return value
 }
 

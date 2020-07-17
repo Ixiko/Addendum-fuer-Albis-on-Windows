@@ -22,9 +22,8 @@ return ;}
 ;*********************************************************************************************************;{
 nopopup_SP2:	;{
 	noTrayOrphansWin10()
-	;HELP Taskbar für Praxomat
 	IfWinActive, ahk_class OptoAppClass
-			AlbisHotKeyHilfe(Addendum.Help, PraxomatHelp)
+			AlbisHotKeyHilfe(Addendum.Help, "")
 return ;}
 seldom_SP2: ;{
 	SetTimer, seldom_SP2, Off

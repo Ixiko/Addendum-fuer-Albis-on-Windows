@@ -1,37 +1,46 @@
 ﻿;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 07.10.2019 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 08.07.2020 - this file runs under Lexiko's GNU Licence
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-;		Menu                                                                                                                                                                                                                                                	(03)
+;		Menu                                                                                                                                                                                                                                                	(05)
 ;		~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;		MenuGetAll 	                                	MenuGetAll_sub                            	CallMenuWaitForWindow
+;		GetMenuHandle                            	GetMenuCount                                	MenuGetAll 	                                	MenuGetAll_sub                            	CallMenuWaitForWindow
 ;		_________________________________________________________________________________________________________________________________________________________
-MenuGetAll(hwnd) {
+GetMenuHandle(hwnd) {                                                                                        	;-- ermittelt das Menuhandle vom Fensterhandle
+	SendMessage, 0x01E1,,,, % "ahk_id " hWnd
+return ErrorLevel
+}
 
-    if !menu := DllCall("GetMenu", "ptr", hwnd, "ptr")
-        return ""
-    MenuGetAll_sub(menu, "", Lcmds)
+GetMenuCount(hMenu) {                                                                                        	;-- gibt die Anzahl der Menupunkte zurück
+Return DllCall("GetMenuItemCount", Ptr,hMenu)
+}
+
+MenuGetAll(hwnd) {                                                                                              	;-- Liste von Menupunkten (kein Submenu)
+
+    if !hmenu := DllCall("GetMenu", "ptr", hwnd, "ptr")
+        return "noMenu"
+    MenuGetAll_sub(hmenu, "", Lcmds)
 
  return Lcmds
 }
 
-MenuGetAll_sub(menu, prefix, ByRef cmds) {
+MenuGetAll_sub(hmenu, prefix, ByRef cmds) {                                                         	;-- Liste von Submenupunkten
 
-    Loop % DllCall("GetMenuItemCount", "ptr", menu) {
+    Loop % DllCall("GetMenuItemCount", "ptr", hmenu) {
 
         VarSetCapacity(itemString, 2000)
 
-        if !DllCall("GetMenuString", "ptr", menu, "int", A_Index-1, "str", itemString, "int", 1000, "uint", 0x400)
+        if !DllCall("GetMenuString", "ptr", hmenu, "int", A_Index-1, "str", itemString, "int", 1000, "uint", 0x400)
             continue
 
         StringReplace itemString, itemString, &
-        itemID := DllCall("GetMenuItemID", "ptr", menu, "int", A_Index-1)
+        itemID := DllCall("GetMenuItemID", "ptr", hmenu, "int", A_Index-1)
         if (itemID = -1)
-        if subMenu := DllCall("GetSubMenu", "ptr", menu, "int", A_Index-1, "ptr") {
+        if hsubMenu := DllCall("GetSubMenu", "ptr", hmenu, "int", A_Index-1, "ptr") {
 
-            MenuGetAll_sub(subMenu, prefix itemString " > ", cmds)
+            MenuGetAll_sub(hsubMenu, prefix itemString " > ", cmds)
             continue
 
         }

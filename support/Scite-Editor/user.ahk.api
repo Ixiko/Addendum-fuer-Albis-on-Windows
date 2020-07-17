@@ -1,0 +1,134 @@
+AlbisAbrechnungsscheinVorhanden(Quartal) \nFunktion nutzt das ComboBox1 Element auf der Hauptoberfläche
+AlbisAbrechnungVorbereiten(Set) \nbearbeitet den Dialog Abrechnung vorbereiten
+AlbisActivateMDITab(MDITitle, TabName) \naktiviert ein MDI-Tab, merkt sich welches TabControl zuletzt aufgerufen wurde
+AlbisActiveControl() \nermittelt den aktuellen Eingabefocus und gibt zusätzliche Informationen zur genauen Identifikation des Controls zurück
+AlbisAkteGeoeffnet(Nachname, Vorname, GebDatum="") \nkontrolliert ob die Akte mit den übergebenen Namen geöffnet ist, alle Bedingungen müssen erfüllt sein\ndie Reihenfolge der Namen wird nicht geprüft
+AlbisAkteOeffnen(Name_or_ID_or_BD) \nöffnet eine Patientenakte über Name, ID oder Geburtsdatum
+AlbisAkteSchliessen(CaseTitle:="") \nFunktion schließt eine Patientenakte und überprüft ob diese wirklich geschlossen wurde
+AlbisAktuellePatID() \nliest aus dem Fenstertitel nur die PatientenID aus
+AlbisCurrentPatient()	\nsucht den aktuellen Patientennamen raus
+AlbisDateiAnzeigen(FullFilePath) \nöffnet eine Datei zur Ansicht in Albis, überprüft auf das korrekte Dateiformat
+AlbisDateiSpeichern(FullFilePath, overwrite:= false) \nspeichert von Albis erstellte Auswertungen, Protokolle, Statistiken oder Listen
+AlbisDialogOeffnePatient(command:="invoke", pattern:="" ) \nstartet den Dialog zum Öffnen einer Patientenakte per Tastatureingabe
+AlbisDruckeBlankoFormular(Art [, BnPlus:=0]) \nFunktion zum Ausdrucken von Blankoformularen
+AlbisDruckeLaborblatt(Spalten, Drucker:="", SaveDir:="") \nAutomatisiertes Drucken eines Laborbefundes
+AlbisDruckePatientenAusweis() \ndruckt den Patientenausweis
+AlbisErstelleTagesprotokoll(Periode:="", SaveFolder:="", CloseProtokoll:=1) \Erstellen und Speichern von Tagesprotokollen
+AlbisErstelleZiffernStatistik(Quartal:="aktuell", Zeitraum:="", Tag:="", Arztwahl:="", SaveToFile:="", CloseStatistik:=true) \nErstellen von Ziffernstatistiken
+AlbisExist() \nschaut nach ob Albis läuft, gibt wahr oder falsch zurück
+AlbisFehlendeLkoEintragen(oGB, [FilePathToObject:=""]) \nüberträgt Daten eines im Abrechnungshelfer erstellten Protokolls nach Albis
+AlbisFormular(Formularbezeichnung) \nzum Aufrufen von Formularen per Kurzbezeichner
+AlbisFristenGui() \nzeigt die Fristen auf dem 'Muster 1a' - Arbeitsunfähigkeitsbescheinigung an
+AlbisFristenRechner(AUSeit:="", AUBis:="") \nerrechnet das Datum des Beginns und des Ende der Krankengeldfortzahlung
+AlbisGetActiveControl(cmd) \nermittelt Eingabefocus im Albisfenster
+AlbisGetActiveMDIChild(Mdi:="") \nermittelt das Handle des aktuellen MDI-Childfensters
+AlbisGetActiveWindowType() \nermittelt den aktuell bearbeiteten Dokumenttyp - Wartezimmer, Terminplaner, Akte, ....
+AlbisGetActiveWinTitle() \nermittelt den Fenstertitel v. Albishauptfenster
+AlbisGetAllMDITabNames(MDITitle) \nermittelt die Namen aller Tabs eines SysTabControls321, gibt ein indiziertes Array zurück
+AlbisGetAllMDIWin() \nerstellt globales Objekt, welches Namen, Klassen und Handles aller geöffneten MDI Fenster enthält
+AlbisGetCave([WinClose:=true]) \nliest alle Zeilen des Cave!von Fenster aus
+AlbisGetCaveZeile(nr, SuchString:="", NoClose:= false) \nNoClose=true cave!von Fenster wird nach der Suche nicht geschlossen
+AlbisGetMDIClientHandle() \nermittelt das Handle des MDIClient (Basishandle für alle Unterfenster)
+AlbisGetMDIMaxStatus(MDIChild) \nstellt fest ob das gewählte MDI Fenster maximiert und im Vordergrund ist
+AlbisGetHMDITab(MDITitle) \nermittelt das Handle eines spezifischen MDI-TabControls
+AlbisGetSpecificHMDI(MDITitle) \nermittelt das Handle eines sub-Fensters innerhalb des Albis-MDI-Controls
+AlbisGetStammPos() \nliest aus der Local.ini die Positionen der Stammdatenfenster auslbi
+AlbisGetWartezimmerID() \nermittelt das Handle des Wartezimmerfenster innerhalb des MDI-Controls
+AlbisGetListView(WinTitle, WinClass, Colum) \nListview eines Fenster auslesen
+AlbisGetOpenMDITabs() \ngibt ein Array mit den Bezeichnern aller Tabs des Dokumentenfensters zurück
+AlbisHautkrebsScreening(Pathologie:="opb", PlusGVU:=true, WinClose:=true ) \nbefüllt das eHautkrebsScreening (nicht Dermatologen) Formular
+AlbisHeilMittelKatologPosition() \nverschiebt den Heilmittelkatalog in die Mitte des aktuellen Monitors
+AlbisInBehandlungSetzen() \nPraxomat Funktion - setzt den Pat. im Wartezimmer in Behandlung und danach wird der Timer gestartet
+AlbisIsBlocked([AlbisWinID, autoclose]) \nautoclose=0 nur Rückgabe eines Objektes, 1 schliessen aller blockierenden Fenster nach Rückfrage, 2 schliessen ohne Rückfrage
+AlbisKarteikarteAktivieren() \naktiviert die Karteikarte
+AlbisKarteikartenFocusSetzen(Control) \nbeste Funktion für den Schreibzugriff auf die Karteikarte
+AlbisLaborAuswählen(Laborname) \nfür das Fenster Labor auswählen
+AlbisLaborDaten()	\nbearbeitet das "Labordaten importieren" Fenster und öffnet im Anschluss das Laborbuch
+AlbisLaborDatenholen() \nöffnet das Fenster Daten holen
+AlbisLeseProgrammDatum() \nliest das eingestellte Programmdatum aus
+AlbisLeseZeilenDatum([Sleeptime:=200]) \nliest den Datumseintrag der aktuellen Zeile der Patientenakte aus
+AlbisListeSpeichern(ListTitle, FilePath, ext:= "csv", overwrite:= true) \nspeichert eine in Albis geöffnete Liste in ein gewünschtes Verzeichnis
+AlbisLogout() \nloggt den Nutzer einfach aus
+AlbisLVContent(hWin, [LVClass="SysListView321", Col="1"]) \nListview eines Fenster auslesen (Universalfunktion)\nLVClass ClassNN des Listview, Col = Spalte in der Listview
+Albismenu(mcmd [, FTitel, WZeit, methode]) \nFTitel - wartet nach Aufruf des Menupunktes bis sich das Fenster mit diesem Titel geöffnet hat\nWZeit in Sekunden\methode wie aufgerufen wird
+AlbisMuster30ControlList() \nFunktion um Änderungen von Check-/Radiobuttons des Formulares zu erkennen
+AlbisOeffneAkte(Pat, PdfPath:="") \nursprüngl. ScanPool.ahk - Akte lässt sich auch öffnen, selbst wenn der Name nicht ganz korrekt geschrieben ist
+AlbisOeffneLaborbuch() \noeffnet das Laborbuch
+AlbisOeffneGrafischerBefund() \nFunktion endet erst wenn das aufgerufene Fenster tatsächlich geöffnet ist\ndies ist eine Parameterlose Funktion
+AlbisOptPatientenfenster(nr) \nöffnet das Menu-Fenster Optionen/Patientenfenster und holt den Tab mit der übergebenen "nr" nach vorne
+AlbisPatientGeburtsdatum() \nentnimmt dem Fenstertitel das Geburtsdatum
+AlbisPatientGeschlecht() \nentnimmt dem Fenstertitel das Geschlecht
+AlbisPatientVersicherung() \ndie Versicherung ist die letzte Angabe im Fenstertitel
+AlbisPID() \ngibt die Prozeß-ID des Albisprogrammes aus
+AlbisPrepareInput(Name) \nbereitet das Übergeben von Daten in die Akte vor, erstellt eine freie Zeile\nName: 'KKk' - Karteikartenkürzel (kann jedes sein) oder 'bild1' - würde den entsprechenden Dialog öffnen
+AlbisReadFromListbox(WTitle, ListboxNr [, EntryNr:=1]) \nliest eine Zeile oder alle Zeilen aus einer Listbox
+AlbisResizeDauerdiagnosen([Options:= "xCenterScreen yCenterScreen w0 h0"]) \nvergrößert die Steuerelemente des Dauerdiagnosefensters für eine bessere Übersicht
+AlbisRestrainLabWindow(nr, hwnd) \nliest Daten eines Fenster im Laborbuch bei Aufruf von 'ins Laborbuch übertragen' ein
+AlbisRezeptAutIdem() \nsetzt automatisch ein 'aut idem' - Häkchen
+AlbisRezept_DauermedikamenteAuslesen(hMuster16) \nliest die Listbox1 (Dauermedikamente) im Rezeptfenster in ein Objekt
+AlbisRezeptFelderLoeschen(hMuster16) \n(primär) Hilfsfunktion für die Rezepthelfer Gui
+AlbisRezeptHelfer(tag, Schalter) \n(Hilfsmittel-/Kassen-/Btm-) Rezepte schreiben ohne eine Liste aufrufen zu müssen
+AlbisRezeptHelferGui(dbfile) \nSchnellrezept - Standardrezepte für bestimmte Diagnosen/Hilfsmittel mit einem Klick erstellen
+AlbisRezeptSchalterLoeschen(hMuster16) \n(primär) Hilfsfunktion für die Rezepthelfer Gui
+AlbisSchliesseProgrammDatum() \nschließt das Programmdatumsfenster
+AlbisSchreibeInKarteikarte([ArztKennung:="", Datum:="", Kuerzel:="", Eintrag:=""]) \nschreibt eine gesamte Zeile in die Karteikarte
+AlbisSchreibeLkMitFaktor(Leistungskomplex [, StandardFaktor:=""]) \nVereinfachung für das Senden von Leistungskomplexen per Hotstring
+AlbisSendInputLT(kk, inhalt, kk_Ausnahme, kk_voll) \nschreibt die übergebenen Daten in die Patientenakte\nkk - steht für Karteikürzel - am besten nur L mehr nicht für kk, Albis ergänzt je nach Abrechnungsschein zu lko/lkü usw.\ninhalt ist die zugehörige Ziffer, Wert oder der Text der zum Kürzel eingegeben werden muss.
+AlbisSetCaveZeile(nr, txt, [NoClose:=false]) \nüberschreibt eine Zeile im cave! von - Fenster\nNoClose = true - das cave!von Fenster nach Abschluß der Funktion nicht geschlossen
+AlbisSetzeProgrammDatum([Datum:=""]) \nstellt das Programmdatum ein\nist Datum leer, wird das aktuelle Tagesdatum eingetragen
+AlbisStatus() \nermittelt ob Albis bereit ist um Befehle zu empfangen und gibt eine Fehlermeldung aus
+AlbisTitle2Data([WTAlbis:=""]) \nerstellt ein Objekt aus den Daten des Fenstertitel
+AlbisUebertrageGrafischenBefund(ImgPath, Karteikartentext:="") \nImgPath: darf nur den benutzten Dateinnamen so wie er im ImportOrdner steht enthalten\nKarteikartentext kann für einen alternativen Eintrag genutzt werden
+AlbisWaitAndActivate(WinTitle, Debug=1, DbgWhwnd=0) \nDebug= 0 dann erfolgt keine Ausgabe in ein Listviewfenster, doch noch immer läßt sich der Errorlevel auslesen
+AlbisWinID() \ngibt die ID des übergeordneten Albisfenster zurück
+AlbisVersArt() \nliest die Versichertenart aus der Titelzeile des Albisfenster
+AlbisZeigeKarteikarte() \nschaltet zur Karteikartenansicht
+AlbisZeigeLaborBlatt() \nschaltet auf das Laborblatt
+
+IfapVerordnung(Medikament, printsilent:=true) \nMedikament über ifap verordnen und Dosiszettel (MS Word Dokument) automatisch ausdrucken
+
+Controls(Control, command, WinTitle, HiddenText:=true, HiddenWin:=true, MatchModeSpeed:="slow")
+Control_SetTextAndResize(controlHwnd, newText) \nset a new text to a control and resize depending on textwidth and -height
+ControlSetTextEx(Control= "", NewText= "", WinTitle= "", delay= 0, WinText= "", ExcludeTitle= "", ExcludeText= "")
+ConvertGerDateToEng(dateStr)\neigene Funktion konvertiert das deutsche Datumsformat in das übliche englische
+CreateDIBSection(w, h, hdc="", bpp=32, ByRef ppvBits=0) \nThe CreateDIBSection function creates a DIB (Device Independent Bitmap) that applications can write to directly
+
+ErrorBox(ErrorString, CallingScript="", Screenshot=0) \nPraxomat-Functions: eine Funktion um Daten ins Fehlerlogbuch zu schreiben\nCallingScript = Name des aufrufenden Skriptes , Screenshot = mit Option 1 wird ein Screenshot erstellt
+FormatedFileCreationTime(filepath) \nermittelt das Erstellungsdatum einer Datei und gibt diese formatiert ins deutsche Format zurück
+FindWindow(WinTitle, WinClass:="", WinText:="", ParentTitle:="", ParentClass:="", DetectHiddenWins:="on", DectectHiddenTexts:="on")
+FoxitInvoke(FoxitMenu:="", FoxitID) \nwm_command wrapper for FoxitReader Version:  9.1
+
+GetQuartal(Datum) \nDatum="heute" o. Datum im folgenden Format ist erlaubt: 13.02.2017 oder 13.2.17
+GetWindowInfo(hWnd) \nreturns Key:Val object (Keys: Window/ClientX|Y|W|H, Style, ExStyle, Active, BorderW|H, Atom, Version)
+Gdip_BitmapFromScreen([Screen=0, Raster=""])
+Gdip_BitmapFromHWND(hwnd)
+Gdip_CreateBitmapFromFile(sFile, IconNumber=1, IconSize="")
+Gdip_CreateBitmapFromHBITMAP(hBitmap, Palette=0)
+Gdip_CreateHBITMAPFromBitmap(pBitmap, Background=0xffffffff)
+Gdip_CreateBitmapFromHICON(hIcon)
+Gdip_CreateHICONFromBitmap(pBitmap)
+Gdip_CreateBitmap(Width, Height, Format=0x26200A)
+Gdip_CreateBitmapFromClipboard()
+Gdip_SetBitmapToClipboard(pBitmap)
+Gdip_SetSmoothingMode(pGraphics, SmoothingMode)
+Gdip_SetCompositingMode(pGraphics, CompositingMode=0)
+LV_EX_FindString(HLV, Str, Start := 0, Partial := False)
+PatInDB(PatDb, Name)
+PraxTT(Textmsg, Params="3 0")
+OnMessageOnOff(status) \n gehört zum ScanPool.ahk Script: status kann "On" oder "Off" sein
+ObjTree(ByRef obj,Title="ObjTree",Options="+ReadOnly +Resize,GuiShow=w640 h480",ishwnd=-1) \zeigt ein den Inhalt eines Objektes an
+ReadDbf(dbfPath)
+SetTextAndResize(controlHwnd, newText, fontOptions := "", fontName := "")
+SciTEOutput(Text[,Clear:=0,LineBreak:=1,Exit:=0])
+StrReplace(Heuhaufen, Suchtext [, Ersatztext, AusgabeVarAnzahl, Limit := -1]) \nAusgabeVarAnzahl - Geben Sie eine Variable an, in der die Anzahl gespeichert werden soll, wie oft der Heuhaufen ersetzt wurde (0, wenn keine)\nLimit - Fehlt Limit, gilt standardmäßig -1, dadurch werden alle Vorkommen des Musters ersetzt, die im Heuhaufen gefunden wurden.\nAnsonsten kann man angeben, wie oft der Heuhaufen ersetzt werden soll. Der Heuhaufen-Bereich rechts neben der letzten Ersetzung bleibt unverändert.
+TimeCode(DaT) \nPraxomat-Functions: used for protokoll functions - Month & Time (DaT) = 1 - it's clear!
+VerifiedClick(CName, [WTitle:="", WText:="", WinID:="", WaitClose := false]) \nFunktion kontrolliert ob der ControlClick Befehl erfolgreich war, wenn nicht wird er ggf. wiederholt\nBei Angabe der WinID muss kein Titel oder Text angegeben werden!
+VerifiedCheck(CName, WTitle:="", WText:="", WinID:="", CheckIt := 1)
+VerifiedChoose(CName, WTitle:="", EntryNr:= 1 )
+VerifiedSetFocus(CName, WTitle:="", WText:="", WinID:="")
+VerifiedSetText(CName:="", NewText:="", WTitle :="", delay:=200, WText:="")
+UpSizeControl(WinTitle, WinClass, UpSizedControl, ExpandDown, ExpandRight, CenterToWin:=0)
+WaitAndActivate(WinTitle, Debug=1, DbgWhwnd=0) \nwait for a window and the activates it\nif you want to use Debug function u must have a DebugWindow and a handle
+WaitForNewPopUpWindow(ParentWinID, LastPopUpWin, Wait) \nwaits for a new PopUpWindow for a given parent window id and returns an object containing Title, Class, Text and Hwnd of the new popup window\nParentWinID: hwnd of the parent window, LastPopUpWin: hwnd of the actual open last popup win (you have to get it before you call this function), Wait: is time in seconds
+
+
