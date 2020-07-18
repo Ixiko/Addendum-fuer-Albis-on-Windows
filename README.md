@@ -64,22 +64,22 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* - es sind *Autohotkey_L* s
 
 <h3> &#9733 Rezepthelfer </h3>
 
-* Rezeptvorlagen, z.B. mehrzeilige Hilfsmittelrezepte oder Verschreibung mehrerer Medikamente nach Auswahl einer Vorlage 
+- Rezeptvorlagen, z.B. mehrzeilige Hilfsmittelrezepte oder Verschreibung mehrerer Medikamente nach Auswahl einer Vorlage 
 <h3> &#9733 Anzeige von Beginn und Ende der Lohnfortzahlung  </h3>
 
 - die berechneten Stichtage werden im oberen Teil der Arbeitsunfähigkeitsbescheinigung eingeblendet 
 
-![](D:\Eigene Dateien\Eigene Dokumente\AutoIt Scripte\GitHub\Addendum-fuer-Albis-on-Windows\Docs\AUFristen.png)
+![](Docs\AUFristen.png)
 
 <h3> &#9733 Kontextsensitive Texterweiterungen </h3>
-* Erkennung des Kontext in der Karteikarte anhand des Albiskürzel (z.B. lko, dia, bef, info) mit Bereitstellung von Texterweiterungen 
+- Erkennung des Kontext in der Karteikarte anhand des Albiskürzel (z.B. lko, dia, bef, info) mit Bereitstellung von Texterweiterungen 
 
 <h3> &#9733 Unterstützung des Laborabrufes </h3>
 - Übernimmt automatisch nach manuellem Start des Laborabrufes die weiteren Vorgänge bis hin zum Übertragen der Befunde ins Laborblatt  (funktioniert nur teilweise)
 
 
 <h3> &#9733 Funktionsbibliothek für eigene Skriptentwicklung </h3>
-* **107 Funktionen** zur Steuerung von Albis sind für die Entwicklung eigener Skripte vorhanden 
+- **107 Funktionen** zur Steuerung von Albis sind für die Entwicklung eigener Skripte vorhanden 
 
   
 
@@ -190,7 +190,7 @@ Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter ande
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![](Docs/Icons/Monet.png) <u>MoNet 
+## ![](Docs/Icons/Monet.png) <u>MoNet</u> 
 
 **Monitor for your Network**
 
@@ -210,6 +210,14 @@ Soll ein Clientkommunikationsmodul werden. angedachte Punkte:
 Die IP-Adressen und Namen der Rechner müssen in der Addendum.ini hinterlegt sein
 
 
+
+<img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
+
+## ![InfoIcon](Docs/Icons/Infofenster.png) <u>Infofenster</u>
+
+**Befundeingang, Tagesprotokoll, Praxisinfos**
+
+![Infofenster](Docs\Infofenster.png)
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
