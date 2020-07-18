@@ -367,7 +367,7 @@ admMenu_PdfPrint(LogText, PDFViewerClass, PDFViewerHwnd) {                      
 		static foxitprint    	:= "i)[(Print)|(Drucken)]+ ahk_class i)#32770 ahk_exe i)FoxitReader.exe"
 		static sumatraprint	:= "Speichern unter ahk_class #32770 ahk_exe SumatraPDF.exe"
 
-		SciTEOutput(LogText " ," PDFViewerClass ", " PDFViewerHwnd )
+		SciTEOutput("PdfPrint: " LogText " ," PDFViewerClass ", " PDFViewerHwnd )
 
 		If InStr(PDFViewerClass, "Foxit") {                ; FoxitReader
 
@@ -380,7 +380,7 @@ admMenu_PdfPrint(LogText, PDFViewerClass, PDFViewerHwnd) {                      
 			FoxitInvoke("Print", PDFViewerHwnd)                       	; 'Drucken' - Dialog
 			WinWait, % foxitPrint,, 6                                          	; wartet 6 Sekunden auf das Dialogfenster
 			hfoxitPrint := GetHex(WinExist(foxitPrint))                	; 'Speichern unter' - Dialog handle
-			SciTEOutput("A4Drucker: " Addendum.Drucker.StandardA4)
+			SciTEOutput("A4Drucker: " Addendum.Drucker.StandardA4 ", hfoxitPrint: " hfoxitPrint)
 			VerifiedChoose("ComboBox1", hfoxitPrint, Addendum.Drucker.StandardA4)
 			;~ VerifiedClick("Button44", hfoxitPrint,,, true)            	; Speichern Button drücken
 			;FoxitInvoke("Close", PDFViewerHwnd)                       	; dieses Dokument schließen

@@ -411,7 +411,6 @@ return ;}
 
 admGui_PatLog(PatID, cmd, data) {                                                                                  	; individuelles Patienten Logbuch
 
-		SciTEOutput("Daten: " data)
 		;PatID    	:= AlbisAktuellePatID()
 		BaseNum	:= Round((PatID / 1000) ) * 1000
 		IDBase  	:= PatID - BaseNum <= 0 ? BaseNum : BaseNum + 1000
