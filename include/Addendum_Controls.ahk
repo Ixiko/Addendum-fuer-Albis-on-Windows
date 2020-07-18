@@ -857,7 +857,7 @@ VerifiedChoose(CName, WTitle, EntryNr ) {                                       
 			return 0
 
 	; Funktionsabbruch wenn Steuerelement nicht existiert
-		ControlGet, CHwnd, Hwnd, % CName, % WTitle
+		ControlGet, CHwnd, Hwnd,, % CName, % WTitle
 		If !CHwnd
 			return 0
 
