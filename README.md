@@ -81,7 +81,7 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* - es sind *Autohotkey_L* s
 <h3> &#9733 Funktionsbibliothek für eigene Skriptentwicklung </h3>
 - **107 Funktionen** zur Steuerung von Albis sind für die Entwicklung eigener Skripte vorhanden 
 
-  
+
 
 ![](Docs/TrennerExtraBreit.png)
 
