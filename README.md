@@ -10,9 +10,9 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* - es sind *Autohotkey_L* s
 ### DIES IST KEINE OFFIZIELLE ERWEITERUNG FÜR ALBIS!
 ##### Der Hersteller der Praxissoftware Albis*, die Compugroup AG, hat mit dieser Software nichts zu tun, geschweige denn, wurde diese offiziell durch die CompuGroup AG legitimiert!
 ###### * Arztinformationssystem (AIS), Arztsoftware, Praxissoftware, Praxisverwaltungssoftware, Praxisverwaltungssystem (PVS), Praxismanagementsoftware oder Ordinationsmanagementsoftware
-<br>
-
 <img src="Docs/TrennerExtraBreit.png" style="zoom:67%;" />
+
+
 
 # ![Funktionen.png](Docs/Icons/Funktionen.png)  FUNKTIONSÜBERSICHT
 ## ![Addendum.png](Docs/Icons/Addendum.png) Addendum
