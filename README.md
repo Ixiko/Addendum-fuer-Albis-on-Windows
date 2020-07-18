@@ -69,7 +69,7 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* - es sind *Autohotkey_L* s
 
 - die berechneten Stichtage werden im oberen Teil der Arbeitsunfähigkeitsbescheinigung eingeblendet 
 
-![](Docs\AUFristen.png)
+![](Docs/AUFristen.png)
 
 <h3> &#9733 Kontextsensitive Texterweiterungen </h3>
 - Erkennung des Kontext in der Karteikarte anhand des Albiskürzel (z.B. lko, dia, bef, info) mit Bereitstellung von Texterweiterungen 
@@ -172,7 +172,7 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
 
 ##  ![Rezepthelfer.png](Docs/Icons/Rezepthelfer.png) <u>Schnellrezepte</u>
 
-![](D:\Eigene Dateien\Eigene Dokumente\AutoIt Scripte\GitHub\Addendum-fuer-Albis-on-Windows\Docs\Schnellrezepte.gif)
+![](Docs/Schnellrezepte.gif)
 
 
 
@@ -182,7 +182,7 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
 
 **mehr Funktionen im Rechtsklick Menu in der Karteikarte**
 
-![erweitertes Kontextmenu](Docs\erweitertes Kontextmenu.png)
+![erweitertes Kontextmenu](Docs/erweitertes Kontextmenu.png)
 
 Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter anderem Öffnen eines Formulares zum Bearbeiten oder der direkte Ausdruck. Wenn Sie PDF-Dateien oder Bild-Dateien direkt in die Karteikarte ablegen, können Sie diese Dateien ebenso Anzeigen oder Ausdrucken lassen, aber die Dateien lassen sich auch in einen nach dem Patienten benannten Dateiordner exportieren (z.B. zur Erleichterung beim Arztwechsel) und da der Faxversand eigentlich auch nur ein Druckvorgang ist, geht auch das inklusive Abfrage der Faxnummer (wenn gewünscht)
 
@@ -217,11 +217,11 @@ Die IP-Adressen und Namen der Rechner müssen in der Addendum.ini hinterlegt sei
 
 **Befundeingang, Tagesprotokoll, Praxisinfos**
 
-![Infofenster](Docs\Infofenster.png)
+![Infofenster](Docs/Infofenster.png)
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![](../../../../../Eigene%20Dateien/Eigene%20Dokumente/AutoIt%20Scripte/GitHub/Addendum-fuer-Albis-on-Windows/Docs/Icons/Monet.png) <u>Abrechnungshelfer - optimieren Sie Ihre Abrechnung</u>
+## ![](Docs/Icons/Abrechnungshelfer.png) <u>Abrechnungshelfer - optimieren Sie Ihre Abrechnung</u>
 
 <b>mehr Statistiken, mehr Möglichkeiten der Automatisierung</b>
 
@@ -241,7 +241,7 @@ Erstellen Sie ein Tagesprotokoll und nutzen Sie diese Modul um von der Compugrou
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![Laborabruf](Docs\Icons\LaborAbruf.png) Laborabruf (teilweise in Addendum integriert)
+## ![Laborabruf](Docs/Icons/LaborAbruf.png) Laborabruf (teilweise in Addendum integriert)
 
 **Die Automatisierung für den Abruf der Laborwerte**
 
