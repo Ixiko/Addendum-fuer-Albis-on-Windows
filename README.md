@@ -5,14 +5,14 @@
 ### Version 1.33 vom 17.07.2020
 lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* - es sind *Autohotkey_L* sowie *Autohotkey_H* (Multithread Unicode 64bit - Version) notwendig, geschrieben für Albis ab Version 18.40
 
-![](Docs\TrennerExtraBreit.png)
+<img src="Docs\TrennerExtraBreit.png" style="zoom: 67%;" />
 
 ### DIES IST KEINE OFFIZIELLE ERWEITERUNG FÜR ALBIS!
 ##### Der Hersteller der Praxissoftware Albis*, die Compugroup AG, hat mit dieser Software nichts zu tun, geschweige denn, wurde diese offiziell durch die CompuGroup AG legitimiert!
 ###### * Arztinformationssystem (AIS), Arztsoftware, Praxissoftware, Praxisverwaltungssoftware, Praxisverwaltungssystem (PVS), Praxismanagementsoftware oder Ordinationsmanagementsoftware
 <br>
 
-![](Docs/TrennerExtraBreit.png)
+<img src="Docs/TrennerExtraBreit.png" style="zoom:67%;" />
 
 # ![Funktionen.png](Docs/Icons/Funktionen.png)  FUNKTIONSÜBERSICHT
 ## ![Addendum.png](Docs/Icons/Addendum.png) Addendum
