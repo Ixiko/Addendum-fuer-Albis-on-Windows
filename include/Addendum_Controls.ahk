@@ -870,7 +870,7 @@ VerifiedChoose(CName, WTitle, EntryNr ) {                                       
 		Items := StrSplit(CtrlList, "`n")
 
 	; Auswahl anhand der Positionsnummer setzen
-		If RegExMatch(EntryNr, "^\d+$") && {
+		If RegExMatch(EntryNr, "^\d+$") {
 
 			;Abbruch wenn die Positionsnummer nicht existiert
 			If (Items.MaxIndex() < EntryNr)
@@ -881,9 +881,9 @@ VerifiedChoose(CName, WTitle, EntryNr ) {                                       
 		}
 
 	; Auswahl anhand des übergebenen String setzen
-		For idx, item in List
-			If RegExMatch(A_LoopField, EntryNr) {
-				Control, Choose, % A_Index, % CName, % WTitle
+		For idx, item in Items
+			If RegExMatch(item, EntryNr) {
+				Control, Choose, % idx,, % "ahk_id " CHwnd
 				return ErrorLevel
 			}
 
