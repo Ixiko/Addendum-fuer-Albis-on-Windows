@@ -182,7 +182,7 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
 
 **mehr Funktionen im Rechtsklick Menu in der Karteikarte**
 
-![erweitertes Kontextmenu](Docs/erweitertes Kontextmenu.png)
+![erweitertes Kontextmenu](Docs/erweitertes_Kontextmenu.png)
 
 Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter anderem Öffnen eines Formulares zum Bearbeiten oder der direkte Ausdruck. Wenn Sie PDF-Dateien oder Bild-Dateien direkt in die Karteikarte ablegen, können Sie diese Dateien ebenso Anzeigen oder Ausdrucken lassen, aber die Dateien lassen sich auch in einen nach dem Patienten benannten Dateiordner exportieren (z.B. zur Erleichterung beim Arztwechsel) und da der Faxversand eigentlich auch nur ein Druckvorgang ist, geht auch das inklusive Abfrage der Faxnummer (wenn gewünscht)
 
