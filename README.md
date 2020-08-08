@@ -56,7 +56,7 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis a
 <h3> &#9733 Vereinfachung der Albisbedienung </h3>
 
 - erweiterte Tastenkombinationen (Hotkeys) für zusätzliche Funktionalität
-	- **Verschieben von Einträgen** im Dauermedikamenten- und Dauerdiagnosenfenster 
+  - **Verschieben von Einträgen** im Dauermedikamenten- und Dauerdiagnosenfenster 
   - **Kopieren**, **Ausschneiden** und **Einfügen** mit der von Windows gewohnten Tastenkombination
   - **Schließen** einer Krankenakte oder **Anzeigen** der nächsten geöffneten
   - Einstellen des aktuellen **Tagesdatums**
@@ -70,6 +70,7 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis a
 <h3> &#9733 Rezepthelfer </h3>
 
 - Rezeptvorlagen, z.B. mehrzeilige Hilfsmittelrezepte oder Verschreibung mehrerer Medikamente nach Auswahl einer Vorlage 
+
 <h3> &#9733 Anzeige von Beginn und Ende der Lohnfortzahlung  </h3>
 
 - die berechneten Stichtage werden im oberen Teil der Arbeitsunfähigkeitsbescheinigung eingeblendet 
@@ -158,7 +159,7 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
     - **Einfügen:**                                       ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![v](Docs/Icons/Key-White-v.png)
   - **Schließen einer Karteikarte:**   ![Alt](Docs/Icons/Alt.png)+![Runter](Docs/Icons/runter.png) 
   - **zur nächsten Karteikarte:**        ![Alt](Docs/Icons/Alt.png)+![Hoch](Docs/Icons/hoch.png) 
-  - **Laborblatt zeigen:**                      ![Alt](Docs/Icons/Alt.png)+![Rechts](Docs/Icons/rechts.png) 
+  - **Laborblatt zeigen:**                      ![Alt](Docs/Icons/Alt.png)+![Rechts](Docs/Icons/Rechts.png) 
   - **Karteikarte zeigen:**                    ![Alt](Docs/Icons/Alt.png)+![Links](Docs/Icons/Links.png) 
   - **Einstellen des aktuellen Tagesdatums:**   ![Alt](Docs/Icons/Alt.png)+![F5](Docs/Icons/F5.png) 
   
