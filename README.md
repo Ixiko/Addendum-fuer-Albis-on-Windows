@@ -18,6 +18,7 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis a
 ## ![Addendum.png](Docs/Icons/Addendum.png) Addendum
 
 <h3> &#9733 PopupBlocker</h3>
+
 - Schließt diverse eher störende, wenig wichtige Fenster in Albis und zugehörigen Programmen
 
 <h3> &#9733 Fensterhandler</h3>
@@ -27,6 +28,7 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis a
 - erweitert automatisch Anzeige-Elemente in Albisdialogen für mehr Übersicht 
 
 <h3> &#9733 Auto-Login </h3>
+
 - kann auf Wunsch das Login in ihr Albisprogramm vornehmen
 
 <h3> &#9733 Patientennamendatenbank </h3>
@@ -47,9 +49,11 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis a
 - durch Druck auf einen Hotkey wird die aktuell im FoxitReader geöffnete PDF Datei signiert. (eine Signatur müssen Sie vorher im FoxitReader erstellt haben). Dadurch ist sogar eine ***gesetzeskonforme und rechtssichere Signierung*** der Dateien möglich. **Achtung:** es gibt keine kostenlose Software zur digitalen Signierung. Den [FoxitReader](https://www.foxitsoftware.com/de/pdf-reader/) müssen Sie bei professioneller Nutzung liszensieren lassen! Ebenso die genutzten Command-Line-Tools - [xpdf-Tools](http://www.xpdfreader.com/) und pdftk.
 
 <h3> &#9733 Menusuche </h3>
+
 - Finden und Aufrufen von Menupunkten im Albismenu
 
 <h3> &#9733 Vereinfachung der Albisbedienung </h3>
+
 - erweiterte Tastenkombinationen (Hotkeys) für zusätzliche Funktionalität
   - **Verschieben von Einträgen** im Dauermedikamenten- und Dauerdiagnosenfenster 
   - **Kopieren**, **Ausschneiden** und **Einfügen** mit der von Windows gewohnten Tastenkombination
