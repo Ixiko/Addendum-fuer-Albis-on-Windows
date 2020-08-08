@@ -51,7 +51,7 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis a
 
 <h3> &#9733 Vereinfachung der Albisbedienung </h3>
 - erweiterte Tastenkombinationen (Hotkeys) für zusätzliche Funktionalität
-	- **Verschieben von Einträgen** im Dauermedikamenten- und Dauerdiagnosenfenster 
+  - **Verschieben von Einträgen** im Dauermedikamenten- und Dauerdiagnosenfenster 
   - **Kopieren**, **Ausschneiden** und **Einfügen** mit der von Windows gewohnten Tastenkombination
   - **Schließen** einer Krankenakte oder **Anzeigen** der nächsten geöffneten
   - Einstellen des aktuellen **Tagesdatums**
@@ -83,6 +83,7 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis a
 
 
 <h3> &#9733 Funktionsbibliothek für eigene Skriptentwicklung </h3>
+
 - **107 Funktionen** zur Steuerung von Albis sind für die Entwicklung eigener Skripte vorhanden 
 
 
