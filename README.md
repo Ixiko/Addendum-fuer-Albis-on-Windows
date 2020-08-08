@@ -145,15 +145,15 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
 
 ## ![Hotkey](Docs/Icons/Hotkey.png) <u>sinnvollere Albiskürzel</u>
 
-- **Kopieren**, **Ausschneiden** und **Einfügen** ist mit den üblichen Kürzeln überall in Albis möglich 
-    - **Kopieren:**                                      ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![](Docs/Icons/Key-White-c.png)
-    - **Ausschneiden: **                            ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![](Docs/Icons/X.png)
-    - **Einfügen:**                                       ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![](Docs/Icons/Key-White-v.png)
-  - **Schließen einer Karteikarte:**   ![](Docs/Icons/Alt.png)+![runter](Docs/Icons/runter.png) 
-  - **zur nächsten Karteikarte:**        ![](Docs/Icons/Alt.png)+![hoch](Docs/Icons/hoch.png) 
-  - **Laborblatt zeigen:**                      ![](Docs/Icons/Alt.png)+![](Docs/Icons/rechts.png) 
-  - **Karteikarte zeigen:**                    ![](Docs/Icons/Alt.png)+![](Docs/Icons/Links.png) 
-  - **Einstellen des aktuellen Tagesdatums:**   ![](Docs/Icons/Alt.png)+![](Docs/Icons/F5.png) 
+- **Kopieren**, **Ausschneiden** und **Einfügen** ist mit den üblichen Kürzeln überall in Albis möglich <br>
+    - **Kopieren:**                                      ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![c](Docs/Icons/Key-White-c.png)
+    - **Ausschneiden:**                            ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![x](Docs/Icons/X.png)
+    - **Einfügen:**                                       ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![v](Docs/Icons/Key-White-v.png)
+  - **Schließen einer Karteikarte:**   ![Alt](Docs/Icons/Alt.png)+![Runter](Docs/Icons/runter.png) 
+  - **zur nächsten Karteikarte:**        ![Alt](Docs/Icons/Alt.png)+![Hoch](Docs/Icons/hoch.png) 
+  - **Laborblatt zeigen:**                      ![Alt](Docs/Icons/Alt.png)+![Rechts](Docs/Icons/rechts.png) 
+  - **Karteikarte zeigen:**                    ![Alt](Docs/Icons/Alt.png)+![Links](Docs/Icons/Links.png) 
+  - **Einstellen des aktuellen Tagesdatums:**   ![Alt](Docs/Icons/Alt.png)+![F5](Docs/Icons/F5.png) 
   
   
 
