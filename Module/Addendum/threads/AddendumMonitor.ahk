@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------------------------------------------------------------------
 ;------------------------------------------------ ADDENDUM MONITOR ----------------------------------------------------
 ;-----------------------------------------------------------------------------------------------------------------------------------
-													Version:= "0.41" , vom:= "12.06.2020"
+													Version:= "0.42" , vom:= "08.08.2020"
 ;------------------------------------------------------ Runtime-Skript ----------------------------------------------------------
 ;------------------- startet Addendum bei einem Absturz oder (un-))absichtlichen Schliessen neu --------------------
 ;-------------------------------------------- Addendum für AlbisOnWindows -----------------------------------------------
@@ -26,9 +26,9 @@ GNU Lizenz can be found in Docs directory  - 2017
 		#SingleInstance, Force
 		#NoTrayIcon
 		#MaxThreadsPerHotkey , 2
-		SetTitleMatchMode    	, 2        	;Fast is default
-		SetTitleMatchMode    	, Fast    	;Fast is default
-		DetectHiddenWindows	, Off	;Off is default
+		SetTitleMatchMode    	, 2        	; Fast is default
+		SetTitleMatchMode    	, Fast    	; Fast is default
+		DetectHiddenWindows	, Off     	; Off is default
 		CoordMode, ToolTip 	, Screen
 		SetBatchLines            	, -1
 		SetWinDelay               	, -1
@@ -48,47 +48,47 @@ GNU Lizenz can be found in Docs directory  - 2017
 ;{ Variablen
 
 		global t
-		global DoRestart := true
-		global q               	:= Chr(0x22)
+		global DoRestart          	:= true
+		global q                       	:= Chr(0x22)
+		global WaitForScript   	:= ""
+		global Addendum      	:= Object()
+		global Restarts           	:= Object()
+		global WatchedScripts	:= {	"Addendum.ahk"	: {"command": "run"
+												, 	"run"              		: (AddendumDir "\include\AHK_H\x64w\AutoHotkeyH_U64 " q AddendumDir "\Module\Addendum\Addendum.ahk" q)
+												, 	"tip"                    	: "Addendum-Skript"}}
+		global winmgmts       	:= ComObjGet("winmgmts:") 	; Get WMI service object.
 
 	; get data from Addendum.ini
 		If !IsObject(Addendum) 	{
-				global Addendum      	:= Object()
-				BotNr:= 1
 
+				BotNr:= 1
 				Addendum.AddendumDir 	:= FileOpen("C:\albiswin.loc\AddendumDir","r").Read()
 				Addendum.AddendumIni  	:= AddendumDir "\Addendum.ini"
 				Addendum.compname   	:= StrReplace(A_ComputerName, "-")
 
-				IniReadExt(Addendum.AddendumDir "\Addendum.ini")                 	; initializing Ini-Path
+				IniReadExt(Addendum.AddendumIni)                 	; initializing Ini-Path
 
 			; loading Telegram BotToken and BotChatID
 				Loop {
-						BotName	:= IniReadExt("Telegram", "Bot" BotNr)
 
-						If !InStr(BotName, "Error") && (A_Index = 1)
-								Addendum.Telegram := Object()
-						else if InStr(BotName, "Error")
-								break
+					BotName	:= IniReadExt("Telegram", "Bot" BotNr)
 
-						BotToken	:= IniReadExt("Telegram", BotName "_Token")
-						BotChatID	:= IniReadExt("Telegram", BotName "_ChatID")
-						Addendum.Telegram.Push({"BotName":BotName, "Token": BotToken, "ChatID": BotChatID})
-						BotNr ++
+					If !InStr(BotName, "Error") && (A_Index = 1)
+							Addendum.Telegram := Object()
+					else if InStr(BotName, "Error")
+							break
+
+					BotToken	:= IniReadExt("Telegram", BotName "_Token")
+					BotChatID	:= IniReadExt("Telegram", BotName "_ChatID")
+					Addendum.Telegram.Push({"BotName":BotName, "Token": BotToken, "ChatID": BotChatID})
+					BotNr ++
+
 				}
 		}
 
-	; Get WMI service object.
-		global winmgmts       	:= ComObjGet("winmgmts:")
-		global WatchedScripts	:= {"Addendum.ahk":{"command": "run"
-													, "run":(AddendumDir "\include\AHK_H\x64w\AutoHotkeyH_U64 " q AddendumDir "\Module\Addendum\Addendum.ahk" q)
-													, "tip":"Addendum-Skript"}}
-		global WaitForScript   	:= ""
-		global Restarts           	:= Object()
-
 	;}
 
-;{ Sink Objekte erstellen
+;{ Sink Objekte erstellen \ Kontrolle das Addendum läuft alle 30 Minuten
 
 	; Create sink objects for receiving event noficiations.
 		ComObjConnect(CreateSink	:= ComObjCreate("WbemScripting.SWbemSink"), "ProcessCreate_")
@@ -101,19 +101,30 @@ GNU Lizenz can be found in Docs directory  - 2017
 			. " WHERE TargetInstance ISA 'Win32_Process'"
 			. " AND TargetInstance.Name LIKE 'Autohotkey%'")
 
-	;}
+	; Timerfunktion für halbstündliche Skriptkontrolle
+		fnADM := Func("RestartAddendum")
+		SetTimer, % fnADM, 15*60*1000
+
+;}
 
 return
 
-^!ö:: ;{ Skriptneustart
-	SciTEOutput()
+^!ö::    	;{ Skriptneustart
 	SciTEOutput("Addendum_Monitor wurde neu gestartet.")
 	Reload
 return ;}
-~Esc:: ;{ Taste um Skriptneustart während der Anzeige des Countdownfenster abzubrechen
+~^Esc:: 	;{ Tastenkombination um Skriptneustart während der Anzeige des Countdownfenster abzubrechen
 	DoRestart := false
+	FileAppend, % "Abbruch des Addendumneustart durch Nutzer, Zeit: " TimeStamp() ", Client: " A_ComputerName "`n", % Addendum.AddendumDir "\logs'n'data\OnExit-Protokoll.txt"
 return ;}
 ^+!ö::ExitApp
+
+TimeStamp() {
+
+	FormatTime, time, % A_Now, dd.MM.yyyy HH:mm:ss
+
+return time
+}
 
 ProcessDelete_OnObjectReady(obj) {                                             	;-- Called when a process terminates
 
@@ -138,8 +149,8 @@ ProcessDelete_OnObjectReady(obj) {                                             	
 					If RegExMatch(wText, "Error:\s.*Line#.*--->") {
 							RegExMatch(Process.CommandLine, "[A-Z]:[\w\\_\säöüÄÖÜ.]+\.ahk", SkriptPath)
 							fehler:= Object()
-							fehler.Message := wText
-							fehler.File := SkriptPath
+							fehler.Message	:= wText
+							fehler.File      	:= SkriptPath
 							FehlerProtokoll(fehler, 1)
 					}
 
@@ -157,7 +168,7 @@ ProcessDelete_OnObjectReady(obj) {                                             	
 
 }
 
-AHKProcessExist(ProcName, cmd="") {                                                    	;-- is only searching for Autohotkey processes
+AHKProcessExist(ProcName, cmd="") {                                              	;-- is only searching for Autohotkey processes
 
 	; use cmd = "PID" to receive the PID of an Autohotkey process
 
@@ -180,29 +191,30 @@ ShowRestartProgress(scriptname, duration) {                                    	
 	; duration = Dauer in Sekunden
 	global DoRestart
 
-	Loops := Floor((duration * 1000) / 100)
+	DoRestart 	:= true
+	Loops   	:= Floor((duration * 1000) / 100)
 
 	Progress, B2 cW202842 cBFFFFFF cTFFFFFF zH25 w250 WM300 WS300, % "...Neustart in 10s`n(Abbruch mit Escape)",  % scriptname, ----------, Futura Bk Bt
 	prghwnd := WinExist("ahk_class AutoHotkey2", "...Neustart")
 	Loop % Loops {
-		rest := (100 - A_Index)
-		Progress % rest
+
+		Progress % (rest := (100 - A_Index))
 		ControlSetText, Static2, % "...Neustart in " Floor(rest/10)+1 "s`n(Abbruch mit Escape)", % "ahk_id " prghwnd
 		Sleep, 100
 		If !DoRestart
 			break
+
 	}
 	Progress, Off
 
-return DoRestart
+return DoRestart  	; Abbruch per Hotkey-Methode gibt ein false zurück
 }
 
 RestartAddendum() {                                                                     	;-- startet Addendum
 
 	If !AHKProcessExist("Addendum.ahk") {
 		Run, % Addendum.AddendumDir "\include\AHK_H\AutoHotkeyH_U64.exe /f " q Addendum.AddendumDir "\Module\Addendum\Addendum.ahk" q
-		FormatTime, time, % A_Now, dd.MM.yyyy HH:mm:ss
-		FileAppend, % "automatischer Addendumneustart ist erfolgt, Zeit: " time  ", Client: " A_ComputerName "`n", % Addendum.AddendumDir "\logs'n'data\OnExit-Protokoll.txt"
+		FileAppend, % TimeStamp() ", " A_ScriptName ", " A_ComputerName ", Addendumrestart`n", % Addendum.AddendumDir "\logs'n'data\OnExit-Protokoll.txt"
 	}
 
 }

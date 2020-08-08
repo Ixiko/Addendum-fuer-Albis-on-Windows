@@ -578,7 +578,7 @@ ReadDbf(dbfPath, SaveTo:="", options:="") {                                     
 		 */
 
 	; Variablen
-		static WorkDb, ConvFile, appendix, CntDataSets, HeaderLen, LenDataSet, buffin, lastpos, lastDatensatz
+		static WorkDb, ConvFile, appendix, CntDataSets, HeaderLen, LenDataSet, buffin, lastpos, lastDatensatz, init := false
 		static MB := 1024*1024 ; maximale Dateigröße der csv Datei (hier 1 MB)
 		static dbf
 
@@ -591,15 +591,18 @@ ReadDbf(dbfPath, SaveTo:="", options:="") {                                     
 			}
 
 		; DBASE Header auslesen, DBASE Pfad speichern
-			CntDataSets 	:= SeekReadNum(dbf, 4	, 4, "Uint")     	; maximale Zahl der Datensätze
-			HeaderLen  	:= SeekReadNum(dbf, 8	, 2, "Uint") 		; Header Länge
-			LenDataSet	:= SeekReadNum(dbf, 10	, 2, "Uint")	    	; Länge eines Datensatzes
-			WorkDb    	:= dbfPath
-			VarSetCapacity(buffin, LenDataSet, 0) ; buffer vorbereiten
-			lastpos      	:= 0
-			lastDatensatz	:= 0
-			pos				:= HeaderLen
+			If !init {
 
+				CntDataSets 	:= SeekReadNum(dbf, 4	, 4, "Uint")     	; maximale Zahl der Datensätze
+				HeaderLen  	:= SeekReadNum(dbf, 8	, 2, "Uint") 		; Header Länge
+				LenDataSet	:= SeekReadNum(dbf, 10	, 2, "Uint")	    	; Länge eines Datensatzes
+				WorkDb    	:= dbfPath
+				VarSetCapacity(buffin, LenDataSet, 0) ; buffer vorbereiten
+				lastpos      	:= 0
+				lastDatensatz	:= options.StartWithSet
+				pos				:= HeaderLen
+
+			}
 		}
 
 	; Konvertierungsdatei für Schreibzugriff öffnen
@@ -626,7 +629,7 @@ ReadDbf(dbfPath, SaveTo:="", options:="") {                                     
 		while (!dbf.AtEOF) {
 
 				datensatz := A_Index
-				ToolTip, % "Datensatz: " lastDatensatz + A_Index "/" CntDataSets
+				ToolTip, % "Datensatz: " lastDatensatz + A_Index "/" CntDataSets, 1500, 170, 1
 
 				dbf.Seek(pos, 0)                                                	; Dateizeiger versetzen
 				pos += LenDataSet                                           	; Leseposition + eine Datensatzlänge
@@ -671,6 +674,9 @@ ReadDbf(dbfPath, SaveTo:="", options:="") {                                     
 
 		If (StrLen(SaveToThis) > 0)
 				cfile.Close()
+
+		data := RTrim(data, "`n")
+		data := RegExReplace(data, "\s{2,}", "|")
 
 return data
 }

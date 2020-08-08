@@ -30,6 +30,12 @@
 
 | Datum          | Teil     | Beschreibung                                                 |
 | -------------- | -------- | ------------------------------------------------------------ |
+| **08.08.2020** | **F+** | **AddendumMonitor** - da Addendum z.T. aus unerfindlichen Gründen nicht automatisch nach einem Fehler oder Nutzereingriff gestartet wird, kontrolliert das Skript jetzt alle 15 min ob Addendum noch ausgeführt wird|
+| **08.08.2020** | **F+** | **Addendum_Gui** - Optimierung der Dialoganzeigen|
+| **05.08.2020** | **F+** | **Addendum** - RPA für MicroDicom einem freien DICOM Viewer integriert (Dicom2Albis Ersatz) V1.34|
+| **04.08.2020** | **F+** | **Addendum** - das *Schnellrezept* läßt sich ein- und ausschalten |
+| **01.08.2020** | **F+** | **Addendum - Sumatra_GetPages(), Sumatra_ToPrint(), FoxitReader_GetPages(), FoxitReader_ToPrint**: *_GetPages* Funktionen ermitteln die angezeigte Seite und die maximale Seitenzahl im aktuell angezeigten Dokument, die *_ToPrint* Funktionen automatisieren den Dokumentdruck auf einen bestimmten Drucker |
+| **31.07.2020** | **F+** | **Addendum - PopUpMenu**: direkter PDF-Druck und PDF-Export aus der Akte für den Sumatra PDF-Viewer ermöglicht |
 | **15.07.2020** | **F~**   | **FoxitReader** - Fehler bei den Funktionen der Signaturhilfe beseitigt |
 | **11.07.2020** | **F+**   | **FoxitReader_GetPDFPath()** liest den Dokumentenpfad und Dateinamen im 'Speichern unter' Dialog des FoxitReader aus |
 | **02.07.2020** | **F-**   | *Anpassung an den EBM 2020 ab 01.07.2020* - Hotstring für Kopieziffer 40144 entfernt |
@@ -124,12 +130,14 @@
 
 ![](D:/Eigene Dateien/Eigene Dokumente/AutoIt Scripte/GitHub/Addendum-fuer-Albis-on-Windows/Docs/Trenner_klein.png)
 
-## ![AddendumFunctions](Docs\Icons\AddendumFunctions.png) Addendum Funktionsbibliotheken (..\Include)
+## ![AddendumFunctions](Docs\Icons\AddendumFunctions.png) Addendum Funktionsbibliotheken (..\Include oder \lib)
 
 ##### .                                                       *Addendum_**.ahk*
 
 |     Datum      |  Teil   | Beschreibung                                                 |
 | :------------: | :-----: | :----------------------------------------------------------- |
+| **01.08.2020** | **F+** | **Addendum_Controls - Controls()**: der Funktionsbefehl "ControlFind" hat einen 3. Sub-Parameter erhalten für die optionale Rückgabe entweder der Steuerelement Klasse oder/und des Handle, der Befehl "GetText" gibt das Ergebnis zurück (return Befehl vergessen) und kann jetzt auch mit WindowsForms Steuerelementen umgehen|
+| **31.07.2020** | **F+** | **libs\SciteOutPut.ahk**: fügt neuen Text immer an das Ende der Ausgabe ein	|
 | **17.07.2020** | **F+** | **Addendum_Controls**: - *VerifiedChoose(CName, WTitle, EntryNr )* - Parameter "EntryNr": flexibler gestaltet. Die Funktion spricht die Steuerelementtypen Listbox oder Combobox an. EntryNr kann dabei die Position des Eintrages oder der Eintrag in Form eines normalen String oder RegEx-String sein. Bei Übergabe einer Zahl wird diese Position in den Steuerelementen ausgewählt. Übergibt man einen String wird der Inhalt des Steuerelementes durchsucht und verglichen. Der passende Eintrag wird anschliessend ausgewählt.  |
 | **05.07.2020** | **F~** | **Addendum_Albis**: *AlbisSetCaveZeile()* - erweitert automatisch die Anzahl der Zeilen im Dialogfenster, Befehle werden jetzt direkt an das Fenster gesendet |
 | **24.06.2020** | **F+** | **Addendum_DB**: umfangreichere *ReadDbf()* Funktion, Fehlerbehebung |

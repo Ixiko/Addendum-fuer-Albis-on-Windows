@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 17.07.2020 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 29.07.2020 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
 ; CONTROLS                                                                                                                                                                                                                                        	(40)
@@ -192,7 +192,7 @@ GetButtonType(hwndButton) {                                                     
 Controls(Control, command, WinTitle
 , HiddenText:=true, HiddenWin:=true, MatchModeSpeed:="slow") {                	;-- Universalfunktion für Steuerelemente
 
-	; ********	    ********		Funktion wächst und gedeiht, gegossen am 14.07.2020
+	; ********	    ********		Funktion wächst und gedeiht, gegossen am 01.08.2020
 	;***	     *    ***	    ***	dependencies: 	Function: ClientToScreen()
 	;***             ***      ***                        	Function: KeyValueObjectFromLists()
 	;***             ***      ***                         	Function: VerifiedSetText() - [ ControlGetText() ]
@@ -344,16 +344,25 @@ Controls(Control, command, WinTitle
 		}
 		else if InStr(command, "ControlFind")	                	{   	; finds a control by its text and returns it's ControlClassNN
 
-				; möglicher Syntax z.B. Controls( "ControlFind, Speichern, Button)" )
-                    searchText		:= Trim(StrSplit(command, ",").2)
-                    searchClass	:= Trim(StrSplit(command, ",").3)
+			; möglicher Syntax z.B. Controls( "ControlFind, Speichern, Button, return hwnd)"
+				searchText 	:= Trim(StrSplit(command, ",").2)
+				searchClass	:= Trim(StrSplit(command, ",").3)
+				returnOpt  	:= Trim(StrSplit(command, ",").4)
 
-                    For ControlClass, ControlHwnd in Ctrl
-                    {
-                    	ControlGetText, ControlText,, % "ahk_id " ControlHwnd
-                    	If InStr(ControlClass, searchClass) && InStr(ControlText, searchText)
-                            	return ControlClass
-                    }
+				For ControlClass, ControlHwnd in Ctrl
+				{
+						ControlGetText, ControlText,, % "ahk_id " ControlHwnd
+						If InStr(ControlClass, searchClass) && InStr(ControlText, searchText) {
+							If RegExMatch(returnOpt, "i)^\s*return\s*both|all")
+								return {"class":ControlClass, "hwnd":ControlHwnd}
+							else if RegExMatch(returnOpt, "i)^\s*return\s*hwnd|id|handle")
+								return ControlHwnd
+							else
+								return ControlClass
+						}
+				}
+
+				return ""
 
 		}
 		else if RegExMatch(command, "^ControlPos")       	{   	; returns the controls position inside window
@@ -422,10 +431,20 @@ Controls(Control, command, WinTitle
 					return cFocus
 		}
 		else if InStr(command, "GetText")                        	{
-				 If class in Edit,ToolbarWindow
-                    	ControlGetText, result,	 , % "ahk_id " Ctrl[Control]
+
+				If (StrLen(Ctrl[Control]) = 0) {
+						throw Control not found!
+						return ""
+				}
+
+				 If class in Edit,ToolbarWindow,Static
+                   	ControlGetText, result,	 		, % "ahk_id " Ctrl[Control]
 				else if class in ComboBox,ListBox,Listview,DropDownList
-                    	ControlGet, result, List  ,,, % "ahk_id " Ctrl[Control]
+                    ControlGet   	, result, List	  ,,, % "ahk_id " Ctrl[Control]
+				else if RegExMatch(Control, "i)WindowsForms.*\.(STATIC|BUTTON)")
+					ControlGetText, result,         	, % "ahk_id " Ctrl[Control]
+
+				return result
 		}
 		else if InStr(command, "Send")                            	{
 				if class in Edit,RichEdit
@@ -746,7 +765,7 @@ VerifiedClick(CName, WTitle="", WText="", WinID="", WaitClose=false) {       	;-
 				WTitle := RegExMatch(WTitle, "^0x[\w]+$")	? ("ahk_id " WTitle)	: (WTitle)
 				WText := ""
 		} else if RegExMatch(WTitle, "^\d+$", digits) {
-				WTitle := StrLen(WTitle) = StrLen(digits)     	? ("ahk_id " digits)  	: (WTitle)
+				WTitle := StrLen(WTitle) = StrLen(digits)      	? ("ahk_id " digits)  	: (WTitle)
 				WText := ""
 		}
 
@@ -757,19 +776,20 @@ VerifiedClick(CName, WTitle="", WText="", WinID="", WaitClose=false) {       	;-
 
 	; 3 verschiedene Wege einen Buttonklick auszulösen
 		ControlClick, % CName, % WTitle, % WText,,, NA
-		If (EL := ErrorLevel)
-		{
+		If (EL := ErrorLevel)		{
+
 				ControlClick, % CName, % WTitle, % WText
-				If (EL :=ErrorLevel)
-				{
+				If (EL := ErrorLevel)				{
+
                     	SendMessage, 0x0201, 1, 0, % CName, % WTitle, % WText                 	;0x0201 - WM_Click
-                    	If (EL:=ErrorLevel)
-                    	{
-                            	ControlGetPos, cx, cy, cw, ch, % CName, % WTitle, % WText
-                            	MouseGetPos, mx, my
-                            	MouseClick, Left, % cx + (cw//2), % cy + (ch//2)
-                            	MouseMove, % mx, % my, 0
+                    	If (EL := ErrorLevel)                    	{
+
+                            	ControlGetPos	, cx, cy, cw, ch, % CName, % WTitle, % WText
+                            	MouseGetPos	, mx, my
+                            	MouseClick   	, Left, % cx + (cw//2), % cy + (ch//2)
+                            	MouseMove  	, % mx, % my, 0
                             	EL := 0
+
                     	}
 				}
 		}
@@ -787,11 +807,11 @@ return (EL = 0 ? 1 : 0)
 
 VerifiedCheck(CName, WTitle="", WText="", WinID="", CheckIt=true) {          	;-- Fensteraktivierung + ControlDelay auf -1 + Kontrolle ob das Control wirklich checked ist jetzt
 
-		; 02.08.2018 - neuer Parameter: CheckIt. Wenn dieser 1, also gesetzt ist, wird ein Häkchen gesetzt , bei 'false' entfernt.
+		; 04.08.2020 - Code effizienter gemacht
+		; 02.08.2018 - neuer Parameter: CheckIt. Wenn dieser true, also gesetzt ist, wird ein Häkchen gesetzt , bei 'false' entfernt.
 		; die Funktion prüft nicht, ob das Setzen oder Entfernen überhaupt notwendig ist, wenn es schon gesetzt oder nicht gesetzt ist
-		; Achtung: diese Funktion macht einen unendlichen Loop wenn
 
-		command	:= "UnCheck"
+		command := CheckIt ? "Check":"UnCheck"
 		tmm      	:= A_TitleMatchMode
 		cd         	:= A_ControlDelay
 
@@ -811,9 +831,8 @@ VerifiedCheck(CName, WTitle="", WText="", WinID="", CheckIt=true) {          	;-
 
 		ControlGet, hCName, hwnd,, % Trim(CName), % WTitle, % WText
 
-		If !InStr(GetButtonType(hCName), "Checkbox")
-		{
-				PraxTT("Fehler in der Funktion VerifiedCheck()`n`nDas angesprochene Steuerelement`nist keine Standard-Checkbox!", "2 0")
+		If !InStr(GetButtonType(hCName), "Checkbox")	{
+				PraxTT("Fehler in der Funktion VerifiedCheck()`n`nDas angesprochene Steuerelement (" CName ")`nist keine Standard-Checkbox!", "5 0")
 				return
 		}
 
@@ -822,25 +841,19 @@ VerifiedCheck(CName, WTitle="", WText="", WinID="", CheckIt=true) {          	;-
 				WinWaitActive, % WTitle, % WText, 1
 		}
 
-		If CheckIt
-			command:= "Check"
-
 		Loop {
 			Control	, % command,, % CName, % WTitle, % WText
             sleep, 50
 			ControlGet, isChecked, checked,, % CName, % WTitle, % WText
-		} until (isChecked = CheckIt)
+		} until (isChecked = CheckIt) || (A_Index > 10)
 
 		SetControlDelay	, % cd
 		SetTitleMatchMode, % tmm
 
-		If ChecktIt
-			return (isChecked = CheckIt ? true : false)
-
-return ErrorLevel
+return (isChecked = CheckIt ? true : false)
 }
 
-VerifiedChoose(CName, WTitle, EntryNr ) {                                                     	;-- wählt einen List- oder Comboboxeintrag
+VerifiedChoose(CName, WTitle, RxStrOrPos ) {                                                     	;-- wählt einen List- oder Comboboxeintrag
 
 	; letzte Änderung: 17.07.2020
 
@@ -861,8 +874,8 @@ VerifiedChoose(CName, WTitle, EntryNr ) {                                       
 		If !CHwnd
 			return 0
 
-	; Funktionsabbruch wenn EntryNr leer oder bei Übergabe einer Dezimalzahl kleiner gleich 0
-		If (StrLen(EntryNr) = 0) || (EntryNr <= 0)
+	; Funktionsabbruch wenn RxStrOrPos leer oder bei Übergabe einer Dezimalzahl kleiner gleich 0
+		If (StrLen(RxStrOrPos) = 0) || (RxStrOrPos <= 0)
 			return 0
 
 	; ermittelt die Einträge im Steuerelement
@@ -870,19 +883,19 @@ VerifiedChoose(CName, WTitle, EntryNr ) {                                       
 		Items := StrSplit(CtrlList, "`n")
 
 	; Auswahl anhand der Positionsnummer setzen
-		If RegExMatch(EntryNr, "^\d+$") {
+		If RegExMatch(RxStrOrPos, "^\d+$") {
 
 			;Abbruch wenn die Positionsnummer nicht existiert
-			If (Items.MaxIndex() < EntryNr)
+			If (Items.MaxIndex() < RxStrOrPos)
 				return 0
 
-			Control, Choose, % EntryNr,, % "ahk_id " CHwnd
+			Control, Choose, % RxStrOrPos,, % "ahk_id " CHwnd
 			return ErrorLevel
 		}
 
 	; Auswahl anhand des übergebenen String setzen
 		For idx, item in Items
-			If RegExMatch(item, EntryNr) {
+			If RegExMatch(item, RxStrOrPos) {
 				Control, Choose, % idx,, % "ahk_id " CHwnd
 				return ErrorLevel
 			}
@@ -1033,17 +1046,20 @@ return
 
 ;\/\/\/\/\/\/\/\/\/\/ Listview Control Funktionen \/\/\/\/\/\/\/\/\/\/
 LV_EX_FindString(HLV, Str, Start := 0, Partial := False) {                       				;-- gibt die Zeilennummer zurück in welchem sich der gesuchte Text befindet
+
    ; LVM_FINDITEM -> http://msdn.microsoft.com/en-us/library/bb774903(v=vs.85).aspx
    Static LVM_FINDITEM := A_IsUnicode ? 0x1053 : 0x100D ; LVM_FINDITEMW : LVM_FINDITEMA
    Static LVFISize := 40
+
    VarSetCapacity(LVFI, LVFISize, 0) ; LVFINDINFO
    Flags := 0x0002 ; LVFI_STRING
    If (Partial)
       Flags |= 0x0008 ; LVFI_PARTIAL
-   NumPut(Flags, LVFI, 0, "UInt")
-   NumPut(&Str,  LVFI, A_PtrSize, "Ptr")
-   SendMessage, % LVM_FINDITEM, % (Start - 1), % &LVFI, , % "ahk_id " . HLV
-   Return (ErrorLevel > 0x7FFFFFFF ? 0 : ErrorLevel + 1)
+   NumPut(Flags	, LVFI, 0        	, "UInt")
+   NumPut(&Str	, LVFI, A_PtrSize	, "Ptr")
+   SendMessage, % LVM_FINDITEM, % (Start - 1), &LVFI,, % "ahk_id " HLV
+
+Return (ErrorLevel > 0x7FFFFFFF ? 0 : ErrorLevel + 1)
 }
 
 LV_GetItemState(HLV, Row) {                                                                         	;-- den Status einer Listviewzeile ermitteln

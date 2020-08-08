@@ -12,7 +12,7 @@
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
 ;       Addendum_PopUpMenu started:    	20.06.2020
-;       Addendum_PopUpMenu last change:	16.07.2020
+;       Addendum_PopUpMenu last change:	01.08.2020
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Addendum_PopUpMenu(hWin, hMenu) {                                                                               	;-- fügt neue Menupunkte dem Rechtsklickmenu der Karteikarte hinzu
@@ -59,16 +59,16 @@ Addendum_PopUpMenu(hWin, hMenu) {                                               
 
 	; Maus Position festhalten, Menu wird durch das Anfügen weiterer Punkte länger und bei Erreichen des unteren Bildschirmrandes nach oben verschoben
 	; die eigentliche Klickposition ist dann nicht mehr feststellbar
-		CoordMode, Mouse, Screen
-		MouseGetPos, MouseScreenX, MouseScreenY
-		pm.MouseX := MouseScreenX
-		pm.MouseY := MouseScreenY
+		CoordMode	,	Mouse, Screen
+		MouseGetPos,	MouseScreenX, MouseScreenY
+		pm.MouseX :=	MouseScreenX
+		pm.MouseY :=	MouseScreenY
 
 	; Kontextmenu - alle Menupunkte ermitteln
 		MenuGetAll_sub(hmenu, "", Lcmds)
 
 	; zusätzliche Menupunkte werden individuell erstellt
-		If RegExMatch(Lcmds, "i)filter\:\s*(\w+)", filter) { ; Rechtsklick Menu der Karteikarte erkannt
+		If RegExMatch(Lcmds, "i)filter\:\s*(\w+)", filter) {                                  	; Rechtsklick Menu der Karteikarte erkannt
 
 				If !ExtMenu.haskey(filter1) || (StrLen(filter1) = 0)
 						return
@@ -79,23 +79,26 @@ Addendum_PopUpMenu(hWin, hMenu) {                                               
 				pm.MenuX	:= pmPosO.X
 				pm.MenuY	:= pmPosO.Y
 
-				Addendum_MenuAppendLabels(hWin, hMenu, ExtMenu[filter1])		; zusätzliche Menupunkte hinzufügen
+				Addendum_MenuAppendLabels(hWin, hMenu, ExtMenu[filter1])		; Menupunkte hinzufügen
 
 				pmPosN    	:= GetWindowSpot(hWin)                                      	; Position des Menu nach der Veränderung
 				newY        	:= pmPosO.Y + pmPosO.H                                  	; Y-Position des angefügten Menu's
 				H              	:= Floor((pmPosN.H - pmPosO.H) / ExtMenu[filter1].MaxIndex())
 				PatID        	:= AlbisAktuellePatID()
 
-				Loop % ExtMenu[filter1].MaxIndex() 	{
+				Loop % ExtMenu[filter1].MaxIndex() 	{                                      	; stellt die zusätzlichen Menupunkte zusammen
 
 						cmd := ExtMenu[filter1][A_Index].cmd
 						If InStr(cmd, "tgram") && !oPat[PatID].tgChatID
+							continue
+						else if InStr(cmd, "fax") && InStr(Addendum.Drucker.FAX, "ERROR")
 							continue
 
 						pm.menu.Push({ 	"filter"	: filter1                                         	; Karteikartenkürzel der Auswahl
 								        		, 	"cmd"	: cmd                                           	; auszuführender Befehl
 								        		,	"StartY"	: (newY+H*(A_Index-1))             	; y1 Position des Menupunktes
 								        		, 	"EndY"	: (newY+H*(A_Index)-1)})           	; y2 Position des Menupunktes
+
 				}
 
 				return pm
@@ -171,7 +174,7 @@ Addendum_PopUpMenuItem(pm) {                                                    
 }
 
 ; Karteikartenkürzel Funktionen
-admMenu_scan(cmd, pm) {
+admMenu_scan(cmd, pm) {                                                                                                   	;-- wird beim Aktenkürzel scan aufgerufen
 
 	; Variablen zur Identifikation von Fenstern
 	static foxitPrint := { "Dialog"	:  "i)Print|Drucken ahk_class i)classFoxitReader ahk_exe i)FoxitReader"
@@ -196,9 +199,13 @@ admMenu_scan(cmd, pm) {
 
 		/* Beschreibung
 
-				- holt sich das Datum und die Bezeichnung des Befundes aus dem Eintrag in der Albis Patientenkarteikarte
-				- erstellt hieraus aus einen zusammengesetzten Dateinamen
-				- erstellt einen mit Patienten ID und Namen versehenen Ordner in dem in der Addendum.ini hinterlegten Export-Ordner
+				- 	holt sich das Datum und die Bezeichnung des Befundes aus dem Eintrag in der Albis Patientenkarteikarte
+				- 	erstellt hieraus aus einen zusammengesetzten Dateinamen
+				- 	erstellt einen mit Patienten ID und Namen versehenen Ordner in dem in der Addendum.ini hinterlegten Export-Ordner
+				- 	öffnet das zu sende Dokument mittels Tastatureingabe (senden der Taste F3)
+				- 	per ShellHook(Addendum.ahk Skript) wird ein Callback zur Funktion admMenu_SaveAs() oder admMenu_print() ausgeführt.
+					wird das Dokument in dem in Albis vom Nutzer hinterlegten PDF-Anzeigeprogramm anzeigt (der Shellhook regiert nur auf den Foxitreader
+					und Sumatra) wird eine der beiden oberen Funktionen aufgerufen
 
 		*/
 
@@ -211,11 +218,11 @@ admMenu_scan(cmd, pm) {
 			If !(FileExist(PatNamePath) = "D")
 				FileCreateDir % PatNamePath
 
-		; Pdf Benennung aus der Karteikarte holen
+		; Pdf (Dokument) Bezeichnung aus der Karteikarte holen
 			BlockInput, On                                                                                                            	; Nutzerinteraktion verhindern
 			AlbisActivate(1)
-			result := AlbisLeseDatumUndBezeichnung(pm.MouseX, pm.MouseY)
-			If !IsObject(result) {
+			result := AlbisLeseDatumUndBezeichnung(pm.MouseX, pm.MouseY)                             	; holt sich das Zeilendatum und den eingetragenen Text
+			If !IsObject(result) {                                                                                                    	; Fehlerbehandlung
 				BlockInput, Off
 				PraxTT("Der Karteikartentext konnte nicht ermittelt werden.`nDer Befundexport ist fehlgeschlagen", "3 0")
 				SendInput, {Escape}
@@ -241,15 +248,35 @@ admMenu_scan(cmd, pm) {
 			SendInput, {F3}
 			BlockInput, Off
 
-	} else if InStr(cmd, "print") {
+	}
+	else if InStr(cmd, "print") {
 
 			BlockInput, On                                                                                                            	; Nutzerinteraktion verhindern
-			result := AlbisLeseDatumUndBezeichnung(pm.MouseX, pm.MouseY)
-			If !IsObject(result)
+			result := AlbisLeseDatumUndBezeichnung(pm.MouseX, pm.MouseY)                             	; holt sich das Zeilendatum und den eingetragenen Text
+			If !IsObject(result) {                                                                                                    	; Fehlerbehandlung
+				BlockInput, Off
+				PraxTT("Der Karteikartentext konnte nicht ermittelt werden.`nDer Dokumentdruck ist fehlgeschlagen", "3 0")
+				SendInput, {Escape}
 				return
-			Addendum.PopUpMenuCallback := "admMenu_PdfPrint|(Karteikartendatum: " result.Datum ", Dokumentname: " result.Text ")"
+			}
+			Addendum.PopUpMenuCallback := "admMenu_PdfPrint|(Karteikartendatum: " result.Datum ", Dokumentname: " result.Text ")#" Addendum.Drucker.StandardA4
 			SendInput, {F3}
 			BlockInput, Off                                                                                                            	; Nutzerinteraktion zulassen
+
+	}
+	else if InStr(cmd, "fax") {
+
+			BlockInput, On                                                                                                            	; Nutzerinteraktion verhindern
+			result := AlbisLeseDatumUndBezeichnung(pm.MouseX, pm.MouseY)                             	; holt sich das Zeilendatum und den eingetragenen Text
+			If !IsObject(result) {                                                                                                    	; Fehlerbehandlung
+				BlockInput, Off
+				PraxTT("Der Karteikartentext konnte nicht ermittelt werden.`nDas Versenden des Dokumentes als Fax ist fehlgeschlagen", "3 0")
+				SendInput, {Escape}
+				return
+			}
+			Addendum.PopUpMenuCallback := "admMenu_PdfPrint|(Karteikartendatum: " result.Datum ", Dokumentname: " result.Text ")#" Addendum.Drucker.FAX
+			SendInput, {F3}
+			BlockInput, Off
 
 	}
 
@@ -314,8 +341,8 @@ Addendum_MenuAppendLabels(hWin, hMenu, labels) {
 return pm
 }
 
-; PDF Reader Funktionen
-admMenu_PdfSaveAs(PdfFullFilePath	, PDFViewerClass, PDFViewerHwnd) {                               	;-- Callback Funktion für Befundexporte
+; PDF Reader/Viewer Funktionen
+admMenu_PdfSaveAs(PdfFullFilePath	, PDFViewerClass, PDFViewerHwnd) {                               	;-- Callback Funktion für Befundexporte (_scan)
 
 		static foxitSaveAs    	:= "Speichern unter ahk_class #32770 ahk_exe FoxitReader.exe"
 		static sumatraSaveAs	:= "Speichern unter ahk_class #32770 ahk_exe SumatraPDF.exe"
@@ -332,7 +359,6 @@ admMenu_PdfSaveAs(PdfFullFilePath	, PDFViewerClass, PDFViewerHwnd) {            
 			VerifiedSetText("Edit1", PdfFullFilePath , hfoxitSaveAs)	; Speicherpfad eingeben
 			VerifiedClick("Button3", hfoxitSaveAs,,, true)               	; Speichern Button drücken
 			FoxitInvoke("Close", PDFViewerHwnd)                        	; dieses Dokument schließen
-			AlbisActivate(2)                                                        	; Albis wieder aktivieren
 
 		}
 		else If InStr(PDFViewerClass, "Sumatra") {	; Sumatra PdfReader
@@ -343,7 +369,6 @@ admMenu_PdfSaveAs(PdfFullFilePath	, PDFViewerClass, PDFViewerHwnd) {            
 			VerifiedSetText("Edit1", PdfFullFilePath , hSaveAs)     	; Speicherpfad eingeben
 			VerifiedClick("Button2", hSaveAs,,, true)                  	; Speichern Button drücken
 			SumatraInvoke("Close", PDFViewerHwnd)                  	; dieses Dokument schließen
-			AlbisActivate(2)                                                        	; Albis wieder aktivieren
 
 		}
 
@@ -354,6 +379,9 @@ admMenu_PdfSaveAs(PdfFullFilePath	, PDFViewerClass, PDFViewerHwnd) {            
 				break
 		}
 
+	; Albis wieder aktivieren
+		AlbisActivate(2)
+
 	; Hinweis über Erfolg oder Mißerfolg
 		If FExists
 			PraxTT("(" FExists ") Der Befund wurde im Verzeichnis:`n" OutDir "`nunter dem Namen:`n" OutFileName "`ngespeichert." , "6 0")
@@ -362,46 +390,48 @@ admMenu_PdfSaveAs(PdfFullFilePath	, PDFViewerClass, PDFViewerHwnd) {            
 
 }
 
-admMenu_PdfPrint(LogText, PDFViewerClass, PDFViewerHwnd) {                                               	;-- Callback Funktion für Pdf-Druck
+admMenu_PdfPrint(Param, PDFViewerClass, PDFViewerHwnd) {                                               	;-- Callback Funktion für Pdf-Druck (_scan)
 
-		static foxitprint    	:= "i)[(Print)|(Drucken)]+ ahk_class i)#32770 ahk_exe i)FoxitReader.exe"
-		static sumatraprint	:= "Speichern unter ahk_class #32770 ahk_exe SumatraPDF.exe"
+	; Funktion bedient den Druck auf einen Hardwaredrucker und auch für virtuelle Druckertreiber z.B. Fax
 
-		SciTEOutput("PdfPrint: " LogText " ," PDFViewerClass ", " PDFViewerHwnd )
+		PraxTT("Pdf Dokument wird gedruckt.`nBitte warten!", "20 3")
+		PatID	:= AlbisAktuellePatID()
+		LogText	:= StrSplit(Param, "#").1
+		Printer	:= StrSplit(Param, "#").2
 
 		If InStr(PDFViewerClass, "Foxit") {                ; FoxitReader
 
-			PatID	 := AlbisAktuellePatID()
-			PdfPage := FoxitReader_GetPages(PDFViewerHwnd)
-			admGui_PatLog(PatID, "AddToLog", LogText)
+			PdfPage := FoxitReader_GetPages(PDFViewerHwnd)                                    	; Seitenzahl des Dokumentes auslesen
+			LogText	 .= ", Dokument mit " PdfPage.max " Seite(n) gedruckt"                       ; LogText präzisieren
+			admGui_PatLog(PatID, "AddToLog", LogText)                                                	; die ausgedruckte Datei inkl. Seitenzahl protokollieren
 
-			OldMatchMode := A_TitleMatchMode
-			SetTitleMatchMode, RegEx
-			FoxitInvoke("Print", PDFViewerHwnd)                       	; 'Drucken' - Dialog
-			WinWait, % foxitPrint,, 6                                          	; wartet 6 Sekunden auf das Dialogfenster
-			hfoxitPrint := GetHex(WinExist(foxitPrint))                	; 'Speichern unter' - Dialog handle
-			SciTEOutput("A4Drucker: " Addendum.Drucker.StandardA4 ", hfoxitPrint: " hfoxitPrint)
-			VerifiedChoose("ComboBox1", hfoxitPrint, Addendum.Drucker.StandardA4)
-			;~ VerifiedClick("Button44", hfoxitPrint,,, true)            	; Speichern Button drücken
-			;FoxitInvoke("Close", PDFViewerHwnd)                       	; dieses Dokument schließen
-			If WinExist("ahk_id " PDFViewerHwnd)
-				WinMinimize, % PDFViewerHwnd
-			AlbisActivate(2)                                                        	; Albis wieder aktivieren
-			SetTitleMatchMode, % OldMatchMode
+			res := FoxitReader_ToPrint(PDFViewerHwnd, Printer)                                    	; Dokument drucken
+			If (res.ItemNr = 0) {                                                                                     	; Fehlerausgabe wenn Drucker nicht vorhanden ist
+				PraxTT("Drucker: " Printer "`nkonnte nicht gefunden werden.`n"
+				      	.  "Bitte die Druckereinstellungen in der Addendum.ini prüfen.", "8 3")
+				return                                                                                                    	; Druck-Dialog wird für manuelle Auswahl offen gelassen
+			}
+			FoxitInvoke("Close", PDFViewerHwnd)                                                           	; dieses Dokument schließen
 
 		}
 		else If InStr(PDFViewerClass, "Sumatra") {	; Sumatra PdfReader
 
-			;~ SumatraInvoke("Print", PDFViewerHwnd)                  	; 'Drucken' - Dialog
-			;~ WinWait, % sumatraSaveAs,, 6                                  	; wartet 6 Sekunden auf das Dialogfenster
-			;~ hSaveAs := GetHex(WinExist(sumatraSaveAs))        	; 'Speichern unter' - Dialog handle
-			;~ VerifiedSetText("Edit1", PdfFullFilePath , hSaveAs)     	; Speicherpfad eingeben
-			;~ VerifiedClick("Button2", hSaveAs,,, true)                  	; Speichern Button drücken
-			;~ SumatraInvoke("Close", PDFViewerHwnd)                  	; dieses Dokument schließen
-			;~ AlbisActivate(2)                                                        	; Albis wieder aktivieren
+			PdfPage := Sumatra_GetPages(PDFViewerHwnd)                                        	; Seitenzahl des Dokumentes auslesen
+			LogText	 .= ", Dokument mit " PdfPage.max " Seite(n) gedruckt"                        ; LogText präzisieren
+			admGui_PatLog(PatID, "AddToLog", LogText)                                                	; die ausgedruckte Datei inkl. Seitenzahl protokollieren
+
+			res := Sumatra_ToPrint(PDFViewerHwnd, Printer)                                        	; Dokument drucken
+			If (res.ItemNr = 0) {                                                                                     	; Fehlerausgabe wenn Drucker nicht vorhanden ist
+				PraxTT("Drucker: " Printer "`nkonnte nicht gefunden werden.`n"
+				      	.  "Bitte die Druckereinstellungen in der Addendum.ini prüfen.", "8 3")
+				return                                                                                                    	; Druck-Dialog wird für manuelle Auswahl offen gelassen
+			}
+			SumatraInvoke("Close", PDFViewerHwnd)                                                    	; Dokument schließen
 
 		}
 
+		PraxTT("", "off")                                                                                                	; Info-Anzeige aus
+		AlbisActivate(2)                                                                                               	; Albis wieder aktivieren
 
 }
 
@@ -410,7 +440,7 @@ AlbisLeseDatumUndBezeichnung(MouseX, MouseY) {                                  
 
 		while (StrLen(KKDatum) = 0) {
 
-			MouseClick, Left, MouseX, MouseY                                                                     	; Mausklick setzt den Cursor
+			MouseClick, Left, MouseX, MouseY                                                                     	; ein Mausklick setzt den Cursor
 			Sleep, 300
 
 			Content 	:= AlbisGetActiveControl("Content")
@@ -424,9 +454,9 @@ AlbisLeseDatumUndBezeichnung(MouseX, MouseY) {                                  
 
 		}
 
-		SendInput, {Escape}
+		SendInput, {Escape}                                                                                               	; Karteikartenzeile freigeben
 
-		PdfTitel  	:= RegExReplace(PdfTitel, "\.*pdf$", "")                                                            ; eventuell noch vorhandene pdf Endung aus dem Karteikartentext entfernen
+		PdfTitel  	:= RegExReplace(PdfTitel, "\.*pdf$", "")                                                    	; eventuell noch vorhandene pdf Endung aus dem Karteikartentext entfernen
 
 return {"Text": PdfTitel, "Datum":KKDatum}
 }

@@ -2,8 +2,8 @@
 
 #### Extends the possibilities through surface analysis and manipulation
 
-### Version 1.33 vom 17.07.2020
-lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* - es sind *Autohotkey_L* sowie *Autohotkey_H* (Multithread Unicode 64bit - Version) notwendig, geschrieben für Albis ab Version 18.40
+### Version 1.34 vom 08.08.2020
+lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 <img src="Docs\TrennerExtraBreit.png" style="zoom: 67%;" />
 
@@ -51,7 +51,7 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* - es sind *Autohotkey_L* s
 
 <h3> &#9733 Vereinfachung der Albisbedienung </h3>
 - erweiterte Tastenkombinationen (Hotkeys) für zusätzliche Funktionalität
-  - **Verschieben von Einträgen** im Dauermedikamenten- und Dauerdiagnosenfenster 
+	- **Verschieben von Einträgen** im Dauermedikamenten- und Dauerdiagnosenfenster 
   - **Kopieren**, **Ausschneiden** und **Einfügen** mit der von Windows gewohnten Tastenkombination
   - **Schließen** einer Krankenakte oder **Anzeigen** der nächsten geöffneten
   - Einstellen des aktuellen **Tagesdatums**
@@ -76,6 +76,10 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* - es sind *Autohotkey_L* s
 
 <h3> &#9733 Unterstützung des Laborabrufes </h3>
 - Übernimmt automatisch nach manuellem Start des Laborabrufes die weiteren Vorgänge bis hin zum Übertragen der Befunde ins Laborblatt  (funktioniert nur teilweise)
+
+<h3> &#9733 Automatisierung DICOM-Daten Umwandlung </h3>
+
+- [MicroDicom](https://www.microdicom.com), der freie DICOM-Viewer für Windows, wird automatisiert für eine schnelle Umwandlung der Daten in Bild- oder Videodateien 
 
 
 <h3> &#9733 Funktionsbibliothek für eigene Skriptentwicklung </h3>
@@ -142,11 +146,11 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
 ## ![Hotkey](Docs/Icons/Hotkey.png) <u>sinnvollere Albiskürzel</u>
 
 - **Kopieren**, **Ausschneiden** und **Einfügen** ist mit den üblichen Kürzeln überall in Albis möglich 
-    - **Kopieren:**                                      ![](Docs/Icons/Key-White_Strg-Links.png)+![](Docs/Icons/Key-White-c.png)
-    - **Ausschneiden: **                            ![](Docs/Icons/Key-White_Strg-Links.png)+![](Docs/Icons/X.png)
-    - **Einfügen:**                                       ![](Docs/Icons/Key-White_Strg-Links.png)+![](Docs/Icons/Key-White-v.png)
-  - **Schließen einer Karteikarte:**   ![](Docs/Icons/Alt.png)+![](Docs/Icons/runter.png) 
-  - **zur nächsten Karteikarte:**        ![](Docs/Icons/Alt.png)+![](Docs/Icons/hoch.png) 
+    - **Kopieren:**                                      ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![](Docs/Icons/Key-White-c.png)
+    - **Ausschneiden: **                            ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![](Docs/Icons/X.png)
+    - **Einfügen:**                                       ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![](Docs/Icons/Key-White-v.png)
+  - **Schließen einer Karteikarte:**   ![](Docs/Icons/Alt.png)+![runter](Docs/Icons/runter.png) 
+  - **zur nächsten Karteikarte:**        ![](Docs/Icons/Alt.png)+![hoch](Docs/Icons/hoch.png) 
   - **Laborblatt zeigen:**                      ![](Docs/Icons/Alt.png)+![](Docs/Icons/rechts.png) 
   - **Karteikarte zeigen:**                    ![](Docs/Icons/Alt.png)+![](Docs/Icons/Links.png) 
   - **Einstellen des aktuellen Tagesdatums:**   ![](Docs/Icons/Alt.png)+![](Docs/Icons/F5.png) 

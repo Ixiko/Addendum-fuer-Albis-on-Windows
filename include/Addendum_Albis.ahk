@@ -441,7 +441,7 @@ AlbisLVContent(hWin, LVClass:="SysListView321", Column:="1") {     	;-- Listview
 
 		LVRow := Object()
 
-		ControlGet, result, List, , % LVClass, ahk_id %hWin%	;Col%A_Index%
+		ControlGet, result, List,, % LVClass, % "ahk_id " hWin	;Col%A_Index%
 
 		Loop, Parse, result, `n
 			If (StrLen(A_LoopField) > 0) {
@@ -450,13 +450,10 @@ AlbisLVContent(hWin, LVClass:="SysListView321", Column:="1") {     	;-- Listview
 				LVRow[rowNr] 	:= Object()
 				            	col 	:= StrSplit(A_LoopField, "`t")
 
-				Loop, % col.MaxIndex() {
+				Loop, % col.MaxIndex()
 					LVRow[rowNr].Push(col[A_Index])
-				}
 
 			}
-
-
 
 return LVRow
 }
@@ -1846,12 +1843,12 @@ AlbisRezeptHelferGui(dbfile) {                                                  
 		RPos                	:= GetWindowSpot(hMuster16)
 
 	; im Moment nur so ermittelbare Position des Karteikarten Filter Steuerelementes (SysTabControl32[nr] - nr variiert)
+	; gebraucht für die Positionierung des Rezeptfensters innerhalb von Albis
 		hMdiChild     	:= AlbisGetActiveMDIChild()
 		WinGet, CtrlList, ControlListHWND, % "ahk_id " hMdiChild
 		Loop, Parse, CtrlList, `n
 		{
-				hwnd := A_LoopField
-				class := GetClassName(hwnd)
+				class := GetClassName(hwnd := A_LoopField)
 				If InStr(class, "AfxFrameOrView140") {
 					hAfxFOV := hwnd
 					TPos    	:= GetWindowSpot(hAfxFOV)
@@ -1897,16 +1894,16 @@ AlbisRezeptHelferGui(dbfile) {                                                  
 		For i, val in Rezepte.Object()
 			DDLValues .= "|" val.Bezeichner
 
-	; Rezeptposition auf dem Monitor ermitteln
-		ControlGetPos, cx, cy,, ch, Button73, % "ahk_id " hMuster16
+	; Schnell-Rezeptposition wird unterhalb des Steuerelementes Arzneimitteldatenbank angezeigt
+		ControlGetPos, cx, cy, cw, ch, Button76, % "ahk_id " hMuster16
 
 	; Gui erstellen
-		Gui, RH: New, -Caption -DPIScale +ToolWindow +HWNDhRezeptHelfer  +E0x00000004 -0x04020000 Parent%hMuster16%
+		Gui, RH: New, -Caption -DPIScale +ToolWindow +HWNDhRezeptHelfer +E0x00000004 -0x04020000 Parent%hMuster16%
 		Gui, RH: Margin, 0, 0
 		Gui, RH: Font, s8 q5 cBlack, MS Sans Serif
 		Gui, RH: Add, DDL 	, % "x+5 w380 AltSubmit vRezeptwahl gRezeptausgewaehlt HWNDhRezeptWahl" , % DDLValues
 		Gui, RH: Add, Button , % "x+5 gRezeptLeeren HWNDhRHelferBtn1"                                                    	, % "alle Felder leeren"
-		Gui, RH: Show, % "x" cX - 190 " y" cY + cH - 20 " NoActivate", Rezepthelfer
+		Gui, RH: Show, % "x" cx + cw + 35 " y" cY + cH + 5 " NoActivate", Rezepthelfer
 		GuiControl, RH: Choose, Rezeptwahl, 1
 
 		RHStatus := true

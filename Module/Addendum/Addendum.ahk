@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                                                                       	ADDENDUM HAUPTSKRIPT
-global                                                                               AddendumVersion:= "1.33" , DatumVom:= "17.07.2020"
+global                                                                               AddendumVersion:= "1.34" , DatumVom:= "08.08.2020"
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                    ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . . . . . . .                                           BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -20,6 +20,13 @@ global                                                                          
 
 /*               	A DIARY OF CHANGES
 Beispiel:| **08.12.2018** | **F+** | IPC - Inter Process Communication - zwischen dem Addendum und Praxomat Skript steht, das Addendumskript kann somit weitere Funktionen übernehmen (V0.98b) |
+| **31.07.2020** | **F+** | **Addendum - PopUpMenu**: direkter PDF-Druck und PDF-Export aus der Akte für den Sumatra PDF-Viewer ermöglicht |
+| **31.07.2020** | **F~** | **libs\SciteOutPut.ahk**: fügt neuen Text immer an das Ende der Ausgabe ein|
+| **01.08.2020** | **F+** | **Addendum_Controls - Controls()**: der Funktionsbefehl "ControlFind" hat einen 3. Sub-Parameter erhalten für die optionale Rückgabe entweder der Steuerelement Klasse oder/und des Handle, der Befehl "GetText" gibt das Ergebnis zurück (return Befehl vergessen) und kann jetzt auch mit WindowsForms Steuerelementen umgehen|
+| **01.08.2020** | **F+** | **Addendum - Sumatra_GetPages(), Sumatra_ToPrint(), FoxitReader_GetPages(), FoxitReader_ToPrint**: *_GetPages* Funktionen ermitteln die angezeigte Seite und die maximale Seitenzahl im aktuell angezeigten Dokument, die *_ToPrint* Funktionen automatisieren den Dokumentdruck auf einen bestimmten Drucker |
+| **04.08.2020** | **F+** | **Addendum** - das *Schnellrezept* läßt sich ein- und ausschalten |
+| **05.08.2020** | **F+** | **Addendum** - RPA für MicroDicom einem freien DICOM Viewer integriert (Dicom2Albis Ersatz) V1.34|
+| **08.08.2020** | **F+** | **Addendum_Gui** - Optimierung der Dialoganzeigen|
 
 
 
@@ -186,7 +193,7 @@ Beispiel:| **08.12.2018** | **F+** | IPC - Inter Process Communication - zwische
 
 		Addendum.Debug := false                                                	; gibt Daten in meine Standardausgabe (Scite) aus wenn = true
 
-	; Vordefinition für Subobjekte + diverse Variablen	;{
+	; Definition Subobjekte + diverse Variablen	;{
 
 		Addendum.AlbisMenu            	:= Object()                        	; wm_command Daten für Dialogaufrufe in Albis
 		Addendum.Chroniker            	:= Array()                         	; Patient ID's der Chroniker
@@ -204,7 +211,6 @@ Beispiel:| **08.12.2018** | **F+** | IPC - Inter Process Communication - zwische
 		Addendum.Thread                  	:= Array()                          	; enthält die PID's gestarteter Threads (z.B. AddendumToolbar)
 		Addendum.MsgGui               	:= Object()                        	; Gui für Interskript Kommunikation
 		Addendum.Drucker               	:= Object()                          	; verschiedene Druckereinstellungen
-
 		Addendum.AktuellerTag	    	:= A_DD                            	; der aktuelle Tag
 
 		; Hotkey Tips für die Statusbar von Albis
@@ -216,14 +222,16 @@ Beispiel:| **08.12.2018** | **F+** | IPC - Inter Process Communication - zwische
 
 		Addendum.AddendumDir                	:= AddendumDir
 		Addendum.AddendumIni               	:= AddendumDir "\Addendum.ini"
-		Addendum.AdditionalData_Path       	:= IniReadExt("Addendum"           	, "AdditionalData_Path"  	, AddendumDir "\include\Daten")
-		Addendum.DosisDokumentenPfad   	:= IniReadExt("Addendum"            	, "DosisDokumentenPfad")                 	; Pfad zu MS Word Dokumenten mit eigenen Hinweisen zu Medikamentendosierungen
-		Addendum.DBPath                          	:= IniReadExt("Addendum"          	, "AddendumDBPath")                       	; Datenbankverzeichnis
-		Addendum.BefundOrdner                	:= IniReadExt("ScanPool"             	, "BefundOrdner")                             	; BefundOrdner = Scan-Ordner für neue Befundzugänge
-		Addendum.ExportOrdner                	:= IniReadExt("ScanPool"             	, "ExportOrdner", Addendum.BefundOrdner)
-		Addendum.TPPath	                        	:= Addendum.DBPath "\Tagesprotokolle\" A_YYYY                                	; Tagesprotokollverzeichnis
-		Addendum.TPFullPath                      	:= Addendum.TPPath "\" A_MM "-" A_MMMM "_TP.txt"	                        	; Name des aktuellen Tagesprotokolls
-		Addendum.AlbisExe                         	:= IniReadExt("Albis"                  	, "AlbisExe" )                                  	; Pfad zum Albis-Stammverzeichnis --- es wäre besser diesen aus der Registry auszulesen!
+		Addendum.DosisDokumentenPfad   	:= IniReadExt("Addendum" 	, "DosisDokumentenPfad"	)              	; MS Word Dateien mit eigenen Hinweisen zu Medikamentendosierungen
+		Addendum.DBPath                          	:= IniReadExt("Addendum" 	, "AddendumDBPath"     	)              	; Datenbankverzeichnis
+		Addendum.BefundOrdner                	:= IniReadExt("ScanPool"     	, "BefundOrdner"            	)             	; BefundOrdner = Scan-Ordner für neue Befundzugänge
+		Addendum.VideoOrdner                	:= IniReadExt("ScanPool"     	, "VideoOrdner"             	)             	; Video's z.B. aus Dicom CD's (CT Bilder u.a.)
+		Addendum.AlbisExe                         	:= IniReadExt("Albis"           	, "AlbisExe"                    	)             	; Pfad zum Albis-Stammverzeichnis
+		Addendum.TPPath	                        	:= Addendum.DBPath "\Tagesprotokolle\" A_YYYY                     	; Tagesprotokollverzeichnis
+		Addendum.TPFullPath                      	:= Addendum.TPPath "\" A_MM "-" A_MMMM "_TP.txt" 	               	; Name des aktuellen Tagesprotokolls
+
+		Addendum.ExportOrdner                	:= IniReadExt("ScanPool"   	, "ExportOrdner"        	, Addendum.BefundOrdner "\Export")
+		Addendum.AdditionalData_Path       	:= IniReadExt("Addendum"	, "AdditionalData_Path" 	, AddendumDir "\include\Daten")
 		;Addendum.7ZipDir                        	:= RegRead64("HKEY_CURRENT_USER\Software\7-Zip", "Path64")
 
 	;}
@@ -231,15 +239,15 @@ Beispiel:| **08.12.2018** | **F+** | IPC - Inter Process Communication - zwische
 	; Standard-Einstellungen für Gui's                  	;{
 
 		; sie können die Schriftart und das Farbdesign der Addendum-Dialogfenstern ändern (in der Addendum.ini Datei!)
-		Addendum.StandardFont                	:= IniReadExt("Addendum"         	, "StandardFont")
-		Addendum.StandardBoldFont          	:= IniReadExt("Addendum"         	, "StandardBoldFont")
-		Addendum.StandardFontSize          	:= IniReadExt("Addendum"         	, "StandardFontSize")
-		Addendum.DefaultFntColor            	:= IniReadExt("Addendum"         	, "DefaultFntColor")
-		Addendum.DefaultBGColor            	:= IniReadExt("Addendum"         	, "DefaultBGColor")
-		Addendum.DefaultBGColor1          	:= IniReadExt("Addendum"         	, "DefaultBGColor1")
-		Addendum.DefaultBGColor2          	:= IniReadExt("Addendum"         	, "DefaultBGColor2")
-		Addendum.DefaultBGColor3          	:= IniReadExt("Addendum"         	, "DefaultBGColor3")
-		Addendum.hashtagNachricht         	:= IniReadExt("Addendum"         	, "HASHtagNachricht"	, "")
+		Addendum.StandardFont                	:= IniReadExt("Addendum"	, "StandardFont"        	)
+		Addendum.StandardBoldFont          	:= IniReadExt("Addendum"	, "StandardBoldFont"    	)
+		Addendum.StandardFontSize          	:= IniReadExt("Addendum"	, "StandardFontSize"    	)
+		Addendum.DefaultFntColor            	:= IniReadExt("Addendum"	, "DefaultFntColor"     	)
+		Addendum.DefaultBGColor            	:= IniReadExt("Addendum"	, "DefaultBGColor"     	)
+		Addendum.DefaultBGColor1          	:= IniReadExt("Addendum"	, "DefaultBGColor1"   	)
+		Addendum.DefaultBGColor2          	:= IniReadExt("Addendum"	, "DefaultBGColor2"   	)
+		Addendum.DefaultBGColor3          	:= IniReadExt("Addendum"	, "DefaultBGColor3"   	)
+		Addendum.hashtagNachricht         	:= IniReadExt("Addendum"	, "HASHtagNachricht", "")
 		Addendum.dpiF                               	:= screenDims().DPI / 96                                                                   	; DPI-Faktor
 
 	;}
@@ -295,26 +303,29 @@ Beispiel:| **08.12.2018** | **F+** | IPC - Inter Process Communication - zwische
 
 	; zu- und abschaltbare Funktionen             	;{
 
-		Addendum.AlbisLocationChange  	:= IniReadExt(compname, "Albis_AutoGroesse"                          , "ja")      	; automatische Größe von Albis ist an
-		Addendum.WordAutoSize              := IniReadExt(compname, "Microsoft_Word_AutoGroesse"          , "nein")    	; automatische Größenanpassung eines Wordfenster
-		Addendum.GVUAutomation			:= IniReadExt(compname, "GVU_automatisieren"                       , "nein")    	; Automatisierung der GVU Formulare
-		Addendum.PDFSignieren   	    	:= IniReadExt(compname, "FoxitPdfSignature_automatisieren"  	, "nein")    	; Automatisierung PDF Signierung
-		Addendum.PDFSignieren_Kuerzel	:= IniReadExt(compname, "FoxitPdfSignature__Kuerzel" 	        	, "Insert")  	; Tastaturkürzel zum Auslösen des Signaturvorganges
-		Addendum.AutoCloseFoxitTab   	:= IniReadExt(compname, "FoxitTabSchliessenNachSignierung"  	, "Ja")    	; signiertes Dokument automatisch schliessen
-		Addendum.Labor.AbrufTimer         := IniReadExt(compname, "Laborabruf_Timer"           	   	    		, "nein")    	; zeitgesteuerter Laborabruf
-		Addendum.Labor.AutoAbruf 		    := IniReadExt(compname, "Laborabruf_automatisieren"              , "nein")    	; Laborabruf bei manuellem Start automatisieren
-		Addendum.AddendumGui          	:= IniReadExt(compname, "Infofenster_anzeigen"                     	, "ja")      	; Infofenster das den Inhalt des Bildvorlagen-Ordners anzeigt
+		Addendum.AlbisLocationChange  	:= IniReadExt(compname	, "Albis_AutoGroesse"                         , "ja"  	)  	; automatische Größe von Albis ist an
+		Addendum.WordAutoSize              := IniReadExt(compname	, "Microsoft_Word_AutoGroesse"         , "nein"	)  	; automatische Größenanpassung eines Wordfenster
+		Addendum.GVUAutomation			:= IniReadExt(compname	, "GVU_automatisieren"                      , "nein"	)  	; Automatisierung der GVU Formulare
+		Addendum.PDFSignieren   	    	:= IniReadExt(compname	, "FoxitPdfSignature_automatisieren"   , "nein"	)  	; Automatisierung PDF Signierung
+		Addendum.PDFSignieren_Kuerzel	:= IniReadExt(compname	, "FoxitPdfSignature__Kuerzel" 	       	, "Insert")  	; Tastaturkürzel zum Auslösen des Signaturvorganges
+		Addendum.AutoCloseFoxitTab   	:= IniReadExt(compname	, "FoxitTabSchliessenNachSignierung"	, "Ja" 	)  	; signiertes Dokument automatisch schliessen
+		Addendum.Labor.AbrufTimer         := IniReadExt(compname	, "Laborabruf_Timer"           	   	    	, "nein"	) 	; zeitgesteuerter Laborabruf
+		Addendum.Labor.AutoAbruf 		    := IniReadExt(compname	, "Laborabruf_automatisieren"            , "nein"	) 	; Laborabruf bei manuellem Start automatisieren
+		Addendum.AddendumGui          	:= IniReadExt(compname	, "Infofenster_anzeigen"                     	, "ja" 	)  	; Infofenster das den Inhalt des Bildvorlagen-Ordners anzeigt
+		Addendum.PatLog                      	:= IniReadExt(compname	, "Logbuch_Patienten"                       	, "ja" 	)  	; Addendum Logbuch für Aktionen in der Patientenkartei ja = eingeschaltet
+		Addendum.mDicom                     	:= IniReadExt(compname	, "MicroDicomExport_automatisieren" 	, "ja" 	)  	; Hilfe beim Export von Dicom CD's im MicroDicom Programm
+		Addendum.Schnellrezept           	:= IniReadExt("Addendum"	, "Schnellrezept"                                	, "ja" 	)  	; Schnellrezept integrieren
 
 	;}
 
 	; Labor abrufen - manuell oder zeitgesteuert	;{
 
-		Addendum.Labor.LDTDirectory     	:= IniReadExt("Labor", "LDTDirectory"           	    , "C:\Labor")
-		Addendum.Labor.LaborName       	:= IniReadExt("Labor", "LaborName"             	    , "")              	; falls sie mehrere Laboreinträge haben (z.B. nach Wechsel) tragen Sie das aktuelle hier ein
-		Addendum.Labor.Laborkuerzel     	:= IniReadExt("Labor", "Aktenkuerzel"           	    , "labor")      	; Karteikartenkürzel um Informationen ablegen zu können
-		Addendum.Labor.Alarmgrenze     	:= IniReadExt("Labor", "Alarmgrenze"           	    , "30%")	    	; Alarmierungsgrenze in Prozent oberhalb der Normgrenzen
-		Addendum.Labor.AbrufZeiten      	:= IniReadExt("Labor", "LaborAbruf_Zeiten"   	    , "")	    		; z.B. "06:00, 15:00, 19:00, 21:00"
-		Addendum.Labor.Kennwort       	:= IniReadExt("Labor", "LaborKennwort"       	    , "")	    		; für order&entry per CGM-Channel
+		Addendum.Labor.LDTDirectory     	:= IniReadExt("Labor"     	, "LDTDirectory"                        , "C:\Labor"	)
+		Addendum.Labor.LaborName       	:= IniReadExt("Labor"     	, "LaborName"                             	    , ""    	)  	; falls sie mehrere Laboreinträge haben (z.B. nach Wechsel) tragen Sie das aktuelle hier ein
+		Addendum.Labor.Laborkuerzel     	:= IniReadExt("Labor"     	, "Aktenkuerzel"                            	    , "labor")  	; Karteikartenkürzel um Informationen ablegen zu können
+		Addendum.Labor.Alarmgrenze     	:= IniReadExt("Labor"     	, "Alarmgrenze"                            	    , "30%"	)  	; Alarmierungsgrenze in Prozent oberhalb der Normgrenzen
+		Addendum.Labor.AbrufZeiten      	:= IniReadExt("Labor"     	, "LaborAbruf_Zeiten"                    	    , ""    	)	; z.B. "06:00, 15:00, 19:00, 21:00"
+		Addendum.Labor.Kennwort       	:= IniReadExt("Labor"     	, "LaborKennwort"                        	    , ""    	)	; für order&entry per CGM-Channel
 		If InStr(Addendum.Labor.Kennwort, "Error")
 			Addendum.Labor.Kennwort := ""
 
@@ -329,25 +340,25 @@ Beispiel:| **08.12.2018** | **F+** | IPC - Inter Process Communication - zwische
 
 	; Pdf Verarbeitung                                       	;{
 
-		Addendum.xpdfPath				       	:= IniReadExt("ScanPool"                	, "xpdfPath"                                 	, AddendumDir "\include\xpdf")
-		Addendum.PDFReaderFullPath      	:= IniReadExt("ScanPool"                	, "PDFReaderFullPath"                 	, AddendumDir "\include\FoxitReader\FoxitReaderPortable\FoxitReaderPortable.exe")
-		Addendum.PDFReaderName        	:= IniReadExt("ScanPool"                	, "PDFReaderName"     	            	, "FoxitReader")
-		Addendum.PDFReaderWinClass    	:= IniReadExt("ScanPool"                	, "PDFReaderWinClass"               	, "classFoxitReader")
-		Addendum.SignatureCount        	:= IniReadExt("ScanPool"                	, "SignatureCount")
-		Addendum.Ort                             	:= IniReadExt("ScanPool"                	, "Ort")
-		Addendum.Grund                        	:= IniReadExt("ScanPool"                	, "Grund")
-		Addendum.SignierenAls             	:= IniReadExt("ScanPool"                	, "SignierenAls")
-		Addendum.DokumentSperren     	:= IniReadExt("ScanPool"                	, "DokumentNachDerSignierungSperren", "ja")
-		Addendum.Darstellungstyp         	:= IniReadExt("ScanPool"                	, "DarstellungsTyp")
-		Addendum.PasswortOn               	:= IniReadExt("ScanPool"                	, "PasswortOn", "nein")
-		Addendum.PatAkteSofortOeffnen  	:= IniReadExt("ScanPool"                	, "Patientenakte_sofort_oeffnen"   	, "ja")
-		Addendum.SignatureWidth          	:= IniReadExt("ScanPool"                	, "Signature_Breite"                    	, 50)
-		Addendum.SignatureHeight          	:= IniReadExt("ScanPool"                	, "Signature_Hoehe"                    	, 25)
+		Addendum.xpdfPath				       	:= IniReadExt("ScanPool"     	, "xpdfPath"                                 	, AddendumDir "\include\xpdf")
+		Addendum.PDFReaderFullPath      	:= IniReadExt("ScanPool"     	, "PDFReaderFullPath"                 	, AddendumDir "\include\FoxitReader\FoxitReaderPortable\FoxitReaderPortable.exe")
+		Addendum.PDFReaderName        	:= IniReadExt("ScanPool"     	, "PDFReaderName"     	            	, "FoxitReader")
+		Addendum.PDFReaderWinClass    	:= IniReadExt("ScanPool"     	, "PDFReaderWinClass"               	, "classFoxitReader")
+		Addendum.SignatureCount        	:= IniReadExt("ScanPool"     	, "SignatureCount")
+		Addendum.Ort                             	:= IniReadExt("ScanPool"     	, "Ort")
+		Addendum.Grund                        	:= IniReadExt("ScanPool"     	, "Grund")
+		Addendum.SignierenAls             	:= IniReadExt("ScanPool"     	, "SignierenAls")
+		Addendum.DokumentSperren     	:= IniReadExt("ScanPool"     	, "DokumentNachDerSignierungSperren", "ja")
+		Addendum.Darstellungstyp         	:= IniReadExt("ScanPool"     	, "DarstellungsTyp")
+		Addendum.PasswortOn               	:= IniReadExt("ScanPool"     	, "PasswortOn", "nein")
+		Addendum.PatAkteSofortOeffnen  	:= IniReadExt("ScanPool"     	, "Patientenakte_sofort_oeffnen"   	, "ja")
+		Addendum.SignatureWidth          	:= IniReadExt("ScanPool"     	, "Signature_Breite"                    	, 50)
+		Addendum.SignatureHeight          	:= IniReadExt("ScanPool"     	, "Signature_Hoehe"                    	, 25)
 
-		SPData.xpdfPath				           	:= IniReadExt("ScanPool"                   	, "xpdfPath"                               	, AddendumDir "\include\xpdf")
-		SPData.PDFReaderFullPath           	:= IniReadExt("ScanPool"                  	, "PDFReaderFullPath"                	, AddendumDir "\include\FoxitReader\FoxitReaderPortable\FoxitReaderPortable.exe")
-		SPData.PDFReaderName              	:= IniReadExt("ScanPool"                 	, "PDFReaderName"                   	, "FoxitReader")
-		SPData.PDFReaderWinClass         	:= IniReadExt("ScanPool"                 	, "PDFReaderWinClass"              	, "classFoxitReader")
+		SPData.xpdfPath				           	:= IniReadExt("ScanPool"       	, "xpdfPath"                               	, AddendumDir "\include\xpdf")
+		SPData.PDFReaderFullPath           	:= IniReadExt("ScanPool"       	, "PDFReaderFullPath"                	, AddendumDir "\include\FoxitReader\FoxitReaderPortable\FoxitReaderPortable.exe")
+		SPData.PDFReaderName              	:= IniReadExt("ScanPool"      	, "PDFReaderName"                   	, "FoxitReader")
+		SPData.PDFReaderWinClass         	:= IniReadExt("ScanPool"      	, "PDFReaderWinClass"              	, "classFoxitReader")
 		SPData.BefundOrdner                  	:= Addendum.BefundOrdner
 		SPData.MaxFiles                           	:= ScanPoolArray("Load", Addendum.BefundOrdner "\PdfIndex.txt")
 
@@ -480,31 +491,33 @@ Beispiel:| **08.12.2018** | **F+** | IPC - Inter Process Communication - zwische
 
 	;}
 
+	; Einlesen des heutigen Tagesprotokoll       	;{
+
+		TProtokoll := LeseTagesProtokoll()
+
+	;}
+
 	;}
 
 	;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	; Tray Menu erstellen
 	;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-
-		;fnCall := Object()
 		func_NoNo                     	:= Func("NoNo")
 		func_ZeigePatDB             	:= Func("ZeigePatDB")
 		func_ZeigeFehlerProtokoll	:= Func("ZeigeFehlerProtokoll")
 		func_ZeigeOnExitProtokoll	:= Func("ZeigeOnExitProtokoll")
 		func_ZeigeGVUs              	:= Func("GVU_Gui")
 
-		If (hIconAddendum:= Create_Addendum_ico())
+		If (hIconAddendum := Create_Addendum_ico())
 			Menu, Tray, Icon				, % "hIcon: " hIconAddendum
 		else
 			Menu, Tray, Icon				, % A_ScriptDir "\Addendum.ico"
 
 		Menu, Tray, NoStandard
-
 		Menu, Tray, Tip					, % StrReplace(A_ScriptName, ".ahk") " V." AddendumVersion " vom " DatumVom
 													. "`nClient: " compName SubStr("                   ", 1, Floor((20 - StrLen(compName))/2))
 													. "`nPID: " DllCall("GetCurrentProcessId")
 													. "`nAutohotkey.exe: " A_AhkVersion
-
 		Menu, Tray, Add				, Addendum, % func_NoNo
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
@@ -564,7 +577,7 @@ Beispiel:| **08.12.2018** | **F+** | IPC - Inter Process Communication - zwische
 	; per Checkbox zu- oder abschaltbare Funktionen (SubMenu3)
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
 
-	  ; automatische Anpassung von Albis an die Monitorauflösung 	;{
+	; automatische Anpassung von Albis an die Monitorauflösung 	;{
 		If InStr(compname, "SP1") {
 			Menu, SubMenu3, Add, % "Pause Addendum"	, Menu_PauseAddendum
 			Menu, SubMenu3, Add, % "Albis AutoSize"      	, Menu_AlbisAutoPosition
@@ -575,7 +588,7 @@ Beispiel:| **08.12.2018** | **F+** | IPC - Inter Process Communication - zwische
 		}
 		;}
 
-	  ; AddendumGui - Infofenster                                                	;{
+	; AddendumGui - Infofenster                                                    	;{
 		Menu, SubMenu3, Add, % "Addendum Infofenster", Menu_AddendumGui
 		If Addendum.AddendumGui
 			Menu, SubMenu3, Check	  , % "Addendum Infofenster"
@@ -583,7 +596,7 @@ Beispiel:| **08.12.2018** | **F+** | IPC - Inter Process Communication - zwische
 			Menu, SubMenu3, UnCheck, % "Addendum Infofenster"
 	  ;}
 
-	  ; Automatisierung der GVU Formulare                                  	;{
+	; Automatisierung der GVU Formulare                                      	;{
 		Menu, SubMenu3, Add, % "Albis GVU automatisieren", Menu_GVUAutomation
 		If Addendum.GVUAutomation
 			Menu, SubMenu3, Check	  , % "Albis GVU automatisieren"
@@ -591,7 +604,7 @@ Beispiel:| **08.12.2018** | **F+** | IPC - Inter Process Communication - zwische
 			Menu, SubMenu3, UnCheck, % "Albis GVU automatisieren"
 		;}
 
-	  ; Automatisierung der PDF Signierung mit dem FoxitReader    	;{
+	; Automatisierung der PDF Signierung mit dem FoxitReader        	;{
 		Menu, SubMenu3, Add, FoxitReader Signaturhilfe                            	, Menu_PDFSignatureAutomation
 		Menu, SubMenu3, Add, FoxitReader Dokument automatisch schliessen, Menu_PDFSignatureAutoTabClose
 
@@ -611,7 +624,7 @@ Beispiel:| **08.12.2018** | **F+** | IPC - Inter Process Communication - zwische
 
 		;}
 
-	  ; Laborabruf automatisieren für manuelle Vorgänge, das Menu für den Client der regelmäßig die Labordatenabrufen soll wird hier auch erstellt ;{
+	; Laborabruf automatisieren                                                   	;{
 
 		If !InStr(Addendum.Labor.AutoAbruf, "Error") {
 
@@ -635,12 +648,25 @@ Beispiel:| **08.12.2018** | **F+** | IPC - Inter Process Communication - zwische
 
 		} ;}
 
-	  ; MS Word mit fester Größe ;{
+	; MS Word mit fester Größe                                                   	;{
 		Menu, SubMenu3, Add, % "Microsoft Word AutoSize", Menu_MSWordAutoPosition
 		If Addendum.WordAutoSize
 			Menu, SubMenu3, Check	  , % "Microsoft Word AutoSize"
 		else
 			Menu, SubMenu3, UnCheck, % "Microsoft Word AutoSize"
+	;}
+
+	; Schnellrezept                                                                       	;{
+		Menu, SubMenu3, Add, % "Schnellrezept", Menu_Schnellrezept
+		If Addendum.Schnellrezept
+			Menu, SubMenu3, Check	  , % "Schnellrezept"
+		else
+			Menu, SubMenu3, UnCheck, % "Schnellrezept"
+	;}
+
+	; MicroDicom Dateiexport automatisieren                                 	;{
+		Menu, SubMenu3, Add, % "MicroDicom Export", Menu_MDicom
+		Menu, SubMenu3, % (Addendum.mDicom ? "Check":"UnCheck"), % "MicroDicom Export"
 	;}
 
 	;}
@@ -743,12 +769,6 @@ Beispiel:| **08.12.2018** | **F+** | IPC - Inter Process Communication - zwische
 	;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
 		If FileExist(Addendum.DBPath "\Patienten.txt")
 			oPat:= ReadPatientDatabase(Addendum.DBPath)
-	;}
-
-	;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	; Einlesen des heutigen Tagesprotokoll bei Skript Neu- oder Restart , Anlegen eines neuen Ordner zum Jahreswechsel
-	;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-		TProtokoll := LeseTagesProtokoll()
 	;}
 
 ;}
@@ -878,11 +898,6 @@ HotkeyLabel:
 	Hotkey, !Left  					, Karteikarte      									;= Albis: Karteikarte des Patienten anzeigen
 	Hotkey, IfWinActive
 
-	;~ InKarteikarte := Func("AlbisKarteikarteAktiv") ; das war ein Test
-	;~ Hotkey, If, % InKarteikarte                                                           	;~~ ALBIS Hotkey - nur auslösbar wenn eine Akte geöffnet ist
-	;~ Hotkey, ~RButton          	, KarteikartenMenu
-	;~ Hotkey, If
-
 	Hotkey, IfWinExist, ahk_class OptoAppClass                              		;~~ mehrmonatiges Kalender-Addon
 	Hotkey, $F9			    		, MinusEineWoche                                	;= Albis: addiert eine Woche einem Datum hinzu, z.B. im AU Formular
 	Hotkey, $F10		        	, PlusEineWoche                                	;= Albis: subtrahiert eine Woche von einem Datum, z.B. im AU Formular
@@ -907,9 +922,9 @@ HotkeyLabel:
 	Hotkey, ^Down              	, CaveVonRunter                                  	;= Albis: schiebt eine Zeile tiefer
 	Hotkey, IfWinActive
 
-	;HotKey, IfWinExist, LbAutoComplete                                            	;~~ Spezielle Listbox erreichbar durch ''+''
-	;Hotkey, Enter, AutoCBLBres                                                        	;= Albis: übernimmt die Auswahl
-	;Hotkey, IfWinExist
+	;~ HotKey, IfWinExist, LbAutoComplete                                            	;~~ Spezielle Listbox erreichbar durch ''+''
+	;~ Hotkey, Enter, AutoCBLBres                                                        	;= Albis: übernimmt die Auswahl
+	;~ Hotkey, IfWinExist
 
 	Hotkey, IfWinActive, Dokumentationsbögen ahk_class #32770   	;~~ Korrekturhilfe bei falsch gesetzer Auswahl bei Hautkrebsverdacht
 	Hotkey, Numpad0		    	, FastSets                                             	;= Albis: ruft Dokumentationsbogen auf, setzt Auswahl um,speichert Dokument u. rückt e. Patienten nach unten
@@ -3063,13 +3078,13 @@ Menu_PauseAddendum:                  	;{
 return ;}
 Menu_AlbisAutoPosition:                   	;{
 	Addendum.AlbisLocationChange := !Addendum.AlbisLocationChange
-	Menu, SubMenu3, ToggleCheck, Albis AutoSize
+	Menu, SubMenu3, ToggleCheck, % "Albis AutoSize"
 	IniWrite, % (Addendum.AlbisLocationChange ? "1":"0")	, % Addendum.AddendumIni, % compname, % "Albis_AutoGroesse"
 return
 ;}
 Menu_AddendumGui:                    	;{
 	Addendum.AddendumGui := !Addendum.AddendumGui
-	Menu, SubMenu3, ToggleCheck, Addendum Infofenster
+	Menu, SubMenu3, ToggleCheck, % "Addendum Infofenster"
 	IniWrite, % (Addendum.AddendumGui ? "1":"0")	        	, % Addendum.AddendumIni, % compname, % "Addendum_Infofenster"
 	If Addendum.AddendumGui {
 		Addendum.AktiveAnzeige := AlbisGetActiveWindowType()
@@ -3082,13 +3097,13 @@ Menu_AddendumGui:                    	;{
 return ;}
 Menu_MSWordAutoPosition:             	;{
 	Addendum.WordAutoSize:= !Addendum.WordAutoSize
-	Menu, SubMenu3, ToggleCheck, Microsoft Word AutoSize
+	Menu, SubMenu3, ToggleCheck, % "Microsoft Word AutoSize"
 	IniWrite, % (Addendum.WordAutoSize ? "1":"0")           	, % Addendum.AddendumIni, % compname, % "Microsoft_Word_AutoGroesse"
 return
 ;}
 Menu_GVUAutomation:                    	;{
 	Addendum.GVUAutomation := !Addendum.GVUAutomation
-	Menu, SubMenu3, ToggleCheck, Albis GVU automatisieren
+	Menu, SubMenu3, ToggleCheck, % "Albis GVU automatisieren"
 	IniWrite, % (Addendum.GVUAutomation ? "1":"0")        	, % Addendum.AddendumIni, % compname, % "GVU_automatisieren"
 return
 ;}
@@ -3096,7 +3111,7 @@ Menu_PDFSignatureAutomation:      	;{
 
 	; Menupunkt umschalten, Einstellung speichern
 		Addendum.PDFSignieren := !Addendum.PDFSignieren
-		Menu, SubMenu3, ToggleCheck, FoxitReader Signaturhilfe
+		Menu, SubMenu3, ToggleCheck, % "FoxitReader Signaturhilfe"
 		IniWrite, % (Addendum.PDFSignieren ? "ja":"nein")          	, % Addendum.AddendumIni, % compname, % "FoxitPdfSignature_automatisieren"
 
 	; weitere Funktionen an- oder abschalten
@@ -3128,21 +3143,31 @@ Menu_PDFSignatureAutomation:      	;{
 return ;}
 Menu_PDFSignatureAutoTabClose:	;{
 	Addendum.AutoCloseFoxitTab := !Addendum.AutoCloseFoxitTab
-	Menu, SubMenu3, ToggleCheck, FoxitReader Dokument automatisch schliessen
+	Menu, SubMenu3, ToggleCheck, % "FoxitReader Dokument automatisch schliessen"
 	IniWrite, % (Addendum.AutoCloseFoxitTab ? "ja":"nein") 	, % Addendum.AddendumIni, % compname, % "FoxitTabSchliessenNachSignierung"
 return ;}
 Menu_LaborAbrufManuell:               	;{
 	Addendum.Labor.AutoAbruf := !Addendum.Labor.AutoAbruf
-	Menu, SubMenu3, ToggleCheck, Laborabruf automatisieren
-	IniWrite, % (Addendum.Labor.AutoAbruf ? "1":"0")        	, % Addendum.AddendumIni, % compname, % "Laborabruf_automatisieren"
+	Menu, SubMenu3, ToggleCheck, % "Laborabruf automatisieren"
+	IniWrite, % (Addendum.Labor.AutoAbruf ? "ja":"nein")   	, % Addendum.AddendumIni, % compname, % "Laborabruf_automatisieren"
 return ;}
 Menu_LaborAbrufTimer:                  	;{
 	If RegExMatch(Addendum.Labor.AbrufTimer, "Nein")
 		return
 	Addendum.Labor.AbrufTimer := !Addendum.Labor.AbrufTimer
-	Menu, SubMenu3, ToggleCheck, zeitgesteuerter Laborabruf
-	IniWrite, % (Addendum.Labor.AbrufTimer ? "1":"0")        	, % Addendum.AddendumIni, % compname, % "Laborabruf_Timer"
-	IniWrite, % "1"                                                           	, % Addendum.AddendumIni, % compname, % "Laborabruf_automatisieren" ; dieser muss hier immer "An" sein!
+	Menu, SubMenu3, ToggleCheck, % "zeitgesteuerter Laborabruf"
+	IniWrite, % (Addendum.Labor.AbrufTimer ? "ja":"nein")   	, % Addendum.AddendumIni, % compname, % "Laborabruf_Timer"
+	IniWrite, % "ja"                                                            	, % Addendum.AddendumIni, % compname, % "Laborabruf_automatisieren" ; dieser muss dann automatisch "An=Ja" sein!
+return ;}
+Menu_Schnellrezept:                      	;{
+	Addendum.Schnellrezept := !Addendum.Schnellrezept
+	Menu, SubMenu3, ToggleCheck, % "Schnellrezept"
+	IniWrite, % (Addendum.Schnellrezept ? "ja":"nein")       	, % Addendum.AddendumIni, % "Addendum", % "Schnellrezept"
+return ;}
+Menu_mDicom:                              	;{
+	Addendum.mDicom := !Addendum.mDicom
+	Menu, SubMenu3, ToggleCheck, % "MicroDicom Export"
+	IniWrite, % (Addendum.mDicom ? "ja":"nein")              	, % Addendum.AddendumIni, % compname, % "MicroDicomExport_automatisieren"
 return ;}
 ;}
 
@@ -3369,10 +3394,11 @@ SendAlternately(chars:="/* | */") {                                             
 
 SciTEFoldAll() {                                                                                                            	;-- gesamten Code zusammenfalten
 
-	SCI_FOLDALL := 2662
 	ControlGet, hScintilla1, hwnd,, Scintilla1, % "ahk_class SciTEWindow"
-	SendMessage, % SCI_FOLDALL,,,, % "ahk_id " hScintilla1
-	TrayTip("SciTEFoldAll", "ErrorLevel: " ErrorLevel, 2 )
+	Sleep 300
+	SendMessage, 2662,,,, % "ahk_id " hScintilla1 ; SCI_FOLDALL
+	;SendMessage, 2662,,,, % hScintilla1 ; SCI_FOLDALL
+	TrayTip("SciTEFoldAll", "hScintilla1: " hScintilla1 "`nErrorLevel: " ErrorLevel, 2 )
 	;SendMessage, 2662, 0, 0,, % "ahk_id " ControlGet("hwnd", "", "Scintilla1", "ahk_class SciTEWindow") ;
 
 }
@@ -4203,11 +4229,12 @@ WinEventProc(hHook, event, hwnd, idObject, idChild, eventThread, eventTime) {   
 								,  	7: "SciTE"
 								,  	8: "FoxitReader"
 								, 	9: "word"
-								, 10: "iexplore"}
+								, 10: "mDicom"
+								, 11: "iexplore"}
 
 	Critical
 
-	If (GetDec(hwnd) = 0) || (StrLen(wClass:= WinGetClass(hwnd)) = 0)
+	If (GetDec(hwnd) = 0) || (StrLen(wClass:=WinGetClass(hwnd)) = 0)
 		return 0
 
 	EHookEvent	:= event
@@ -4216,13 +4243,13 @@ WinEventProc(hHook, event, hwnd, idObject, idChild, eventThread, eventTime) {   
 	; nur Fensterklassen Filter
 		For i, filterclass in class_filter
 			If InStr(wclass, filterclass) {
-					SetTimer, EventHook_WinHandler, -0
-					Critical Off
-					return 0
+				SetTimer, EventHook_WinHandler, -0
+				Critical Off
+				return 0
 			}
 
 	; Order & Entry Prozess
-		WinGet, EHproc, ProcessName, % "ahk_id " hwnd
+		WinGet, EHproc, ProcessName, % "ahk_id " EHookHwnd
 		If Instr(EHProc, "infoBoxWebClient")
 				SetTimer, EventHook_WinHandler, -0
 
@@ -4372,7 +4399,9 @@ ShellHookProc(lParam, wParam) {                                                 
 				return 0
 		}
 
+	; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 	; für Addendum_PopUpMenu - ruft die als String in der Variable .PopUpMenuCallback Funktion auf und übergibt zusätzliche Parameter
+	; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 		If (StrLen(Addendum.PopUpMenuCallback) > 0)
 			For idx, viewerclass in PDFViewer
 				If InStr(class, viewerclass) {
@@ -4410,7 +4439,7 @@ EventHook_WinHandler:                                                           
 		If EHWHStatus
 			return
 		EHWT:= WinGetTitle(EHookHwnd), EHWText:= WinGetText(EHookHwnd)
-		If (StrLen(EHWT . EHWText) = 0) || RegExMatch(EHWT, "^List1|OK") || RegExMatch(EHWText, "^SkinLoader")
+		If (StrLen(EHWT . EHWText) = 0) || InStr(EHWText, "SkinLoader") ;|| RegExMatch(EHWT, "i)^List1|OK")
 			return
 		EHWHStatus :=true
 
@@ -4533,13 +4562,9 @@ EventHook_WinHandler:                                                           
 						AlbisFristenGui()
 						EHWHStatus := false
 				}
-				else if InStr(EHWT, "Muster 16")                                                                                                  	; Kassenrezept - Schnellrezept + Auto autIdem Kreuz
+				else if InStr(EHWT, "Muster 16") && Addendum.Schnellrezept                                                          	; Kassenrezept - Schnellrezept + Auto autIdem Kreuz
 				{
-						;TrayTip, % "Rezeptformular", % "Rezeptformular wurde geöffnet", 2
 						AlbisRezeptHelferGui(Addendum.AdditionalData_Path "\RezepthelferDB.json")
-						;result := AlbisRezeptHook(hHookedWin)
-						;Menu, Tray, Tip, % StrReplace(A_ScriptName, ".ahk") " V." Version " vom " vom "`n" result
-						;AlbisRezeptAutIdem()
 						EHWHStatus := false
 				}
 				else If InStr(EHWText, "Bitte die Straße")                                                                                       	; weitere Information Dialog (Patientendaten) und Adressproblematik
@@ -4758,7 +4783,12 @@ EventHook_WinHandler:                                                           
 				EHWHStatus := false
 
 		}
-        else if InStr(EHproc1, "ipc")                                                                                     	; ifap Programm
+        else if InStr(EHproc1, "mDicom") && (Addendum.mDicom = true)
+		{
+				If InStr(EHWT, "Export to video")
+					MicroDicom_VideoExport()
+		}
+		else if InStr(EHproc1, "ipc")                                                                                     	; ifap Programm
 		{
 					If InStr(EHWText, "Fehler im ifap praxisCENTER") {
 							VerifiedClick("Button1", hHookedWin)
@@ -4777,7 +4807,7 @@ EventHook_WinHandler:                                                           
 							return
 					}
 		}
-		else if ((Addendum.Labor.AutoAbruf = true) && InStr(EHproc1, "infoBoxWebClient") )	; fängt das WebFenster meines Labors ab
+		else if InStr(EHproc1, "infoBoxWebClient") && (Addendum.Labor.AutoAbruf = true)  	; fängt das WebFenster meines Labors ab
 		{
 				IniWrite, % A_DD "." A_MM "." A_YYYY " (" A_Hour ":" A_Min ":" A_Sec ")", % Addendum.AddendumIni, Labor, letzter_Laborabruf
 				If !Addendum.Laborabruf.Status {
@@ -4818,7 +4848,8 @@ EventHook_WinHandler:                                                           
 
 				If InStr(EHWT, "SciTE4AutoHotkey") && Instr(WinGetClass(hHookedWin), "#32770") && RegExMatch(EHWText, "Datei.*Addendum\.ini")			{
 
-					; nach dem Laden einer veränderten Addendum.ini Datei - wird diese von SciTE immer entfaltet. Das macht alles unübersichtlich. Deshalb wird hier automatisches Codefolding durchführen
+					; nach dem Laden einer veränderten Addendum.ini Datei - wird diese von SciTE immer entfaltet.
+					; Das macht alles unübersichtlich. Deshalb wird hier automatisches Codefolding durchgeführt
 						VerifiedClick("Button1", "SciTE4AutoHotkey ahk_class #32770")
 						SciTeFoldAll()
 						EHWStatus := false
@@ -4840,38 +4871,6 @@ EventHook_WinHandler:                                                           
 							return
 
 					}
-
-					/*
-
-					If (InStr(EHWT, "Speichern unter bestätigen") && Addendum.PDFRecentlySigned) {
-
-							FoxitID := GetParent(hHookedWin)
-							SciTEOutput("hSaveAs: " hHookedWin ", FoxitID: " FoxitID)
-
-						; Dialogfenster schließen und Schließen des signierten FoxitReader Tabs
-							If VerifiedClick("Button1", hHookedWin,,, true)
-								If Addendum.AutoCloseFoxitTab		{
-									Sleep, 500                    	; kurze Pause um das Neuzeichnen des Foxitreaderfensters abzuwarten
-									result := FoxitInvoke("Close", FoxitID)
-								}
-
-						;ein PdfReader-Fenster nach vorne holen, wenn noch eines da ist
-							If WinExist("ahk_id " FoxitID)
-								WinActivate, % "ahk_id " FoxitID
-
-							EHWHStatus := false
-							return
-
-					}
-					else if (InStr(EHWT, "Speichern unter") && Addendum.PDFRecentlySigned)      	{
-
-						; Dialog schließen
-							VerifiedClick("Button3", hHookedWin,,, true)
-
-							EHWHStatus := false
-							return
-					}
-				*/
 
 				}
 
@@ -4924,7 +4923,6 @@ EventHook_WinHandler:                                                           
 						EHWHStatus := false
 				}
 		}
-
 
 	EHWHStatus := false
 
@@ -5371,8 +5369,9 @@ return
 
 ;}
 
-;{18. PDF-Reader Automation
+;{18. PDF-Reader Automation (Sumatra, FoxitReader)
 
+;Sumatra PDF Viewer
 SumatraInvoke(command, SumatraID="") {                                                                     	;-- wm_command wrapper for Sumatra PDF Version: 3.1
 
 	/* DESCRIPTION of FUNCTION:  SumatraInvoke() by Ixiko (version 12.07.2020)
@@ -5476,6 +5475,64 @@ SumatraInvoke(command, SumatraID="") {                                          
 
 }
 
+Sumatra_GetPages(SumatraID="") {                                                                                	;-- aktuelle und maximale Seiten des aktuellen Dokumentes ermitteln
+
+	If !SumatraID
+		SumatraID := WinExist("ahk_class SUMATRA_PDF_FRAME")
+
+	ControlGetText, PageDisp, Edit3 	, % "ahk_id " SumatraID
+	ControlGetText, PageMax, Static3	, % "ahk_id " SumatraID
+	RegExMatch(PageMax, "\s*(?<Max>\d+)", Page)
+
+return {"disp":PageDisp, "max":PageMax}
+}
+
+Sumatra_ToPrint(SumatraID="", Printer="") {                                                                      	;-- Druck Dialoghandler - Ausdruck auf übergebenen Drucker
+
+		; druckt das aktuell angezeigte Dokument
+		; abhängige Biblitheken: LV_ExtListView.ahk
+
+		static sumatraprint	:= "i)[(Print)|(Drucken)]+ ahk_class i)#32770 ahk_exe i)SumatraPDF.exe"
+
+		rxPrinter:= StrReplace(Trim(Printer), " ", "\s")
+		rxPrinter:= StrReplace(rxPrinter, "(", "\(")
+		rxPrinter:= StrReplace(rxPrinter, ")", "\)")
+
+		OldMatchMode := A_TitleMatchMode
+		SetTitleMatchMode, RegEx                                                              	; RegEx Fenstervergleichsmodus einstellen
+
+		SumatraInvoke("Print", SumatraID)                                                  	; Druckdialog wird aufgerufen
+		WinWait, % sumatraprint,, 6                                                             	; wartet 6 Sekunden auf das Dialogfenster
+		hSumatraPrint := GetHex(WinExist(sumatraprint))                               	; 'Drucken' - Dialog handle
+		ControlGet, hLV, Hwnd,, SysListview321, % "ahk_id " hSumatraPrint    	; Handle der Druckerliste (Listview) ermittlen
+		sleep 200                                                                                       	; Pause um Fensteraufbau abzuwarten
+		ControlGet, Items	, List  , Col1 	,, % "ahk_id " hLV                             	; Auslesen der vorhandenen Drucker
+		ItemNr := 0                                                                                    	; ItemNr auf 0 setzen
+		Loop, Parse, Items, `n                                                                    	; Listview Position des Standarddrucker suchen
+			If RegExMatch(A_LoopField, "i)^" rxPrinter) {                                	; Standarddrucker gefunden
+				ItemNr := A_Index                                                                	; nullbasierende Zählung in Listview Steuerelementen
+				break
+			}
+		If ItemNr {                                                                                    	; Drucker in der externen Listview auswählen
+			objLV := ExtListView_Initialize(sumatraprint)                                	; Initialisieren eines externen Speicherzugriff auf den Sumatra-Prozeß
+			ControlFocus,, % "ahk_id " objLV.hlv                                            	; Druckerauswahl fokussieren
+			SciTEOutput(A_LineNumber)
+			err	 := ExtListView_ToggleSelection(objLV, 1, ItemNr - 1)            	; gefundenes Listview-Element (Drucker) fokussieren und selektieren
+			SciTEOutput("err1: " err)
+			ExtListView_DeInitialize(objLV)                                                     	; externer Speicherzugriff muss freigegeben werden
+			Sleep 200
+			err	:= VerifiedClick("Button13", hSumatraPrint)                           	; 'Drucken' - Button wählen
+			SciTEOutput("err: " err)
+			WinWaitClose, % "ahk_id " hSumatraPrint,, 3                              	; wartet max. 3 Sek. bis der Dialog geschlossen wurde
+		}
+
+		SciTEOutput("ItemNr: " ItemNr ", ID: " hSumatraPrint)
+		SetTitleMatchMode, % OldMatchMode                                            	; TitleMatchMode zurückstellen
+
+return {"DialogID":hSumatraPrint, "ItemNr":ItemNr}                                 	; für Erfolgskontrolle und eventuelle weitere Abarbeitungen
+}
+
+;FoxitReader
 FoxitInvoke(command, FoxitID="") {		                                                                        	;-- wm_command wrapper for FoxitReader Version:  9.1
 
 		/* DESCRIPTION of FUNCTION:  FoxitInvoke() by Ixiko (version 11.07.2020)
@@ -5701,7 +5758,7 @@ FoxitInvoke(command, FoxitID="") {		                                            
 		return FoxitCommands[command]
 }
 
-FoxitReader_GetPages(FoxitID="") {
+FoxitReader_GetPages(FoxitID="") {                                                                                	;-- aktuelle und maximale Seiten des aktuellen Dokumentes ermitteln
 
 	If !FoxitID
 		FoxitID := WinExist("ahk_class classFoxitReader")
@@ -5710,6 +5767,30 @@ FoxitReader_GetPages(FoxitID="") {
 	RegExMatch(Pages, "(?<Disp>\d+)\s*\/\s*(?<Max>\d+)", Page)
 
 return {"disp":PageDisp, "max":PageMax}
+}
+
+FoxitReader_ToPrint(FoxitID="", Printer="") {                                                                     	;-- Druck Dialoghandler - Ausdruck auf übergebenen Drucker
+
+		static foxitprint    	:= "i)[(Print)|(Drucken)]+ ahk_class i)#32770 ahk_exe i)FoxitReader.exe"
+
+		If !FoxitID
+			FoxitID := WinExist("ahk_class classFoxitReader")
+
+		OldMatchMode := A_TitleMatchMode
+		SetTitleMatchMode, RegEx                                                              	; RegEx Fenstervergleichsmodus einstellen
+
+		FoxitInvoke("Print", FoxitID)                                                               	; 'Drucken' - Dialog wird aufgerufen
+		WinWait, % foxitPrint,, 6                                                                 	; wartet 6 Sekunden auf das Dialogfenster
+		hfoxitPrint	:= GetHex(WinExist(foxitPrint))                                        	; 'Drucken' - Dialog handle
+		ItemNr  	:= VerifiedChoose("ComboBox1", hfoxitPrint, Printer)          	; Drucker auswählen
+		If (ItemNr <> 0) {
+			VerifiedClick("Button44", hfoxitPrint,,, true)                                    	; OK Button drücken
+			WinWaitClose, % "ahk_id " hfoxitPrint,, 3                                    	; wartet max. 3 Sek. bis der Dialog geschlossen wurde
+		}
+
+		SetTitleMatchMode, % OldMatchMode                                            	; TitleMatchMode zurückstellen
+
+return {"DialogID":hFoxitPrint, "ItemNr":ItemNr}                                   	; für Erfolgskontrolle und eventuelle weitere Abarbeitungen
 }
 
 FoxitReader_SignaturSetzen() {						                                                           			;-- ruft Signatur setzen auf und zeichnet eine Signatur in die linke obere Ecke des Dokumentes
@@ -5808,7 +5889,7 @@ FoxitReader_SignaturSetzen() {						                                            
 return 1
 }
 
-FoxitReader_SignDoc(hDokSig, FoxitTitle, FoxitText:="") {			                        		        	;-- Winhook-Handler zum Bearbeiten des Dokument signieren Dialoges
+FoxitReader_SignDoc(hDokSig, FoxitTitle, FoxitText="") {			                        		        	;-- Winhook-Handler zum Bearbeiten des Dokument signieren Dialoges
 
 		; letzte Änderung: 15.07.2020 - Dateidialogbehandlung verbessert
 
@@ -5885,7 +5966,7 @@ FoxitReader_SignDoc(hDokSig, FoxitTitle, FoxitText:="") {			                    
 			ToolTip, % "Signature Nr: " Addendum.SignatureCount, 1000, 1, 10
 
 		; Dateidialog Routinen starten
-			SetTimer, PDFHelpCloseSaveDialogs	, 100
+			SetTimer, PDFHelpCloseSaveDialogs	, 50
 			SetTimer, PDFNotRecentlySigned		, -10000
 	;}
 
@@ -5906,7 +5987,7 @@ PDFHelpCloseSaveDialogs:            	;{ - Notfalllösung für die immer noch uns
 				WinActivate   	, % "ahk_id " FoxitID
 				WinWaitActive	, % "ahk_id " FoxitID,, 2
 				PraxTT("signiertes Dokument wird geschlossen!'", "0 2")
-				Sleep, 500                                                	; kurze Pause um das Neuzeichnen des Foxitreaderfensters abzuwarten
+				Sleep, 200                                                	; kurze Pause um das Neuzeichnen des Foxitreaderfensters abzuwarten
 				result := FoxitInvoke("Close", FoxitID)
 				PraxTT("", "off")
 			}
@@ -5957,10 +6038,183 @@ JEE_StrUtf8BytesToText(vUtf8) {
 	return StrGet(&vUtf8, "UTF-8")
 }
 
-
-
 ;}
 
+;{19. Automatisierung anderer Programme (MicroDicom)
+MicroDicom_VideoExport() {                                                                                          	;-- automatischer Export in ein Videoformat mit Dateinamenerstellung anhand von Dicom Tags
+
+	; MicroDicom - kostenloser DICOM Viewer für Windows
+	; Download Seite: https://www.microdicom.com/downloads.html
+	; optimiert für die Version 3.4+
+
+		StringCaseSense, Off
+
+	; window description for MicroDicom 64bit V2 'Export to video' dialog
+		MDExport  	:= {	"Title"              	: {"class":"Export to video ahk_class #32770", "Type":"window"}
+								, 	"Dest"             	: {"class":"Edit1"         	, "Type":"edit"}
+								,	"Name"           	: {"class":"Edit2"         	, "Type":"edit"}
+								, 	"Source"          	: {"class":"ComboBox1"	, "Type":"combobox"}
+								, 	"Planes"           	: {"class":"Button4"     	, "type":"checkbox"}              	; export each planes
+								, 	"SpFiles"          	: {"class":"Button5"     	, "type":"checkbox"}               	; Separate files for &every
+								,	"WMV"             	: {"class":"Button7"     	, "type":"button"}                	; WMV Export (Checkbox)
+								,	"AVI"                	: {"class":"Button8"     	, "type":"button"}                  	; AVI Export (Checkbox)
+								,	"FRateDefault"  	: {"class":"Button9"     	, "type":"button"}                  	; Frame rate custom
+								,	"FRateCustom"  	: {"class":"Button10"     	, "type":"button"}                  	; Frame rate custom
+								,	"FPS"              	: {"class":"Edit3"         	, "Type":"edit"}                     	; frames per second
+								,	"WMVQuality"   	: {"class":"Edit4"         	, "Type":"edit"}                     	; Exportquality
+								,	"ComprYes"      	: {"class":"Button11"     	, "type":"button"}                	; AVI Compression Yes
+								,	"ComprNo"      	: {"class":"Button12"    	, "type":"button"}                  	; AVI Compression No
+								,	"SizeOrig"      	: {"class":"Button14"    	, "type":"button"}                  	; VideoSize Original
+								,	"SizeAsScreen"  	: {"class":"Button15"    	, "type":"button"}                  	; Video Size As on screen
+								,	"SizeOther"     	: {"class":"Button16"    	, "type":"button"}                  	; Video Size As on screen
+								,	"SizeWidth"      	: {"class":"Edit5"         	, "Type":"edit"}                     	; Video Size Other Width
+								,	"SizeHeight"      	: {"class":"Edit6"         	, "Type":"edit"}                     	; Video Size Other Height
+								,	"Annotation"     	: {"class":"Button18"    	, "type":"checkbox"}              	; show annotations
+								,	"AllOverlay"     	: {"class":"Button19"    	, "type":"button"}                  	; all overlay
+								,	"Anonymous"    	: {"class":"Button20"    	, "type":"button"}                  	; anonymous overlay
+								,	"NoOverlay"    	: {"class":"Button21"    	, "type":"button"}                  	; Without overlay
+								,	"Export"         	: {"class":"Button22"    	, "type":"button"}                	; Export button
+								,	"Cancel"         	: {"class":"Button23"    	, "type":"button"}}                	; Cancel button
+
+	; smart RPA working object for function RPA() - sets all needed options in 'Export to video' dialog
+		ExportRPA := ["Dest|" Addendum.VideoOrdner
+							, "Name|%PatName%"		; wird ersetzt
+							, "Source|i)All\spatients" 	; RegEx string
+							, "Planes|check"
+							, "SpFiles|uncheck"
+							, "WMV|click"
+							, "FRateCustom|click"
+							, "FPS|10"
+							, "WMVQuality|100"
+							, "SizeOrig|click"
+							, "Annotation|check"
+							, "NoOverlay|click"
+							, "Export|click"]
+
+	; Handle des MicroDicom Hauptfensters
+		If !(hMDicom := WinExist("MicroDicom viewer")) {
+			PraxTT("Der automatische Videoexport ist fehlgeschlagen.", "4 0")
+			return
+		}
+
+	; den Exportdialog erstmal wieder schließen
+		If (hExport := WinExist(MDExport.title.class))
+			VerifiedClick(MDExport.Cancel.class, hExport)
+
+	; die Dicom Tags anzeigen
+		If !(hDicomTags := MicroDicom_Invoke("DicomTags", hMDicom, "DICOM Tags ahk_class #32770", 6)) {
+			SciTEOutput("Der automatische Videoexport ist fehlgeschlagen.")
+			PraxTT("Der automatische Videoexport ist fehlgeschlagen.`nDer Dialog Dicom Tags konnte nicht aufgerufen werden", "4 0")
+			return
+		}
+
+	; Patientenname, Geburtstag,Untersuchungsart und Untersuchungstag ermitteln (Auslesen der SysListview321 im Dicom Tags Dialog)
+		ExportRPA[2] := MicroDicom_BuildFileName(hDicomTags)
+
+	; Dicom Tags Dialog schliessen
+		VerifiedClick("Button1", hDicomTags)
+		WinWaitClose, % "ahk_id " hDicomTasgs,, 3
+
+	; den Exportvorgang mit den ausgelesenen Daten starten
+		If !MicroDicom_Invoke("ExportToVideo", hMDicom, MDExport.title.class, 6) {
+			PraxTT("Der automatische Videoexport ist fehlgeschlagen.", "4 0")
+			return
+		}
+
+	; den Inhalt der Dicom CD als Video exportieren
+		RPA(MDExport, ExportRPA)
+
+	; wartet bis zu 3min auf den Abschluss des Exportvorganges - ein Explorerfenster wird nach Abschluss angezeigt
+		;WinWait, % "ahk_class CabinetWClass", % Addendum.VideoOrdner, 300  ; werden andere Threads noch ausgeführt wenn WinWait aktiv ist?
+
+	; Schliessen und Auswerfen der CD nach Export
+		;MsgBox, 4, Addendum für Albis on Windows, % ""
+
+return
+}
+
+MicroDicom_Invoke(command, MicroDicomID="", WinToWait="", TimeToWait=3) {          	;-- Menuaufrufe für MicroDicom 64bit
+
+		static MicroDicom := { 	"DicomTags":           	40018  	; View
+										,	"ExportToImage":      	32790  	; File/Export/To a picture file
+										,	"ExportToVideo":      	32806}	; File/Export/To a video file
+
+	; wm_command code wird zurück gegeben
+		If !MicroDicomID
+			return MicroDicom[command]
+
+	; Fenster ist schon geöffnet, Rückgabe des Handle
+		If (StrLen(WinToWait) > 0) && (hwnd := WinExist(WinToWait))
+			return hwnd
+
+	; Senden des wm_command Befehls
+		PostMessage, 0x111, % MicroDicom[command],,, % "ahk_id " MicroDicomID
+
+	; wartet auf den sich öffnenden Dialog und gibt das Fensterhandle zurück
+		If (StrLen(WinToWait) > 0) {
+			WinWait, % WinToWait,, % TimeToWait
+			return WinExist(WinToWait) 	; handle ist 0 bei nicht vorhandenem Fenster
+		}
+
+
+return ; gibt nichts zurück!
+}
+
+MicroDicom_BuildFileName(hDicomTags) {                                                                    	;-- erstellt einen sinnvollen Dateinamen für den Export
+
+		ControlGet, tags, List,, SysListView321, % "ahk_id " hDicomTags
+		RegExMatch(tags, "StudyDescription\s*\w+\s*\w+\s*\w+\s*([\w\d\s]+)", description)
+		RegExMatch(tags, "i)PatientName\s*\w+\s*\w+\s*\w+\s*(?<Name>[\p{L}\s^]+)", Patient)
+		RegExMatch(tags, "i)PatientBirthDate\s*\w+\s*\w+\s*\w+\s*(?<BD>\d+)", Pat)
+		RegExMatch(tags, "i)StudyDate\s*\w+\s*\w+\s*\w+\s*(?<D>\d+)", St)
+		PatientName := RegExReplace(PatientName, "(\p{L})\^(\p{L})", "$1, $2" )
+		PatientName := RegExReplace(PatientName, "(\p{L})\s+(\p{L})", "$1, $2" )
+		PatientName := StrReplace(PatientName, "^")
+		PatientName := Trim(StrReplace(PatientName, "`n"))
+		PatientBirthDate := SubStr(PatBD, 7,2) "." SubStr(PatBD, 5,2) "." SubStr(PatBD, 1,4)
+		StudyDate := SubStr(StD, 7,2) "." SubStr(StD, 5,2) "." SubStr(StD, 1,4)
+
+return "Name|" PatientName " (" PatientBirthdate ") - " StrReplace(description1, "`n") " vom " StudyDate " - "
+}
+
+RPA(WinObj, steps) {                                                                                                      	;-- universal prototype: 'macro like' robot process automation for system controls in windows
+
+	; universal function to check or uncheck checkboxes, radiobuttons or to select entries in combo/listboxes and to set text entries in edit controls
+	; function is made to be used on standard windows controls
+	; the main goal is to give users the possibility to have their own settings for windows
+	;
+	; dependancies: Addendum_Control.ahk (VerifiedSetText/Click/Check/Choose)
+
+	If !IsObject(WinObj)
+		throw Exception("parameter 'WinObject': is not an object", "RPA")
+
+	If !IsObject(steps)
+		throw Exception("parameter 'steps': is not an object", "RPA")
+
+	If !(hRPAWin := WinExist(WinObj.title.class))
+		throw Exception("Could not find window:`n" WinObj.title.class, "RPA")
+
+	For idx, step in steps
+	{
+			on := StrSplit(step, "|").1
+			do := StrSplit(step, "|").2
+
+			switch WinObj[on].type
+			{
+					case "edit":
+						VerifiedSetText(WinObj[on].class, do, hRPAWin)
+					case "button":
+						VerifiedClick(WinObj[on].class, hRPAWin)
+					case "checkbox":
+						VerifiedCheck(WinObj[on].class, hRPAWin,,, InStr(do, "uncheck") ? false:true)
+					case "combobox":
+						VerifiedChoose(WinObj[on].class, hRPAWin, do)
+			}
+
+	}
+
+}
+;}
 ;----------------------------------------------------------------------------------------------------------------------------------------------
 
 ;{20. Gui's, Icons
@@ -6275,7 +6529,7 @@ DasEnde(ExitReason, ExitCode) {
 	OnExit("DasEnde", 0)
 
 	FormatTime, time, % A_Now, dd.MM.yyyy HH:mm:ss
-	FileAppend, % "Skript: " A_ScriptName ", time: " time  ", Client: " A_ComputerName ", ExitReason: " ExitReason ", ExitCode: " ExitCode "`n", % AddendumDir "\logs'n'data\OnExit-Protokoll.txt"
+	FileAppend, % time ", " A_ScriptName ", " A_ComputerName ", " ExitReason ", " ExitCode ", " A_TimeIdle "`n", % AddendumDir "\logs'n'data\OnExit-Protokoll.txt"
 
 	For i, hook in Addendum.Hooks
 		UnhookWinEvent(hook.hEvH, hook.HPA)
@@ -6284,7 +6538,6 @@ DasEnde(ExitReason, ExitCode) {
 
 	counter := Fehlerprotokoll("return counter", 0)
 	SciTEOutput("Fehlermeldungen seit letztem Addendumstart: " counter.same + counter.different "`n")
-
 
 	gosub istda
 
@@ -6326,6 +6579,7 @@ ExitApp
 #Include %A_ScriptDir%\..\..\lib\FindText.ahk
 #include %A_ScriptDir%\..\..\lib\GDIP_All.ahk
 #Include %A_ScriptDir%\..\..\lib\ini.ahk
+#Include %A_ScriptDir%\..\..\lib\LV_ExtListView.ahk
 #Include %A_ScriptDir%\..\..\lib\TrayIcon.ahk
 #Include %A_ScriptDir%\..\..\lib\Sci.ahk
 #Include %A_ScriptDir%\..\..\lib\SciTEOutput.ahk

@@ -3,7 +3,7 @@
 ;																					   							Basisskript: 	Addendum.ahk
 ;
 ;	                                                                                                                Addendum für Albis on Windows
-;                                                            	by Ixiko started in September 2017 - last change 14.07.2020 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 08.08.2020 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; Infofenster
@@ -60,7 +60,6 @@ AddendumGui() {
 			;----------------------------------------------------------------------------------------------------------------------------------------------
 			; Hotkey's für alle Tab's
 			;----------------------------------------------------------------------------------------------------------------------------------------------;{
-				;Hotkey, $F1, admTestung
 				Hotkey, IfWinActive, AddendumGui ; ahk_class AutoHotkeyGUI"
 				Hotkey, Enter       	, % fc_admView
 				Hotkey, F3         	, % fc_admView
@@ -82,7 +81,7 @@ AddendumGui() {
 		If !WinExist("ahk_class OptoAppClass")
 			return
 
-	; mehr als 3 Versuche das MDIFrame zu finden führen zum Abbruch des Selbstaufrufes der Funktion
+	; mehr als 9 Versuche das MDIFrame zu finden, führen zum Abbruch des Selbstaufrufes der Funktion
 		If (admReCheck > 9) {
 			admReCheck := 0
 			return
@@ -237,13 +236,9 @@ AddendumGui() {
 	;}
 
 		admReCheck := 0
-		gosub toptop
 		SetTimer, toptop, % Addendum.InfoWindow.RefreshTime
+		gosub toptop
 
-return
-
-admTestung:
-	SciTEOutput("Gut")
 return
 }
 
@@ -319,7 +314,7 @@ admTProtokollLV:             	;{ Tagesprotokoll - Listview Handler
 
 return ;}
 
-admGuiDropFiles:         	;{ nicht erkannte Dokumente einfach in das Posteingangfenster ziehen! klappt genial!
+admGuiDropFiles:         	;{ nicht erkannte Dokumente einfach in das Posteingangfenster ziehen!
 
 	PatName 	:= StrReplace(AlbisCurrentPatient(), " ")
 	PatName 	:= StrReplace(PatName, "-")
@@ -409,20 +404,16 @@ toptop:                          	;{ zeichnet das Gui neu
 
 return ;}
 
-admGui_PatLog(PatID, cmd, data) {                                                                                  	; individuelles Patienten Logbuch
+admGui_PatLog(PatID, cmd, LogText) {                                                                             	; individuelles Patienten Logbuch
 
-		;PatID    	:= AlbisAktuellePatID()
-		BaseNum	:= Round((PatID / 1000) ) * 1000
-		IDBase  	:= PatID - BaseNum <= 0 ? BaseNum : BaseNum + 1000
-		PatientDir 	:= Addendum.DBPath "\PatData\" IDBase "\" PatID
-		If !InStr(FileExist(PatientDir), "D")
-			FileCreateDir, % PatientDir
+ 	; zurück falls Nutzer keine Protokollerstellung wünscht
+		If !Addendum.PatLog
+			return
 
+		PatientDir 	:= PatDir(PatID)
 		If InStr(cmd, "AddToLog") {
-
 			timeStamp := A_DD "." A_MM "." A_YYYY " " A_Hour ":" A_Min ":" A_Sec "`t"
-			FileAppend, % timeStamp . data "`n", % PatientDir "\log.txt"
-
+			FileAppend, % timeStamp . LogText "`n", % PatientDir "\log.txt"
 		}
 
 }
@@ -794,7 +785,7 @@ admGui_ImportGui(ShowGUI=true) {                                                
 
 admGui_ImportFromJournal(Report) {                                                                            	; einzel Importfunktion für das Journal
 
-	global hPdfReports
+	global hPdfReports, hadm
 
 	SetTimer, MoveAdmMsgBox, -100
 	message := "Wollen Sie die Datei:`n" (StrLen(Report) >30 ? SubStr(Report, 1, 30) "..." : Report) "`nin die aktuelle geöffnete Karteikarte von`n" AlbisCurrentPatient() "`nimportieren ?"
@@ -818,6 +809,7 @@ admGui_ImportFromJournal(Report) {                                              
 				}
 			}
 
+		; Re-Indizieren, Gui auffrischen
 			BefundOrdner_Indizieren()
 			admGui_Journal()
 			admGui_Reports()
@@ -828,11 +820,12 @@ return
 
 MoveAdmMsgBox:  ;{ verschiebt die Messagebox in die Nähe des Importbuttons
 
-		hwnd := WinExist("A")
-		m   	 := GetWindowSpot(hwnd)
-		p  	 := GetWindowSpot(hPdfReports)
+	WinWait,, % "Wollen Sie die Datei", 2
+	m   	 := GetWindowSpot(hwnd := WinExist("", "Wollen Sie die Datei"))
+	p  	 := GetWindowSpot(hadm)
 
-		SetWindowPos(hwnd, p.X + (p.W/2 - m.W/2), p.Y + (p.H/2 - m.H/2) + 105, m.w, m.H)
+	SetWindowPos(hwnd, p.X + Floor(p.W/2 - m.W/2), p.Y + Floor(p.H/2 - m.H/2) + 105, m.w, m.H)	; Position basierend auf hadm
+	;SetWindowPos(hwnd, p.X + (p.W/2 - m.W/2), p.Y + (p.H/2 - m.H/2) + 105, m.w, m.H) ; Position basierend auf hPdfReports
 
 return ;}
 }
@@ -940,31 +933,22 @@ BefundOrdner_Indizieren() {                                                     
 
 }
 
-ImportZaehler(creationtime, Report) {                                                                             	; ### zuviele Fehler !!
+PatDir(PatID) {                                                                                                               	; berechnet den Addendumdatenpfad für den Patienten
 
-	RegExMatch(Report, "(?<Name>.*)(?<extension>\.\w+$)", Case)
-	RegExMatch(creationtime, "(?<Day>\d\d)\.(?<Month>\d\d)\.(?<Year>\d\d\d\d)", creation)
+	; Addendum speichert zusätzliche Daten zum Patienten in einem extra Ordnerverzeichnis nach folgendem Schema:
+	; 	- die Sortierung erfolgt anhand der Patienten ID von Albis
+	;	- maximal 1000 Unterverzeichnisse pro Ordner, ein Ordner mit der Bezeichnung 8000 enthält alle Patientenunterordner zwischen 7001-8000
+	;
+	; die Funktion legt noch nicht vorhandene Ordner/Unterordner automatisch an
 
-	If InStr(CaseExtension, "pdf")
-	{
-			DocName := "Briefe"
-			DocKey		:= ScanPoolArray("Find", Report)
-			Pages   	:= Trim(StrSplit(ScanPool[DocKey], "|").3)
-			Pages     	:= StrLen(Pages) = 0 ? 1 : Pages
-			RegExMatch(IniReadExt("ScanPool", "importierte_" DocName "_" creationYear, "0 0S"), "^(?<Count>\d+)\s(?<Pages>\d+)S", Ini)
-			ToolTip, % (IniCount +1) " " (IniPages + Pages)
-			IniWrite, % (IniCount +1) " " (IniPages + Pages) "S" , % Addendum.AddendumIni, ScanPool, % "importierte_" DocName "_" creationYear
-	}
-	else
-	{
-			DocName := "Bilder"
-			BefundNr := IniReadExt("ScanPool", "importierte_" DocName "_" creationYear, 0) + 1
-			IniWrite, % BefundNr, % Addendum.AddendumIni, ScanPool, % "importierte_" DocName "_" creationYear
-	}
+	BaseNum	:= Round((PatID / 1000) ) * 1000
+	IDBase  	:= (PatID - BaseNum <= 0) ? BaseNum : BaseNum + 1000
+	PatientDir 	:= Addendum.DBPath "\PatData\" IDBase "\" PatID
+	If !InStr(FileExist(PatientDir), "D")
+			FileCreateDir, % PatientDir
 
-
+return PatientDir
 }
-
 
 ; ------------------------
 LV_GetColWidth(hLV, ColN) {                                                                                           	;-- gets the width of a column
