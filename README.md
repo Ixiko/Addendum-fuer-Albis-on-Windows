@@ -36,6 +36,7 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis a
 - für eine schnelle und fehlertolerante Suche nach Patienten
 
 <h3> &#9733 alternatives Tagesprotokoll </h3>
+
 - nach Computern getrenntes Tagesprotokoll. Dies könnte für einzelne Analysen interessant sein
 
 <h3> &#9733 Infofenster </h3>
@@ -69,6 +70,7 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis a
 <h3> &#9733 Rezepthelfer </h3>
 
 - Rezeptvorlagen, z.B. mehrzeilige Hilfsmittelrezepte oder Verschreibung mehrerer Medikamente nach Auswahl einer Vorlage 
+
 <h3> &#9733 Anzeige von Beginn und Ende der Lohnfortzahlung  </h3>
 
 - die berechneten Stichtage werden im oberen Teil der Arbeitsunfähigkeitsbescheinigung eingeblendet 
@@ -76,15 +78,16 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis a
 ![](Docs/AUFristen.png)
 
 <h3> &#9733 Kontextsensitive Texterweiterungen </h3>
+
 - Erkennung des Kontext in der Karteikarte anhand des Albiskürzel (z.B. lko, dia, bef, info) mit Bereitstellung von Texterweiterungen 
 
 <h3> &#9733 Unterstützung des Laborabrufes </h3>
+
 - Übernimmt automatisch nach manuellem Start des Laborabrufes die weiteren Vorgänge bis hin zum Übertragen der Befunde ins Laborblatt  (funktioniert nur teilweise)
 
 <h3> &#9733 Automatisierung DICOM-Daten Umwandlung </h3>
 
 - [MicroDicom](https://www.microdicom.com), der freie DICOM-Viewer für Windows, wird automatisiert für eine schnelle Umwandlung der Daten in Bild- oder Videodateien 
-
 
 <h3> &#9733 Funktionsbibliothek für eigene Skriptentwicklung </h3>
 
