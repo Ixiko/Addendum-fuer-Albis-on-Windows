@@ -218,5 +218,27 @@
 			"",
 			""
 		]
+	},
+	"11":{
+		"Beschreibung": "Inkontinenzvorlagen ohne Produktverordnung, Quartalsmenge",
+		"Bezeichner": "anatomisch geformte Vorlagen, normale Saugleistung",
+		"Medikamente": [
+			"anatomisch geformte Vorlagen, normale Saugleistung",
+			"Positionsnummer: 15.25.30.0 , 100 Stück",
+			"Diagnose: mittlere Harninkontinenz",
+			"",
+			"",
+			""
+		],
+		"Optionen": "",
+		"RezeptTyp": "Hilfsmittel",
+		"Zusaetze": [
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		]
 	}
 }

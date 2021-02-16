@@ -6,8 +6,16 @@
 ;                                                                                  	------------------------
 ;                                                	FÜR DAS AIS-ADDON: "ADDENDUM FÜR ALBIS ON WINDOWS"
 ;                                                                                  	------------------------
-;    		BY IXIKO STARTED IN SEPTEMBER 2017 - LAST CHANGE 24.06.2020 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
+;    		BY IXIKO STARTED IN SEPTEMBER 2017 - LAST CHANGE 13.11.2020 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                                           	|                                          	|                                          	|                                          	|
+; (01) ReadPatientDatabase    	(02) PatInDB                          	(03) GetFromPatDb                 	(04) PatDb
+; (05) PatDbSave                    	(06) FindPatData                      	(07) ScanPoolArray                 	(08) CountValidKeys
+; (09) ReadDir                        	(10) ReadPdfIndex                   	(11) RefreshPdfIndex                	(12) ReadDbf
+; (13) SeekReadNum             	(14) FuzzyNameMatch             	(15) FuzzySearch                    	(16) StrDiff
+; (17) StrDiffFromWords           	(18) DLD                               	(19) FuzzyFind                       	(20) VorUndNachname
+; (21) StrSplitEx                        	(22) GetAddendumDbPath
+;
 ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;###############################################################################
 ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -16,30 +24,34 @@
 ; PATIENTEN DATENBANK INKL. SUCHFUNKTIONEN
 ;--------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
 
-ReadPatientDatabase(AddendumDBPath) {														;-- liest die .csv Datei Patienten.txt als Object() ein
+ReadPatientDatabase(PatDBPath) {										                				;-- liest die .csv Datei Patienten.txt als Object() ein
 
 	PatDB	:= Object()
 
-	If FileExist(AddendumDBPath "\Patienten.txt")
-	{
-			; Einlesen der Datenbank als Textliste, Sortieren aufsteigend nach PatID, Aussortieren doppelter Einträge (später neue Einträge unter den Skripten kommunizieren?)
-				FileRead    	,    PatDB_temp, % AddendumDBPath "\Patienten.txt"
-				Sort          	,    PatDB_temp, N U
-				FileDelete  	, % AddendumDBPath "\Patienten.txt"
-				FileAppend	, % PatDB_temp, % AddendumDBPath "\Patienten.txt", UTF-8
+	If (StrLen(PatDBPath) > 0)
+		PatDBPath := Addendum.DBPath "\Patienten.txt"
 
-			; Einlesen in ein Objekt
-				;~ 1.PatID = key; 2.Nachname (Nn); 3.Vorname (Vn); 4.Geschlecht (Gt); 5.Geburtsdatum (Gd); 6.Krankenkasse (Kk); 7.letzteGVU (letzteGVU)
-				Loop, Parse, PatDB_temp, `n, `r
-				{
-							If (StrLen(A_LoopField) = 0)
-									continue
-							Str := StrSplit(A_LoopField, ";", A_Space)
-							PatID := Str[1]
-							PatDB[PatID] := {"Nn": Str[2], "Vn": Str[3], "Gt": Str[4], "Gd": Str[5], "Kk": Str[6], "letzteGVU": Str[7]}
-				}
+	If FileExist(PatDBPath)	{
 
-				PatDB["MaxPat"] := maxPat := PatDB.Count()
+		; Einlesen der Datenbank als Textliste, Sortieren aufsteigend nach PatID, Aussortieren doppelter Einträge (später neue Einträge unter den Skripten kommunizieren?)
+			PatDB_temp := FileOpen(PatDBPath, "r").Read()
+			Sort,    PatDB_temp, N U
+			FileDelete  	, % AddendumDBPath "\Patienten.txt"
+			FileAppend	, % PatDB_temp, % AddendumDBPath "\Patienten.txt", UTF-8
+
+		; Einlesen in ein Objekt
+			;~ 1.PatID = key; 2.Nachname (Nn); 3.Vorname (Vn); 4.Geschlecht (Gt); 5.Geburtsdatum (Gd); 6.Krankenkasse (Kk); 7.letzteGVU (letzteGVU)
+			Loop, Parse, PatDB_temp, `n, `r
+			{
+					If (StrLen(A_LoopField) = 0)
+							continue
+					Str := StrSplit(A_LoopField, ";", A_Space)
+					PatID := Str[1]
+					PatDB[PatID] := {"Nn": Str[2], "Vn": Str[3], "Gt": Str[4], "Gd": Str[5], "Kk": Str[6], "letzteGVU": Str[7]}
+			}
+
+			PatDB["MaxPat"] := maxPat := PatDB.Count()
+
 	}
 
 return PatDB
@@ -161,7 +173,8 @@ PatDb(Pat, cmd:="") {																			        ;-- überprüft die Addendum Pat
 					oPat[PatID] := {"Nn": Pat.Nn, "Vn": Pat.Vn, "Gt": Pat.Gt, "Gd": Pat.Gd, "Kk": Pat.Kk}
 
 					FileAppend, % PatID ";" Pat.Nn ";" Pat.Vn ";" Pat.Gt ";" Pat.Gd ";" Pat.Kk ";`n", % Addendum.DBPath "\Patienten.txt", UTF-8
-					TrayTip, Addendum, % "neue PatID (Zähler: " oPat.Count() ") für die Addendumdatenbank:`n(" PatID ") " Pat.Nn "," Pat.Vn, 1
+					If Addendum.ShowTrayTips
+						TrayTip, Addendum, % "neue PatID (Zähler: " oPat.Count() ") für die Addendumdatenbank:`n(" PatID ") " Pat.Nn "," Pat.Vn, 1
 
 				; Praxomat zeigt den maximalen Index der Patienten in der 'Addendum-Patienten' Datenbank an
 					If ( hPraxomatGui:= WinExist("PraxomatGui ahk_class AuthotkeyGui") ) {
@@ -235,13 +248,18 @@ return 0
 ; PDF DATENBANK / SCANPOOL
 ;--------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
 
-ScanPoolArray(cmd, param:="", opt:="") {                    		;-- verarbeitet den files-Array der die Datei-Informationen des Befundordners bereit hält
+ScanPoolArray(cmd, param="", opt="") {                    		;-- verarbeitet den Datei-Array der die Datei-Informationen des Befundordners bereit hält
 
 /*							BESCHREIBUNG
 
-		ein Array mit dem Namen 'ScanPool' muss superglobal gemacht werden am Anfang des Skriptes, wichtig egal was man mit dem Array dann macht: Er darf niemals in dieser Funktion gelöscht werden oder neu
-		initialisiert werden.  Beispiel: ScanPool:="" , entfernt leert den Speicher den der Array besetzt, einen Array mit selbigen Namen zu initalisieren ' ScanPool:=[] ' ergibt nicht den selben Array.
-		Ergebnis ist das der Array Name zwar global angelegt wurde, jetzt aber ausserhalb dieser Funktion leer ist.
+		ein Array mit dem Namen 'ScanPool' muss superglobal gemacht werden am Anfang aufrufenden Skriptes
+			WICHTIG!!:	egal was man mit dem Array dann macht >>> niemals innerhalb dieser Funktion löschen oder neu initialisieren!
+								wie es gemacht werden sollte und zwar nur ausserhalb dieser Funktion:
+									• ScanPool := ""        	- leert den Array
+									• ScanPool := Array()	- erstellt das Array neu!
+								führt man die oben erwähnten Zuordnungen innerhalb dieser Funktion aus, ist ScanPool zwar weiterhin superglobal angelegt
+								, aber ausserhalb dieser Funktion wird der Array leer sein, selbst wenn man ihn wieder befüllt. Scheinbar existieren dann zwei Variablen
+								anstatt nur einer Variable!!
 
 		Beschreibung: param
 		was param beinhalten kann, ist vom übergebenen Befehl (cmd) abhängig, z.B. ScanPoolArray("GetCell", "5|3") ; ermittle den Inhalt der 3.Spalte der 5.Zeile, weiteres siehe folgende Zeilen:
@@ -260,104 +278,99 @@ ScanPoolArray(cmd, param:="", opt:="") {                    		;-- verarbeitet de
 
 	static Loaded := false
 	static PdfIndexFile
-	static newPDF
 
-	columns:=[], res:=0, allfiles:=""
+	newPDF := 0, col :=[], res := 0, allfiles := ""
 	FileEncoding, UTF-8
 
 	;diese Zeilen sichern ab das zuerst der ScanPool-Array erstellt wird bevor die anderen Befehle aufgerufen werden können
-	If !Loaded && StrLen(param) = 0 	{
-			MsgBox, 0, Funktion ScanPoolArray, Dieser Funktion muss als erstes per 'Load' command`nder Pfad zur PdfIndex.txt Datei übergeben werden.
-			ExitApp
-			;Loaded:= ScanPoolArray("Load")
+	If !Loaded && (StrLen(param) = 0) 	{
+		MsgBox, 0, % "Funktion ScanPoolArray", % "Dieser Funktion muss als erstes per 'Load' command`nder Pfad zur PdfIndex.txt Datei übergeben werden."
+		ExitApp
+		;Loaded:= ScanPoolArray("Load")
 	}
   ;--------------------------------------------------------------------- Befehle -----------------------------------------------------------------------------------
 
 	If Instr(cmd, "Delete") || Instr(cmd, "Remove")	{  	;param: gesuchter Dateiname			           			, Rückgabe: Wert       	- Seitenanzahl der entfernten Pdf-Datei
 
-			param:= RegExReplace(param, "\.pdf$", "") ".pdf" ;muss man nicht immer dran denken die Dateiendung zu übergeben
+			param := RegExReplace(param, "\.pdf$", "") ".pdf" ;muss man nicht immer dran denken die Dateiendung zu übergeben
 			For key, val in ScanPool
-				If Instr(val, param)
-				{
+				If Instr(val, param)	{
 					delpages := StrSplitEx(val, 3)
 					ScanPool.Delete(key)
 					break
 				}
 
-			FileCount:= CountValidKeys(ScanPool)						;ist sozusagen dann der "NEUE" MaxIndex()
+			FileCount := CountValidKeys(ScanPool)						;ist sozusagen dann der "NEUE" MaxIndex()
 			return delpages
 	}
 	else If Instr(cmd, "Load")         	{                         	;param: Pfad zur PDFIndex.txt Datei                      	, Rückgabe: Wert       	- Gesamtzahl der Befunde in der pdfIndex.txt Datei
 
-			if FileExist(param)
-			{
-					PdfIndexFile := param
-					FileRead, allfiles, % PdfIndexFile
-					Sort, allfiles
-					Loop, Parse, allfiles, `n, `r
-							ScanPool.Push(A_LoopField)
+		If FileExist(param)	{
+			Loaded      	:= true											        	;zur Überprüfung - Load muss vor allen anderen Befehlen als erstes stattgefunden haben
+			PdfIndexFile	:= param
+			allfiles       	:= FileOpen(PdfIndexFile, "r").Read()
+			Sort, allfiles
+			ScanPool   	:= StrSplit(allfiles, "`n", "`r")
+			return ScanPool.MaxIndex()
+		}
+		else
+			return 0
 
-					Loaded 	:= true											        	;zur Überprüfung - Load muss vor allen anderen Befehlen als erstes stattgefunden haben
-					VarSetCapacity(allfiles, 0)
-					MaxFiles:= ScanPool.MaxIndex()
-					return MaxFiles
-			}
-			else
-					return 0
 	}
 	else If Instr(cmd, "Rename")    	{                         	;param: Original-Dateiname, opt: neuer Name     	, Rückgabe: Wert       	- ist der Index im ScanPool-Array
 
-			for key, val in ScanPool
-			{
-					If Instr(val, param)
-					{
-							columns:= StrSplit(ScanPool[key], "|")
-							ScanPool[key]:= opt . "|" . columns[2] . "|" . columns[3]
-							return key
-					}
-			}
+			For key, val in ScanPool
+				If Instr(val, param)		{
+					col := StrSplit(ScanPool[key], "|")
+					ScanPool[key] := opt "|" col[2] "|" col[3]
+					return key
+				}
 			return 0
 	}
 	else If Instr(cmd, "Save")         	{                         	;param: und opt - unbenutzt					            	, Rückgabe: ErrorLevel	- erfolgreich = 1, Speicherung nicht möglich = 0
 
-			File:= FileOpen(PdfIndexFile, "w", "UTF-8")
-
+			File := FileOpen(PdfIndexFile, "w", "UTF-8")
 			For key, val in ScanPool
-				If val != ""
-					allfiles.= val "`n"
+				allfiles .= (StrLen(Trim(val)) >0) ? val "`n" : ""
 
-			allfiles:= RTrim(allfiles, "`n")
+				;~ If (StrLen(Trim(val)) >0)
+					;~ allfiles .= val "`n"
+
+			allfiles := RTrim(allfiles, "`n")
 			File.Write(allfiles)
 			File.Close()
 			If !ErrorLevel
-						return 1
+				return 1
 			else
-						return 0
+				return 0
+
 	}
 	else if Instr(cmd, "Sort")           	{                         	;param: und opt - unbenutzt			            			, Rückgabe: ohne      	- der ScanPool-Array wird sortiert
 
 			For key, val in ScanPool
-					allfiles.= val . "`n"
+				If (Trim(val) != "")
+					allfiles .= val "`n"
+
 			Sort, allfiles
-			allfiles:= RTrim(allfiles, "`n")
-			ScanPool:= StrSplit(allfiles, "`n")
+			ScanPool := StrSplit(RTrim(allfiles, "`n"), "`n")
+
 	}
 	else if Instr(cmd, "ValidKeys")   	{                         	;param: und opt - unbenutzt				           			, Rückgabe: Wert       	- Anzahl der im Array gespeicherten Pdf-Dateien
 		return CountValidKeys(ScanPool)
 	}
 	else If InStr(cmd, "Find")           	{                         	;param: gesuchter Dateiname		            			, Rückgabe: Wert       	- ist der Indexwert oder KeyIndex im ScanPool-Array
 
-			for key, val in ScanPool
+			For key, val in ScanPool
 				If Instr(val, param)
-			    		return key
+			   		return key
 
-			return 0
+			return ""
 	}
 	else If Instr(cmd, "CountPages")  {                        	;param: und opt - unbenutzt			           				, Rückgabe: Wert       	- Gesamtzahl aller Seiten in den Pdf-Dateien des Befundordners
 
-			tpgs:= 0
-			for key, val in ScanPool
-					tpgs += (StrSplitEx(val, 3) = "" ) ? 0 : StrSplitEx(val, 3)
+			tpgs := 0
+			For key, val in ScanPool
+				tpgs += !StrSplitEx(val, 3) ? 0 : StrSplitEx(val, 3)
 
 			return tpgs
 	}
@@ -368,49 +381,45 @@ ScanPoolArray(cmd, param:="", opt:="") {                    		;-- verarbeitet de
 			RegExMatch(StrReplace(param, "-"), "(?P<Nachname>[\w\p{L}]+)[\,\s]+(?P<Vorname>[\w\p{L}]+)", Such)
 			SuchName := SuchNachname SuchVorname
 
-			For key, val in ScanPool					;wenn keine PatID vorhanden ist, dann ist die if-Abfrage immer gültig (alle Dateien werden angezeigt)
-			{
-						if (StrLen(val) = 0)
-							continue
+			For key, val in ScanPool	{				;wenn keine PatID vorhanden ist, dann ist die if-Abfrage immer gültig (alle Dateien werden angezeigt)
 
-						filename := StrReplace(StrSplit(val, "|").1, ".pdf")
-						RegExMatch(StrReplace(filename, "-"), "(?P<Nachname>[\w\p{L}]+)[\,\s]+(?P<Vorname>[\w\p{L}]+)", pdf)
+				if (StrLen(val) = 0)
+					continue
 
-						a := StrDiff(SuchName, pdfNachname pdfVorname)
-						b := StrDiff(SuchName, pdfVorname pdfNachname)
+				filename := StrReplace(StrSplit(val, "|").1, ".pdf")
+				RegExMatch(StrReplace(filename, "-"), "(?P<Nachname>[\w\p{L}]+)[\,\s]+(?P<Vorname>[\w\p{L}]+)", pdf)
 
-						If ((a < 0.12) || (b< 0.12))
-								Reports.Push(filename)
+				a := StrDiff(SuchName, pdfNachname pdfVorname)
+				b := StrDiff(SuchName, pdfVorname pdfNachname)
+
+				If ((a < 0.12) || (b< 0.12))
+					Reports.Push(filename)
+
 			}
 
 			return Reports
 	}
 	else If InStr(cmd, "Refresh")       	{                       	;param: unbenutzt                                                	, Rückgabe: Wert        	- Anzahl neuer Funde
 
-			If InStr(param, "Tip") {
-				PraxTT("ermittle neue Befunde im ScanPool", "0 3")
-				Sleep, 500
-			}
+		If InStr(A_ScriptName, "ScanPool")
+			newPDF := RefreshPdfIndex(BefundOrdner)
+		else
+			newPDF := RefreshPdfIndex(Addendum.BefundOrdner)
 
-			If InStr(A_ScriptName, "ScanPool")
-				newPDF:= RefreshPdfIndex(BefundOrdner)
-			else
-				newPDF:= RefreshPdfIndex(Addendum.BefundOrdner)
+		If (newPDF > 0) {
+			anzeigetext := newpdf = 1 ? "1 Dokument hinzugefügt." : newpdf " Dokumente hinzugefügt."
+			PraxTT(anzeigetext, "4 0")
+		}
+		return newPDF
 
-			If InStr(param, "Tip")
-				PraxTT("", "off")
-
-			return newPDF
 	}
 	else If InStr(cmd, "Signed")      	{                      	;param: und opt - unbenutzt						           	, Rückgabe: Array       	- signierte Befunde
 
-			Signed := [], BOidx := 0
+			Signed := []
 			for key, val in ScanPool
-					If StrSplitEx(val, 4) = 1
-					{
-							BOidx ++
-							Signed[BOidx]:= StrSplitEx(val, 1)
-					}
+				If (StrSplitEx(val, 4) = 1)
+					Signed.Push(StrSplitEx(val, 1))
+
 			return Signed
 	}
 	else If InStr(cmd, "NotSigned") 	{                       	;param: Array (signierter Befunde "Signed")           	, Rückgabe: Array       	- unsignierte Befunde
@@ -420,18 +429,15 @@ ScanPoolArray(cmd, param:="", opt:="") {                    		;-- verarbeitet de
 
 			NotSigned := [], BOidx := 0
 			For key, val in ScanPool
-					allfiles.= val . "`n"
+				allfiles .= val "`n"
 			For key, val in param
-					allfiles.= val . "`n"
-			allfiles:= RTrim(allfiles, "`n")
+				allfiles .= val "`n"
+			allfiles := RTrim(allfiles, "`n")
 
 			for key, val in ScanPool
 				If InStr(val, param)
-					If StrSplitEx(val, 4) = 1
-					{
-							BOidx ++
-							SignedArr[BOidx]:= StrSplitEx(val, 1)
-					}
+					If (StrSplitEx(val, 4) = 1)
+						SignedArr.Push(StrSplitEx(val, 1))
 
 			return SignedArr
 	}
@@ -450,40 +456,52 @@ return counter
 }
 
 ReadDir(dir, ext) {                                                           	;-- liest ein Verzeichnis ein, ext=Dateiendung
+	tlist := Array()
 	Loop, Files, % dir "\*." ext
-		tlist .= A_LoopFileName "`n"
+		tlist.Push(A_LoopFileName)
 return tlist
 }
 
-ReadPdfIndex(PdfIndexFile) {	                                        	;-- erstellt das ScanPool Object
+ReadPdfIndex(PdfIndexFile) {	                                        	;-- erstellt das ScanPool Object### geändert jetzt fehlerhaft - ist noch für scanpool.ahk
 
-		;Teile der Variablen sind globale Variablen
-
-		PageSum	:= 0
-		FileCount	:= 0
+	; ein Teil der Variablen sind globale Variablen
+		PageSum	:= FileCount	:= 0
 		allfiles   	:= ""
-		tidx       	:= 0
+		tmpPool	:= Array()
 
-		If ( FileCount	:= ScanPoolArray("Load", PdfIndexFile) )					;erstellt den files Array aus der pdfIndex.txt Datei
-				PageSum:= ScanPoolArray("CountPages")
+		If (FileCount := ScanPoolArray("Load", PdfIndexFile))					; erstellt den files Array aus der pdfIndex.txt Datei
+			PageSum := ScanPoolArray("CountPages")
 
-		PdfDirList:= ReadDir(BefundOrdner, "pdf")
-		RegExReplace(PdfDirList, "m)\n", "", filesInDir)
+		PDFfiles := ReadDir(BefundOrdner, "pdf")
 
 	;nicht mehr vorhandene Dateien aus dem Index nehmen
-		For key, val in ScanPool
-				If !InStr(PdfDirList, StrSplit(val, "|").1)
-						ScanPool.Delete(key)
+		For key, val in ScanPool {
+
+			SPfile := StrSplit(val, "|").1
+			filefound := false
+			For idx, pdfname in PDFfiles
+				If InStr(pdfname, SpFile) {
+					tmpPool.Push(val)
+					PDFFiles[idx] := "---"
+					filefound := true
+					break
+				}
+
+		}
+		ScanPool := Array()
+		For idx, val in tmpPool
+			ScanPool.Push(val)
 
 	;nach noch nicht aufgenommenen Dateien suchen
-		Loop, Parse, PdfDirList, `n, `r
-		{
-				If !ScanPoolArray("Find", A_LoopField)
-				{
-						FileGetSize, FSize, % BefundOrdner "\" A_LoopField, K
-						ScanPool.Push(A_LoopField . "|" . FSize . "|" . pages)
-						continue
-				}
+		For idx, pdfname in PDFfiles {
+			If (pdfname != "---")	{
+				pdfPath := Addendum.BefundOrdner "\" pdfname
+				FileGetSize	, FSize	, % pdfPath, K
+				FileGetTime	, FTime	, % pdfPath, M
+				pages := GetPDFPages(pdfPath)
+				ScanPool.Push(pdfname "|" FSize "|" FTime "|" pages)
+				continue
+			}
 
 		}
 
@@ -496,45 +514,56 @@ return CountValidKeys(ScanPool)
 
 RefreshPdfIndex(BefundOrdner) {	                                   	;-- frischt das ScanPool Object auf
 
-	; globale Variabeln im aufrufenden Skript: ScanPool := Object()
+	; WICHTIG!: braucht eine globale Variable im aufrufenden Skript: ScanPool := Object()
 
-		static newPDFs  	:= 0
-		PageSum	:= 0
-		FileCount	:= 0
-
-	; Kopie des ScanPool-Objektes anlegen
-		tmpObj		:= Object()
-		tmpObj 	:= ScanPool
-
-	; ScanPool-Objekt leeren
-		ScanPool	:= Object()
+		newPDFs 	:= 0
+		tmpObj 	:= ScanPool                      	; Kopie des ScanPool-Objektes anlegen
+		ScanPool	:= Object()                    		; ScanPool-Objekt leeren
 
 	; alle pdf Dokumente einlesen
-		PdfDirList:= ReadDir(BefundOrdner, "pdf")
+		PDFfiles	:= ReadDir(BefundOrdner, "pdf")
 
-	;nicht mehr vorhandene Dateien aus dem Index nehmen
-		For key, val in tmpObj
-			If FileExist(BefundOrdner "\" StrSplit(val, "|").1)
+	; nicht mehr vorhandene Dateien aus dem Index nehmen
+		For key, val in tmpObj {
+
+			SPfile := StrSplit(val, "|").1
+			filefound := false
+			For idx, pdfname in PDFfiles
+				If InStr(pdfname, SpFile) {
 					ScanPool.Push(val)
-
-	;nach noch nicht aufgenommenen Dateien suchen
-		Loop, Parse, PdfDirList, `n, `r
-		{
-				If !ScanPoolArray("Find", A_LoopField)
-				{
-						FileGetSize, FSize, % BefundOrdner "\" A_LoopField, K
-						ScanPool.Push(A_LoopField "|" FSize "|" pages)
-						newPDFs ++
-						continue
+					PDFFiles[idx] := "---"
+					filefound := true
+					break
 				}
+
 		}
 
-	;Sortieren der eingelesenen und aktualisierten Dateien
-		ScanPoolArray("Sort")
+	; neue PDF Dateien hinzufügen
+		For idx, pdfname in PDFfiles {
+			If (pdfname != "---")	{
+				newPDFs ++
+				pdfPath := BefundOrdner "\" pdfname
+				FileGetSize	, FSize	, % pdfPath, K
+				FileGetTime	, FTime	, % pdfPath, M
+				pages           	:= GetPDFPages(pdfPath)
+				isSearchable 	:= isSearchablePDF(pdfPath) ? 1 : 0
+				ScanPool.Push(pdfname "|" FSize "|" FTime "|" pages "|" isSearchable)
+			}
+
+		}
+
+	;Sortieren der Daten
+		For key, val in ScanPool
+			If (StrLen(Trim(val)) > 0)
+				allfiles .= val "`n"
+		Sort, allfiles
+		ScanPool := StrSplit(RTrim(allfiles, "`n"), "`n")
+
 		ScanPoolArray("Save")
 
 return newPDFs
 }
+
 
 ;}
 
@@ -697,6 +726,26 @@ return NumGet(buffin, 0, Type)
 ;--------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
 
 
+;}
+
+;--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+; BILDBEFUNDE
+;--------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
+GetAllDocumentsFromPatID(PatID, ext="*") {
+
+	; ext = * findet alle Dokumente egal welche Dateiendung oder z.B. pdf, jpg, avi ...
+
+	dirs 	:= [], files 	:= []
+
+	Loop, Files, % "M:\albiswin\Briefe\*Bild", D
+		dirs.Push(A_LoopFileFullPath)
+
+	For idx, dir in dirs
+		Loop, Files, % dir "\*" PatID "*." ext
+			files.Push(A_LoopFileFullPath)
+
+return files
+}
 ;}
 
 ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------

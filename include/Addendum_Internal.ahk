@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 08.06.2020 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 26.08.2020 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -10,6 +10,7 @@
 ; (01) TimeCode                                    	(02) PrintArr                                  	(03) GetHex                                  	(04) GetDec
 ; (05) SetWinEventHook                         	(06) UnhookWinEvent                    	(07) StdOutToVar                          	(08) IsProcessElevated                         	(09) RunAsTask
 ; (10) Json2Obj                                     	(11) IniReadExt                              	(12) IniAppend                              	(13) hk                                               	(14) Errorbox
+
 ;1
 TimeCode(DaT) {                                                                                                                  	;-- used for protokoll functions - Month & Time (DaT) = 1 - it's clear!
 
@@ -92,34 +93,37 @@ UnhookWinEvent(hWinEventHook, HookProcAdr) {
 }
 ;7
 StdoutToVar(sCmd, sEncoding:="UTF-8", sDir:="", ByRef nExitCode:=0) {                               	;-- cmdline Ausgabe in einen String umleiten
+
     DllCall( "CreatePipe",           PtrP,hStdOutRd, PtrP,hStdOutWr, Ptr,0, UInt,0 )
     DllCall( "SetHandleInformation", Ptr,hStdOutWr, UInt,1, UInt,1                 )
 
             VarSetCapacity( pi, (A_PtrSize == 4) ? 16 : 24,  0 )
     siSz := VarSetCapacity( si, (A_PtrSize == 4) ? 68 : 104, 0 )
-    NumPut( siSz,      si,  0,                                       	"UInt" )
-    NumPut( 0x100,     si,  (A_PtrSize == 4) ? 44 : 60, "UInt" )
-    NumPut( hStdOutWr, si,  (A_PtrSize == 4) ? 60 : 88, "Ptr"  )
-    NumPut( hStdOutWr, si,  (A_PtrSize == 4) ? 64 : 96, "Ptr"  )
+    NumPut( siSz,         si,  0,                                      		"UInt" )
+    NumPut( 0x100,     si,  (A_PtrSize == 4) ? 44 : 60, 	"UInt" )
+    NumPut( hStdOutWr, si,  (A_PtrSize == 4) ? 60 : 88, 	"Ptr"  )
+    NumPut( hStdOutWr, si,  (A_PtrSize == 4) ? 64 : 96, 	"Ptr"  )
 
-    If ( !DllCall( "CreateProcess", Ptr,0, Ptr,&sCmd, Ptr,0, Ptr,0, Int,True, UInt,0x08000000, Ptr,0, Ptr,sDir?&sDir:0, Ptr,&si, Ptr,&pi ) )
+    If (!DllCall( "CreateProcess", "Ptr",0, "Ptr",&sCmd, "Ptr",0, "Ptr",0, "Int",True, "UInt",0x08000000, "Ptr",0, "Ptr",sDir?&sDir:0, "Ptr",&si, "Ptr",&pi ))
         Return ""
       , DllCall( "CloseHandle", Ptr,hStdOutWr )
       , DllCall( "CloseHandle", Ptr,hStdOutRd )
 
     DllCall( "CloseHandle", Ptr,hStdOutWr ) ; The write pipe must be closed before reading the stdout.
-    While ( 1 )
-    { ; Before reading, we check if the pipe has been written to, so we avoid freezings.
-        If ( !DllCall( "PeekNamedPipe", Ptr,hStdOutRd, Ptr,0, UInt,0, Ptr,0, UIntP,nTot, Ptr,0 ) )
+    While ( 1 )  { ; Before reading, we check if the pipe has been written to, so we avoid freezings.
+
+        If (!DllCall( "PeekNamedPipe", Ptr,hStdOutRd, Ptr,0, UInt,0, Ptr,0, UIntP,nTot, Ptr,0 ))
             Break
-        If ( !nTot )
-        { ; If the pipe buffer is empty, sleep and continue checking.
+
+        If ( !nTot ) { ; If the pipe buffer is empty, sleep and continue checking.
             Sleep, 100
             Continue
         } ; Pipe buffer is not empty, so we can read it.
+
         VarSetCapacity(sTemp, nTot+1)
         DllCall( "ReadFile", Ptr,hStdOutRd, Ptr,&sTemp, UInt,nTot, PtrP,nSize, Ptr,0 )
         sOutput .= StrGet(&sTemp, nSize, sEncoding)
+
     }
 
     ; * SKAN has managed the exit code through SetLastError.
@@ -127,7 +131,8 @@ StdoutToVar(sCmd, sEncoding:="UTF-8", sDir:="", ByRef nExitCode:=0) {           
     DllCall( "CloseHandle",        Ptr,NumGet(pi,0)                              )
     DllCall( "CloseHandle",        Ptr,NumGet(pi,A_PtrSize)                   )
     DllCall( "CloseHandle",        Ptr,hStdOutRd                                   )
-    Return sOutput
+
+Return sOutput
 }
 ;8
 IsProcessElevated(ProcessID) {                                                                                                	;-- ermittelt ob ein Prozess mit UAC-Virtualisierung läuft
@@ -309,7 +314,7 @@ IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="") {                  
 
 	; beim ersten Aufruf der Funktion !nur! Übergabe des ini Pfades mit dem Parameter SectionOrFullFilePath
 	; die Funktion behandelt einen geschriebenen Wert der "ja" oder "nein" ist, als Wahrheitswert, also true oder false
-	; letzte Änderung: 08.06.2020
+	; letzte Änderung: 26.08.2020
 
 		static WorkIni
 
@@ -323,19 +328,29 @@ IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="") {                  
 			return WorkIni
 		}
 
+	; Workini ist nicht definiert worden, dann muss das komplette Skript abgebrochen werden
+		If !WorkIni {
+			MsgBox,, Addendum für AlbisOnWindows, % "Bei Aufruf der Funktion IniReadExt`nmuss als erstes der Dateipfad zur ini Datei`nübergeben werden.`n`nDas Skript wird jetzt beendet.", 10
+			ExitApp
+		}
+
 	; Section, Key einlesen
 		IniRead, OutPutVar, % WorkIni, % SectionOrFullFilePath, % Key
+		OutPutVar := StrReplace(OutPutVar, "Ã¼", "ü")
 
 	; Bearbeiten des Wertes vor Rückgabe
 		If InStr(OutPutVar, "ERROR")
-			If (StrLen(DefaultValue) > 0) ; Defaultwert vorhanden, dann diesen Schreiben und Zurückgeben
-				IniWrite, % (OutPutVar := DefaultValue), % WorkIni, % SectionOrFullFilePath, % key
-			else
-				return "ERROR"
+			If (StrLen(DefaultValue) > 0) { ; Defaultwert vorhanden, dann diesen Schreiben und Zurückgeben
+				OutPutVar := DefaultValue
+				IniWrite, % DefaultValue, % WorkIni, % SectionOrFullFilePath, % key
+				If ErrorLevel
+					MsgBox, % "Der Defaultwert <" DefaultValue "> konnte geschrieben werden.`n`n" WorkIni
+			}
+			else return "ERROR"
 		else if InStr(OutPutVar, "%AddendumDir%")
-				OutPutVar := StrReplace(OutPutVar, "%AddendumDir%", Addendum.AddendumDir)
+				return StrReplace(OutPutVar, "%AddendumDir%", Addendum.AddendumDir)
 		else if RegExMatch(OutPutVar, "i)^\s*(ja|nein)\s*$", bool)
-				OutPutVar := (bool1= "ja") ? true : false
+				return (bool1= "ja") ? true : false
 
 return Trim(OutPutVar)
 }
@@ -410,4 +425,6 @@ ErrorBox(ErrorString, CallingScript:="", Screenshot:=false) {                   
 	FileAppend, % Zeitstempel Computer Skript SC ErrorString "`n", % logpath "\Errorbox.txt"
 
 }
+
+
 

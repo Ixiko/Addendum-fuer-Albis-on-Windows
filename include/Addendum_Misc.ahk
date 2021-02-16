@@ -1,17 +1,17 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 24.01.2020 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 27.09.2020 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; SONSTIGES                                                                                                                                                                                                                                                	(17)
+; SONSTIGES                                                                                                                                                                                                                                                	(18)
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; (01) ObjFindValue                         	(02) WaitFileExist                                  	(03) FormatSeconds
-; (04) DateDiff                                  	(05) FormatedFileCreationTime             	(06) ConvertGerDateToEng                  	(07) LineDelete                         (08) Send_WM_COPYDATA
+; (04) DateDiff                                  	(05) FormatedFileCreationTime             	(06) ConvertGerDateToEng                  	(07) LineDelete                      	(08) Send_WM_COPYDATA
 ; (09) GetAddendumID                     	(10) KeyValueObjectFromList                 (11) sleepx                                            (12) NoScriptStopSleep
-; (13) ProcessExist                            	(14) ScriptExist
-; (15) SendSuspend                        	(16) IsRemoteSession                          	(17) StrFlip                                            (18) Clip                               	(19) ScriptIsRunning
+; (13) ProcessExist                            	(14) SendSuspend                              	(15) IsRemoteSession                            	(16) StrFlip                            	(17) Clip
+; (18) ScriptIsRunning
 ;1
 ObjFindValue(arr, value) {                                                                         	;-- Array in Array Suche
 
@@ -149,7 +149,7 @@ ConvertGerDateToEng(dateStr) {                                                  
 return SubStr(dateStr, 7, 4) . SubStr(dateStr, 4, 2) . SubStr(dateStr, 1, 2)
 }
 ;7
-LineDelete(V, L, R := "", O := "", ByRef M := "") {	                                          	;-- Deletes a specific line or a range of lines from a variable containing one or more lines of text.
+LineDelete(V, L, R := "", O := "", ByRef M := "") {	                                       	;-- Deletes a specific line or a range of lines from a variable containing one or more lines of text.
 
 	; DESCRIPTION of function LineDelete() - see AHK.Rare on GitHub (Ixiko)
 
@@ -194,7 +194,7 @@ Send_WM_COPYDATA(ByRef StringToSend, ScriptID) {                                
     SizeInBytes := (StrLen(StringToSend) + 1) * (A_IsUnicode ? 2 : 1)
     NumPut(SizeInBytes, CopyDataStruct, A_PtrSize)
     NumPut(&StringToSend, CopyDataStruct, 2*A_PtrSize)
-    SendMessage, 0x4a, 0, &CopyDataStruct,, ahk_id %ScriptID%,,,, % TimeOutTime ; 0x4a is WM_COPYDATA.
+    SendMessage, 0x4a, 0, &CopyDataStruct,, % "ahk_id " ScriptID,,,, % TimeOutTime ; 0x4a is WM_COPYDATA.
 
     DetectHiddenWindows, % Prev_DetectHiddenWindows 	; Restore original setting for the caller.
     SetTitleMatchMode	 ,  % Prev_TitleMatchMode         	; Same.
@@ -276,9 +276,9 @@ return "c1"
 }
 ;12
 NoScriptStopSleep(waitingtime) {                                                               	;-- wie sleepx - nur nicht unterbrechbar
-		a:=A_TickCount
+		a := A_TickCount
 		while (A_TickCount - a < waitingtime)
-					sleep, 50
+			sleep, 50
 }
 ;13
 ProcessExist(ProcName, cmd:="") {                                                                	;-- is searching only for Autohotkey Scripts
@@ -300,28 +300,6 @@ ProcessExist(ProcName, cmd:="") {                                               
 return false
 }
 ;14
-ScriptExist(scriptname) {                                                                             	;-- true oder false wenn ein Skript schon ausgeführt wird
-
-	dtWin:= A_DetectHiddenWindows
-	DetectHiddenWindows, On
-
-	WinGet, hwnd, List, ahk_class AutoHotkey
-
-	Loop, %hwnd%
-	{
-			ID := hwnd%A_Index%
-			WinGetTitle, Titel, ahk_id %ID%
-			WinGet, PID, PID, ahk_id %ID%
-			SplitPath, Titel, runningAHK
-			If InStr(runningAHK, scriptname)
-                            return PID
-	}
-
-	DetectHiddenWindows, % dtWin
-
-return 0
-}
-;15
 SendSuspend(scriptname) {                                                                        	;-- Sendet einen Suspend-Befehl zu einem anderen Skript.
 
 	DetectHiddenWindows, On
@@ -330,16 +308,16 @@ SendSuspend(scriptname) {                                                       
 	PostMessage, WM_COMMAND, ID_FILE_SUSPEND,,, %scriptname% ahk_class AutoHotkey
 
 }
-;16
+;15
 IsRemoteSession() {                                                                                   	;-- true oder false wenn eine RemoteSession besteht
 
 	SysGet, SessionRS, 4096
-	If SessionRS <> 0
+	If (SessionRS <> 0)
 		return true
 
 return false
 }
-;17
+;16
 StrFlip(string) {                                                                                          	;-- String reverse
 
 	VarSetCapacity(new, n:=StrLen(string))
@@ -348,7 +326,7 @@ StrFlip(string) {                                                               
 
 return new
 }
-;18
+;17
 Clip(Text:="", Reselect:="") {                                                                        	;-- Clip() - Send and Retrieve Text Using the Clipboard
 
 	; by berban - updated February 18, 2019
@@ -400,13 +378,14 @@ Return
 Clip:
 Return Clip()
 }
-;19
+;18
 ScriptIsRunning(scriptname) {
 
 	for Prozess in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")
         If RegExMatch(Prozess.commandline, scriptname "\.ahk")
 			 return Prozess.ProcessID
 
+return 0
 }
 
 

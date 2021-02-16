@@ -1,0 +1,896 @@
+﻿Abhängigkeit|Drogen
+Abhängigkeitssyndrom durch Gebrauch von Cannabinoiden {F12.2G}|Abhängigkeitssyndrom durch Alkoholgebrauch {F10.2G}|Abhängigkeitssyndrom bei Gebrauch von Kokain {F14.2G}|Abhängigkeitssyndrom bei Gebrauch von Sedativa oder Hypnotika {F13.2G}
+
+ACE
+ACE Hemmer Husten {T88.7G}
+
+Akne|Acne|Kommed
+Acne vulgaris {L70.0G}
+
+Adipositas
+Adipositas Grad I über 18 Jahre {E66.00G}|Adipositas Grad II über 18 Jahre {E66.01G}|Adipositas Grad III über 18 Jahre {E66.02G}
+
+Adrenogenitale Störung
+Adrenogenitale Störung {E25.9G}
+
+GVU|Allgemeinuntersuchung|ärztliche Allgemeinuntersuchung
+Ärztliche Allgemeinuntersuchung {Z00.0G}
+
+AK|Aktinische Keratose|solare Keratose|Licht Keratose
+Aktinische Keratose {L57.0G}
+
+C2|Alkohol
+C2-Abusus {F10.2G}
+
+Alopecia|Alopezie|Haarausfall
+Alopecia  totalis {L63.0G}|Alopecia areata {L63.9G}
+
+Alzheimer|Demenz bei Alzheimer|Morbus Alzheimer
+Alzheimer-Krankheit (F00.9*G) {+G30.9G} Demenz bei Alzheimer-Krankheit (G30.9+G) {*F00.9G}
+
+Amaurosis fugax|schwarzer Star
+Amaurosis fugax mit kompletter Rückbildung {G45.32G}|Amaurosis fugax mit nicht näher bezeichnetem Verlauf der Rückbildung {G45.39G}
+
+Analfistel
+Analfistel {K60.3G}
+
+Analfissur
+Akute Analfissur {K60.0G}
+
+Anaphylaxie|anaphylaktischer Schock
+Anaphylaxie {T78.2G}
+
+Aneurysma|Dissektion
+Aneurysma und Dissektion der A. carotis {I72.0G}|Aneurysma der Aorta abdominalis ohne Angabe einer Ruptur {I71.4G}|Aneurysma der Aorta thoracica ohne Angabe einer Ruptur {I71.2G}|Aortenaneurysma, thorakoabdominal, ohne Angabe einer Ruptur {I71.6G}|Aneurysma der Aorta abdominalis {I71.4G}|Aortenaneurysma thoracica Pars ascendens {I71.8G}
+
+AP|Angina pectoris|Stenokardie|Brustenge|Herzenge
+Angina pectoris, stabile {I20.9G}
+
+Angstsstörung generalisiert
+Generalisierte Angststörung {F41.1G}
+
+Anosmie|Geruchsverlust|Verlust des Geruchsinn
+Anosmie {R43.0G}
+
+NOAK|Antikoagulation|Falithrom|Marcumar
+Dauertherapie mit Antikoagulanzien {Z92.1G}
+
+Apallisches Syndrom|Wachkoma|Coma vigile|lucid syndrom
+Apallisches Syndrom {G93.80G}
+
+Appendizitis|akute Appendizitis|Blinddarmentzündung
+Akute Appendizitis, nicht näher bezeichnet {K35.8G}
+
+Aortenaneurysma
+Aneurysma der Aorta abdominalis ohne Angabe einer Ruptur {I71.4G}|Aneurysma der Aorta thoracica ohne Angabe einer Ruptur {I71.2G}|Aortenaneurysma, thorakoabdominal, ohne Angabe einer Ruptur {I71.6G}|Aneurysma der Aorta abdominalis {I71.4G}
+
+AI|Aortenklappeninsuffizienz|Insuffizienz Aortenklappe
+Aortenklappeninsuffizienz ###° {I35.1G}
+
+Arthritis reaktiv|Gelenkentzündung|reaktive Arthritis
+Reaktive Arthritis, nicht näher bezeichnet: Finger Hand {M02.94G}|Reaktive Arthritis, Zeh {M02.97G}
+
+AB|Asthma bronchiale
+Asthma bronchiale {J45.0G}
+
+Atherom|Trichilemmazyste
+Atherom {L72.1G}
+
+Atherosklerose|Arterienverkalkung
+Atherosklerose der Aorta {I70.0G}|Atherosklerose der Extremitätenarterien vom Becken-Bein-Typ mit Ulzeration {I70.24G}|Atherosklerose der Nierenarterie {I70.1G}|Atherosklerose sonstiger Arterien {I70.8G}
+
+Atopisches Ekzem|Atopie|Dermatitis atopica|Endogenes Exzem
+Atopisches Ekzem {L20.9G}
+
+ADHS|Aufmerksamkeit|hyperaktivität|hyperkin|Aktivitäts|Hyperkinetische Störung
+Einfache Aktivitäts- und Aufmerksamkeitsstörung {F90.0G}|Hyperkinetische Störung des Sozialverhaltens {F90.1G}|Sonstige hyperkinetische Störungen {F90.8G}|Hyperkinetische Störung, nicht näher bezeichnet {F90.9G}|Aufmerksamkeitsdefizitsyndrom {F98.8G}
+
+Autismusspektrumstörung|Asperger Syndrom
+kombinierte Autismusspektrumstörung {F84.5G}
+
+AVB|Wencke|Mobitz|Herzbl|Hemibl|Rechtssch|Linkssch|Atrioventrikulärer Block
+AV-Block I° {I44.0G}|AV-Block II° {I44.1G}|AV-Block III° {I44.2G}|Atrioventrikulärer Block {I44.3G}|Linksanteriorer Hemiblock {I44.4G}|Linksposteriorer Hemiblock {I44.5G}|Inkompletter Linksschenkelblock {I44.6G}|Kompletter Linksschenkelblock {I44.7G}|Rechtsfaszikulärer Block {I45.0}|Kompletter Rechtsschenkel Rechtsschenkelblock {I45.1G}|Wolff-Parkinson-White-Syndrom {I45.6G}
+
+av Knoten re|Re entry|av re entry
+Ventrikuläre Arrhythmie durch Re-entry {I47.0G}
+
+Baker Zyste|Synovialzyste
+Baker-Zyste {M71.2G}
+
+Bandscheibenschaden|Prolaps|Protrusio
+Lumbale und sonstige Bandscheibenschäden mit Radikulopathie (G55.1*) {+M51.1G} Kompression von Nervenwurzeln und Nervenplexus bei Bandscheibenschäden (M50-M51+) {*G55.1G}|sonstige zervikale Bandscheibenverlagerung {M50.2G}
+
+Basaliom|weißer Hautkrebs|Basalzellkarzinom|Epitheliom
+Basaliom des Gesichtes {C44.3G}|Basaliom der behaarten Kopfhaut {C44.4G}|Basaliom des Augenlides, einschließlich Kanthus {C44.1G}|Basaliom der Lippenhaut {C44.0G}|Basaliom des Ohres und des äußeren Gehörganges {C44.2G}
+
+Bauchschmerz|schmerz Oberbauch|schmerz Mittelbauch|schmerz Unterbauch|abdominelle Schmerzen|abdomineller Schmerz|Abdomenschmerz
+Schmerzen im Bereich des Oberbauches {R10.1G}|Schmerzen im Bereich des Mittelbauches {R10.2G}|Schmerzen im Bereich des Unterbauches {R10.3G}
+
+Beckenschiefstand
+Beckenschiefstand +### cm {M95.5G}
+
+ABR|Belastungsreaktion|akute Belastungsreaktion|Krisenreaktion|psychische Dekompensation|
+Akute Belastungsreaktion {F43.0G}
+
+Besenreißer|Varikose
+Besenreißer {I83.9BG}
+
+Blindh|visusver|einseitiger Vis|Einseitige Am|Amaur|sehver|sehsch|sehde|visusabf|sehbehin|Monokulare Bli|binokulare Bli|binokulare Seh|beidseitiger Vis|beidseitiger Sehv
+Monokulare Blindheit und hochgradige Sehbehinderung {H54.4G}|Einseitige Amaurose {H54.4G}|Beidseitiger Visusverlust {H54.9G}|Sehschwäche {H54.9G}|Blindheit beider Augen {H54.0G}|Schwere binokulare Sehbeeinträchtigung {H54.1G}|Erworbene Blindheit {H54.0G}
+
+Blutung|Einblutung|Hämatom
+Blutung, ### {R58G}
+
+blockierung LWS|blockierung BWS|blockierung HWS|blockierung Sakralbereich
+LWS Blockierung {M99.83G}|BWS Blockierung {M99.82G}|HWS Blockierung {M99.81G}|Blockierung Sakralbereich {M99.84G}
+
+BH
+HWS Blockierung {M99.81G}
+
+BB
+BWS Blockierung {M99.82G}
+
+BL
+LWS Blockierung {M99.83G}
+
+BS
+Blockierung Sakralbereich {M99.84G}
+
+Borderline|Persönlichkeitsstörung Borderline|emotional instabil
+Emotional instabile Persönlichkeitsstörung vom Borderline-Typ {F60.31G}
+
+Borrelliose|Lyme Krankheit
+Lyme-Krankheit {A69.2G}
+
+Bouch
+Bouchard-Arthrose {M15.2G}
+
+BR|Bronchitis|Entzündung Bronchien|bronchialer Infekt|Infektbronchitis
+Akute Bronchitis {J20.9G}
+
+bronchialkarzinom|lungenkarzinom|bronchial Ca|bronchial Karzinom
+metastasiertes Lungenkarzinom {C34.8G}|Metastasen in der Lunge bei ### {C78.0G}|Bronchial-Ca -Hauptbronchus {C34.0G}|Bronchial-Ca -Lungenoberlappen {C34.1G}
+
+Bursitis|schleimbeutele
+Bursitis trochanterica {M70.6G}|Bursitis im Schulterbereich {M75.5G}|Bursitis olecrani {M70.2G}|Bursitis praepatellaris {M70.4G}
+
+Candi|Soor|Kandi
+Candida-Ösophagitis {B37.81G}
+
+Cannabis
+Abhängigkeitssyndrom durch Gebrauch von Cannabinoiden {F12.2G}
+
+Carotisstenose|Stenose Arteria carotis|Stenose A. carotis|Arteria Carotis St
+Arteria carotis Stenose {I65.2G}
+
+Cholesteatom
+Cholesteatom des Mittelohres {H71G}
+
+Cholezystolithiasis|Gallenblasenstein|gallenstein|gallenkolik|Gallenwegsobstruktion
+Gallenblasenstein {K80.20G}|Gallenblasenstein ohne Cholezystitis ohne Gallenwegsobstruktion {K80.20G}|Gallenblasenstein ohne Cholezystitis mit Gallenwegsobstruktion {K80.21G}
+
+Claudicatio intermittens|Schaufensterkrankheit
+Claudicatio intermittens {I73.9G}
+
+Claustrophobie|Platzangst|Raumangst|Angst in engen Räumen
+Claustrophobie {F40.2G}
+
+Colitis ulcerosa
+Colitis ulcerosa {K51.9G}
+
+COPD|obstruktive Bronchitis|chronisch obstruktive Lungenerkrankung|obstruktive Lungenerkrankung
+COPD {J44.89G}|exacerbierte COPD {J44.19G}|COPD, FEV1 <35% {J44.90G}|COPD, FEV1 >35% und <50% {J44.91G}|COPD, FEV1 >50 % und <70 % {J44.92G}|COPD, FEV1 >70% {J44.93G}
+
+Coxa val
+Coxa valga antetorta {M21.05G}
+
+Coxar|Hüftgelenksa|Arthrose Hüftg
+Coxarthrose {M16.0G}
+
+Daumenarthrose|Rhizarthorse|Daumengrundgelenka|daumengel|arthrose Daumen|Arthritis Daumen
+Rhizarthrose {M18.9G}|reaktive Arthrititis des Daumengrundgelenkes {M02.84G}
+
+vaskuläre Demenz|Demenz vas
+Subkortikale vaskuläre Demenz {F01.2G}
+
+Depression
+Leichte depressive Episode {F32.0G}|Mittelgradige depressive Episode {F32.1G}|Schwere depressive Episode ohne psychotische Symptome {F32.2G}|Rezidivierende depressive Störung, gegenwärtig leichte Episode {F33.0G}|Rezidivierende depressive Störung, gegenwärtig mittelgradige Episode {F33.1G}|Rezidivierende depressive Störung, gegenwärtig schwere Episode {F33.2G}
+
+DM2|Diabetes Typ 2|Diab2|Diabetes 2
+Diabetes mellitus Typ 2 {E11.90G}|Diabetes mellitus mit multiplen Komplikationen {E14.72G}|Diabetische Polyneuropathie (E10-E14+, vierte Stelle .4) {*G63.2G}|Glomeruläre Krankheiten bei Diabetes mellitus (E10-E14+, vierte Stelle .2) {*N08.3G}|Diabetes mellitus Typ 2 mit diabetischer Retinopathie [H36.0*] {E11.30G}|Retinopathia diabetica  (E10-E14+, vierte Stelle .3) {*H36.0G}|diabetische Gastropathie [G59.0*, G63.2*, G73.0*, G99.0*] {+E11.40G}|Diabetischer Fuß bei Typ-2-Diabetes mellitus, G. {E11.74G}|Sexualstörung bei Typ-2-Diabetes mellitus {E11.60G}|Diabetische Gangrän bei Typ-2-Diabetes mellitus {E11.50G}}|Ulcus diabeticum bei Typ-2-Diabetes mellitus {E11.50G}|Durchblutungsstörung bei Typ-2-Diabetes mellitus {E11.50G}
+
+Diar|Durchf|GE
+Gastroenteritis {A09.0G}
+
+Distorsion Sp|Zerrung Sp|Distorsion OSG|OSG Dis|OSG Zer|Zerrung OSG
+Verstauchung und Zerrung des oberen Sprunggelenkes {S93.40G}
+
+Divertikuli|Sigmad|Dickdarmdiv|Colondiv
+Divertikulitis des Dickdarmes ohne Perforation, Abszess, Blutung {K57.32G}|Divertikulitis des Dickdarmes mit Perforation ohne Abszess ohne Blutung {K57.22G}|Divertikulitis des Dickdarmes mit Perforation, Abszess und Blutung {K57.23G}|Divertikulitis des Dickdarmes ohne Perforation ohne Abszess mit Blutung {K57.33G}
+
+Divertikulo
+Divertikulose des Dickdarmes {K57.30G}|Divertikulose des Dickdarmes ohne Perforation oder Abszess, mit Blutung {K57.31G}
+
+Dupu|Fibromato
+Fibromatose der Palmarfaszie [Dupuytren-Kontraktur] {M72.0G}
+
+Dyspno|Atemn|Luftn|Kurzatm|Atembe|akute resp|respiratorische Ins
+Dyspnoe {R06.0G}|Akute respiratorische Insuffizienz ambulant nicht klassifizierbar {J96.09G}
+
+Dysart
+Dysarthrie {R47.1G}
+
+Dysphas|Aphas
+Dysphasie und Aphasie {R47.0G}|
+
+Sprechstö
+Sprechstörung {R47.8G}
+
+Dyskalk|Rechens
+Dyskalkulie {R48.8G}
+
+Eisenm|mikrozytäre Anämie
+Eisenmangelanämie {D50.9G}
+
+Ekchymose|subkonjunktivale Blutung|Hyposphagma|Bindehautblutung|Blutung Konjunktiva|Konjunktivaeinblung
+Ekchymose der Konjunktiva {H11.3G}
+
+Endoprothese Knie|Knie Prothese|Kniegelenksendoprothese
+Kniegelenkprothese {Z96.65G}
+
+Enzephalitis
+Virusenzephalitis {A86G}
+
+Enzephalophalopathie
+Mikrovaskuläre Enzephalopathie {I67.9G}
+
+Epistaxis|Nasenbluten
+Epistaxis {R04.0G}
+
+Epicondylitis Ulnaris|Epicondylitis Radialis|tennisarm
+Epicondylitis ulnaris humeri {M77.0G}|Epicondylitis radialis humeri {M77.1G}
+
+Erythema migrans|Wanderröte|migrans|Erytema
+Erythema migrans {A69.2G}
+
+exacer|excopd
+exacerbierte COPD {J44.19G}
+
+Fersensp|Achilless|Kalkan
+Fersensporn {M77.3G}
+
+Fettl|Steatosis
+Steatosis hepatis {K76.0G}
+
+Flugan
+Flugangst {F41.8G}
+
+Folgen Schlaganfall|Schlaganfallfolgen|Folgen intraspinaler Abszess|Folgen Myelitis|Folgen intrazerebraler Blutung|Folgen Schädelfraktur
+Folgen eines Schlaganfall {I69.4G}|Folgen eines intraspinalen Abszesses {G09G}|Folgen einer Myelitis{G09G}|Folgen einer intrazerebralen Blutung {I69.1G}|Folgen einer Fraktur des Schädels und der Gesichtsschädelknochen, G. {T90.2G}
+
+Folsä
+Arzneimittelinduzierte Folsäure-Mangelanämie {D52.1G}
+
+Fraktur Handgelenk|Handgelenksfraktur|Handfraktur|Handwurzelfraktur|Metakarpalefraktur|Mittelhandfraktur|Fingerfraktur|Daumenfraktur
+Fraktur des Handgelenkes {S62.8G}|Fraktur des Os scaphoideum der Hand {S62.0G}|Fraktur des Os naviculare manus {S62.0G}|Handwurzelfraktur {S62.10G}|Fraktur des Os lunatum {S62.11G}|Fraktur des Os triquetrum {S62.12G}|Fraktur des Os pisiforme {S62.13G}|Fraktur des Os trapezium {S62.14G}|Fraktur des Os trapezoideum {S62.15G}|Fraktur des Os capitatum {S62.16G}|Fraktur des Os hamatum {S62.17G}|Fraktur des ersten Mittelhandknochens {S62.20G}|Fraktur des ersten Metakarpalknochens {S62.20G}|Os-metacarpale-I-Basisfraktur {S62.21G}|Bennett-Fraktur {S62.21G}|Fraktur des Schaftes des ersten Mittelhandknochens {S62.22G}|Fraktur des Kollums des ersten Mittelhandknochens {S62.23G}|Fraktur des Kopfes des ersten Mittelhandknochens {S62.24G}|Fraktur des Metakarpale V {S62.30G}|Mittelhandbruch {S62.30G}|Multiple Frakturen der Mittelhandknochen {S62.4G}|Daumenfraktur {S62.50G}|Fraktur der proximalen Phalanx des Daumens {S62.51G}|Fingerfraktur {S62.60G}|Mittelfingerendgliedfraktur {S62.63G}|Multiple Frakturen der Finger {S62.7G}
+
+Gallenwegsk|Cholangiok|Gallengangsk|cholangiozell
+metastasiertes Gallenwegskarzinom {C24.0G}
+
+Gicht|Urikop
+idiopathische Gicht {M10.07G}
+
+Glukosetol
+Abnormer Glukosetoleranztest {R73.0G}
+
+Gonal|Knies|Arthralgie Kn
+Gelenkschmerz: Kniegelenk {M25.56G}
+
+Gonar|Kniegelenksa
+Gonarthrose {M17.9G}|Chondromalacia patellae {M22.4G}|Kniegelenkserguß {M25.46G}
+
+Genu val|X Be|Valgusdeformität Kn|Valgusstellung Kn
+Genu valgum {M21.06G}
+
+Genu var|O Be|Varusstellung Kn|Varusdeformität Kn
+Varusdeformität des Kniegelenkes {M21.16G}
+
+Gürtelr|Herpes Z|Zoster
+Herpes zoster ohne Komplikation {B02.9G}
+
+Hämorr
+Hämorrhoiden {K64.9G}
+
+Hämatoc|Melä|Teer
+Meläna {K92.1G}
+
+Harnink|Urininkontinenz|Bettnässen
+Harninkontinenz {R32G}
+
+Enuresis|Einnässen|nächtliches Einnässen
+Enuresis {R32G}
+
+Gewichtsabnahme
+Abnorme Gewichtsabnahme {R63.4G}
+
+Harnstau|Nierenob|obstruktive Nep|stauungsni|Hydronephr
+Harnstau 3.Grades {N13.8G}|Hydronephrose {N13.3G}|Hydronephrose bei pelviureteraler Striktur {N13.0G}|Hydronephrose bei Ureterstriktur a.n.k. {N13.1G}|Steinbedingte Pyelonephritis mit Hydronephrose {N13.2G}|Ureterstein mit Hydronephrose {N13.2G}|Stauungsniere {N13.3G}
+
+Helicobacter
+Helicobacter pylori [H. pylori] als Ursache von Krankheiten {!B98.0G}
+
+hemiparese|hemiplegie
+Schlaffe Hemiparese und Hemiplegie {G81.0}|Spastische Hemiparese {G81.1G}|Hemiparese und Hemiplegie, nicht näher bezeichnet {G81.9}
+
+Schlaffe Hemiparese|schlaffe Hemiplegie
+Schlaffe Hemiparese und Hemiplegie {G81.0}
+
+spastische Hemipase
+Spastische Hemiparese {G81.1G}
+
+Hepato|Lebervergr|Lebersch
+Hepatomegalie {R16.0G}
+
+Hepatitis|Virushepatitis|Leberentzündung
+Akute Virushepatitis {B17.9G}
+
+Hernia inguinalis|Leistenbruch
+Hernia inguinalis ohne Komplikationen {K40.90G}|Hernia inguinalis mit Einklemmung ohne Gangrän, kein Rezidiv {K40.30G}
+
+herzinsuffizienz|myokardinsuffizienz|Linksherzinsuffzienz|Rechtsherzinsuffizienz
+Linksherzinsuffizienz ohne Beschwerden {I50.11G}|Linksherzinsuffizienz NYHA II {I50.12G}|Linksherzinsuffizienz NYHA III {I50.14G}|Linksherzinsuffizienz NYHA IV {I50.14G}|Linksherzinsuffizienz, nicht näher bezeichnet {I50.19G}|Primäre Rechtsherzinsuffizienz {I50.00G}|Sekundäre Rechtsherzinsuffizienz {I50.01G}
+
+Herzspitz|Aneurysma Herzsp
+Herzspitzenaneurysma {I25.3G}
+
+Hüftgelenksd|Hüftdysp|Hüftgelenksve
+Hüftgelenksdysplasie {Q65.8G}
+
+Hydrozele|Wasserbruch
+Hydrozele {N43.3G}
+
+Hypercholesterinämie|Hyperlipoprot
+Hypercholesterinaemie {E78.0G}
+
+Hypergly|Überzu
+Hyperglykämie {R73.9G}
+
+Hyperlipi
+Hyperlipidaemie {E78.5G}
+
+Hyperpa
+Primärer Hyperparathyreoidismus {E21.0G}
+
+Hyperprol
+Hyperprolaktinämie {E22.1G}
+
+Hyperte
+hypertensive Episode {I10.91G}
+
+hyperthy|Autoimmunthyre|thyreoi|Basedow|Hashi
+Hyperthyreose {E05.9G}|Morbus Basedow {E05.0G}|Hashimoto-Thyreoiditis {E06.3G}|Autoimmunthyreoiditis {E06.3G}
+
+Hyperto|Blutho
+Hypertonie {I10.0G}|essentielle Hypertonie {I10.0G}
+
+Hypogly|Unterzu
+Hypoglykämie {E16.2G}
+
+Hypok|Kaliumm
+Hypokaliämie {E87.6G}
+
+Hypothyr
+Hypothyreose {E03.9G}
+
+latente Hypoth
+latente Hypothyreose {E03.9G}
+
+hypoto|Orthostat
+Orthostatische Hypotonie {I95.1G}|Hypotonie durch Arzneimittel {I95.2G}|Idiopathische Hypotonie {I95.0G}|Sonstige Hypotonie {I95.8G}
+
+Immobilität
+Immobilität {R26.3G}
+
+Impetigo contagiosa|Grind
+Impetigo contagiosa Kopf, ### {L01.0G}
+
+Impingment Syndrom|Rotatorenmanschettenruptur|Läsion der Rotatorenmanschette
+Impingement-Syndrom der Schulter {M75.4G}|Bursitis im Schulterbereich {M75.5G}|Läsionen der Rotatorenmanschette {M75.1G}
+
+Insektenstich
+Insektenstich {T63.4G}
+
+Interkostalneuropathie|Rippenblockierung
+Interkostalneuropathie {G58.0G}
+
+Kalkschulter|Tendinitis calcarea Schulter
+Tendinitis calcarea im Schulterbereich {M75.3RG}
+
+Kardiomegalie
+Kardiomegalie {I51.7G}
+
+CTS|Karpaltunnelsyndrom|Carpaltunnelsyndrom
+Karpaltunnelsyndrom {G56.0G}
+
+Katarakt|grauer Star
+Katarakt {H26.9G}
+
+KHK
+KHK {I25.19G}|KHK 1 Gefäß {I25.11G}|KHK 2 Gefäß {I25.12G}|KHK 3 Gefäß {I25.13G}
+
+Knick Senk Spreizfuß|Senk Spreizfuß|Spreizfuß
+Knick-Senk-Spreizfuß {M21.4G}
+
+KGE|Kniegelenkserguß
+Kniegelenkserguß {M25.46G}
+
+Kokain
+Abhängigkeitssyndrom bei Gebrauch von Kokain {F14.2G}
+
+CE|kopfschmerz|Arzneimittelinduzierter Kopfschmerz|medikamenteninduzierter Kopfschmerz|analgetikainduzierter Kopfschmerz
+Kopfschmerz {G44.8G}|Arzneimittelinduzierter Kopfschmerz {G44.4G}
+
+Kontaktdermatitis|Kontaktexzem
+Allergische Kontaktdermatitis {L23.9G}
+
+Krampf|Krämpfe|Muskelkrampf|Wadenkrampf
+Krämpfe und Spasmen der Muskulatur {R25.2G}
+
+Lagerungsschwindel|benigner paroxys
+Benigner paroxysmaler Schwindel {H81.1G}
+
+Laktoseintoleranz
+Laktoseintoleranz {E73.9G}
+
+Leberzirrhose|Dekompensierte Leberz
+Alkoholische Leberzirrhose Child Pugh ### {K70.3G}|dekompensierte Leberzirrhose {K74.6G}
+
+Lesestörung|Rechtsschreibstörung|Lese Rechtschreibschwäche
+Lese- und Rechtschreibstörung {F81.0G}
+
+Lichen ruber|Feinknötchenflechte|Knötchenflechte
+Lichen ruber planus {L43.9G}
+
+LSB|Linksschenkelblock
+Linksschenkelblock {I44.7G}
+
+Lipom
+Lipom {D17.3G}
+
+Loefgren|Löfgren|Morbus Loefgren
+Morbus Loefgren {D86.8G}
+
+Lungenembolie
+Lungenembolie ohne Angabe eines akuten Cor pulmonale {I26.9G}
+
+Lungenemphysem|Emphysem
+Lungenemphysem {J43.9G}
+
+Lungenmetastasen|Metastasten Lunge
+Sekundäre bösartige Neubildung der Lunge {C78.0G}
+
+Lungenödem|pulmonales Ödem|Pulmonalödem|Wasserlunge
+Lungenödem {J81G}
+
+Luxat|Schulterluxation|Schultergelenksluxation
+Luxation des Schultergelenkes {S43.00G}
+
+Lymphadenitis
+Akute Lymphadenitis an Gesicht, Kopf und Hals {L04.0G}|Akute Lymphadenitis am Rumpf {L04.1G}|Akute Lymphadenitis an der oberen Extremität {L04.2G}|Akute Lymphadenitis an der unteren Extremität {L04.3G}
+
+Lymphödem
+Lymphödem {I89.09G}|Hereditäres Lymphödem {Q82.09G}
+
+Makuladegeneration
+Makuladegeneration {H35.3G}
+
+Magengeschwür|Ulcus ventriculi|Geschwür Magen
+Ulcus ventriculi {K25.3G}
+
+Mamma Ca|Brustkrebs
+Mamma-Ca {C50.9G}
+
+Marasmus|Kachexie
+Alimentärer Marasmus {E41G}
+
+Meniere|Morbus Meniere
+Ménière-Krankheit {H81.0G}
+
+Meningeom
+Meningeom {D32.9G}
+
+Meniskopathie|Meniskusschädigung
+Meniskusschädigung Hinterhorn des Außenmeniskus {M23.25G}|Meniskusschädigung durch alten Riss oder alte Verletzung: mehrere Lokalisationen {M23.20G}|Meniskusschädigung durch alten Riss oder alte Verletzung: Vorderhorn des Innenmeniskus {M23.21G}|Meniskusschädigung durch alten Riss oder alte Verletzung: Hinterhorn des Innenmeniskus {M23.22G}|Meniskusschädigung durch alten Riss oder alte Verletzung: sonstiger und nicht näher bezeichneter Teil des Innenmeniskus {M23.23G}|Meniskusschädigung durch alten Riss oder alte Verletzung: Vorderhorn des Außenmeniskus {M23.24G}|Sonstige Meniskusschädigungen: mehrere Lokalisationen {M23.30G}|Sonstige Meniskusschädigungen: Vorderhorn des Innenmeniskus {M23.31G}|Sonstige Meniskusschädigungen: Hinterhorn des Innenmeniskus {M23.32}|Sonstige Meniskusschädigungen: sonstiger und nicht näher bezeichneter Teil des Innenmeniskus {M23.33G}|Sonstige Meniskusschädigungen: Vorderhorn des Außenmeniskus {M23.34G}|Sonstige Meniskusschädigungen: Hinterhorn des Außenmeniskus {M23.35G}|Sonstige Meniskusschädigungen: sonstiger und nicht näher bezeichneter Teil des Außenmeniskus {M23.36G}|Binnenschädigung des Kniegelenkes, nicht näher bezeichnet: mehrere Lokalisationen {M23.90G}|Binnenschädigung des Kniegelenkes, nicht näher bezeichnet: vorderes Kreuzband oder Vorderhorn des Innenmeniskus {M23.91}|Binnenschädigung des Kniegelenkes, nicht näher bezeichnet: hinteres Kreuzband oder Hinterhorn des Innenmeniskus {M23.92G}|Binnenschädigung des Kniegelenkes, nicht näher bezeichnet: Innenband [Lig. collaterale tibiale] oder sonstiger und nicht näher bezeichneter Teil des Innenmeniskus {M23.93G}|Binnenschädigung des Kniegelenkes, nicht näher bezeichnet: Außenband [Lig. collaterale fibulare] oder Vorderhorn des Außenmeniskus {M23.94G}|Binnenschädigung des Kniegelenkes, nicht näher bezeichnet: Hinterhorn des Außenmeniskus {M23.95}|Binnenschädigung des Kniegelenkes, nicht näher bezeichnet: Hinterhorn des Außenmeniskus {M23.95G}|Binnenschädigung des Kniegelenkes, nicht näher bezeichnet: sonstiger und nicht näher bezeichneter Teil des Außenmeniskus {M23.96G}
+
+Meralgia paraesthetica
+Meralgia paraesthetica {G57.1G}
+
+Meteorismus|Flatulenz
+Meteorismus {R14G}
+
+Migräne
+Migräne {G43.0G}
+
+MI|Mitralinsuffizienz|Mitralklappeninsuffizienz
+Mitralklappeninsuffizienz {I34.0G}
+
+Mykose|Hautpilz
+Oberflächliche Mykose {B36.9G}
+
+Mukoviszidose
+Mukoviszidose {E84.9G}
+
+Muskelkontraktur|Kontraktur
+Muskelkontraktur: mehrere Lokalisationen {M62.40G}|Muskelkontraktur: Schulterregion {M62.41G}|Muskelkontraktur: Oberarm {M62.42G}| Muskelkontraktur: Unterarm {M62.43G}|Muskelkontraktur: Hand {M62.44G}|Muskelkontraktur: Beckenregion und Oberschenkel {M62.45G}|Muskelkontraktur: Unterschenkel {M62.46G.}|Muskelkontraktur: Knöchel und Fuß {M62.47G}|Muskelkontraktur: sonstige Lokalisationen {M62.48G}|Muskelkontraktur: nicht näher bezeichnete Lokalisationen {M62.49G}
+
+Myogelosen
+Myogelosen {M62.89G}
+
+Myokardinfarkt|Herzinfarkt|Hinterwandinfarkt|Vorderwandinfarkt|alter Myokardinfarkt
+Herzinfarkt {I21.9G}|Vorderwandinfarkt des Herzens {I21.0G}|Hinterwandinfarkt des Herzens {I21.1G}|Akuter transmuraler Myokardinfarkt {I21.2G}|Akuter subendokardialer Myokardinfarkt {I21.4G}|Alter Myokardinfarkt, ### {I25.29G}
+
+MYOTRIG
+Myogelosen {M62.89G}|Triggerpunkt LWS {M62.88G}
+
+Narkolepsie|Kataplexie
+Narkolepsie und Kataplexie {G47.4G}
+
+Nebenniereninsuffizienz|Nebennierenrindeninsuffizinz|Addison|Morbus Addison
+Morbus Addison {E27.1G}
+
+Nebenwirkung
+unerwünschte Nebenwirkungen, ### {T78.8G}
+
+Nephrolithiasis|Nierenstein|Harnstein
+Nierenstein {N20.0G}|Harnsteinkrankheit {N20.9G}|Harnsteinleiden {N20.9G}
+
+Netzhautdystrophie|Hereditäre Netzhautdystrophie
+Hereditäre Netzhautdystrophie {H35.5G}
+
+Nierenkar|Nieren Ca|bösartige Neubildung Nier
+Nierencarcinom {C64G}
+
+Niereninsuffizienz
+Chronische Nierenkrankheit, Stadium 2 {N18.2}|Chronische Nierenkrankheit, Stadium 3 {N18.3}|Chronische Nierenkrankheit, Stadium 4 {N18.4}|Chronische Nierenkrankheit, Stadium 5 {N18.5}|Chronische Nierenkrankheit, Stadium 1 {N18.1}
+
+Nierenkolik|Ureterkolik
+Nierenkolik{N20.1G}
+
+Nikotin|Raucher
+Abhängigkeit von Nikotin {F17.2G}
+
+Obstipation|Koprostase
+Obstipation bei Kolontransitstörung {K59.00G}
+
+Ödem Unterschenkel|Unterschenkelödem
+Ödem, Unterschenkel {R60.9BG}
+
+Orientierungsstörung
+Orientierungsstörung, nicht näher bezeichnet {R41.0G}
+
+OE|Otitis externa|Gehörgangsentzündung
+eitrige Otitis externa {H60.8G}
+
+OM|Otitis media|Mittelohrentzündung
+Akute eitrige Otitis media {H66.0G}
+
+OSAS|Schlafapnoe|obstruktive Schlafapnoe
+Obstruktives Schlafapnoesyndrom {G47.31G}
+
+Oxyuriasis|Fadenwürmer|Enterobiasis|Madenwurm
+Enterobiasis [Oxyuriasis] {B80G}
+
+Panikstörung|paroxysmale Angst
+Episodisch paroxysmale Angst {F41.0G}
+
+pankreatitis|pankreasentzündung|bauchspeicheldrüsenen|pankreasabszeß
+Biliäre akute Pankreatitis ohne Angabe einer Organkomplikation {K85.10G}|Idiopathische akute Pankreatitis {K85.00G}|Alkoholinduzierte Pankreatitis {K85.20G}|Pankreatitis {K85.90G}|Pankreasabszess {K85.91G}
+
+Parästhesie|Kribbelparästhesie|Mißempfindung
+Parästhesie der Haut {R20.2}
+
+Parkinson|Morbus Parkinson
+Primärer M.Parkinson (fehlende oder geringe Beeinträchtigung) {G20.00G}|Primärer M.Parkinson (mäßige bis schwere Beeinträchtigung) {G20.10G}|Primärer M.Parkinson-Syndrom (schwerste Beeinträchtigung) {G20.20G}
+
+PAVK|Periphere Gefäßkrankheit
+Periphere Gefäßkrankheit {I73.9G}
+
+Pankreasinsuffizienz
+Pankreasinsuffizienz {K86.8G}
+
+Pedikulose|Läuse|Pediculosis
+Pedikulose [Läusebefall] {B85.2G}
+
+Persönlichkeitsstörung
+Ängstliche  Persönlichkeitsstörung {F60.6G}|ängstlich-narzistische Persönlichkeitsstörungen {F60.8G}
+
+Pertussis|Keuchhusten
+Keuchhusten durch Bordetella pertussis {A37.0G}
+
+PHA|Pharyngitis|Rachenentzündung
+Akute Pharyngitis {J02.9G}
+
+Phimose|Vorhautverengung|Paraphimose|Vorhauthypertrophie
+Vorhauthypertrophie, Phimose und Paraphimose {N47G}
+
+Phlegmone|FingerPhlegmone|ZehenPhlegmone|RumpfPhlegmone
+Phlegmone an den Fingern {L03.01G}|Phlegmone an den Zehen {L03.02G}|Phlegmone an der oberen Extremität {L03.10G}|Phlegmone an der unteren Extremität {L03.11G}|Phlegmone im Gesicht {L03.2G}|Phlegmone am Rumpf {L03.3G}|Phlegmone, nicht näher bezeichnet {L03.9G}
+
+PNEU|Pneumonie|Lungenentzündung
+Pneumonie {J15.8G}
+
+Pityriasis v|Kleienp|Kleienf|Kleief
+Pityriasis versicolor {B36.0G}
+
+Pityriasis rosea|Schuppenröschen|Röschenflechte|Plaque m|Herald P|Primärflec|Primärmed|Pityriasis ci|Gibert
+Pityriasis rosea {L42G}
+
+Plattenepithelkarzinom|Stachelzellkarzinom|Spinaliom
+Plattenepithelkarzinom ### {C44.9G}
+
+Plattfuß|Pes planus
+Plattfuß [Pes planus] {M21.4G}
+
+Pleuraerguss
+Pleuraerguss bei anderenorts klassifizierten Krankheiten {*J91G}|Pleuraerguss, anderenorts nicht klassifiziert {J90G}|
+
+Pollen|Gräser
+Allergie gegen Pollen {T78.4G}
+
+PCP|Polyarthritis|chronische Polyarthritis|Gelenkrheuma
+Chronische Polyarthritis {M06.90G}
+
+Polyarthrose
+Polyarthrose, n.n.bz. {M15.9G}
+
+Polymyalgia rheumatica
+Polymyalgia rheumatica {M35.3G}
+
+Polyneuro|PNP
+Hereditäre und idiopathische Neuropathie {G60.9G}
+
+polyzystische Ovarien|PCO
+Syndrom polyzystischer Ovarien {E28.2G}
+
+PTBS|Posttraumatische Belastungsstörung
+Posttraumatische Belastungsstörung {F43.1G}
+
+Prellung|KniePrellung|KopfPrellung|FußPrellung|UnterschenkelPrellung|RippenPrellung|ThoraxPrellung
+Prellung des Knies {S80.0.G}|Prellung des Kopfes {S00.95.G}|Prellung des Fußes {S90.3.G}|Prellung des Unterschenkels {S80.1.G}|Prellung des Thorax (Rippen) {S20.2G}
+
+problem|kontaktan|Soziale Um|Berufsle|Familienkre|Lebensfü
+Problem mit Bezug auf die Lebensführung {Z72.9G}|Kontaktanlässe mit Bezug auf die soziale Umgebung {Z60G}|Andere Kontaktanlässe mit Bezug auf den engeren Familienkreis {Z63G}|Kontaktanlässe mit Bezug auf das Berufsleben {Z56G}
+
+BPH|Prostatahyperplasie|Prostatavergrößerung|vergrößerung Prostata|vergrößerte Prostata|Hyperplasie Prostata
+benigne Prostatahyperplasie {N40G}
+
+Prostatakarzinom|Prostata Ca
+Prostata-Ca {C61G}
+
+pulmonale Hypertonie|Lungenhochdruck
+sekundäre pulmonale Hypertonie {I27.28G}
+
+Psoriasis|Schuppenflechte
+Psoriasis {L40.0G}|Psoriasis pustulosa palmoplantaris {L40.3G}
+
+Pyelonephritis|Nierenbeckenentzündung
+Akute Pyelonephritis {N10G}
+
+Quinke Ödem|Angioneurotisches Ödem
+Angioneurotisches Ödem {T78.3G}
+
+Raucherleukozytose
+Raucherleukozytose {D72.8G}
+
+Raynaud Syndrom|Morbus Raynaud|Reilsch|Weißfingerkrankheit|Digitus mortus
+Raynaud-Syndrom an den Händen {I73.0G}
+
+RSB|Rechtsschenkelblock|Rechtsfaszikul
+Rechtsschenkelblock {I45.1G}
+
+Refluxösophagitis
+Refluxösophagitis {K21.0G}
+
+reizdarm|colon irritabile
+Reizdarmsyndrom mit prädominanter Obstipation {K58.2G}|Colon irritabile mit Diarrhoe {K58.1G}|Reizdarm mit Diarrhoe {K58.1G}|Reizdarmsyndrom {K58.8G}
+
+Retropatellararthrose|Chondromalacia patellae
+Chondromalacia patellae {M22.4G}
+
+Rhinitis sicca
+Rhinitis sicca {J31.0G}
+
+Riesenzellarteriitis|Horton|Morbus Horton|Arteritis Temporalis|Arteritis cranialis
+Sonstige Riesenzellarteriitis {M31.6G}
+
+Salping|akute Sal|Adnexi|akute Adn|Oophori
+Akute Salpingitis und/oder Oophoritis {N70.0G}
+
+Scharl|Streptokokkenan
+Scharlach {A38G}
+
+Schilddrüsenk
+Bösartige Neubildung der Schilddrüse {C73G}
+
+Schizop
+Sonstige Schizophrenie {F20.8G}
+
+Schlafmi|Benzo|Diazepam|Hypnotika|Sedativ
+Abhängigkeitssyndrom bei Gebrauch von Sedativa oder Hypnotika {F13.2G}
+
+schlafstörung|einschlafstörung|Durchschlafstörung|Albträume|Angstträume|Schlafbedürfnis|Ein und Durchschlafstörung
+Ein- und Durchschlafstörungen {G47.0G}|Krankhaft gesteigertes Schlafbedürfnis {G47.1G}|Sonstige Schlafstörungen {G47.8G}|Schlafstörung, nicht näher bezeichnet {G47.9G}|Albträume [Angstträume] {F51.5G}
+
+Schmerz|chronische Schmerzen|chronischer Schmerz|chronisches Schmerzsyndrom
+chronischer Schmerz {R52.2G}
+
+Schnittwunde
+Schnittwunde {T14.1G}
+
+schwerh|Presby|altersschw|Hörver|hypakus
+Presbyakusis{H91.1G}|Hörverlust {H91.9G}
+
+Schwindel|Vertig|Taumel
+Schwindel und Taumel {R42G}
+
+Senilität
+Senilität {R54G}
+
+Sialad|Ohrspeicheldrüsenentzündung|Parotitis|Siaload
+Parotitis {K11.2G}
+
+Sialolit|Sialodocholithiasis|Speicheldrüsenstein|Speichelstein
+Sialodocholithiasis {K11.5G}
+
+Sick Sinus Syndrom|Sinusknotensyndrom|Sinusknotenerkrankung
+Sick-Sinus-Syndrom {I49.5G}
+
+Sinusitis acuta|akute Sinusitis
+akute Sinusitis {J01.9G}
+
+SMA|Sinusitis maxillaris
+Akute Sinusitis maxillaris {J01.0G}
+
+SFA|Sinusitis frontalis
+Akute Sinusitis frontalis {J01.1G}
+
+skoliose|Lws Skoliose|Bws Skoliose|Bws Lws Skoliose|Hws Skoliose
+LWS-Skoliose {M41.96G}|BWS-Skoliose {M41.94G}|BWS-LWS-Skoliose {M41.95G}|HWS-Skoliose {M41.92G}
+
+Sodbrennen|Refluxbeschwerden
+Sodbrennen {R12G}
+
+PSY|Somatisierungsstörung
+Somatisierungsstörung {F45.0G}
+
+Spinalkanalstenose Lumbal|Spinalstenose Lumbal
+Spinal(kanal)stenose: Lumbalbereich {M48.06G}
+
+Spondylol
+Spondylolisthesis {M43.19G}
+
+Spondylos
+Spondylosis derformans {M47.99G}
+
+SVT|Supraventrikuläre Tachykardie
+Supraventrikuläre Tachykardie {I47.1G}
+
+Stressinkontinenz|Belastungsinkontinenz
+Stressinkontinenz {N39.3G}
+
+Stuhlinkontinenz|Enkopresis|Einkoten
+Stuhlinkontinenz {R15G}
+
+Sturzneigung
+Sturzneigung {R29.6G}
+
+Synkope|Kollaps
+Synkope und Kollaps {R55G}
+
+SVES|supraventrikuläre Extrasystolie
+SVES {I49.4G}
+
+Tachykarkardie unspez.
+Tachykardie {R00.0G}
+
+Tendovaginitis|Sehnenscheidenentzündung
+Tendovaginitis {M65.99G}
+
+thalassämie|mittelmeeranämie|Rietti|Cooley|Mittelmeerfieber
+Thalassämie {D56.9G}|Alpha-Thalassämie {D56.0G}|Beta-Thalassämie {D56.1G}|Cooley-Anämie {D56.1G}|Thalassämie-Erbanlage {D56.3G}|Delta-Beta-Thalassämie {D56.2G}|Thalassämievariante {D56.8G}
+
+TIA|Zerebrale transistorische Ischämie|transitorische Ischämie
+Zerebrale transitorische Ischämie {G45.92G}
+
+Tinea|Fußpilz
+Tinea pedis {B35.3G}
+
+Tonsillitis|Mandelentzündung|Angina tonsillaris
+Akute Tonsillitis durch sonstige näher bezeichnete Erreger {J03.8G}|Scharlach {A38G}
+
+Trigeminusneuralgie
+Trigeminusneuralgie {G50.0G}
+
+TRIG
+Triggerpunkt LWS {M62.88G}
+
+Tuba auditiva Verschluß|tubenkatarrh|syringitis des Ohres|ohrtrompete|verschluss der Tuba auditiva|tubenmittelohrkatarrh
+Verschluss der Tuba auditiva {H68.1G}|Obstruktion der Tuba auditiva {H68.1G}|Verengung der Tuba auditiva {H68.1G}|Entzündung der Tuba auditiva {H68.0G}
+
+TVT|Thrombose|Venenthrombose
+Tiefe Venenthrombose {I80.1G}
+
+Übel|Erbr|Naus|Vomit|Emes
+Übelkeit und Erbrechen, G. {R11G}
+
+Unguis|Onychocryptosis|eingewachsener Zehnagel
+Unguis incarnatus {L60.0G}
+
+Urachusfistel
+Urachusfistel {Q64.4G}
+
+Urtikaria
+Idiopathische Urtikaria {L50.1G}|Chronische Urtikaria {L50.8G}|Allergische Urtikaria {L50.0G}
+
+Varizen
+Varizen der unteren Extremitäten ohne Ulzeration oder Entzündung, bds. {I83.9G}
+
+Ventrikelseptumdefekt|Septumdefekt
+Ventrikelseptumdefekt {Q21.0G}
+
+VES|Ventrikuläre Extrasystolie
+Ventrikuläre Extrasystolie {I49.3G}
+
+VHF|Vorhofflimmern|Permanentes Vorhofflimmern|paroxysmales Vorhofflimmern|persistierendes Vorhofflimmern|typisches Vorhofflimmern
+Vorhofflimmern, permanent {I48.2G}|Vorhofflimmern, paroxysmal {I48.0G}|Vorhofflimmern, persistierend {I48.1G}|Vorhofflattern, typisch {I48.3G}|Vorhofflimmern und Vorhofflattern, n.n.bz. {I48.9G}
+
+VI|Virusinfektion|viraler Infekt
+Virusinfektion{B34.9G}
+
+Viruswarze|Warze
+Viruswarzen {B07}
+
+VitaminD|Vitamin D
+Vitamin D Mangel {E64.8G}
+
+Vorhandensein Gelenk|Vorhandensein orthopäd|
+Vorhandensein von orthopädischen Gelenkimplantaten {Z96.6G}
+
+Vorhofthrombus|intrakardialer thrombus|thrombus vorhof
+Vorhofthrombus {I51.3G}
+
+Vorsorge|allgemeinun|erstunter|gesundheitsun|gesundheitsc|gesundheits Ch|routineun|u Unters|untersuchung
+Vorsorgeuntersuchung {Z00.0G}|Untersuchung des gesunden Säuglings {Z00.1G}|Untersuchung beim Kleinkind {Z00.1G}|Untersuchung beim Kind {Z00.1G}|Prüfung des Entwicklungsstandes eines Kindes {Z00.1G}|Prüfung des Entwicklungsstandes eines Säuglings {Z00.1G}|Intelligenztest beim Kind {Z00.1G}|Kontrolle des Entwicklungsstandes eines Kleinkindes {Z00.1G}|Untersuchung aufgrund eines Wachstumsschubs in der Kindheit {Z00.2G}|Psychiatrische Untersuchung a.n.k. {Z00.4G}|Untersuchung potentieller Organ- oder Gewebespender {Z00.5G}
+
+Krebsvorsorge|karzinomvorsorge|krebsfrüherkennung|screening auf Neubildungen
+Krebsvorsorge {Z12.9G}|Mammographie {Z12.3G}|Screening auf Leukämie {Z12.8G}|Screening auf Lymphome {Z12.8G}|Screening auf Harnblasenneoplasma {Z12.6G}|Screening auf Blasenneoplasma {Z12.6G}|Abstrich der Cervix uteri nach Papanicolaou {Z12.4G}|Papanicolaou-Abstrich der Cervix uteri bei Verdacht auf Neubildung {Z12.4G}|Spezielle Untersuchung auf Neubildung der Prostata {Z12.5G}|Spezielle Untersuchung auf Neubildung der Harnblase {Z12.6G}
+
+Wespengiftallergie
+Wespengiftallergie {T78.4G}
+
+Windeldermatitis|Windelsoor|Windelexzem|Hautsoor
+Windeldermatitis {L22G}
+
+Wirbelfraktur|Wirbelkörperfraktur|Wirbelsinterung
+Fraktur der Wirbelsäule, Höhe ### {T08.0G}
+
+wundheilungstörung|wundinfekt|sekundär heilende Wunde|Fremdkörper als Komplikation|sekundäre Wundheilung
+Fremdkörper (mit oder ohne Infektion) als Komplikation einer offenen Wunde {T89.01G}|Infektion als Komplikation einer offenen Wunde {T89.02G}|Sonstige Komplikationen einer offenen Wunde {T89.03G}
+
+WPW|Wolff|White
+Wolff-Parkinson-White-Syndrom {I45.6G}
+
+Zeckenbiß
+Zeckenbiß {T14.03G}
+
+Zentralvenenthrombose|Augenvenenverschluß
+Zentralvenenthrombose {H34.8G}
+
+Zöliakie|Gluteneiweißallergie|Sprue
+Zöliakie {K90.0G}
+
+Zwangsstörung
+Zwangsstörungen {F42.8G}
+
+HTI|Zystitis|Harnwegsinfektion|Blasenentzündung
+Harnwegsinfektion {N39.0G}

@@ -13,7 +13,7 @@ nopopup_SP1WS:	;{
 return ;}
 seldom_SP1WS: ;{
 	If ( TimeDiff("000000", "now", "m")=0 )
-						gosub SkriptReload
+			gosub SkriptReload
 return ;}
 ;}
 
@@ -42,12 +42,8 @@ seldom_AnmeldungPC: ;{
 	If (TimeDiff("000000", "now", "m") = 0)
 				gosub SkriptReload
 return ;}
-Wartezeit_AnmeldungPC: ;{
 
 
-
-return
-;}
 ;}
 
 ;*********************************************************************************************************

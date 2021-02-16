@@ -12,7 +12,7 @@
 ;
 ;
 ;
-;------------------------------------- written by Ixiko -this version is from 01.04.2020 -----------------------------------------
+;------------------------------------- written by Ixiko -this version is from 26.08.2020 -----------------------------------------
 ;--------------------------- please report errors and suggestions to me: Ixiko@mailbox.org ---------------------------------
 ;------------------------ use subject: "Addendum" so that you don't end up in the spam folder -----------------------------
 ;--------------------------------- GNU Lizenz - can be found in main directory  - 2017 ---------------------------------------
@@ -30,8 +30,10 @@ runAutohotkeyH	:= A_Args.5
 SplitPath, FullAppPath, AppName
 Sleep, % (delay * 1000)
 
+AHKH_FilePath := A_AppData "\AutoHotkeyH\AutoHotkeyH_U64.exe"
+
 If (runAutohotkeyH = 1)
-	Run, %A_ScriptDir%\AHK_H\AutohotkeyH_U64.exe /f "%FullAppPath%"
+	Run, %AHKH_FilePath% /f "%FullAppPath%"
 else
 	Run, Autohotkey.exe /f "%FullAppPath%"
 

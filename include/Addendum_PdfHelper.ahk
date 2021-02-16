@@ -9,19 +9,8 @@
 ;                                                                                  	------------------------
 ;                                                	FÜR DAS AIS-ADDON: "ADDENDUM FÜR ALBIS ON WINDOWS"
 ;                                                                                  	------------------------
-;    		BY IXIKO STARTED IN SEPTEMBER 2017 - LAST CHANGE 31.01.2020 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
+;    		BY IXIKO STARTED IN SEPTEMBER 2017 - LAST CHANGE 12.10.2020 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-/* 							    		     	                     A DIARY OF "FUNCTION CHANGES"
- -----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-*/
-/*							    						                                 TO-DO Liste
-
-
-*/
-
 ListLines, Off
 return
 ;----------------------------------------------------------------------------------------------------------------------------------------------
@@ -32,125 +21,77 @@ ExtractNamesFromFileName(Pat) {					                      	;-- die Namen müssen
 	Name:=[]
 	;diese Funktion basiert auf der manuellen Erstellung des Dateinamens während des Scanvorganges, es ist sehr kompliziert dem Computer aus OCR Text nach Patientennamen zu durchsuchen
 
-	;Ermitteln des Patientennamen aus dem PDF-Dateinamen
-		;Pat:= RegExReplace(Pat, "\.\|;|,", A_Space) 			;entferne alle Punkt, Komma und Semikolon
-		Pat:= StrReplace(Pat, "Dr.", "")
-		Pat:= StrReplace(Pat, "Prof.", "")
-		Pat:= StrReplace(Pat, ",", A_Space)				;(^,+|,+(?= )|,+$)	;
-		Pat:= StrReplace(Pat, ".", A_Space)				;(^,+|,+(?= )|,+$)	;
-		Pat:= StrReplace(Pat, ";", A_Space)				;\.|;|,
-		Pat:= RegExReplace(Pat, "^Frau\s", "")
-		Pat:= RegExReplace(Pat, "\sFrau\s", A_Space)
-		Pat:= RegExReplace(Pat, "^Herr\s", "")
-		Pat:= RegExReplace(Pat, "\s*Herr\s", A_Space)
-	;zuviele Space Zeichen hintereinander machen Probleme
-		Pat:= RegExReplace(Pat, "(^\s+| +(?= )|\s+$)", "")								;entfernt alle aufeinander folgenden Spacezeichen! https://autohotkey.com/board/topic/26575-removing-redundant-spaces-code-required-for-regexreplace/
+	; Ermitteln des Patientennamen aus dem PDF-Dateinamen
+		;Pat:= RegExReplace(Pat, "\.|;|,", A_Space) 			;entferne alle Punkt, Komma und Semikolon
+		Pat:= StrReplace(Pat, "Dr.", " ")
+		Pat:= StrReplace(Pat, "Prof.", " ")
+		Pat:= StrReplace(Pat, ",", " ")				;(^,+|,+(?= )|,+$)	;
+		Pat:= StrReplace(Pat, ".", " ")				;(^,+|,+(?= )|,+$)	;
+		Pat:= StrReplace(Pat, ";", " ")				;\.|;|,
+		Pat:= RegExReplace(Pat, "^Frau\s", " ")
+		Pat:= RegExReplace(Pat, "\s*Frau\s", " ")
+		Pat:= RegExReplace(Pat, "^Herr\s", " ")
+		Pat:= RegExReplace(Pat, "\s*Herr\s", " ")
+	  ; entfernt alle aufeinander folgenden Spacezeichen! https://autohotkey.com/board/topic/26575-removing-redundant-spaces-code-required-for-regexreplace/
+		Pat:= RegExReplace(RegExReplace(Pat, "\s{2,}", ""),"(^\s*|\s*$)")
 		Pat:= StrSplit(Pat, A_Space)
-		Name[1]:= Pat[1] . ", " . Pat[2]
-		Name[2]:= Pat[2] . ", " . Pat[1]
+		Name[1]:= Pat[1] ", " Pat[2]
+		Name[2]:= Pat[2] ", " Pat[1]
 		Name[3]:= Pat[1]
 		Name[4]:= Pat[2]
 
 return Name
 }
 
-GetPatNames(FullName) {													;-- teilt einen Komma-getrennten String und entfernt Leerzeichen am Anfang und Ende eines Namens
-	Obj	:= Object()
-	obj.surname		:= StrSplitEx(FullName, 1, ",")		;Trimmed den String
-	obj.prename		:= StrSplitEx(FullName, 2, ",")
-return Obj
-}
-
-RegExtractAllWords(str) {
-
-}
-
 ;----------------------------------------------------------------------------------------------------------------------------------------------
 ; xpdf wrapper
 ;----------------------------------------------------------------------------------------------------------------------------------------------
-PdfToText(PdfPath, pages, enc:="UTF-8", SaveToFile:="") {   	;-- using xpdf's pdftotext, function catches the stdout
+PdfToText(PdfPath, pages, enc="UTF-8", SaveToFile="") {    	;-- using xpdf's pdftotext, function catches the stdout
 
 	; Link	: https://autohotkey.com/boards/viewtopic.php?t=15880&start=20
 	; By	: kon - 16.4.2016 modified from: Ixiko
+	; pages = 0 -> alle Seiten extrahieren
 
 	; parameter: pages format 	- use one number to extract only one page, use comma or - to extract a range of pages
-
 
 	q := Chr(0x22)
 
 	If !RegExMatch(pages, "(?<Start>\d+)\s*-|,\s*(?<End>\d+)", Page)
 		PageStart := PageEnd := pages
+	else if (pages = 0) {
+		PageStart	:= 1
+		PageEnd	:= PdfInfo(PdfPath, "Pages")
+	}
 
 	If (StrLen(SaveToFile) = 0)
 		SplitPath, PdfPath,,,, SaveToFile
-	else
-		SaveToFile := RegExReplace(SaveToFile, "\.[a-z]+$", "") ; entfernt Dateiendungen
 
 	If !InStr(SaveToFile, "\")
-		SaveToFile := SPData.ContentPath "\" SaveToFile ".txt"
+		SaveToFile := Addendum.BefundOrdner "\temp\" SaveToFile ".txt"
 
-return StdOutToVar(SPData.XpdfPath "\pdftotext.exe" " -f " PageStart " -l " PageEnd " -bom -nopgbrk -nodiag -layout -enc " q enc q " " q PdfPath q " " q SaveToFile q)			;-enc " encoding "  " " q "-" q -layout
+return StdOutToVar(Addendum.XpdfPath "\pdftotext.exe" " -f " PageStart " -l " PageEnd " -bom -nopgbrk -nodiag -clip -layout -enc " q enc q " " q PdfPath q " " q SaveToFile q)			;-enc " encoding "  " " q "-" q -layout
 }
 
-PdfToPng(PdfPath, dpi, page=1, PreviewPath:="") {	            ;-- using xpdf's pdftoPng
+PdfToPng(PdfPath, page=1, dpi=300, PreviewPath="") {	            ;-- using xpdf's pdftoPng
 
 	;Link: https://autohotkey.com/boards/viewtopic.php?t=15880&start=20
 	;original By: kon - 16.4.2016 modified from: Ixiko
 
-	static pdfError, q:= Chr(0x22)
+	static tmpPath
 
-	If FileExist(PreviewPath . "\PdfPreview-" . SubStr("00000" . page, -6) . ".png")
-		FileDelete, % PreviewPath . "\PdfPreview-" . SubStr("00000" . page, -6) . ".png"
+	If (StrLen(PreviewPath . tmpPath) = 0)
+		tmpPath := Addendum.BefundOrdner "\temp"
+	else if PreviewPath && tmpPath
+		tmpPath := PreviewPath
 
-	StdOut:= StdOutToVar( SPData["XpdfPath"] "\pdftopng64.exe" " -f " page " -l " page " -r " dpi " -aa yes -freetype yes -aaVector yes " q PdfPath q " " q PreviewPath "\PdfPreview" q )
+	pngPath := tmpPath "\PdfPage-" SubStr("00000" page, -6) ".png"
+	If FileExist(pngPath)
+		FileDelete, % pngPath
 
-	If Instr(StdOut, "Error")
-			pdfError ++
+	If InStr(StdOutToVar(Addendum.XpdfPath "\pdftopng.exe" " -f " Page " -l " Page " -r " dpi " -aa yes -freetype yes -aaVector yes " q PdfPath q " " q tmpPath "\PdfPage" q), "Error")
+		return "Error"
 
-return pdfError
-}
-
-PdfToPng2(PdfPath, dpi, page=1) {		                                ;-- not working
-
-	;	using pdftoPng.exe (xpdf) without writing the extracted picture to harddisk (not working)
-
-	;	theres an option in
-	;	based on kon's xpdf functions
-	;	Link: https://autohotkey.com/boards/viewtopic.php?t=15880&start=20
-
-	;	DESCRIPTION from xpdf docs
-    ;   Pdftopng converts  Portable  Document  Format  (PDF)  files  to  color, grayscale,
-	;	or monochrome image files in Portable Network Graphics (PNG) format.
-
-    ;   Pdftopng reads the PDF file, PDF-file, and writes one PNG file for each page, PNG-root-nnnnnn.png,
-	;	where  nnnnnn is the page number.
-	;	If PNG-root is '-', the image is sent to stdout (this is probably only useful when converting a single page).
-
-	;	EXIT CODES
-	;	 	The Xpdf tools use the following exit codes:
-	;	   0      No error.
-	;	   1      Error opening a PDF file.
-	;	   2      Error opening an output file.
-	;	   3      Error related to PDF permissions.
-	;	  99     Other error.
-
-	q := Chr(0x22)
-	static pdfError
-
-	StdOut		 	:= StdOutToVar( SPData["XpdfPath"] "\pdftopng64.exe" " -f " page " -l " page " -r " dpi " -freetype no -aaVector no " q PdfPath q " " q "-" q )
-
-	If Instr(StdOut, "Error") {
-			pdfError += 1
-	} else {
-			size:= VarSetCapacity(StdOut)
-			ImageBin:= StdOut
-			hbit:= BinImgToBITMAP(size, hBitmap, ImageBin)
-			ListVars
-			return {"hBitmap": (hBitmap), "pBitmap": (pBitmap)}
-	}
-
-
-	return 0
+return pngPath
 }
 
 PdfPreviewHandler(PdfPath, PdfCachePath="") {    		            ;-- cache all pages of a pdf on harddisk
@@ -163,8 +104,8 @@ PdfPreviewHandler(PdfPath, PdfCachePath="") {    		            ;-- cache all pag
 
 	StdOut:= StdOutToVar( SPData["XpdfPath"] "\pdftopng64.exe" " -f " page " -l " page " -r " dpi " -freetype yes -aaVector yes " q PdfPath q " " q TempPath "\sppreview" q )
 	If Instr(StdOut, "Error") {
-			pdfError += 1
-			StdOut:=""
+		pdfError += 1
+		StdOut:=""
 	}
 
 return pdfError
@@ -178,21 +119,21 @@ PdfInfo(PdfPath, opt:="", lastpage:=1) {		                         	;-- using xp
 		;Link:            	https://autohotkey.com/boards/viewtopic.php?f=9&t=59294&hilit=pdfinfo
 		;Description: 	function now returns an object (thx to swagfag for his help on RegExMatch)
 		;                   	a space char in keys will be replaced from "Page size" to "Pagesize"
-		;Parameters:		use a key to retreave only one result: PdfInfo2(PdfPath, "Pages")
+		;Parameters:		use a key to retreave only one result: PdfInfo(PdfPath, "Pages")
 
 		static q 				:= Chr(0x22)
 		static PdfResults := Object()
 		static PdfPath_old
 
-		If !(PdfPath_old = PdfPath)
-		{
-				PdfPath_old 	:= PdfPath
-				StdOut			:= StdOutToVar( SPData["XpdfPath"] "\pdfInfo.exe -f 1 -l " lastpage " -rawdates " q PdfPath q )
-				If Instr(StdOut, "Error")
-						StdOut := PdfPath_old:= "", return
+		If !(PdfPath_old = PdfPath)	{
 
-				while(Pos := RegExMatch(StdOut, "`aimO)^([^:]+):\s*(.*)$", M, A_Index == 1 ? 1 : Pos + StrLen(M[0])))
-						PdfResults[StrReplace(M[1], " ")]:= M[2]
+			PdfPath_old 	:= PdfPath
+			StdOut			:= StdOutToVar( SPData["XpdfPath"] "\pdfInfo.exe -f 1 -l " lastpage " -rawdates " q PdfPath q )
+			If Instr(StdOut, "Error")
+				StdOut := PdfPath_old:= "", return
+
+			while(Pos := RegExMatch(StdOut, "`aimO)^([^:]+):\s*(.*)$", M, A_Index == 1 ? 1 : Pos + StrLen(M[0])))
+				PdfResults[StrReplace(M[1], " ")]:= M[2]
 		}
 
 		If (opt = "")
@@ -311,3 +252,19 @@ BinImgToBITMAP(size, byref hBitmap, byref Imagebin) {          ;-- Convert Binar
 
 }
 
+/*  PDF Dokumentstruktur - Notizen
+
+%PDF-1.3 - "Zeilenende/trenner" Hex 0D 0A
+
+	<<
+			/Type /Pages
+			/Count	2
+			/Kids[ 	4 0 R          -> ..4 0 obj..	- [....] steht für ein Array, dieses Dokumentobjekt hat 2 Seiten, objekt Nr 4 und 7
+						7 0 R ]        -> ..7 0 obj..
+	>>
+
+%PDF-1.7 - "Zeilenende/trenner" Hex 0A
+
+eingebetteter OCR Text: [/PDF/Text/ImageB/ImageC/ImageI]
+
+ */

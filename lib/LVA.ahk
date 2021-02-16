@@ -278,7 +278,7 @@ LVA_ListViewModify(LVvar, Options) {
 
 LVA_Refresh(LVvar) {
   tmp := LVA_hWndInfo(LVvar,0,2)
-  WinSet, Redraw,, ahk_id %tmp%
+  WinSet, Redraw,, % "ahk_id " tmp
 }
 
 LVA_SetProgressBar(LVvar, Row, Col, cInfo="") {
@@ -569,21 +569,22 @@ lva_GetStatusColor(Switch, Row=0, Col=0, LVvar=0) {
 }
 
 lva_hWndInfo(hwnd, switch=0, data=1) {
+
   Static
   Local tmp, found
-  if ((switch = 0)||(switch = 2))
-  {
+
+  return hwnd
+
+  if ((switch = 0)||(switch = 2))  {
+
     if hwnd is Integer
-      hwnd := hwnd+0
+      hwnd := hwnd + 0
 
     found := false
-    Loop, %LVCount%
-    {
+    Loop, % LV_GetCount()    {
       tmp := A_Index
-      Loop, 3
-      {
-        if (LVA_hWndInfo_%tmp%_%A_Index% = hwnd)
-        {
+      Loop, 3      {
+        if (LVA_hWndInfo_%tmp%_%A_Index% = hwnd)        {
           found := true
           break
         }
@@ -591,10 +592,10 @@ lva_hWndInfo(hwnd, switch=0, data=1) {
       if found
         break
     }
+
     if !found
       return ""
-    else
-    {
+    else    {
       if (switch = 0)
         return LVA_hWndInfo_%tmp%_%data%
       else if (switch = 2)
@@ -607,8 +608,7 @@ lva_hWndInfo(hwnd, switch=0, data=1) {
     return LVA_hWndInfo_%data%_2
   else if (switch = -3)
     return LVA_hWndInfo_%data%_3
-  else if (switch = 1)
-  {
+  else if (switch = 1)  {
     if !LVCount
       LVCount := 1
     else

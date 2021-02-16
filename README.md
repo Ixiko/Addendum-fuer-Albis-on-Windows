@@ -2,8 +2,8 @@
 
 #### Extends the possibilities through surface analysis and manipulation
 
-### Version 1.34 vom 08.08.2020
-lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
+### Version 1.44 vom 07.11.2020
+lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32.00 Unicode 64bit* , geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 <img src="Docs\TrennerExtraBreit.png" style="zoom: 67%;" />
 
@@ -19,31 +19,35 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis a
 
 <h3> &#9733 PopupBlocker</h3>
 
-- Schließt diverse eher störende, wenig wichtige Fenster in Albis und zugehörigen Programmen
+- Schließt automatisch diverse störende Albisdialoge und zugehörigen Programmen
 
 <h3> &#9733 Fensterhandler</h3>
 
-- positioniert Fenster zur besseren Übersicht auf dem Monitor (bestimmte Bereiche im Albisfenster werden nicht mehr verdeckt)
-- automatische Bestätigung von Dialognachfragen
+- positioniert, erweitert Albisdialoge zur besseren Übersicht innerhalb des Albisfenster damit die Patientenstammdaten immer sichtbar bleiben
+- sie können Albis-Dialognachfragen, welche sie seit Jahren immer gleich beantworten, automatische Bestätigen lassen
 - erweitert automatisch Anzeige-Elemente in Albisdialogen für mehr Übersicht 
+- die im Rezept angezeigte Werbung wird automatisch ausgeblendet
+- Albis *kann* individuell an jedem Arbeitsplatz in Größe und/oder Position fixiert werden 
 
 <h3> &#9733 Auto-Login </h3>
 
 - kann auf Wunsch das Login in ihr Albisprogramm vornehmen
 
-<h3> &#9733 Patientennamendatenbank </h3>
+<h3> &#9733 Patientendatenbank </h3>
 
 - für eine schnelle und fehlertolerante Suche nach Patienten
 
 <h3> &#9733 alternatives Tagesprotokoll </h3>
 
-- nach Computern getrenntes Tagesprotokoll. Dies könnte für einzelne Analysen interessant sein
+- nach Arbeitsplatz-PC's getrenntes Tagesprotokoll. Dies könnte für einzelne Analysen interessant sein
 
 <h3> &#9733 Infofenster </h3>
 
-- zeigt den Inhalt ihres Bildvorlagen-Dateiordners an (PDF, sowie Bilddateien)
-- Befund-/Bilddateien können von dort ohne Umweg in die Patientenakte importiert werden
-- Auflistung aller Karteikarten des Tages (letzte Patienten) 
+- **zentral** in Albis **integriertes Tool für Dokument-Eingänge und Verwaltung des Praxisnetzwerk**. 
+- **Befund-/Bilddateien** können von dort ohne Umweg in die Patientenakte importiert, angezeigt und umbenannt werden
+- **OCR von PDF Dateien mit Tesseract 4** - PDF Dateien, ohne durchgeführte Texterkennung werden erkannt. Die Texterkennung wird im Hintergrund durchgeführt. Dies kann man vom Skript in der Nacht erledigen lassen. Erste Ergebnisse habe ich bei der automatischen Erkennung von Patientennamen erzielt. Ziel ist eine automatische Erkennung von Namen, des Inhaltes und eine gezieltes Entfernen leerer Seiten, Seitenzahl entsprechender Sortierung und die korrekte Ausrichtung jeder Seite
+- **Auflistung aller Karteikarten des Tages** (letzte Patienten).  Jetzt ist es möglich sich durch alle aufgezeichneten Arbeitstage zu blättern, so daß man direkt nach Patienten der vergangenen Wochen, Monate ... suchen kann  
+- **Anzeige aller Netzwerk-Arbeitsplätze**. Neu seit dieser Version ist der direkte Start einer Remotedesktopsitzung per Klick aus Albis heraus.
 
 <h3> &#9733 Unterstützung der PDF-Signierung </h3>
 
@@ -56,7 +60,7 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis a
 <h3> &#9733 Vereinfachung der Albisbedienung </h3>
 
 - erweiterte Tastenkombinationen (Hotkeys) für zusätzliche Funktionalität
-  - **Verschieben von Einträgen** im Dauermedikamenten- und Dauerdiagnosenfenster 
+  - **Verschieben von Einträgen** im Dauermedikamenten- und Dauerdiagnosenfenster und im cave! Dialog 
   - **Kopieren**, **Ausschneiden** und **Einfügen** mit der von Windows gewohnten Tastenkombination
   - **Schließen** einer Krankenakte oder **Anzeigen** der nächsten geöffneten
   - Einstellen des aktuellen **Tagesdatums**
@@ -71,6 +75,10 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis a
 
 - Rezeptvorlagen, z.B. mehrzeilige Hilfsmittelrezepte oder Verschreibung mehrerer Medikamente nach Auswahl einer Vorlage 
 
+<h3> &#9733 schönerer Verordnungsplan und besserer BMP </h3>
+
+* letzteres mag übertrieben sein. Den Bundeseinheitlichen Medikationsplan finde ich furchtbar und wüßte ihn nicht wirklich gut zu verwenden. Ich habe ein Skript geschrieben das die Vorgaben des BMP imitiert, dabei doch mehr Möglichkeiten und um einiges bessere Darstellungen von Informationen bietet
+
 <h3> &#9733 Anzeige von Beginn und Ende der Lohnfortzahlung  </h3>
 
 - die berechneten Stichtage werden im oberen Teil der Arbeitsunfähigkeitsbescheinigung eingeblendet 
@@ -79,7 +87,8 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis a
 
 <h3> &#9733 Kontextsensitive Texterweiterungen </h3>
 
-- Erkennung des Kontext in der Karteikarte anhand des Albiskürzel (z.B. lko, dia, bef, info) mit Bereitstellung von Texterweiterungen 
+- Erkennung des Eingabekontext in der Karteikarte anhand des Albiskürzel (z.B. lko, dia, bef, info, lp, lbg) 
+- man kann sich Textkürzel anlegen die sich Dank Autohotkey automatisch zur Leistungskomplexen, Diagnosen, Befundtexten oder anderem erweitern 
 
 <h3> &#9733 Unterstützung des Laborabrufes </h3>
 
@@ -87,7 +96,7 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis a
 
 <h3> &#9733 Automatisierung DICOM-Daten Umwandlung </h3>
 
-- [MicroDicom](https://www.microdicom.com), der freie DICOM-Viewer für Windows, wird automatisiert für eine schnelle Umwandlung der Daten in Bild- oder Videodateien 
+- [MicroDicom](https://www.microdicom.com), der freie DICOM-Viewer für Windows, wird automatisiert für eine schnelle Umwandlung der Daten in Bild- oder Videodateien (im Moment MRT/CT Aufnahmenumwandlung ins wmi Format (video))
 
 <h3> &#9733 Funktionsbibliothek für eigene Skriptentwicklung </h3>
 
@@ -97,7 +106,7 @@ lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis a
 
 ![](Docs/TrennerExtraBreit.png)
 
-## ![](../../../../../Eigene%20Dateien/Eigene%20Dokumente/AutoIt%20Scripte/GitHub/Addendum-fuer-Albis-on-Windows/Docs/Icons/Achtung.png) *WICHTIG*
+## ![](Docs/Icons/Achtung.png) *WICHTIG*
 
 - Ich empfehle die Skripte **nicht** zu **kompilieren!** 
 
@@ -196,7 +205,7 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
 
 ![erweitertes Kontextmenu](Docs/erweitertes_Kontextmenu.png)
 
-Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter anderem Öffnen eines Formulares zum Bearbeiten oder der direkte Ausdruck. Wenn Sie PDF-Dateien oder Bild-Dateien direkt in die Karteikarte ablegen, können Sie diese Dateien ebenso Anzeigen oder Ausdrucken lassen, aber die Dateien lassen sich auch in einen nach dem Patienten benannten Dateiordner exportieren (z.B. zur Erleichterung beim Arztwechsel) und da der Faxversand eigentlich auch nur ein Druckvorgang ist, geht auch das inklusive Abfrage der Faxnummer (wenn gewünscht)
+Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter anderem Öffnen eines Formulares zum Bearbeiten oder direkter Druck. Wenn Sie PDF-Dateien oder Bild-Dateien direkt in die Karteikarte ablegen, können Sie diese Dateien ebenso Anzeigen oder Ausdrucken lassen. Und man kann diese in einen nach dem Patienten benannten Dateiordner exportieren (z.B. zur Erleichterung beim Arztwechsel). Versehentlich importierte Befunde lassen sich wieder in den Befundordner unter anderem Namen exportieren. Und da der Faxversand eigentlich auch nur ein Druckvorgang ist, geht auch das inklusive Abfrage der Faxnummer (wenn gewünscht)
 
 
 
@@ -319,27 +328,25 @@ DIE SAMMLUNG ENTHÄLT SKRIPTE/BIBLIOTHEKEN AUS ANDEREN QUELLEN. DAS COPYRIGHT SI
 
 **I.a.** Der Download und die Nutzung der Skripte unterliegen der GNU Lizenz welche von Lexikos dem Gründer der Autohotkey Foundation erstellt wurden. 
 
-Die Inhalte und Skripte dürfen AUSSCHLIESSLICH NUR von Praxisinhabern, die zum Zeitpunkt des Downloads oder bei Nutzung in EIGENER PRAXIS als selbstständig tätige approbierte Ärzte sind, installiert, authorisiert, ausgeführt und aber auch frei verändert werden. Ein Auftrag zum Download, Änderungsvorgaben, Nutzungsänderungen an Angestellte (dies gilt auch für angestellte (approbierte) Ärzte oder eine Auftragsvergabe an ein Unternehmen sind **UNTERSAGT**! Nach jeder noch so kleinen Änderung an einem der Skripte oder den grafischen Beigaben ist zusätzlich zu meinem Pseudonym im jeweiligen Skript ihr eigenes Pseudonym oder ihr eigener Namen hinzu zufügen, falls Sie das veränderte Skript weitergeben möchten. Eine Weitergabe veränderter Dateien ausschließlich unter meinem Pseudonym **UNTERSAGE** ich.
+Die Inhalte und Skripte dürfen AUSSCHLIESSLICH NUR von Praxisinhabern, interessierten Angestellte und natürlich allen Personen genutzt werden die sich dem Gedanken "der freien Software" anschliessen können. Ein Auftrag zum Download, Änderungsvorgaben, Nutzungsänderungen an Angestellte (dies gilt auch für angestellte (approbierte) Ärzte oder eine Auftragsvergabe an ein Unternehmen sind **UNTERSAGT**! Nach jeder noch so kleinen Änderung an einem der Skripte oder den grafischen Beigaben ist zusätzlich zu meinem Pseudonym im jeweiligen Skript ihr eigenes Pseudonym oder ihr eigener Namen hinzu zufügen, falls Sie das veränderte Skript weitergeben möchten. Eine Weitergabe *veränderter Dateien* unter ausschließlicher Angabe meines Pseudonyms **UNTERSAGE** ich hiermit ausdrücklich.
 
 **I.b.** ***Nicht gemeinnützigen Unternehmen*** (wie Softwarehäusern, Vertrieblern, Krankenhäusern, Servicefirmen und all Ihren Mitarbeitern) ist ***weder*** die Erwähnung (insbesondere zu Werbezwecken) noch das Weiterverwenden/Einbinden, das Ändern der Skripte oder die Nutzung meiner Ideen in jeglicher Form, selbst in ähnlicher Weise zum Verändern eigener oder anderer Software z.B. um hiermit Geld zu generieren **UNTERSAGT!** In diesen Fällen behalte ich mir vor einen Urheberanspruch an das kommerziell arbeitende Unternehmen zu stellen, den ich im entsprechenden Fall gesetzlich durchsetzen lasse werde.
 
-**I.c.** Universitäten, interessierten Studenten gestatte ich eine Nutzung nur nach schriftlicher Genehmigung und persönlichem Nachweis einer gemeinnützigen Sache, meiner Haftungsfreistellung und einer Erklärung in keinster Weise mit irgendeinem Unternehmen oder einer juristischen Person wie unter I.b. zusammenzuarbeiten. Die eventuellen Auslagen und Kosten trägt der Anfrage/Antragsteller!<BR>
+**I.c.** Universitäten, interessierten Studenten gestatte ich eine Nutzung nach schriftlicher Genehmigung und persönlichem Nachweis einer gemeinnützigen Sache, meiner Haftungsfreistellung und einer Erklärung in keinster Weise mit irgendeinem Unternehmen oder einer juristischen Person wie unter I.b. zusammenzuarbeiten. Die eventuellen Auslagen und Kosten trägt der Anfrage/Antragsteller!<BR>
 
 **I.d.** Gemeinnützige Einrichtungen aus nicht EU-Ländern und nicht-Gxx-Ländern ist die Nutzung wie den Personen unter I.a. unter allen Haftungsausschlüssen für mich jederzeit und ohne Nachfrage gestattet! Hier erkläre ich mich gerne ebenso wie bei I.a. bereit im Falle von Fragen zu helfen.<BR>
 
 #### Download
 
-**II.** mit dem Herunterladen oder Speichern der Dateien in jeglicher Form (entpackt, gepackt, kompiliert, unkompiliert, in Teilen, als Ganzes) übernehmen Sie die volle Verantwortung für deren Inhalt. Ich brauche keinen Nachweis wer die Skripte nutzt, nutzen will oder wer Veränderungen daran vorgenommen hat oder vornehmen will. Desweiteren akzeptieren sie vollständig alle unter Punkt III stehenden Handlungs- und Haftungsregeln.<BR>
+**II.** mit dem Herunterladen oder Speichern der Dateien in jeglicher Form (entpackt, gepackt, kompiliert, unkompiliert, in Teilen, als Ganzes) übernehmen Sie die volle Verantwortung für deren Inhalt. Ich verlange keinen Nachweis wer die Skripte herunterlädt, plant diese herunter zuladen oder diese vielleicht nie nutzen möchte, oder sogar nutzen will oder wer Veränderungen daran vorgenommen hat oder vornehmen will. Desweiteren akzeptieren sie vollständig alle unter Punkt III stehenden Handlungs- und Haftungsregeln.<BR>
 
 #### Haftungsausschluß / Haftungsfreistellung
 
 **III.** die Nutzung des gesamten Inhaltes (einschließlich Programme, Skripte, Bilder, Bibliotheken, Fremdprogramme) erfolgt auf eigene Gefahr! Das Angebot wurde besten Gewissens auf mögliche Urheberrechtsverletzungen untersucht. Es dürften keine Verletzungen enthalten sein. Quellenangaben sind soweit es nachvollziehbar war in den jeweiligen Dateien enthalten.<BR>
 
-**III.a.** ich übernehme keine Haftung durch vermeintliche, unwissentliche oder wissentliche Fehler in den Skripten<BR>
+**III.a.** ich übernehme keine Haftung durch vermeintliche, unwissentliche oder eventuell unterstellte, wissentliche Fehler in den Skripten. Programmieren ist Hobby, Leidenschaft und Arbeitserleichterung. <BR>
 
-**III.b.** ebenso übernehme ich keine Haftung für Urheberrechtsverletzungen durch Dritte deren Software oder SourceCode hier verwendet wurde/wird und werden wird.<BR>
-
-**III.c.** Sie akzeptieren das die Skripte nur in einer Alpha-Version vorliegen, sie sehen den Inhalt als ein Beispielprojekt! Die dargebotenen Skripte sollen keinen Abrechnungsbetrug ermöglichen, sondern im Gegenteil nur zeigen, welche Möglichkeiten im Einsatz von Software liegen.<BR>
+**III.b.** ebenso übernehme ich keine Haftung für Urheberrechtsverletzungen durch Dritte deren Software oder SourceCode hier verwendet wurde/wird und werden wird. <BR>
 
 **III.c.** Sie akzeptieren das die Skripte nur in einer Alpha-Version vorliegen. Sie sehen den Inhalt als  Beispielprojekt! Die angebotenen Skripte sollen keinen Abrechnungsbetrug ermöglichen, sondern im Gegenteil nur zeigen, welche Möglichkeiten der Einsatz von RPA-Software in der Praxis bringen würde.<BR>
 
@@ -355,7 +362,7 @@ Die Inhalte und Skripte dürfen AUSSCHLIESSLICH NUR von Praxisinhabern, die zum 
 
 **III.i.** ich übernehme keinerlei HAFTUNG aufgrund hier fehlender rechtlicher Hinweise/Aus- oder Einschlüße. Ihnen sollte nach dem lesen bekannt und bewußt sein, daß ich keinerlei kommerzielle Zwecke verfolge und die Zusammenstellung der Dateien nicht zum Zwecke eigener Bekanntheit erfolgt und ich deshalb niemals wissentlich oder absichtlich fremdes geistiges Eigentums entwendet habe. Die angebotene Sammlung verfolgt ausschließlich unten genannten gemeinnützigen Zweck.<BR>
 
-**III.j** ich erkläre hiermit, das bewußt keine Informatiker, IT-Experten oder Angestellten einer Hotline für dieses Projekt genervt oder gequält wurden. Irgendwelche Ähnlichkeiten zu lebenden oder verstorbenen Personen sind rein zufällig.*
+**III.j** ich erkläre hiermit, das bewußt (und insbesondere bewußt) keine Informatiker, IT-Experten oder Angestellten einer Hotline für dieses Projekt genervt oder gequält wurden. Irgendwelche Ähnlichkeiten zu lebenden oder verstorbenen Personen sind rein zufällig.*
 
 ###### * (! für Juristen ! - Artikel ‘III.j’ ist Satire!)
 

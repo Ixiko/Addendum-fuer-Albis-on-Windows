@@ -1,5 +1,6 @@
 AlbisAbrechnungsscheinVorhanden(Quartal) \nFunktion nutzt das ComboBox1 Element auf der Hauptoberfläche
 AlbisAbrechnungVorbereiten(Set) \nbearbeitet den Dialog Abrechnung vorbereiten
+AlbisActivate(waitingtime) \naktiviert das Albisfenster\nwaitingtime = maximale Wartezeit in Sekunden bis Albis aktiviert sein sollte
 AlbisActivateMDITab(MDITitle, TabName) \naktiviert ein MDI-Tab, merkt sich welches TabControl zuletzt aufgerufen wurde
 AlbisActiveControl() \nermittelt den aktuellen Eingabefocus und gibt zusätzliche Informationen zur genauen Identifikation des Controls zurück
 AlbisAkteGeoeffnet(Nachname, Vorname, GebDatum="") \nkontrolliert ob die Akte mit den übergebenen Namen geöffnet ist, alle Bedingungen müssen erfüllt sein\ndie Reihenfolge der Namen wird nicht geprüft
@@ -71,7 +72,7 @@ AlbisRezeptHelfer(tag, Schalter) \n(Hilfsmittel-/Kassen-/Btm-) Rezepte schreiben
 AlbisRezeptHelferGui(dbfile) \nSchnellrezept - Standardrezepte für bestimmte Diagnosen/Hilfsmittel mit einem Klick erstellen
 AlbisRezeptSchalterLoeschen(hMuster16) \n(primär) Hilfsfunktion für die Rezepthelfer Gui
 AlbisSchliesseProgrammDatum() \nschließt das Programmdatumsfenster
-AlbisSchreibeInKarteikarte([ArztKennung:="", Datum:="", Kuerzel:="", Eintrag:=""]) \nschreibt eine gesamte Zeile in die Karteikarte
+AlbisSchreibeInKarteikarte([ArztKennung="", Datum="", Kuerzel="", Eintrag=""]) \nschreibt eine gesamte Zeile in die Karteikarte
 AlbisSchreibeLkMitFaktor(Leistungskomplex [, StandardFaktor:=""]) \nVereinfachung für das Senden von Leistungskomplexen per Hotstring
 AlbisSendInputLT(kk, inhalt, kk_Ausnahme, kk_voll) \nschreibt die übergebenen Daten in die Patientenakte\nkk - steht für Karteikürzel - am besten nur L mehr nicht für kk, Albis ergänzt je nach Abrechnungsschein zu lko/lkü usw.\ninhalt ist die zugehörige Ziffer, Wert oder der Text der zum Kürzel eingegeben werden muss.
 AlbisSetCaveZeile(nr, txt, [NoClose:=false]) \nüberschreibt eine Zeile im cave! von - Fenster\nNoClose = true - das cave!von Fenster nach Abschluß der Funktion nicht geschlossen
@@ -87,48 +88,67 @@ AlbisZeigeLaborBlatt() \nschaltet auf das Laborblatt
 
 IfapVerordnung(Medikament, printsilent:=true) \nMedikament über ifap verordnen und Dosiszettel (MS Word Dokument) automatisch ausdrucken
 
-Controls(Control, command, WinTitle, HiddenText:=true, HiddenWin:=true, MatchModeSpeed:="slow")
+Controls(Control, command, WinTitle, HiddenText=true, HiddenWin=true, MatchModeSpeed="slow")
 Control_SetTextAndResize(controlHwnd, newText) \nset a new text to a control and resize depending on textwidth and -height
-ControlSetTextEx(Control= "", NewText= "", WinTitle= "", delay= 0, WinText= "", ExcludeTitle= "", ExcludeText= "")
+ControlSetTextEx(Control="", NewText="", WinTitle="", delay=0, WinText="", ExcludeTitle="", ExcludeText="")
 ConvertGerDateToEng(dateStr)\neigene Funktion konvertiert das deutsche Datumsformat in das übliche englische
-CreateDIBSection(w, h, hdc="", bpp=32, ByRef ppvBits=0) \nThe CreateDIBSection function creates a DIB (Device Independent Bitmap) that applications can write to directly
+CreateDIBSection(w, h[, hdc="", bpp=32, ByRef ppvBits=0]) \nThe CreateDIBSection function creates a DIB (Device Independent Bitmap) that applications can write to directly
 
-ErrorBox(ErrorString, CallingScript="", Screenshot=0) \nPraxomat-Functions: eine Funktion um Daten ins Fehlerlogbuch zu schreiben\nCallingScript = Name des aufrufenden Skriptes , Screenshot = mit Option 1 wird ein Screenshot erstellt
+ErrorBox(ErrorString[, CallingScript="", Screenshot=0]) \nPraxomat-Functions: eine Funktion um Daten ins Fehlerlogbuch zu schreiben\nCallingScript = Name des aufrufenden Skriptes , Screenshot = mit Option 1 wird ein Screenshot erstellt
+
+FindWindow(WinTitle[, WinClass="", WinText="", ParentTitle="", ParentClass="", DetectHiddenWins="on", DectectHiddenTexts="on"])
 FormatedFileCreationTime(filepath) \nermittelt das Erstellungsdatum einer Datei und gibt diese formatiert ins deutsche Format zurück
-FindWindow(WinTitle, WinClass:="", WinText:="", ParentTitle:="", ParentClass:="", DetectHiddenWins:="on", DectectHiddenTexts:="on")
-FoxitInvoke(FoxitMenu:="", FoxitID) \nwm_command wrapper for FoxitReader Version:  9.1
+FoxitInvoke(FoxitMenu, FoxitID) \nwm_command wrapper for FoxitReader Version:  9.1
+FoxitReader_GetPDFPath() \nden aktuellen Dokumentenpfad im 'Speichern unter' Dialog auslesen
+FoxitReader_SignaturSetzen()
+FoxitReader_SignDoc(hDokSig, FoxitTitle, FoxitText:="") {\nWinhook-Handler zum Bearbeiten des Dokument signieren Dialoges
 
+GetAncestor(hWnd[, Flag=2])\nFlag: 1 - Parent , 2 - Root
+GetNextWindow(hwnd, wCmd)\nermittelt die Z-Ordnung der Fenster\nwCmd = 2 - handle to window below, 3 - handle to window above
+GetParent(hWnd)\nermittelt das Handle des Parent Fenster
 GetQuartal(Datum) \nDatum="heute" o. Datum im folgenden Format ist erlaubt: 13.02.2017 oder 13.2.17
 GetWindowInfo(hWnd) \nreturns Key:Val object (Keys: Window/ClientX|Y|W|H, Style, ExStyle, Active, BorderW|H, Atom, Version)
 Gdip_BitmapFromScreen([Screen=0, Raster=""])
 Gdip_BitmapFromHWND(hwnd)
-Gdip_CreateBitmapFromFile(sFile, IconNumber=1, IconSize="")
-Gdip_CreateBitmapFromHBITMAP(hBitmap, Palette=0)
-Gdip_CreateHBITMAPFromBitmap(pBitmap, Background=0xffffffff)
+Gdip_CreateBitmapFromFile(sFile[, IconNumber=1, IconSize=""])
+Gdip_CreateBitmapFromHBITMAP(hBitmap[, Palette=0])
+Gdip_CreateHBITMAPFromBitmap(pBitmap[, Background=0xffffffff])
 Gdip_CreateBitmapFromHICON(hIcon)
 Gdip_CreateHICONFromBitmap(pBitmap)
-Gdip_CreateBitmap(Width, Height, Format=0x26200A)
+Gdip_CreateBitmap(Width, Height[, Format=0x26200A])
 Gdip_CreateBitmapFromClipboard()
 Gdip_SetBitmapToClipboard(pBitmap)
 Gdip_SetSmoothingMode(pGraphics, SmoothingMode)
-Gdip_SetCompositingMode(pGraphics, CompositingMode=0)
-LV_EX_FindString(HLV, Str, Start := 0, Partial := False)
+Gdip_SetCompositingMode(pGraphics[, CompositingMode=0])
+
+LV_EX_FindString(HLV, Str[, Start=0, Partial=false])
+
+OnMessageOnOff(status) \ngehört zum ScanPool.ahk Script: status kann "On" oder "Off" sein
+ObjTree(ByRef obj[,Title="ObjTree",Options="+ReadOnly +Resize,GuiShow=w640 h480",ishwnd=-1]) \nzeigt ein den Inhalt eines Objektes an
+
 PatInDB(PatDb, Name)
-PraxTT(Textmsg, Params="3 0")
-OnMessageOnOff(status) \n gehört zum ScanPool.ahk Script: status kann "On" oder "Off" sein
-ObjTree(ByRef obj,Title="ObjTree",Options="+ReadOnly +Resize,GuiShow=w640 h480",ishwnd=-1) \zeigt ein den Inhalt eines Objektes an
-ReadDbf(dbfPath)
-SetTextAndResize(controlHwnd, newText, fontOptions := "", fontName := "")
+PdfToText(PdfPath, pages[, enc="UTF-8", SaveToFile=""])\nextract text layer via xpdf commandline tools\nenc - encoding of text output, SaveToFile - full filepath to text file or when empty uses path stored in Addendum.Befundordner
+PraxTT(Textmsg, Params="3 0") \nTextmsg (Text der angezeigt werden soll), [Params="3 0 B"]\n    Zahl 1: Anzeigedauer in Sekunden\n    2: wird zur eingestellten Schriftgröße addiert (kann auch negativ sein)\n    3: Position - B(ottom),T(op),L(eft),R(ight),M(iddle)
+
+ReadDbf(dbfPath[, SaveTo="", options=""]) \nDBase-Datenbankkonvertierung\nSaveTo=Dateipfad und Name der Textdatei in die gespeichert werden soll\noptions - ein AHK Object mit folgenden Key's: StartWithSet, MaxDataSets, Search, CloseAfterRead
+
+ScanPoolArray(cmd, param="", opt="")\nScanpool-Objekt Handler - enthält Daten des Befundordners
+SetTextAndResize(controlHwnd, newText[, fontOptions="", fontName=""])
+SetWindowPos(hwnd, x, y, w, h [, hWndInsertAfter, uflag])
 SciTEOutput(Text[,Clear:=0,LineBreak:=1,Exit:=0])
 StrReplace(Heuhaufen, Suchtext [, Ersatztext, AusgabeVarAnzahl, Limit := -1]) \nAusgabeVarAnzahl - Geben Sie eine Variable an, in der die Anzahl gespeichert werden soll, wie oft der Heuhaufen ersetzt wurde (0, wenn keine)\nLimit - Fehlt Limit, gilt standardmäßig -1, dadurch werden alle Vorkommen des Musters ersetzt, die im Heuhaufen gefunden wurden.\nAnsonsten kann man angeben, wie oft der Heuhaufen ersetzt werden soll. Der Heuhaufen-Bereich rechts neben der letzten Ersetzung bleibt unverändert.
+
 TimeCode(DaT) \nPraxomat-Functions: used for protokoll functions - Month & Time (DaT) = 1 - it's clear!
-VerifiedClick(CName, [WTitle:="", WText:="", WinID:="", WaitClose := false]) \nFunktion kontrolliert ob der ControlClick Befehl erfolgreich war, wenn nicht wird er ggf. wiederholt\nBei Angabe der WinID muss kein Titel oder Text angegeben werden!
-VerifiedCheck(CName, WTitle:="", WText:="", WinID:="", CheckIt := 1)
-VerifiedChoose(CName, WTitle:="", EntryNr:= 1 )
-VerifiedSetFocus(CName, WTitle:="", WText:="", WinID:="")
-VerifiedSetText(CName:="", NewText:="", WTitle :="", delay:=200, WText:="")
+
 UpSizeControl(WinTitle, WinClass, UpSizedControl, ExpandDown, ExpandRight, CenterToWin:=0)
-WaitAndActivate(WinTitle, Debug=1, DbgWhwnd=0) \nwait for a window and the activates it\nif you want to use Debug function u must have a DebugWindow and a handle
+
+VerifiedClick(CName, WTitle=""[, WText="", WinID="", WaitClose= false]) \nFunktion kontrolliert ob der ControlClick Befehl erfolgreich war, wenn nicht wird er ggf. wiederholt\nBei Angabe der WinID muss kein Titel oder Text angegeben werden!
+VerifiedCheck(CName, WTitle=""[, WText="", WinID="", CheckIt=true])
+VerifiedChoose(CName, WTitle=""[, EntryNr=1])
+VerifiedSetFocus(CName, WTitle=""[, WText="", WinID=""])
+VerifiedSetText(CName, NewText, WTitle=""[, delay=200, WText=""])
+
+WaitAndActivate(WinTitle[Debug=1, DbgWhwnd=0]) \nwait for a window and the activates it\nif you want to use Debug function u must have a DebugWindow and a handle
 WaitForNewPopUpWindow(ParentWinID, LastPopUpWin, Wait) \nwaits for a new PopUpWindow for a given parent window id and returns an object containing Title, Class, Text and Hwnd of the new popup window\nParentWinID: hwnd of the parent window, LastPopUpWin: hwnd of the actual open last popup win (you have to get it before you call this function), Wait: is time in seconds
 
 

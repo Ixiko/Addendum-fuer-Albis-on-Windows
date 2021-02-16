@@ -54,12 +54,12 @@ class JSON {
 			     , json_value_or_array_closing := quot . "{[]01234567890-tfn"
 			     , object_key_or_object_closing := quot . "}"
 
-			key := ""
-			is_key := false
-			root := {}
-			stack := [root]
-			next := json_value
-			pos := 0
+			key   	:= ""
+			is_key 	:= false
+			root  	:= {}
+			stack 	:= [root]
+			next  	:= json_value
+			pos   	:= 0
 
 			while ((ch := SubStr(text, ++pos, 1)) != "") {
 				if InStr(" `t`r`n", ch)
@@ -214,6 +214,7 @@ class JSON {
 
 			return this.rev.Call(holder, key, value)
 		}
+
 	}
 
 	/**
@@ -239,7 +240,7 @@ class JSON {
 			if (space) {
 				static integer := "integer"
 				if space is %integer%
-					Loop, % ((n := Abs(space))>10 ? 10 : n)
+					Loop % ((n := Abs(space))>10 ? 10 : n)
 						this.gap .= " "
 				else
 					this.gap := SubStr(space, 1, 10)
@@ -263,8 +264,8 @@ class JSON {
 				static type := A_AhkVersion<"2" ? "" : Func("Type")
 				if (type ? type.Call(value) == "Object" : ObjGetCapacity(value) != "") {
 					if (this.gap) {
-						stepback := this.indent
-						this.indent .= this.gap
+						stepback 	:= this.indent
+						this.indent	.= this.gap
 					}
 
 					is_array := value.IsArray
@@ -279,13 +280,14 @@ class JSON {
 
 					str := ""
 					if (is_array) {
-								Loop, % value.Length() {
-									if (this.gap)
-										str .= this.indent
 
-									v := this.Str(value, A_Index)
-									str .= (v != "") ? v . "," : "null,"
-								}
+						Loop, % value.Length() {
+							if (this.gap)
+								str .= this.indent
+
+							v := this.Str(value, A_Index)
+							str .= (v != "") ? v "," : "null,"
+						}
 
 					} else {
 
@@ -296,7 +298,7 @@ class JSON {
 								if (this.gap)
 									str .= this.indent
 
-								str .= this.Quote(k) . colon . v . ","
+								str .= this.Quote(k) colon v ","
 							}
 						}
 					}
@@ -305,7 +307,7 @@ class JSON {
 						str := RTrim(str, ",")
 						if (this.gap)
 							str .= stepback
-											}
+					}
 
 					if (this.gap)
 						this.indent := stepback

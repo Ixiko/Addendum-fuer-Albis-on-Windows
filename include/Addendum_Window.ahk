@@ -18,21 +18,32 @@ ListLines, Off
 ; (40) MoveWinToCenterScreen             	(41) IsInsideVisibleArea
 ; (42) getProcessName                         	(43) GetProcessProperties                 	(44) GetProcessNameFromID
 ; (45) MonitorFromWindow                   	(46) GetMonitorInfo                       	(47) VerifiedWindowClose
-;1
-GetAncestor(hWnd, Flag := 2) {                                                                                                	;--
+;01
+GetAncestor(hWnd, Flag=2) {                                                                                                    	;--
 	;1 - Parent , 2 - Root
     Return DllCall("GetAncestor", "Ptr", hWnd, "UInt", Flag)
 }
-;2
+;02
 GetParentList(ChildHwnd) {                                                                                                        	;-- returns a list of comma separated WinTitles and WinClasses of all parent windows
 
 	;15.05.2019: Code shortend - using extra functions and while loop
-	while, pHwnd:= GetParent(ChildHwnd) {
-			List.= WinGetTitle(pHwnd) . " - " . WinGetClass(pHwnd) "`,"
+	while, (pHwnd:= GetParent(ChildHwnd)) {
+			List .= WinGetTitle(pHwnd) " - " WinGetClass(pHwnd) ","
 			ChildHwnd:= pHwnd
 	}
 
 return List
+}
+GetParentClassList(ChildHwnd, WinHwnd) {                                                                                                    	;-- returns a list of comma separated WinTitles and WinClasses of all parent windows
+
+	;15.05.2019: Code shortend - using extra functions and while loop
+	List := Control_GetClassNN(WinHwnd, ChildHwnd) "|"
+	while, (pHwnd:= GetParent(ChildHwnd)) {
+			List := List . Control_GetClassNN(WinHwnd, pHwnd) "|"
+			ChildHwnd:= pHwnd
+	}
+
+return RTrim(List, "|")
 }
 _GetParentList(ChildHwnd) {                                                                                                      	;-- returns a list of comma separated WinTitles and WinClasses of all parent windows
 
@@ -48,11 +59,11 @@ _GetParentList(ChildHwnd) {                                                     
 
 return List
 }
-;3
+;03
 GetParent(hWnd) {                                                                                                                     	;-- ermittelt das Parent Fenster
 	return GetHex(DllCall("GetParent", "Ptr", hWnd, "Ptr"))
 }
-;4
+;04
 GetNextWindow(hwnd, wCmd) {                                                                                                	;-- ermittelt die Fenster-Z Ordnung
 
 /* wCMD
@@ -61,7 +72,7 @@ GetNextWindow(hwnd, wCmd) {                                                     
 */
 	return DllCall("GetNextWindow", "Ptr", hWnd, "uint", wCMD, "Ptr")
 }
-;5
+;05
 GetWindowInfo(hWnd) {                                                                                                            	;-- returns an Key:Val Object with the most informations about a window (Pos, Client Size, Style, ExStyle, Border size...)
     NumPut(VarSetCapacity(WININFO, 60, 0), WININFO)
     DllCall("GetWindowInfo", "Ptr", hWnd, "Ptr", &WININFO)
@@ -76,40 +87,40 @@ GetWindowInfo(hWnd) {                                                           
     wInfo.ClientH 	:= NumGet(WININFO, 32, "Int") 	- wInfo.ClientY
     wInfo.Style   		:= NumGet(WININFO, 36, "UInt")
     wInfo.ExStyle		:= NumGet(WININFO, 40, "UInt")
-    wInfo.Active  		:= NumGet(WININFO, 44, "UInt")
+    wInfo.Active 		:= NumGet(WININFO, 44, "UInt")
     wInfo.BorderW 	:= NumGet(WININFO, 48, "UInt")
     wInfo.BorderH 	:= NumGet(WININFO, 52, "UInt")
     wInfo.Atom    	:= NumGet(WININFO, 56, "UShort")
     wInfo.Version 	:= NumGet(WININFO, 58, "UShort")
     Return wInfo
 }
-;6
+;06
 GetWindowSpot(hWnd) {                                                                                                           	;-- like GetWindowInfo, but faster because it only returns position and sizes
-    NumPut(VarSetCapacity(WINDOWINFO, 60, 0), WINDOWINFO)
-    DllCall("GetWindowInfo", "Ptr", hWnd, "Ptr", &WINDOWINFO)
+    NumPut(VarSetCapacity(WININFO, 60, 0), WININFO)
+    DllCall("GetWindowInfo", "Ptr", hWnd, "Ptr", &WININFO)
     wi := Object()
-    wi.X   	:= NumGet(WINDOWINFO, 4	, "Int")
-    wi.Y   	:= NumGet(WINDOWINFO, 8	, "Int")
-    wi.W  	:= NumGet(WINDOWINFO, 12, "Int") 	- wi.X
-    wi.H  	:= NumGet(WINDOWINFO, 16, "Int") 	- wi.Y
-    wi.CX	:= NumGet(WINDOWINFO, 20, "Int")
-    wi.CY	:= NumGet(WINDOWINFO, 24, "Int")
-    wi.CW 	:= NumGet(WINDOWINFO, 28, "Int") 	- wi.CX
-    wi.CH  	:= NumGet(WINDOWINFO, 32, "Int") 	- wi.CY
-	wi.S   	:= NumGet(WINDOWINFO, 36, "UInt")
-    wi.ES 	:= NumGet(WINDOWINFO, 40, "UInt")
-	wi.Ac	:= NumGet(WINDOWINFO, 44, "UInt")
-    wi.BW	:= NumGet(WINDOWINFO, 48, "UInt")
-    wi.BH	:= NumGet(WINDOWINFO, 52, "UInt")
-	wi.A    	:= NumGet(WINDOWINFO, 56, "UShort")
-    wi.V  	:= NumGet(WINDOWINFO, 58, "UShort")
+    wi.X    	:= NumGet(WININFO, 4	, "Int")
+    wi.Y    	:= NumGet(WININFO, 8	, "Int")
+    wi.W   	:= NumGet(WININFO, 12, "Int") 	- wi.X
+    wi.H    	:= NumGet(WININFO, 16, "Int") 	- wi.Y
+    wi.CX  	:= NumGet(WININFO, 20, "Int")
+    wi.CY  	:= NumGet(WININFO, 24, "Int")
+    wi.CW	:= NumGet(WININFO, 28, "Int") 	- wi.CX
+    wi.CH  	:= NumGet(WININFO, 32, "Int") 	- wi.CY
+	wi.S    	:= NumGet(WININFO, 36, "UInt")
+    wi.ES   	:= NumGet(WININFO, 40, "UInt")
+	wi.Ac  	:= NumGet(WININFO, 44, "UInt")
+    wi.BW 	:= NumGet(WININFO, 48, "UInt")
+    wi.BH  	:= NumGet(WININFO, 52, "UInt")
+	wi.A    	:= NumGet(WININFO, 56, "UShort")
+    wi.V    	:= NumGet(WININFO, 58, "UShort")
 Return wi
 }
-;7
+;07
 GetWindow(hWnd, uCmd) {
 	return DllCall( "GetWindow", "Ptr", hWnd, "uint", uCmd, "Ptr")
 }
-;8
+;08
 GetWindowPos(hWnd, ByRef X, ByRef Y, ByRef W, ByRef H) {
     VarSetCapacity(RECT, 16, 0)
     DllCall("GetWindowRect", "Ptr", hWnd, "Ptr", &RECT)
@@ -119,27 +130,30 @@ GetWindowPos(hWnd, ByRef X, ByRef Y, ByRef W, ByRef H) {
     w := NumGet(RECT, 8, "Int") - X
     H := NumGet(RECT, 12, "Int") - Y
 }
-;9
+;09
 SetWindowPos(hWnd, x, y, w, h, hWndInsertAfter := 0, uFlags := 0x40) {                                		;--works better than the internal command WinMove - why?
 
-	; https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-setwindowpos
-	SWP_ASYNCWINDOWPOS	:= 0x4000	;This prevents the calling thread from blocking its execution while other threads process the request.
-	SWP_DEFERERASE                	:= 0x2000	;Prevents generation of the WM_SYNCPAINT message.
-	SWP_DRAWFRAME            	:= 0x0020	;Draws a frame (defined in the window's class description) around the window.
-	SWP_FRAMECHANGED     	:= 0x0020	;Applies new frame styles set using the SetWindowLong function.
-	SWP_HIDEWINDOW         	:= 0x0080	;Hides the window
-	SWP_NOACTIVATE   	        	:= 0x0010	;Does not activate the window.
-	SWP_NOCOPYBITS            	:= 0x0100	;Discards the entire contents of the client area.
-	SWP_NOMOVE                 	:= 0x0002	;Retains the current position (ignores X and Y parameters).
-	SWP_NOOWNERZORDER 	:= 0x0200	;Does not change the owner window's position in the Z order.
-	SWP_NOREDRAW             	:= 0x0008	;Does not redraw changes.
-	SWP_NOREPOSITION        	:= 0x0200	;Same as the SWP_NOOWNERZORDER flag.
-	SWP_NOSENDCHANGING	:= 0x0400	;Prevents the window from receiving the WM_WINDOWPOSCHANGING message.
-	SWP_NOSIZE                       	:= 0x0001	;Retains the current size (ignores the cx and cy parameters).
-	SWP_NOZORDER              	:= 0x0004	;Retains the current Z order (ignores the hWndInsertAfter parameter).
-	SWP_SHOWWINDOW        	:= 0x0040	;Displays the window.
+	/*  ; https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-setwindowpos
 
-    Return DllCall("SetWindowPos", "Ptr", hWnd, "Ptr", hWndInsertAfter, "Int", x, "Int", y, "Int", w, "Int", h, "UInt", uFlags)
+	SWP_ASYNCWINDOWPOS	:= 0x4000	; This prevents the calling thread from blocking its execution while other threads process the request.
+	SWP_DEFERERASE                	:= 0x2000	; Prevents generation of the WM_SYNCPAINT message.
+	SWP_DRAWFRAME            	:= 0x0020	; Draws a frame (defined in the window's class description) around the window.
+	SWP_FRAMECHANGED     	:= 0x0020	; Applies new frame styles set using the SetWindowLong function.
+	SWP_HIDEWINDOW         	:= 0x0080	; Hides the window
+	SWP_NOACTIVATE   	        	:= 0x0010	; Does not activate the window.
+	SWP_NOCOPYBITS            	:= 0x0100	; Discards the entire contents of the client area.
+	SWP_NOMOVE                 	:= 0x0002	; Retains the current position (ignores X and Y parameters).
+	SWP_NOOWNERZORDER 	:= 0x0200	; Does not change the owner window's position in the Z order.
+	SWP_NOREDRAW             	:= 0x0008	; Does not redraw changes.
+	SWP_NOREPOSITION        	:= 0x0200	; Same as the SWP_NOOWNERZORDER flag.
+	SWP_NOSENDCHANGING	:= 0x0400	; Prevents the window from receiving the WM_WINDOWPOSCHANGING message.
+	SWP_NOSIZE                       	:= 0x0001	; Retains the current size (ignores the cx and cy parameters).
+	SWP_NOZORDER              	:= 0x0004	; Retains the current Z order (ignores the hWndInsertAfter parameter).
+	SWP_SHOWWINDOW        	:= 0x0040	; Displays the window.
+
+	 */
+
+Return DllCall("SetWindowPos", "Ptr", hWnd, "Ptr", hWndInsertAfter, "Int", x, "Int", y, "Int", w, "Int", h, "UInt", uFlags)
 }
 ;10
 WinMoveZ(hWnd, C, X, Y, W, H, Redraw:=0) {                                                                           	;-- WinMoveZ v0.5 by SKAN on D35V/D361 @ tiny.cc/winmovez
@@ -453,18 +467,14 @@ GetLastActivePopup(hwnd) {                                                      
 	return DLLCall("GetLastActivePopup", "uint", hwnd)
 }
 ;29
-WaitAndActivate(WinTitle, Debug:=0, DbgWhwnd:=0, delay:= 3) {                                				;-- wait for a window and the activates it
-
-		If (Debug =1) {
-				Gui, %DbgWhwnd%:Default
-				LV_Add("", "      Warte auf Fenster: " . WinTitle)
-		}
+WaitAndActivate(WinTitle, WinText="", wait:= 3) {                                                             				;-- wait for a window and then activate it
 
 		WinWait, % WinTitle,, % delay
-
-		while !WinExist(WinTitle) {
-				MsgBox, 0x40000, % A_ScriptName, % "Das Fenster " WinTitle " hat sich nicht geöffnet.`nÖffne es bitte manuell und drücke dann ok."
-                    sleep, 200
+		while !WinExist(WinTitle, WinText) {
+			MsgBox, 0x40004, % A_ScriptName, % "Das Fenster " WinTitle " hat sich nicht geöffnet.`nÖffne es bitte manuell und drücke dann ok."
+			IfMsgBox, No
+				return 0
+			sleep, 200
 		}
 
 		WinActivate    	, % WinTitle
@@ -474,9 +484,9 @@ return ErrorLevel
 }
 ;30
 ActivateAndWait(WinTitle, MaxSecondsToWait) {                                                                            	;--activates a window and wait for activation
-		If !WinActive(WinTitle)
-				WinActivate, % WinTitle
-                    	WinWaitActive, % WinTitle, , % MaxSecondsToWait
+	If !WinActive(WinTitle)
+		WinActivate, % WinTitle
+           	WinWaitActive, % WinTitle, , % MaxSecondsToWait
 return ErrorLevel
 }
 ;31
@@ -574,23 +584,23 @@ RectOverlapsRect(vX1, vY1, vW1, vH1, vX2, vY2, vW2, vH2, vOpt="") {             
 }
 ;35
 WinGetTitle( hwnd ) {                                                                                                                	;-- schnellere Fensterfunktion
-	if (hwnd is not Integer)
-			hwnd :=GetDec(hwnd)
-	vChars := DllCall("user32\GetWindowTextLengthW", Ptr, hWnd) + 1
+	;if (hwnd is not Integer)
+	;		hwnd :=GetDec(hwnd)
+	vChars := DllCall("user32\GetWindowTextLengthW", "Ptr", hWnd) + 1
 	VarSetCapacity(sClass, vChars << !!A_IsUnicode, 0)
-	DllCall("user32\GetWindowTextW", "UInt", hWnd, "Str", sClass, "Int", VarSetCapacity(sClass)+1)
+	DllCall("user32\GetWindowTextW", "UInt", hWnd, "Str", sClass, "Int", VarSetCapacity(sClass) + 1)
 	wtitle := sClass, sClass := ""
-	Return wtitle
+Return wtitle
 }
 ;36
 WinGetClass( hwnd ) {                                                                                                                	;-- schnellere Fensterfunktion
-	if (hwnd is not Integer)
-			hwnd :=GetDec(hwnd)
+	;if (hwnd is not Integer)
+	;		hwnd :=GetDec(hwnd)
 	VarSetCapacity(sClass, 80, 0)
 	DllCall("GetClassNameW", "UInt", hWnd, "Str", sClass, "Int", VarSetCapacity(sClass)+1)
 	wclass := sClass
 	sClass =
-	Return wclass
+Return wclass
 }
 ;37
 WinGetText( hwnd ) {                                                                                                                  	;-- Wrapper
@@ -603,7 +613,7 @@ WinGet( hwnd, cmd) {                                                            
 return res
 }
 ;39
-Redraw( hwnd ) {                                                                                                                      	;-- redraw's a window
+Redraw( hwnd ) {                                                                                                                       	;-- redraw's a window
    static RDW_ALLCHILDREN	:= 0x80, RDW_ERASE    	:= 0x4  , RDW_ERASENOW	:=0x200, RDW_FRAME                 	:=0x400	, RDW_INTERNALPAINT	:=0x2   	, RDW_INVALIDATE	:=0x1
    static RDW_NOCHILDREN	:= 0x40, RDW_NOERASE 	:= 0x20, RDW_NOFRAME 	:=0x800, RDW_NOINTERNALPAINT	:=0x10 	, RDW_UPDATENOW	:=0x100	, RDW_VALIDATE  	:=0x8
 
