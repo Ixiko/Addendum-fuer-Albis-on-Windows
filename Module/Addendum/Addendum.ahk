@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                                                                       	ADDENDUM HAUPTSKRIPT
-global                                                                               AddendumVersion:= "1.51" , DatumVom:= "16.02.2021"
+global                                                                               AddendumVersion:= "1.51" , DatumVom:= "17.02.2021"
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                    ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . . . . . . .                                           BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -18,7 +18,9 @@ global                                                                          
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 /*               	A DIARY OF CHANGES
-
+| **17.02.2021**	| 	**F~**	| **Addendum_Albis**       	-	**AlbisImportierePdf()** und  **AlbisImportiereBild()** - den Funktionen kann optional ein Karteikartendatum
+																							übergeben werden. <br>
+																							|
 | **16.02.2021**	|	**F+**	| **Addendum_Exporter**     	-	Kommunikation zwischen dem Infofenster und dem Dokumentexporter steht. Bei Aufruf des Skriptes übergibt Addendum
 																							die aktuelle Patienten ID so daß dieser Patient im DokExporter angezeigt wird.
 																						-	Für das Exportieren der Karteikarteneinträge durch Erstellung eines Tagesprotokolls werden die in Albis angelegten
@@ -946,6 +948,11 @@ return ;}
 :*R:covid-19::COVID-19, Virus nachgewiesen {!U07.1G}; COVID-19, Virus nicht nachgewiesen {!U07.2G};
 :*R:covid19::COVID-19, Virus nachgewiesen {!U07.1G}; COVID-19, Virus nicht nachgewiesen {!U07.2G};
 :*R:sars::Spezielle Verfahren zur Untersuchung auf SARS-CoV-2 {!U99.0G};Spezielle Verfahren zur Untersuchung auf infektiöse und parasitäre Krankheiten {Z11G};
+:*:#reflux::Refluxösophagitis, G. {K21.0G};
+:*:#ledder::M.Ledderhose, li. {M72.2LG};
+:*:#zwerchf::Hernia diaphragmatica {K44.9G}
+:*:#hiatus h::Hernia diaphragmatica {K44.9G}
+
 #If
 ;}
 ; --- Info                                                                                          	;{
@@ -2712,7 +2719,6 @@ SciTEFoldAll() {                                                                
 	;TrayTip("SciTEFoldAll", "hScintilla1: " hScintilla1 "`nErrorLevel: " ErrorLevel, 2 )
 
 }
-
 RunExe(exePath) {                                                                                                         	;-- startet eine ausführbare Datei
 
 	SplitPath, exePath, filename, filepath
@@ -2725,7 +2731,6 @@ RunExe(exePath) {                                                               
 
 return ModulPID
 }
-
 RunSkript(modulpath) {                                                                                              	;-- startet oder beendet Autohotkeyskripte
 
 	AddendumDir := Addendum.Dir
@@ -2768,7 +2773,6 @@ RunSkript(modulpath) {                                                          
 
 return ModulPID
 }
-
 ListviewClipboard(WinTitle:="") {                                                                                	;-- kopiert den Inhalt einer Listview,Listbox,DDL ins Clipboard
 
 	; letzte Änderung: 13.02.2021
@@ -2975,7 +2979,6 @@ ListviewClipboard(WinTitle:="") {                                               
 		}
 
 }
-
 GetPatNameFromExplorer() {                                                                                     	;-- ermittelt in einer pdf Dateibezeichnung den Patientennamen und öffnet die Patientenakte
 	; Voraussetzung: der Patient ist in der Addendum Patientendatenbank gelistet, ansonsten passiert nichts
 		SplitPath, % Explorer_GetSelected(WinExist("A")),,,, fname
@@ -2995,7 +2998,6 @@ LaborAbrufCheck() {                                                             
 
 return true
 }
-
 LaborAbrufTimerStarten() {                                                                                         	;-- berechnet die Millisekunden bis zum nächsten eingestellten Laborabruf
 
 		global func_LaborAbruf
@@ -3048,7 +3050,6 @@ LaborAbrufTimerStarten() {                                                      
 		PraxTT(outtext, "3 1")
 
 }
-
 LaborAbruf() {                                                                                                             	;-- startet externes Skript für den Laborabruf
 
 	; Überprüfung des Aufrufes
@@ -4329,12 +4330,11 @@ AutoDoc() {
 
 	saX:= A_CaretX, saY:=A_CaretY
 
-	If !ADocInit
-	{
+	If !ADocInit 	{
 		ADoc:= GetFromIni("MaxResults|OffsetX|OffsetY|BoxHeight|ShowLength|Font|FontSize|MinScore", "AutoDoc")
-		ADocList["Impferrinnerung"]    		:= {"Edit2": "31.12.%A_YYYY%"	, "Edit3": "impf"	, "Do": "Choose"	, "RichE": "< /TdPP>< /, Pneumovax>< /, GSI>< /, MMR>"                                        	 }
+		ADocList["Impferrinnerung"]    		:= {"Edit2": "31.12.%A_YYYY%"	, "Edit3": "impf"	, "Do": "Choose"	, "RichE": "< /TdPP>< /, Pneumovax>< /, GSI>< /, MMR>"                                    	 }
 		ADocList["Impfausweis"]     	    	:= {"Edit2": "31.12.%A_YYYY%"	, "Edit3": "impf"	, "Do": "Set"		, "RichE": "Impfausweis mitbringen"                                                                                	 }
-		ADocList["lko - Gespräch"]	        	:= {"Edit2": "="							, "Edit3": "lko"	, "Do": "Input"	, "RichE": "03230(x:*)"                                                                                						 }
+		ADocList["lko - Gespräch"]	        	:= {"Edit2": "="							, "Edit3": "lko"	, "Do": "Input"	, "RichE": "03230(x:*)"                                                                                		        	 }
 		ADocList["VorsorgeColo"]    	    	:= {"Edit2": "31.12.%A_YYYY%"	, "Edit3": "info"	, "Do": "Set"		, "RichE": "an die Vorsorge Coloskopie errinnern"                                        						 }
 		ADocList["In die Sprechstunde"]   	:= {"Edit2": "31.12.%A_YYYY%"	, "Edit3": "info"	, "Do": "Set"		, "RichE": "Es wäre schön wenn der Patient in diesem Jahr in mein Sprechzimmer vorstößt!"}
 		For key, val in ADocList
@@ -4358,55 +4358,53 @@ AutoDoc() {
 
 Return
 
-FillDocLine:
+FillDocLine: ;{
+
 	Gui, Suggestions: Submit
 	actrl:= AlbisGetActiveControl("content")
 
-	If !(ADocList[(matched)]["Edit2"]="=")
-	{
-				n:= (A_MM=12) ? 1 : 0
-				replacement:= StrReplace(ADocList[(matched)]["Edit2"], "%A_YYYY%", A_YYYY + n)		;<-später ein RegExMatch oder Replace für mehr Optionen
-				VerifiedSetText("Edit2", replacement , "ahk_class OptoAppClass", 100)
+	If !(ADocList[(matched)]["Edit2"]="=")	{
+		n:= (A_MM=12) ? 1 : 0
+		replacement:= StrReplace(ADocList[(matched)]["Edit2"], "%A_YYYY%", A_YYYY + n)		;<-später ein RegExMatch oder Replace für mehr Optionen
+		VerifiedSetText("Edit2", replacement , "ahk_class OptoAppClass", 100)
 	}
 
 	VerifiedSetText("Edit3", ADocList[(matched)]["Edit3"] , "ahk_class OptoAppClass", 100)
 
-	If (ADocList[(matched)]["Do"]="Choose")
-	{
-				VerifiedSetText("RichEdit20A1", ADocList[(matched)]["RichE"] , "ahk_class OptoAppClass", 100)
-				ControlFocus, RichEdit20A1, % "ahk_class OptoAppClass"
-				Sleep, 200
-				SendInput, {LControl Down}{Right}{LControl Up}
+	If (ADocList[(matched)]["Do"]="Choose")	{
+		VerifiedSetText("RichEdit20A1", ADocList[(matched)]["RichE"] , "ahk_class OptoAppClass", 100)
+		ControlFocus, RichEdit20A1, % "ahk_class OptoAppClass"
+		Sleep, 200
+		SendInput, {LControl Down}{Right}{LControl Up}
 	}
 
-	If (ADocList[(matched)]["Do"]="Set")
-	{
-				VerifiedSetText("RichEdit20A1", ADocList[(matched)]["RichE"] , "ahk_class OptoAppClass", 100)
-				ControlFocus, RichEdit20A1, % "ahk_class OptoAppClass"
-				Sleep, 100
-				SendInput, {Tab}
+	If (ADocList[(matched)]["Do"]="Set")	{
+		VerifiedSetText("RichEdit20A1", ADocList[(matched)]["RichE"] , "ahk_class OptoAppClass", 100)
+		ControlFocus, RichEdit20A1, % "ahk_class OptoAppClass"
+		Sleep, 100
+		SendInput, {Tab}
 	}
 
-	If (ADocList[(matched)]["Do"]="Input")
-	{
-				InputBox, faktor, Addendum für AlbisOnWindows, bitte tragen Sie hier den faktor für die Gesprächsziffer ein.,,,,,,,, 2
-				VerifiedSetText("RichEdit20A1", StrReplace(ADocList[(matched)]["RichE"], "*", faktor), "ahk_class OptoAppClass", 100)
-				ControlFocus, RichEdit20A1, % "ahk_class OptoAppClass"
-				Sleep, 100
-				SendInput, {Tab}
+	If (ADocList[(matched)]["Do"]="Input")	{
+		InputBox, faktor, Addendum für AlbisOnWindows, bitte tragen Sie hier den faktor für die Gesprächsziffer ein.,,,,,,,, 2
+		VerifiedSetText("RichEdit20A1", StrReplace(ADocList[(matched)]["RichE"], "*", faktor), "ahk_class OptoAppClass", 100)
+		ControlFocus, RichEdit20A1, % "ahk_class OptoAppClass"
+		Sleep, 100
+		SendInput, {Tab}
 	}
 
 	gosub SuggestionsGuiEscape
-return
+
+return ;}
 
 SuggestionsGuiClose:
 	Gui, Suggestions: Hide
-SuggestionsGuiEscape:
+SuggestionsGuiEscape: ;{
 	;HotKey, Enter            	, Off
 	;HotKey, NumpadEnter	, Off
 	;HotKey, Esc	             	, Off
 	AutoDocCalled:=0
-Return
+Return ;}
 
 }
 
@@ -4425,6 +4423,7 @@ return tempObj
 }
 
 MedTrenner(f) {
+
 		static MedTrenner, MedTTrenner, x, y
 		global MedT
 

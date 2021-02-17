@@ -841,7 +841,10 @@ adm_GuiDropFiles:                                                               
 		Loop, Parse, A_GuiEvent, `n
 		{
 
-				SplitPath, A_LoopField, filename
+			; Datei kommt direkt aus dem Befundordner, nicht aufnehmen (, "^" EscapeStrRegEx(Addendum.BefundOrdner) "\\[^\\]+$")
+				SplitPath, A_LoopField, filename, filepath
+				If (A_LoopField = (Addendum.BefundOrdner "\" filename))
+					continue
 
 			; benennt die Datei gleich mit dem Namen des aktuellen Patienten, wenn man die Datei auf den Patienten Tab gezogen hatte
 				If InStr(A_GuiControl, "admReports") {
@@ -849,28 +852,28 @@ adm_GuiDropFiles:                                                               
 					filename := PatName ", " RegExReplace(filename, "^\s*,\s*")
 				}
 
-			; Datei kommt direkt aus dem Befundordner, nicht aufnehmen (, "^" EscapeStrRegEx(Addendum.BefundOrdner) "\\[^\\]+$")
-				If (A_LoopField = (Addendum.BefundOrdner "\" filename))
-					continue
-
 			; Datei sicherheitshalber in den Befund und Backup Ordner kopieren
 				If !FileExist(Addendum.BefundOrdner "\" filename){
 					FileCopy, % A_LoopField, % Addendum.BefundOrdner "\" filename
 					FileCopy, % A_LoopField, % Addendum.BefundOrdner "\Backup\" filename, 1
 				}
 
+			; in den Listviews anzeigen
+				displayname := string.Replace.Names(filename)
 				If RegExMatch(filename, "\.pdf$")		{
 					PatDocs.Push(StrReplace(filename, ".pdf"))
-					LV_Add("ICON" 1,, RxNames(filename, "ReplaceNames"))
+					LV_Add("ICON" 1,, displayname)
 				}
 				else If RegExMatch(filename, "\.(jpg|png|tiff|bmp|wav|mov|avi)$")	{
 					PatDocs.Push(filename)
-					LV_Add("ICON" 2,, RxNames(filename, "ReplaceNames"))
+					LV_Add("ICON" 2,, displayname)
 				}
+
 		}
 
 	; Importbuttons aktivieren und später nach Befundart ausschalten
 		admGui_InfoText("Patient")
+		admGui_InfoText("Journal")
 
 return ;}
 
@@ -882,11 +885,11 @@ adm_BefundImport:                                                               
 		PreReaderListe := admGui_GetAllPdfWin()              	; derzeit geöffnete Readerfenster einlesen
 		admGui_ImportGui(true, "...importiere alle Befunde")	; Hinweisfenster anzeigen
 		Imports := admGui_ImportFromPatient()                   	; Importvorgang starten
-		admGui_RemoveImports(Imports)                            	; PatDocs - Importe entfernen
 		admGui_InfoText("Patient")                                      	; Kurzinfo aktualisieren
+		admGui_InfoText("Journal")                                      	; Kurzinfo aktualisieren
+		admGui_ImportGui(false)                                        	; Hinweisfenster wieder schliessen
 		admGui_Journal(false)                                             	; Journalinhalt auffrischen
 		admGui_ShowPdfWin(PreReaderListe)                     	; holt den/die PdfReaderfenster in den Vordergrund
-		admGui_ImportGui(false)                                        	; Hinweisfenster wieder schliessen
 
 return ;}
 
@@ -1159,19 +1162,6 @@ admGui_Reload(refreshDocs=true)                                  	{             
 
 }
 
-admGui_RemoveImports(ImportList)                               	{               	; PdfReport-Array aufräumen
-
-	global PatDocs
-
-	Loop, Parse, % RTrim(ImportList, "`n"), `n
-		Loop % PatDocs.MaxIndex()
-			If InStr(PatDocs[A_Index], A_LoopField) {
-				PatDocs.RemoveAt(A_Index)
-				continue
-			}
-
-}
-
 admGui_Abrechnungshelfer(PatID, Geburtsdatum)          	{                	; berechnet und zeigt die letzten Untersuchungstermine an
 
 		global adm, admNotes
@@ -1307,7 +1297,7 @@ admGui_CountDown()                                                   	{         
 	IniRead, LCall3	, % Addendum.Ini, % "LaborAbruf", % "Letzter_Abruf_mit_Daten"
 
 	If RegExMatch(LCall1, "(?<Y>\d{4})-(?<M>\d{2})-(?<D>\d{2})\s+(?<H>\d{2}):(?<Min>\d{2}):(?<S>\d{2})[\s\|]*", T)
-		lastLBCall := "letzter:  " TD "." TM (TY = A_YYYY ? "." : "." TY) " " TH ":" TMin "Uhr`n          Daten " (LCall1 = LCall2 ? "[-]" : LCall1 = LCall3 ? "[+]" : "[?]")
+		lastLBCall := "letzter:  " TD "." TM (TY = A_YYYY ? "." : "." TY) " " TH ":" TMin "Uhr`nDaten: " (LCall1 = LCall2 ? "[-]" : LCall1 = LCall3 ? "[+]" : "[?]")
 
 	IniRead, nextCall, % Addendum.Ini, % "LaborAbruf", % "naechster_Abruf"
 	If RegExMatch(nextCall, "(?<D>\d{2})\.(?<M>\d{2})\.(?<Y>\d{4})", T)
@@ -1337,12 +1327,16 @@ admGui_Reports()                                                         	{	    
 		PatID    	:= AlbisAktuellePatID()
 		PatNV   	:= RegExReplace(oPat[PatID].Nn, "[\s\-]") . RegExReplace(oPat[PatID].Vn, "[\s\-]")
 
-	; PatDocsPatDocs erstellen - enthält nur die Dateien zum aktuellen Patienten
+	; PatDocs erstellen - enthält nur die Dateien zum aktuellen Patienten
 		For key, pdf in ScanPool	{				;wenn keine PatID vorhanden ist, dann ist die if-Abfrage immer gültig (alle Dateien werden angezeigt)
+			If !RegExMatch(pdf.name, "\.pdf$") || !FileExist(Addendum.BefundOrdner "\" pdf.name) {
+				pdfpool.remove(pdf.name)
+				continue
+			}
 			RegExMatch(pdf.name, "^\s*(?<Nachname>" rxPerson2 ")[\,\s]+(?<Vorname>" rxPerson2 ")", doc)  ; ## ersetzen
 			a := StrDiff(PatNV, RegExReplace(docNachname docVorname, "[\s\-]"))
 			b := StrDiff(PatNV, RegExReplace(docVorname docNachname, "[\s\-]"))
-			If (a < 0.12) || (b < 0.12)
+			If (a < 0.11) || (b < 0.11)
 				PatDocs.Push(pdf)
 		}
 
@@ -1350,10 +1344,11 @@ admGui_Reports()                                                         	{	    
 		For key, pdf in PatDocs {
 			If !RegExMatch(pdf.name, "\.pdf$") || !FileExist(Addendum.BefundOrdner "\" pdf.name)
 				continue
+			displayname := string.Replace.Names(string.Replace.FileExt(pdf.name))
 			If pdf.isSearchable
-				LV_Add("ICON3", pdf.pages " S:" , RxNames(StrReplace(pdf.name, ".pdf"), "ReplaceNames"))
+				LV_Add("ICON3", pdf.pages " S:" , displayname)
 			else
-				LV_Add("ICON1", pdf.pages " S:" , RxNames(StrReplace(pdf.name, ".pdf"), "ReplaceNames"))
+				LV_Add("ICON1", pdf.pages " S:" , displayname)
 		}
 
 	; Bilddateien aus dem Befundordner einlesen
@@ -1364,8 +1359,8 @@ admGui_Reports()                                                         	{	    
 				SuchVN := RegExReplace(SuchVorname SuchNachname, "[\s\-]")
 				a	:= StrDiff(PatNV, SuchNV), b	:= StrDiff(PatNV, SuchVN)
 				Diff := (a <= b) ? a : b
-				If (Diff < 0.12) {
-					LV_Add("ICON2",, RxNames(A_LoopFileName, "ReplaceNames")) ; entfernt den Namen
+				If (Diff < 0.11) {
+					LV_Add("ICON2",,  string.Replace.Names(A_LoopFileName)) ; entfernt den Namen
 					PatDocs.Push({"name": A_LoopFileName})
 				}
 			}
@@ -2708,30 +2703,32 @@ admGui_ImportFromJournal(filename)                              	{              
 
 		global 	admHPDFfilenames, hadm, admHTab
 		static 	WZEintrag	:= {"LASV":"Anfragen", "Anfrage":"Anfragen", "Antrag":"Anfragen", "Lageso":"Anfragen", "Lebensversicherung":"Anfragen"}
-		static 	rxPerson 	:= "[A-ZÄÖÜ][\pL]+[\s-]*([A-ZÄÖÜ][\pL-]+)*"
 
-	; Nutzer abfragen
+	; Nutzer befragen
 		currPat 	:= AlbisCurrentPatient()
-		Pat		:= string.GetNames(filename)
+		Pat		:= string.Get.Names(filename)
 		If Addendum.iWin.ConfirmImport || (!InStr(currPat, Pat.Nn) && !InStr(currPat, Pat.Vn)) {
-			message :=	"Wollen Sie die Datei:`n"
-							. 	(StrLen(filename) >30 ? SubStr(filename, 1, 30) "..." : filename) "  dem Pat.`n"
-							. 	currPat " zuordnen ?"
-			MsgBox, 262148, Importieren ? - Addendum für AlbisOnWindows, % message
+			MsgBox, 262148	, % "Befund importieren?"
+										, % "Wollen Sie die Datei:`n"
+										. 	 (StrLen(filename) > 30 ? SubStr(filename, 1, 30) "..." : filename) "  dem Pat.`n"
+										. 	currPat " zuordnen ?"
 			IfMsgBox, No
 				return 0
 		}
 
+	; Dokumentdatum aus dem Dateinamen entnehmen, falls enthalten
+		DocDate := string.Get.DocDate(filename)
+
 	; Befund importieren
 		If      	RegExMatch(filename, "\.pdf")                                             	{
 				Addendum.FuncCallback := "GetPDFViewerArg"
-				If !AlbisImportierePdf(filename)
+				If !AlbisImportierePdf(filename, DocDate)
 					return 0
 				admGui_MoveFile(filename)             	; PDF in einen anderen Ordner verschieben
 				docID := pdfpool.Remove(filename)	; aus ScanPool entfernen
 		}
 		else If	RegExMatch(filename, "\.(jpg|png|tiff|bmp|wav|mov|avi)$")	{
-				If !AlbisImportiereBild(filename, string.ReplaceNames(filename))
+				If !AlbisImportiereBild(filename, string.Replace.Names(filename), DocDate)
 					return 0
 		}
 		else
@@ -2755,50 +2752,58 @@ return 1
 
 admGui_ImportFromPatient()                                            	{               	; Patient:	Befundimport alle Befunde
 
-	global PatDocs
+	; letzte Änderung: 17.02.2021
 
-	Imports := ""
-	admGui_Default("admReports")                         	; Journallistview als Default setzen
+		global 	PatDocs
 
-	For key, file in PatDocs		{
+		Docs 	:= Object()
 
-		imported	:= ""
-		filename  	:= file.name
+	; Importschleife
+		For key, file in PatDocs		{
 
-		If RegExMatch(filename, "\.(jpg|png|tiff|bmp|wav|mov|avi)$")	{	; Bild importieren
-
-			If !AlbisImportiereBild(filename, string.ReplaceNames(filename))
+			Addendum.FuncCallback := ""
+			If !FileExist(Addendum.BefundOrdner "\Backup\" file.name)
 				continue
 
-			imported := filename
-			FileAppend, % datestamp() "| " filename "`n", % Addendum.Befundordner "\PdfImportLog.txt"
-			If FileExist(Addendum.BefundOrdner "\Backup\" filename)        ; PDF in einen anderen Ordner verschieben
-				FileMove, % Addendum.BefundOrdner "\Backup\" filename, % Addendum.BefundOrdner "\Backup\Importiert\" filename, 1
+			DocDate 	:= string.Get.DocDate(file.name)
+			KKText    	:= string.Karteikartentext(file.name)
 
-		}
-		else {                                                                                         	; Pdf importieren
+			; Bild importieren
+			If RegExMatch(file.name, "\.(jpg|png|tiff|bmp|wav|mov|avi)$")	{
 
-			Addendum.FuncCallback := "GetPDFViewerArg"
-			If !AlbisImportierePdf(filename)
-				continue
-
-			; Logfile schreiben. Backup und Textdateien verschieben
-				imported := filename
-				FileAppend, % datestamp() "| " filename "`n", % Addendum.Befundordner "\PdfImportLog.txt"
-				admGui_MoveFile(filename)
-				docID := pdfpool.Remove(filename)
-
-			; wartet auf den FoxitReader
-				while, % (StrLen(Addendum.FuncCallback) > 0) {
-					Sleep, 50
-					If (A_Index > 40)
-						break
+				FileCopy, % Addendum.BefundOrdner "\" file.name, % Addendum.BefundOrdner "\Backup\Importiert\" file.name, 1
+				If !AlbisImportiereBild(file.name, KKText, DocDate) {
+					Docs.Push(file)
+					continue
 				}
 
-		}
+			}
+			; Pdf importieren
+			else {
 
-		If (StrLen(imported) > 0)                   			{                              	; importierten Eintrag aus der Listview entfernen
-			Imports .= imported "`n"
+				; sind ohne .pdf ?
+					Addendum.FuncCallback := "GetPDFViewerArg"
+					If !AlbisImportierePdf(file.name, KKText, DocDate) {
+						Docs.Push(file)
+						continue
+					}
+
+				; Logfile schreiben. Backup-PDF-Datei und PDF-Textdatei verschieben
+					admGui_MoveFile(file.name)
+					docID := pdfpool.Remove(file.name)
+
+				; wartet auf den FoxitReader
+					while, % (StrLen(Addendum.FuncCallback) > 0) {
+						Sleep, 50
+						If (A_Index > 40)
+							break
+					}
+
+				SciTEOutput("FuncCallback: " Addendum.FuncCallback)
+
+			}
+
+			FileAppend, % datestamp() "| " file.name "`n", % Addendum.Befundordner "\PdfImportLog.txt"
 			admGui_Default("admReports")
 			Loop % LV_GetCount() {
 				LV_GetText(celltext, A_Index, 1)
@@ -2809,10 +2814,11 @@ admGui_ImportFromPatient()                                            	{        
 			}
 		}
 
-	}
-
-	; PDF-Reports leeren
-		PatDocs.RemoveAt(1, pdfmax)
+	; PatDocs  leeren und mit nicht verarbeiteten Dateien füllen
+		Loop % PatDocs.MaxIndex()
+			PatDocs.RemoveAt(1)
+		For index, file in Docs
+			PatDocs.Push(file)
 
 return Imports
 }
@@ -2835,9 +2841,9 @@ admGui_MoveFile(filename)                                             	{        
 FuzzyKarteikarte(NameStr)                                             	{               	; fuzzy name matching function, öffnet eine Karteikarte
 
 	; prüft ob Namen übergeben wurden
-		If !IsObject(Pat := string.GetNames(NameStr)) {
+		If !IsObject(Pat := string.Get.Names(NameStr)) {
 			PraxTT(	"Die Dateibezeichnung enthält keinen Namen eines Patienten.`nDer Karteikartenaufruf wird abgebrochen!", "3 2")
-			return
+			return 0
 		}
 
 	; passende Patienten suchen
@@ -2995,7 +3001,7 @@ admGui_FolderWatch(path, changes)                             	{                
 				else If RegExMatch(action, "2")	{
 
 					SplitPath, name, filename, filepath
-					oPDF := pdfpool.Remove(filepath, filename)
+					oPDF := pdfpool.Remove(filename)
 					Controls("", "reset", "")
 					If Controls("", "ControlFind, AddendumGui, AutoHotkeyGUI, return hwnd", "ahk_class OptoAppClass") {
 						admGui_Default("admJournal")
@@ -3061,11 +3067,9 @@ class pdfpool                                                                 	{
 		}
 
 	; Datei entfernen
-		Remove(path, filename) {
-
+		Remove(filename) {
 			If (docID := this.inPool(filename))
 				return ScanPool.RemoveAt(docID)
-
 		return
 		}
 

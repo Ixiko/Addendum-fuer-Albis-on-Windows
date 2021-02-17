@@ -976,7 +976,10 @@ LVM_GetText(h, r, c=1) {
 Return t
 }
 
+
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum_Windows
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 WinToClient(hwnd, ByRef x, ByRef y) {
 
     WinGetPos, wx, wy,,, ahk_id %hwnd%
@@ -1026,308 +1029,8 @@ GetWindowPos(hWnd, ByRef X, ByRef Y, ByRef W, ByRef H) {
 }
 
 
-; Addendum_Gui
-admGui_RenameO(filename, prompt="", newfilename="") {               	; Dialog für Dokument umbenennen oder teilen
-
-	; Variablen
-		global hadm, admPV, admGui_HRenIB
-		static admRen_Width 	:= 350
-		static admRen_Height	:= 206
-		static oPV, fileout, fileout1, fileext, newadmFile
-
-	; PDF Vorschau anzeigen
-		oPV := admGui_PDFPreview(fileName)
-		If !IsObject(oPV)
-			return
-
-	; Vorbereitung Dokument zerlegen
-		If Instr(prompt, "Aufteilen") {
-
-			title    	:= "Dokument zerlegen"
-			fileout	:= ""
-
-		}
-	; Vorbereitung Dokument umbenennen
-		else {
-
-			title   	:= "Dokument umbenennen"
-			prompt	:= "Ändern Sie hier die Dateibezeichnung"
-			SplitPath, filename,,, fileext
-
-		; neuen Dateinamen vorbereiten
-			newfilename := Trim(newfilename)
-			If (StrLen(newfilename ) > 0) {
-
-				If RegExMatch(newfilename, "\.[a-z]+$")
-					SplitPath, newfilename,,,, fileout
-				else
-					fileout := newfilename
-
-				fileout := RegExReplace(fileout, "\s*(Befund)*\s*\.[a-z]+\d*$")
-			}
-			else {
-
-				;RegExMatch(filename, "\s*(Befund\s*)\.\w*$", fileout)	; => fileout1
-				fileout := RegExReplace(filename, "\s*(Befund)*\s*\.[a-z]+\d*$")
-			}
-
-		}
-
-	; DPI-Skalierung ausschalten
-		Result := DllCall("User32\SetProcessDpiAwarenessContext", "UInt" , 1)
-
-	; Inputfensterposition
-		admPos	:= GetWindowSpot(hadm)
-		RnWidth	:= admPos.W + (2 * admPos.BW) + 10
-		RnWidth	:= RnWidth < admRen_Width ? admRen_Width : RnWidth
-
-	; Inputbox anzeigen
-		InputBox, newadmFile	, % title
-									    	, % Trim(prompt)                                          	; prompt
-											, % ""                                                          	; Hide
-											, % RnWidth                                                	; Width
-											, % admRen_Height                                      	; Height
-											, % admPos.X + admPos.W -	 RnWidth + 5	; X
-											, % admPos.Y + admPos.H                        	; Y
-											, % "Locale"                                                	; Locale
-											, % ""                                                          	; Timeout
-											, % fileout                                                    	; Default
-
-		IBErrLvl := ErrorLevel
-
-	; PDF Vorschaufenster automatisch schliessen
-		If (oPV.previewer = "SumatraPDF") {
-
-			Process, Close, % oPV.PID
-			If WinExist(filename)
-				SumatraInvoke("Exit", oPV.ID)
-
-		} else
-			Gui, admPV: Destroy
-
-	; Dokument zerlegen
-		If Instr(prompt, "Aufteilen") {
-
-		; split pages: 	qpdf.exe --empty --pages in.pdf 1-2 -- split1.pdf
-		; 						qpdf.exe --empty --pages in.pdf 3-4 -- split2.pdf
-		;	1-2 D1, 3-4 D2
-		; (?<Pages>\d+-\d+)\s*D(?<Nr>\d+)
-
-				nwfiles	:= Array()
-				SplitPath, filename,,, fileext, fileout
-
-				SciTEOutput(" ------------------------------------------------------------------------------------------------------")
-				SciTEOutput("  # teile PDF: " filename)
-
-				For idx, scmd in StrSplit(newadmFile, ",") {
-
-					If RegExMatch(scmd, "\s*(?<Pages>\d*-*\d+)\s*D(?<Nr>\d+", Dok) {
-
-						splitcmd := 	Addendum.PDF.qpdfPath "\qpdf.exe --empty --pages " Addendum.BefundOrdner "\" fileName
-									 .  	" " DokPages " -- " Addendum.BefundOrdner "\" fileout DokNr "." fileext
-						SciTEOutput("  - teile Seite(n) [" DokPage "] Dokument " fileout DokNr "." fileext " zu`n  [" splitcmd "]")
-						stdout := StdoutToVar(splitcmd)
-						If (StrLen(Stdout) > 0)
-							SciTEOutput(ParseStdOut(stdout))
-
-						haystack :=	"error in numeric range|"
-										. 	"number \d+ out of range|"
-										.	"No such file or directory|"
-										.	"Permission denied|"
-										.	"unexpected character"
-
-						If !RegExMatch(stdout, haystack)
-							nwfiles.Push(fileout DokNr "." fileext)
-
-					}
-
-				}
-
-				SciTEOutput("  # Dokument aufgeteilt.")
-
-			; Anzeige auffrischen
-				admGui_Default("admJournal")
-				For fnr, newfile in nwfiles {
-
-					isNewFile := true
-					For key, pdf in ScanPool
-						If Instr(pdf.name, newfile) {
-							isNewFile := false
-							break
-						}
-
-					thispdf := GetFileData(Addendum.BefundOrdner, newfile)
-
-					If isNewFile
-						ScanPool[key] := thispdf
-					else {
-
-						ScanPool.Push(thispdf)
-						;LV_Add
-					}
-
-				}
-				admGui_Reload(false)
-
-				return
-		}
-	; Dokument umbenennen
-		else {
-
-			; -------------------------------------------------------------------------------------------------------------------------------------
-			; HINWEISE BEI UMBENENNUNGSFEHLERN
-			; -------------------------------------------------------------------------------------------------------------------------------------;{
-			; Nutzer hatte abgebrochen
-				If IBErrLvl {
-					PraxTT("Sie haben abgebrochen!", "2 1")
-					RedrawWindow(hadm)
-					return
-				}
-			; Nutzer hat OK oder Enter gedrückt, aber nichts geändert
-				If ((newadmFile . fileout1 . fileext) = filename) {
-					PraxTT("Sie haben den Dateinamen nicht geändert!", "2 1")
-					RedrawWindow(hadm)
-					return
-				}
-			; Nutzer hat alles gelöscht
-				If (StrLen(newadmFile) = 0) {
-					PraxTT("Ihr neuer Dateiname enthält keine Zeichen.", "2 1")
-					RedrawWindow(hadm)
-					return
-				}
-			;}
-
-			; -------------------------------------------------------------------------------------------------------------------------------------
-			; DOKUMENTE UMBENENNEN
-			; -------------------------------------------------------------------------------------------------------------------------------------;{
-				newadmFile := newadmFile "." fileext
-				FileMove, % Addendum.BefundOrdner "\" filename, % Addendum.BefundOrdner "\" newadmFile, 1
-				If ErrorLevel {
-					MsgBox, 0x1024, Addendum für Albis on Windows, % 	"Das Umbenennen der Datei`n"
-																									.	"  <" filename ">  `n"
-																									. 	"wurde von Windows aufgrund des`n"
-																									.	"Fehlercode (" A_LastError ") abgelehnt."
-					RedrawWindow(hadm)
-					return
-				}
-
-			; ZUGEHÖRIGES TEXTDOKUMENT UMBENENNEN
-				txtfile := Addendum.BefundOrdner "\Text\" RegExReplace(filename, "\.\w+$", ".txt")
-				If (fileext = "pdf") && FileExist(txtfile)
-					FileMove, % txtfile, % Addendum.BefundOrdner "\Text\" RegExReplace(newadmFile, "\.\w+$", ".txt"), 1
-
-			; BACKUP DATEI UMBENENNEN
-				If (fileext = "pdf") && FileExist(Addendum.BefundOrdner "\Backup\" filename)
-					FileMove, % Addendum.BefundOrdner "\Backup\" fileName, % Addendum.BefundOrdner "\Backup\" newadmFile, 1
-
-			;}
-
-			; ScanPool auffrischen
-				For key, pdf in ScanPool
-					If (pdf.name = filename) {
-						ScanPool[key].name := newadmFile
-						break
-					}
-
-			; Journal auffrischen
-				admGui_Default("admJournal")
-				Loop, % LV_GetCount() {
-
-					LV_GetText(rFilename, row := A_Index, 1)
-					If Instr(rFilename, fileName) {
-						LV_Modify(row,, newadmFile)
-						break
-					}
-
-				}
-
-				RedrawWindow(hadm)
-
-		}
-
-return
-}
-
-ReadPatientDatabase_O1(PatDBPath) {										               				;-- liest die .csv Datei Patienten.txt als Object() ein
-
-	PatDB	:= Object()
-
-	If (StrLen(PatDBPath) = 0)
-		PatDBPath := Addendum.DBPath "\Patienten.txt"
-
-	If FileExist(PatDBPath)	{
-
-		; Einlesen der Datenbank als Textliste, Sortieren aufsteigend nach PatID, Aussortieren doppelter Einträge (später neue Einträge unter den Skripten kommunizieren?)
-			DBtmp := FileOpen(PatDBPath, "r").Read()
-			Sort, DBtmp, N U
-			SciTEOutput(StrLen(DBtmp))
-			;FileOpen(PatDBPath, "w", "UTF-8").Write(DBtmp)
-			DBtmp := StrSplit(DBtmp, "`n", "`r")
-
-		; Einlesen in ein Objekt
-
-			/*  Aufbau PatDB - Objektes
-
-				1. PatID = key
-				2. Nachname    	(Nn)
-				3. Vorname     		(Vn)
-				4. Geschlecht    	(Gt)
-				5. Geburtsdatum 	(Gd)
-				6. Krankenkasse 	(Kk)
-				7. letzteGVU 		(letzteGVU)
-
-			 */
-			For DBtmpIdx, line in DBtmp 	{
-				If (StrLen(line) = 0)
-					continue
-				Str := StrSplit(line, ";", A_Space)
-				PatID := Str[1]
-				PatDB[PatID] := {"Nn": Str[2], "Vn": Str[3], "Gt": Str[4], "Gd": Str[5], "Kk": Str[6]}
-
-			}
-
-	}
-
-	JSONData.Save(Addendum.DBpath "\Patienten.json", PatDB, true,, 1, "UTF-8")
-
-return PatDB
-}
-
-ReadPatientDatabase_O2(PatDBPath) {										               				;-- liest die .csv Datei Patienten.txt als Object() ein
-
-	PatDB	:= Object()
-
-	If (StrLen(PatDBPath) = 0)
-		PatDBPath := Addendum.DBPath "\Patienten.txt"
-
-	If FileExist(PatDBPath)	{
-
-		; Einlesen der Datenbank als Textliste, Sortieren aufsteigend nach PatID, Aussortieren doppelter Einträge (später neue Einträge unter den Skripten kommunizieren?)
-			DBtmp := FileOpen(PatDBPath, "r").Read()
-			Sort, DBtmp, N U
-			FileOpen(PatDBPath, "w", "UTF-8").Write(DBtmp)
-			DBtmp := StrSplit(DBtmp, "`n", "`r")
-			;~ FileDelete  	, % AddendumDBPath "\Patienten.txt"
-			;~ FileAppend	, % DBtmp, % AddendumDBPath "\Patienten.txt", UTF-8
-
-		; Einlesen in ein Objekt
-			;~ 1.PatID = key; 2.Nachname (Nn); 3.Vorname (Vn); 4.Geschlecht (Gt); 5.Geburtsdatum (Gd); 6.Krankenkasse (Kk); 7.letzteGVU (letzteGVU)
-			For DBtmpIdx, line in DBtmp 	{
-
-				If (StrLen(line) = 0)
-					continue
-				Str := StrSplit(A_LoopField, ";", A_Space)
-				PatID := Str[1]
-				PatDB[PatID] := {"Nn": Str[2], "Vn": Str[3], "Gt": Str[4], "Gd": Str[5], "Kk": Str[6], "letzteGVU": Str[7]}
-			}
-
-			;PatDB["MaxPat"] := maxPat := PatDB.Count()
-
-	}
-
-return PatDB
-}
-
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; Addendum_DB.ahk
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; some ways to find patient names in text by comparing against known patient data
 FindName(text)                                 	{                          	; PDF renaming - Hilfsfunktion
@@ -1462,12 +1165,125 @@ FindName(text)                                 	{                          	; PD
 return BestPatID
 }
 
+RxNames(Str, RxMatch="GetNames")                      	{                       	;-- Stringfunktion für die Behandlung von PDF-Dateinamen
 
+	; eingeführt mit Addendum_Gui.ahk
+	; letzte Änderung: 07.02.2021
+
+	static rxPerson1 	:= "[A-ZÄÖÜ][\pL]+[\s-]*([A-ZÄÖÜ][\pL-]+)*"
+	static rxPerson2 	:= "[A-ZÄÖÜ][\pL]+([\-\s][A-ZÄÖÜ][\pL]+)*"
+
+	static RxExtract   	:= "^\s*(?<NN>" rxPerson1 ")[\s,]+(?<VN>" rxPerson1 ")[\s,]+(?<DokTitel>.*)*" ;?\.[a-z]*
+	static RxNames1	:= "^\s*(?<NN>" rxPerson1 ")[\s,]+(?<VN>" rxPerson1 ")[\s,]+"
+	static RxNames2	:= "^\s*(?<NN>" rxPerson2 ")[\s,]+(?<VN>" rxPerson2 ")[\s,]+"
+
+	if (RxMatch = "ContainsName")
+		return RegExMatch(Str, RxNames1)
+	else If (RxMatch = "GetNames") {
+		RegExMatch(Str, RxExtract, Pat)
+		return {"Nn":PatNN, "Vn":PatVN, "DokTitel":PatDokTitel}
+	}
+	else if (RxMatch ="ReplaceNames")
+		return RegExReplace(Str, RxNames2)
+
+}
+
+EscapeStrRegEx(str)                                                 	{                      	;-- formt eine String RegEx fähig um
+	For idx, Char in StrSplit("[](){}*\/|-+.?^$")
+		str := StrReplace(str, char , "\" char)
+return str
+}
+
+StrFlip(string)                                                         	{                         	;-- String reverse
+	VarSetCapacity(new, n:=StrLen(string))
+   Loop % n
+      new .= SubStr(string, n--, 1)
+return new
+}
+
+class string_old                                                               	{                        	;-- wird alle String Funktionen von Addendum enthalten
+
+	; benötigt Addendum_Datum.ak
+	; letzte Änderung 17.02.2021
+
+	; RegEx Strings erstellen
+		static rx := RegExStrings()
+
+	;----------------------------------------------------------------------------------------------------------------------------------------------
+	; diverse Stringfunktionen
+	;----------------------------------------------------------------------------------------------------------------------------------------------
+		EscapeStrRegEx(str)                           	{      	;-- formt einen String RegEx fähig um
+			For idx, Char in StrSplit("[](){}*\/|-+.?^$")
+				str := StrReplace(str, char , "\" char)
+		return str
+		}
+
+		Flip(string)                                       	{        	;-- String reverse
+			VarSetCapacity(new, n:=StrLen(string))
+			Loop % n
+				new .= SubStr(string, n--, 1)
+		return new
+		}
+
+	;----------------------------------------------------------------------------------------------------------------------------------------------
+	; Funktionen für die PDF Kategorisierung von Addendum-Gui.ahk
+	;----------------------------------------------------------------------------------------------------------------------------------------------
+		ContainsName(str)                         	{       	;-- enthält Personennamen?
+			return RegExMatch(Str, this.rx.Names1)
+		}
+
+		GetDocDate(str)                               	{       	;-- Dokumentdatum aus dem Dateinamen erhalten
+
+			RegExMatch(str, "(?<Date>\d{1,2}\.\d{1,2}\.\d{2,4}).?([^\d.\s\-]|$)", Doc)
+			If RegExMatch(DocDate, "^\d{1,2}\.\d{1,2}\.\d{2,4}$")
+				return FormatDate(DocDate, "DMY", "dd.MM.yyyy")
+
+		return
+		}
+
+		GetNames(str)                               	{         	;-- Personennamen zurückgeben
+			RegExMatch(Str, this.rx.Extract, Pat)
+			return {"Nn":PatNN, "Vn":PatVN, "DokTitel":PatDokTitel}
+		}
+
+		isFullNamed(str)                            	{        	;-- Dateiname enthält Nachname,Vorname, Dokumentbezeichung und Datum
+
+			str := RegExReplace(str, this.rx.fileExt)
+			If RegExMatch(str, this.rx.CaseName, FOE) {
+				Part1	:= RegExReplace(FOEN	, "[\s,]+$")
+				Part2	:= RegExReplace(FOEI 	, "[\s,]+$")
+				Part3	:= RegExReplace(FOED	, "^[\s,v\.]+")
+				If (StrLen(Part1) = 0 || StrLen(Part2) = 0 || StrLen(Part3) = 0)
+					return false
+				else
+					return true
+			}
+
+		return false
+		}
+
+		class Replace extends string             	{
+
+			Names(str, rplStr:="")                   	{         	;-- Personennamen ersetzen
+				return RegExReplace(Str, this.rx.Names2, rplStr)
+			}
+
+			FileExt(str, ext:="", rplStr:="")       	{        	;-- Dateiendungen ersetzen
+				ext := !ext ? "[a-z]+" : ext
+				return RegExReplace(Str, "\." ext "$" , rplStr)
+			}
+
+		}
+
+}
+
+
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum.ahk
-
-		global Script              	:= Object()
-		Script.Gui         	:= Object()
-		Script.User       	:= {"Interaction" : false, "Interface" : ""}
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+global Script        	:= Object()
+Script.Gui         	:= Object()
+Script.User       	:= {"Interaction" : false, "Interface" : ""}
 
 Wartezeit:                                     	;{
 
@@ -1482,7 +1298,6 @@ Wartezeit:                                     	;{
 
 return
 ;}
-
 UserAway:                                      	;{	                                                            				;-- macht verschiedene Dinge wenn niemand den Computer eine zeitlang benutzt
 
 	;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1526,7 +1341,9 @@ return
 ;}
 
 
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum_Gui.ahk
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 FuzzyKarteikarte_O1(NameStr, OnlyPatID=false)                   	{               	;-- fuzzy name matching function, öffnet eine Karteikarte
 
 	; mit OnlyPatID = true kann man nur einen String mit enthaltenem Patientennamen testen und bekommt bei einem Treffer die Patienten-ID zurück
@@ -1869,7 +1686,325 @@ adm_Notes:			                                                                   
 
 return ;}
 
+admGui_RenameO(filename, prompt="", newfilename="") {               	; Dialog für Dokument umbenennen oder teilen
+
+	; Variablen
+		global hadm, admPV, admGui_HRenIB
+		static admRen_Width 	:= 350
+		static admRen_Height	:= 206
+		static oPV, fileout, fileout1, fileext, newadmFile
+
+	; PDF Vorschau anzeigen
+		oPV := admGui_PDFPreview(fileName)
+		If !IsObject(oPV)
+			return
+
+	; Vorbereitung Dokument zerlegen
+		If Instr(prompt, "Aufteilen") {
+
+			title    	:= "Dokument zerlegen"
+			fileout	:= ""
+
+		}
+	; Vorbereitung Dokument umbenennen
+		else {
+
+			title   	:= "Dokument umbenennen"
+			prompt	:= "Ändern Sie hier die Dateibezeichnung"
+			SplitPath, filename,,, fileext
+
+		; neuen Dateinamen vorbereiten
+			newfilename := Trim(newfilename)
+			If (StrLen(newfilename ) > 0) {
+
+				If RegExMatch(newfilename, "\.[a-z]+$")
+					SplitPath, newfilename,,,, fileout
+				else
+					fileout := newfilename
+
+				fileout := RegExReplace(fileout, "\s*(Befund)*\s*\.[a-z]+\d*$")
+			}
+			else {
+
+				;RegExMatch(filename, "\s*(Befund\s*)\.\w*$", fileout)	; => fileout1
+				fileout := RegExReplace(filename, "\s*(Befund)*\s*\.[a-z]+\d*$")
+			}
+
+		}
+
+	; DPI-Skalierung ausschalten
+		Result := DllCall("User32\SetProcessDpiAwarenessContext", "UInt" , 1)
+
+	; Inputfensterposition
+		admPos	:= GetWindowSpot(hadm)
+		RnWidth	:= admPos.W + (2 * admPos.BW) + 10
+		RnWidth	:= RnWidth < admRen_Width ? admRen_Width : RnWidth
+
+	; Inputbox anzeigen
+		InputBox, newadmFile	, % title
+									    	, % Trim(prompt)                                          	; prompt
+											, % ""                                                          	; Hide
+											, % RnWidth                                                	; Width
+											, % admRen_Height                                      	; Height
+											, % admPos.X + admPos.W -	 RnWidth + 5	; X
+											, % admPos.Y + admPos.H                        	; Y
+											, % "Locale"                                                	; Locale
+											, % ""                                                          	; Timeout
+											, % fileout                                                    	; Default
+
+		IBErrLvl := ErrorLevel
+
+	; PDF Vorschaufenster automatisch schliessen
+		If (oPV.previewer = "SumatraPDF") {
+
+			Process, Close, % oPV.PID
+			If WinExist(filename)
+				SumatraInvoke("Exit", oPV.ID)
+
+		} else
+			Gui, admPV: Destroy
+
+	; Dokument zerlegen
+		If Instr(prompt, "Aufteilen") {
+
+		; split pages: 	qpdf.exe --empty --pages in.pdf 1-2 -- split1.pdf
+		; 						qpdf.exe --empty --pages in.pdf 3-4 -- split2.pdf
+		;	1-2 D1, 3-4 D2
+		; (?<Pages>\d+-\d+)\s*D(?<Nr>\d+)
+
+				nwfiles	:= Array()
+				SplitPath, filename,,, fileext, fileout
+
+				SciTEOutput(" ------------------------------------------------------------------------------------------------------")
+				SciTEOutput("  # teile PDF: " filename)
+
+				For idx, scmd in StrSplit(newadmFile, ",") {
+
+					If RegExMatch(scmd, "\s*(?<Pages>\d*-*\d+)\s*D(?<Nr>\d+", Dok) {
+
+						splitcmd := 	Addendum.PDF.qpdfPath "\qpdf.exe --empty --pages " Addendum.BefundOrdner "\" fileName
+									 .  	" " DokPages " -- " Addendum.BefundOrdner "\" fileout DokNr "." fileext
+						SciTEOutput("  - teile Seite(n) [" DokPage "] Dokument " fileout DokNr "." fileext " zu`n  [" splitcmd "]")
+						stdout := StdoutToVar(splitcmd)
+						If (StrLen(Stdout) > 0)
+							SciTEOutput(ParseStdOut(stdout))
+
+						haystack :=	"error in numeric range|"
+										. 	"number \d+ out of range|"
+										.	"No such file or directory|"
+										.	"Permission denied|"
+										.	"unexpected character"
+
+						If !RegExMatch(stdout, haystack)
+							nwfiles.Push(fileout DokNr "." fileext)
+
+					}
+
+				}
+
+				SciTEOutput("  # Dokument aufgeteilt.")
+
+			; Anzeige auffrischen
+				admGui_Default("admJournal")
+				For fnr, newfile in nwfiles {
+
+					isNewFile := true
+					For key, pdf in ScanPool
+						If Instr(pdf.name, newfile) {
+							isNewFile := false
+							break
+						}
+
+					thispdf := GetFileData(Addendum.BefundOrdner, newfile)
+
+					If isNewFile
+						ScanPool[key] := thispdf
+					else {
+
+						ScanPool.Push(thispdf)
+						;LV_Add
+					}
+
+				}
+				admGui_Reload(false)
+
+				return
+		}
+	; Dokument umbenennen
+		else {
+
+			; -------------------------------------------------------------------------------------------------------------------------------------
+			; HINWEISE BEI UMBENENNUNGSFEHLERN
+			; -------------------------------------------------------------------------------------------------------------------------------------;{
+			; Nutzer hatte abgebrochen
+				If IBErrLvl {
+					PraxTT("Sie haben abgebrochen!", "2 1")
+					RedrawWindow(hadm)
+					return
+				}
+			; Nutzer hat OK oder Enter gedrückt, aber nichts geändert
+				If ((newadmFile . fileout1 . fileext) = filename) {
+					PraxTT("Sie haben den Dateinamen nicht geändert!", "2 1")
+					RedrawWindow(hadm)
+					return
+				}
+			; Nutzer hat alles gelöscht
+				If (StrLen(newadmFile) = 0) {
+					PraxTT("Ihr neuer Dateiname enthält keine Zeichen.", "2 1")
+					RedrawWindow(hadm)
+					return
+				}
+			;}
+
+			; -------------------------------------------------------------------------------------------------------------------------------------
+			; DOKUMENTE UMBENENNEN
+			; -------------------------------------------------------------------------------------------------------------------------------------;{
+				newadmFile := newadmFile "." fileext
+				FileMove, % Addendum.BefundOrdner "\" filename, % Addendum.BefundOrdner "\" newadmFile, 1
+				If ErrorLevel {
+					MsgBox, 0x1024, Addendum für Albis on Windows, % 	"Das Umbenennen der Datei`n"
+																									.	"  <" filename ">  `n"
+																									. 	"wurde von Windows aufgrund des`n"
+																									.	"Fehlercode (" A_LastError ") abgelehnt."
+					RedrawWindow(hadm)
+					return
+				}
+
+			; ZUGEHÖRIGES TEXTDOKUMENT UMBENENNEN
+				txtfile := Addendum.BefundOrdner "\Text\" RegExReplace(filename, "\.\w+$", ".txt")
+				If (fileext = "pdf") && FileExist(txtfile)
+					FileMove, % txtfile, % Addendum.BefundOrdner "\Text\" RegExReplace(newadmFile, "\.\w+$", ".txt"), 1
+
+			; BACKUP DATEI UMBENENNEN
+				If (fileext = "pdf") && FileExist(Addendum.BefundOrdner "\Backup\" filename)
+					FileMove, % Addendum.BefundOrdner "\Backup\" fileName, % Addendum.BefundOrdner "\Backup\" newadmFile, 1
+
+			;}
+
+			; ScanPool auffrischen
+				For key, pdf in ScanPool
+					If (pdf.name = filename) {
+						ScanPool[key].name := newadmFile
+						break
+					}
+
+			; Journal auffrischen
+				admGui_Default("admJournal")
+				Loop, % LV_GetCount() {
+
+					LV_GetText(rFilename, row := A_Index, 1)
+					If Instr(rFilename, fileName) {
+						LV_Modify(row,, newadmFile)
+						break
+					}
+
+				}
+
+				RedrawWindow(hadm)
+
+		}
+
+return
+}
+
+ReadPatientDatabase_O1(PatDBPath) {										               				;-- liest die .csv Datei Patienten.txt als Object() ein
+
+	PatDB	:= Object()
+
+	If (StrLen(PatDBPath) = 0)
+		PatDBPath := Addendum.DBPath "\Patienten.txt"
+
+	If FileExist(PatDBPath)	{
+
+		; Einlesen der Datenbank als Textliste, Sortieren aufsteigend nach PatID, Aussortieren doppelter Einträge (später neue Einträge unter den Skripten kommunizieren?)
+			DBtmp := FileOpen(PatDBPath, "r").Read()
+			Sort, DBtmp, N U
+			SciTEOutput(StrLen(DBtmp))
+			;FileOpen(PatDBPath, "w", "UTF-8").Write(DBtmp)
+			DBtmp := StrSplit(DBtmp, "`n", "`r")
+
+		; Einlesen in ein Objekt
+
+			/*  Aufbau PatDB - Objektes
+
+				1. PatID = key
+				2. Nachname    	(Nn)
+				3. Vorname     		(Vn)
+				4. Geschlecht    	(Gt)
+				5. Geburtsdatum 	(Gd)
+				6. Krankenkasse 	(Kk)
+				7. letzteGVU 		(letzteGVU)
+
+			 */
+			For DBtmpIdx, line in DBtmp 	{
+				If (StrLen(line) = 0)
+					continue
+				Str := StrSplit(line, ";", A_Space)
+				PatID := Str[1]
+				PatDB[PatID] := {"Nn": Str[2], "Vn": Str[3], "Gt": Str[4], "Gd": Str[5], "Kk": Str[6]}
+
+			}
+
+	}
+
+	JSONData.Save(Addendum.DBpath "\Patienten.json", PatDB, true,, 1, "UTF-8")
+
+return PatDB
+}
+
+ReadPatientDatabase_O2(PatDBPath) {										               				;-- liest die .csv Datei Patienten.txt als Object() ein
+
+	PatDB	:= Object()
+
+	If (StrLen(PatDBPath) = 0)
+		PatDBPath := Addendum.DBPath "\Patienten.txt"
+
+	If FileExist(PatDBPath)	{
+
+		; Einlesen der Datenbank als Textliste, Sortieren aufsteigend nach PatID, Aussortieren doppelter Einträge (später neue Einträge unter den Skripten kommunizieren?)
+			DBtmp := FileOpen(PatDBPath, "r").Read()
+			Sort, DBtmp, N U
+			FileOpen(PatDBPath, "w", "UTF-8").Write(DBtmp)
+			DBtmp := StrSplit(DBtmp, "`n", "`r")
+			;~ FileDelete  	, % AddendumDBPath "\Patienten.txt"
+			;~ FileAppend	, % DBtmp, % AddendumDBPath "\Patienten.txt", UTF-8
+
+		; Einlesen in ein Objekt
+			;~ 1.PatID = key; 2.Nachname (Nn); 3.Vorname (Vn); 4.Geschlecht (Gt); 5.Geburtsdatum (Gd); 6.Krankenkasse (Kk); 7.letzteGVU (letzteGVU)
+			For DBtmpIdx, line in DBtmp 	{
+
+				If (StrLen(line) = 0)
+					continue
+				Str := StrSplit(A_LoopField, ";", A_Space)
+				PatID := Str[1]
+				PatDB[PatID] := {"Nn": Str[2], "Vn": Str[3], "Gt": Str[4], "Gd": Str[5], "Kk": Str[6], "letzteGVU": Str[7]}
+			}
+
+			;PatDB["MaxPat"] := maxPat := PatDB.Count()
+
+	}
+
+return PatDB
+}
+
+admGui_RemoveImports(Imports)                                                        	; PatDocs - Importe entfernen
+admGui_RemoveImports(ImportList)                               	{               	; PdfReport-Array aufräumen
+
+	global PatDocs
+
+	Loop, Parse, % RTrim(ImportList, "`n"), `n
+		Loop % PatDocs.MaxIndex()
+			If InStr(PatDocs[A_Index], A_LoopField) {
+				PatDocs.RemoveAt(A_Index)
+				continue
+			}
+
+}
+
+
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum_Ini.ahk
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 admAlbisMenuAufrufe()                                      	; Albis Menubezeichnungen und wm_command Befehle
 admAlbisMenuAufrufe() {                                                                       	;-- Menubezeichnungen und wm_command Befehle
 

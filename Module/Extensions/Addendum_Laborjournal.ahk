@@ -39,7 +39,8 @@
 	Warnen		:= {	"nie"      	: 	"CHOL,LDL,TRIG,HDL,LDL/HD,HBA1CIFC"                             	; nie      	= werden nie gezeigt
 							,	"immer" 	: 	"NTBNP,TROPI,TROPT,TROP,CKMB,K"                                       	; immer 	= wenn pathologisches Ergebnis
 							,	"exklusiv"	: 	"HBK-ST,COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,HIV,"  	; exklusiv 	= zeigen auch wenn kein ausgeprägtes path. Ergebnis
-												  .	"KERNS,ALYMPNEO,PROMY,DIFANISO,MYELOC,METAM,TROPOIHS"}
+												  .	"KERNS,ALYMPNEO,PROMY,DIFANISO,MYELOC,METAM,"
+												  .	"TROPOIHS,DDIM-CP"}
 
   ; Laborjournal anzeigen
 	LabPat      	:= AlbisLaborJournal("", "", Warnen, 105, true)

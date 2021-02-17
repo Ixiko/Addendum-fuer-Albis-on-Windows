@@ -1,7 +1,7 @@
 ﻿;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - letzte Änderung 16.02.2021 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - letzte Änderung 17.02.2021 - this file runs under Lexiko's GNU Licence
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
 return
@@ -4840,57 +4840,75 @@ AlbisOeffneGrafischerBefund() {                                                 
 return Albismenu(32960, "Grafischer Befund ahk_class #32770")
 }
 ;02
-AlbisUebertrageGrafischenBefund(ImgName, Karteikartentext:="") {           	;-- Funktion mit Sicherheitsüberprüfung falls ein Focus verloren geht
+AlbisUebertrageGrafischenBefund(ImgName, KKText:="") {                      	;-- Funktion mit Sicherheitsüberprüfung falls ein Focus verloren geht
+
+		; letzte Änderung: 17.02.2021
+
+		static WinText1	:= "Bitte überprüfen Sie den Namen bzw. Pfad."
+		static GRBFD 	:= "Grafischer Befund ahk_class #32770"
 
 	; ein fehlender Dateibez. wird automatisch ersetzt
 		If !RegExMatch(ImgName, "\.\w+$")
-				ImgName .= ".pdf"
+			ImgName .= ".pdf"
 
-	; Karteikartentext ist leer
-		If (Karteikartentext = "")
-				Karteikartentext := SubStr(ImgName, 1, StrLen(ImgName) - 4)
+	; KKText ist leer
+		If (KKText = "")
+			KKText := SubStr(ImgName, 1, StrLen(ImgName) - 4)
 
-		WinActivate   	, Grafischer Befund ahk_class #32770
-		WinWaitActive	, Grafischer Befund ahk_class #32770,,4
-
-	;der Haken bei Vorschau wird entfernt, dann muss ich keine PDF Viewer oder Imageviewer Fenster abfangen und abhandeln mehr
+	; Dialog aufrufen falls noch nicht geschieht
 		If !(hGBef:= WinExist("Grafischer Befund ahk_class #32770"))
-			return
+			return 2
+		WinActivate   	, % "ahk_id " hGBef
+		WinWaitActive	, % "ahk_id " hGBef,, 4
 
+	; der Haken bei Vorschau wird entfernt, dann muss ich keine PDF Viewer oder Imageviewer Fenster abfangen und abhandeln mehr
 		VerifiedCheck("Button1", "", "", hGBef, 0)
 		sleep, 200
 
 	;Daten in das Fenster eintragen
-		VerifiedSetText("Edit1", ImgName       	, "Grafischer Befund ahk_class #32770", 100)
-		VerifiedSetText("Edit2", Karteikartentext	, "Grafischer Befund ahk_class #32770", 100)
+		VerifiedSetText("Edit1", ImgName	, GRBFD, 100)
+		VerifiedSetText("Edit2", KKText 		, GRBFD, 100)
 
-	;auf Ok drücken - ein mögliches Fehlerfenster abfangen und schliessen (beendet den Vorgang insgesamt)
-		while WinExist("Grafischer Befund ahk_class #32770")		{
+	;auf Ok drücken - ein mögliches Fehlerfenster abfangen und schliessen (beendet den Importvorgang)
+		while WinExist(GRBFD)		{
 
-				VerifiedClick("Button2", "Grafischer Befund ahk_class #32770")
-				WinWaitClose, Grafischer Befund ahk_class #32770,, 1
+			VerifiedClick("Button2", GRBFD)
+			sleep, 300
+			If WinExist(GRBFD)                                         	{
+				WinWaitClose, % GRBFD,, 2
+				sleep, 300
+			}
+			If WinExist("ALBIS ahk_class #32770", WinText1)	 {
+				If !VerifiedClick("Button1", "ALBIS ahk_class #32770", WinText1)
+					If WinExist("ALBIS ahk_class #32770", WinText1)
+						AlbisClosePopups()
+				return 3
+			} else {
+				return 1
+			}
 
-				If WinExist("ALBIS ahk_class #32770", "Bitte überprüfen Sie den Namen bzw. Pfad.") {
-						VerifiedClick("Button1", "ALBIS ahk_class #32770", "Bitte überprüfen Sie den Namen bzw. Pfad.")
-						return 0
-				}
 
-				If (A_Index > 2)
-						return 0
-
-				Sleep, 1000
+			If (A_Index > 2)
+				return 4
+			else
+				Sleep, 500
 
 		}
 
 return 1
 }
 ;03
-AlbisImportierePdf(PdfName, LVRow:=0) {                                             	;-- Importieren einer PDF-Datei in eine Patientenakte
+AlbisImportierePdf(PdfName, KKText:="", DocDate:="") {                          	;-- Importieren einer PDF-Datei in eine Patientenakte
 
-	; benötigt ein globales Objekt mit dem Namen SPData -> Aufbau siehe ScanPool.ahk
-	; oPat : globals Object, enthält die Addendum interne Patientendatenbank
-	; Addendum: globales Object - enthält Daten zu Albis-Ordnern
-	; letzte Änderung: 14.02.2020
+	/* AlbisImportierePdf()	-	letzte Änderung: 17.02.2021
+
+		benötigt ein globales Objekt mit dem Namen SPData -> Aufbau siehe ScanPool.ahk
+		oPat : globals Object, enthält die Addendum interne Patientendatenbank
+		Addendum: globales Object - enthält Daten zu Albis-Ordnern
+		Das Datum des Karteikarteneintrages wird entweder aus DocDate oder wenn leer dem Dateierstellungsdatum entnommen.
+		Ist DocDate im Format dd.MM.yyyy wird das Erstellungsdatum der Datei verwendet
+
+	 */
 
 		suggestions:= Object()
 
@@ -4901,72 +4919,101 @@ AlbisImportierePdf(PdfName, LVRow:=0) {                                         
 		}
 
 	; Eingangsdatum des Befundes auslesen
-		BlockInput, On
-		creationtime := FormatedFileCreationTime(Addendum.BefundOrdner "\" PdfName)
-
-	; öffnet den Dialog 'Grafischer Befund' durch Eingabe eines Kürzel in die Akte - falls Sie ein anderes Kürzel verwenden - müssen Sie dies hier ändern
 		PraxTT("Importiere PDF-Datei:`n[" PdfName "]", "15 2")
-		AlbisSetzeProgrammDatum(creationtime)
+		BlockInput, On
+		If !DocDate || !RegExMatch(DocDate, "\d\d\.\d\d\.\d\d\d\d")
+			DocDate := FormatedFileCreationTime(Addendum.BefundOrdner "\" PdfName)
+
+	; Programmdatum ändern
+		AlbisSetzeProgrammDatum(DocDate)
 
 	; Eingabefokus in die Karteikarte setzen
 		If !AlbisKarteikartenFocusSetzen("Edit3") {
 			PraxTT("Beim Importieren ist ein Problem aufgetreten.`nDer Eingabefocus konnte nicht gesetzt werden!", "6 2")
+			AlbisSetzeProgrammDatum()
 			BlockInput, Off
 			return 0
 		}
-
 		SendRaw, Scan
 		sleep, 100
 		SendInput, {Tab}
+		WinWait, % "Grafischer Befund ahk_class #32770",, 3
 
 	; Erstellen des Karteikartentextes
-		KarteikartenText := RegExReplace(PdfName       	, "\.pdf$")            	;entfernen von '.pdf'
-		KarteikartenText :=       RxNames(KarteikartenText	, "ReplaceNames")
-		KarteikartenText := RegExReplace(KarteikartenText	, "^[\s,]*")
-		KarteikartenText := RegExReplace(KarteikartenText	, "\s{2,}", " ")
+		If !KKText
+			KKText := string.Karteikartentext(PdfName)
 
 	; Übertragen des Befundes in die Akte
-		If !AlbisUebertrageGrafischenBefund(PdfName, KarteikartenText) 	{
-			PraxTT("Beim Übertragen des Befundes`nist ein Problem aufgetreten.", "6 2")
-			BlockInput, Off
+		err := AlbisUebertrageGrafischenBefund(PdfName, KKText)
+
+	; Karteikartenfokus entfernen, ans Ende der Karteikarte springen
+		AlbisKarteikarteAktivieren()
+		SendInput, {Escape}
+		sleep, 300
+		SendInput, {End}
+		sleep, 50
+
+	; auf aktuelles Tagesdatum zurücksetzen und Tastaturzugriff wieder zulassen
+		AlbisSetzeProgrammDatum()
+		BlockInput, Off
+
+	; Hinweis anzeigen
+		If (err > 1)
+			PraxTT("Beim Übertragen des Befundes`nist ein Problem aufgetreten.`nFehlercode: " err, "6 2")
+		else if (err = 1)
+			PraxTT("Der PDF-Befund wurde importiert.", "3 2")
+
+return (err > 1 ? 0 : DocDate)
+}
+;04
+AlbisImportiereBild(ImageName, KKText:="", DocDate:="") {              	;-- Importieren einer JPG-Datei in eine Patientenakte
+
+	; Änderung des Tagesdatum wie bei AlbisImportierePdf() beschrieben
+	; letzte Änderung: 17.02.2021
+
+	; zurück falls Datei nicht mehr vorhanden ist
+		If !FileExist(Addendum.BefundOrdner "\" ImageName) {
+			PraxTT("Datei: " ImageName " ist nicht vorhanden!", "1 0")
 			return 0
 		}
 
-	; auf aktuelles Tagesdatum zurücksetzen
-		AlbisSetzeProgrammDatum()
-
-	; Tastaturzugriff wieder zulassen
-		BlockInput, Off
-		PraxTT("Der Befund wurde importiert.", "3 2")
-
-return creationtime
-}
-;04
-AlbisImportiereBild(ImageName, KarteikartenText) {                                	;-- Importieren einer JPG-Datei in eine Patientenakte
-
 	; Dialogfenster aufrufen über das Albismenu
+		BlockInput, On
 		If !(hGBef := AlbisOeffneGrafischerBefund()) 	{
-				PraxTT("Der Dialog zum Importieren der Bilddatei:`n" ImageName "konnte nicht geöffnet werden.`nDer nächste Vorgang wird abgebrochen.", "2 2")
-				return 0
+			PraxTT(	"Der Dialog zum Importieren der Bilddatei:`n<" ImageName ">`n"
+					. 	"konnte nicht geöffnet werden.`nDer Importvorgang wird abgebrochen.", "2 2")
+			BlockInput, Off
+			return 0
 		}
+		PraxTT("Importiere Bild:`n[" ImageName "]", "15 2")
 
 	; Dialog aktivieren
-		WinActivate   	, Grafischer Befund ahk_class #32770
-		WinWaitActive	, Grafischer Befund ahk_class #32770,,4
+		WinActivate   	, % (GRBFD := "Grafischer Befund ahk_class #32770")
+		WinWaitActive	, % GRBFD,, 4
+
+	; Dokumentdatum prüfen
+		If !DocDate || !RegExMatch(DocDate, "\d\d\.\d\d\.\d\d\d\d")
+			DocDate := FormatedFileCreationTime(Addendum.BefundOrdner "\" ImageName)
 
 	; Tagesdatum ändern
-		AlbisSetzeProgrammDatum(creationtime := FormatedFileCreationTime(Addendum.BefundOrdner "\" ImageName))
+		AlbisSetzeProgrammDatum(DocDate)
+
+	; Erstellen des Karteikartentextes
+		If !KKText
+			KKText := string.Karteikartentext(ImageName)
 
 	; Importieren des Bildes in die Akte
-		If !AlbisUebertrageGrafischenBefund(ImageName, KarteikartenText) 	{
-				PraxTT("Beim Übertragen des Befundes`nist ein Problem aufgetreten.", "6 2")
-				return 0
-		}
+		err := AlbisUebertrageGrafischenBefund(ImageName, KKText)
 
 	; auf das aktuelle Tagesdatum zurücksetzen
 		AlbisSetzeProgrammDatum()
+		BlockInput, Off
+		If !err
+			PraxTT("Beim Importieren des Bildes ist ein Problem aufgetreten.", "6 2")
+		else
+			PraxTT("Der Bildbefund wurde importiert.", "3 2")
 
-return creationtime
+return (!err ? 0 : DocDate)
 }
 ;}
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -8,7 +8,7 @@
 ;       Abhängigkeiten:
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Laborabruf_iBWC.ahk last change:    	15.02.2021
+;       Laborabruf_iBWC.ahk last change:    	17.02.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -23,6 +23,7 @@
 	;#MaxMem 						4096
 	SetBatchLines					, -1
 	;ListLines    						, Off
+	FileEncoding                 	, UTF-8
 	;}
 
   ; -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -239,7 +240,7 @@ infoBoxWebClient() {                                                            
 	; Logdaten schreiben
 		IniWrite	, % datestamp(1) , % adm.ini, % "LaborAbruf", % "Letzter_Abruf"
 		If (StrLen(writeTExt) > 0) {
-			IniWrite			, % datestamp(1) "|0", % adm.ini, % "LaborAbruf", % "Letzter_Abruf_mit_Daten"
+			IniWrite			, % datestamp(1) , % adm.ini, % "LaborAbruf", % "Letzter_Abruf_mit_Daten"
 			FileAppend	, % (amsg .= datestamp(2)  "| " A_ThisFunc "()  `t- # Daten vorhanden [" RTrim(writeText, ", ") "]`n")
 								, % adm.LogFilePath, UTF-8
 			LabDataReceived := true
@@ -270,6 +271,8 @@ return LabDataReceived
 
 AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 
+		WinLabordaten := "Labordaten ahk_class #32770"
+
 	; Aufruf des Dialoges Labor wählen über das Menu Extern\Labor\Daten importieren ....
 		hLaborwaehlen := AlbisLaborwaehlen()
 		If !VerifiedChoose("ListBox1", hLaborwaehlen, LaborName) {
@@ -296,14 +299,14 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 		}
 
 	; ein anderes Fenster [Labordaten Sammelimport] öffnet sich jetzt
-		while !WinExist("Labordaten ahk_class #32770", "Sammelimport") {
+		while !WinExist(WinLabordaten, "Sammelimport") {
 			If (A_Index >= 100)
 				break
 			Sleep 50
 			Loop 10
 				Sleep 5
 		}
-		If !WinExist("Labordaten ahk_class #32770", "Sammelimport") {
+		If !WinExist(WinLabordaten, "Sammelimport") {
 			FileAppend	, % (amsg .= datestamp(2) "| " A_ThisFunc "() `t- Labordaten Sammelimport: hat sich nicht geöffnet`n")
 								, % adm.LogFilePath
 			return 0
@@ -313,14 +316,14 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 		Sleep 1500
 
 	; Checkbox: [für Sammelimport vormerken] anhaken
-		If !VerifiedCheck("Button5", "Labordaten ahk_class #32770",,, 1) {
+		If !VerifiedCheck("Button5", WinLabordaten,,, 1) {
 			FileAppend	, % (amsg .= datestamp(2) "| " A_ThisFunc "() `t- Labordaten Sammelimport: Checkbox"
 								. 	 " ''für Sammelimport vormerken'' konnte nicht gesetzt werden`n")
 								, % adm.LogFilePath
 			return 0
 		}
 	; Button: Sammelimport drücken
-		If !VerifiedClick("Button1"	, "Labordaten ahk_class #32770",,, 3) {
+		If !VerifiedClick("Button1"	, WinLabordaten,,, 3) {
 			FileAppend	, % (amsg .= datestamp(2)  "| " A_ThisFunc "() `t- Labordaten Sammelimport: "
 								. 	 "konnte nicht geschlossen werden`n")
 								, % adm.LogFilePath
@@ -331,7 +334,7 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 	; Import: 	Fortschrittsanzeige detektieren und solange warten bis der Import abgeschlossen ist
 	; 				wartet auf das erste Popupfenster und wartet bis dieses geschlossen wurde
 		PopupWin := false
-		writeStr := datestamp(2) "| " A_ThisFunc "() `t- Labordaten Sammelimport: letztes Fenster (Importfortschritt) konnte nicht abgefangen werden"
+		writeStr := "| " A_ThisFunc "() `t- Labordaten Sammelimport: letztes Fenster (Importfortschritt) konnte nicht abgefangen werden"
 		Loop {
 
 			If (A_Index >= 80) {
@@ -349,7 +352,7 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 						FileAppend, % (amsg .= datestamp(2) writeStr " [2]`n"), % adm.LogFilePath
 						break
 					}
-					SleepLoop(50, 10, 5)
+					Sleep 100
 				}
 
 				hPopupWin := GetHex(DllCall("GetLastActivePopup", "uint", AlbisWinID()))
@@ -359,7 +362,7 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 					return 1
 			}
 
-			SleepLoop(50, 10, 5)
+			Sleep 100
 
 		}
 

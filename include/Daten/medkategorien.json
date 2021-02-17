@@ -35,6 +35,10 @@
         "ingredient": "Amiodaron",
         "use": "Herzrhythmus"
     },
+    "Amlodigamma Top": {
+        "ingredient": "Amlodipin",
+        "use": "Bluthochdruck"
+    },
     "Amlodipin": {
         "ingredient": "Amlodipin",
         "use": "Blutdruck"
@@ -491,6 +495,14 @@
         "ingredient": "Macrogol, Kombinationen",
         "use": "chronische Obstipation "
     },
+    "Macrogol TAD": {
+        "ingredient": "Macrogol",
+        "use": "chron. Stuhlverhalt"
+    },
+    "Madopar": {
+        "ingredient": "L-Dopa und Benserazid",
+        "use": "M. Parkinson"
+    },
     "Melneurin": {
         "ingredient": "Melperon",
         "use": "Schlafverbesserung"
@@ -554,6 +566,10 @@
     "Metoprololsuccinat": {
         "ingredient": "Metoprolol succinat",
         "use": "Blutdruck/Herzrhythmus"
+    },
+    "Mirtalich": {
+        "ingredient": "Mirtazapin",
+        "use": "Stimmung"
     },
     "Mirtazapin": {
         "ingredient": "Mirtazapin",
@@ -756,6 +772,10 @@
     "Sertralin": {
         "ingredient": "Sertralin",
         "use": "Stimmung"
+    },
+    "Simva Basics": {
+        "ingredient": "Simvastatin",
+        "use": "Cholesterin"
     },
     "SimvaHEXAL": {
         "ingredient": "",

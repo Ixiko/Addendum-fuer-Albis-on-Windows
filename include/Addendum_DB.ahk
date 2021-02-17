@@ -1072,36 +1072,33 @@ FuzzyFind(dict, query) {																					;-- Creates an array of match objec
 ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; HILFSFUNKTIONEN - STRING HANDLING,
 ;--------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-RxNames(Str, RxMatch="GetNames")                      	{                       	;-- Stringfunktion für die Behandlung von PDF-Dateinamen
+RegExStrings()                                                         	{                         	;-- erstellt die RegExString für die string Klassenbibliothek
 
-	; eingeführt mit Addendum_Gui.ahk
-	; letzte Änderung: 07.02.2021
+	rxb := {"S"             	: "[\s,]+"
+			, 	"Person1"  	: "[A-ZÄÖÜ][\pL]+[\s-]*([A-ZÄÖÜ][\pL-]+)*"
+			, 	"Person2"  	: "[A-ZÄÖÜ][\pL]+([\-\s][A-ZÄÖÜ][\pL]+)*"
+			,	"Date1"        	: "\d{1,2}\.\d{1,2}\.\d{2,4}"}
 
-	static rxPerson1 	:= "[A-ZÄÖÜ][\pL]+[\s-]*([A-ZÄÖÜ][\pL-]+)*"
-	static rxPerson2 	:= "[A-ZÄÖÜ][\pL]+([\-\s][A-ZÄÖÜ][\pL]+)*"
+	rx := {	"fileExt"	    	: "\.[A-Za-z]{,3}$"
+			, 	"umlauts"   	: {"Ä":"Ae", "Ü":"Ue", "Ö":"Oe", "ä":"ae", "ü":"ue", "ö":"oe", "ß":"sz"}
+			, 	"Extract"      	: "^\s*(?<NN>" rxb.Person1 ")" rxb.S "(?<VN>" rxb.Person1 ")" rxb.S "(?<Title>.*)*"
+			, 	"Names1"  	: "^\s*(?<NN>" rxb.Person1 ")" rxb.S "(?<VN>" rxb.Person1 ")" rxb.S
+			, 	"Names2"  	: "^\s*(?<NN>" rxb.Person2 ")" rxb.S "(?<VN>" rxb.Person2 ")" rxb.S
+			; Addendums Dateibezeichnungsregel für Befunde: z.B. "Muster-Mann, Max-Ali, Entlassungsbrief Kardiologie v. 10.10.2020-18.10.2020"
+			, 	"CaseName"	: "^\s*(?<N>.*)?,\s*(?<I>.*)?\s+v\.\s*(?<D>\d+\.\d+\.\d+)(?<E>\s*\.[a-z]+)*"
+			; letztes Datum im Dateinamen (der letzte Datumsstring auf den weder ein Whitespace, Zahl, Punkt oder ein Minus folgt, oder am Ende des String steht
+			,	"LastDate" 	: "(?<Date>\" rxb.Date1 ").?([^\d.\s\-]|$)"}
 
-	static RxExtract   	:= "^\s*(?<NN>" rxPerson1 ")[\s,]+(?<VN>" rxPerson1 ")[\s,]+(?<DokTitel>.*)*" ;?\.[a-z]*
-	static RxNames1	:= "^\s*(?<NN>" rxPerson1 ")[\s,]+(?<VN>" rxPerson1 ")[\s,]+"
-	static RxNames2	:= "^\s*(?<NN>" rxPerson2 ")[\s,]+(?<VN>" rxPerson2 ")[\s,]+"
+	For key, rxString in rxb
+		rx[key] := rxString
 
-	if (RxMatch = "ContainsName")
-		return RegExMatch(Str, RxNames1)
-	else If (RxMatch = "GetNames") {
-		RegExMatch(Str, RxExtract, Pat)
-		return {"Nn":PatNN, "Vn":PatVN, "DokTitel":PatDokTitel}
-	}
-	else if (RxMatch ="ReplaceNames")
-		return RegExReplace(Str, RxNames2)
-
-}
-
-EscapeStrRegEx(str)                                                 	{                      	;-- formt eine String RegEx fähig um
-	For idx, Char in StrSplit("[](){}*\/|-+.?^$")
-		str := StrReplace(str, char , "\" char)
-return str
+return rx
 }
 
 class string                                                               	{                        	;-- wird alle String Funktionen von Addendum enthalten
+
+	; benötigt Addendum_Datum.ak
+	; letzte Änderung 17.02.2021
 
 	; RegEx Strings erstellen
 		static rx := RegExStrings()
@@ -1109,76 +1106,84 @@ class string                                                               	{   
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	; diverse Stringfunktionen
 	;----------------------------------------------------------------------------------------------------------------------------------------------
-		EscapeStrRegEx(str)   	{                      	;-- formt einen String RegEx fähig um
+		EscapeStrRegEx(str)                           	{      	;-- formt einen String RegEx fähig um
 			For idx, Char in StrSplit("[](){}*\/|-+.?^$")
 				str := StrReplace(str, char , "\" char)
 		return str
 		}
 
-		Flip(string)               	{                         	;-- String reverse
+		Flip(string)                                       	{        	;-- String reverse
 			VarSetCapacity(new, n:=StrLen(string))
 			Loop % n
 				new .= SubStr(string, n--, 1)
 		return new
 		}
 
-	;----------------------------------------------------------------------------------------------------------------------------------------------
-	; Namen von Personen PDF Kategorisierung von Addendum-Gui.ahk
-	;----------------------------------------------------------------------------------------------------------------------------------------------
-		ContainsName(str) 	{                        	;-- enthält Personennamen?
-			return RegExMatch(Str, this.rx.Names1)
+		Karteikartentext(str)                        	{        	;-- entfernt Namen, Dateierweiterung, Leerzeichen
+
+			str := this.Replace.FileExt(str)                	; entfernen der Dateiendung
+			str := this.Replace.Names(str)            	; Namen von Patienten entfernen
+			str := RegExReplace(str, "^[\s,]*")        	; einzeln stehende Komma entfernen
+		return RegExReplace(str, "\s{2,}", " ")       	; Leerzeichenfolgen kürzen
 		}
 
-		GetNames(str)       	{                        	;-- Personennamen zurückgeben
-			RegExMatch(Str, this.rx.Extract, Pat)
-			return {"Nn":PatNN, "Vn":PatVN, "DokTitel":PatDokTitel}
+	;----------------------------------------------------------------------------------------------------------------------------------------------
+	; Funktionen für die PDF Kategorisierung von Addendum-Gui.ahk
+	;----------------------------------------------------------------------------------------------------------------------------------------------
+		ContainsName(str)                         	{       	;-- enthält Personennamen?
+			rxpos := RegExMatch(Str, this.rx.Names1)
+			return (rxpos ? rxpos : RegExMatch(Str, this.rx.Names2))
 		}
 
-		isFullNamed(str)    	{                        	;-- Dateiname enthält Nachname,Vorname, Dokumentbezeichung und Datum
+		isFullNamed(str)                            	{        	;-- Dateiname enthält Nachname,Vorname, Dokumentbezeichung und Datum
 
-			str := RegExReplace(str, this.rx.fileExt)
-			If RegExMatch(str, this.rx.CaseName, FOE) {
-				Part1	:= RegExReplace(FOEN	, "[\s,]+$")
-				Part2	:= RegExReplace(FOEI 	, "[\s,]+$")
-				Part3	:= RegExReplace(FOED	, "^[\s,v\.]+")
-				If (StrLen(Part1) = 0 || StrLen(Part2) = 0 || StrLen(Part3) = 0)
-					return false
-				else
+			;str := RegExReplace(str, this.rx.fileExt) ; neuer RegExString 'CaseName' kann mit Dateiendungen umgehen
+			If RegExMatch(str, this.rx.CaseName, F) {
+				Part1	:= RegExReplace(FN	, "[\s,]+$")
+				Part2	:= RegExReplace(FI 	, "[\s,]+$")
+				Part3	:= RegExReplace(FD	, "^[\s,v\.]+")
+				If (StrLen(Part1) > 0) && (StrLen(Part2) > 0) && (StrLen(Part3) > 0)
 					return true
 			}
 
 		return false
 		}
 
-		ReplaceNames(str) 	{                        	;-- Personennamen ersetzen
-			return RegExReplace(Str, this.rx.Names2)
+		class Get extends string                   	{        	;-- alle Stringextraktionen unter einem Namen
+
+			DocDate(str)                                           	{       	;-- Dokumentdatum aus dem Dateinamen erhalten
+
+				RegExMatch(str, this.rx.LastDate, Doc)
+				If RegExMatch(DocDate, "^" this.rx.Date1 "$")
+					return FormatDate(DocDate, "DMY", "dd.MM.yyyy")
+
+			return
+			}
+
+			Names(str)                                             	{         	;-- Personennamen zurückgeben
+				RegExMatch(Str, this.rx.Extract, Pat)
+				return {"Nn":PatNN, "Vn":PatVN, "DokTitel":PatDokTitel}
+			}
+
 		}
 
+		class Replace extends string             	{           ;-- alle Ersetzungsfunktionen unter einem Namen
+
+			Names(str, rplStr:="")            	{         	;-- Personennamen ersetzen
+				return RegExReplace(Str, this.rx.Names2, rplStr)
+			}
+
+			FileExt(str, ext:="", rplStr:="") 	{        	;-- Dateiendungen ersetzen
+				ext := !ext ? "[a-z]+" : ext
+				return RegExReplace(Str, "\." ext "$" , rplStr)
+			}
+
+		}
 
 }
 
-RegExStrings()                                                         	{                         	;-- erstellt die RegExString für die string Klassenbibliothek
 
-	rxb := {"S"             	: "[\s,]+"
-			, 	"Person1"  	: "[A-ZÄÖÜ][\pL]+[\s-]*([A-ZÄÖÜ][\pL-]+)*"
-			, 	"Person2"  	: "[A-ZÄÖÜ][\pL]+([\-\s][A-ZÄÖÜ][\pL]+)*"}
 
-	rx := {	"fileExt"	    	: "\.[A-Za-z]{,3}$"
-			, 	"umlauts"   	: {"Ä":"Ae", "Ü":"Ue", "Ö":"Oe", "ä":"ae", "ü":"ue", "ö":"oe", "ß":"sz"}
-			, 	"Extract"      	: "^\s*(?<NN>" rxb.Person1 ")" rxb.S "(?<VN>" rxb.Person1 ")" rxb.S "(?<DokTitel>.*)*"
-			, 	"Names1"  	: "^\s*(?<NN>" rxb.Person1 ")" rxb.S "(?<VN>" rxb.Person1 ")" rxb.S
-			, 	"Names2"  	: "^\s*(?<NN>" rxb.Person2 ")" rxb.S "(?<VN>" rxb.Person2 ")" rxb.S
-			, 	"CaseName"	: "^\s*(?<N>.*)?,\s*(?<I>.*)?v\.\s(?<D>.*)\s*"}
-
-return rx
-}
-
-StrFlip(string)                                                         	{                         	;-- String reverse
-	VarSetCapacity(new, n:=StrLen(string))
-   Loop % n
-      new .= SubStr(string, n--, 1)
-return new
-}
 
 GetAlbisPath()                                                          	{                         	;-- liest das Albisinstallationsverzeichnis aus der Registry
 

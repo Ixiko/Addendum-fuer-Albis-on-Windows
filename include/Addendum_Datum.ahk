@@ -1,60 +1,17 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                            	Funktionen für die Berechnung/Umwandlung von Tagesdaten, Quartalsdaten
-;                                                            	by Ixiko started in September 2017 - last change 13.02.2021 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 17.02.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-GetSeconds(timestring) {                                                                                        	;-- Sekunden berechnen von hhmmss
-	; timestring format: hhmmss
-	timestring := SubStr("000000" timestring, -5)
-return (SubStr(timestring,1,2)*3600)+(SubStr(timestring,3,2)*60)+SubStr(timestring,5,2)
-}
+; Datumberechnung
+AddToDate(Feld, val, timeunits) {                                                                           	;-- addiert Tage bzw. eine Anzahl von Monaten zu einem Datum hinzu
 
-FormatSeconds(timestring, formatstring:="hh:mm:ss")  {                                         	;--
-    atime := A_YYYY A_MM A_DD "000000"
-    atime += timestring, seconds
-    FormatTime, hhmmss, %atime%, %formatstring%
-    return hhmmss
-}
+	calcdate:= SubStr(Feld.Datum, 7, 4) . SubStr(Feld.Datum, 4, 2) . SubStr(Feld.Datum, 1, 2)
+	calcdate += val, %timeunits%
+	FormatTime, newdate, % calcdate, dd.MM.yyyy
+	ControlSetText,, % newdate, % "ahk_id " Feld.hwnd
 
-TimeFormatEx(sec, ShowSeconds:=true) {                                                                	;-- Sekunden in hh:mm:ss
-
-	H	:= SubStr("00" Floor(sec/3600), -1)
-	M	:= SubStr("00" Floor((sec-(H*3600))/60), -1)
-	S	:= SubStr("00" Floor(sec-(H*3600)-(M*60)), -1)
-
-return H ":" M (ShowSeconds ? ":" S : "")
-}
-
-datestamp(nr:=1) {                                                                                                	;-- für Protokolle
-	If (nr = 1)
-		return (A_YYYY "-" A_MM "-" A_DD " " A_Hour ":" A_Min ":" A_Min)
-	else
-		return (A_Hour ":" A_Min ":" A_Sec)
-}
-
-TimeCode(DaT) {                                                                                                     	;-- für Addendum_Protokoll - true für [YYYY.MM.DD,] hh:mm:ss.ms
-	TC := (DaT ? (A_YYYY "." A_MM "." A_DD ", ") : ("")) . A_Hour ":" A_Min ":" A_Sec "." A_MSec
-return TC
-}
-
-TimeDiff(time1, time2="now", output="m") {                                                           	;-- errechnet die Zeitdifferenz zwischen Zeit1 und Zeit2
-
-	; Ausgabe in Minuten (output="m") oder Sekunden (output="s")
-
-	if Instr(time2, "now") {
-		time2 := A_Now
-		FormatTime, time2,, HHmmss
-	}
-
-	time1 := Instr(time1, "000000") ? "240000" : time1
-
-	if Instr(output, "m")
-		return (SubStr(time1, 1, 2)*60 + SubStr(time1, 3, 2)) - (SubStr(time2, 1, 2)*60 + SubStr(time2, 3, 2))
-	else if Instr(output,"s")
-		return (SubStr(time1, 1, 2)*3600 + SubStr(time1, 3, 2) + SubStr(time1, 5, 2)) - ( SubStr(time2, 1, 2)*3600 + SubStr(time2, 3, 2)*60 + SubStr(time2, 5, 2))
-
-return
 }
 
 DateDiff(fnTimeUnits, fnStartDate, fnEndDate) {                                                        	;-- berechnet Tagesdifferenzen zwischen zwei Tagen
@@ -150,8 +107,17 @@ DateDiff(fnTimeUnits, fnStartDate, fnEndDate) {                                 
 	Return TimeDifference
 }
 
-ConvertGerDateToEng(dateStr) {                                                                             	;-- konvertiert das deutsche Datumsformat in das übliche englische Format
-return SubStr(dateStr, 7, 4) . SubStr(dateStr, 4, 2) . SubStr(dateStr, 1, 2)
+DaysInMonth(date:="") {                                                                                        	;-- errechnet die Anzahl der Tage des Monats
+    date := (date = "") ? (a_now) : (date)
+    FormatTime, year  	, % date, yyyy
+    FormatTime, month	, % date, MM
+    month += 1                                                      	; goto next month
+    if (month > 12)
+        year += 1, month := 1                                  	; goto next year, reset month
+    month := (month < 10) ? (0 . month) : (month)  	; 0 to 01
+    new_date := year . month
+    new_date += -1, days                                      	; minus 1 day
+return subStr(new_date, 7, 2)
 }
 
 GetQuartal(Datum, Trenner:="") {                                                                            	;-- berechnet zu welchem Quartal das übergebene Datum gehört
@@ -364,26 +330,98 @@ Vorquartal(Datum, retFormat:="YYYYQ") {                                         
 return retStr
 }
 
-DaysInMonth(date:="") {                                                                                        	;-- errechnet die Anzahl der Tage des Monats
-    date := (date = "") ? (a_now) : (date)
-    FormatTime, year  	, % date, yyyy
-    FormatTime, month	, % date, MM
-    month += 1                                                      	; goto next month
-    if (month > 12)
-        year += 1, month := 1                                  	; goto next year, reset month
-    month := (month < 10) ? (0 . month) : (month)  	; 0 to 01
-    new_date := year . month
-    new_date += -1, days                                      	; minus 1 day
-return subStr(new_date, 7, 2)
+
+; Zeitberechungen
+FormatSeconds(timestr, formatstring:="hh:mm:ss")  {                                              	;-- Sekunden in Stunden:Minuten:Sekunden umrechnungen
+    atime := A_YYYY A_MM A_DD "000000"
+    atime += timestr, seconds
+    FormatTime, hhmmss, % atime, % formatstring
+    return hhmmss
 }
 
-AddToDate(Feld, val, timeunits) {                                                                           	;-- addiert Tage bzw. eine Anzahl von Monaten zu einem Datum hinzu
+GetSeconds(timestr) {                                                                                            	;-- Sekunden berechnen von hhmmss
+	; timestr format: hhmmss
+	timestr := SubStr("000000" timestr, -5)
+return (SubStr(timestr,1,2)*3600)+(SubStr(timestr,3,2)*60)+SubStr(timestr,5,2)
+}
 
-	calcdate:= SubStr(Feld.Datum, 7, 4) . SubStr(Feld.Datum, 4, 2) . SubStr(Feld.Datum, 1, 2)
-	calcdate += val, %timeunits%
-	FormatTime, newdate, % calcdate, dd.MM.yyyy
-	ControlSetText,, % newdate, % "ahk_id " Feld.hwnd
+TimeFormatEx(sec, ShowSeconds:=true) {                                                                	;-- Sekunden in hh:mm:ss
 
+	H	:= SubStr("00" Floor(sec/3600), -1)
+	M	:= SubStr("00" Floor((sec-(H*3600))/60), -1)
+	S	:= SubStr("00" Floor(sec-(H*3600)-(M*60)), -1)
+
+return H ":" M (ShowSeconds ? ":" S : "")
+}
+
+TimeDiff(time1, time2="now", output="m") {                                                           	;-- errechnet die Zeitdifferenz zwischen Zeit1 und Zeit2 (max. ein Tag Differenz!)
+
+	; Ausgabe in Minuten (output="m") oder Sekunden (output="s")
+
+	if Instr(time2, "now") {
+		time2 := A_Now
+		FormatTime, time2,, HHmmss
+	}
+
+	time1 := Instr(time1, "000000") ? "240000" : time1
+
+	if Instr(output, "m")
+		return (SubStr(time1, 1, 2)*60 + SubStr(time1, 3, 2)) - (SubStr(time2, 1, 2)*60 + SubStr(time2, 3, 2))
+	else if Instr(output,"s")
+		return (SubStr(time1, 1, 2)*3600 + SubStr(time1, 3, 2) + SubStr(time1, 5, 2)) - ( SubStr(time2, 1, 2)*3600 + SubStr(time2, 3, 2)*60 + SubStr(time2, 5, 2))
+
+return
+}
+
+
+; Formatierung
+FormatDate(timestr, timeformat:="DMY", returnformat:="dd.MM.yyyy") {
+
+		static rxMDate := {"D"	: "(?<D>\d{1,2})"
+								, 	"M"	: "(?<M>\d{1,2})"
+								, 	"Y"	: "(?<Y>\d{1,4})"}
+
+	; timeformat korrigieren
+		timeformat := RegExReplace(timeformat, "[D]"	, "D")
+		timeformat := RegExReplace(timeformat, "[M]"	, "M")
+		timeformat := RegExReplace(timeformat, "[Y]" 	, "Y")
+
+	; RegExMatch String anhand timeformat zusammenstellen
+		TF	:= Object()
+		TF[InStr(timeformat, "D")]	:= "D"
+		TF[InStr(timeformat, "M")]	:= "M"
+		TF[InStr(timeformat, "Y")]	:= "Y"
+
+		rxMatch := rxMDate[TF.1] ".*?" rxMDate[TF.2] ".*?" rxMDate[TF.3]
+
+	; fehlhaften timestr verwerfen
+		If !RegExMatch(timestr, rxMatch, T) || (StrLen(TY) = 1) || (StrLen(TY) = 3)
+			return  ; "wrong timeformat"
+
+	; Anzahl der Ziffern des Jahres in returnformat berichtigen
+		RegExReplace(returnformat, "i)y", "", YearDigits)
+		If (YearDigits != 4)
+			returnformat := RegExReplace(returnformat, "i)y+", "yyyy")
+
+	; Eingabedatum formatieren
+		TD 	:= SubStr("0" TD	, -1)
+		TM 	:= SubStr("0" TM	, -1)
+		If (StrLen(TY) = 2) {   ; wendet sich gegen Datumszahlen in der Zukunft!
+			YD	:= SubStr(A_YYYY, 3, 2) + 0
+			YT	:= SubStr(A_YYYY, 1, 2) + 0
+			TY 	:= (TY > YD ? YT-1 : YT) . TY
+		}
+
+	; Zeitstring formatieren
+		FormatTime, formatedTime, % TY TM TD "000000", % returnformat
+
+return formatedTime
+}
+
+
+; Konvertierung
+ConvertGerDateToEng(dateStr) {                                                                             	;-- konvertiert das deutsche Datumsformat in das übliche englische Format
+return SubStr(dateStr, 7, 4) . SubStr(dateStr, 4, 2) . SubStr(dateStr, 1, 2)
 }
 
 ConvertDBASEDate(DBASEDate) {                                                                            	;-- Datumskonvertierung von YYYYMMDD nach DD.MM.YYYY
@@ -395,10 +433,29 @@ ConvertToDBASEDate(Date) {                                                      
 	return tY . tM . tD
 }
 
-GetFileTime(filepath, WhichTime:="C", formatstring:="") {                                        	;-- gibt einen formatierten Datumsstring zurück
+
+; Stempel
+datestamp(nr:=1) {                                                                                                	;-- für Protokolle
+	If (nr = 1)
+		return (A_YYYY "-" A_MM "-" A_DD " " A_Hour ":" A_Min ":" A_Min)
+	else
+		return (A_Hour ":" A_Min ":" A_Sec)
+}
+
+TimeCode(DaT) {                                                                                                     	;-- für Addendum_Protokoll - true für [YYYY.MM.DD,] hh:mm:ss.ms
+	TC := (DaT ? (A_YYYY "." A_MM "." A_DD ", ") : ("")) . A_Hour ":" A_Min ":" A_Sec "." A_MSec
+return TC
+}
+
+
+; sonstiges
+GetFileTime(filepath, WhichTime:="C", formatstring:="") {                                        	;-- formatiertes Datum aus der Dateierstellungszeit
 
 	FileGetTime, FTIME , % filepath, % WhichTime
 	FormatTime, RTIME, % FTIME, % (formatstring ? formatstring : "dd.MM.yyyy")
 
 return RTIME
 }
+
+
+
