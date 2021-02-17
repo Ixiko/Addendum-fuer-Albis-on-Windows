@@ -1,22 +1,21 @@
-﻿; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-; . . . . . . . . . .
-; . . . . . . . . . .                                                                                	VERORDNUNGSPLAN VERSCHÖNERN
-global                                                                               						DatumVom:= "15.10.2020"
-; . . . . . . . . . .
-; . . . . . . . . . .                                    ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
-; . . . . . . . . . .                                           BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
-; . . . . . . . . . .                                        THIS SCRIPT USES THE - MICROSOFT COM OBJECT MODEL - TO INTERACT WITH MS WORD
-; . . . . . . . . . .                                                                 THIS SOFTWARE IS ONLY AVAIBLE IN GERMAN LANGUAGE
-; . . . . . . . . . .
-; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-; . . . . . . . . . .                    !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !!
-; . . . . . . . . . .                    - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-; . . . . . . . . . .                                                    SCRIPT ONLY WORKS WITH AUTOHOTKEY OR AUTOHOTKEY_H - V1.1.32.XX
-; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-; . . . . . . . . . .
-; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+﻿; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+; . . . . . .
+; . . . . . .                                                                  	VERORDNUNGSPLAN VERSCHÖNERN
+global                                                         						DatumVom:= "29.01.2021"
+; . . . . . .
+; . . . . . .                      ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
+; . . . . . .                             BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
+; . . . . . .                          THIS SCRIPT USES THE - MICROSOFT COM OBJECT MODEL - TO INTERACT WITH MS WORD
+; . . . . . .                                                   THIS SOFTWARE IS ONLY AVAIBLE IN GERMAN LANGUAGE
+; . . . . . .
+; . . . . . .      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; . . . . . .      !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !!
+; . . . . . .      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; . . . . . .                                      SCRIPT ONLY WORKS WITH AUTOHOTKEY OR AUTOHOTKEY_H - V1.1.32.XX
+; . . . . . .
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
 /* VBA-SKRIPT DIREKT ÜBER MICROSOFT WORD STARTEN
@@ -29,7 +28,7 @@ global                                                                          
 		Dim cmdln As String
 		Dim retVal
 
-		cmdln = "C:\Program Files\AutoHotkey\Autohotkey.exe /f ""D:\Addendum für AlbisOnWindows\Module\Albis_Funktionen\Verordnungsplan verschönern.ahk"""
+		cmdln = "C:\Program Files\AutoHotkey\Autohotkey.exe /f ""D:\....\Verordnungsplan verschönern.ahk"""
 		retVal = Shell(cmdln, vbNormalNoFocus)
 
 	End Sub
@@ -64,6 +63,8 @@ global                                                                          
 	RemoveThatShit := {	"Aaa"                     	: ""
 								, 	"\-*1\s*A"              	: ""
 								, 	"Ab[Zz]"                 	: ""
+								, 	"Acino"                  	: ""
+								, 	"Actavis"                  	: ""
 								, 	"AL"                       	: ""
 								, 	"Ari"                      	: ""
 								, 	"Arzneim"              	: ""
@@ -72,11 +73,14 @@ global                                                                          
 								,	"Augentropfen"      	: ""
 								, 	"Aurobindo"           	: ""
 								, 	"Arzne"                  	: ""
+								, 	"AWD"                   	: ""
 								,	"Axico"                  	: ""
 								,	"Axicorp\s*P"          	: ""
 								, 	"BAYER|Bayer"       	: ""
 								, 	"Becat"                  	: ""
+								, 	"beta"                    	: ""
                             	,	"Br\W"                   	: ""
+								,	"\s*\-\s+Ct(\d+)"     	: " $1"
 								,	"\-*\s*CT"              	: ""
 								,	"Deutsch"              	: ""
 								,	"Dosiergel"            	: ""
@@ -94,7 +98,7 @@ global                                                                          
 								,	"Henning"              	: ""
 								,	"Hennig"                	: ""
 								,	"Heum*a*n*n*"         	: ""
-								,	"HEXAL"                	: ""
+								,	"HEXAL"                 	: ""
 								,	"Hkp"                    	: ""
 								,	"Huebe"                	: ""
 								,	"Inject"                     	: ""
@@ -107,78 +111,85 @@ global                                                                          
 								,	"Mili"                     	: ""
 								,	"Milinda"               	: ""
 								,	"Msr"                     	: ""
+								,	"Myl"                     	: ""
 								,	"Nachfuell"            	: ""
 								,	"Net"                     	: ""
 								,	"Novolet"               	: ""
 								,	"Orifarm"              	: ""
 								,	"Pe\s"                    	: ""
 								,	"Pen\s"                  	: ""
+								,	"Penf*i*l*l*"               	: ""
 								,	"Phar*m*a*"          	: ""
 								,	"Protect(\d+)"        	: " $1"
-								,	"ratiop*h*a*r*m*"   	: ""
+								,	"[Rr]atiop*h*a*r*m*"  	: ""
 								,	"Retard"                 	: ""
 								,	"Retardtable*t*t*e*n*"	: ""
+								,	"SANDOZ"               	: ""
 								,	"Sta(\d)"                 	: " $1"
 								,	"STADA|Stada"      	: ""
+								,	"\ssto"                   	: ""
 								,	"Tabl\W"                  	: ""
 								,	"Tabletten"             	: ""
 								,	"T[Aa][Hh]"            	: ""
+								,	"TEI"                      	: ""
 								,	"TEVA"                   	: ""
 								,	"Tro"                     	: ""
 								,	"Vital"                    	: ""
 								,	"Weichkaps*e*l*n*"	: ""
+								,	"Winthrop"	            	: ""
 								,	"Zentiva"               	: ""
 								,	"4Wochen"            	: "" }
 
-	MedForm	:= {"AMP"	: "Ampulle"
-						, "ATR"	: "Augentropfen"
-						, "CRE"	: "Creme"
-						, "DOS" : "Dosierspray"
-						, "EMU"	: "Emulsion"
-						, "FER"	: "Fertigspritze"
-						, "FLU"	: "Flüssig"
-						, "FTA"	: "Tablette"
-						, "GEL"	: "Gel"
-						, "GRA"	: "Granulat"
-						, "HKM"	: "Kapsel"
-						, "HKP"	: "Kapsel"
-						, "HPI"	: "Kapsel"
-						, "HVW"	: "Kapsel"
-						, "IFB"	: "Infusionsbeutel"
-						, "IHP"	: "Inhalationspack"
-						, "INF"	: "Infusionslösung"
-						, "ILO"	: "Injektionslösung"
-						, "ISU"	: "Suspension"
-						, "KAP"	: "Kapsel"
-						, "KMP"	: "Kapseln"
-						, "KMR"	: "Kapsel"
-						, "KPG"	: "Kombipackung"
-						, "LOT"	: "Lotion"
-						, "LSE"	: "Lösung"
-						, "MIL"	: "Lotion"
-						, "PEN"	: "Fertigpen"
-						, "PFL"	: "Pflaster"
-						, "PIK"	: "Infusionslösung"
-						, "PLE"	: "Pulverzubereitung"
-						, "PST"	: "Paste"
-						, "PUL"	: "Pulver"
-						, "REK"	: "Retardkapsel"
-						, "RET"	: "Retardtablette"
-						, "SHA"	: "Shampoo"
-						, "SIR"	: "Sirup"
-						, "SPR"	: "Spray"
-						, "STI"	: "Stift"
-						, "TAB"	: "Tablette"
-						, "TEI"	: "Tropfen"
-						, "TMR"	: "Tablette"
-						, "TRO"	: "Tropfen"
-						, "UTA"	: "Tablette"
-						, "VGE"	: "Vaginalcreme"
-						, "WKA"	:" Kapsel"
-						, "XNC"	: "Nachtcreme"
-						, "ZAM"	: "Ampulle"}
+	MedForm	:= {	"AMP"	: "Ampulle"
+						, 	"ATR" 	: "Augentropfen"
+						, 	"CRE"	: "Creme"
+						, 	"DOS" 	: "Dosierspray"
+						, 	"EMU"	: "Emulsion"
+						, 	"FER" 	: "Fertigspritze"
+						, 	"FLU"	: "Flüssig"
+						, 	"FTA" 	: "Tablette"
+						, 	"GEL"	: "Gel"
+						, 	"GRA"	: "Granulat"
+						, 	"HKM"	: "Kapsel"
+						, 	"HKP"	: "Kapsel"
+						, 	"HPI" 	: "Kapsel"
+						, 	"HVW"	: "Kapsel"
+						, 	"IFB"  	: "Infusionsbeutel"
+						, 	"IHP"  	: "Inhalationspack"
+						, 	"INF" 	: "Infusionslösung"
+						, 	"ILO" 	: "Injektionslösung"
+						, 	"ISU" 	: "Suspension"
+						, 	"KAP"	: "Kapsel"
+						, 	"KMP"	: "Kapsel"
+						, 	"KMR"	: "Kapsel"
+						, 	"KPG"	: "Kombipackung"
+						, 	"LOT"	: "Lotion"
+						, 	"LSE" 	: "Lösung"
+						, 	"MIL" 	: "Lotion"
+						, 	"PEN"	: "Fertigpen"
+						, 	"PFL" 	: "Pflaster"
+						, 	"PIK"  	: "Infusionslösung"
+						, 	"PLE" 	: "Pulverzubereitung"
+						, 	"PST" 	: "Paste"
+						, 	"PUL"	: "Pulver"
+						, 	"REK" 	: "Retardkapsel"
+						, 	"RET" 	: "Retardtablette"
+						, 	"SHA"	: "Shampoo"
+						, 	"SIR"  	: "Sirup"
+						, 	"SPR" 	: "Spray"
+						, 	"STI"  	: "Stift"
+						, 	"TAB"	: "Tablette"
+						, 	"TEI"  	: "Tropfen"
+						, 	"TMR"	: "Tablette"
+						, 	"TRO"	: "Tropfen"
+						, 	"UTA"	: "Tablette"
+						, 	"VGE"	: "Vaginalcreme"
+						, 	"WKA"	: "Kapsel"
+						, 	"XNC"	: "Nachtcreme"
+						, 	"ZAM"	: "Ampulle"}
 
-	Hinweise	:= {1: "• Einnahme der Kapseln mit Flüssigkeit zur selben Tageszeit, unabhängig von den Mahlzeiten • Kapseln nicht zerkauen oder zerstoßen • nicht zusammen mit Grapefruitsaft einnehmen"}
+	Hinweise	:= {1: 	"• Einnahme der Kapseln mit Flüssigkeit zur selben Tageszeit, unabhängig von den Mahlzeiten "
+							.	"• Kapseln nicht zerkauen oder zerstoßen • nicht zusammen mit Grapefruitsaft einnehmen"}
 
 ;}
 
@@ -230,6 +241,7 @@ global                                                                          
 		startrow:= 1
 		table		:= oWord.ActiveDocument.Tables(1)
 		rows		:= table.Rows.Count
+		cols  	:= table.columns.Count
 		cell   	:= table.Cell(2, 2)
 		cell.Select
 
@@ -243,7 +255,7 @@ global                                                                          
 			cell.Range.Font.Bold      	:= true
 			cell.Range.Font.italic      	:= true
 			cell.Range.Font.underline	:= true
-			cell.Range.Text              	:= "!!! Bekannte Allergien oder Nebenwirkungen nach Einnahme von Medikamenten !!!"
+			cell.Range.Text              	:= "!!! Bekannte Allergie oder Nebenwirkungen in der Anamnese bei folgenden Medikamenten: "
 
 			Loop % (rows - 2) {                                                    	; Ende der Hinweise finden
 				rowAllergieLast := A_Index + 2
@@ -261,6 +273,7 @@ global                                                                          
 					table.Cell(row, 4 + A_Index).Range.Text := ""
 
 				table.Rows(row).Cells.Merge
+				;table.Cell(row, 2).Merge(table.Cell(row, cols))  ; vorbereitung für anderes Layout
 				thisrow := table.Rows(row)
 				thisrow.Range.Font.Size := 10
 
@@ -281,6 +294,8 @@ global                                                                          
 		; HINWEISBEREICH ALS ERSTE ZEILE DER TABELLE EINSTELLEN (DURCH AUSSCHNEIDEN UND EINFÜGEN DER 1.ZEILE NACH DEN HINWEISEN)
 			table.Rows(1).Range.Cut
 			table.Rows(2).Range.Paste
+			;table.CellRows(1).Range.Cut
+			;table.Rows(2).Range.Paste
 
 		; STARTZEILE FÜR DIE ERSETZUNG IST JETZT DIE 3.ZEILE
 			startrow := 2
@@ -293,7 +308,6 @@ global                                                                          
 ;----------------------------------------------------------------------------------------------------------------------------------------------
 ; Medikamentbezeichnungen bereinigen von Pharmaherstellern, Packungsgrößen, sonstigen Angaben
 ;----------------------------------------------------------------------------------------------------------------------------------------------;{
-
 	Loop % ((rows := table.Rows.Count) - startrow) {
 
 		; SPALTE 2 AB ZEILE 2 - MEDIKAMENTBEZEICHNUNG - KÜRZEN UND KLARER DARSTELLEN
@@ -324,7 +338,8 @@ global                                                                          
 		; ERMITTELT DIE APPLIKATIONSFORM (AUS RET -> RETARDTABLETTE Z.B.), ENTFERNT DIE KURZBEZEICHNUNGEN (RET, TAB)
 			For Abkuerzung, Form in MedForm
 				If RegExMatch(newText, "i)\s" Abkuerzung "\s") {
-					newText := RegExReplace(newText , "i)\s" Abkuerzung "\s", " ")
+					Loop 2	                                                                                                                              	; sind manchmal 2x vorhanden
+						newText := RegExReplace(newText , "i)\s" Abkuerzung "\s", " ")                                           	; z.B. Etoricoxib Heu 90mg Fta FTA N3 100 St
 					break
 				}
 
@@ -573,7 +588,7 @@ return {"use":VOuse, "ingredient":VOingr}
 writeJSONFile(file, obj, indent) {
 
 	file := FileOpen(file, "w", "UTF-8")
-	file.Write(JSON.Dump(obj,,indent))
+	file.Write(JSON.Dump(obj,,indent, "UTF-8"))
 	file.Close()
 
 }

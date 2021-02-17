@@ -1,7 +1,7 @@
 ﻿;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 11.11.2020 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - letzte Änderung 16.02.2021 - this file runs under Lexiko's GNU Licence
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
 return
@@ -11,7 +11,7 @@ return
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ;{
 ;
-;       FUNKTIONDESIGN:
+;       FUNKTIONSDESIGN:
 ;
 ;       Die Funktionen sollen eine einfach durchzuführende und möglichst fehlerfreie RPA (robotic process automation) ermöglichen.
 ;   	Nachfolgend beschreibe ich das dafür verwendete Design:
@@ -20,7 +20,8 @@ return
 ;
 ;        - das Albis Fensterhandle                   	 -	wird bei jedem Aufruf neu ermittelt, damit ein neues Albishandle, z.B. nach einem Absturz oder Neustart von Albis erkannt wird
 ;
-;        - wenige Parameter		                     	 -
+;        - wenige Parameter		                     	 - viele Parameter = viele Variablen = viel mehr Möglichkeiten? Möglicherweise ja, aber auch eine deutlich höhere Wahrscheinlich-
+;																		keit durch einen Tippfehler Probleme mit seinem Programm zu bekommen
 ;
 ;        - keine Wartezeit nach Funktionsende 	 - 	nachdem eine Automatisierungsfunktion beendet ist, ist kein sleep Befehl notwendig um auf Fenster oder anderes zu warten
 ;                                                        			  	Die nächsten Befehle können unmittelbar erfolgen.
@@ -28,11 +29,12 @@ return
 ;                                                        			  	Die Zeiten haben ich durch tägliche Nutzung meiner Skripte im Laufe der Jahre optimiert. In meiner Praxis gibt es schnelle sowie
 ;                                                                  	  	auch langsame Computer. Auf allen funktioniert das Timing der Skripte gut.
 ;
-;        - Ausführungsüberprüfung                 	- 	Funktionen welche Menupunkte oder Fenster in Albis öffnen, überprüfen ob Albis im Moment durch geöffnete Fenster blockiert ist
-;                                                                	  	und schliessen diese automatisch. Die meisten dieser Funktionen prüfen auch ob das zu erwartende Dialogfenster geöffnet wurde.
-;                                                        			  	Damit wird verhindert das weitere Automatisierungsroutinen nicht ins Leere laufen.
-;                                                                	- 	Daten die aus einem Skript in das Albisfenster übergeben werden, werden sofort wieder ausgelesen um den Erfolg der Über-
-;                                                                	  	gabe zu überprüfen.
+;        - Ausführungsüberprüfung                 	- 	Funktionen welche Menupunkte oder Fenster in Albis öffnen, überprüfen ob Albis im Moment durch geöffnete Fenster blockiert
+;                                                                	  	ist und schliessen diese automatisch.  Die meisten dieser Funktionen prüfen auch ob das zu erwartende Dialogfenster geöffnet
+;																		wurde. Damit wird verhindert das nachfolgende Automatisierungsfunktionen nicht ins Leere arbeiten oder durch wiederholte
+;																		Abfolgen von Befehlen den Nutzer vom Zugriff auf Albis blockieren. Erreicht wird dies z.B. durch folgende Regel:
+;                                                                		- 	Daten die aus einem Skript in das Albisfenster übergeben werden, werden sofort wieder ausgelesen um den Erfolg der
+;                                                                	  		Übergabe zu überprüfen.
 ;
 ;        - Fensterhandling                               	 -	Fehlerausgaben oder Hinweisfenster werden ausgewertet und es wird entsprechend reagiert
 ;
@@ -56,16 +58,11 @@ return
 ;                                                                	  	Somit ist die Interaktion  mit fast allen  Elementen der  Albisoberfläche  und sämtlichen  Albisfenstern nach  kurzer Einarbeitung in
 ;                                                                 	  	diese Skriptsprache möglich.
 ;
-;	-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+;	-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
 ;
-;                                                                                        	WARUM KEINE KLASSENBIBLIOTHEK ?
+;																																																													IXIKO 2021
 ;
-;	Ich bin kein IT-Profi. Das notwendige Wissen habe ich mir über das Autohotkey-Forum angeeignet. Die Bereitstellung von Klassenbibliotheken, anstatt wie hier von
-;	einzelnen Funktionen, ist mir bis heute fremd geblieben.
-;
-;	IXIKO 2019
-;
-;	-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - ;}
+;	-  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  - ;}
 
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; HAUPTFENSTER INFO's                                                                                                                                                                                                                            	(05)
@@ -77,22 +74,26 @@ AlbisGetActiveWinTitle() {						                                    	;-- ermitte
 	WinGetTitle, iWT, ahk_class OptoAppClass
 	RegExMatch(iWT, "(?<=\[).*(?=\])", Match)
 	For key, val in StrSplit(Match, "/") 			     					    		;entfernt überflüssige Spacezeichen vor und hinter dem String, CG hatte die Darstellung des Albis Fenstertitel verändert
-		LWT.= Trim(val) . "/"
+		LWT .= Trim(val) "/"
 return RTrim(LWT, "/")
 }
 ;02
 AlbisWinID() {                            			                                    	;-- gibt die ID des übergeordneten Albisfenster zurück
-	While !(AID := WinExist("ahk_class OptoAppClass"))
-	{
-			sleep, 50
-			if (A_Index > 40)
-				break
-	}
+
+	; letzte Änderung: 07.02.2021
+	Loop
+		If (AID := WinExist("ahk_class OptoAppClass"))
+			return GetHex(AID)
+		else If (A_Index > 40)
+			return 0
+		else if (A_Index <= 40)
+			sleep, 20
+
 return GetHex(AID)
 }
 ;03
 AlbisPID() {                            				                                    	;-- gibt die Prozeß-ID des Albisprogrammes aus
-	WinGet, AlbisPID, PID, ahk_class OptoAppClass
+	WinGet, AlbisPID, PID, % "ahk_class OptoAppClass"
 return AlbisPID
 }
 ;04
@@ -105,24 +106,28 @@ return result
 ;05
 AlbisStatus() {                                                                            	;-- ermittelt ob Albis bereit ist um Befehle zu empfangen und gibt eine Fehlermeldung aus
 
-	while !CheckWindowStatus(AlbisWinID(), 200)
-	{
-				MsgBox,1, Addendum für Albis on Windows, Albis scheint nicht zu reagieren!`nBevor Sie weiter machen,`nüberprüfen Sie bitte das Albisprogramm!
-				IfMsgBox, Cancel
-				{
-                            MsgBox, 1, Addendum für Albis on Windows,
-                            				(LTrim
-                            				Wollen Sie wirklich das laufende
-                            				Skript (%A_ScriptName%) abbrechen?
-                            				Möglicherweise verlieren Sie dabei Daten.
+	while !CheckWindowStatus(AlbisWinID(), 200)	{
+		MsgBox,1, % "Addendum für Albis on Windows",
+					(LTrim
+						Albis scheint nicht zu reagieren!
+						Bevor Sie weiter machen,
+						überprüfen Sie bitte das Albisprogramm!
+					)
+		IfMsgBox, Cancel
+		{
+				MsgBox, 1, Addendum für Albis on Windows,
+								(LTrim
+								Wollen Sie wirklich das laufende
+								Skript (%A_ScriptName%) abbrechen?
+								Möglicherweise verlieren Sie dabei Daten.
 
-                            				Vorschlag, starten Sie Albis erneut und
-                            				drücken Sie dann auf OK.
-                            				)
-                            IfMsgBox, Cancel
-                            		ExitApp
-				}
-	}
+								Vorschlag, starten Sie Albis erneut und
+								drücken Sie dann auf OK.
+								)
+				IfMsgBox, Cancel
+						ExitApp
+		}
+}
 
 }
 ;}
@@ -135,128 +140,104 @@ AlbisStatus() {                                                                 
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~;{
 ;01    	;-- MDI Control Funktionen
 AlbisGetMDIClientHandle() {                                                      	;-- ermittelt das Handle des MDIClient (Basishandle für alle Unterfenster)
-
-	global Mdi
-
-	If !IsObject(Mdi)
-		Mdi := Object()
-
+	; letzte Änderung: 10.02.2021
 	ControlGet, hMdi, HWND,, MdiClient1, ahk_class OptoAppClass
-	;Mdi.MDIClientHandle := hMdi
-
 return hMdi
 }
 ;02
 AlbisGetWartezimmerID() {                                                        	;-- ermittelt das Handle des Wartezimmerfenster innerhalb des MDI-Controls
-return FindChildWindow({Class: "OptoAppClass"}, {Title: "Wartezimmer"}, "Off")				;ID des Wartezimmer-Fenster
+return FindChildWindow({"Class": "OptoAppClass"}, {"Title": "Wartezimmer"}, "Off")				;ID des Wartezimmer-Fenster
 }
 ;03
 AlbisGetAllMDIWin() {                                                                	;-- erstellt ein globales Objekt, welches Namen, Klassen und Handles aller geöffneten MDI Fenster enthält
 
-	;Mdi - key:value Object - key ist WinTitle, value ist die Fensterklasse, extra Key ist "MdiHwnd" für das Roothandle des MDI-Fenster
-	; global Mdi:= Object() - im aufrufenden Skript / aufrufender Funktion einfügen!
+	; Mdi	- [key : value]	- Object > global Mdi - im aufrufenden Skript / aufrufender Funktion einfügen!
+	;         	- key             	- ist WinTitle
+	;       	- value          	- ist die Fensterklasse, extra Key ist "MdiHwnd" für das Roothandle des MDI-Fenster
+	;
+	; letzte Änderung: 10.02.2021
 
 	global Mdi
-	Mdi := Object()   ; Mdi-Objekt wird nur von dieser Funktion zurückgesetzt
+	Mdi := Object()   ; das Mdi-Objekt wird nur von dieser Funktion zurückgesetzt
 
-	hMdi:= AlbisGetMDIClientHandle()
-	WinGet, MDIClientWinList, ControlListHWND, % "ahk_id " hMdi
+	WinGet, MDIClientWinList, ControlListHWND, % "ahk_id " AlbisGetMDIClientHandle()
 	Loop, Parse, MDIClientWinList, `n
-		If InStr(class:= WinGetClass(A_LoopField), "Afx:")
-				Mdi[WinGetTitle(A_LoopField)]:= {"class": (class), "ID": (A_LoopField)}
-
-	;Mdi.MDIClientHandle:= hMdi
+		If InStr(class := WinGetClass(A_LoopField), "Afx:")
+			Mdi[WinGetTitle(A_LoopField)]:= {"class": class, "ID": A_LoopField}
 
 return Mdi
 }
 ;04
-AlbisGetMDIMaxStatus(MDIChild) {                                            	;-- stellt fest ob das gewählte MDI Fenster maximiert und im Vordergrund ist
+AlbisGetMDIMaxStatus(MDITitle) {                                               	;-- stellt fest ob das gewählte MDI Fenster maximiert und im Vordergrund ist
 
-	;gibt 1 zurück wenn es maximiert ist und im Vordergrund , Beispiel: AlbisGetMdiMaxStatus("Wartezimmer")
+	; MDITitle - Titel des gesuchten MDI Fenster
+	; gibt 1 zurück wenn es maximiert ist und im Vordergrund , Beispiel: AlbisGetMdiMaxStatus("Wartezimmer")
+	; letzte Änderung: 10.02.2021
+
 	global Mdi
 
 	Mdi := AlbisGetAllMDIWin()
 
-	If RegExMatch(MDIChild, "^0x[\w]+") ;|| RegExMatch(MDIChild, "^\d+$")
-	{
-		For title, val in Mdi
-			If InStr(val.id, MDIChild)
+	If RegExMatch(MDITitle, "^0x[\w]+") {
+		For title, mditab in Mdi
+			If InStr(mditab.id, MDIChild)
 				return DllCall("IsZoomed", "UInt", val.ID)
 	}
-	else
-	{
-		For title, val in Mdi
-			If InStr(title, MDIChild)
+	else 	{
+		For title, mditab in Mdi
+			If InStr(mditab, MDIChild)
 				return DllCall("IsZoomed", "UInt", val.ID)
 	}
 
 }
 ;05
 AlbisGetActiveMDIChild() {                                                        	;-- ermittelt das Handle des aktuellen MDI-Childfensters
-
-	global Mdi
-
-	If !IsObject(Mdi)
-		Mdi := Object()
-
-	; WM_MDIGETACTIVE:= 0x0229
-	hMdi:= AlbisGetMDIClientHandle()
-	SendMessage, 0x0229,,,, % "ahk_id " hMdi
-	hMdiChild := GetHex(ErrorLevel)
-	;Mdi.MDIClientHandle:= hMdi
-
-return hMdiChild
+	; letzte Änderung: 10.02.2021
+		SendMessage, 0x0229,,,, % "ahk_id " AlbisGetMDIClientHandle() 	; WM_MDIGETACTIVE:= 0x0229
+return GetHex(ErrorLevel)
 }
 ;06
 AlbisGetSpecificHMDI(MDITitle) {		                                        	;-- ermittelt das Handle eines sub oder child Fenster innerhalb des Albis-MDI-Controls
-return GetHex(FindChildWindow({Class: "OptoAppClass"}, {Title: (MDITitle)}, "Off"))
+return GetHex(FindChildWindow({"Class": "OptoAppClass"}, {"Title": MDITitle}, "Off"))
 }
 ;07
 AlbisGetAllMDITabNames(MDITitle) {                                         	;-- ermittelt die Namen aller Tabs eines SysTabControls321
 
   ; Funktion kann ohne die anderen MDI Funktionen aufgerufen werden
   ; Abhängigkeiten: GetHex(), GetControls, ObjFindValue(), ControlGetTabs()
+  ; letzte Änderung: 10.02.2021
 
-	global Mdi
-
-	oCtrl			:= Object()
 	hSpecMDI	:= GetHex(AlbisGetSpecificHMdi(MDITitle))
-	oCtrl			:= GetControls(hSpecMDI)
-	key			:= ObjFindValue(oCtrl, "SysTabControl321")
+	key			:= ObjFindValue(GetControls(hSpecMDI), "SysTabControl321")
 	hMdiTab	:= oCtrl[key]["Hwnd"]
-	If !key {
-		MsgBox,, Addendum für AlbisOnWindows, % "AlbisGetMDITabs (" A_LineNumber "): Could not find SysTabControl321`n for this window :" WinTitle, 5
-		return ""
-	}
+	If key
+		return ControlGetTabs(hMdiTab)
 
-return ControlGetTabs(hMdiTab)
+	PraxTT(A_ThisFunc " (" (A_LineNumber - 3) "): SysTabControl321 nicht gefunden:`n" MDITitle, "2 1")
+
+return
 }
 ;08
 AlbisGetHMDITab(MDITitle) {                                                     	;-- ermittelt das Handle eines spezifischen MDI-TabControls
 
-	global Mdi
+	; letzte Änderung: 10.02.2021
 
-	oCtrl     	:= Object()
 	hSpecMDI	:= GetHex(AlbisGetSpecificHMDI(MDITitle))
-	oCtrl			:= GetControls(hSpecMDI)
-	key			:= ObjFindValue(oCtrl, "SysTabControl321")
-	If !key {
-		MsgBox,, Addendum für AlbisOnWindows, % "AlbisGetMDITabs (" A_LineNumber "): Could not find SysTabControl321`n for this window :" WinTitle, 5
-		return ""
-	}
+	If (key := ObjFindValue(GetControls(hSpecMDI), "SysTabControl321"))
+		return oCtrl[key]["Hwnd"]
 
-return oCtrl[key]["Hwnd"]
+	PraxTT(A_ThisFunc " (" (A_LineNumber - 3) "): SysTabControl321 nicht gefunden:`n" MDITitle, "2 1")
+
+return
 }
 ;09
 AlbisActivateMDIChild(MDITitle) {		                                        	;-- aktiviert ein MDI-Child Fenster (nicht Tab im MDI-Child!)
 
 	; return value: bei Erfolg das Handle des MDI-Child ansonsten ein Objekt mit dem ErrorLevel, dem letzten Fehler und das MDIClient-Handle
-	global Mdi
+	; letzte Änderung: 10.02.2021
 
-	hMdi     	:= AlbisGetMDIClientHandle()
 	hMdiChild	:= AlbisGetSpecificHMDI(MDITitle)
-
-	SendMessage, 0x222, % hMdiChild,,, % "ahk_id " hMdi
+	SendMessage, 0x222, % hMdiChild,,, % "ahk_id " hMdi := AlbisGetMDIClientHandle()
 
 return (ErrorLevel = 0 ? hMdiChild : {"ErrorLevel": ErrorLevel, "LastError": A_LastError, "hMdi": hmdi})
 }
@@ -266,19 +247,22 @@ AlbisActivateMDITab(MDITitle, TabName:="") {                             	;-- ak
 	; ruft man die Funktion mehrfach nacheinander unter demselben MDITitle auf, ermittelt er nicht jedesmal alle Handles neu (Speicherung in tabs - Object)
 	; Beispiel: result:= AlbisActivateMDITab("Wartezimmer", "Arzt")
 	; Rückgabewert ist 0 wenn er keinen passenden Tab finden konnte, >0 wenn die Funktion erfolgreich war
+	; letzte Änderung: 10.02.2021
 
-	global Mdi
-	static tabs := Object()
-	static last_MDITitle, hTab
+		static last_MDITitle, hTab
 
-	If !InStr(last_MDITitle, MDITitle) {
-		last_MDITitle := MDITitle
-		hTab	:= AlbisGetHMDITab(MDITitle)
-		tabs	:= AlbisGetAllMDITabNames(MDITitle)
-	}
+	; keinen TabNamen übergeben
+		If (StrLen(TabName) = 0)
+			return 0
 
-	If (StrLen(TabName) > 0)
-		For idx, tab in tabs
+	; Änderung des MDI Fenstertitels?
+		If (last_MDITitle <> MDITitle) {
+			last_MDITitle := MDITitle
+			hTab	:= AlbisGetHMDITab(MDITitle)
+		}
+
+	; Position des Tab finden und dann fokussieren
+		For idx, tab in AlbisGetAllMDITabNames(MDITitle)
 			If InStr(tab, TabName)
 				SendMessage, 0x1330, % idx - 1 ,,, % "ahk_id " hTab     ; 0x1330 is TCM_SETCURFOCUS.
 
@@ -288,26 +272,25 @@ return ErrorLevel
 AlbisCloseMDITab(MDITitle) {                                                    	;-- schließt ein per Titel identifiziertes MDIClient Fenster
 
 	; MDITitle - darf ein Teil des Namens, die komplette Patienten-ID, Geburtsdatum, .... sein
-	global Mdi
 
-	If (hMdiChild:= AlbisGetSpecificHMDI(MDITitle)) 	{
-		SendMessage, 0x0221, % hMdiChild,,, % "ahk_id " AlbisGetMDIClientHandle() ;WM_MDIDESTROY
-		EL := ErrorLevel
-		sleep, 400
-	}
-	else
-		EL := 0
+	; wird nur ausgeführt wenn der Titel gefunden werden kann
+		If (hMdiChild := AlbisGetSpecificHMDI(MDITitle)) 	{
+			SendMessage, 0x0221, % hMdiChild,,, % "ahk_id " AlbisGetMDIClientHandle() ;WM_MDIDESTROY
+			return ErrorLevel ? 1 : 0
+		}
+		else
+			return 0
 
-return (EL = 0 ? 1 : EL)
+return 1
 }
 ;}
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; INFO's VON ANDEREN STEUERELEMENTEN                                                                                                                                                                                             	(05)
+; INFO's VON ANDEREN STEUERELEMENTEN                                                                                                                                                                                             	(03)
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; (01) AlbisGetActiveControl           	(02) AlbisGetActiveWindowType   	(03) AlbisLVContent                       	(04) AlbisGetStammPos             	(05) AlbisAktuellesKuerzel
+; (01) AlbisGetActiveControl           	(02) AlbisGetActiveWindowType   	(03) AlbisLVContent                       	(04) #AlbisGetStammPos             	(05) #AlbisAktuellesKuerzel
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~;{
 ;01
-AlbisGetActiveControl(cmd) {                                                            	;-- ermittelt den aktuellen Eingabefocus und gibt zusätzliche Informationen zur genauen Identifikation des Controls zurück
+AlbisGetActiveControl(cmd) {                                                            	;-- ermittelt den aktuellen Eingabefocus und gibt zusätzliche Informationen zur Identifikation zurück
 
 	/* 		FUNKTIONSBESCHREIBUNG: AlbisGetActiveControl() letzte Änderung: 20.06.2020
 	   *
@@ -395,15 +378,16 @@ AlbisGetActiveControl(cmd) {                                                    
 return 0
 }
 ;02
-AlbisGetActiveWindowType() {                                                         	;-- ermittelt den aktuell bearbeiteten Dokumenttyp - Wartezimmer, Terminplaner, Akte, ....
+AlbisGetActiveWindowType(CBReturn=false) {                                	;-- ermittelt die aktuelle Ansicht Wartezimmer, Terminplaner, Akte, ....
 
-	;diese Funktion unterscheidet die 3 möglichen Fenstertitel von Albis
-	; Patientenakte ("Akte"), Wartezimmer ("WZ") , freie Statistik (fS) oder alles geschlossen ("other")
+	; diese Funktion kategorisiert die Art des von Albis angezeigten Inhaltes
+	; Patientenakte ("Akte"), Wartezimmer ("WZ") , freie Statistik (fS), Tagesprotokoll, Terminplaner oder nicht in der unteren Liste dann ("other")
+	; CBReturn: gibt den vollständigen Eintrag der ComboBox zurück z.B. um nach automatisiertem Schalten der Auswahl die ursprüngliche Ansicht wiederherzustellen
 	; keine Unterscheidung ob ein PopUp Dialog z.B. Rezeptformular geöffnet ist, da es in dieser Funktion ausschließlich um den Inhalt des Fenstertitels geht
 	;
-	;letzte Änderung: 20.04.2020
+	; letzte Änderung: 13.01.2021
 
-	WinGetTitle, LWT, ahk_class OptoAppClass
+	WinGetTitle, LWT, % "ahk_class OptoAppClass"
 
     If InStr(LWT, "Wartezimmer")
 		return "WZ"
@@ -415,18 +399,17 @@ AlbisGetActiveWindowType() {                                                    
 		return "TProt"
 	else if InStr(LWT, "Terminplaner")
 		return "TP"
-	else if RegExMatch(LWT, "\d\d\.\d\d\.\d\d\d\d")
-	{
-			ControlGet, hTbar		, Hwnd		,, ToolbarWindow321	, % "ahk_id " AlbisGetActiveMDIChild()
-			ControlGet, Auswahl	, Choice	,, ComboBox1				, % "ahk_id " hTbar
-			;ControlGet, Auswahl	, Choice	,, ComboBox1				, % "PatientfensterToolbar"
-
-			If InStr(Auswahl, "Abrechnung")
-				return "Patientenakte|Abrechnung"
-			else If RegExMatch(Auswahl, "i)^P\s+Priva\s")
-				return "Patientenakte|Privatabrechnung"
-			else
-				return "Patientenakte|" Auswahl
+	else if RegExMatch(LWT, "\d\d\.\d\d\.\d\d\d\d")	{
+		ControlGet, hTbar		, Hwnd		,, ToolbarWindow321	, % "ahk_id " AlbisGetActiveMDIChild()
+		ControlGet, Auswahl	, Choice	,, ComboBox1				, % "ahk_id " hTbar
+		If CBReturn
+			return Auswahl
+		If InStr(Auswahl, "Abrechnung")
+			return "Patientenakte|Abrechnung"
+		else If RegExMatch(Auswahl, "i)^P\s+Priva\s")
+			return "Patientenakte|Privatabrechnung"
+		else
+			return "Patientenakte|" Auswahl
 	}
 
 return "other"
@@ -461,31 +444,29 @@ AlbisLVContent(hWin, LVClass:="SysListView321", Column:="1") {     	;-- Listview
 return LVRow
 }
 ;04
-AlbisGetStammPos() {                                                                    	;-- liest aus der Local.ini die Positionen der Stammdatenfenster aus
+AlbisGetStammPos() {                                                                    	;-- ##liest aus der Local.ini die Positionen der Stammdatenfenster aus
 
 	; Abhängigkeiten: \lib\ini.ahk
 
 	obj := Object()
 
-	If !FileExist(LocalIni:= "C:\albiswin\Local.ini")
-			If !FileExist(LocalIni:= "C:\albiswin.loc\Local.ini") {
-					MsgBox, Addendum für AlbisOnWindows, Die Local.ini befindet sich in keinem der`nStandard-Ordner auf dem Laufwerk (C:)!`nDas Skript (%A_ScriptName%) wird beendet.
-					ExitApp
-			}
+	If !FileExist(LocalIni := "C:\albiswin\Local.ini")
+		If !FileExist(LocalIni := "C:\albiswin.loc\Local.ini") {
+			MsgBox, % "Addendum für AlbisOnWindows", % 	"Die Local.ini befindet sich in keinem der`n"
+														        					. 	"Standard-Ordner auf dem Laufwerk (C:)!`n"
+																        			.	"Das Skript (" A_ScriptName ") wird beendet."
+				ExitApp
+	}
 
-
-	ini_Load(ini, LocalIni)
-	keys := ini_getAllKeyNames(Ini, "STAMM_POS")
+	;ini_Load(ini, LocalIni)
+	;keys := ini_getAllKeyNames(Ini, "STAMM_POS")
 
 	Loop, Parse, keys, `,
 	{
-
-				If InStr(val:= ini_getValue(ini, "STAMM_POS", A_LoopField), ",") {
-
-                            val:= StrSplit(StrReplace(val, " ") , ",")
-                            obj[(A_LoopField)] := {"x":(val[1]), "y":(val[2]), "w":(val[3]), "h":(val[4])}
-
-				}
+		;~ If InStr(val := ini_getValue(ini, "STAMM_POS", A_LoopField), ",") {
+			;~ val := StrSplit(StrReplace(val, " ") , ",")
+			;~ obj[A_LoopField] := {"x":val.1, "y":val.2, "w":val.3, "h":val.4}
+		;~ }
 
 	}
 
@@ -510,8 +491,8 @@ AlbisAktuellesKuerzel() {                                                       
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; DATEN VOM AKTUELLEN PATIENTEN                                                                                                                                                                                                      	(08)
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; (01) AlbisAktuellePatID                 	(02) AlbisCurrentPatient              	(03) AlbisPatientGeschlecht()          	(04) AlbisPatientGeburtsdatum   	(05) AlbisPatientVersicherung
-; (06) AlbisVersArt                          	(07) AlbisTitle2Data                   	(08) AlbisAbrechnungsscheinVorhanden
+; (01) AlbisAktuellePatID                 	(02) AlbisCurrentPatient              	(03) AlbisPatientGeschlecht             	(04) AlbisPatientGeburtsdatum   	(05) AlbisPatientVersicherung
+; (06) AlbisVersArt                          	(07) AlbisTitle2Data                   	(08) AlbisAbrechnungsscheinVorhanden                                               	(09) AlbisAbrechnungsscheinAktuell
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~;{
 ;01		;-- Patienten bezogene Informationen
 AlbisAktuellePatID() {                                                                 	;-- liest aus dem Fenstertitel nur die PatientenID aus
@@ -549,33 +530,31 @@ AlbisTitle2Data(WTAlbis:="") {                            				         	;-- erst
 	If !InStr(AlbisGetActiveWindowType(), "Akte")
 		return ""
 
-	If (WTAlbis="")
-		WTAlbis:= AlbisGetActiveWinTitle()
+	If (StrLen(WTAlbis) = 0)
+		WTAlbis := AlbisGetActiveWinTitle()
 
 	Splitstr				:= StrSplit(WTAlbis, "/", A_Space)
-	SplitStr2			:= StrSplit(SplitStr[2], "`,", A_Space)
+	SplitStr2			:= StrSplit(SplitStr[2], ",", A_Space)
 
 return {"ID": SplitStr[1], "Nn": SplitStr2[1], "Vn": SplitStr2[2], "Gt": SplitStr[3], "Gd": SplitStr[4], "Kk": SplitStr[5]}
 }
 ;08
-AlbisAbrechnungsscheinVorhanden(Quartal) {                            	;-- Funktion nutzt das ComboBox1 Element auf der Hauptoberfläche
+AlbisAbrechnungsscheinVorhanden(Quartal) {                            	;-- gibt Index eines gesuchten Abrechnungsscheines in ComboBox zurück
 
 	; Achtung: das Quartal muss mit folgendem Trennzeichen "/" übergeben sein, wenn z.b. das Quartal:="01/17" ist, kürzt die Funktion die 0 am Anfang weg
 	; Rückgabewert ist die Zeilennummer in der ComboBox wenn die Abrechnung existiert - kein Abrechnungsschein vorhanden dann 0
 
-	Quartal:= LTrim(Quartal, "0")
-	If !InStr(Quartal, "/") {
-		Quartal:= SubStr(Quartal, 1, 1) . "/" . SubStr(Quartal, 2, 2)
-	}
-	Quartal:= "`(" . Quartal . "`)"
-		;MsgBox, % Quartal
+	;AlbisActivate(1)
 
-	AlbisActivate(1)
-	ControlGet, ComBox, List, , ComboBox1, % "ahk_id " AlbisWinID()			;ahk_class OptoAppClass
-	Loop, Parse, ComBox, `n
+	Quartal:= LTrim(Quartal, "0")
+	Quartal:= RegExReplace(Quartal, "[^\d]")
+	Quartal:= "(" SubStr(Quartal, 1, 1) "/" SubStr(Quartal, 2, 2) ")"
+
+	ControlGet, CBox, List,, ComboBox1, % "ahk_id " AlbisWinID()			;ahk_class OptoAppClass
+	Loop, Parse, CBox, `n
 	{
-		zeile:= A_LoopField
-		if ( Instr(zeile, Quartal) or InStr(zeile, "aktuell") ) {
+		zeile := A_LoopField
+		if ( Instr(zeile, Quartal) || InStr(zeile, "aktuell") ) {
 			found:= A_Index
 			break
 		}
@@ -583,16 +562,49 @@ AlbisAbrechnungsscheinVorhanden(Quartal) {                            	;-- Funkt
 
 	return found
 }
+;09
+AlbisAbrechnungsscheinAktuell() {            	                 		         	;-- aktuelle Art des Abrechnungsscheines (Abrechnung, Privat, Notfall, Überweisung ...)
+
+	; gibt alle noch nicht abgerechneten Abrechnungsscheinarten zurück
+
+	static Scheinarten 	:= {"Abrechnung":"^Abrechnung", "Überweisung":"^Überweisung", "Belegarzt":"^Belegarzt", "Notfall":"^Notfall", "Privat":"^P\sPriva.*?BE" }
+	AbrSchein := Array()
+
+	ControlGet, CBox, List,, ComboBox1, % "ahk_id " AlbisWinID()			;ahk_class OptoAppClass
+	CBLines := StrSplit(CBox, "`n", "`r")
+	For CBIndex, line in CBLines {
+
+		For Scheinart, rxASAString in Scheinarten
+			If RegExMatch(line, rxASAString) {
+
+				If (Scheinart <> "Privat") {
+					RegExMatch(line, "(?<Q>\d\/\d+)", Abr)
+					AbrSchein.Push({"Scheinart":Scheinart, "Quartal":AbrQ})
+					break
+				}
+				else If (Scheinart = "Privat") {
+					RegExMatch(line, "\d\d\.\d\d.\d\d\d\d)", PDatum)
+					AbrSchein.Push({"Scheinart":Scheinart, "Datum":PDatum})
+					break
+				}
+
+			}
+
+	}
+
+return AbrSchein
+}
 
 ;}
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; FENSTERELEMENTE AUSLESEN UND BEHANDELN                                                                                                                                                                                    	(08)
+; FENSTERELEMENTE AUSLESEN UND BEHANDELN                                                                                                                                                                                    	(12)
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; (01) AlbisGetCaveZeile                	(02) AlbisGetCave                     	(03) AlbisMuster30ControlList()       	(04) AlbisOptPatientenfenster     	(05) AlbisHeilMittelKatologPosition
-; (06) AlbisSortiereDiagnosen         	(07) AlbisReadFromListbox				(08) AlbisResizeDauerdiagnosen
+; (01) AlbisGetCaveZeile                	(02) AlbisGetCave                     	(03) AlbisCaveAddRows                 	(04) AlbisCaveGetCellFocus          	(05) AlbisCaveGetCellFocus
+; (06) AlbisCaveUnFocus                 	(07) AlbisMuster30ControlList()     	(08) AlbisOptPatientenfenster         	(09) AlbisHeilMittelKatologPosition	(10) AlbisSortiereDiagnosen
+; (11) AlbisReadFromListbox           	(12) AlbisResizeDauerdiagnosen
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~;{
 ;01
-AlbisGetCaveZeile(nr, SuchString="", CloseCave=false) {               	;-- Auslesen einer oder aller Zeilen im Cave! von Dialog
+AlbisGetCaveZeile(nr, SuchString="", CloseCave=false) {             	;-- Auslesen einer oder aller Zeilen im Cave! von Dialog
 
 	; letzte Änderung: 01.10.2020 - Suchstring kann ein RegEx-String sein
 
@@ -646,7 +658,7 @@ AlbisGetCaveZeile(nr, SuchString="", CloseCave=false) {               	;-- Ausle
 return Trim(Zeile)
 }
 ;02
-AlbisGetCave(CloseCave=true) {       		                                    	;-- alle Zeilen des Cave!von Fenster auslesen
+AlbisGetCave(CloseCave=true) {       		                                  	;-- alle Zeilen des Cave!von Fenster auslesen
 
 		AlbisActivate(1)
 
@@ -674,6 +686,167 @@ AlbisGetCave(CloseCave=true) {       		                                    	;-- 
 return List
 }
 ;03
+AlbisCaveAddRows(hCave, RowsToAdd) {                                    	;-- fügt Cave! von neue Zeilen hinzu
+
+	ControlGet, hCaveLV, HWND,, SysListView321, % "ahk_id " hCave
+	ControlGet, rowCount, List, Count,, % "ahk_id " hCaveLV
+	MaxRow := rowCount + RowsToAdd
+
+	If !AlbisCaveSetCellFocus(hCave, "last", "last")
+		return 0
+
+	Table := AlbisCaveGetCellFocus(hCave)
+
+	SetKeyDelay, 30, 40
+	SendMode, Input
+
+	Loop {
+
+		ControlGet, hEdit, HWND,, Edit1, % "ahk_id " hCave
+		If !(EditVisible := DllCall("IsWindowVisible","Ptr", hEdit))
+			return "-1"
+		ControlFocus	, Edit1, % "ahk_id " hCave
+		sleep 50
+		Send, {TAB}
+		sleep 200
+		ControlFocus	, Edit1, % "ahk_id " hCave
+		ControlGetFocus, FControl, % "ahk_id " hCave
+		Table := AlbisCaveGetCellFocus(hCave)
+		;ToolTip, % A_Index ": r" Table.row ", c" Table.col ", hEdit: " hEdit ", FC: " FControl
+		If !IsObject(Table)
+			return "-2"
+
+	} until (Table.row = MaxRow)
+
+}
+;04
+AlbisCaveGetCellFocus(hCave) {                                                   	;-- ermittelt die aktuell ausgewählte Reihe und Spalte
+
+	; ein Eingabefocus muss innerhalb der Listview gesetzt sein (nennt sich immer Edit1)
+
+		CCol := Array()
+
+	; keine Zelle der Tabelle fokussiert dann zurück
+		ControlGet, hEdit, HWND,, Edit1,  % "ahk_id " hCave
+		If !hEdit
+			return hEdit
+
+	; Listview Daten auslesen
+		ControlGet, hCaveLV     	, HWND,, SysListView321	, % "ahk_id " hCave
+		ControlGet, LVColCount	, List, Count Col,            	, % "ahk_id " hCaveLV
+		ControlGet, RowIndex    	, List, Count Focused,      	, % "ahk_id " hCaveLV
+
+	; Spaltenbreite und x Position errechnen
+		Loop % LVColCount {
+			W	:= DllCall("SendMessage", "uint", hCaveLV, "uint", 4125, "uint", A_Index-1, "uint", 0)
+			X	:= A_Index = 1 ? W : CCol[A_Index-1].X + CCol[A_Index-1].W
+			CCol.Push({"X":X, "W":W})
+		}
+
+	; Position und Breite des Edit1 Steuerelementes ermitteln
+		ControlGetPos, EditX,, EditW,, Edit1, % "ahk_id " hCaveLV
+
+	; Spaltenposition des Edit-Steuerelementes errechnen
+		For ColIndex, colpos in CCol
+			If (EditX > colpos.X) && (EditX < colpos.X+colpos.W)
+				return {"row":RowIndex, "col":ColIndex+1}
+
+return -1
+}
+;05
+AlbisCaveSetCellFocus(hCave, row, column) {                               	;-- setzt den Eingabefokus in Zeile und Spalte
+
+	; Parameter: wenn row := "last", wird die letzte Zeile gewählt
+
+	static CaveColumns := {"Arzt":2, "Datum":3, "Beschreibung":4}
+
+	; Listviewdaten ermitteln
+		ControlGet, hCaveLV, HWND,, SysListView321, % "ahk_id " hCave
+		ControlGet, rowCount, List, Count,, % "ahk_id " hCaveLV
+		ControlGet, colCount, List, Count Col,, % "ahk_id " hCaveLV
+
+	; column in eine Zahl umwandeln
+		If RegExMatch(column, "\d")
+			col := column
+		else if InStr(column, "last")
+			col := colCount
+		else
+			col := CaveColumns[column]
+
+	; row in Zahl umwandeln
+		If InStr(row, "last")
+			row := rowCount
+
+	; sind überhaupt ausreichend Zeilen vorhanden?
+		If (rowCount < row) || (colCount < col)
+			return 0
+
+	; wenn es ein Edit1 Steuerelement (Eingabe von Daten wäre möglich) wird es geschlossen
+		If !AlbisCaveUnFocus(hCave)
+			return 0
+
+	; Zeile (row) auswählen
+		ControlSend,, % row, % "ahk_id " hCaveLV
+		sleep 50
+		ControlGet, FocusedRow, List, Count Focused,, % "ahk_id " hCaveLV
+		If (FocusedRow <> row)
+			return 0
+
+	; Spalte (col) wählen
+		ControlSend,, {Space}, % "ahk_id " hCaveLV
+		sleep 50
+		Table := AlbisCaveGetCellFocus(hCave)
+		If !IsObject(Table)
+			return 0
+
+		SetKeyDelay, 30, 40
+		SendMode, Event
+
+		Loop {
+			Table := AlbisCaveGetCellFocus(hCave)
+			If !IsObject(Table)
+				return 0
+			If (Table.col = col)
+				return 1
+			ControlFocus	, Edit1, % "ahk_id " hCave
+			ControlSend	, Edit1, {TAB}, % "ahk_id " hCave
+			sleep 50
+			Table := AlbisCaveGetCellFocus(hCave)
+			If !IsObject(Table)
+				return 0
+			If (Table.col = col)
+				return 1
+		} until (Table.col = col)
+
+return 1
+}
+;06
+AlbisCaveUnFocus(hCave) {                                                         	;-- entfernt den Eingabefokus
+
+	ControlGet, hCaveLV, HWND,, SysListView321, % "ahk_id " hCave
+	ControlGet, hEdit   	, HWND,, Edit1, % "ahk_id " hCaveLV
+	EditVisible := DllCall("IsWindowVisible","Ptr", hEdit)
+
+	while EditVisible {
+
+		If (A_Index > 1) && (A_Index <= 3)
+			sleep 400
+		else if (A_Index > 3)  {
+			return 0
+		}
+
+		ControlSend,, {Escape}, % "ahk_id " hCave
+		sleep 50
+		EditVisible := DllCall("IsWindowVisible","Ptr", hEdit)
+
+	}
+
+	;~ ControlFocus, SysListView321, % "ahk_id " hCave
+	;~ sleep 50
+
+return 1
+}
+;07
 AlbisMuster30ControlList() {                                                       	;-- Funktion um Änderungen von Check-/Radiobuttons zu erkennen - diese speziell für das Muster30 Formular
 
 /*                                                                                                      BESCHREIBUNG
@@ -697,7 +870,7 @@ AlbisMuster30ControlList() {                                                    
 
 	return Controls
 }
-;04
+;08
 AlbisOptPatientenfenster(nr) {                                                    	;-- öffnet das Menu-Fenster Optionen/Patientenfenster und holt den Tab mit der 'nr' nach vorne
 
 			;Errorhandling
@@ -743,7 +916,7 @@ AlbisOptPatientenfenster(nr) {                                                  
 
 		return foundWinID
 }
-;05
+;09
 AlbisHeilMittelKatologPosition() {                                                	;-- verschiebt den Heilmittelkatalog in die Mitte des aktuellen Monitors
 
 	/* LÖSUNG: FÜR DAS FEHLENDE ANZEIGEN  DER AUSFÜLLHILFE (CGM HEILMITTELKATALOG) NACH DRÜCKEN VON F3
@@ -762,7 +935,7 @@ AlbisHeilMittelKatologPosition() {                                              
 
 return
 }
-;06
+;10
 AlbisSortiereDiagnosen() {                                                         	;-- ## funktioniert nicht - nur zum Sortieren von Diagnosen im Dauerdiagnosenfenster
 
 	DoSort:= 0
@@ -804,7 +977,7 @@ AlbisSortiereDiagnosen() {                                                      
 	}
 
 }
-;07
+;11
 AlbisReadFromListbox(WTitle, ListboxNr, EntryNr:=1) {                	;-- liest eine Zeile oder alle Zeilen aus einer Listbox
 
 	If RegExMatch(WTitle, "^0x[\w]+$", WinID)
@@ -826,7 +999,7 @@ AlbisReadFromListbox(WTitle, ListboxNr, EntryNr:=1) {                	;-- liest 
 
 return LBList
 }
-;08
+;12
 AlbisResizeDauerdiagnosen(Options:= "xCenterScreen yCenterScreen w0 h0") { ;-- spezielle Funktion für den Dauerdiagnosendialog
 
 	static WT:= "Dauerdiagnosen von ahk_class #32770"
@@ -938,27 +1111,23 @@ return eingestelltesDatum
 ; (03)
 AlbisLeseProgrammDatum() {                                                                                	;-- öffnet das Fenster Programmdatum einstellen und setzt das übermittelte Datum ein
 
-	;V1.2 mit Überprüfung ob das Fenster geöffnet, das Auslesen des Datum funktioniert und ob das Fenster auch wieder geschlossen wurde
+	; V1.2 mit Überprüfung ob das Fenster geöffnet ist, das Auslesen des Datum funktioniert und ob das Fenster auch wieder geschlossen werden konnte
 
 	; Fenster Programmdatum einstellen aufrufen
-		hWin:= Albismenu(32852, "Programmdatum einstellen", 3)
-		If !hWin
-		{
-					MsgBox, 1, Addendum für Albis on Windows - %A_ScriptName%, Das Programmdatum ließ sich nicht einstellen! `nDie Funktion wird jetzt beendet, 5
-					return 0
+		If !(hWin:= Albismenu(32852, "Programmdatum einstellen", 3)) {
+			PraxTT(A_ScriptName ": Das Programmdatum ließ sich nicht anzeigen!", "1 0")
+			return 0
 		}
-					;PostMessage, 0x111, 32852, 0, , ALBIS ahk_class OptoAppClass;WinWaitActive, Programmdatum einstellen,, 3;If WinActive("Programmdatum einstellen");break;If A_Index > 5;		return;else	;		Sleep, 50
-
-
-		while (Datum="") {
-			ControlGetText, Datum, Edit1, Programmdatum einstellen ahk_class #32770
-			Sleep, 100
-			If A_Index > 10
+		while (StrLen(Datum) = 0) {
+			If (A_Index > 1)
+				Sleep, 50
+			If (A_Index > 40)
 					break
+			ControlGetText, Datum, Edit1,  % "Programmdatum einstellen ahk_class #32770"
 		}
 
+	; Fenster schliessen
 		AlbisSchliesseProgrammDatum()
-		AlbisActivate(2)
 
 return Datum
 }
@@ -1484,7 +1653,7 @@ AlbisFehlendeLkoEintragen(AbrechnungslistenPfad="", Arbeitsfrei="") {           
 
 		For index, obj in oGB {
 
-				SciTEOutput("PatIndex: " index)
+				;SciTEOutput("PatIndex: " index)
 
 				If (obj.bearbeitet = 1)
 					continue
@@ -1699,7 +1868,7 @@ KopiekostenFokus:
 return
 }
 ;11
-AlbisSchreibeSequenz(sequenz) {
+AlbisSchreibeSequenz(sequenz) {                                                                             	;-- Blöcke von verschiedenen Kürzeleintragungen realisieren
 
 	/* Beschreibung
 
@@ -1774,7 +1943,7 @@ AlbisSchreibeSequenz(sequenz) {
 ; (01) AlbisDruckeBlankoFormular  	(02) AlbisRezeptHelfer                	(03) AlbisRezeptHelferGui            		(04) AlbisRezeptFelderLoeschen  	(05) AlbisRezeptFelderAuslesen
 ; (06) AlbisRezeptSchalterLoeschen 	(07) AlbisDruckePatientenAusweis	(08) AlbisRezeptAutIdem                	(09) AlbisRezept_DauermedikamenteAuslesen
 ; (10) AlbisFormular                       	(11) AlbisHautkrebsScreening     	(12) AlbisFristenRechner                    	(13) AlbisFristenGui                   	(14) IfapVerordnung
-; (15) AlbisWeitereMedikamente
+; (15) AlbisWeitereMedikamente        	(16*) AlbisVerordnungsplan        	(17*) AlbisAusfuellhilfe
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~;{
 ;1
 AlbisDruckeBlankoFormular(Art:="KR1", BnPlus:=0) {			                                    	;-- Funktion zum Ausdrucken von Blankoformularen
@@ -1944,7 +2113,7 @@ AlbisRezeptHelferGui(dbfile) {                                                  
 				AlbisRezeptHelferGui(dbfile)
 
 			RHRetry := 0
-			SciTEOutput("Muster 16 nicht gefunden")
+			;SciTEOutput("Muster 16 nicht gefunden")
 			return
 		}
 
@@ -2101,8 +2270,8 @@ RezeptVOPlan:                	;{
 		WinWait, % "Auswahl weiterer Medikamente ahk_class #32770",, 15
 		If !ErrorLevel
 			AlbisVerordnungsplan()
-		else
-			SciTEOutput("Das hat zu lange gedauert")
+		;~ else
+			;~ SciTEOutput("Das hat zu lange gedauert")
 
 return ;}
 
@@ -2703,7 +2872,8 @@ AlbisHautkrebsScreening(Pathologie:="opb", PlusGVU=true, WinClose=true ) {      
 			ResultClose := VerifiedClick("Speichern", hHKS)
 			Winwait, % "Albis ahk_class #32770", % "Folgende Fehler sind bei der Plausibilitätsprüfung", 1
 			If WinExist("Albis ahk_class #32770", "Folgende Fehler sind bei der Plausibilitätsprüfung") {
-				SciTEOutput("Fehler im eHKS Formular bei Patient: " ControlGetText("Edit1", "ahk_id " hHKS))
+				;SciTEOutput("Fehler im eHKS Formular bei Patient: " ControlGetText("Edit1", "ahk_id " hHKS))
+				return 0
 			}
 
 			; falls sich das Formular nicht speichern/schließen ließ, wird keine 1 als Erfolgsmeldung zurück senden
@@ -3052,7 +3222,7 @@ AlbisWeitereMedikamente(KatChar="#", CaveTag="Problem") {                       
 				RegExMatch(Medikament, "(?<Name>.*)[\(\[]", Med)
 				RegExMatch(Medikament, "\((?<Dosis>.*)\)", Med)
 				RegExMatch(MedDosis, "(?<DosisF>.*)\-(?<DosisM>.*)\-(?<DosisA>.*)\-(?<DosisN>.*)", Med)
-				SciTEOutput("MedDatum:  " MedDate ", Medikament: " MedName ", Dosis: " MedDosisF "- " MedDosisM "-" MedDosisA "-" MedDosisN  ", Pos: " A_Index)
+				;SciTEOutput("MedDatum:  " MedDate ", Medikament: " MedName ", Dosis: " MedDosisF "- " MedDosisM "-" MedDosisA "-" MedDosisN  ", Pos: " A_Index)
 				Dosis := {"Morgens":MedDosisF, "Mittags":MedDosisM, "Abends":MedDosisA, "MedDosisN":MedDosisN}
 
 				VOP.DMed.Push({"MedDatum":MedDate, "Medikament":MedName, "MedDosis":Dosis, "cave":false, "Pos":A_Index})
@@ -3082,7 +3252,7 @@ AlbisVerordnungsplan() {
 
 		VOP := AlbisWeitereMedikamente()
 		ControlFocus, Listbox1, % "Auswahl weiterer Medikamente ahk_class #32770"
-		SciTEOutput(VOP.Count())
+		;SciTEOutput(VOP.Count())
 		;~ For index, med in VOP.DMed {
 
 			;~ SendMessage, 0x187
@@ -3095,11 +3265,87 @@ AlbisVerordnungsplan() {
 		;VerifiedClick("Abbruch", WMed,,, 3)
 
 }
+;17
+AlbisAusfuellhilfe(Formular, cmd) {                                                                          	;-- #### angefangen
+
+	/* AlbisAusfuellhilfe - Beschreibung
+
+			geplant als universell einsetzbare Funktion für schnelleres Ausfüllen von editierbaren Feldern in Albis
+
+	*/
+
+		static Formulare := {"Muster12" : {"from"	: [6,12,17,22,27,32,37,43,52,59,65,71,78,83]
+														,	"to"   	: [7,13,18,23,28,33,38,44,53,60,66,72,79,84]}}
+		static fcLast, awLast, wt, entryNr
+
+		hk 	:= A_ThisHotkey
+		aw	:= WinExist("A")
+		fc  	:= GetFocusedControlClassNN(aw)
+		sf		:= true                                                      	; flag bleibt true wenn der Eingabefokus noch im gleichen Steuerelement ist (sf = static focus)
+
+	; Zurücksetzen von Variablen wenn ein anderes Formular bearbeitet wird
+		If !(aw = awLast)
+			wt	:= WinGetTitle(aw), awLast := aw, fcLast := ""
+
+	; anderer Eingabefokus
+		If !(fcLast = fc)
+			sf := false, fcLast := fc
+
+	; fokussiertes Steuerelement ist nicht in der Ausfuellhilfsliste (Formulare) dann zurück
+		If !(ctrlLabel := ControlFilter(Formulare[Formular], fc))
+			return
+
+	switch Formular
+	{
+		case "Muster12":
+
+			If (hk = "UP") {
+
+
+
+			}
+
+		; ermittelt alle schon vorhanden Datumsangaben in den "vom" und "bis" Feldern
+			If !sf {
+
+				Formulare["Muster12"].Dates := Array()
+				Loop, % Formulare["Muster12"]["from"].Count() {
+
+					from := Formulare["Muster12"]["from"](A_Index)
+					to 	:= Formulare["Muster12"]["to"](A_Index)
+					date := Array()
+					ControlGetText, date1, % "Edit" from	, % "ahk_id " aw
+					ControlGetText, date2, % "Edit" to   	, % "ahk_id " aw
+					date[1] := date1, date[2] := date2
+
+					Loop, 2
+						If !(RegExMatch(date[A_Index], "\d{2}\.\d{2}\.\d{2,4}") || RegExMatch(date[A_Index], "\d{6,8}"))
+							date[A_Index] := ""
+
+					If (StrLen((Dates := date.1 "," date.2)) = 1)
+						continue
+
+					If !DatesInArr(Dates, Formulare["Muster12"].Dates)
+						Formulare["Muster12"].Dates.Push(Dates)
+
+					}
+				}
+
+
+			;SciTEOutput(Formulare["Muster12"]["fromDates"])
+			;SciTEOutput(Formulare["Muster12"]["toDates"])
+
+		}
+
+
+}
+
+
 ;}
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; WARTEZIMMER                                                                                                                                                                                                                                        	(03)
+; WARTEZIMMER                                                                                                                                                                                                                                        	(02)
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; (01) AlbisWZPatientEntfernen       	(02) AlbisOeffneWarteZimmer    	(03) AlbisWartezeit
+; (01) AlbisWZPatientEntfernen       	(02) AlbisOeffneWarteZimmer
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~;{
 ;1
 AlbisWZPatientEntfernen(Nachname, Vorname) { 				                                    	;--##### benötigt einen REWRITE ###### entfernt einen Patienten aus dem Wartezimmer
@@ -3150,11 +3396,11 @@ return 1		;oder war schon geöffnet
 
 ;}
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; KARTEIKARTE/AKTE oder ALBIS-MENU                                                                                                                                                                                                        	(13)
+; KARTEIKARTE/AKTE oder ALBIS-MENU                                                                                                                                                                                                        	(15)
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; (01) AlbisAkteSchliessen               	(02) AlbisAkteOeffnen                	(03) AlbisAkteGeoeffnet                 	(04) AlbisPatientAuswaehlen       	(05) AlbisInBehandlungSetzen
 ; (06) AlbisSucheInAkte                  	(07) AlbisMenu                          	(08) AlbisZeigeKarteikarte              	(09) AlbisOeffnePatient              	(10) AlbisDateiAnzeigen
-; (11) AlbisDateiSpeichern              	(12) AlbisOeffneAkte                    	(13) AlbisKarteikarteAktiv
+; (11) AlbisDateiSpeichern              	(12) AlbisKarteikarteAktiv              	(13) AlbisSaveAsPDF                       	(14) AlbisKarteikartenAnsicht        	(15) AlbisNeuerSchein
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~;{
 ;01
 AlbisAkteSchliessen(CaseTitle="") {                                                             	;-- schließt eine Karteikarte ## seit Albis20.20 mit Problemen
@@ -3164,8 +3410,7 @@ AlbisAkteSchliessen(CaseTitle="") {                                             
 	oACtrl			:= Object()			;active control object
 	AlbisWinID	:= AlbisWinID()
 
-	If InStr(AlbisGetActiveWindowType(), "Karteikarte")
-	{
+	If InStr(AlbisGetActiveWindowType(), "Karteikarte")	{
 			; aktuellen FensterTitel auslesen wenn keine Daten der Funktion übergeben wurden
 				If (StrLen(CaseTitle) = 0)
 					CaseTitle:= AlbisGetActiveWinTitle()
@@ -3202,114 +3447,129 @@ AlbisAkteOeffnen(CaseTitle, PatID="") {                                         
 
 	/*				DESCRIPTION
 
-			AlbisAkteOeffnen - zum Öffnen einer Patientenakte nach Übergabe eines Namens, der Patienten ID oder eines Geburtsdatums, letzte Änderung 06.06.2019
+			AlbisAkteOeffnen - zum Öffnen einer Patientenakte nach Übergabe eines Namens, der Patienten ID oder eines Geburtsdatums
 
 			Die Funktion ist in der Lage sämtliche Fenster abzufangen und entsprechend zu behandeln. Es wird bei erfolgreichem Aufruf der gewünschten Akte eine 1 ansonsten eine 0
 			zurückgegeben. Falls sich ein Fenster mit einem Listview öffnet - Auswahl eines Namens, wenn mehr als einer vorhanden ist , wird eine 2 zurück gegeben. Nur das Listview
 			Fenster wird nicht geschlossen. Da dieses Ausgelesen werden muss um in der Auswahl nach dem entsprechenden Namen suchen zu können.
+
+			letzte Änderung 07.02.2021
+
 	*/
 
-	; Variablen ;{
+	; Variablen                                                                                        	;{
 		global Mdi
 		static WarteFunc, AlbisTitleFirst
+		static Win_PatientOeffnen := "Patient öffnen ahk_class #32770"
+
+		If !AlbisWinID() {
+			PraxTT(A_ThisFunc ": Albis wird nicht ausgeführt!", "2 1")
+			return 0
+		}
+
 		name    	:= []
 		CaseTitle	:= Trim(CaseTitle)
+
+		If RegExMatch(Trim(PatID), "^\d+$") {
+			rxStr := "\[" Trim(PatID) "\s\/"
+			sStr := Trim(PatID)
+			CaseTitle := oPat[PatID].Nn ", " oPat[PatID].Vn
+		}
+		else if (StrLen(CaseTitle) > 0) {
+			rxStr	:= CaseTitle
+			sStr	:= CaseTitle
+		}
+		else {
+			PraxTT(A_ThisFunc ": es wurden keine Parameter übergeben`nDer Karteikartenaufruf wird abgebrochen.", "2 1")
+			return 0
+		}
+
 	;}
 
-	; ist die Akte bereits geöffnet? ;{
-		oMDI := AlbisGetAllMDIWin()
+	; Karteikarte bereits geöffnet?                                                             	;{
 		hMdi	 := AlbisGetMDIClientHandle()
-		sStr	 := StrLen(PatID) > 0 ? PatID "\s\/" : CaseTitle
+		oMDI := AlbisGetAllMDIWin()
 		For MDITitle, thisMdi in oMDI
-		{
-				If RegExMatch(MDITitle, sStr) {
-						SendMessage, 0x222, % thisMdi.id,,, % "ahk_id " hMdi
-						PraxTT("Die gewünschte Karteikarte wird angezeigt.", "5 0")
-						return 1
-				}
-		}
+			If RegExMatch(MDITitle, rxStr) {
+				SendMessage, 0x222, % thisMdi.id,,, % "ahk_id " hMdi
+				PraxTT("Die gewünschte Karteikarte wird angezeigt.", "5 0")
+				return 1
+			}
 
 	;}
 
 		If PatID
 			PraxTT("Geöffnet wird die Karteikarte des Patienten:`n#2" oPat[PatID].Nn ", " oPat[PatID].Vn ", geb.am " oPat[PatID].Gd "(" PatID ")`n`n(Warte bis zu 10s auf die Karteikarte)", "10 0")
 
-		AlbisTitleFirst:= AlbisHookTitle       	; aktuellen Albisfenstertitel auslesen
-		AlbisDialogOeffnePatient()             	; Aufruf des Fenster 'Patient öffnen'
+		AlbisTitleFirst := WinGetTitle(AlbisWinID())               	; aktuellen Albisfenstertitel auslesen
+		AlbisDialogOeffnePatient()                         	; Aufruf des Fenster 'Patient öffnen'
 
-	; Übergeben des Parameter an das Albisdialogfenster ;{
-		If (StrLen(PatID) > 0) {
-
-			if VerifiedSetText("Edit1", PatID, "Patient öffnen ahk_class #32770", 200) {
-				VerifiedClick("Button2", "Patient öffnen ahk_class #32770")
-				goto AlbisWaitAkte
-			} else {
-				VerifiedClick("Button3", "Patient öffnen ahk_class #32770")
-				return 0
-			}
-
-		}
-		else {
-
-			if !VerifiedSetText("Edit1", CaseTitle, "Patient öffnen ahk_class #32770", 200)
+	; Übergeben des Parameter an das Albisdialogfenster                         	;{
+		If !VerifiedSetText("Edit1", sStr, Win_PatientOeffnen, 200) {
+			PraxTT(	"Dialog: 'Patient öffnen' konnte nicht behandelt werden.", "2 1")
+			VerifiedClick("Button3", Win_PatientOeffnen)
 			return 0
+		}
+
+		while WinExist(Win_PatientOeffnen)		{
+
+				If (A_Index > 1)
+					sleep 100
+
+				If (A_Index = 1)
+					VerifiedClick("Button2", Win_PatientOeffnen)            	; Versuch 1: Button OK drücken
+				else If (A_Index = 2)
+					ControlSend, Edit1, {Enter}, % Win_PatientOeffnen	; Versuch 2: Enter simulieren
+				else {
+					PraxTT(	"Die Karteikarte des Patienten:`n"
+							. 	"#2" oPat[PatID].Nn ", " oPat[PatID].Vn ", geb.am " oPat[PatID].Gd "(" PatID ")`n"
+							.	"konnte nicht geöffnet werden", "2 1")
+					WinClose, % Win_PatientOeffnen
+					return 0
+				}
 
 		}
 
 	;}
 
-	; Aufrufen der Akte durch Schließen des -Patient öffnen- Dialoges ;{
-		while WinExist("Patient öffnen ahk_class #32770")
-		{
-				; Button OK drücken
-					VerifiedClick("Button2", "Patient öffnen ahk_class #32770")
-					WinWaitClose, Patient öffnen ahk_class #32770,, 1
-				; Fenster ist immer noch da? Dann sende ein ENTER.
-					if WinExist("Patient öffnen ahk_class #32770")
-					{
-                            WinActivate, Patient öffnen ahk_class #32770
-                            ControlFocus, Edit1, Patient öffnen ahk_class #32770
-                            SendInput, {Enter}
-					}
+	; Loop der in den nächsten 10Sekunden auf die neue Karteikarte wartet	;{
+		Loop	{
 
-				sleep, 500
-		}
-	;}
-
-	; Loop der in den nächsten 10Sekunden auf die neue Karteikarte wartet ;{
-		AlbisWaitAkte:
-		Loop 		{
-
-				hwnd		:= WinExist("A")
+				If !(hwnd:= DLLCall("GetLastActivePopup", "uint", AlbisWinID()))
+					hwnd := AlbisWinID()
 				newTitle	:= WinGetTitle(hwnd)
 				newClass	:= WinGetClass(hwnd)
 				newText	:= WinGetText(hwnd)
 
+			; Karteikarte ist geöffnet
+				If RegExMatch(newTitle, rxStr) {
+					PraxTT("", "Off")
+					return 1
+				}
+
 			; Dialog Patient <.....,......> nicht vorhanden
 				If Instr(newTitle, "ALBIS") && Instr(newClass, "#32770") && Instr(NewText, "nicht vorhanden") {
-						VerifiedClick("Button1", "ALBIS ahk_class #32770", "nicht vorhanden")			;Abbrechen
-						PraxTT("Albis konnte keine Karteikarte finden!", "5 3")
-						if WinExist("Patient öffnen ahk_class #32770")
-							VerifiedClick("Button2", "Patient öffnen ahk_class #32770")
-						return 0
+					VerifiedClick("Button1", "ALBIS ahk_class #32770", "nicht vorhanden")			;Abbrechen
+					PraxTT("Albis konnte keine Karteikarte finden!", "5 3")
+					if WinExist(Win_PatientOeffnen)
+						VerifiedClick("Button3", Win_PatientOeffnen)
+					PraxTT("", "Off")
+					return 0
 				}
 				else if Instr(newTitle, "Patient") && Instr(newClass, "#32770") && Instr(newText, "List1") {
-						return 2
+					PraxTT("", "Off")
+					return 2
 				}
 
-				If InStr(newTitle, CaseTitle)
-					break
-
-				If (A_Index > 20) 	{
-
-						PraxTT("Die Karteikarte des Patienten:`n#2" oPat[PatID].Nn ", " oPat[PatID].Vn ", geb.am " oPat[PatID].Gd "(" PatID ")`nkonnte nicht geöffnet werden", "6 3")
-						if WinExist("Patient öffnen ahk_class #32770")
-							VerifiedClick("Button2", "Patient öffnen ahk_class #32770")
-						return 0
-
+				If (A_Index > 50) 	{
+					PraxTT("Die Karteikarte des Patienten:`n#2" oPat[PatID].Nn ", " oPat[PatID].Vn ", geb.am " oPat[PatID].Gd "(" PatID ")`nkonnte nicht geöffnet werden", "6 3")
+					if WinExist(Win_PatientOeffnen)
+						VerifiedClick("Button3", Win_PatientOeffnen)
+					PraxTT("", "Off")
+					return 0
 				}
 
-				sleep, 500
+				sleep, 200
 		}
 	;}
 
@@ -3320,6 +3580,8 @@ return 1
 ;----
 AlbisWarteAufKarteikarte(AlbisTitleFirst, CaseTitle, waitingtime) {
 
+		static Win_PatientOeffnen := "Patient öffnen ahk_class #32770"
+
 		hwnd		:= WinExist("A")
 		newTitle	:= WinGetTitle(hwnd)
 		newClass	:= WinGetClass(hwnd)
@@ -3327,13 +3589,13 @@ AlbisWarteAufKarteikarte(AlbisTitleFirst, CaseTitle, waitingtime) {
 
 	; Dialog Patient <.....,......> nicht vorhanden
 		If Instr(newTitle, "ALBIS") && Instr(newClass, "#32770") && Instr(NewText, "nicht vorhanden") {
-				VerifiedClick("Button1", "ALBIS ahk_class #32770", "nicht vorhanden")			;Abbrechen
-				SetTimer, % WarteFunc, Off
-				return 0
+			VerifiedClick("Button1", "ALBIS ahk_class #32770", "nicht vorhanden")			;Abbrechen
+			SetTimer, % WarteFunc, Off
+			return 0
 		}
 		else if Instr(newTitle, "Patient") && Instr(newClass, "#32770") && Instr(newText, "List1") {
-				SetTimer, % WarteFunc, Off
-				return 2
+			SetTimer, % WarteFunc, Off
+			return 2
 		}
 
 		If (AlbisTitleFirst = newTitle) && !InStr(newTitle, CaseTitle)
@@ -3341,22 +3603,18 @@ AlbisWarteAufKarteikarte(AlbisTitleFirst, CaseTitle, waitingtime) {
 
 		SetTimer, % WarteFunc, Off
 	;Namen splitten - bei Schreibfehlern, Komma fehlt zwischen den Namen, kann er nicht erkennen das die Akte geöffnet ist
-		If !RegExMatch(CaseTitle, "\d+", dummy)
-		{
-				name:= ExtractNamesFromString(CaseTitle)
-				If !InStr(AlbisGetActiveWinTitle(), name[3]) && !InStr(AlbisGetActiveWinTitle(), name[4])
-				{
-						MsgBox,, Addendum für AlbisOnWindows - %A_ScriptName%, % "Achtung:`nDie angeforderte Patientenakte ließ sich nicht öffnen!", 25
-						return 0				;fungiert als ErrorLevel
-				}
+		If !RegExMatch(CaseTitle, "\d+")	{
+			name := ExtractNamesFromString(CaseTitle)
+			If !InStr(AlbisGetActiveWinTitle(), name[3]) && !InStr(AlbisGetActiveWinTitle(), name[4]) {
+				MsgBox,, % "Addendum für AlbisOnWindows - " A_ScriptName, % "Die angeforderte Patientenakte ließ sich nicht öffnen!", 25
+				return 0				;fungiert als ErrorLevel
+			}
 		}
-		else
-		{
-				If !InStr(AlbisGetActiveWinTitle(), CaseTitle)
-				{
-						MsgBox,, Addendum für AlbisOnWindows - %A_ScriptName%, % "Achtung:`nDie angeforderte Patientenakte ließ sich nicht öffnen!", 25
-						return 0				;fungiert als ErrorLevel
-				}
+		else	{
+			If !InStr(AlbisGetActiveWinTitle(), CaseTitle)	{
+					MsgBox,, Addendum für AlbisOnWindows - %A_ScriptName%, % "Achtung:`nDie angeforderte Patientenakte ließ sich nicht öffnen!", 25
+					return 0				;fungiert als ErrorLevel
+			}
 		}
 
 return 			;erfolgreich dann 1
@@ -3491,6 +3749,8 @@ return localIndex
 ;07
 Albismenu(mcmd, FTitel:="", WZeit:=2, methode:=1) {                              	;-- Aufrufen eines Menupunktes oder Toolbarkommandos, wartet je nach Parameter auf ein sich öffnendes Fenster
 
+	; letzte Änderung: 17.01.2021
+
 	/* Albismenu() - Dokumentation
 
 		mcmd:  		WM_Command - die Zahlen findet man im include Ordner AlbisMenu.json
@@ -3504,65 +3764,76 @@ Albismenu(mcmd, FTitel:="", WZeit:=2, methode:=1) {                             
 							Methode 1 und 2 wirkt sich nur bei leerem FTitel aus, da nur SendMessage die Variable ErrorLevel setzt
 	 */
 
-		InfoMsg:= false
+		InfoMsg := false, WinText := ""
 
 		If IsObject(FTitel) {
 			WinTitle	:= FTitel.1
-			WinText	:= FTitel.2
+			WinText 	:= FTitel.2
 			AltTitle  	:= FTitel.3
 			AltText   	:= FTitel.4
 		}
 		else
 			WinTitle	:= FTitel
 
-		AlbisActivate(2)                   	; aktiviert das Albishauptfenster
-		;AlbisIsBlocked(AlbisWinID())	; schließt blockierende Fenster
+		; AlbisActivate(2)                   	; aktiviert das Albishauptfenster
 
-	; wenn ein zu erwartender Fenstertitel übergeben wurde, wird der Titel zur Kontrolle des Menuaufrufes genutzt. Ansonsten bleibt nur SendMessage - siehe unten
-		If (StrLen(WinTitle) > 0) 		{
-
-			Loop 	{
-
-				; Menu Aufruf durchführen
-					If !WinExist(WinTitle) {
-					  ; Methodenwahl
-						If (methode = 1)
-							PostMessage	, 0x111, % mcmd,,, ahk_class OptoAppClass
-						else if (methode = 2)
-							SendMessage, 0x111, % mcmd,,, ahk_class OptoAppClass
-					}
-
-				; Fenster abwarten
-					while (A_Index * 50 <= WZeit * 1000) {
-
-						If WinExist(WinTitle, WinText)	{
-							WinActivate   	, % WinTitle, % WinText
-							WinWaitActive	, % WinTitle, % WinText, % WZeit
-							return GetHex(WinExist(WinTitle, WinText))
-						}
-						else if IsObject(FTitel) && WinExist(AltTitle, AltText)
-							return {"hwnd": GetHex(WinExist(AltTitle, AltText))}
-
-						sleep, 50
-
-					}
-
-					If (A_Index > 2) ; Abbruch nach dem 2.Versuch
-						return 0
-
-				}
-
+	; Menuaufruf ohne auf ein Fenster zu warten
+		If (StrLen(WinTitle) = 0) {
+			If (methode = 1) {
+				PostMessage, 0x111, % mcmd,,, % "ahk_class OptoAppClass"
+				return 1
+			}
+			else if (methode = 2) { ; ACHTUNG: Sendmessage wartet auf eine Antwort, diese kann lange dauern (bis 5s zum Teil)
+				SendMessage, 0x111, % mcmd,,, % "ahk_class OptoAppClass"
+				return ErrorLevel
+			}
 		}
-		else 	{
 
-				If (methode = 1) {
-					PostMessage, 0x111, % mcmd,,, ahk_class OptoAppClass
-					return 1
+	; Menuaufruf mit wartet auf bis zu 2 verschiedene Fenstertitel
+		Loop 	{
+
+			; Prüfen ob erwartete Fenster schon geöffnet sind
+				If !IsObject(FTitel) {
+					If (pHwnd := WinExist(WinTitle, WinText))
+						return GetHex(pHwnd)
+				} else {
+					If (pHwnd := WinExist(WinTitle, WinText))
+						return GetHex(pHwnd)
+					else if (pHwnd := WinExist(AltTitle, AltText))
+						return {"hwnd": GetHex(pHwnd)}
 				}
-				else if (methode = 2) { ; ACHTUNG: Sendmessage wartet auf eine Antwort, diese kann lange dauern (bis 5s zum Teil)
-					SendMessage, 0x111, % mcmd,,, ahk_class OptoAppClass
-					return ErrorLevel
+
+			; der Menu command Befehl öffnet manchmal nicht das gewollte Fenster (Bug von Albis?)
+				AlbisIsBlocked(AlbisWinID())
+
+			; Menupunkt aufrufen
+				If (methode = 1)
+					PostMessage	, 0x111, % mcmd,,, % "ahk_class OptoAppClass"
+				else if (methode = 2)
+					SendMessage, 0x111, % mcmd,,, % "ahk_class OptoAppClass"
+
+			; Fenster abwarten
+				while (A_Index * 50 <= WZeit * 1000) {
+
+					If !IsObject(FTitel) {
+						If (pHwnd := WinExist(WinTitle, WinText))
+							return GetHex(pHwnd)
+					} else {
+						If (pHwnd := WinExist(WinTitle, WinText))
+							return GetHex(pHwnd)
+						else if (pHwnd := WinExist(AltTitle, AltText))
+							return {"hwnd": GetHex(pHwnd)}
+					}
+
+					sleep, 50
+
 				}
+
+				If (A_Index > 2) { ; Abbruch nach dem 2.Versuch
+					AlbisIsBlocked(AlbisWinID())
+					return 0
+				}
+
 		}
 
 return 0
@@ -3570,34 +3841,52 @@ return 0
 ;---
 AlbisInvoke(menu, start=1) {                                                                     	;-- ~# fehlerhalt ## Vereinfachung eines Menupunktaufrufes - Teil- oder Ganzstring Übergabe wie im Albis Menu selbst
 
-	;--diese Funktion benötigt die Datei AlbisMenu.json aus dem AddendumDir Verzeichnis \include, die Variable AddendumDir muss Superglobal im aufrufenden Skript definiert sein
-	;--übergebe einen Menu-Namen z.b. AlbisInvoke("Wartezimmer",1) erhälst du die CommandID zurück und der Menupunkt wird bei start=1 durch PostMessage aufgerufen, start=0 gibt nur die CommandID zurück
-	;--folgende Syntaxe sind möglich: 	1. vollständiger Pfad "Formular/BG/F1050  - Ärztliche Unfallmeldung	(A13)" , hier gehen auch Teilstrings "Formular/BG/F1050" oder "Form/BG/A13"
+	;-- diese Funktion benötigt die Datei AlbisMenu.json aus dem AddendumDir Verzeichnis \include, die Variable AddendumDir muss Superglobal im aufrufenden Skript definiert sein
+	;-- übergebe einen Menu-Namen z.b. AlbisInvoke("Wartezimmer",1) erhälst du die CommandID zurück und der Menupunkt wird bei start=1 durch PostMessage aufgerufen, start=0 gibt nur die CommandID zurück
+	;-- folgende Syntaxe sind möglich: 	1. vollständiger Pfad "Formular/BG/F1050  - Ärztliche Unfallmeldung	(A13)" , hier gehen auch Teilstrings "Formular/BG/F1050" oder "Form/BG/A13"
 	;                            						2.	Teile der Suche "Formular, F1050" oder "BG, A13" - dies dauert länger da die Funktionen mitunter jedes Key:Value Paar durchsuchen muss
-	static oAlbisMenu:=Object(Json2Obj(FileOpen(Addendum.AddendumDir "\include\AlbisMenu.json", "r").Read()))
 
-	For key, val in oAlbisMenu
-	{
-		If ( Instr(key, menu) and (Start=1) ) {
-				PostMessage, 0x111, % val,,, % "ahk_id " AlbisWinID()
-				return
+	static oAlbisMenu
+
+	If !IsObject(oAlbisMenu) {
+
+		AlbismenuPath := Addendum.Dir "\include\Daten\AlbisMenu.json"
+		If !FileExist(AlbismenuPath) {
+			throw A_ThisFunc ": AlbisMenu.json - konnte nicht gefunden werden."
+		}
+
+		oAlbisMenu := JSON.Load(FileOpen(Addendum.Dir "\include\Daten\AlbisMenu.json", "r").Read())
+
+	}
+
+	For key, val in oAlbisMenu	{
+		If ( Instr(key, menu) && (Start = 1) ) {
+			PostMessage, 0x111, % val,,, % "ahk_id " AlbisWinID()
+			return
 		} else {
-				return val
+			return val
 		}
 	}
 
 }
 ;08
-AlbisZeigeKarteikarte() {                                                                             	;-- schaltet zur Karteikartenansicht
+AlbisZeigeKarteikarte(Info=true) {                                                                 	;-- schaltet zur Karteikartenansicht
 
-	; !!WICHTIG!!: ein Erfolg der funktioniert wird per Rückgabeparameter 1 bestätigt, die aufrufende Funktion sollte den Rückgabewert prüfen bevor andere Funktionen fortgesetzt werden!
+	; !!WICHTIG!!: ein Erfolg der wird per Rückgabe einer 1 bestätigt, die aufrufende Funktion sollte den Rückgabewert prüfen bevor andere Funktionen fortgesetzt werden!
+
+	; Info anzeigen
+		If Info
+			PraxTT("Karteikarte anzeigen", "1 2")
+
+	; Albis aktivieren
+		AlbisActivate(1)
 
 	; es wird keine Patientenakte angezeigt - dann ist die Funktionsausführung nicht möglich
 		If !InStr(AlbisGetActiveWindowType(), "Patientenakte")
 			return 0
 
 	; wechselt zur Karteikarte, muss dazu begonnene Eingaben beenden oder abbrechen.
-	; es werden hier zwei Dialogfenster abgefangen und entsprechend
+	; es werden hier zwei Dialogfenster abgefangen und entsprechend behandelt
 		while !InStr(AlbisGetActiveWindowType(), "Karteikarte")	{
 
 			PostMessage, 0x111, 33033,,, % "ahk_id " AlbisWinID()
@@ -3612,28 +3901,27 @@ AlbisZeigeKarteikarte() {                                                       
 					VerifiedClick("Button1", "ALBIS ahk_class #32770", "Gebühren")
 
 				while, WinExist("ahk_id " hAlbisHinweis1) {
-							WinSetTitle, % "ahk_id " hAlbisHinweis1,, % "ALBIS ...wird automatisch geschlossen in " Round(5-(0.1*(A_Index-1)),1) "s"
-							Sleep, 100
-							If (A_Index > 50)
-							{
-									VerifiedClick("Button1", "ALBIS ahk_class #32770", "Die aktuelle Zeile wurde nicht gespeichert")
-									AlbisActivate(1)
-									cFocus := Controls("", "GetFocus", hActiveMDIWin:= AlbisGetActiveMDIChild())
-									If (StrLen(cFocus) > 0) {
-										SendInput, {Esc}
-									} else {
-										ControlFocus,, % "ahk_id " Controls("#327702", "ID", hActiveMDIWin)
-										SendInput, {Esc}
-									}
-									break
-							}
+					WinSetTitle, % "ahk_id " hAlbisHinweis1,, % "ALBIS ...wird automatisch geschlossen in " Round(5-(0.1*(A_Index-1)),1) "s"
+					Sleep, 100
+					If (A_Index > 30)	{
+						VerifiedClick("Button1", "ALBIS ahk_class #32770", "Die aktuelle Zeile wurde nicht gespeichert")
+						cFocus := Controls("", "GetFocus", (hActiveMDIWin:= AlbisGetActiveMDIChild()))
+						If (StrLen(cFocus) > 0) {
+							SendInput, {Esc}
+						} else {
+							ControlFocus,, % "ahk_id " Controls("#327702", "ID", hActiveMDIWin)
+							SendInput, {Esc}
+						}
+						break
+					}
 				}
 
 				If (A_Index > 10)
 						return 0
 
 				AlbisActivate(1)
-				cFocus := Controls("", "GetFocus", hActiveMDIWin:= AlbisGetActiveMDIChild())
+				Controls("", "Reset", "")
+				cFocus := Controls("", "GetFocus", (hActiveMDIWin:= AlbisGetActiveMDIChild()))
 				If (StrLen(cFocus) > 0)
 					SendInput, {Esc}
 
@@ -3641,7 +3929,7 @@ AlbisZeigeKarteikarte() {                                                       
 			}
 
 			If InStr(AlbisGetActiveWindowType(), "Karteikarte")
-				break
+				return 1
 			else if (A_Index > 10)
 				return 0
 
@@ -3656,17 +3944,19 @@ AlbisDialogOeffnePatient(command:="invoke", pattern:="" ) {                     
 	; 	abort/close - um das Fenster zu schliessen ohne eine Suche zu durchzuführen
 	;	serach/set/open [Namens-/Suchmuster]- übernimmt den eingegeben Text und kann gleichzeitig das Suchmuster eintragen
 
+		static Win_PatientOeffnen := "Patient öffnen ahk_class #32770"
+
 	; Aufrufen des Dialogfensters
 		If !InStr(command, "close")
-			id:= Albismenu(32768, "Patient öffnen ahk_class #32770", 3)
+			id:= Albismenu(32768, Win_PatientOeffnen, 3)
 
 	; command parsen
 		If InStr(command, "invoke")
 			return ID
 		else If InStr(command, "close") {
 
-				If WinExist("Patient öffnen ahk_class #32770")
-				return VerifiedClick("Button3", "Patient öffnen ahk_class #32770")
+				If WinExist(Win_PatientOeffnen)
+				return VerifiedClick("Button3", Win_PatientOeffnen)
 			else
 				return
 
@@ -3674,7 +3964,7 @@ AlbisDialogOeffnePatient(command:="invoke", pattern:="" ) {                     
 
 			; kein Suchmuster übergeben dann wird nur auf Ok gedrückt
 				If (StrLen(Pattern) > 0)
-					If !VerifiedSetText("Edit1", Pattern, "Patient öffnen ahk_class #32770", 200)
+					If !VerifiedSetText("Edit1", Pattern, Win_PatientOeffnen, 200)
 						return 0
 
 			; Suchmuster wurde als Parameter übergeben, aber
@@ -3682,16 +3972,16 @@ AlbisDialogOeffnePatient(command:="invoke", pattern:="" ) {                     
 					return ID
 
 				; Akte wird jetzt geöffnet durch drücken von OK
-					while WinExist("Patient öffnen ahk_class #32770")
+					while WinExist(Win_PatientOeffnen)
 					{
 							; Button OK drücken
-								VerifiedClick("Button2", "Patient öffnen ahk_class #32770")
-								WinWaitClose, Patient öffnen ahk_class #32770,, 1
+								VerifiedClick("Button2", Win_PatientOeffnen)
+								WinWaitClose, % Win_PatientOeffnen,, 1
 							; Fenster ist immer noch da? Dann sende ein ENTER.
-								if WinExist("Patient öffnen ahk_class #32770")
+								if WinExist(Win_PatientOeffnen)
 								{
-										WinActivate, Patient öffnen ahk_class #32770
-										ControlFocus, Edit1, Patient öffnen ahk_class #32770
+										WinActivate, % Win_PatientOeffnen
+										ControlFocus, Edit1, % Win_PatientOeffnen
 										SendInput, {Enter}
 								}
 
@@ -3790,138 +4080,6 @@ AlbisDateiSpeichern(FullFilePath, overwrite:= false) {                          
 return FullFilePath	; Rückgabe des vollständigen Pfades
 }
 ;12
-AlbisOeffneAkte(Pat, PdfPath:="") {                                                            	;-- ursprüngl. ScanPool.ahk - Akte lässt sich auch öffnen, selbst wenn der Name nicht ganz korrekt geschrieben ist
-
-		AllreadyOpen       	:= 0
-		CurrPat    				:= Object()
-		CurrPat    				:= VorUndNachname(AlbisCurrentPatient())
-
-	;----------------------------------------------------------------------------------------------------------------------------------------------
-	; Überprüfen ob die Patientenakte schon geöffnet ist
-	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-		If (Pat[5] = "")		{
-			PraxTT("Öffne die Akte des Patienten`n#2" Pat[1], "3 3")
-			AllreadyOpen := FuzzyNameMatch(CurrPat, Pat)
-		}
-		else		{
-			If InStr(AlbisAktuellePatID(), Pat[5])
-				AllreadyOpen := 1
-		}
-
-		If AllreadyOpen		{
-			AlbisZeigeKarteikarte() 		; sicherstellen das die Karteikarte angezeigt wird
-			PraxTT("Die Patientenakte ist schon geöffnet!", "3 3")
-			return 1
-		}
-	;}
-
-	;----------------------------------------------------------------------------------------------------------------------------------------------
-	; Patient öffnen - Dialog: Aufruf des Fensters und Texteingabe
-	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-		AlbisActivate(2)
-
-	; 32768 Menu Kommando für den 'Patient öffnen' Auswahldialog
-		while !WinExist("Patient öffnen ahk_class #32770")		{
-
-			PostMessage, 0x111, 32768,,, % "ahk_id " AlbisWinID()
-			Sleep, 200
-			If (A_Index > 10) {
-				PraxTT("Der Dialog zum Öffnen einer Patientenakte`nließ sich nicht aufrufen.`nDer Vorgang wurde abgebrochen!", "5 0")
-				return 0
-			}
-
-		}
-
-		WinActivate, Patient öffnen ahk_class #32770
-		WinWaitActive, Patient öffnen ahk_class #32770,, 3
-
-		If VerifiedSetText("Edit1", (Pat[5]="" ? Pat[1] : Pat[5]), "Patient öffnen ahk_class #32770", 200)	{		;Pat enthält nur die ID wenn es kein Array ist
-
-			MsgBox, 1, % "Addendum für Albis on Windows - " A_ScriptName,
-                           (LTrim
-                       	   Der Patientenname konnte nicht eingetragen werden.
-
-							1. Bitte manuell per Strg+c Taste einfügen (Kopie aus dem Clipboard).
-							2. Drücken Sie dann auf 'Ok" im 'Patient öffnen' - Dialog
-							3. Warten Sie das Öffnen der Akte ab,
-							4. Drücken Sie erst jetzt auf den 'Ok"-Button in diesem Dialog!
-							)
-
-		}
-		else		{
-			  ; Patient öffnen - Dialog: Ok oder Enter drücken
-				LastPopUpWin := GetLastActivePopup(AlbisWinID())
-				while WinExist("Patient öffnen ahk_class #32770")		{
-
-					VerifiedClick("Button2", "Patient öffnen ahk_class #32770")			; Button OK drücken
-					WinWaitClose, Patient öffnen ahk_class #32770,, 1
-
-					if WinExist("Patient öffnen ahk_class #32770")		{                 	; Fenster ist immer noch da? Dann sende ein ENTER.
-							WinActivate, Patient öffnen ahk_class #32770
-								WinWaitActive, Patient öffnen ahk_class #32770,, 1
-							ControlFocus, Edit1, Patient öffnen ahk_class #32770
-							SendInput, {Enter}
-					}
-
-					Sleep, 300
-
-				}
-		}
-
-	;}
-
-	;----------------------------------------------------------------------------------------------------------------------------------------------
-	; 2 Folgedialoge sind möglich - 1. Patient nicht vorhanden , 2. Listview-Auswahl -> den will ich durch möglichst vermeiden
-	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-		PopWin:= WaitForNewPopUpWindow(AlbisWinID(), LastPopUpWin, 10)
-
-	  ;Dialog Patient <.....,......> nicht vorhanden schließen.
-		If ( Instr(PopWin.Title, "ALBIS") AND Instr(PopWin.Class, "#32770") AND  Instr(PopWin.Text, "nicht vorhanden") ) {
-			LastPopUpWin := GetLastActivePopup(AlbisWinID())
-			VerifiedClick("Button1", "", "", PopWin.Hwnd)			;soll das Fenster schließen
-			PopWin:= WaitForNewPopUpWindow(AlbisWinID(), LastPopUpWin, 30)
-		}
-	  ;Dialog Patient auswählen mit eingebettetem ListView-Fenster
-		If ( Instr(PopWin.Title, "Patient") AND Instr(PopWin.Class, "#32770") AND  Instr(PopWin.Text, "List1") ) {
-				;Scite_OutPut("Listenfenster ist aufgetaucht", 0, 1, 0)
-			return 0
-		}
-	  ;Dialog Patient öffnen schließen der sich nach dem Schließen des "<Patient ... nicht vorhanden>" Dialoges erneut öffnet
-		If ( Instr(PopWin.Title, "Patient öffnen") AND Instr(PopWin.Class, "#32770") ) {
-			LastPopUpWin := GetLastActivePopup(AlbisWinID())
-			VerifiedClick("Button3", "", "", PopWin.Hwnd)			;soll das Fenster schließen
-			PopWin := WaitForNewPopUpWindow(AlbisWinID(), LastPopUpWin, 30)
-			return 0
-		}
-	;}
-
-	;----------------------------------------------------------------------------------------------------------------------------------------------
-	; wartet auf das Öffnen der angeforderten Akte
-	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-		PraxTT( "Warte bis zu 10s auf die Patientenakte (" Name[5] ", " Name[1] ")", "10 3" )
-		start:= A_TickCount
-		Loop
-		{
-				If FuzzyNameMatch(CurrPat, Pat) or InStr(AlbisAktuellePatID(), Pat[5])
-				{
-						PraxTT("Die Patientenakte ist jetzt bereit!", "3 3")
-						return 1
-				}
-
-				Sleep, 50
-				timesince:= (A_TickCount - start)/1000
-				GuiControl, PraxTT:, PraxTTCounter2, % Round( (10-timesince), 1 ) "s"
-				GuiControl, PraxTT:, PraxTTCounter1, % Round( (10-timesince), 1 ) "s"
-
-		} until timesince > 9.9
-
-		PraxTT("Die richtige Patientenakte konnte nicht geöffnet werden!!", "3 3")
-
-	;}
-
-return 0
-}
-;13
 AlbisKarteikarteAktiv() {                                                                               	;-- gibt true zurück wenn eine Karteikarte angezeigt wird
 
 	If InStr(AlbisGetActiveWindowType(), "Patientenakte")
@@ -3929,17 +4087,121 @@ AlbisKarteikarteAktiv() {                                                       
 
 return false
 }
+;13
+AlbisSaveAsPDF(filePath, printer="Microsoft Print to PDF", fromFunc="") {       	;-- Ausdruck/Speichern per PDF-Druckertreiber
+
+	; ermöglicht den Export von Listen, Protokollen, dem Laborblatt über die Verwendung eines PDF-Druckertreibers
+	; ACHTUNG: 	die Funktion kann auch mit dem gesonderten Druckdialog des Laborblatt Drucks umgehen,
+	;                    	dazu muss der Dialog "Laborblatt Druck" allerdings zwingend vorher aufgerufen werden.
+	;                    	die Albismenu() hat zwar die Option auf 2 Fenstertitel zu reagieren,
+	;						allerdings kann man keine Einstellungen im "Laborblatt Druck" Fenster vornehmen
+
+		Laborblattdruck := false
+
+	; Albis-Druckdialog öffnen
+		If (hLaborblattdruck := WinExist("Laborblatt Druck ahk_class #32770")) {
+			Laborblattdruck := true
+			If !VerifiedClick("Drucker...", "Laborblatt Druck ahk_class #32770")
+				return 2
+			WinWait, % "Drucken ahk_class #32770"
+			If !(hprintdialog := WinExist("Drucken ahk_class #32770"))
+				return 3
+		}
+		else {
+
+			If !(hprintdialog := Albismenu(57607, "Drucken ahk_class #32770", 3, 1))
+				return 4
+		}
+
+		If !(hprintdialog := WinExist("Drucken ahk_class #32770"))
+			return 5
+
+	; PDF-Drucker wählen
+		If ((err := VerifiedChoose("ComboBox1", hprintdialog, printer)) <> 1) {
+			PraxTT("PDF Drucker konnte nicht gefunden werden.`nFehlercode: " err, "2 1")
+			sleep 2000
+			return 6
+		}
+
+	; Debug
+		;If ((res := Weitermachen("Func: " A_ThisFunc "`nfromFunc: " fromFunc "`nprinter: " printer "`nhprd: " hprintdialog)) <> 1)
+		;	return res
+
+		VerifiedClick("OK", hprintdialog)
+
+	; Laborblatt Druck aktiv dann ist noch ein OK notwendig
+		If Laborblattdruck
+			If !VerifiedClick("OK", hLaborblattdruck)
+				return 7
+
+	; Ende der Funktion wenn filepath leer ist
+		If (StrLen(filepath) = 0)
+			return  1
+
+	; Microsoft Print to PDF Dialog bearbeiten
+		Druckausgabe := "Druckausgabe speichern unter ahk_class #32770"
+		WinWait, % Druckausgabe,, 5
+		hDruckausgabe := WinExist(Druckausgabe)
+		res := VerifiedSetText("Edit1", filePath, hDruckausgabe)
+		VerifiedClick("Button2", hDruckausgabe)
+		WinWaitClose, % Druckausgabe,, 5
+
+	; Fenster: "Albis", Text: "Drucken" erscheint bei größeren Dokumenten
+		WinWaitClose, % "Albis ahk_class #32770", "Drucken", 20
+
+return ErrorLevel ? 8 : 1
+}
+;14
+AlbisKarteikartenAnsicht(PatientFensterCB) {                                                	;-- verändert die akutelle Auswahl der Combobox in der PatientFensterToolbar (Karteikarte,Abrechnung,Laborblatt...)
+
+	ControlGet, hTbar	, Hwnd	,, ToolbarWindow321, % "ahk_id " AlbisGetActiveMDIChild()
+	ControlGet, hCB  	, Hwnd	,, ComboBox1			, % "ahk_id " hTbar
+	If !hCB
+		return 0
+
+	; String oder Nummer wird unterschieden
+	;SciTEOutput(hTbar)
+return VerifiedChoose("ComboBox1", hTbar, PatientFensterCB)
+}
+;15
+AlbisNeuerSchein() {                                                                                    	;-- öffnet den Dialog "Neuen Schein für <....> aufnehmen"
+
+		ScheinAbfrage := "Wollen Sie wirklich einen neuen Schein anlegen"
+		AlbisBlanko := "ALBIS ahk_class #32770"
+
+		AlbisIsBlocked(AlbisWinID())
+
+	; Menubefehl Patient/Schein/Neu
+		PostMessage	, 0x111, 32788,,, % "ahk_class OptoAppClass"
+
+	; Fenster abwarten
+		while (A_Index <= 60) {
+
+			If (WinExist(AlbisBlanko, ScheinAbfrage))
+				If !VerifiedClick("Ja", AlbisBlanko, ScheinAbfrage,, true ) {
+					Sleep 300
+					ToolTip, % ScheinAbfrageZähler ++
+				}
+				else if (hwnd := WinExist(AlbisBlanko, ScheinAbfrage))
+					return hwnd
+
+			Sleep 100
+		}
+
+return 0
+}
 ;}
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; LABOR ABRUF AUTOMATION / LABOR DIVERSES                                                                                                                                                                                     	(08)
+; LABOR ABRUF AUTOMATION / LABOR DIVERSES                                                                                                                                                                                     	(09)
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; (01) MCSVianova_WebClient       	(02) AlbisLaborDatenholen        	(03) AlbisOeffneLaborbuch            	(04) AlbisRestrainLabWindow     	(05) AlbisDruckeLaborblatt
-; (06) AlbisZeigeLaborBlatt              	(07) AlbisLaborAuswählen          	(08) AlbisLaborDaten
+; (01) MCSVianova_WebClient       	(02) AlbisLaborwaehlen              	(03) AlbisOeffneLaborbuch            	(04) AlbisRestrainLabWindow     	(05) AlbisDruckeLaborblatt
+; (06) AlbisZeigeLaborBlatt              	(07) AlbisLaborAuswählen          	(08) AlbisLaborDaten                       	(09) AlbisLaborblattExport
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~;{
 ;01
 vianovaInfoBoxWebClient(infoBoxID=0) {                                                               	;{-- WebClient Automation (Labor IMD)
 
-	; letzte Änderung vom 22.09.2020
+	; letzte Änderung vom 30.01.2021
+	; 30.01.2021: flexiblere Steuerelementerkennung
 	; ACHTUNG: FUNKTIONIERT NUR MIT ADDENDUM.AHK
 
 	;##Hersteller des WebClienten haben die Gui dieses WebClienten geändert, Button haben andere ClassNN bekommen, brauche eher eine Suchfunktion für das ClassNN
@@ -3970,11 +4232,10 @@ vianovaInfoBoxWebClient(infoBoxID=0) {                                          
 
 	;}
 
-	; WindowsForms10.BUTTON.app.0.34f5582_r6_ad12
 	; Button "Abruf" drücken                                                                                                                                   	;{
-
-		If (err := Controls("", "ControlClick, Abruf, BUTTON", infoBoxID)) {
-			If !VerifiedClick("WindowsForms10.BUTTON.app.0.34f5582_r6_ad12",  infoBoxID)	{ ; WindowsForms10.BUTTON.app.0.34f5582_r6_ad12
+		ctrlClass := Controls("", "ControlFind, Abruf, Button, return classNN", infoBoxID)
+		If (StrLen(ctrlClass) > 0) {
+			If !VerifiedClick(ctrlClass, infoBoxID) {
 				Addendum.LaborAbruf.Daten:= false
 				Addendum.LaborAbruf.Status	:= "fail"
 				Addendum.LaborAbruf.Voll	:= false
@@ -3982,22 +4243,27 @@ vianovaInfoBoxWebClient(infoBoxID=0) {                                          
 				return 0
 			}
 		}
+		else {
+			Addendum.LaborAbruf.Daten:= false
+			Addendum.LaborAbruf.Status	:= "fail"
+			Addendum.LaborAbruf.Voll	:= false
+			PraxTT("Das Auslösen des Abrufes (klick auf Abruf)`nhat nicht funktioniert.`nDie Funktion bricht hier ab", "0 10")
+			return 0
+		}
 
 	;}
 
 	; 4.1.4.5.4.1.4.4.4.1.2
 	; wartet bis keine Daten mehr hinzukommen                                                                                                   	;{
-		oAcc     	:= Acc_Get("Object", "4.1.4.5.4.1.4.4.4" , 0, "ahk_id " infoBoxID)
 
 		Loop {
-
+			oAcc := Acc_Get("Object", "4.1.4.5.4.1.4.4.4" , 0, "ahk_id " infoBoxID)
 			t := ""
 			Loop % oAcc.accChildCount()	{
-
 				 oAcc := Acc_Get("Object", "4.1.4.5.4.1.4.4.4." A_Index, 0, "ahk_id " infoBoxID)
 				 t .= oAcc.accValue(2) "`n"
-
 				 If Instr(t, "Keine Daten zum Abruf") {
+					Addendum.LaborAbruf.Daten:= false
 					break
 				} else if Instr(t, "Es liegen neue Labordaten vor") {
 					Addendum.LaborAbruf.Daten:= true
@@ -4006,7 +4272,7 @@ vianovaInfoBoxWebClient(infoBoxID=0) {                                          
 
 			}
 
-			If (A_Index > 50) || Addendum.LaborAbruf.Daten
+			If (A_Index > 250) || Addendum.LaborAbruf.Daten
 				break
 			sleep 100
 
@@ -4051,8 +4317,11 @@ vianovaInfoBoxWebClient(infoBoxID=0) {                                          
 	;}
 
 	; Button "Schliessen" drücken                                                                                                                          	;{
-		If (err:= Controls("", "ControlClick, Schließen, BUTTON", infoBoxID))
-			VerifiedClick("WindowsForms10.BUTTON.app.0.378734a1", infoBoxID)
+		ctrlClass := Controls("", "ControlFind, Schließen, Button, return classNN", infoBoxID)
+		If (StrLen(ctrlClass) > 0)
+			VerifiedClick(ctrlClass , infoBoxID)
+		else
+			WinClose, % "ahk_id " infoBoxID
 	;}
 
 	; Schließen des Fensters abwarten, wenn das Fenster nicht schließt über andere Befehle das Fenster schliessen  	;{
@@ -4087,7 +4356,7 @@ vianovaInfoBoxWebClient(infoBoxID=0) {                                          
 	; mit Aufruf des Dialogfensters 'Daten holen' wird der automatisierte Vorgang fortgesetzt
 		PraxTT("`n- die Anwendung 'vianovaWebClient " (EL ? "konnte nicht beendet werden" : "wurde beendet"), "10 2")
 
-		If (GetDec(Addendum.LaborAbruf.InvokedHWND  := AlbisLaborDatenholen()) = 0)
+		If (GetDec(Addendum.LaborAbruf.InvokedHWND  := AlbisLaborwaehlen()) = 0)
 			ResetLaborabrufStatus()
 
 		Addendum.LaborAbruf.Status := "invoke_dialog_LaborDatenHolen"
@@ -4106,7 +4375,7 @@ ResetLaborabrufStatus() {                	; Variablen des Laborabrufes zurückse
 return
 }   ;}
 ;01A
-AlbisLaborLDTBackup(LDTDateiName) {
+AlbisLaborLDTBackup(LDTDateiName) {                                                                 	;-- soll empfange Labordaten sichern
 
 	; -------------------------------------------------------------------------------------------------------------
 	;                 !!! EINSTELLUNG DES RICHTIGEN ENCODINGS FÜR DIE LDT-DATEI !!!
@@ -4133,64 +4402,115 @@ AlbisLaborLDTBackup(LDTDateiName) {
 return err
 }
 ;02
-AlbisLaborDatenholen() {                                                                                       	;-- öffnet das Fenster Daten holen
-return Albismenu(32965, "Labordaten ahk_class #32770") 	; Menupunkt 32965 - Extern\Labor\Daten ?????
+AlbisLaborwaehlen() {                                                                                            	;-- öffnet das Fenster Daten holen
+; Menupunkt 32965 - Extern\Labor\Daten importieren ....
+return Albismenu(32965, "Labor auswählen ahk_class #32770")
 }
 ;03
-AlbisOeffneLaborbuch() {                                                                                      	;-- oeffnet das Laborbuch
-	AlbisActivate(2)
-	AlbisIsBlocked(AlbisWinID())
-	PostMessage, 0x111, 34162,,, % "ahk_id " AlbisWinID()		;Öffnen des Laborbuches per WM_Command Befehl - Laborbuch:= 34162
-	WinWait, Laborbuch ahk_class OptoAppClass,,6
-return ErrorLevel
-}
-;04
-AlbisRestrainLabWindow(nr, hwnd) {                                                                      	;-- liest Daten eines Fenster im Laborbuch bei Aufruf von 'ins Laborbuch übertragen' ein
+AlbisOeffneLaborbuch(hinweis=true) {                                                                     	;-- oeffnet das Laborbuch
 
-	; liest Daten eines Fenster im Laborbuch bei Aufruf von 'ins Laborbuch übertragen' ein und speichert diese in eine Datei zur späteren Verarbeitung
-	;  (!Funktionsumfang ist noch nicht vollständig)
-		Labordaten := ""
+	; ermittelt alle 100ms den Fenstertitel von Albis
+	; letzte Änderung 31.01.2021
 
-	; setze ich auf 0 zurück, da ich nicht wie weiß wie ich feststellen kann das alle Laborwerte in die Akten sortiert wurden
-		Addendum.LaborAbruf.Status := false
+	; blockierende Fenster schliessen
+		AlbisIsBlocked(AlbisWinID())
+		If hinweis
+			PraxTT("Befehl:`n- Laborbuch anzeigen -`nwird ausgeführt", "6 1")
 
-		If (nr=1) {
-
-				idx:=0
-				ControlGetText, AfNr     	, Static2	, % "ahk_id " hwnd                                                 	;AnforderungsNr
-				ControlGetText, BStatus 	, Static8	, % "ahk_id " hwnd                                                 	;End- oder Teilbefund diese Daten möchte ich
-				ControlGetText, EDatum	, Static4	, % "ahk_id " hwnd                                                 	;Eingangsdatum
-				ControlGetText, ADatum	, Static11	, % "ahk_id " hwnd                                                 	;Abnahmedatum
-				ControlGetText, PNam   	, Static6	, % "ahk_id " hwnd                                                  	;Patientenname
-
-				pre := SubStr(ADatum, StrLen(ADatum)-3, 4) . SubStr(ADatum, StrLen(ADatum)-6, 2)
-
-				Labordaten .=  A_DD "." A_MM "." A_YYYY ";" AfNr ";" BStatus ";" EDatum ";" ADatum ";" PName "`n"
-				FileAppend, % Labordaten, % AddendumDir "\Module\Albis_Funktionen\Laborabruf\Labordaten\Laborbuch\" pre "-Labordaten.txt"
-
-				ControlGet, content, List,, ListBox1, % "ahk_id " hwnd
-				Loop, Parse, content, `n
-						idx++
-
-				If (idx>1)	{
-
-						searchstr:= SubStr(ADatum, StrLen(ADatum)-5, 1) . "/" . SubStr(ADatum, StrLen(ADatum)-1, 2)
-						Loop, Parse, content, `n
-                           	If InStr(A_LoopField, searchstr)
-                           		Control, Choose, % A_Index, ListBox1, % "ahk_id " hwnd
-				}
-
-				sleep, 1000
-				VerifiedClick("Button8","","", hwnd)
-
-				return Labordaten
-
+	; Öffnen des Laborbuches per WM_Command Befehl - Laborbuch:= 34162
+		PostMessage, 0x111, 34162,,, % "ahk_class OptoAppClass"
+		while !InStr(AlbisGetActiveWinTitle(), "Laborbuch") {
+			If (A_Index > 50)
+				break
+			sleep 50
+			Loop 10
+				sleep 5
 		}
 
-return ""
+	; Hinweis
+		If !InStr(AlbisGetActiveWinTitle(), "Laborbuch") {
+			If hinweis
+				PraxTT("Das Laborbuch konnte nicht angezeigt werden.", "2 1")
+			return 0
+		}
+
+return 1
+}
+;04
+AlbisRestrainLabWindow(nr, hwnd) {                                                                      	;-- schließt 'GNR der Anford.-Ident übernehmen' ohne Daten auszulesen
+
+	; letzte Änderung: 06.02.2021
+
+		static classGNRAnforderung := "GNR der Anford ahk_class #32770"
+		static rxStatics1 := {"AfNr" : "^\d+$", "BArt" : "^[A-Z][\sa-z]+$", "Pat" : "^(?<Name>.*,.*)\s+\((?<ID>\d+)\)$"}
+		static rxStatics2 := {"ETag":"^\d{2}\.\d{2}\.\d{4}$", "ATag":"^\d{2}\.\d{2}\.\d{4}$"}
+
+		Statics       	:= Object()
+		mcount        	:= 0
+
+	; Daten für die Identifizierung auslesen
+		Controls("", "Reset", "")
+		sleep 500 ; Fensteraufbau abwarten
+		Statics.AfNr 	:= Controls("Static2"  	, "GetText", classGNRAnforderung)									; AnforderungsNr identifiziert das Fenster
+		Statics.BArt  	:= Controls("Static8"  	, "GetText", classGNRAnforderung)									; BefundArt
+		Statics.ETag 	:= Controls("Static4"  	, "GetText", classGNRAnforderung)									; Eingangs-Datum:
+		Statics.ATag	:= Controls("Static11"	, "GetText", classGNRAnforderung)									; Abnahme-Datum:
+		Statics.Pat    	:= Controls("Static6"  	, "GetText", classGNRAnforderung)									; Patient:
+
+	; per RegExMatch die Werte prüfen, Veränderungen der ClassNN der Steuerelemente können so erkannt werden
+	; Übereinstimmungen müssen der Anzahl der Steuerelemente entsprechen
+		For staticArt, rxStr in rxStatics1 {
+			If RegExMatch(Statics[staticArt], rxStr, Pat)
+				mcount ++
+			else
+				failedClassNN .= staticArt " (" StaticText "),"
+		}
+		If (mcount <> rxStatics1.Count()) {
+			Addendum.LaborAbruf.Status := "Failure: mismatching classNNs"
+			FileAppend	, % datestamp() "|" A_ThisFunc "()`t " Addendum.LaborAbruf.Status "  (" RTrim(failedClassNN, ",") ")`n"
+								, % Addendum.DBPath "\Labordaten\LaborimportLog.txt"
+			return 0
+		}	else {
+			PraxTT("Anford.-Nr: " Statics.AfNr, "1 1")
+			FileAppend	, % datestamp() "|" A_ThisFunc "()`t [" Statics.AfNr "] " Statics.BArt ", " Statics.ETag ", " Statics.ATag ", " Statics.Pat "`n"
+								, % Addendum.DBPath "\Labordaten\LaborimportLog.txt"
+		}
+
+	; ist der Dialog neu dann die Daten im Protokoll sichern
+		If (Addendum.LaborAbruf.AfNrOld <> Statics.AfNr) {
+			Addendum.LaborAbruf.Status := "Success: window data read out are correct"
+			Addendum.LaborAbruf.AfNrOld := Statics.AfNr
+		}	else {
+			PraxTT("#2Labor importieren`n`nDas vorhergehende Anfordungsfenster ist noch geöffnet!`nDie Importfunktion wird abgebrochen.", "3 1")
+			Addendum.LaborAbruf.Status := "Failure: last dialog window is open!"
+			FileAppend	, % datestamp() "|" A_ThisFunc "()`t  " Addendum.LaborAbruf.Status "`n"
+						     		, % Addendum.DBPath "\Labordaten\LaborimportLog.txt"
+			return 0
+		}
+
+	; alle GNR übernehmen, der Dialog schließt dann
+		sleep 200
+		If !VerifiedClick("Alle GNR", "GNR der Anford ahk_class #32770") {
+			PraxTT("Dialog 'GNR der Anforderung' konnte nicht geschlossen werden.", "1 1")
+			Addendum.LaborAbruf.Status := "Failure: action on button ''Alle GNR übernehmen'' failed!"
+			FileAppend	, % datestamp() "|" A_ThisFunc "()`t " Addendum.LaborAbruf.Status "`n"
+								, % Addendum.DBPath "\Labordaten\LaborimportLog.txt"
+			return 0
+		}
+
+	; Popup Fenster abfangen
+		;~ Loop {
+
+
+		;~ }
+
+		Addendum.LaborAbruf.Status := "Succes: action on button ''Alle GNR übernehmen''"
+
+
+return 1
 }
 ;05
-AlbisDruckeLaborblatt(Spalten, Drucker:="", SaveDir:="") {                                     	;-- Automatisiertes Drucken eines Laborbefundes
+AlbisDruckeLaborblatt(Spalten, Drucker:="", SaveDir:="") {                                     	;-- Automatisiertes Drucken eines Laborbefundes (## AlbisLaborblattExport() ist besser!)
 
 	; im Moment kann nur die Anzahl der auszudruckenden Spalten als Option übergeben werden
 	; Drucker := "pdf" für PDF Drucker - einzustellen in den Addendum.ini
@@ -4200,24 +4520,21 @@ AlbisDruckeLaborblatt(Spalten, Drucker:="", SaveDir:="") {                      
 		static printInit, Fenster_Druckeinrichtung, Fenster_Laborblatt_Druck
 
 		If !InStr(AlbisGetActiveWindowType(), "Patientenakte")		{
-			PraxTT("Der Laborblattdruck kann nur bei einer geöffneten`nPatientenakte ausgeführt werden!.", "6 3")
+			PraxTT("Der Laborblattdruck kann nur bei einer geöffneten`nKarteikarte ausgeführt werden!.", "6 3")
 			return 0
 		}
 
 	; bei Druckausgabe in eine PDF-Datei einen neuen Dateinamen finden
 		If InStr(Drucker, "pdf")	{
 			Name:= StrSplit(AlbisCurrentPatient(), ",", A_Space)
-			If !(SubStr(SaveDir, -1) = "\")
-				SaveDir .= "\"
 
 			; noch nicht vorhandenen Dateinamen finden
 				Loop		{
 					filename:= "BW-" SubStr(Name[1], 1, 2) SubStr(Name[2], 1, 2) ( A_Index = 1 ? "" : "-" A_Index - 1 ) "_Ausdruck_vom_" A_DD "." A_MM "." A_YYYY
-					If !FileExist(SaveDir . filename . ".pdf")
+					If !FileExist(SaveDir "\" filename . ".pdf")
 						break
 				}
 		}
-
 
 	; Erstinitalisierung
 		If !printInit		{
@@ -4229,17 +4546,16 @@ AlbisDruckeLaborblatt(Spalten, Drucker:="", SaveDir:="") {                      
 			Fenster_Druckausgabe   	:= "Druckausgabe speichern unter"
 			oDrucker.PDF                	:= PDF
 			oDrucker.Standard        	:= Standard
-			printInit                         	:= 1
-
+			printInit                         	:= true
 		}
 
 	; Auslesen des eingestellten Druckers und Zwischenspeichern der Einstellungen für späteres Wiederherstellen
 		Albismenu(57606, Fenster_Druckeinrichtung, 3, 1)
-		oDrucker.ActivePrinter:= { "Name"     	:ControlGet("Choice" 	,, "ComboBox1"	, Fenster_Druckeinrichtung)
-		                                		, "Size"        	:ControlGet("Choice" 	,, "ComboBox2"	, Fenster_Druckeinrichtung)
-			                                 	, "Source"   	:ControlGet("Choice" 	,, "ComboBox3"	, Fenster_Druckeinrichtung)
-				                                , "Portrait"    	:ControlGet("Checked"	,, "Button5"     	, Fenster_Druckeinrichtung)
-					                           , "Landscape":ControlGet("Checked"	,, "Button6"     	, Fenster_Druckeinrichtung)}
+		oDrucker.ActivePrinter:= { "Name"     	: ControlGet("Choice" 	,, "ComboBox1"	, Fenster_Druckeinrichtung)
+		                                		, "Size"        	: ControlGet("Choice" 	,, "ComboBox2"	, Fenster_Druckeinrichtung)
+			                                 	, "Source"   	: ControlGet("Choice" 	,, "ComboBox3"	, Fenster_Druckeinrichtung)
+				                                , "Portrait"    	: ControlGet("Checked"	,, "Button5"     	, Fenster_Druckeinrichtung)
+					                           , "Landscape" : ControlGet("Checked"	,, "Button6"     	, Fenster_Druckeinrichtung)}
 
 	; Einrichten des gewünschten Drucker
 		If InStr(Drucker, "pdf") || (Drucker = "")
@@ -4258,7 +4574,7 @@ AlbisDruckeLaborblatt(Spalten, Drucker:="", SaveDir:="") {                      
 
 			; Druckaufruf ausführen
 				Albismenu(57607, Fenster_Laborblatt_Druck, 3, 1)
-				sleep, 500
+				sleep 500
 
 			; Überprüft nochmals den ausgewählten Drucker
 				VerifiedClick("Button11", Fenster_Laborblatt_Druck) 	                    	; Drucker...
@@ -4346,19 +4662,38 @@ AlbisDruckeLaborblatt(Spalten, Drucker:="", SaveDir:="") {                      
 return
 }
 ;06
-AlbisZeigeLaborBlatt() {                                                                                         	;-- schaltet auf das Laborblatt
+AlbisZeigeLaborBlatt(Info:=true) {                                                                             	;-- schaltet auf das Laborblatt
 
+	; Info anzeigen
+		If Info
+			PraxTT("Laborblatt anzeigen", "2 1")
+
+	; Albis aktivieren
+		AlbisActivate(2)
+
+	; prüfen auf geöffnete Karteikarte
 		If !InStr(activeWT:= AlbisGetActiveWindowType(), "Patientenakte")
 			return 0
 
-		AlbisActivate(2)
-
+	; Laborblatt aufrufen und Erfolg prüfen
 		while !InStr(AlbisGetActiveWindowType(), "Laborblatt") 	{
+
+			If (A_Index > 5)
+				return 0
 			PostMessage, 0x111, 33034,,, % "ahk_id " AlbisWinID()
-			sleep, 100
-			If InStr(AlbisGetActiveWindowType(), "Laborblatt") || (A_Index > 10)
+			Loop {
+
+				If InStr(AlbisGetActiveWindowType(), "Laborblatt") {
+					sleep 300
+					return 1
+				}
+				else if  (A_Index > 20)
 					break
-			sleep, 200
+
+				sleep 100
+
+			}
+
 		}
 
 return 1
@@ -4381,13 +4716,13 @@ AlbisLaborAuswählen(Laborname) {                                               
 		}
 
 		err:= VerifiedClick("Button1", "Labor auswählen ahk_class #32770")
-
+		PraxTT("Warte auf den nächsten Laborabruf-Dialog", "2 1")
 		WinWait, ALBIS, Keine Datei(en) im Pfad, 2
 		If (ErrorLevel = 0) 	{
 				err:= VerifiedClick("Button1", "ALBIS", "Keine Datei(en) im Pfad")
-				Addendum.LaborAbruf.Daten:= false
+				Addendum.LaborAbruf.Daten	:= false
 				Addendum.LaborAbruf.Status	:= false
-				Addendum.LaborAbruf.Voll	:= false
+				Addendum.LaborAbruf.Voll    	:= false
 				return err
 		}
 
@@ -4395,9 +4730,104 @@ return err
 }
 ;08
 AlbisLaborDaten()	{                                                                                                 	;-- bearbeitet das "Labordaten importieren" Fenster und öffnet im Anschluss das Laborbuch
-	VerifiedCheck("Button5", "Labordaten ahk_class #32770",,, 1)
-	VerifiedClick("Button1", "Labordaten ahk_class #32770")
+	VerifiedCheck("Button5"	, "Labordaten ahk_class #32770",,, 1)
+	VerifiedClick("Button1"	, "Labordaten ahk_class #32770")
+	sleep, 200
 	AlbisOeffneLaborbuch()
+}
+;09
+AlbisLaborblattExport(PrintRange, SaveAs="", Printer="Microsoft Print to PDF") {          	;-- PDF Export des Laborblattes
+
+	; letzte Änderung am 12.02.2020
+
+	/* 	PARAMETER OPTIONEN
+
+		PrintRange 	:= Datum als String im Format "DD.MM.YYYY-DD.MM.YYYY"
+								 oder eine Zahl für "letzte Spalten"
+							 	 oder das Wort "Alles" um alle Spalten auszugeben
+		SaveAs      	:= Dateipfad mit Dateinamen (Dateierweiterungen wie .pdf werden entfernt )
+		Printer       	:= empfohlener Drucktreiber  "Microsoft Print to PDF"
+
+	 */
+
+	; Parameter parsen und prüfen ;{
+		PrintRange := Trim(PrintRange)
+		SaveAs := RegExReplace(SaveAs, "i)\.[a-z\d]+$")
+
+	  ; SAVEAS
+		If RegExMatch(SaveAs, "[A-Z]\:\\") {
+
+			tmpSaveAs :=  SavesAs ".pdf"
+			SplitPath, tmpSaveAs, SaveName, SaveDir
+			If !InStr(FileExist(SaveDir "\"), "D") {
+				PraxTT(A_ThisFunc ": Der übergebene Dateiordner existiert nicht`n[" SaveDir "]", "3 1")
+				return 0
+			}
+
+			If FileExist(saveAs ".pdf")
+				FileDelete, % saveAs ".pdf"
+		}
+		else
+			SaveAs := ""
+
+	  ; PrintRange
+		If !RegExMatch(PrintRange, "\d{2}\.\d{2}\.\d{4}\-\d{2}\.\d{2}\.\d{4}") && !RegExMatch(PrintRange, "^\d+$") && (PrintRange != "Alles") {
+			PraxTT(A_ThisFunc ": PrintRange - Es muss ein Datumsbereich, eine Zahl oder das Wort 'Alles' übergeben werden!`n[" PrintRange "]", "3 1")
+			sleep 3000
+			return 0
+		}
+
+	  ; Printer
+		If (StrLen(Printer) = 0) {
+			PraxTT(A_ThisFunc ": Es wurde kein Drucker übergeben!", "3 1")
+			sleep 3000
+			return 0
+		}
+
+	;}
+
+	; Laborblatt anzeigen falls möglich
+		If !InStr(AlbisGetActiveWindowType(), "Laborblatt")	{
+			If !InStr(AlbisGetActiveWindowType(), "Patientenakte")		{
+				PraxTT("Der Laborblattdruck kann nur bei einer geöffneten`nKarteikarte ausgeführt werden!.", "3 1")
+				sleep 3000
+				return 0
+			}
+			If !AlbisZeigeLaborBlatt(true) {
+				PraxTT("Das Anzeigen des Laborblattes ist fehlgeschlagen.", "3 1")
+				return 0
+			}
+		}
+
+	; startet den Druckdialog
+		If !(hLaborblattdruck := Albismenu(57607, "Laborblatt Druck ahk_class #32770", 3, 1)) {
+			PraxTT(A_ThisFunc ": Der Laborblatt Druck konnte nicht ausgeführt werden!", "3 1")
+			sleep 3000
+			return 0
+		}
+
+	; Einstellungen eintragen
+		If RegExMatch(PrintRange, "(?<Von>\d\d\.\d\d\.\d\d\d\d)\-(?<Bis>\d\d\.\d\d\.\d\d\d\d)", rx) || (PrintRange = "Alles") {
+			If !VerifiedClick("Button3", hLaborblattdruck)                    ; Zeitraum
+				return 0
+			If !(PrintRange = "Alles") {
+				If !VerifiedSetText("Edit2", rxVon	, hLaborblattdruck)
+					return 0
+				If !VerifiedSetText("Edit3", rxBis	, hLaborblattdruck)
+					return 0
+			}
+		}
+		else {
+			If !VerifiedClick("Button2", hLaborblattdruck)                 	 ; letzte
+				return 0
+			If !VerifiedSetText("Edit1", (PrintRange = 0 ? 1 : PrintRange), hLaborblattdruck)
+				return 0
+		}
+
+		 ; Anmerkungen und Probedaten
+			VerifiedCheck("Button5", hLaborblattdruck)
+
+return AlbisSaveAsPDF(saveAs, printer, A_ThisFunc)
 }
 ;}
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4460,56 +4890,28 @@ AlbisImportierePdf(PdfName, LVRow:=0) {                                         
 	; benötigt ein globales Objekt mit dem Namen SPData -> Aufbau siehe ScanPool.ahk
 	; oPat : globals Object, enthält die Addendum interne Patientendatenbank
 	; Addendum: globales Object - enthält Daten zu Albis-Ordnern
+	; letzte Änderung: 14.02.2020
 
 		suggestions:= Object()
-		BlockInput, On
 
-	; für das ScanPool-Skript, ansonsten wird davon ausgegangen das die richtige Patientenakte geöffnet ist
-		If InStr(A_ScriptName, "ScanPool") {
-
-			; Pdf Previewer ausschalten
-				PrevBackup:= dpiShow, dpiShow:= "Aus"
-
-			; Patientenname ermitteln
-				Name := ExtractNamesFromFileName(PdfName)
-
-			; Prüfen ob der Patient in der Datenbank vorhanden ist und ermitteln einer Patienten ID wenn möglich
-				If oPat.Count()	{
-
-						suggestions:= PatInDB_SiftNgram(Name)
-						If IsObject(suggestions)	{
-									If suggestions.MaxIndex() = 1
-											Name[5]:= suggestions.1.PatID
-						}
-						else	                        	{
-								InputBox, newName, ScanPool, % "Patient: " Name[1] "konnte in der Addendum-Datenbank nicht gefunden werden.`nBitte geben Sie hier den korrekten Namen ein!",, 400,,,,,, % Name[1]
-								Name:= ExtractNamesFromFileName(newName)
-						}
-
-				}
-
-			; Patientenakte öffnen
-				PraxTT("Öffne die Akte von: `n" . Name[1] , "3 2")
-				If !AlbisOeffneAkte(Name) {
-						PraxTT("Die Akte des Patienten`n" . Name[1] . "`nließ sich nicht öffnen! Der angeforderte Vorgang wird jetzt abgebrochen", "6 2")
-						return 0
-				}
-
+	; zurück falls Datei nicht mehr vorhanden ist
+		If !FileExist(Addendum.BefundOrdner "\" PdfName) {
+			PraxTT("Datei: " PdfName " ist nicht vorhanden!", "1 0")
+			return 0
 		}
 
 	; Eingangsdatum des Befundes auslesen
-		If InStr(A_ScriptName, "ScanPool")
-			creationtime := FormatedFileCreationTime(SPData.BefundOrdner "\" PdfName)
-		else
-			creationtime := FormatedFileCreationTime(Addendum.BefundOrdner "\" PdfName)
+		BlockInput, On
+		creationtime := FormatedFileCreationTime(Addendum.BefundOrdner "\" PdfName)
 
 	; öffnet den Dialog 'Grafischer Befund' durch Eingabe eines Kürzel in die Akte - falls Sie ein anderes Kürzel verwenden - müssen Sie dies hier ändern
-		PraxTT("Importiere den Befund:`n" PdfName, "15 2")
+		PraxTT("Importiere PDF-Datei:`n[" PdfName "]", "15 2")
 		AlbisSetzeProgrammDatum(creationtime)
 
 	; Eingabefokus in die Karteikarte setzen
 		If !AlbisKarteikartenFocusSetzen("Edit3") {
-			PraxTT("Beim Übertragen des Befundes ist ein Problem aufgetreten.`nEs konnte kein Eingabefocus in die Karteikarte gesetzt werden.", "6 2")
+			PraxTT("Beim Importieren ist ein Problem aufgetreten.`nDer Eingabefocus konnte nicht gesetzt werden!", "6 2")
+			BlockInput, Off
 			return 0
 		}
 
@@ -4518,50 +4920,23 @@ AlbisImportierePdf(PdfName, LVRow:=0) {                                         
 		SendInput, {Tab}
 
 	; Erstellen des Karteikartentextes
-		KarteikartenText := StrReplace(PdfName, ".pdf")            	;entfernen von '.pdf'
-
-		If InStr(A_ScriptName, "ScanPool") {
-			KarteikartenText := StrReplace(KarteikartenText, Name[3], "")
-			KarteikartenText := StrReplace(KarteikartenText, Name[4], "")
-		} else {
-			KarteikartenText := RegExReplace(KarteikartenText, "^[\w\p{L}-]+\s*\,*\s*[\w\p{L}]+\s*\,*\s*", "")
-		}
-
-		KarteikartenText := RegExReplace(KarteikartenText, "^\s*\,*\s*")
-		KarteikartenText := StrReplace(KarteikartenText, "   ", "°")
-		KarteikartenText := StrReplace(KarteikartenText, "  ", "°")
-		KarteikartenText := StrReplace(KarteikartenText, "°", " ")
+		KarteikartenText := RegExReplace(PdfName       	, "\.pdf$")            	;entfernen von '.pdf'
+		KarteikartenText :=       RxNames(KarteikartenText	, "ReplaceNames")
+		KarteikartenText := RegExReplace(KarteikartenText	, "^[\s,]*")
+		KarteikartenText := RegExReplace(KarteikartenText	, "\s{2,}", " ")
 
 	; Übertragen des Befundes in die Akte
 		If !AlbisUebertrageGrafischenBefund(PdfName, KarteikartenText) 	{
-				PraxTT("Beim Übertragen des Befundes`nist ein Problem aufgetreten.", "6 2")
-				return 0
-		}
-
-	; ScanPool nutzt derzeit noch andere Variablen
-		If InStr(A_ScriptName, "ScanPool") {
-
-			; Daten sichern (PdfData ist global - ein return nicht notwendig)
-				PdfData.KarteikartenText 	:= KarteikartenText
-				PdfData.PdfFullPath       	:= PdfName
-				PdfData.ReaderID 	        	:= ReaderID
-
-			; Zurücksetzen von gemachten Einstellungen
-				DpiShow	:= PrevBackup
-		}
-		else	{
-
-				SPData.KarteikartenText 	:= KarteikartenText
-				SPData.PdfFullPath        	:= PdfName
-				SPData.ReaderID 	        	:= ReaderID
-
+			PraxTT("Beim Übertragen des Befundes`nist ein Problem aufgetreten.", "6 2")
+			BlockInput, Off
+			return 0
 		}
 
 	; auf aktuelles Tagesdatum zurücksetzen
 		AlbisSetzeProgrammDatum()
 
-	BlockInput, Off
-
+	; Tastaturzugriff wieder zulassen
+		BlockInput, Off
 		PraxTT("Der Befund wurde importiert.", "3 2")
 
 return creationtime
@@ -4600,70 +4975,127 @@ return creationtime
 ; (01) AlbisErstelleTagesprotokoll       	(02) AlbisErstelleZiffernStatistik     	(03) AlbisListeSpeichern
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~;{
 ; 01
-AlbisErstelleTagesprotokoll(Periode:="", SaveFolder:="", CloseProtokoll:=1)     	;{--	Erstellen und Speichern von Tagesprotokollen
-{
+AlbisErstelleTagesprotokoll(Options:="", SaveFolder:="", CloseProtokoll:=1) {                                                       	;--	Erstellen und Speichern von Tagesprotokollen
+
 	;Parameter Periode: 	    1. leerer String                         	- setzt den Zeitraum auf den ersten und letzten Tag des aktuellen Quartals
 	;                            		2. mmyy (z.B. 0219)                 	- es wird ein Tagesprotokoll mit dem ersten und letzten Tag des übergebenen Quartals erstellt
 	;                            		3. "dd.dd.dddd[,/-]dd.dd.dddd"	- von bis Datumsübergabe ist auch als String mit zwei Tagesdaten welche durch ein "-" oder "," getrennt sind möglich
+	;									4. Übergabe eines Objektes		- Schlüssel: Patienten (Alle, mit_Einträgen, aktiver_Patient), Kürzel (Alle, Filtername), Periode (wie oben)
 	;
 	; Beispiel               :		AlbisErstelleTagesprotokoll("04.01.2016-06.01.2016", AddendumDir "\Tagesprotokolle\TP-Abrechnungshelfer", 1)
+	;
+	; letzte Änderung	:		16.02.2020
 
 		Quartal     	:= Object()
 		SaveFolder	:= RTrim(SaveFolder, "\")
+		static TPWin 	:= "Tagesprotokoll ahk_class #32770"
+		static Periode
 
-	; DATEN ZUM TAGESPROTOKOLLFENSTER IN Controls LEEREN
+	; DATEN DES TAGESPROTOKOLLFENSTER IN Controls LEEREN
 		Controls("","Reset", "")
 
 	; TAGESPROTOKOLLFENSTER AUFRUFEN
-		hTprotWin	:= Albismenu(32802, "Tagesprotokoll")
-		If !WinExist("Tagesprotokoll")
+		hTprotWin	:= Albismenu(32802, TPWin)
+		If !WinExist(TPWin)
 			return "invoke error"
 
-	; PARAMETER PARSEN
-		periode:= StrReplace(periode, "/")
-		periode:= StrReplace(periode, " ")
+	; OPTIONS PARSEN
+		If !IsObject(Options)
+			Periode := Options
+		else
+			Periode := Options.Periode
 
+	; DATUM PARSEN
+		Periode:= RegExReplace(periode, "[\s\/]")
 		If        RegExMatch(Periode, "^\d{4}$", QuartalAkt)	{
 				Quartal.aktuell	:= QuartalAkt
 				Quartal         	:= QuartalTage(Quartal)
 				QNr             	:= SubStr(QuartalAkt, 2, 1)
+				ErsterTag 	:= Quartal.TDBeginn
+				LetzterTag	:= Quartal.TDEnde
 		}
 		else If RegExMatch(Periode, "^\d{3}$", QuartalAkt)	{
 				Quartal.aktuell	:= "0" QuartalAkt
 				Quartal         	:= QuartalTage(Quartal)
 				QNr              	:= SubStr(QuartalAkt, 1, 1)
+				ErsterTag 	:= Quartal.TDBeginn
+				LetzterTag	:= Quartal.TDEnde
 		}
 		else if (StrLen(Periode) = 0)                                    	{
 				Quartal.aktuell	:= GetQuartal("heute")
 				Quartal         	:= QuartalTage(Quartal)
 				QNr             	:= SubStr(QuartalAkt, 2, 1)
+				ErsterTag       	:= Quartal.TDBeginn
+				LetzterTag     	:= Quartal.TDEnde
 		}
-		else If RegExMatch(Periode, "^\d\d\.\d\d\.\d\d\d\d", ErsterTag) && RegExMatch(Periode, "(?<=-|,)\d\d\.\d\d\.\d\d\d\d", LetzterTag)	{
-				Quartal.ErsterTag  	:= ErsterTag
-				Quartal.LetzterTag	:= LetzterTag
+		else If RegExMatch(Periode, "^\s*(?<1>\d{1,2}.\d{1,2}.\d{2,4})[,\s\-]+(?<2>\d{1,2}.\d{1,2}.\d{2,4})", Tag) {
+				Quartal.ErsterTag 	:= Tag1
+				Quartal.LetzterTag	:= Tag2
+				ErsterTag 	:= Tag1
+				LetzterTag	:= Tag2
 		}
 		else	{
-				throw A_ThisFunc " (" A_LineFile ") : Error in function call, a date must be passed in the following format`n - dd.mm.yyyy[-/,]dd.mm.yyyy or qq[// ]yy"
-				return 1
+			throw A_ThisFunc " (" A_LineFile ") : Error in function call, a date must be passed in the following format`n - dd.mm.yyyy[ -|,]dd.mm.yyyy or qq[// ]yy"
+			return 1
 		}
 
 	; FELDER VON UND BIS MIT DEN JEWEILS ÜBERGEBEN DATEN FÜLLEN
-		If !Controls("Edit1", "SetText " Quartal.ErsterTag, hTprotWin)
-			PraxTT("Das Anfangsdatum (von) konnte nicht gesetzt werden.", "6 3"), return 1
-		If !Controls("Edit2", "SetText " Quartal.LetzterTag, hTprotWin)
-			PraxTT("Das Enddatum (bis) konnte nicht gesetzt werden.", "6 3"), return 1
+		If !Controls("Edit1", "SetText," ErsterTag, hTprotWin) {
+			PraxTT("Das Anfangsdatum (von) konnte nicht gesetzt werden.", "6 3")
+			return 1
+		}
+		If !Controls("Edit2", "SetText," LetzterTag, hTprotWin) {
+			PraxTT("Das Enddatum (bis) konnte nicht gesetzt werden.", "6 3")
+			return 1
+		}
+
+	; EINSTELLUNGEN ÄNDERN AUS OPTIONS
+		If IsObject(Options) {
+
+			optKuerzel := Options["Kürzel"]
+			If (optKuerzel = "Alle")
+				VerifiedClick("Button4", hTprotWin)
+			else {
+				VerifiedClick("Button5", hTprotWin)
+				If !VerifiedChoose("ComboBox1", hProtWin, optKuerzel) {
+					PraxTT("Fehler bei der Kürzelauswahl", "1 3")
+					return -3
+				}
+			}
+
+			optPat := Options["Patienten"]
+			Switch optPat 			{
+
+				Case "Alle":
+					If !VerifiedClick("Button9", hTprotWin)
+						return -4
+
+				Case "Mit_Einträgen":
+					If !VerifiedClick("Button10", hTprotWin)
+						return -5
+
+				Case "aktiver_Patient":
+					If !VerifiedClick("Button11", hTprotWin)
+						return -6
+			}
+
+		; CAVE nicht mitdrucken
+			If (!Options.Cave)
+				VerifiedCheck("Button26", hTprotWin,,, false)
+
+		}
 
 	; EINEN MAUSCLICK AN DEN 'OK' BUTTON DES FENSTER SENDEN
 		If !Controls("", "ControlClick, OK, Button", hTprotWin)
 			Controls("Button31", "Click use ControlClick", hTprotWin)
 		WinWait, % "Bitte warten... ahk_class #32770",, 10
-		If ErrorLevel && WinExist("Tagesprotokoll") {
-				PraxTT("Der ausgelöste Click auf den 'OK' Button`nim Tagesprotokoll-Dialog ist fehlgeschlagen.`nEs wurde als letztes ein simulierter Mausklick versucht.", "6 3")
-				WinClose, Tagesprotokoll ahk_class #32770
-				return 1
-		} else if ErrorLevel && !WinExist("Tagesprotokoll") {
-				PraxTT("Es ist ein unbekannter Fehler aufgetreten,`nwelcher die Erstellung des Tagesprotokoll verhindert hat.", "6 3")
-				return 1
+		If ErrorLevel && WinExist(TPWin) {
+			PraxTT("Der ausgelöste Click auf den 'OK' Button`nim Tagesprotokoll-Dialog ist fehlgeschlagen.`nEs wurde als letztes ein simulierter Mausklick versucht.", "1 3")
+			WinClose, % TPWin
+			return 1
+		} else if ErrorLevel && !WinExist(TPWin) {
+			PraxTT("Es ist ein unbekannter Fehler aufgetreten,`nwelcher die Erstellung des Tagesprotokoll verhindert hat.", "1 3")
+			return 1
 		}
 
 	; DATEN ZUM TAGESPROTOKOLLFENSTER IN Controls LEEREN
@@ -4671,7 +5103,7 @@ AlbisErstelleTagesprotokoll(Periode:="", SaveFolder:="", CloseProtokoll:=1)     
 
 	; AUF DAS FERTIG ERSTELLTE TAGESPROTOKOLL WARTEN
 		bitteWarten:= false
-		PraxTT("Warte auf das vollständig erstellte Tagesprotokoll!", "0 3")
+		PraxTT("Warte auf das vollständig erstellte Tagesprotokoll!", "1 3")
 		while !WinExist("ALBIS - [Tagesprotokoll") {
 				Sleep, 500
 			; läßt den Loop pausieren
@@ -4680,7 +5112,7 @@ AlbisErstelleTagesprotokoll(Periode:="", SaveFolder:="", CloseProtokoll:=1)     
 					If InStr(wText, "Tagesprotokoll") {
 							bitteWarten := true
 							BWin	:= GetWindowSpot(hBWin)
-							TPWin	:= GetWindowSpot(WinExist("Tagesprotokoll ahk_class #32770"))
+							TPWin	:= GetWindowSpot(WinExist(TPWin))
 							SetWindowPos(hBwin, TPWin.X + Floor(TPWin.W//2) - Floor(BWin.W//2), TPWin.Y + TPWin.H + 5, BWin.W, BWin.H)
 							WinSet, ExStyle, +0x8, % "ahk_id " hBWin	;+ WS_EX_TOPMOST
 							WinWaitClose, % "Bitte warten... ahk_class #32770"
@@ -4691,6 +5123,8 @@ AlbisErstelleTagesprotokoll(Periode:="", SaveFolder:="", CloseProtokoll:=1)     
 
 	; SPEICHERN DES ANGEZEIGTEN TAGESPROTOKOLL AUF FESTPLATTE
 		If SaveFolder		{
+
+				Controls("","Reset", "")
 
 			; Tastatur- und Mauseingriffe durch den Nutzer kurzzeitig sperren
 				hk(1, 0, "!ACHTUNG!`n`nDie Tastatureingaben sind für maximal 10 Sekunden gesperrt", 10)
@@ -4703,29 +5137,30 @@ AlbisErstelleTagesprotokoll(Periode:="", SaveFolder:="", CloseProtokoll:=1)     
 					return 1
 				}
 
-			; ermitteln ob ein Tagesprotokoll mit selben Datumsangaben schon einmal erstellt wurde
-				If FileExist(SaveFolder "\" Quartal.LetztesJahr "(" SubStr(Quartal.ErsterTag, 1, 6) "-" SubStr(Quartal.LetzterTag, 1, 6) ".txt")
-					tprotFileExists:=1
-
 			; Dateinamen erstellen
-				If StrLen(Quartal.aktuell) = 0
-					ProtokollFileName:= SaveFolder "\" Quartal.ErsterTag "-" Quartal.LetzterTag ".txt"
+				If !IsObject(Options) {
+					If (StrLen(Quartal.aktuell) = 0)
+						ProtokollFileName := SaveFolder "\" Quartal.ErsterTag "-" Quartal.LetzterTag ".txt"
+					else
+						ProtokollFileName := SaveFolder "\" Quartal.Jahr "-" QNr ".txt"
+				}
 				else
-					ProtokollFileName:= SaveFolder "\" Quartal.Jahr "-" QNr ".txt"
+					ProtokollFileName := SaveFolder "\" Options.filename ".txt"
+
 
 			; Ordner und Dateinamen im Speichern unter Dialog eintragen
 				If FileExist(ProtokollFileName)
-						FileDelete, % ProtokollFileName
+					FileDelete, % ProtokollFileName
 
-				Controls("Edit1", "SetText, " ProtokollFileName, hSaveAsWin)
+				Controls("Edit1", "SetText," ProtokollFileName, hSaveAsWin)
 
 			; Speichern unter drücken
 				Controls("Button2", "Click use Controlclick", hSaveAsWin)
 				sleep 200
 
 			; Warten auf einen eventuellen "Speichern unter bestätigen" - Dialog
-				PraxTT("Warte 5 Sekunden auf einen möglichen Speichern unter... Dialog!", "0 5")
-				WinWait, % "Speichern unter bestätigen ahk_class #32770",, 5
+				PraxTT("Warte bis zu 10 Sekunden auf einen möglichen Speichern unter... Dialog!", "0 10")
+				WinWait, % "Speichern unter bestätigen ahk_class #32770",, 10
 				If !ErrorLevel
 					Controls("Button1", "Click use ControlClick", "Speichern unter bestätigen ahk_class #32770")
 
@@ -4737,48 +5172,16 @@ AlbisErstelleTagesprotokoll(Periode:="", SaveFolder:="", CloseProtokoll:=1)     
 		If CloseProtokoll
 			AlbisCloseMDITab("Tagesprotokoll")
 
-	PraxTT("Das Tagesprotokoll wurde erstellt und ist gespeichert!", "6 3")
+		PraxTT("Das Tagesprotokoll wurde erstellt und gespeichert!", "6 3")
 
 return ProtokollFileName		; ein vollständiger Dateipfad als Rückgabe = erfolgreicher Funktionsablauf
 }
-QuartalTage(Quartal) {
-
-	If !IsObject(Quartal)	{
-		throw Exception(A_ThisFunc " (" A_LineFile ") : Error in function call, parameter of function must be an object!")
-		return 1
-	}
-
-	Quartal.Quartal    	:= SubStr(Quartal.aktuell, 1, 2)
-	Quartal.Jahr	         	:= SubStr(Quartal.aktuell, 3, 2)
-
-	Quartal.Jahr          	:= Quartal.Jahr > SubStr(A_YYYY, 3, 2) ? ("19" Quartal.Jahr) : ("20" Quartal.Jahr)
-	Quartal.ErsterMonat	:= (Quartal.Quartal - 1) * 3 + 1
-	Quartal.LetzterMonat	:= SubStr("0" . Quartal.ErsterMonat + 2, -1)
-	Quartal.ErsterTag	   	:= "01." SubStr("0" . Quartal.ErsterMonat, -1) "." Quartal.Jahr
-	Quartal.LetzterTag    	:= days_in_month(Quartal.Jahr Quartal.LetzterMonat) "." Quartal.LetzterMonat "." Quartal.Jahr
-
-return Quartal
-}
-days_in_month(date:="") {
-    date := (date = "") ? (a_now) : (date)
-    FormatTime, year,  % date, yyyy
-    FormatTime, month, % date, MM
-    month += 1                 ; goto next month
-    if (month > 12)
-        year += 1, month := 1  ; goto next year, reset month
-    month := (month < 10) ? (0 . month) : (month)  ; 0 to 01
-    new_date := year . month
-    new_date += -1, days       ; minus 1 day
-    return subStr(new_date, 7, 2)
-}
-;} end sub AlbisTagesprotokollErstellen
 ; 02
-AlbisErstelleZiffernStatistik(Quartal:="aktuell", Zeitraum:="", Tag:=""                	;--	Erstellen von Ziffernstatistiken
-, Arztwahl:="", SaveToFile:="", CloseStatistik:=true) {
+AlbisErstelleZiffernStatistik(Quartal="aktuell",Zeitraum="",Tag="",Arztwahl="",SaveToFile="",CloseStatistik:=true) {	;-- Erstellen von Ziffernstatistiken
 
 	; Menu Statistik\Leistungsstatistik\EBM2000Plus\2009Ziffernstatistik
 	; ACHTUNG: Funktion kommuniziert mit Addendum.ahk - das Skript sollte vorher aufgerufen sein
-	; Arztwahl wird folgend funktionieren. Übergabe eines String mit "BSNR 123456678" oder "Arzt Dr.Mustergültig" oder "Person Dr.Kontrolle" zur Auswahl der Arztwahlfelder
+	; Parameter Arztwahl: String in der Form "BSNR 123456678" oder "Arzt Dr.Mustergültig" oder "Person Dr.Kontrolle" zur Auswahl der Arztwahlfelder
 
 		static WM_MDIMAXIMIZE:= 0x0225
 
@@ -4787,15 +5190,13 @@ AlbisErstelleZiffernStatistik(Quartal:="aktuell", Zeitraum:="", Tag:=""         
 
 	; kein Überprüfen des erfolgreichen Dialogaufrufes über die AlbisMenu() Funktion, da der User als Administrator eingeloggt sein muss
 		If !WinExist("Ziffernstatistik ahk_class #32770")
-			hZfStat:= Albismenu(34293)			;EBM 2000plus/2009 Ziffernstatistik = 34293
+			hZfStat:= Albismenu(34293)		                                    	;EBM 2000plus/2009 Ziffernstatistik = 34293
 
-	; prüft ob als Administrator eingeloggt wurde, sonst kann keine Ziffernstatistik erstellt werden, wenn ja wird der der Dialog aufgerufen ;{
-		Loop
-		{
-				If WinExist("Ziffernstatistik ahk_class #32770")
-					break
-				else if WinExist("ALBIS ahk_class #32770", "Zugang verweigert")
-				{
+	; prüft ob als Administrator eingeloggt wurde, sonst kann keine Ziffernstatistik erstellt werden, wenn ja wird der der Dialog aufgerufen
+		Loop		{
+			If WinExist("Ziffernstatistik ahk_class #32770")
+				break
+			else if WinExist("ALBIS ahk_class #32770", "Zugang verweigert")	{
 						MsgBox, 4, % "Abrechnungshelfer",
 						(LTrim
 						Um eine Ziffernstatistik zu erstellen müssen Sie sich
@@ -4808,53 +5209,48 @@ AlbisErstelleZiffernStatistik(Quartal:="aktuell", Zeitraum:="", Tag:=""         
 						IfMsgBox, Yes
 						{
 							;- Skriptkommunikation -0x555 - für Kommunikation mit Addendum.ahk, Befehl|Name des abfragenden Skriptes, Name des empfangenen Skriptes
-								If AddendumID := GetAddendumID()
-								{
-										MessageReceived := ""
-										OnMessage(0x4a, "Receive_WM_COPYDATA")
-										Send_WM_COPYDATA("AutoLogin Off|" A_ScriptHwnd, AddendumID)
-										while !InStr(MessageReceived, "AutoLogin disabled")
-											Sleep, 100
-										PraxTT("AutoLogin ist ausgestellt.", "3 1")
-										MessageReceived := ""
+								If (AddendumID := GetAddendumID())	{
+									MessageReceived := ""
+									OnMessage(0x4a, "Receive_WM_COPYDATA")
+									Send_WM_COPYDATA("AutoLogin Off|" A_ScriptHwnd, AddendumID)
+									while !InStr(MessageReceived, "AutoLogin disabled")
+										Sleep, 100
+									PraxTT("AutoLogin ist ausgestellt.", "3 1")
+									MessageReceived := ""
 								}
 
 							; Ausloggen und warten auf den erneuten Login
 								AlbisLogout()
 
 								PraxTT("Warte auf den Abschluß des Login-Vorganges.`nSie können an dieser Stelle die weitere`nSkriptausführung mit >>Escape<< abbrechen.", "0 3")
-								while, WinExist("ALBIS - Login ahk_class #32770")
-								{
-										If GetKeyState("Escape")
-										{
-												M5UserBreak:= true
-												break
-										}
-										Sleep, 50
+								while, WinExist("ALBIS - Login ahk_class #32770") 	{
+									If GetKeyState("Escape")	{
+										M5UserBreak:= true
+										break
+									}
+									Sleep, 50
 								}
 
 								PraxTT("", "Off")
 
 							; AutoLogin wieder einschalten
-								If AddendumID := GetAddendumID()
-								{
-										Send_WM_COPYDATA("AutoLogin On|" A_ScriptHwnd, AddendumID)
-										while !InStr(MessageReceived, "AutoLogin enabled")
-											Sleep, 100
-										PraxTT("AutoLogin ist wieder aktiviert.", "3 1")
-										MessageReceived := ""
+								If (AddendumID := GetAddendumID())	{
+									Send_WM_COPYDATA("AutoLogin On|" A_ScriptHwnd, AddendumID)
+									while !InStr(MessageReceived, "AutoLogin enabled")
+										Sleep, 100
+									PraxTT("AutoLogin ist wieder aktiviert.", "3 1")
+									MessageReceived := ""
 								}
 
 							; Selbstaufruf der Funktion für den Neustart
 								AlbisErstelleZiffernStatistik(Quartal, Zeitraum, Tag)
 						}
 				}
-				else If WinExist("ALBIS ahk_class #32770", "Fehler beim Aufruf dppivassist")
-					VerifiedClick("Button1","ALBIS ahk_class #32770", "Fehler beim Aufruf dppivassist")
+			else If WinExist("ALBIS ahk_class #32770", "Fehler beim Aufruf dppivassist")
+				VerifiedClick("Button1","ALBIS ahk_class #32770", "Fehler beim Aufruf dppivassist")
 
-				Sleep, 100
+			Sleep, 100
 		}
-		;}
 
 	; Abbruch wenn das Dialogfenster nicht geöffnet werden könnte
 		If !WinExist("Ziffernstatistik ahk_class #32770") {
@@ -4864,15 +5260,13 @@ AlbisErstelleZiffernStatistik(Quartal:="aktuell", Zeitraum:="", Tag:=""         
 
 	; Daten werden jetzt in die Steuerelemente des Dialogfensters eingetragen
 		PraxTT("Ich starte jetzt mit der Erstellung der Ziffernstatistik", "3 1")
-
 		VerifiedClick("Button1", "Ziffernstatistik ahk_class #32770") ; Quartal
+		If (StrLen(Zeitraum) > 0)	                                	{
 
-		If (StrLen(Zeitraum) > 0)
-		{
 				RegExMatch(Zeitraum, "(?<von>[\d\.]+)\s*,\s*(?<bis>[\d\.]+)", Datum)
-				If !RegExMatch(DatumVon, "\d\d\.\d\d\.\d\d\d\d") || !RegExMatch(DatumBis, "\d\d\.\d\d\.\d\d\d\d") {
-						throw Exception("Datumsformat(TT.MM.JJJJ) wurde nicht eingehalten <" Zeitraum ">")
-						return 0
+				If !RegExMatch(DatumVon, "\d{2}\.\d{2}\.\d{4}") || !RegExMatch(DatumBis, "\d{2}\.\d{2}\.\d{4}") {
+					throw Exception("Datumsformat(TT.MM.JJJJ) wurde nicht eingehalten <" Zeitraum ">")
+					return 0
 				}
 
 				Erstellungszeitraum := "den Zeitraum " DatumVon " bis zum " DatumBis
@@ -4881,8 +5275,7 @@ AlbisErstelleZiffernStatistik(Quartal:="aktuell", Zeitraum:="", Tag:=""         
 				VerifiedSetText("Edit1", DatumVon, "Ziffernstatistik ahk_class #32770")
 				VerifiedSetText("Edit2", DatumBis, "Ziffernstatistik ahk_class #32770")
 		}
-		else If (StrLen(Tag) > 0)
-		{
+		else If (StrLen(Tag) > 0)                                 		{
 				If !RegExMatch(Tag, "\d\d\.\d\d\.\d\d\d\d") {
 						throw Exception("Datumsformat(TT.MM.JJJJ) wurde nicht eingehalten <" Tag ">")
 						return 0
@@ -4893,52 +5286,44 @@ AlbisErstelleZiffernStatistik(Quartal:="aktuell", Zeitraum:="", Tag:=""         
 				VerifiedClick("Button3", "Ziffernstatistik ahk_class #32770") ; Tag
 				VerifiedSetText("Edit3", Tag, "Ziffernstatistik ahk_class #32770")
 		}
-		else If !RegExMatch(Quartal, "^\s*aktuell\s*$")
-		{
-
-				If !RegExMatch(Quartal, "\d\/\d\d") {
-						throw Exception("Quartalsformat(Q/JJ) wurde nicht eingehalten <" Quartal ">")
-						return 0
-				}
-
-				Erstellungszeitraum := "das Quartal <" Quartal ">"
-
-				Control, ChooseString, % Quartal, ComboBox1, Ziffernstatistik ahk_class #32770
+		else If !RegExMatch(Quartal, "^\s*aktuell\s*$")		{
+			If !RegExMatch(Quartal, "\d\/\d\d") {
+				throw Exception("Quartalsformat(Q/JJ) wurde nicht eingehalten <" Quartal ">")
+				return 0
+			}
+			Erstellungszeitraum := "das Quartal <" Quartal ">"
+			Control, ChooseString, % Quartal, ComboBox1, Ziffernstatistik ahk_class #32770
 		}
 
 		VerifiedClick("Button22", "Ziffernstatistik ahk_class #32770")	; %Durchschnitt
 		VerifiedClick("Button24", "Ziffernstatistik ahk_class #32770")	; Optionen berücksichtigen
 		VerifiedClick("Button23", "Ziffernstatistik ahk_class #32770")	; FG Vergleich
 		VerifiedClick("Button25", "Ziffernstatistik ahk_class #32770")	; Leistungstexte zeigen
-		; den Button für Optionen und Einstellungen dort habe ich noch nie genutzt
+		; den Button für Optionen und Einstellungen habe ich noch nie genutzt
 
 	; drückt den Button Ok um die Statistik zu erstellen
 		VerifiedClick("Button26", "Ziffernstatistik ahk_class #32770")	 ; OK
 
 	; wartet bis die Erstellung abgeschlossen ist
-		while !AlbisGetSpecificHMDI("Ziffernstatistik")
-		{
-				If hwnd:= WinExist("ahk_class #32770", "Scheine einlesen")
-					WinSetTitle, % "ahk_id " hwnd,, % "Ziffernstatistik für " Erstellungszeitraum " wird erstellt (" A_Index "s)"
-				Sleep, 1000
+		while !AlbisGetSpecificHMDI("Ziffernstatistik")		{
+			If (hwnd:= WinExist("ahk_class #32770", "Scheine einlesen"))
+				WinSetTitle, % "ahk_id " hwnd,, % "Ziffernstatistik für " Erstellungszeitraum " wird erstellt (" A_Index "s)"
+			Sleep, 1000
 		}
 
 	; wenn abgeschlossen, dann wird das Statistikfenster innerhalb des Albisfenster maximiert
 		AlbisActivate(1)
+		If (hStatistikWin:= AlbisGetSpecificHMDI("Ziffernstatistik"))
+			If !AlbisGetMDIMaxStatus(hStatistikWin)                                                                                       	; MDI Fenster ist nicht vergrößert dann maximieren
+				PostMessage, % WM_MDIMAXIMIZE, % hStatistikWin,,, % "ahk_id " AlbisGetMDIClientHandle()
 
-		If hStatistikWin:= AlbisGetSpecificHMDI("Ziffernstatistik") {
-			If !AlbisGetMDIMaxStatus(hStatistikWin) ; MDI Fenster ist nicht vergrößert dann maximieren
-					PostMessage, % WM_MDIMAXIMIZE, % hStatistikWin,,, % "ahk_id " AlbisGetMDIClientHandle()
-		}
 
 	; kurze Pause damit Windows wieder reagieren kann
 		sleep 1000
 
 	; wenn angegeben wird das erstellte Protokoll gespeichert
 		If (StrLen(SaveToFile) > 0)
-		{
-				savedAs:= AlbisDateiSpeichern(SaveToFile, true)
-		}
+			savedAs:= AlbisDateiSpeichern(SaveToFile, true)
 
 	; wenn CloseStatistik = true wird das Statistikfenster geschlossen
 		If CloseStatistik
@@ -4951,7 +5336,7 @@ AlbisErstelleZiffernStatistik(Quartal:="aktuell", Zeitraum:="", Tag:=""         
 return 1 	; ansonsten wird nur eine 1 zurückgegeben
 }
 ; 03
-AlbisListeSpeichern(ListTitle, FilePath, ext:= "csv", overwrite:= true) {	            	;--	speichert eine in Albis geöffnete Liste in ein gewünschtes Verzeichnis
+AlbisListeSpeichern(ListTitle, FilePath, ext:= "csv", overwrite:= true) {	                                                                  	;--	Albislisten speichern
 
 	; Parameter:
 	; 	ListTitle      	- sollte der Titel einer in Albis geöffneten Liste sein, z.B. offene Posten. Achtung: Der Listentitel wird als Dateiname weiterverwendet!
@@ -5129,8 +5514,7 @@ return
 AlbisBehandlungsliste(Options:="") {                                                                                          	;-- Privat/Behandlungsliste anzeigen
 
 	; Dialog Behandlungsliste aufrufen
-		AMenu := Addendum.AlbisMenu.Privatliquidation["Behandlungsliste"]
-		hBhlg := Albismenu(AMenu, ["Behandlungsliste ahk_class #32770", "", "ALBIS ahk_class #32770", "Zugang verweigert"])
+		hBhlg := Albismenu(32891, ["Behandlungsliste ahk_class #32770", "", "ALBIS ahk_class #32770", "Zugang verweigert"])
 		If IsObject(hBhlg) {
 			MsgBox, 1, Addendum für Albis on Windows, % "Sie haben nicht die Berechtigung`ndie Behandlungsliste anzuzeigen!", 6
 			VerifiedClick("Button1", "ALBIS ahk_class #32770", "Zugang verweigert")
@@ -5313,22 +5697,17 @@ AlbisNeuStart(CompName, User, Pass, CallingProcess, Auto=0) {                   
 	;}
 
 	;{ 3. Albis Start- und Verifizierungsprozeduren, a. Albis starten wenn nicht vorhanden, b. Prüfen ob Login notwendig, wenn ja dann einloggen, c. Öffnen des Wartezimmerfenster, 4. Maximieren des Wartezimmerfensters
-	If InStr(Result, "Ja")
-	{
-            user_result :=1
+	If InStr(Result, "Ja") 	{
+		user_result :=1
 
 		;{a ------------- falls Albis nicht gestartet ist, dann wird es jetzt gestartet
-            If !AlbisWinID()
-			{
+            If !AlbisWinID()			{
 					Msgbox,1, Addendum für ALBIS - %CallingProcess%, Albis muss gestartet sein`nDamit dieses Skript verwendet werden kann!, 10
 					Run, %AlbisExeDir%\%AlbisExe%, %AlbisWorkDir%, UserErrorLevel, AlbisPID
 					If ErrorLevel
-					{
-                            MonitorScreenShot(1, "Function AlbisNeuStart", AddendumDir . "\logs'n'data\ErrorLogs")
-                            FileAppend, % TimeCode(1) "Function:  AlbisNeuStart ErrorLevel: " ErrorLevel "|Error: " A_LastError "|AlbisPID: " AlbisPID "`n", %AddendumDir%\logs'n'data\ErrorLogs\Errorbox.txt, UTF-8
-					}
+						FileAppend, % TimeCode(1) "Function:  AlbisNeuStart ErrorLevel: " ErrorLevel "|Error: " A_LastError "|AlbisPID: " AlbisPID "`n", %AddendumDir%\logs'n'data\ErrorLogs\Errorbox.txt, UTF-8
 					else
-                            newrun := 1
+						newrun := 1
             }
 		;}
 
@@ -5618,29 +5997,23 @@ MMOVE_CVTT() {                                                                  
 ;04
 AlbisHotKeyHilfe(AddendumHelp:="", PraxomatHelp:="") {                                       	;-- blendet die aktuellen zusätzlichen Hotkeys in der Albisstatusbar ein
 
-	static AlbisKeyHelp_old
+	; letzte Änderung: 07.02.2021
 
-	If WinActive("ahk_class OptoAppClass")	{
+	static AlbisStatusbarClass := "Afx:00400000:0:00010003:00000010:000000001"
 
-			If PraxomatHelp	{
+	If !WinActive("ahk_class OptoAppClass")
+		return
 
-					ControlGetText, AlbisKeyHelp, Afx:00400000:0:00010003:00000010:000000001
-					If !Instr(AlbisKeyHelp, PraxomatHelp)
-						ControlSetText, Afx:00400000:0:00010003:00000010:000000001, % AlbisKeyHelp "  " PraxomatHelp
+	ControlGetText, AlbisKeyHelp, % AlbisStatusbarClass
 
-			}  else if AddendumHelp {
-
-					ControlGetText, AlbisKeyHelp, Afx:00400000:0:00010003:00000010:000000001
-					If !InStr(AlbisKeyHelp, AddendumHelp)
-						ControlSetText, Afx:00400000:0:00010003:00000010:000000001, % AlbisKeyHelp "  " AddendumHelp
-
-			}
-
-	}
+	If PraxomatHelp && !Instr(AlbisKeyHelp, PraxomatHelp)
+		ControlSetText, % AlbisStatusbarClass, % AlbisKeyHelp "  " PraxomatHelp
+	else if AddendumHelp && !InStr(AlbisKeyHelp, AddendumHelp)
+		ControlSetText, % AlbisStatusbarClass, % AlbisKeyHelp "  " AddendumHelp
 
 }
 ;05
-AlbisIsBlocked(AlbisWinID, autoclose:=2) {	                                                            	;-- befreit Albis von blockierenden Fenstern
+AlbisIsBlocked(AlbisWinID, autoclose:=2) {	                                                           	;-- befreit Albis von blockierenden Fenstern
 
 	; stellt fest ob Albis durch ein ChildWindow blockiert ist und wie dieses heißt, kann dieses auch sofort schließen, autoclose ist default
 
@@ -5732,50 +6105,52 @@ AlbisCloseLastActivePopups(AlbisWinID) {                                        
 
 	;diese Funktion wird benötigt wenn ein Skript
 
-	If !WinIsBlocked(AlbisWinID:= AlbisWinID())
+	If !WinIsBlocked(AlbisWinID := AlbisWinID())
 		return
 
-	Loop
-	{
-			phwnd:= GetHex(DLLCall("GetLastActivePopup", "uint", AlbisWinID()))
+	Loop	{
+
+		; mehr als 10 zu schließende Dialoge gibt es nicht (Sicherheits return , damit die Schleife irgendwann verlassen wird)
+			If (A_Index > 9)
+				return 2         	; 2 = Problem beim Schliessen
 
 		; ist fertig wenn Popup handle und Albis handle identisch sind
+			phwnd := GetHex(DLLCall("GetLastActivePopup", "uint", AlbisWinID()))
 			If (pHwnd = AlbisWinID())
 					return 1
 
 		;3 verschiedene Versuche das Fenster zu schließen von "sanft" bis "kraftvoll"
 			SendMessage, 0x112, 0xF060,,, % "ahk_id " phwnd  ; 0x112 = WM_SYSCOMMAND, 0xF060 = SC_CLOSE
-			ELevel:= ErrorLevel
+			ELevel := ErrorLevel
 
 		; schießt manchmal versehentlich über das Ziel hinaus und will Albis schließen, der "Hiermit beenden Sie Albis" Dialog wird erkannt und
 		; wieder geschlossen, die Schleife beendet
-			If WinExist("ALBIS", "Hiermit beenden Sie Albis")
-			{
-					VerifiedClick("Button2", "ALBIS", "Hiermit beenden Sie Albis")
-					return 1
+			If WinExist("ALBIS", "Hiermit beenden Sie Albis")			{
+				VerifiedClick("Button2", "ALBIS", "Hiermit beenden Sie Albis")
+				return 1
 			}
 
 		; so neuer Versuch
-			If ELevel
-			{
-					WinClose, % "ahk_id " phwnd
-					If ErrorLevel
-					{
-                            WinKill, % "ahk_id " phwnd
-                            If ErrorLevel
-                            {
-                            	WinGetTitle, ltitle, ahk_id %pHwnd%
-                            	throw Exception("Can not close entire window : '" . ltitle . "' `n. The function AlbisCloseLastActivePopups stops here.", -1)
-                            	return "Das Schließen geöffneter Dialoge war nicht möglich!"
-                            }
+			If ELevel {
+
+				WinClose, % "ahk_id " phwnd
+				If ErrorLevel	{
+					WinKill, % "ahk_id " phwnd
+					If ErrorLevel {
+						WinGetTitle, ltitle, % "ahk_id " pHwnd
+                        throw Exception("Can not close entire window : '" ltitle  "'`n. The function AlbisCloseLastActivePopups stops here.", -1)
+                        return "Das Schließen geöffneter Dialoge war nicht möglich!"
 					}
+				}
+
 			}
 
-			sleep 200
 
-		; mehr als 10 zu schließende Dialoge gibt es nicht (Sicherheits return , damit die Schleife irgendwann verlassen wird)
-			If A_Index = 10
-				return 2   ; 2 = Problem beim Schliessen
+		; alle Popupfenster sind geschlossen, dann zurück
+			If (AlbisWinID() = GetHex(DLLCall("GetLastActivePopup", "uint", AlbisWinID())))
+				return 1
+
+			sleep 200
 	}
 
 return 1
@@ -5855,6 +6230,7 @@ AlbisCopyCut() {                                                                
 
 		static AlbisCText_old
 
+
 		while (AlbisCText = "") 	{
 
 				ControlGetFocus, CFocus, % "ahk_class OptoAppClass"
@@ -5915,82 +6291,39 @@ AlbisSelectAll() {                                                              
 ;14
 CheckAISConnector() {                                                                                				;-- sieht nach ob der AIS Connector (Laborverbindungsprogramm) läuft und startet es bei Bedarf neu
 
-	ListLines, Off
 	; durch Verwendung von A_Username müsste diese Funktion auf allen Computern unter allen Benutzernamen funktionieren
 
 	for Prozess in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")
-	   prozesse.= Prozess.Name . " "
-
-	Sort, prozesse, U
+	   prozesse .= Prozess.Name "|"
 
 	If !Instr(prozesse, "AISConnector") {
 
-		ErrorBox("Der AIS Connector ist nicht mehr verfügbar und wird neu gestartet!", "", 0)
-		TrayTip, Hinweis!, Der AIS Connector ist`nnicht mehr verfügbar`nund wird neu gestartet!, 6
-			sleep, 6000
-		run C:\Users\%A_UserName%\Desktop\AIS Connector.appref-ms
-		If ErrorLevel
-			ErrorBox("Der AIS Connector ließ sich nicht starten!", "", 0)
-			TrayTip, Fehler!, Der AIS Connector `nließ sich nicht starten!`nVersuche es später nocheinmal!, 6
-				sleep, 6000
+		TrayTip, % "Hinweis!", % "Der AIS Connector ist`nnicht mehr verfügbar`nund wird neu gestartet!", 4
+		run, % "C:\Users\" A_UserName "\Desktop\AIS Connector.appref-ms"
+		If ErrorLevel {
+			TrayTip, Fehler!, % "Der AIS Connector `nließ sich nicht starten!`nVersuche es später nocheinmal!", 4
+			return 0
+		}
+		else
+			return 1
 	}
 
-
+return 1
 }
-
+;15
 ;}
-;----------------------------------------------------- Unterfunktionen der Albisfunktionen (kein manipulativer Zugriff auf die Albisoberfäche!) -------------------------------------------------------
-; GetQuartal                                    	WMIEnumProcesses                    	WMIEnumProcessID                    	WMIEnumProcessExist                	ExtractFromString						114
-; --WartezeitInfo--                            	--CheckAlbisHealth--                 	ExtractNamesFromString            	SleepOnRdPSession
+;------------------------------------------------------------------------ Hilfsfunktionen für die Albisfunktionen ----------------------------------------------------------------------------------------------
+; (01) WMIEnumProcessExist            	(02) ExtractNamesFromString     	(03) FormatedFileCreationTime	    	(04) ObjFindValue			        	(05) hk                                	      (5)
+; (06) isActiveFocus
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~;{
 ;1
-GetQuartal(Datum, Format:="") {                                                                           	;--zum Errechnen zu welchem Quartal das übergeben Datum gehört
-
-	; Funktionsbeschreibung:
-	; Datum im folgenden Format ist erlaubt: 13.02.2017 oder 13.2.17 - in dieser Form der Übergabe müssen die Punkte im Übergabestring vorhanden sein
-	; 14.5.2018: absofort ist die Übergabe des Begriffs heute möglich, es wird damit das aktuelle Quartal berechnet
-	; Format ist ein Trennzeichen zwischen Quartal und Jahr z.B. Format="`/" dann wäre die Ausgabe so z.B. 01/18 , Format kann jedes beliebige Zeichen oder mehrere enthalten
-
-	If InStr(Datum, "heute") {
-		Monat	:= A_MM
-		Jahr		:= SubStr(A_Year, 3, 2) ;die letzten zwei Zeichen
-	} else {
-		split		:= StrSplit(Datum, "`.")
-		Monat	:= split[2]
-		Jahr		:= Substr(split[3], StrLen(split3) - 1, 2)
-	}
-
-	;MsgBox, % Monat ", " Jahr "`n" SubStr("0" . Ceil(Monat/3), -1) . Format . Jahr
-return SubStr("0" . Ceil(Monat/3), -1) . Format . Jahr
-}
-;2
-WMIEnumProcesses() {                                                                                          	;--returns process list
-	;==== ein deutlich besserer Ersatz für Process, Exist nur 32bit ======
-	;funktioniert zuverlässiger, in der Original Library waren zudem Fehler bei den ID Bezeichnungen
-	; gibt eine Liste existierender Prozesse samt PID zurück, die Liste muss nachfolgend ausgewertet werden
-
-	for process in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")
-        list .= process.ProcessID . "|" . process.Name . "`n"
-
-    return list
-}
-;3
-WMIEnumProcessID(ProcessSearched) {
-
-	ProcList:= Object()
-	for process in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")
-		   ProcList[process.Name]:= process.ProcessID
-
-	return ProcList.ProcessSearched
-}
-;4
 WMIEnumProcessExist(ProcessSearched) {                                                            		;-- logische Funktion zur Suche ob ein bestimmter Prozeß existiert
 
     ;Funktion gibt nur 0 - für nicht vorhanden und 1 für vorhanden aus (als schnell Variante gedacht)
 	;zudem ist der Funktion die exakte Schreibweise des Prozeß egal (GROSS/klein oder nur ein Teil davon)
 
 	for process in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")
-		   liste .= process.Name . "`n"
+	   liste .= process.Name "`n"
 
 	Sort, liste, U
 
@@ -6000,52 +6333,156 @@ WMIEnumProcessExist(ProcessSearched) {                                          
 
 	return 0
 }
-;6
-WartezeitInfo(command) {                                                                                    		;-- können Ausgaben von Funktionen unter den Skripten gemeinsam genutzt werden?
-
-
-
-}
-;7
-CheckAlbisHealth() {                                                                                                	;-- eine Funktion die helfen soll durch Albis ausgelöste Verzögerungen zu erkennen, die nicht im Zusammenhang mit einem Programmabsturz stehen
-
-
-}
-;8
+;2
 ExtractNamesFromString(Str) {                                                                        			;-- die Namen müssen die ersten zwei Worte im String sein
 
-	Name:=[]
-	;diese Funktion basiert auf der manuellen Erstellung des Dateinamens während des Scanvorganges, es ist sehr kompliziert dem Computer die Erkennung von Eigennamen beizubringen
+	; im Parameter Str muss Wort1 und Wort2 den Patientennamen enthalten
+
+	Name := Array()
 
 	;Ermitteln des Patientennamen aus dem PDF-Dateinamen
-	Pat:= StrReplace(Str, "`,", A_Space)
+	Pat := StrReplace(Str, ",", " ")
 	;zuviele Space Zeichen hintereinander machen Probleme
-	Pat:= StrReplace(Pat, A_Space . A_Space . A_Space, A_Space)
-	Pat:= StrReplace(Pat, A_Space . A_Space, A_Space)
-	Pat:= StrSplit(Pat, A_Space)
-	Name[1]:= Pat[1] . ", " . Pat[2]
-	Name[2]:= Pat[2] . ", " . Pat[1]
-	Name[3]:= Pat[1]
-	Name[4]:= Pat[2]
+	Pat := RegExReplace(Pat, "\s{2,}", " ")
+	Pat := StrSplit(Pat, " ")
+	Name[1] := Pat[1] ", " Pat[2]
+	Name[2] := Pat[2] ", " Pat[1]
+	Name[3] := Pat[1]
+	Name[4] := Pat[2]
 
 return Name
 }
-;9
-SleepOnRdPSession(ms, altms) {                                                                               	;-- unterschiedliche sleep Zeiten ms = wenn eine Remotedesktop-Verbindung besteht, altms = wenn nicht
-
-	; manchmal notwendig wegen verzögertem Übertragung einer Fensterdarstellung während einer bestehenden Remotesitzung. Manche Fenster flickern lange und man kann nichts lesen.
-	; wenn altms = 0 kehrt die Funktion sofort zurück
-
-	If altms = 0
-			return
-
-	If WMIEnumProcessExist("RdClient.Windows.exe")
-			sleep % ms
-	else
-			sleep % altms
-
-return
+;3
+FormatedFileCreationTime(filepath) {                                                                     	;-- formatiert ins deutsche Format 18.05.2019
+	;bei leerem creationtime String gibt FormatTime automatisch das Datum von heute aus
+	FileGetTime, creationtime, % filepath, C
+	FormatTime, creationtime, % creationtime, dd.MM.yyyy
+return creationtime
 }
+;4
+ObjFindValue(arr, value) {                                                                                     	;-- Array in Array Suche
+
+	; findet den Wert in mehreren key:value Objekten, welche in einem indizierten Array enthalten sind, gibt den Index key zurück
+
+	For OFVIndex, obj in arr
+		For key, val in arr[OFVIndex]
+			If InStr(val, value)
+                return OFVIndex
+
+return 0
+}
+;5
+hk(keyboard:=0, mouse:=0, message:="", timeout:=3) {                                          	;-- Tastatur- und/oder Mauseingriffe abschalten
+
+	;https://www.autohotkey.com/boards/viewtopic.php?f=6&t=33925
+	;!F1::hk(1,1,"Keyboard keys and mouse buttons disabled!`nPress Alt+F2 to enable")   ; Disable all keyboard keys and mouse buttons
+	;!F2::hk(0,0,"Keyboard keys and mouse buttons restored!")         ; Enable all keyboard keys and mouse buttons
+	;!F3::hk(1,0,"Keyboard keys disabled!`nPress Alt+F2 to enable")   ; Disable all keyboard keys (but not mouse buttons)
+	;!F4::hk(0,1,"Mouse buttons disabled!`nPress Alt+F2 to enable")   ; Disable all mouse buttons (but not keyboard keys)
+
+   static AllKeys
+   static optKeyboard, optMouse
+
+   if !AllKeys {
+      s := "||NumpadEnter|Home|End|PgUp|PgDn|Left|Right|Up|Down|Del|Ins|"
+      Loop, 254
+         k := GetKeyName(Format("VK{:0X}", A_Index))
+       , s .= InStr(s, "|" k "|") ? "" : k "|"
+      For k,v in {Control:"Ctrl",Escape:"Esc"}
+         AllKeys := StrReplace(s, k, v)
+      AllKeys := StrSplit(Trim(AllKeys, "|"), "|")
+   }
+   ;------------------
+   For k,v in AllKeys {
+      IsMouseButton := Instr(v, "Wheel") || Instr(v, "Button")
+      Hotkey, *%v%, Block_Input, % (keyboard && !IsMouseButton) || (mouse && IsMouseButton) ? "On" : "Off"
+   }
+   if (StrLen(message) > 0) {
+      Progress, B1 M FS12 ZH0, %message%
+	  optKeyboard	:= keyboard
+	  optMouse    	:= mouse
+      SetTimer, HkTimeoutTimer, % -1000*timeout
+   }
+   else
+      Progress, Off
+
+Block_Input:
+Return
+
+hkTimeoutTimer:
+
+   Progress, Off
+   If (optKeyboard=1) || (optMouse=1)
+		hk(0, 0, "Die Sperrung des Nutzereingriffes ist aufgrund des übergebenen Zeitintervalles aufgehoben worden!" )
+
+Return
+}
+;6
+isActiveFocus(conditions) {                                                                                        	;-- Hotkey/Hotstring #If Bedingung Funktion
+
+	; negative Vergleiche sind noch nicht möglich
+
+	If !WinActive("ahk_class OptoAppClass")
+		return false
+
+	If StrLen(conditions) = 0
+		Conditions := "contraction=lp|bg, activeWinType=Privatabrechnung"
+
+	RegExReplace(conditions, "[+\-]", "", conditionsMax)
+	conditionsMax	+= 1
+	condMatched 	:= 0
+	conditions     	:= StrSplit(conditions, ",")
+	;conditionsMax	:= conditions.MaxIndex()
+	For condNr, condition in conditions {
+
+		RegExMatch(condition, "^\s*(?<lc>[+\-])*\s*(?<1>\w+)?\=(?<2>[A-Za-z\|]+)\s*$", param)
+		If (param1 = "contraction")
+			If RegExMatch(AlbisGetActiveControl("contraction"), param2)
+				condMatched ++
+		else if (param1 = "activeWinType")
+			If InStr(AlbisGetActiveWindowType(), param2)
+				condMatched ++
+
+		if (condMatched = conditionsMax)
+			return true
+
+	}
+
+return (condMatched = conditionsMax ? true : false)
+}
+;{ Hilfsfunktionen Ausfuellhilfe
+ControlFilter(CtrlObj, classnn) { 	    	; Hilfsfunktion für AlbisAusfuellhilfe - gibt Steuerelementbezeichnung zurück
+
+	; überprüft im Moment nur Edit Steuerelement
+
+	For ctrlLabel, class in CtrlObj
+		Loop, % class.Count()
+			If (classnn = "Edit" class[A_Index])
+				return ctrlLabel
+
+return false
+}
+
+DatesInArr(Dates, Arr) {	                     	; Hilfsfunktion für AlbisAusfuellhilfe
+
+	For idx, val in Arr
+		If (val = Dates)
+			return true
+
+return false
+}
+
+IndexInArr(s, Arr) {	                        	; Hilfsfunktion für AlbisAusfuellhilfe
+
+	For idx, val in Arr
+		If (val = s)
+			return idx
+
+return 0
+}
+
+;}
+
 ;}
 
 

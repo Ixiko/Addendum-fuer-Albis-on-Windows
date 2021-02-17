@@ -1,17 +1,22 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;                                                                                     INFOFENSTER -
+;               															⚫      INFOFENSTER		⚫
 ;
-;      Funktion:   	Verwaltung/Bearbeitung (Texterkennung/Kategorisierung) neuer gescannter Post vor dem Import in die Karteikarte
-;                       	Export und Druck von Befunden direkt aus der Karteikarte
-;                       	Anzeige von Praxisinformationen
-;                       	Netzwerkkommunikation
-;                       	erweitertes Tagesprotokoll
+;      Funktionen:   	▫ Verwaltung/Bearbeitung (Texterkennung/Kategorisierung) gescannter Post vor dem Import in die Patientenkartei
+;                       	▫ Anzeigen von Praxisinformationen
+;                       	▫ Netzwerkkommunikation
+;                       	▫ RDP Sessions starten
+;                       	▫ erweitertes Tagesprotokoll
+;							▫ Programme und Skripte starten
+;							▫ Abrechnungshelfer
+;							▫ Zusatzfunktionen: Laborblattdruck
+;
 ;      Basisskript: 	Addendum.ahk
 ;
 ;
 ;	                    	Addendum für Albis on Windows
-;                        	by Ixiko started in September 2017 - last change 22.11.2020 - this file runs under Lexiko's GNU Licence
+;                        	by Ixiko started in September 2017 - letzte Änderung 16.02.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+return
 
 ; Infofenster
 AddendumGui(admShow="") {
@@ -21,33 +26,50 @@ AddendumGui(admShow="") {
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
 		global
 
-		admLVPatOpt    	:= " r" (Addendum.InfoWindow.LVScanPool.r)
-		admLVPatOpt    	.= " gadm_PdfReports   	vadmPdfReports 	HWNDadmHPDFReports 	AltSubmit -Hdr	ReadOnly	BackgroundF0F0F0 LV0x10020 0x5001804B "
-		admLVJournalOpt	:= " gadm_Journal        	vadmJournal 		HWNDadmHJournal 	 	AltSubmit                      	BackgroundF0F0F0 LV0x10020 0x50210049 -E0x200 "
-		admLVTProtokoll 	:= " gadm_TProtokollLV 	vadmTProtokoll 	HWNDadmHTProtokoll  	AltSubmit      	ReadOnly	BackgroundF0F0F0 LV0x10020 0x50210049 -E0x200"
+		static admWidth, admHeight, admTabNames, admLVPatOpt, admLVJournalOpt, admLVTProtokoll, DDLPrinter
 
-		local LVContent
-		local hbmPdf_Ico, hbmImage_Ico
-		local adm, adm2, adm3, admWidth, admHeight, TabSize, TabSizeX, TabSizeY, TabSizeW, TabSizeH
-		local APos, SPos, rpos, mox, moy, moWin, moCtrl, regExt, Aktiv, Pat
+		local MObj, MNr, cpx, cpy, cpw, cph
+		local APos, SPos, mox, moy, moWin, moCtrl, regExt, Aktiv, Pat, nfo, res
 		local ClientName, LanClients, ClientIP, onlineclient, OffLineIndex, InfoText, found, YPlus, Y
-		local admReCheck := 0
 
-		If (Addendum.InfoWindow.Init = false) {
+		If !Addendum.iWin.Init {
 
-				Addendum.InfoWindow.Init ++
-				Addendum.InfoWindow.FileStack   	:= Array()
-				Addendum.InfoWindow.RowColors	:= false
+				Addendum.iWin.FileStack   	:= Array()
+				Addendum.iWin.OCRStack   	:= Array()     	; sammelt zunächst alle PDF Dateien die noch keine Texterkennung erhalten haben
+				Addendum.iWin.RowColors	:= false
+				Addendum.iWin.Imports     	:= 0
+				Addendum.iWin.ReCheck   	:= 0
+				Addendum.Importing                     	:= 0
 
-				adm_importing	:= false
-				admTabNames	:= "Patient|Journal|Protokoll|Info|Netzwerk"
-				factor            	:= A_ScreenDPI / 96
-				fc_admGui    	:= Func("AddendumGui")
+				func_admGui       	:= Func("AddendumGui")
+				factor                	:= A_ScreenDPI / 96
 
+				admTabNames  	:= "Patient|Journal|Protokoll|Extras|Netzwerk|Info"
+				admLVPatOpt    	:= " r" (Addendum.iWin.LVScanPool.r)
+				admLVPatOpt    	.= " gadm_Reports         	vadmReports     	HWNDadmHReports     	AltSubmit -Hdr	ReadOnly	BackgroundF0F0F0 LV0x10020 0x5001804B "
+				admLVJournalOpt	:= " gadm_Journal        	vadmJournal 		HWNDadmHJournal 	 	AltSubmit                      	BackgroundF0F0F0 LV0x10020 0x50210049 -E0x200 "
+				admLVTProtokoll 	:= " gadm_TProtokollLV 	vadmTProtokoll 	HWNDadmHTProtokoll  	AltSubmit      	ReadOnly	BackgroundF0F0F0 LV0x10020 0x50210049 -E0x200"
+
+			;----------------------------------------------------------------------------------------------------------------------------------------------
+			; Druckerliste anlegen
+			;----------------------------------------------------------------------------------------------------------------------------------------------;{
+				DDLPrinter := Addendum.Drucker.StandardA4 "|" Addendum.Drucker.PDF "|"
+				DDLPrinter := RegExReplace(DDLPrinter, "\|\|", "|")
+				DDLPrinter := RegExReplace(DDLPrinter, "^\|$", "")
+
+				for Item in ComObjGet( "winmgmts:" ).ExecQuery("Select * from Win32_Printer")
+					DDLPrinter .= !InStr(DDLPrinter, Item.Name) ? Item.Name "|" : ""
+
+				DDLPrinter := RTrim(DDLPrinter, "|")
+			;}
+
+			;----------------------------------------------------------------------------------------------------------------------------------------------
+			; ICON Liste laden
+			;----------------------------------------------------------------------------------------------------------------------------------------------;{
 				admHBM := Array()
-				admHBM.Push(LoadPicture(Addendum.AddendumDir "\assets\ModulIcons\PDFImage.ico"))	; PDF ohne OCR
-				admHBM.Push(LoadPicture(Addendum.AddendumDir "\assets\ModulIcons\image.ico"))    	; Bilddatei
-				admHBM.Push(LoadPicture(Addendum.AddendumDir "\assets\ModulIcons\PDFOCR.ico"))	; PDF mit OCR
+				admHBM.Push(LoadPicture(Addendum.Dir "\assets\ModulIcons\PDFImage.ico"))	; PDF ohne OCR
+				admHBM.Push(LoadPicture(Addendum.Dir "\assets\ModulIcons\image.ico"))    	; Bilddatei
+				admHBM.Push(LoadPicture(Addendum.Dir "\assets\ModulIcons\PDFOCR.ico"))	; PDF mit OCR
 
 				;-: lädt die Icons
 				admImageListID  	:= IL_Create(3)
@@ -55,54 +77,79 @@ AddendumGui(admShow="") {
 				IL_Add(admImageListID, "HBITMAP:" admHBM[2], 0xFFFFFF)		;2
 				IL_Add(admImageListID, "HBITMAP:" admHBM[3], 0x00000) 		;3
 
-				admHConnected   	:= LoadPicture(Addendum.AddendumDir "\assets\ModulIcons\connected.png")
-				admHDisconnected	:= LoadPicture(Addendum.AddendumDir "\assets\ModulIcons\disconnected.png")
+				;~ admNetW := []
+				;~ admNetW.Push(LoadPicture(Addendum.Dir "\assets\ModulIcons\connected.png"))
+				;~ admNetW.Push(LoadPicture(Addendum.Dir "\assets\ModulIcons\disconnected.png"))
 
 				;hbmPdf_Ico   	:= Create_PDF_ico()
 				;hbmImage_Ico	:= Create_Image_ico()
 				;~ IL_Add(ImageListID, "HBITMAP: " hbmPdf_Ico 		, 0xFFFFFF, 0) 		;1
 				;~ IL_Add(ImageListID, "HBITMAP: " hbmImage_Ico	, 0xFFFFFF, 0)		;2
 
+			;}
+
 			;----------------------------------------------------------------------------------------------------------------------------------------------
 			; Kontextmenu (Rechtsklickmenu) für das Journal
 			;----------------------------------------------------------------------------------------------------------------------------------------------;{
-				fc_admOpen 	:= Func("admGui_CM").Bind("JOpen")
-				fc_admImport	:= Func("admGui_CM").Bind("JImport")
-				fc_admRename	:= Func("admGui_CM").Bind("JRename")
-				fc_admDelete	:= Func("admGui_CM").Bind("JDelete")
-				fc_admView		:= Func("admGui_CM").Bind("JView")
-				fc_admRefresh	:= Func("admGui_CM").Bind("JRefresh")
-				fc_admRecog	:= Func("admGui_CM").Bind("JRecognize")
-				fc_admRenAll	:= Func("admGui_CM").Bind("JRenAll")
-				fc_admOCR  	:= Func("admGui_CM").Bind("JOCR")
-				fc_admOCRAll	:= Func("admGui_CM").Bind("JOCRAll")
+				func_admOpen 	:= Func("admGui_CM").Bind("JOpen")
+				func_admImport	:= Func("admGui_CM").Bind("JImport")
+				func_admRename	:= Func("admGui_CM").Bind("JRename")
+				func_admSplit   	:= Func("admGui_CM").Bind("JSplit")
+				func_admDelete	:= Func("admGui_CM").Bind("JDelete")
+				func_admView1	:= Func("admGui_CM").Bind("JView1")
+				func_admView2	:= Func("admGui_CM").Bind("JView2")
+				func_admRefresh	:= Func("admGui_CM").Bind("JRefresh")
+				func_admRecog1	:= Func("admGui_CM").Bind("JRecog1")
+				func_admRecog2	:= Func("admGui_CM").Bind("JRecog2")
+				func_admOCR  	:= Func("admGui_CM").Bind("JOCR")
+				func_admOCRAll	:= Func("admGui_CM").Bind("JOCRAll")
 
-				Menu, admJCM, Add, Karteikarte öffnen                      	, % fc_admOpen
-				Menu, admJCM, Add, Datei - anzeigen                        	, % fc_admView
-				Menu, admJCM, Add, Datei - importieren                     	, % fc_admImport
-				Menu, admJCM, Add, Datei - umbennen                      	, % fc_admRename
-				Menu, admJCM, Add, Datei - löschen                           	, % fc_admDelete
-				Menu, admJCM, Add, Datei - Texterkennung ausführen 	, % fc_admOCR
-				Menu, admJCM, Add, Datei - Inhalt erkennen            	, % fc_admRecog
+				Menu, admJCM, Add, Karteikarte öffnen                      	, % func_admOpen
+				Menu, admJCM, Add, Anzeigen                                 	, % func_admView1
+				Menu, admJCM, Add, Importieren                             	, % func_admImport
+				Menu, admJCM, Add, Umbennen                              	, % func_admRename
+				;Menu, admJCM, Add, Aufteilem                                   	, % func_admSplit
+				Menu, admJCM, Add, Löschen                                     	, % func_admDelete
+				Menu, admJCM, Add, Texterkennung ausführen           	, % func_admOCR
+				Menu, admJCM, Add, Inhaltserkennung                      	, % func_admRecog1
 				Menu, admJCM, Add
-				Menu, admJCM, Add, Texterkennung - alle Dateien       	, % fc_admOCRAll
-				Menu, admJCM, Add, automatische Benennung           	, % fc_admRenAll
-				Menu, admJCM, Add, Befundordner neu indizieren    	, % fc_admRefresh
+				Menu, admJCM, Add, Texterkennung - alle Dateien       	, % func_admOCRAll
+				Menu, admJCM, Add, automatische Benennung           	, % func_admRecog2
+				Menu, admJCM, Add, Befundordner neu indizieren    	, % func_admRefresh
+
 			;}
 
 			;----------------------------------------------------------------------------------------------------------------------------------------------
 			; Hotkey's für alle Tab's
 			;----------------------------------------------------------------------------------------------------------------------------------------------;{
-				fc_admCMJournal := Func("GuiControlActive").Bind("AdmJournal", "adm")
-				Hotkey, If, % fc_admCMJournal ; ahk_class AutoHotkeyGUI"
-				Hotkey, Enter       	, % fc_admView
-				Hotkey, F2        	, % fc_admRename
-				Hotkey, F3         	, % fc_admView
-				Hotkey, F4         	, % fc_admRecog
-				Hotkey, F5        	, % fc_admRefresh
-				Hotkey, F6        	, % fc_admOCR
-				Hotkey, BackSpace, % fc_admDelete
+				func_admCMJournal := Func("GuiControlActive").Bind("admJournal"	, "adm")
+				func_admSuche 		:= Func("GuiControlActive").Bind("admTPSuche"	, "adm")
+				func_admTPSuche		:= Func("admGui_TPSuche")
+
+			; Hotkeys - Journal
+				Hotkey, If, % func_admCMJournal
+				Hotkey, Enter 	, % func_admView1
+				Hotkey, F2     	, % func_admRename
+				Hotkey, F3     	, % func_admView1
+				Hotkey, F4     	, % func_admRecog1
+				Hotkey, F5     	, % func_admRefresh
+				Hotkey, F6     	, % func_admOCR
+				Hotkey, Delete	, % func_admDelete
 				Hotkey, If
+
+			; Hotkeys - Protokoll
+				Hotkey, If, % func_admSuche
+				Hotkey, Enter 	, % func_admTPSuche
+				Hotkey, If
+			;}
+
+			;----------------------------------------------------------------------------------------------------------------------------------------------
+			; OnMessage
+			;----------------------------------------------------------------------------------------------------------------------------------------------;{
+	    		LISTENERS := [ 	WM_ACTIVATE                      	:= 0x06
+									,	WM_PARENTNOTIFY             	:= 0x210
+									, 	WM_MDIACTIVATE                	:= 0x222]
+
 			;}
 
 		}
@@ -112,112 +159,152 @@ AddendumGui(admShow="") {
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	; Vorbereitungen
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-
 	; Albis wurde beendet -return-
-		If !WinExist("ahk_class OptoAppClass")
+		If !WinExist("ahk_class OptoAppClass") {
+			admGui_Destroy()
 			return
-
-		Result := DllCall("User32\SetProcessDpiAwarenessContext", "UInt" , -1)
-
-		If (Addendum.InfoWindow.lastPatID = AlbisAktuellePatID())
-			return
+		}
 
 	; mehr als 9 Versuche das MDIFrame zu finden, führen zum Abbruch des Selbstaufrufes der Funktion
-		If (admReCheck > 9) {
-			admReCheck := 0
+		If (Addendum.iWin.ReCheck > 9) {
+			Addendum.iWin.ReCheck := 0
 			TrayTip, AddendumGui, % "Die Integration des Infofenster ist fehlgeschlagen.", 2
 			return
 		}
 
+	; Position innerhalb des Albisfenster für die Integration finden
 		Aktiv         	:= Addendum.AktiveAnzeige := AlbisGetActiveWindowType()
 		res                := Controls("", "Reset", "")
 		hMDIFrame	:= Controls("AfxMDIFrame1401"	, "ID", AlbisGetActiveMDIChild())
 		hStamm		:= Controls("#327701"             	, "ID", hMDIFrame)
-		If !RegExMatch(Aktiv, "i)Karteikarte|Laborblatt|Biometriedaten|Abrechnung|Rechnungsliste") || (GetDec(hMDIFrame) = 0) || (GetDec(hStamm) = 0) {
-			SetTimer, % fc_admGui, -1000
-			admReCheck ++
+		If !RegExMatch(Aktiv, "i)Karteikarte|Laborblatt|Biometriedaten|Rechnungsliste") || (GetDec(hMDIFrame) = 0) || (GetDec(hStamm) = 0) {
+			SetTimer, % func_admGui, -1000
+			Addendum.iWin.lastPatID := 0
+			Addendum.iWin.ReCheck ++
 			return
 		}
 
 	; legt die Höhe der Gui anhand der Größe des MDIFrame-Fenster fest
-		APos  	:= GetWindowSpot(AlbisWinID())
-		SPos 	:= GetWindowSpot(hStamm)
+		If (Addendum.iWin.lastPatID <> AlbisAktuellePatID()) {
 
-		Addendum.InfoWindow.StammY:= Round(SPos.Y / factor)
-		Addendum.InfoWindow.X	       	:= APos.CW - Addendum.InfoWindow.W ; ClientWidth passt besser!
-		Addendum.InfoWindow.H       	:= admHeight := SPos.CH
-		admWidth 	:= Addendum.InfoWindow.W
+			APos  	:= GetWindowSpot(AlbisWinID())
+			SPos 	:= GetWindowSpot(hStamm)
 
-	; der Albisinfobereich (Stammdaten, Dauerdiagnosen, Dauermedikamente) wird für das Einfügen der Gui verkleinert
-		If (SPos.W > APos.CW - admWidth) ; verhindert erneutes verkleinern
-			SetWindowPos(hStamm, 2, 2, APos.CW - admWidth - 4, SPos.CH)
+			Addendum.iWin.StammY	:= Round(SPos.Y / factor)
+			Addendum.iWin.X	         	:= APos.CW - Addendum.iWin.W ; ClientWidth passt besser!
+			Addendum.iWin.H          	:= admHeight := SPos.CH
+			admWidth                     	:= Addendum.iWin.W
+
+		; der Albisinfobereich (Stammdaten, Dauerdiagnosen, Dauermedikamente) wird für das Einfügen der Gui verkleinert
+			If (SPos.W > APos.CW - admWidth) ; verhindert ein wiederholtes Verkleinern
+				SetWindowPos(hStamm, 2, 2, APos.CW - admWidth - 4, SPos.CH)
+		}
+
 	;}
 
 	;---------------------------------------------------------------------------------------------------------------------------------------------
 	; Gui zeichnen
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-	; umgeht die seltene Problematik der eines nicht mehr vorhandenen Handle eines MDIFrame, wenn der Nutzer eine Karteikarte
-	; schon geschlossen hat und das Skript noch dieses Handle erfasst hatte
+	If (Addendum.iWin.lastPatID <> AlbisAktuellePatID()) {
+		Addendum.iWin.lastPatID := AlbisAktuellePatID()
+
+	; umgeht die seltene Problematik der eines nicht mehr vorhandenen Handle eines MDIFrame, wenn der Nutzer eine
+	; Karteikarte schon geschlossen hat und das Skript noch dieses Handle erfasst hatte
 		Sleep 100
 		try {
-			Gui, adm: New	, -Caption -DPIScale +ToolWindow 0x50020000 E0x0802009C +Parent%hMDIFrame% +HWNDhadm
+			Gui, adm: New	, -Caption -DPIScale +ToolWindow 0x50000000 E0x0802009C +Parent%hMDIFrame% +HWNDhadm
 		} catch {
-			SetTimer, % fc_admGui, -1000
-			admReCheck ++
+			SetTimer, % func_admGui, -1000
+			Addendum.iWin.ReCheck ++
 			return
 		}
 
+	;-: Gui 	 :- Tab Start                       	;{
 		Gui, adm: Margin	, 0, 0
-		Gui, adm: Add  	, Tab     	, % "x0 y0  	w" admWidth " h" admHeight " hwndadmHTab vadmTabs"                           	, % admTabNames
+		Gui, adm: Font  	, s8 q5 Normal cBlack, Arial
+		Gui, adm: Add  	, Tab     	, % "x0 y0  	w" admWidth " h" admHeight " HWNDadmHTab vadmTabs gadm_Tabs"       	, % admTabNames
+	;}
 
 	;-: Tab1 :- Patient                          	;{
 		Gui, adm: Tab  	, 1
 
 		Gui, adm: Font  	, s7 q5 Normal cBlack, Arial
-		Gui, adm: Add  	, Text      	, % "x10 y27 w" admWidth-15 " BackgroundTrans vadmPdfReportTitel Section"                  	, % "(es wird gesucht ....)"
+		Gui, adm: Add  	, Text      	, % "x10 y27 w" admWidth-15 " BackgroundTrans vadmPatientTitle Section"                     	, % "(es wird gesucht ....)"
 
 		Gui, adm: Font  	, s6 q5 Normal cBlack, Arial
 		Gui, adm: Add  	, Button    	, % "x" admWidth-55 " y23 w50 vadmButton1 gadm_BefundImport"                                    	, % "Importieren"
 
+	  ;-: Patientenbefunde
 		Gui, adm: Font  	, s8 q5 Normal cBlack, Arial
 		Gui, adm: Add  	, ListView	, % "x2 y+2 	w" admWidth-6	" " admLVPatOpt                                                                   	, % "S|Befundname"
 		LV_SetImageList(admImageListID)
-		admCol1W :=35, admCol2W := admWidth - admCol1W - 10
+		admCol1W :=50, admCol2W := admWidth - admCol1W - 10
 		LV_ModifyCol(1, admCol1W " Integer Right NoSort")
 		LV_ModifyCol(2, admCol2W " Text Left NoSort")
 
+	  ;-: Abrechnungshelfer
 		Gui, adm: Font  	, s7 q5 Normal cBlack, Arial
-		Gui, adm: Add  	, Text, % "x2 y+0 	w" admWidth-6 " Center vadmGP1"   	                                                             	, % "Notizen/Erinnerungen"
+		cpw := Floor((admWidth-6)/1.8)
+		Gui, adm: Add  	, Text    	, % "x2 y+0 	w" cpw " Center vadmGP1"   	                                                                    	, % "Abrechnungshelfer und andere Hinweise"
 
+		Gui, adm: Font  	, s8 q5 Normal cBlack, Arial
 		GuiControlGet, cpos, adm: Pos, AdmGP1
-		Gui, adm: Add  	, Edit     	, % "x2 y" cposY+12 " w" admWidth-6 " h" admHeight - cposY - cposH - 4 " gadm_Notes vadmNotes"
 
+		cph := admHeight - cposY - cposH - 4
+		GCOption	:= "x2 y" cposY+12 " w" cpw " h" cph " t6 t12 t22 vadmNotes"
+
+		If Addendum.iWin.AbrHelfer
+			abrInfo    	:= admGui_Abrechnungshelfer(AlbisAktuellePatID(), AlbisPatientGeburtsdatum())
+		else
+			abrInfo 	:= ""
+		Gui, adm: Add, Edit, % GCOption                                                                                                                              	, %  abrInfo
+
+	  ;-: zusätzliche Karteikartenfunktionen
+		GuiControlGet, cpos, adm: Pos, admNotes
+		cpx := cposX + cposW + 3, cpy := cposY - 1, cpw	:= admWidth - cpx - 120 - 6
+		Gui, adm: Add, Button       	, % "x" cpx " y" cpy " w100 vadmLBD  gadm_LBDruck"                                                        	, % "Laborblatt Druck"
+		Gui, adm: Add, Edit          	, % "x+2 y" cpy+1 " w" cpw " vadmLBDCB"                                                                      ;	, % "1|alle"
+		Gui, adm: Add, UpDown   	, % "x+0 y" cpy+1 " vadmLBDUD gadm_LBDruck"                                                              	,  1
+
+		Gui, adm: Font  	, s7 q5 Normal cBlack, Arial
+		cpw	:= admWidth - cpx - 5
+		Gui, adm: Add, DDL          	, % "x" cpx+1 " y+2 w" cpw " r8 vadmLBDPD gadm_LBDruck"                                           	, % DDLPrinter
+		GuiControl, adm: ChooseString, admLBDPD, % Addendum.iWin.LBDrucker
 		;}
 
 	;-: Tab2 :- Journal                         	;{
 		Gui, adm: Tab  	, 2
 
 		Gui, adm: Font  	, s7 q5 Normal cBlack, Arial
-		Gui, adm: Add  	, Text      	, % "x10 y25  	w" admWidth-22 " BackgroundTrans vadmJournalTitel Section"               	, % "(es wird gesucht ....)"
+		Gui, adm: Add  	, Text      	, % "x10 y25 w" Floor(admWidth/3) " BackgroundTrans vadmJournalTitle 	Section"          	, % "(es wird gesucht ....)"
+		Gui, adm: Add  	, Text      	, % "x+5                                          BackgroundTrans vadmJournalTitle2 	Section"          	, % "                          "
 
 		Gui, adm: Font  	, s7 q5 Normal cBlack, Arial
-		Gui, adm: Add  	, Button    	, % "x" admWidth-145 " y23 h16 	vadmButton2 gadm_Journal"                                        	, % "Einzelimport"
-		Gui, adm: Add  	, Button    	, % "x20 y23 h16                          	vadmButton3 gadm_Journal"                                        	, % "Aktualisieren"
-		GuiControlGet  	, cpos, adm: Pos, AdmButton2
-		GuiControlGet  	, dpos, adm: Pos, AdmButton3
-		GuiControl        	, adm: Move, AdmButton2, % "x" admWidth - cposW - 5
-		GuiControl        	, adm: Move, AdmButton3, % "x" admWidth - cposW - dposW - 10
+		Gui, adm: Add  	, Button    	, % "x" admWidth-145 " y23 h16 w" (11*7) " 	vadmButton2 gadm_Journal Center"             	, % "Importieren"
+		Gui, adm: Add  	, Button    	, % "x20 y23 h16                                       	vadmButton3 gadm_Journal"                        	, % "Aktualisieren"
+
+		GuiControlGet  	, cpos, adm: Pos	, admButton2
+		GuiControlGet  	, dpos, adm: Pos	, admButton3
+		GuiControl        	, adm: Move, admButton2, % "x" admWidth - cposW - 5
+		GuiControl        	, adm: Move, admButton3, % "x" admWidth - cposW - dposW - 5
 		Gui, adm: Add  	, Button    	, % "x20 y23 h16                          	vadmButton4 gadm_Journal"                                        	, % "OCR ausführen  "
-		GuiControlGet  	, cpos, adm: Pos, AdmButton3
-		GuiControlGet  	, dpos, adm: Pos, AdmButton4
-		GuiControl        	, adm: Move, AdmButton4, % "x" cposX - dposW - 20
+
+		GuiControlGet  	, cpos, adm: Pos, admButton3
+		GuiControlGet  	, dpos, adm: Pos, admButton4
+		GuiControl        	, adm: Move, admButton4, % "x" cposX - dposW
 
 		Gui, adm: Font  	, s7 q5 Normal cBlack, Arial
-		Gui, adm: Add  	, ListView	, % "x2 y+5 		w" admWidth - 6 " h" admHeight - 47 " " admLVJournalOpt                        	, % "Befund|Eingang|TimeStamp"
-		admCol2W := 58, admCol1W := admWidth - admCol2W - 25, admCol3W := 0
+		Gui, adm: Add  	, ListView	, % "x2 y+5 		w" admWidth - 6 " h" admHeight - 47 " " admLVJournalOpt                        	, % "Befund|S|Eingang|TimeStamp"
+
+		admCol4W := 0
+		admCol3W := 58
+		admCol2W := 25
+		admCol1W := admWidth - admCol2W - admCol3W - 25
+
 		LV_ModifyCol(1, admCol1W " Left NoSort")
-		LV_ModifyCol(2, admCol2W " Left NoSort")
-		LV_ModifyCol(3, admCol3W " Left Integer")       	; versteckte Spalte enthält Integerzeitwerte für die Sortierung nach dem Datum
+		LV_ModifyCol(2, admCol2W " Left Integer")
+		LV_ModifyCol(3, admCol3W " Right NoSort")    	; versteckte Spalte enthält Integerzeitwerte für die Sortierung nach dem Datum
+		LV_ModifyCol(4, admCol4W " Left Integer")       	; versteckte Spalte enthält Integerzeitwerte für die Sortierung nach dem Datum
 		Gui, adm: ListView, % "admJournal"
 		LV_SetImageList(admImageListID)
 
@@ -228,12 +315,20 @@ AddendumGui(admShow="") {
 
 		Gui, adm: Font  	, s7 q5 Normal cBlack, Arial
 		ProtText := "[" compname "] [" TProtokoll.MaxIndex() " Patienten]"
-		Gui, adm: Add  	, Text      	, % "x10 y25  	w" admWidth - 22 " BackgroundTrans vAdmTProtokollTitel"                     	, % ProtText
+		Gui, adm: Add  	, Text      	, % "x10 y25  w120 BackgroundTrans 	vadmTProtokollTitel"                                          	, % ProtText
 
 		Gui, adm: Font  	, s8 q5 Normal cBlack, Arial
-		Gui, adm: Add  	, Button    	, % "x" admWidth - 225 " y23 h16      	vadmTPZurueck	 	gadm_TP"                              	, % "<"
-		Gui, adm: Add  	, Button    	, % "x+2 y23 h16							    	vadmTPVor   		gadm_TP"                              	, % ">"
-		Gui, adm: Add  	, Text      	, % "x+5 y25 w100 BackgroundTrans 	vAdmTPTag                    	"                                	, % Addendum.InfoWindow.TProtDate
+
+		Gui, adm: Add  	, Text      	, % "x+10 "                                                                                                                   	, % "Pat:"
+		Gui, adm: Add  	, Edit     	, % "x+0 y22 w100 r1  vadmTPSuche"                                                                               	, % ""
+
+		Gui, adm: Add  	, Text      	, % "x" admWidth - 100 - 5 " y25 w100 BackgroundTrans 	vadmTPTag"                          	, % Addendum.iWin.TProtDate
+		Gui, adm: Add  	, Button    	, % "x+10 y23 h16                             	vadmTPZurueck	 	gadm_TP"                              	, % "<"
+		Gui, adm: Add  	, Button    	, % "x+2 	y23 h16						    	vadmTPVor   		gadm_TP"                              	, % ">"
+		GuiControlGet	, cpos, adm: Pos, admTPVor
+		GuiControlGet	, dpos, adm: Pos, admTPZurueck
+		GuiControl    	, adm: Move, admTPVor    	, % "x" admWidth - 100 - 5 - cposW - 5
+		GuiControl    	, adm: Move, admTPZurueck	, % "x" admWidth - 100 - 5 - cposW - dposW - 10
 
 		;Gui, adm: Add  	, Text      	, % "x+5 y25 w30 BackgroundTrans	 Right vAdmTPTag          	"                                     	, % "Heute"
 		;Gui, adm: Add  	, Text      	, % "x+5 y25 w70 BackgroundTrans	vAdmTPDatum                 	"                                      	, % A_DD "." A_MM "." A_YYYY
@@ -241,41 +336,83 @@ AddendumGui(admShow="") {
 		Gui, adm: Font  	, s8 q5 Normal cBlack, Arial
 		Gui, adm: Add  	, ListView	, % "x2 y+5 w" admWidth-6 " h" admHeight-47 " " admLVTProtokoll                                    	, % "RF|Nachname, Vorname|Geburtstag|PatID"
 
-		col1W := 30, col2W := 160, col3W := 70, col4W := 70
+		admcol1W := 30, admcol2W := 160, admcol3W := 70, amdcol4W := 70
 		Gui, adm: ListView, AdmTProtokoll
-		LV_ModifyCol(1, col1W )
-		LV_ModifyCol(2, col2W )
-		LV_ModifyCol(3, col3W )
-		LV_ModifyCol(4, col4W )
+		LV_ModifyCol(1, admcol1W )
+		LV_ModifyCol(2, admcol2W )
+		LV_ModifyCol(3, admcol3W )
+		LV_ModifyCol(4, admcol4W )
 	;}
 
-	;-: Tab4 :- Info                              	;{
+	;-: Tab4 :- Extras                               ;{
 		Gui, adm: Tab  	, 4
-		Gui, adm: Font  	, s8 q5 Normal cBlack, Arial
 
-		InfoText	:= "⌚ Sprechstunde  : " ;{
-		Sprechstunde := Addendum.Praxis.Sprechstunde[A_DDDD]
-		InfoText .= ((StrLen(Sprechstunde) > 0) ? (A_DDDD ",der " A_DD "." A_MM "." A_YYYY " von " Sprechstunde " Uhr") : ( "heute keine Sprechstunde")) "`n"
-		InfoText	.= "⚕ Tagesprotokoll: "	(TProtokoll.MaxIndex() = "" ? 0 : TProtokoll.MaxIndex()) " Patienten`n"
-		InfoText	.= "⚕ Patienten ges. : "	oPat.Count() "`n"
-		InfoText	.= "⚕ Signaturen      : "	Addendum.SignatureCount ", ges. Seitenzahl: " Addendum.SignaturePages "`n"
-		InfoText	.= "☀ Monitoranzahl : "	Addendum.Monitor.Count() (IsRemoteSession() ? " (Remotedesktopsitzung!)" : "") "`n"
-		Loop, % Addendum.Monitor.Count()
-			InfoText .= "`t" SubStr("⚀⚁⚂⚃⚄⚅", A_Index, 1) " " Addendum.Monitor[A_Index] "`n"
 
-		InfoText .= "`n"
-		InfoText .= "⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯⚯`n"
-		InfoText	.= "① Albis    `t: x"     	APos.X " y" APos.Y " w" APos.W " h" APos.H ", CW" APos.CW " CH" APos.CH "`n"
-		InfoText	.= "② Stamm  `t: "     	hStamm ", x" SPos.X " y" SPos.Y " w" SPos.W " h" SPos.H " cw" SPos.CW " ch" SPos.CH "`n"
-		InfoText	.= "③ nStammW: "     	(SPos.W - admWidth - 2) "`n"
-		InfoText	.= "③ hTab   `t:"          	admHTab "`n"
-		InfoText	.= "④ GuiSize`t: x"     	Addendum.InfoWindow.X " y" Addendum.InfoWindow.Y " w" Addendum.InfoWindow.W  " h" Addendum.InfoWindow.H "`n"
-		InfoText	.= "⑤ Iconlist ID`t: 1=" GetHex(admHBM[1]) ", 2=" GetHex(admHBM[2]) ", 3=" GetHex(admHBM[3])  "`n"
-		InfoText	.= "⑤ rcolors.`t: "     	(Addendum.InfoWindow.RowColors ? "true":"false") "`n"
+		; MODUL BUTTON
+		Gui, adm: Font , s10 q5 bold cBlack, Calibri
+		Gui, adm: Add, Button	, % "x10 y35 w" admWidth-20 " h20 Center hwndadmHPB", % "< - - - - - - - - - - - - - - M O D U L E - - - - - - - - - - - - - - >"  ; vadmMMM
+		Opt1 := { 1:0, 2:0xFFAfC2ff , 4:"Black", 5:"H", 6:"WHITE", 7:"Black", 8:1}
+		Opt2 := { 1:0, 2:0xFFAfC2ff	, 4:"Black", 5:"H", 6:"WHITE", 7:"Black", 8:1}
+		Opt3 := { 1:0, 2:0xFFAfC2ff	, 4:"Black", 5:"H", 6:"WHITE", 7:"Black", 8:1}
+		ImageButton.Create(admHPB, Opt1, Opt2, Opt3)
 
-		;}
+		; MODUL BUTTONS (feste Größe)
+		Gui, adm: Font  	, s9 q5 Normal cBlack, Calibri
+		ImageButton.SetGuiColor("Green")
+		GuiControlGet, EX, adm: Pos, % admHPB
+		Mw :=Mh := 15, MEw := MEh :=20
+		mStep 	:= 0 	, mxWidth	:= 115, stepX := mxWidth + 5
+		mdX  	:= 15	, mdY     	:= mdY := EXY +EXH + 7
+		mCols 	:= Floor((admWidth - (mdX*2))/(mxWidth+5))
+		stepX 	:= Round(((admWidth - (mdX*2)) - (mCols*mxWidth))/(mCols-1))
+		stepX 	:= stepX < 5 ? 5 : stepX
+		For IWmIdx, IWModul in Addendum.Module {
 
-		Gui, adm: Add  	, Edit     	, % "x2 y30 w" admWidth - 6 " h" admHeight - 32 " t6 t12 t18 ReadOnly -E0x200", % InfoText
+			IWx := mStep < mCols ? (mdX + mStep*(mxWidth+stepX)) : (admWidth-mdX-mxWidth)
+			Gui, adm: Add, Button, % "x" IWx " y" mdY " w" mxWidth " vadmMX" IWmIdx " hwndadmHPB  gadm_extras", % "  " IWModul.name " " ;Center
+			Opt1 := { 1:0, 2:0xFFAfC2ff	, 4:"Black", 5:"H", 6:"WHITE", 7:"Black", 8:1, icon:{file:IWModul.ico, x: 9      	, w: Mw		, h: Mh	}}
+			Opt2 := { 1:0, 2:0xFF8fA2ff	, 4:"Black", 5:"H", 6:"WHITE", 7:"Black", 8:1, icon:{file:IWModul.ico, x: 7, y: 3	, w: MEw	, h: MEh}}
+			Opt3 := { 1:0, 2:0xFFAfC2f	, 4:"Black", 5:"H", 6:"WHITE", 7:"Black", 8:1, icon:{file:IWModul.ico, x: 9      	, w: Mw		, h: Mh	}}
+			ImageButton.Create(admHPB, Opt1, Opt2, Opt3)
+			mStep ++
+			If (mStep = mCols) {
+				mStep := 0
+				GuiControlGet, EX, adm: Pos, % "admMX" IWmIdx
+				mdY := EXY + EXH + 5
+			}
+
+		}
+
+		; TOOL BUTTON  0xFFAfC2ff -> 0xFFAFFFF4
+		Gui, adm: Font, s10 q5 bold cBlack, Calibri
+		Gui, adm: Add, Button, % "x10 y+15 w" admWidth-20 " h20 Center hwndadmHPB", % "< - - - - - - - - - - - - - - - T O O L S - - - - - - - - - - - - - - - >" ; vadmTTT
+		Opt1 := { 1:0, 2:0xFFAFFFF4	, 4:"Black", 5:"H", 6:"WHITE" , 7:"Black", 8:1 	 }
+		Opt2 := { 1:0, 2:0xFFAFFFF4	, 4:"Black", 5:"H", 6:"WHITE" , 7:"Black", 8:1 	 }
+		Opt3 := { 1:0, 2:0xFFAFFFF4	, 4:"Black", 5:"H", 6:"WHITE" , 7:"Black", 8:1	 }
+		ImageButton.Create(admHPB, Opt1, Opt2, Opt3)
+
+		; TOOL BUTTONS
+		Gui, adm: Font, s9 q5 Normal cBlack, Calibri
+		GuiControlGet, EX, adm: Pos, % admHPB
+		IWx := mdX, mdY := EXY + EXH + 7, mStep := 0
+		For IWtIdx, IWTool in Addendum.Tools {
+
+			; neuer Button soll nicht aus dem Fenster herausragen
+			thisWidth := CalcIdealWidthEx("", IWTool.name,, "s9 q5 Normal", Calibri, 0) + MW
+			If (IWtIdx > 1) && (EXW+EXX+thisWidth > admWidth - (2*mdX))
+				mStep := 0, IWx := mdX, mdY := EXY + EXH + 5
+			else if (IWtIdx > 1)
+				IWx := EXX + EXW + 5
+
+			Gui, adm: Add, Button	, % "x" IWx " y" mdY " w" thisWidth " Center vadmTX" IWtIdx " hwndadmHTB gadm_extras", % IWTool.name
+			Opt1 := { 1:0, 2:0xFFAFFFF4, 4:"Black", 5:"H", 6:"WHITE" , 7:"Black", 8:1, icon:{file:IWTool.ico, x: 8     	, w: Mw		, h: Mh	}}
+			Opt2 := { 1:0, 2:0xFFAFFFF4, 4:"Black", 5:"H", 6:"WHITE" , 7:"Black", 8:1, icon:{file:IWTool.ico, x: 6, y: 4, w: MEw	, h: MEh}}
+			Opt3 := { 1:0, 2:0xFFAFFFF4, 4:"Black", 5:"H", 6:"WHITE" , 7:"Black", 8:1, icon:{file:IWTool.ico, x: 8     	, w: Mw		, h: Mh	}}
+			ImageButton.Create(admHTB, Opt1, Opt2, Opt3)
+			mStep ++
+			GuiControlGet, EX, adm: Pos, % "admTX" IWtIdx
+
+		}
 
 	;}
 
@@ -286,13 +423,12 @@ AddendumGui(admShow="") {
 		;~ nprop	:= {	"title"         	: "admNet"
 						;~ , 	"x"             	: 1
 						;~ , 	"y"             	: 20
-						;~ , 	"w"             	: Addendum.InfoWindow.W -	2
-						;~ , 	"h"            	: Addendum.InfoWindow.H -	22
+						;~ , 	"w"             	: Addendum.iWin.W -	2
+						;~ , 	"h"            	: Addendum.iWin.H -	22
 						;~ , 	"hparent"    	: hadm
 						;~ ,	"parentgui"	: "adm"}
 		;~ htmlPath := CreateHTML(nprop)
 		;~ MoNet := new NeutronEmbedded(htmlpath,,, nprop)
-
 
 		Gui, adm: Add   	, Button	, % "x10 y30 vAdmLanCheck gadm_Lan", % "Netzwerkgeräte aktualisieren"
 
@@ -303,8 +439,8 @@ AddendumGui(admShow="") {
 			If (compname = clientName)
 				continue
 
-			Gui, adm: Add   	, Button	, % "x" dposX " y" dposY " vAdmClient_"	clientName " Center gadm_Lan", % clientName
-			Gui, adm: Add   	, Button	, % "x150		  y" dposY " vAdmRDP_" 	clientName " Center gadm_Lan", % "RDP Sitzung starten"
+			Gui, adm: Add   	, Button	, % "x" dposX " y" dposY " vadmClient_"	clientName " Center gadm_Lan", % clientName
+			Gui, adm: Add   	, Button	, % "x150		  y" dposY " vadmRDP_"  	clientName " Center gadm_Lan", % "RDP Sitzung starten"
 			GuiControlGet	, cpos, adm: Pos, % "AdmClient_" clientName
 			dposY := cposY + cposH
 			cMaxW := cposW > cMaxW ? cposW : cMaxW
@@ -320,80 +456,129 @@ AddendumGui(admShow="") {
 			GuiControl, adm: Move, % "AdmRDP_" 	 clientName,	% "x"	 dposX + 20 + cMaxW
 
 			GuiControlGet	, cpos, adm: Pos, % "AdmClient_" clientName
-			Gui, adm: Add, Pic, % "x10 y" cposY+2 " w" cposH-4 " h" cposH-4 " Backgroundtrans vAdmConn_" clientName, % "HBITMAP: " hBmDisconnected
+			Gui, adm: Add, Picture, % "x10 y" cposY+2 " w" cposH-4 " h" cposH-4 " Backgroundtrans vAdmConn_" clientName ;, % "HBITMAP:" Addendum.Dir "\assets\ModulIcons\connected.png"
 		}
 
 		;Gui, adm: Add    	, Text, % "x10 y30 w110 BackgroundTrans Center vAdmLanT1", % "ONLINE"
 		;SetTimer, admLan, -300
 
-	;-:          :-
-		Gui, adm: Tab
 		;}
 
-	;-: Gui zeigen                                 	;{
+	;-: Tab6 :- Info                              	;{
+		Gui, adm: Tab  	, 6
 
-		; Listview coloring -
-			Gui, adm: ListView, AdmJournal
-			If Addendum.InfoWindow.RowColors {
-				LV_Colors.OnMessage()
-				If !LV_Colors.Attach(admHJournal, true) {
-					GuiControl, adm: +Redraw, AdmJournal
-					SciTEOutput("LV_Color attach impossible")
-				}
-			}
+		tW 	:= A_ScreenWidth > 1920 ? 150 :130
+		fS 	:= A_ScreenWidth > 1920 ? 11 : 10
+		fWS	:= A_ScreenWidth > 1920 ? "         " : "                        "
+		YPlus := 5
+		Sprechstunde := Addendum.Praxis.Sprechstunde[A_DDDD]
+		Gui, adm: Font  	, % "s13 q4 bold underline cBlack", % Addendum.StandardFont
+		Gui, adm: Add  	, Text, % "x10 y30 w" admWidth-20 " ", % (" " A_DDDD ", " A_DD "." A_MM "." A_YYYY . fWS)
 
-		; Fenster anzeigen
-			Gui, adm: Show	, % "x" Addendum.InfoWindow.X " y" Addendum.InfoWindow.Y " w" Addendum.InfoWindow.W  " h" Addendum.InfoWindow.H " " admShow " NA ", AddendumGui
-			Gui, adm: Default
+		Gui, adm: Font  	, % "s" fs " normal bold cBlack"
+		Gui, adm: Add  	, Text, % "x10 y+" YPlus+8 " w" tw, % "⌚ Sprechstunde"
+		Gui, adm: Font  	, Normal
+		Gui, adm: Add  	, Text, x+5, % ((StrLen(Sprechstunde) > 0) ? ("von " Sprechstunde " Uhr") : ( "heute keine Sprechstunde"))
 
-		; den zuletzt angezeigten TAB wiederherstellen (TCM_SETCURFOCUS (0x1330):)
-			For tabNr, TabName in StrSplit(admTabNames, "|")
-				If InStr(TabName, Addendum.InfoWindow.firstTab) {
-					SendMessage, 0x1330, % tabNr - 1,,, % "ahk_id " admHTab
-					break
-				}
+		Gui, adm: Font  	, % "s" fs " bold cDarkBlue"
+		Gui, adm: Add  	, Text, % "x10 y+" YPlus " w" tw, % "✍ Tagesprotokoll"
+		Gui, adm: Font  	, Normal
+		Gui, adm: Add  	, Text, x+5, % (TProtokoll.MaxIndex() = "" ? 0 : TProtokoll.MaxIndex()) " Patienten"
 
-		; Fensterstyles anpassen
-			WinSet, Style  	, 0x50020000, % "ahk_id " hadm
-			WinSet, ExStyle , 0x0802009C, % "ahk_id " hadm
-			WinSet, AlwaysOnTop, On 	 , % "ahk_id " hadm
+		Gui, adm: Font  	, % "s" fs " bold cGreen"
+		Gui, adm: Add  	, Text, % "x10 y+" YPlus " w" tw, % "⚕ Patienten ges."
+		Gui, adm: Font  	, Normal
+		Gui, adm: Add  	, Text, x+5, % oPat.Count()
+
+		Gui, adm: Font  	, % "s" fs " bold cRed"
+		Gui, adm: Add  	, Text, % "x10 y+" YPlus " w" tw, % "✉ Signaturen"
+		Gui, adm: Font  	, Normal
+		Gui, adm: Add  	, Text, x+5, % Addendum.PDF.SignatureCount ", Seitenzahl: " Addendum.PDF.SignaturePages
+
+		Gui, adm: Font  	, % "s" fs " bold cAA2277"
+		Gui, adm: Add  	, Text, % "x10 y+" YPlus " w" tw " hwndadmHMT", % "☀ Monitor"
+
+		GuiControlGet, cp, adm: Pos, % admHMT
+		cpy -= 10
+
+		Loop, % Addendum.Monitor.Count() {
+			Gui, adm: Font	, % "s" fs+12 " Normal"
+			Gui, adm: Add 	, Text, % "x" tw+15 " y" cpy-3 " BackgroundTrans", % SubStr("⚀⚁⚂⚃⚄⚅", A_Index, 1)
+			Gui, adm: Font	, % "s" fs
+			Gui, adm: Add 	, Text, % "x+2  y" cpy+8 " hwndadmHPB", % Addendum.Monitor[A_Index]
+			GuiControlGet, dp, adm: Pos, % admHPB
+			cpy += dph+4
+		}
+
+		Gui, adm: Font  	, % "s" fs " bold c172842"
+		Gui, adm: Add  	, Text, % "x10 y+" YPlus " w" tw " hwndadmHMT", % "⚗ Laborabruf"
+		Gui, adm: Font  	, % "s" fs " Normal"
+		Gui, adm: Add   	, Text, % "x+5 w" admWidth-tw-10 " vadmILAB1 " , % " `n "
+		Gui, adm: Add   	, Text, % "y+2 w" admWidth-tw-10 " vadmILAB2 " , % ""
+		;Gui, adm: Add  	, Text, % "x10 y" admHeight-50 " w" admWidth-20 " h40 vadmILAB1"  	, % ""
 
 	;}
+
+		Gui, adm: Tab
+	}
+
+	;}
+
+	;---------------------------------------------------------------------------------------------------------------------------------------------
+	; Gui zeigen
+	;---------------------------------------------------------------------------------------------------------------------------------------------;{
+		; Fensterstyles anpassen
+			If !hMDIFrame {
+				res                := Controls("", "Reset", "")
+				hMDIFrame	:= Controls("AfxMDIFrame1401"	, "ID", AlbisGetActiveMDIChild())
+			}
+			SetParentByID(hMDIFrame, hadm)
+
+			WinSet, Style              	, 0x50000000	, % "ahk_id " hadm
+			WinSet, ExStyle          	, 0x0802009C	, % "ahk_id " hadm
+
+		; Fenster anzeigen
+			Gui, adm: Show, % "x" Addendum.iWin.X " y" Addendum.iWin.Y " w" Addendum.iWin.W  " h" Addendum.iWin.H " HIDE NA " admShow, AddendumGui
+			WinGet, Style, Style, % "ahk_id " hadm
+			If (Style & 0x80000000) {
+				admGui_Destroy()
+				AddendumGui()
+			}
+
 
 	;}
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	; Tabs - Listviews mit Daten befüllen
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-		Addendum.InfoWindow.PatID := AlbisAktuellePatID()
-		If (Addendum.InfoWindow.PatID <> Addendum.InfoWindow.lastPatID)
-			Addendum.InfoWindow.ReIndex := true, Addendum.InfoWindow.lastPatID := Addendum.InfoWindow.PatID
+		Addendum.iWin.PatID := AlbisAktuellePatID()
+		If (Addendum.iWin.PatID <> Addendum.iWin.lastPatID)
+			Addendum.iWin.ReIndex := true, Addendum.iWin.lastPatID := Addendum.iWin.PatID
 		else
-			Addendum.InfoWindow.ReIndex := false
+			Addendum.iWin.ReIndex := false
 
-	; Inhalte auffrischen und anzeigen
-		admGui_Journal((Addendum.InfoWindow.Init ? false : true))
-		admGui_TProtokoll(Addendum.TProtDate, 0, compname)
-		PdfReports := admGui_Reports()
-
-	; Gui aktivieren damit es angezeigt wird
-		If admShow
-			RedrawWindow(hadm)
-
-		;AlbisActivate(1)
-
+		; Inhalte auffrischen und anzeigen
+			res := admGui_ShowTab(Addendum.iWin.firstTab, admHTab)
+			admGui_CountDown()
+			admGui_Journal( (!Addendum.iWin.Init ? true : false) )
+			Addendum.iWin.Init ++
+			admGui_TProtokoll(Addendum.TProtDate, 0, compname)
+			PatDocs := admGui_Reports()
+			Addendum.iWin.ReCheck := 0
 	;}
 
-		If Addendum.import
-			admGui_ImportGui(true)
+	; PDF Thumbnailpreview
+		;OnMessage(0x200,"admGui_ThumbnailView")
 
-		admReCheck := false
-
-		SetTimer, toptop, % Addendum.InfoWindow.RefreshTime
+	; Journalimport läuft gerade
+		If Addendum.ImportRunning {
+			res := admGui_ShowTab("Journal", admHTab)
+			admGui_ImportJournalAll()
+		}
 
 return
 
-admLAN:                                                                           	;{ zeichnet den LAN Tab
+admLAN:                                                                                          	;{ zeichnet den LAN Tab
 
 	; Array mit verfügbaren Netzwerkgeräten
 		LanClients := ClientsOnline()
@@ -457,10 +642,28 @@ return ;}
 
 }
 
+adm_Tabs:                                                                                        	;{ Tab Handler
+
+	If (A_GuiEvent = "Normal") {
+		; aktueller Tab ist Info, Countdown auffrischen
+			SendMessage, 0x130B,,,, % "ahk_id " admHTab
+			If (ErrorLevel = 5)  ; Info Tab angewählt
+				admGui_CountDown()
+	}
+
+return ;}
+
 adm_Lan:                                                                                         	;{ Netzwerk/LAN Tab Handler
 
 	If (A_GuiControl = "AdmLanCheck") {
 
+
+		;~ For clientname, Client in Addendum.LAN.Clients {
+
+			;~ ;SciTEOutput("IP: " clientname " , Ping: " IPHelper.Ping(client.ip))
+			;~ GuiControl, adm:, % "AdmConn_" clientName, % "HBITMAP:" Addendum.Dir "\assets\ModulIcons\connected.png"
+
+		;~ }
 			;~ LANMsg := ""
 			;~ admSendText("192.168.100.45", "answer|" A_ComputerName "|" A_IPAddress1 "|Status Ok" )
 			;~ ;admSendText("192.168.100.25", "answer")
@@ -468,41 +671,66 @@ adm_Lan:                                                                        
 			;~ myTcp.connect("localhost", 1337)
 			;~ MsgBox, % myTcp.recvText()
 
-	} else if RegExMatch(A_GuiControl, "AdmRDP_") {
+	} else if RegExMatch(A_GuiControl, "admRDP_")
+			Run, % q Addendum.LAN.Clients[compname].rdpPath "\" StrReplace(A_GuiControl, "admRDP_") ".rdp" q
 
-			rdpPath 	:= Addendum.LAN.Clients[compname].rdpPath
-			rdpClient	:= StrReplace(A_GuiControl, "AdmRDP_")
+return ;}
 
-			SciTEOutput("rdpfile: " rdpPath "\" rdpclient ".rdp")
+adm_Extras:		                                                                         			;{ Startet Module / Tools
 
-			Run, % q rdpPath "\" rdpclient ".rdp" q
+	If !RegExMatch(A_GuiControl, "adm(?<Obj>[A-Z]+)(?<Nr>\d+)", M)
+		return
+
+	Switch MObj 	{
+
+		case "MX":
+			EModulExe    	:= Addendum.Module[MNr].command
+			EModulName	:= Addendum.Module[MNr].name
+			If FileExist(EModulExe) {
+				PraxTT("starte Modul : " EModulName, "1 1")
+				SplitPath, EModulExe, WorkPath
+				Run, % EModulExe, % WorkPath,, EModulPID
+
+				If Instr(EModulExe, "Addendum_Exporter") {
+					Sleep 1000
+					WinWaitActive, % "Dokumentexport ahk_class AutoHotkeyGUI",, 7
+					If (EModulHwnd := WinExist("Dokumentexport ahk_class AutoHotkeyGUI"))
+						Send_WM_CopyData("search|" AlbisAktuellePatID() "|" GetAddendumID() "|admGui_Callback", EModulHwnd)
+				}
+
+			}
+
+		case "TX":
+			EToolExe    	:= Addendum.Tools[MNr].command
+			EToolName	:= Addendum.Tools[MNr].name
+			If FileExist(EToolExe) {
+				PraxTT("starte Tool: " EToolName, "1 1")
+				SplitPath, EToolExe, WorkPath
+				Run, % EToolExe, % WorkPath
+			}
+			else {
+				SplitPath, EToolExe,, EToolPath
+				PraxTT(EToolName " ist nicht vorhanden`n[" EToolPath "\]", "1 1")
+
+			}
 
 	}
 
 return ;}
 
-adm_Notes:			                                                                    			;{ Notizen           	- Edit Handler
+adm_Reports:                                                                                    	;{ Patienten Tab 	- Listview Handler
 
-return ;}
-
-adm_PdfReports:                                                                               	;{ Patienten Tab 	- Listview Handler
-
-		If InStr(A_GuiControl, "AdmPdfReports") && (A_EventInfo = 0)
+		If InStr(A_GuiControl, "admReports") && (A_EventInfo = 0)
 			return
 
 	; zurück wenn Datei nicht existiert
 		pdfPath := ""
 		LV_GetText(admFile, EventInfo := A_EventInfo, 1)
-		For idx, pdf in PdfReports
-			If InStr(pdf.name, admFile) {
-				pdfPath	:= Addendum.BefundOrdner "\" pdf.name
+		For idx, file in PatDocs
+			If InStr(file.name, admFile)
 				break
-			}
 
-		If (StrLen(pdfPath) = 0)
-			return
-
-		If !FileExist(pdfPath) 	{
+		If !FileExist(Addendum.BefundOrdner "\" file.name) 	{
 			PraxTT(	"Die Dateioperation ist nicht möglich,`nda die Datei nicht mehr vorhanden ist.", "3 2")
 			admGui_Reports()
 			RedrawWindow(hadm)
@@ -511,53 +739,51 @@ adm_PdfReports:                                                                 
 
 	;PDF Vorschau
 		If Instr(A_GuiEvent, "DoubleClick")
-			admGui_View(pdf.name)
+			admGui_View(file.name)
 
 return ;}
 
-adm_Journal:                                                                                     	;{ Journal Tab   	- Listview Handler
+adm_Journal:                                                                                     	;{ Journal Tab
 
 	; Default Listview, gewählter Dateiname
 		admGui_Default("admJournal")
-		LV_GetText(admFile, A_EventInfo, 1)
-		EventInfo := A_EventInfo
-		;ToolTip, % "file: " admFile "`nEvInfo: " EventInfo "`nGuiEvent: " A_GuiEvent "`nControl: " A_GuiControl, 1000, 400, 15
+		admFile	:= LV_GetSelected("admJournal")
+		EventInfo	:= A_EventInfo
 
-		If       	InStr(A_GuiEvent	, "RightClick")  	{                    	; Kontextmenu
-			If (StrLen(admFile) = 0)
+		If IsObject(admFile)
+			GuiControl, adm: , admButton2, % "Importieren [" admFile.Count() "]"
+		else
+			GuiControl, adm: , admButton2, % "Importieren"
+
+	; Kontextmenu
+		    	If InStr(A_GuiEvent 	, "RightClick")  	{
+			If (StrLen(admFile) = 0) && !IsObject(admFile)
 				return
 			MouseGetPos, mx, my, mWin, mCtrl, 2
-			Menu, admJCM, Show, % mx - 20, % my + 10
+			If IsObject(admFile)
+				Menu, admJCM1, Show, % mx - 20, % my + 10
+			else
+				Menu, admJCM, Show, % mx - 20, % my + 10
 			return
 		}
-		else if 	InStr(A_GuiEvent	, "ColClick")    	{                    	; Spaltensortierung
+	; Spaltensortierung
+		else 	If 	InStr(A_GuiEvent	, "ColClick")    	{
 			If (EventInfo > 0)
 				admGui_Sort(EventInfo)
 			return
 		}
-		else If 	InStr(A_GuiControl, "admButton2")	{                    	; einzelnes Dokument importieren
-
-			Loop % LV_GetCount() {                                                ; Dokumente ohne Personennamen werden ignoriert
-				LV_GetText(rowFile, A_Index, 1)
-				If !RxNames(rowFile, "ContainsName")   ; enthält keinen Personennamen dann weiter
-					continue
-				filePath := Addendum.BefundOrdner "\" rowFile
-				If RegExMatch(filePath, "\.pdf$") && FileExist(filePath) && !FileIsLocked(filePath) && isSearchablePDF(filepath) {
-					If FuzzyKarteikarte(rowFile)
-						admGui_ImportFromJournal(rowFile)
-					else
-						PraxTT("Es konnte kein passender Patient gefunden werden.", "3 0")
-					return
-				}
-			}
-
+	; Dokumente importieren
+		else 	If 	InStr(A_GuiControl, "admButton2")	{
+			admGui_ImportJournalAll(admFile)
 			return
 		}
-		else If	InStr(A_GuiControl, "admButton3") {                    	; Befundordner neu einlesen
+	; Befundordner indizieren
+		else 	If	InStr(A_GuiControl, "admButton3") {
 			admGui_Reload()
 			return
 		}
-		else If	InStr(A_GuiControl, "admButton4") {                    	; OCR Vorgang starten oder abbbrechen
+	; OCR starten/abbbrechen
+		else 	If	InStr(A_GuiControl, "admButton4") {
 			If Addendum.Thread["tessOCR"].ahkReady() {
 				MsgBox, 4	, Addendum für Albis on Windows, % "Soll die laufende Texterkennung`nabgebrochen werden?"
 				IfMsgBox, No
@@ -567,16 +793,16 @@ adm_Journal:                                                                    
 				return
 			}
 			else {
-				OCRRenameAllFiles()
+				admGui_OCRAllFiles()
 			}
 		}
 
-		If !FileExist(Addendum.BefundOrdner "\" admFile) 	{        	; zurück wenn Datei nicht existiert
-			;PraxTT(A_GuiEvent ", " A_GuiControl	" - Eine Dateioperation ist nicht möglich,`nda die Datei`n>" admFile "<`nnicht mehr vorhanden ist.", "3 1")
-			;admGui_Reload()
+	; zurück wenn Datei nicht existiert
+		If !FileExist(Addendum.BefundOrdner "\" admFile) || IsObject(admFile)
 			return
-		}
-		If Instr(A_GuiEvent	, "DoubleClick")                                 	; PDF/Bild-Programm aufrufen
+
+	; PDF/Bild-Programm aufrufen
+		If Instr(A_GuiEvent	, "DoubleClick")
 			admGui_View(admFile)
 
 return ;}
@@ -598,6 +824,8 @@ return ;}
 
 adm_TProtokollLV:                                                                               	;{ Tagesprotokoll 	- Listview Handler
 
+	admGui_Default("admTProtokoll")
+
 	If Instr(A_GuiEvent, "DoubleClick") {
 		LV_GetText(PatID, EventInfo:= A_EventInfo, 4)
 		AlbisAkteOeffnen("", PatID)
@@ -607,79 +835,87 @@ return ;}
 
 adm_GuiDropFiles:                                                                             	;{ nicht erkannte Dokumente einfach in das Posteingangfenster ziehen!
 
-	PatName 	:= StrReplace(AlbisCurrentPatient(), " ")
-	PatName 	:= StrReplace(PatName, "-")
-	PatName 	:= StrSplit(PatName, ",")
+		PatName 	:= AlbisCurrentPatient()
 
-	; übergebene Dateien liegen als `n getrennte Liste in A_GuiEvent vor (genial einfach))
+	; übergebene Dateien liegen durch ein mit `n getrennte Liste in A_GuiEvent vor (genial einfach))
 		Loop, Parse, A_GuiEvent, `n
 		{
+
 				SplitPath, A_LoopField, filename
 
-			; Datei muss zunächst sicherheitshalber in den Befundordner kopiert werden, wenn sie dort nicht vorliegt
-				If !InStr(A_LoopField, Addendum.BefundOrdner )
-					FileCopy, % A_LoopField, % Addendum.BefundOrdner "\" filename
-
-				If RegExMatch(filename, "\.pdf")
-				{
-						PdfReports.Push(StrReplace(filename, ".pdf"))
-						;LV_Add("ICON" 1,, RegExReplace(filename, "^[\w\p{L}-]+[\s,]+[\w\p{L}]+\s*\,*\s*", ""))
-						LV_Add("ICON" 1,, filename)
+			; benennt die Datei gleich mit dem Namen des aktuellen Patienten, wenn man die Datei auf den Patienten Tab gezogen hatte
+				If InStr(A_GuiControl, "admReports") {
+					filename := StrReplace(filename, PatName)
+					filename := PatName ", " RegExReplace(filename, "^\s*,\s*")
 				}
-				else If RegExMatch(filename, "\.jpg")
-				{
-						PdfReports.Push(filename)
-						LV_Add("ICON" 2,, RegExReplace(filename, "^[\w\p{L}-]+\s*[,]*\s*[\w\p{L}]+\,*\s*", ""))
+
+			; Datei kommt direkt aus dem Befundordner, nicht aufnehmen (, "^" EscapeStrRegEx(Addendum.BefundOrdner) "\\[^\\]+$")
+				If (A_LoopField = (Addendum.BefundOrdner "\" filename))
+					continue
+
+			; Datei sicherheitshalber in den Befund und Backup Ordner kopieren
+				If !FileExist(Addendum.BefundOrdner "\" filename){
+					FileCopy, % A_LoopField, % Addendum.BefundOrdner "\" filename
+					FileCopy, % A_LoopField, % Addendum.BefundOrdner "\Backup\" filename, 1
+				}
+
+				If RegExMatch(filename, "\.pdf$")		{
+					PatDocs.Push(StrReplace(filename, ".pdf"))
+					LV_Add("ICON" 1,, RxNames(filename, "ReplaceNames"))
+				}
+				else If RegExMatch(filename, "\.(jpg|png|tiff|bmp|wav|mov|avi)$")	{
+					PatDocs.Push(filename)
+					LV_Add("ICON" 2,, RxNames(filename, "ReplaceNames"))
 				}
 		}
 
 	; Importbuttons aktivieren und später nach Befundart ausschalten
-		admGui_InfoText("admReports")
+		admGui_InfoText("Patient")
 
 return ;}
 
 adm_BefundImport:                                                                              	;{ läuft wenn Befunde oder Bilder importiert werden sollen
 
-		If (PdfReports.MaxIndex() = 0) || Addendum.Importing 	; versehentlichen Aufruf bei leerem Array verhindern
+		If (PatDocs.MaxIndex() = 0) || Addendum.Importing 	; versehentlichen Aufruf bei leerem Array verhindern
 			return
 
-		;Addendum.Importing := true                             		; globale flag für Importvorgang setzen
 		PreReaderListe := admGui_GetAllPdfWin()              	; derzeit geöffnete Readerfenster einlesen
 		admGui_ImportGui(true, "...importiere alle Befunde")	; Hinweisfenster anzeigen
-		Imports := admGui_FileImport()                               	; Importvorgang starten
-		admGui_RemoveImports(Imports)                            	; PdfReports - Importe entfernen
-		admGui_InfoText("Reports")                                    	; Kurzinfo aktualisieren
-		admGui_Journal(true)                                               	; Journalinhalt auffrischen
+		Imports := admGui_ImportFromPatient()                   	; Importvorgang starten
+		admGui_RemoveImports(Imports)                            	; PatDocs - Importe entfernen
+		admGui_InfoText("Patient")                                      	; Kurzinfo aktualisieren
+		admGui_Journal(false)                                             	; Journalinhalt auffrischen
 		admGui_ShowPdfWin(PreReaderListe)                     	; holt den/die PdfReaderfenster in den Vordergrund
 		admGui_ImportGui(false)                                        	; Hinweisfenster wieder schliessen
-		;Addendum.Importing := false                                 	; globalen flag für Importvorgang ausschalten
-
-		;SetTimer, toptop, % Addendum.InfoWindow.RefreshTime
 
 return ;}
 
-toptop:                                                                                              	;{ zeichnet das Fenster in Abständen neu
+adm_LBDruck:                                                                                     	;{ Laborblattdruck mit einem Tastendruck
 
-	; Gui schliessen unter bestimmten Bedingungen
-		Aktiv := Addendum.AktiveAnzeige := AlbisGetActiveWindowType()
-		If !RegExMatch(Aktiv, "i)Karteikarte|Laborblatt|Biometriedaten") || !WinExist("ahk_class OptoAppClass") {
-			admGui_Destroy()
-			return
+	Gui, adm: Submit, NoHide
+
+	; sichert die Einstellung
+		If (A_GuiControl = "admLBDPD") {
+			IniWrite, % admLBDPD, % Addendum.Ini, % compname, % "Infofenster_Laborblatt_Drucker"
+			Addendum.iWin.LBDrucker := admLBDPD
 		}
-
-	; Fenster ab und zu - neu zeichnen lassen
-		RedrawWindow(hadm)
-		try {
-			Gui, adm: Show, NA
+	; wenn Zähler 0 zeigt "Alles" anzeigen
+		else If (A_GuiControl = "admLBDUD") {
+			If (admLBDUD < 1) {
+				GuiControl, adm:, admLBDCB, % "Alles"
+				Sleep 50
+				GuiControl, adm:, admLBDCB, % "Alles"
+			}
+			GuiControl, adm: Focus, admLBDUD
 		}
-
-	; ist Albis inaktiv, dann wird das wiederholte neuzeichnen der Gui zeitlich reduziert
-		SetTimer, toptop, % (Addendum.InfoWindow.aRT := !WinActive("ahk_class OptoAppClass") ? Addendum.InfoWindow.RefreshTime*2 : Addendum.InfoWindow.RefreshTime)
-		;ToolTip, % "Toptop: on, timer interval: " Round(Addendum.InfoWindow.aRT/1000, 1) "s", 1000, 1, 11
+	; Drucken ausführen
+		else If (A_GuiControl = "admLBD")
+			admGui_LaborblattDruck(admLBDPD, admLBDCB)
 
 return ;}
 
-; ------------------------ Gui-Funktionen
+
+; -------- Gui-Funktionen
 admGui_Default(LVName)                                             	{               	; Gui Listview als Default setzen
 
 	Gui, adm: Default
@@ -688,153 +924,461 @@ admGui_Default(LVName)                                             	{           
 return
 }
 
+admGui_ShowTab(TabName, hTab="")                          	{               	; ein bestimmten Tab nach vorne holen
+
+		global admHTab, hadm
+		static admGuiTabs := {"Patient":0, "Journal":1, "Protokoll":2, "Extras":3, "Netzwerk":4, "Info":5}
+
+		TabToShow := (RegExMatch(TabName, "^\d+$") ? TabName : admGuiTabs[TabName])
+		hTab := !hTab ? admHTab : hTab
+
+	; TCM_GETCURSEL (0x130B)     	: ausgewählten TAB ermitteln
+		SendMessage, 0x130B,,,, % "ahk_id " hTab
+		CurrentTab := ErrorLevel
+
+	; zurück wenn Tab schon angezeigt wird
+		If (TabToShow = CurrentTab)
+			return 1
+
+	; TCM_SETCURFOCUS (0x1330)	: TAB wählen
+		SendMessage, 0x1330, % TabToShow,,, % "ahk_id " hTab
+
+	; TCM_GETCURSEL (0x130B)     	: ausgewählten TAB ermitteln
+		SendMessage, 0x130B,,,, % "ahk_id " hTab
+		CurrentTab := ErrorLevel
+		For CurrentTabName, tabnr in admGuiTabs
+			If (CurrentTab = tabnr)
+				return CurrentTabName
+
+return ErrorLevel
+}
+
+admGui_Sort(EventNr, LV_Init=false)                              	{                 	; sortiert die Journalspalten und zeigt ein Symbol für die Sortierreihenfolge an
+
+		; Funktion wird gebraucht für die Wiederherstellung der letzten Sortierung und für das Sichern der Einstellungen bei Nutzerinteraktion
+		; LV_Init - nutzen um gespeicherte Sortierungseinstellung wiederherzustellen
+
+		global 	admHJournal, hadm
+		static 	admJCols, LVSortStr, JSort, JColDir, JRow, JSortDir := []
+
+		admGui_Default("admJournal")
+
+		If LV_Init {
+
+		  ; Spalte "3" , Sortierrichtung 1 = Aufsteigend : 0 = Absteigend, Listview scrollen zur Reihe Nr.
+			Addendum.iWin.JournalSort:= IniReadExt(compname, "Infofenster_JournalSortierung", "3 1 1")
+
+   		  ; LVM_GETHEADER = LVM_FIRST (0x1000) + 31 = 0x101F.
+			admHhdr	:= DllCall("SendMessage", "uint", admHJournal	, "uint", 0x101F, "uint", 0, "uint", 0)
+		  ; HDM_GETITEMCOUNT = HDM_FIRST (0x1200) + 0 = 0x1200.
+			amdCols	:= DllCall("SendMessage", "uint", admHhdr     	, "uint", 0x1200, "uint", 0, "uint", 0)
+
+			Loop % admJCols
+				JSortDir[A_Index] := "0"
+
+		}
+
+		If LV_Init || (EventNr = 0) {
+			RegExMatch(Addendum.iWin.JournalSort, "\s*(\d+)\s*(\d)\s*(\d+)", S)
+			EventNr            	:= S1= 0 	? 1 : S1
+			JSortDir[EventNr] 	:= S2= ""	? 1 : S2
+			JRow                 	:= S3
+		}
+
+	; Sortierung je nach gewählter Spalte vornehmen
+	; Idee von: https://www.autohotkey.com/boards/viewtopic.php?t=68777
+		If (EventNr = 3)     ; Spalte 3 (Eingangsdatuim) - sortiert wird nach der unsichtbaren Spalte 4 (Timestamp)
+			EventNr := 4
+
+		admGui_ColSort("admJournal", EventNr, (JSortDir[EventNr] := !JSortDir[EventNr]))
+		Addendum.iWin.JournalSort := EventNr " " (JSortDir[EventNr])
+
+}
+
+admGui_Sort_old(EventNr, LV_Init=false)                          	{               	; sortiert die Journalspalten und zeigt ein Symbol für die Sortierreihenfolge an
+
+		; Funktion wird gebraucht für die Wiederherstellung der letzten Sortierung und für das Sichern der Einstellungen bei Nutzerinteraktion
+		; LV_Init - nutzen um gespeicherte Sortierungseinstellung wiederherzustellen
+
+		global 	admHJournal
+		static 	JCol1Dir, JCol2Dir, LVSortStr, JColDir := []
+
+		admGui_Default("admJournal")
+
+		If LV_Init {
+
+			RegExMatch(Addendum.iWin.JournalSort, "\s*(\d)\s*(\d)", JSort)
+			EventNr := JSort1
+
+			If (JSort1 = 1) {
+				If (JSort2 = 1)
+					JCol1Dir := true
+			}
+			else {
+				If (JSort2 = 1)
+					JCol3Dir := true
+			}
+
+			If JCol1Dir
+				JCol3Dir := false
+
+			If JCol3Dir
+				JCol1Dir := false
+
+		}
+
+	; Sortierung je nach gewählter Spalte vornehmen
+	; Idee von: https://www.autohotkey.com/boards/viewtopic.php?t=68777
+		If      	(EventNr = 3) {    ; Spalte 3 (Eingangsdatuim) - sortiert wird nach der unsichtbaren Spalte 4 (Timestamp)
+
+			admGui_ColSort("admJournal", EventNr, (JCol3Dir := !JCol3Dir))
+			Addendum.iWin.JournalSort := EventNr " " (JCol2Dir ? "1":"0")
+
+		}
+		else If	(EventNr = 1) {
+
+			admGui_ColSort("admJournal", EventNr, (JCol1Dir := !JCol1Dir))
+			Addendum.iWin.JournalSort := EventNr " " (JCol1Dir ? "1":"0")
+
+		}
+
+
+}
+
+admGui_ColSort(LVName, col, SortDest)                         	{                	; Helfer für admGui_Sort
+
+	global 	admHJournal
+
+	admGui_Default(LVName)
+
+	If (LVName = "admJournal")
+		If (col = 2)
+			Type := "Integer"
+		else If (col = 3)
+			col := 4, Type := "Integer"
+		else
+			Type := "Text"
+
+	LV_ModifyCol(col, (SortDest ? "Sort" : "SortDesc") " " Type)
+	LV_SortArrow(admHJournal, col, (SortDest ? "up":"down"))
+
+}
+
+admGui_ColorRow(hLV, rowNr, paint=true)                      	{                	; eine Zeile einfärben
+
+	global 	hadm
+	static 	bcolor := 0x995555, tcolor := 0xFFFFFF
+
+	If !Addendum.iWin.RowColors
+		return
+
+	If paint
+		res := LV_Colors.Row(hLV, rowNr, bcolor, tcolor)
+	else
+		res := LV_Colors.Row(hLV, rowNr)
+
+	;SciTEOutput("ColorRow: " res)
+	;GuiControl, adm: +Redraw, admJournal
+	WinSet, Redraw, , % "ahk_id " hadm
+
+}
+
+admGui_OCRButton(status)                                           	{                	; ändert den Text und Modus des OCR Buttons im Journal Tab
+
+	global admButton4, adm
+
+	RegExMatch(status " ", "i)^\s*(?<Enabled>[\+\-])\s*(?<Text>[\pL\-\s]+)", OCR_)
+
+	If (OCR_Enabled = "+")
+		OCRStatus := "Enable1"
+	else if (OCR_Enabled = "-")
+		OCRStatus := "Enable0"
+	else
+		OCRStatus := "Enable1"
+
+	admGui_Default("admJournal")
+
+	GuiControl, % "adm: " 	OCRStatus 	, admButton4
+	GuiControl, % "adm: ",	admButton4	, % OCR_Text
+
+}
+
+admGui_Receive(answer)                                               	{                 	; empfängt Netzwerknachrichten
+	SciTEOutput(answer)
+}
+
+admGui_Watcher()                                                         	{                	; Timerfunktion. Änderungen im Albisfenster werden leider nicht zuverlässig erkannt
+
+	global hadm
+
+	If !WinExist("ahk_class OptoAppClass") || !Addendum.AddendumGui
+		return
+
+	Addendum.AktiveAnzeige := AlbisGetActiveWindowType()
+	If RegExMatch(Addendum.AktiveAnzeige, "i)Karteikarte|Laborblatt|Biometriedaten") {
+		WinGet, winList, ControlList, % "ahk_id" AlbisGetActiveMDIChild()
+		If InStr(winlist, "AutohotkeyGui1")
+			return
+		else
+			AddendumGui()
+	}
+
+}
+
 admGui_Destroy()                                                             {                	; schliesst das Infofenster
 
-	global admHJournal
+	global admHJournal, admHTab
 
 	Gui, adm: Submit, Hide
 	GuiControlGet, ProtokollTag, adm:, admTPTag
 
-	Addendum.TProtDate             	:= ProtokollTag
-	Addendum.InfoWindow.firstTab	:= admTabs
+	Addendum.TProtDate       	:= ProtokollTag
+	Addendum.iWin.firstTab	:= admTabs
+	Addendum.iWin.lastPatID	:= 0
 
-	If Addendum.InfoWindow.RowColors
-		LV_Colors.Detach(admHJournal)
-
-	SetTimer, toptop, % (Addendum.InfoWindow.aRT := Addendum.InfoWindow.RefreshTime*3)
-	;SetTimer, toptop, Off
 	Gui, adm: 	Destroy
 	Gui, adm2: 	Destroy
+
+	hadm := hadm2 := 0
+
+	;~ for i, message in LISTENERS
+		;~ OnMessage(message, "")
 
 return
 }
 
-admGui_Receive(answer)                                               	{                 	; empfängt Netzwerknachrichten
 
-	SciTEOutput(answer)
+; -------- Inhalte erstellen
+admGui_Reload(refreshDocs=true)                                  	{                	; aktualisiert die Inhalte und zeichnet das Fenster neu
 
-}
+	global hadm, PatDocs
 
-admGui_PatLog(PatID, cmd, LogText)                             	{                 	; individuelles Patienten Logbuch
-
- 	; zurück falls Nutzer keine Protokollerstellung wünscht
-		If !Addendum.PatLog
-			return
-
-		PatientDir 	:= PatDir(PatID)
-		If InStr(cmd, "AddToLog") {
-			timeStamp := A_DD "." A_MM "." A_YYYY " " A_Hour ":" A_Min ":" A_Sec "`t"
-			FileAppend, % timeStamp . LogText "`n", % PatientDir "\log.txt"
-		}
-
-}
-
-; -------- TAB Inhalte
-admGui_Reload()                                                           	{                	; aktualisiert die Inhalte und zeichnet das Fenster neu
-
-	admGui_Journal(true)
-	PdfReports := admGui_Reports()
+	admGui_Journal(refreshDocs)
+	PatDocs := admGui_Reports()
 	RedrawWindow(hadm)
 
 }
 
+admGui_RemoveImports(ImportList)                               	{               	; PdfReport-Array aufräumen
+
+	global PatDocs
+
+	Loop, Parse, % RTrim(ImportList, "`n"), `n
+		Loop % PatDocs.MaxIndex()
+			If InStr(PatDocs[A_Index], A_LoopField) {
+				PatDocs.RemoveAt(A_Index)
+				continue
+			}
+
+}
+
+admGui_Abrechnungshelfer(PatID, Geburtsdatum)          	{                	; berechnet und zeigt die letzten Untersuchungstermine an
+
+		global adm, admNotes
+
+		;~ If (StrLen(Addendum.Praxis.ArztUser) = 0)
+			;~ NR := Addendum.Praxis.StandardArzt
+
+		;~ If InStr(Addendum.Praxis.Arzt[NR].Fach, "Hausarzt")
+			;~ return
+
+		Kassenabrechnung := false
+
+		SArten   	:= "Scheinarten: "
+		infT       	:= ""
+		infTr      	:= "⎈ ⎈ ⎈ ⎈ ⎈ ⎈ ⎈ ⎈ ⎈ ⎈ ⎈ ⎈ ⎈ ⎈`n"
+		infT2     	:= ""
+
+		GVUMin 	:= Addendum.GVUminAlter
+		AbrSchein := AlbisAbrechnungsscheinAktuell()
+		QDaten 	:= QuartalTage({"TDatum": A_YYYY A_MM A_DD, "TFormat": "DBASE"})
+		PatGeburt	:= StrReplace(Geburtsdatum, ".")
+		PatGeburt	:= SubStr(PatGeburt, 5, 4) SubStr(PatGeburt, 3, 2) SubStr(PatGeburt, 1, 2)
+		PatAge    	:= HowLong(PatGeburt, A_YYYY A_MM A_DD)
+
+	; angelegte Abrechnungsscheine werden angezeigt
+		If (AbrSchein.Count() > 0)
+			For abrIndex, Abr in AbrSchein {
+				SArten .= (abIndex > 1 ? "," : "")  (Abr.Scheinart = "Privat" ? "P " Abr.Datum : SubStr(Abr.Scheinart,1,1) " (" Abr.Quartal ")")
+				If (Abr.Scheinart = "Abrechnung")
+					Kassenabrechnung := true
+			}
+		else
+			SArten .= "keine"
+
+	; bei ausschließlicher Abrechnung nach EBM (Privatpatienten) bricht die Funktion hier ab
+		If !Kassenabrechnung
+			return SArten
+
+	; Abrechnungsregeln für verschiedene Ziffern
+		For key, val in Addendum.PatExtra[PatID] {
+
+			If    	  (key = "Z01732")	{
+
+					gkey := StrReplace(key, "Z")
+					gvQ 	:= QuartalTage({"TDatum":val, "TFormat":"DBASE"})
+     				gvT 	:= ConvertDBASEDate(val) "`tQ " SubStr(gvQ["Aktuell"], 1, 2) "/" SubStr(gvQ["Aktuell"], 3, 2)
+					gvuspan	:= HowLong(val, QDaten.DBaseEnd)
+					timeString	:= gvuspan.Years "J " gvuspan.Months "M " gvuspan.Days "T`n"
+					If (gvuspan.Years >= 3)
+						gvZ :=  ((gvuspan.Years >= 3) ? "☘" : "⛔") "   `t" timeString
+
+			}
+			else If (key = "Z01746" || key = "Z01745")	{
+
+					hkey	:= StrReplace(key, "Z")
+					hkQ	:= QuartalTage({"TDatum":val, "TFormat":"DBASE"})
+					hkT 	:= ConvertDBASEDate(val) "`tQ " SubStr(hkQ["Aktuell"], 1, 2) "/" SubStr(hkQ["Aktuell"], 3, 2)
+					hkspan	:= HowLong(val, QDaten.DBaseEnd)
+					timeString	:= "vor " hkspan.Years "J " hkspan.Months "M " hkspan.Days "T`n"
+					If (hkspan.Years >= 3)
+						hkZ := "HKS(" key ")" ((hkspan.Years >= 3) ? "☘" : "⛔") "   `t" timeString
+
+			}
+			else If (key = "Z01740")	{
+
+					coZ := "01740: "
+					cokey := StrReplace(key, "Z")
+					coQ := QuartalTage({"TDatum":val, "TFormat":"DBASE"})
+					coZ := cokey ":#" ConvertDBASEDate(val) " `tQ " SubStr(coQ["Aktuell"], 1, 2) "/" SubStr(coQ["Aktuell"], 3, 2) "`n"
+
+			}
+			else If (key = "Z03220")	{
+
+					crzQ1 := QuartalTage({"TDatum":val, "TFormat":"DBASE"})
+					cz1 := "03220: #" ConvertDBASEDate(val) " `tQ " SubStr(crzQ1["Aktuell"], 1, 2) "/" SubStr(crzQ1["Aktuell"], 3, 2) "`n"
+
+			}
+			else If (key = "Z03221")	{
+
+					crzQ2 := QuartalTage({"TDatum":val, "TFormat":"DBASE"})
+					cz2 := "03221: #" ConvertDBASEDate(val) " `tQ " SubStr(crzQ2["Aktuell"], 1, 2) "/" SubStr(crzQ2["Aktuell"], 3, 2) "`n"
+
+			}
+
+		}
+
+	; Regeln der Vorsorgeuntersuchungen
+		If      	(PatAge.Years >= GVUMin) && (StrLen(gkey) > 0) && (StrLen(hkey) > 0) && (gvQ.Aktuell = hkQ.Aktuell ) {
+
+			tabs := "`t`t`t"
+			infT1 .= gkey "/" hkey . " `t" . gvT "`n"
+			If gvz
+				infT2 .= "GVU(" gkey ") / HKS(" hkey ") " gvz "`n"
+
+		}
+		else if 	(PatAge.Years >= GVUMin) && (StrLen(gkey) > 0) && (StrLen(hkey) > 0) {
+
+			tabs := "`t"
+			infT1 .= gkey . tabs . gvl "`n" hkey . tabs . hkl "`n"
+			If hkZ
+				infT2 .= "GVU(" gkey ") " gvz "`n" hkZ "`n"
+
+		}
+		else if 	(PatAge.Years >= GVUMin) && (StrLen(gkey) =0) && (StrLen(hkey) = 0) {
+			infT2 .= "GVU / HKS - bisher noch ohne GVU`n"
+		}
+
+	; Text zusammensetzen
+		infT .= StrReplace(coz, "#", tabs)
+		infT .= infT1
+		infT .= StrReplace(cz1, "#", tabs)
+		infT .= StrReplace(cz2, "#", tabs)
+
+		If IstChronischKrank(PatID) {
+			If (crzQ1.Aktuell <> QDaten.Aktuell)
+				infT2 .= "Chronikerpauschale 1: ☘`t`tQ " . SubStr(crzQ1["Aktuell"], 1, 2) "/" SubStr(crzQ1["Aktuell"], 3, 2) "`n"
+			If (crzQ2.Aktuell <> QDaten.Aktuell)
+				infT2 .= "Chronikerpauschale 2: ☘`t`tQ " . SubStr(crzQ2["Aktuell"], 1, 2) "/" SubStr(crzQ2["Aktuell"], 3, 2) "`n"
+		}
+
+		If !InStr(infT, "01740") && (PatAge.Years >= 55)
+				infT2 .= "01740: ☘" tabs " ! ! ! ! "
+
+return SArten "`n" . infT . infTr . (Kassenabrechnung ? infT2 : "")
+}
+
+admGui_CountDown()                                                   	{              	; berechnet die Zeit bis zum nächsten Laborabruf
+
+	global hadm, adm, admILAB1
+
+	IniRead, LCall1	, % Addendum.Ini, % "LaborAbruf", % "Letzter_Abruf"
+	IniRead, LCall2	, % Addendum.Ini, % "LaborAbruf", % "Letzter_Abruf_ohne_Daten"
+	IniRead, LCall3	, % Addendum.Ini, % "LaborAbruf", % "Letzter_Abruf_mit_Daten"
+
+	If RegExMatch(LCall1, "(?<Y>\d{4})-(?<M>\d{2})-(?<D>\d{2})\s+(?<H>\d{2}):(?<Min>\d{2}):(?<S>\d{2})[\s\|]*", T)
+		lastLBCall := "letzter:  " TD "." TM (TY = A_YYYY ? "." : "." TY) " " TH ":" TMin "Uhr`n          Daten " (LCall1 = LCall2 ? "[-]" : LCall1 = LCall3 ? "[+]" : "[?]")
+
+	IniRead, nextCall, % Addendum.Ini, % "LaborAbruf", % "naechster_Abruf"
+	If RegExMatch(nextCall, "(?<D>\d{2})\.(?<M>\d{2})\.(?<Y>\d{4})", T)
+		nextLBCall := "nächster: " (nextCall ? (TY = A_YYYY ? RegExReplace(nextCall, "\." TY "\,\s*", ". ") : nextCall) "Uhr" : "")
+
+	GuiControl, adm:, admILAB1, % lastLBCall
+	GuiControl, adm:, admILAB2, % nextLBCall
+
+return
+}
+
+
+; -------- TAB Anzeigen auffrischen
 admGui_Reports()                                                         	{	            	; zeigt Befunde des Patienten aus dem Befundordner
 
-		global PdfReports
-		PdfReports := []
+		global 	PatDocs
+		static 	PdfImport 		:= false
+		static 	ImageImport	:= false
+		static 	rxPerson1    	:= "[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL-]+)*"
+		static 	rxPerson2    	:= "[A-ZÄÖÜ][\pL]+([\-\s][A-ZÄÖÜ][\pL]+)*"
 
-		static PatName
-		static PdfImport 	:= false
-		static ImageImport	:= false
-
-		admGui_Default("admPdfReports")
+		admGui_Default("admReports")
 		LV_Delete()
 
-
 	; Pdf Befunde des Patienten ermitteln und entfernen bestimmter Zeichen aus dem Patientennamen für die fuzzy Suchfunktion
-		RegExMatch(AlbisCurrentPatient(), "(?<Nachname>[\pL-]+)[\,\s]+(?<Vorname>[\pL-]+)", Pat)
-		PatNVame	:= RegExReplace(PatNachname PatVorname, "\s-")
-		PatVName	:= RegExReplace(PatVorname PatNachname, "\s-")
+		PatDocs	:= Array()
+		PatID    	:= AlbisAktuellePatID()
+		PatNV   	:= RegExReplace(oPat[PatID].Nn, "[\s\-]") . RegExReplace(oPat[PatID].Vn, "[\s\-]")
 
-	; PdfReports erstellen - enthält nur die Dateien zum aktuellen Patienten
+	; PatDocsPatDocs erstellen - enthält nur die Dateien zum aktuellen Patienten
 		For key, pdf in ScanPool	{				;wenn keine PatID vorhanden ist, dann ist die if-Abfrage immer gültig (alle Dateien werden angezeigt)
-			RegExMatch(pdf.name, "^\s*(?<Nachname>[A-ZÄÖÜ][\pL]+[\s-]*([A-ZÄÖÜ][\pL-]+)*)[\,\s]+(?<Vorname>[A-ZÄÖÜ][\pL]+[\s-]*([A-ZÄÖÜ][\pL-]+)*)", doc)
-			a := StrDiff(PatNVame, RegExReplace(docNachname docVorname, "\s-"))
-			b := StrDiff(PatNVame, RegExReplace(docVorname docNachname, "\s-"))
-			If (a < 0.11) || (b< 0.11)
-				PdfReports.Push(pdf)
+			RegExMatch(pdf.name, "^\s*(?<Nachname>" rxPerson2 ")[\,\s]+(?<Vorname>" rxPerson2 ")", doc)  ; ## ersetzen
+			a := StrDiff(PatNV, RegExReplace(docNachname docVorname, "[\s\-]"))
+			b := StrDiff(PatNV, RegExReplace(docVorname docNachname, "[\s\-]"))
+			If (a < 0.12) || (b < 0.12)
+				PatDocs.Push(pdf)
 		}
 
 	; Pdf Befunde anzeigen
-		For key, pdf in PdfReports {
+		For key, pdf in PatDocs {
 			If !RegExMatch(pdf.name, "\.pdf$") || !FileExist(Addendum.BefundOrdner "\" pdf.name)
 				continue
 			If pdf.isSearchable
-				LV_Add("ICON3", pdf.pages, RxNames(StrReplace(pdf.name, ".pdf"), "ReplaceNames"))
+				LV_Add("ICON3", pdf.pages " S:" , RxNames(StrReplace(pdf.name, ".pdf"), "ReplaceNames"))
 			else
-				LV_Add("ICON1", pdf.pages, RxNames(StrReplace(pdf.name, ".pdf"), "ReplaceNames"))
+				LV_Add("ICON1", pdf.pages " S:" , RxNames(StrReplace(pdf.name, ".pdf"), "ReplaceNames"))
 		}
 
 	; Bilddateien aus dem Befundordner einlesen
 		Loop, Files, % Addendum.BefundOrdner "\*.*"
 			If RegExMatch(A_LoopFileName, "\.jpg|png|tiff|bmp|wav|mov|avi$") {
-				RegExMatch(A_LoopFileName, "^\s*(?<Nachname>[A-ZÄÖÜ][\pL]+[\s-]*([A-ZÄÖÜ][\pL-]+)*)[\,\s]+(?<Vorname>[A-ZÄÖÜ][\pL]+[\s-]*([A-ZÄÖÜ][\pL-]+)*)", Such)
-				SuchName := RegExReplace(SuchNachname SuchVorname, "\s-")
-				a	:= StrDiff(SuchName, PatNVame)
-				b	:= StrDiff(SuchName, PatVName)
+				RegExMatch(A_LoopFileName, "^\s*(?<Nachname>" rxPerson2 ")[\,\s]+(?<Vorname>" rxPerson2 ")", Such) ; ## ersetzen
+				SuchNV := RegExReplace(SuchNachname SuchVorname, "[\s\-]")
+				SuchVN := RegExReplace(SuchVorname SuchNachname, "[\s\-]")
+				a	:= StrDiff(PatNV, SuchNV), b	:= StrDiff(PatNV, SuchVN)
 				Diff := (a <= b) ? a : b
-				If (Diff < 0.11) {
+				If (Diff < 0.12) {
 					LV_Add("ICON2",, RxNames(A_LoopFileName, "ReplaceNames")) ; entfernt den Namen
-					PdfReports.Push({"name": A_LoopFileName})
+					PatDocs.Push({"name": A_LoopFileName})
 				}
 			}
 
 	; InfoText auffrischen
-		admGui_InfoText("Reports")
+		admGui_InfoText("Journal")
 
-return PdfReports
-}
-
-admGui_CheckJournal(pdffile, ThreadID)                          	{                	; Ausführung jedesmal nach erfolgreicher Erstellung einer PDF durch TesseractOCR()
-
-		global admHJournal
-
-		admGui_Default("admJournal")
-
-	; Farb-Markierung entfernen
-		If (rowNr := LV_FindRow("admJournal",1, pdffile)) {
-			LV_Modify(rowNr, "ICON3")                                        	; ICON für durchsuchbare PDF hinzufügen
-			admGui_ColorRow(admHJournal, rowNr, false)          	; Hintergrundfarbe der Zeile wird entfernt
-		}
-
-	; Datei aus dem Stapel entfernen
-		For idx, inprogress in Addendum.InfoWindow.FilesStack
-			If (inprogress = pdffile) {
-				Addendum.InfoWindow.FilesStack.RemoveAt(idx)
-				break
-			}
-
-	; ScanPool Array ändern und BefundIndex sichern
-		For idx, pdf in ScanPool
-			If InStr(pdf.name, pdfFile) {
-				pdfPath := Addendum.BefundOrdner "\" pdffile
-				FileGetSize	, FSize	, % pdfPath, K
-				FileGetTime	, FTime	, % pdfPath, C
-				ScanPool[idx].filesize      	:= FSize
-				ScanPool[idx].filetime      	:= FTime
-				ScanPool[idx].pages       	:= GetPDFPages(pdfPath)
-				ScanPool[idx].isSearchable	:= isSearchablePDF(pdfPath)
-				break
-			}
-
-	; Nachricht an den OCR-Thread: OCR Vorgang fortsetzen
-		Send_WM_CopyData("continue", ThreadID)
-
+return PatDocs
 }
 
 admGui_Journal(refreshDocs=false)                              	{	            	; befüllt das Journal mit Pdf und Bildbefunden aus dem Befundordner
 
-		global admHJournal, tessOCRRunning
+		global admHJournal
 		static FirstRun := true
 
 		ImageImport := false
@@ -845,35 +1389,22 @@ admGui_Journal(refreshDocs=false)                              	{	            	;
 
 	; SCANPOOL OBJECT UND "PdfIndex.json" DATEI AUFFRISCHEN
 		If (refreshDocs || FirstRun) {
-			newPDF := BefundIndex()
 			FirstRun := false
+			newPDF := BefundIndex()
 		}
 
 	; PDF BEFUNDE DES PATIENTEN HINZUFÜGEN
-		GuiControl, adm: -Redraw, admJournal
-		Addendum.InfoWindow.OCREnabled := false
+		Addendum.iWin.OCREnabled := false
 		For key, pdf in ScanPool	{
-
 			If FileExist(filePath := Addendum.BefundOrdner "\" pdf.name) {
-
-				FormatTime, filetime      	, % pdf.filetime, dd.MM.yyyy
-				FormatTime, timeStamp 	, % pdf.filetime, yyyyMMdd
-
-				; anderes Symbol für durchsuchbare PDF Dateien
-				If pdf.isSearchable
-					LV_Add("ICON3", pdf.name, filetime, timeStamp)
-				else
-					LV_Add("ICON1", pdf.name, filetime, timeStamp)
-
-				If !pdf.isSearchable && !Addendum.InfoWindow.OCREnabled
-					Addendum.InfoWindow.OCREnabled := true
-
+				LV_Add((pdf.isSearchable ? "ICON3" : "ICON1"), pdf.name, pdf.pages, pdf.filetime, pdf.timeStamp) 	; anderes Symbol für durchsuchbare PDF Dateien
+				If !pdf.isSearchable && !Addendum.iWin.OCREnabled
+					Addendum.iWin.OCREnabled := true
 			}
 		}
-		GuiControl, adm: +Redraw, admJournal
 
 	; OCR BUTTON
-		If Addendum.InfoWindow.OCREnabled {
+		If Addendum.iWin.OCREnabled {
 			If Addendum.Thread["tessOCR"].ahkReady()
 				admGui_OCRButton("+OCR abbrechen")
 			else
@@ -889,14 +1420,14 @@ admGui_Journal(refreshDocs=false)                              	{	            	;
 				FormatTime, filetime  	, % timeStamp, dd.MM.yyyy
 				FormatTime, timeStamp	, % timeStamp, yyyyMMdd
 				SplitPath, A_LoopFileLongPath, BefundName
-				LV_Add("ICON2", BefundName, filetime, timeStamp)
+				LV_Add("ICON2", BefundName,, filetime, timeStamp)
 			}
 
 	; INFOTEXT AUFFRISCHEN
 		admGui_InfoText("Journal")
 
 	; SCROLLT DAS ZULETZT GESPEICHERTE ELEMENT IN SICHT
-		;~ IWin :=  Addendum.InfoWindow
+		;~ IWin :=  Addendum.iWin
 		;~ If (IWin.firstTab = "Protokoll") && (IWin.firstTabPos > 0)
 			;~ SendMessage, 0x1013, % IWin.firstTabPos, 0,, % "ahk_id " admHJournal
 
@@ -959,175 +1490,82 @@ admGui_TProtokoll(datestring, addDays, client)              	{                	;
 
 admGui_InfoText(TabTitel)                                             	{               	; Zusammenfassungen aktualisieren
 
-	global PdfReports
+	; letzte Änderung: 15.02.2021
+
+	global adm, admButton1, admButton2
+	global admJournalTitle, admPatientTitle, admTProtokollTitel
+	global PatDocs
 
 	Gui, adm: Default
 
-	If InStr(TabTitel, "Journal")  	{
-		InfoText := (ScanPool.MaxIndex() = 0) ? " keine Dokumente" : (ScanPool.MaxIndex() = 1) ? "1 Dokument" : ScanPool.MaxIndex() " Dokumente"
-		admGui_Default("admJournal")
-		GuiControl, adm: , AdmJournalTitel, % InfoText
-		If (LV_GetCount() > 0)
-			GuiControl, adm: Enable, AdmButton2
-		else
-			GuiControl, adm: Disable, AdmButton2
-	}
+	If (TabTitel = "Journal") || (TabTitel = "Patient")	{
 
-	If InStr(TabTitel, "Reports")  	{
-		InfoText := "Posteingang: (" (!PdfReports.MaxIndex() ? "keine neuen Befunde)" : PdfReports.MaxIndex() = 1 ? "1 Befund)" : PdfReports.MaxIndex() " Befunde)") ", insgesamt: " ScanPool.MaxIndex()
-		admGui_Default("admPatLV")
-		GuiControl, adm: , AdmPdfReportTitel, % InfoText
-		If (LV_GetCount() > 0)
-			GuiControl, adm: Enable, AdmButton1
-		else
-			GuiControl, adm: Disable, AdmButton1
+		; Journal
+			InfoText := (ScanPool.MaxIndex() = 0) ? " keine Dokumente" : (ScanPool.MaxIndex() = 1) ? "1 Dokument" : ScanPool.MaxIndex() " Dokumente"
+			admGui_Default("admJournal")
+			GuiControl, adm: , admJournalTitle, % InfoText
+			If (LV_GetCount() > 0)
+				GuiControl, adm: Enable, admButton2
+			else
+				GuiControl, adm: Disable, admButton2
+
+		; Patient
+			InfoText := "Posteingang: (" (!PatDocs.MaxIndex() ? "keine neuen Befunde)" : PatDocs.MaxIndex() = 1 ? "1 Befund)" : PatDocs.MaxIndex() " Befunde)") ", insgesamt: " ScanPool.MaxIndex()
+			admGui_Default("admReports")
+			GuiControl, adm: , admPatientTitle, % InfoText
+			If (LV_GetCount() > 0)
+				GuiControl, adm: Enable, admButton1
+			else
+				GuiControl, adm: Disable, admButton1
+
 	}
 
 	If InStr(TabTitel, "TProtokoll") 	{
 		InfoText := "[" compname "] [" TProtokoll.MaxIndex() " Patienten]"
-		GuiControl, adm: , AdmTProtokollTitel, % InfoText
+		GuiControl, adm: , admTProtokollTitel, % InfoText
 	}
 
 }
 
-; -------- Hilfsfunktionen
-admGui_Sort(EventNr, LV_Init=false)                              	{                 	; sortiert die Journalspalten und zeigt ein Symbol für die Sortierreihenfolge an
 
-		; Funktion wird gebraucht für die Wiederherstellung der letzten Sortierungseinstellung und für das Sichern der Einstellungen bei Nutzerinteraktion
-		; LV_Init - nutzen um gespeicherte Sortierungseinstellung wiederherzustellen
-
-		global 	admHJournal
-		static 	JCol1Dir, JCol2Dir, LVSortStr, JColDir := []
-
-		admGui_Default("admJournal")
-
-		If LV_Init {
-
-			RegExMatch(Addendum.InfoWindow.JournalSort, "\s*(\d)\s*(\d)", JSort)
-			EventNr := JSort1
-
-			If (JSort1 = 1) {
-				If (JSort2 = 1)
-					JCol1Dir := true
-			}
-			else {
-				If (JSort2 = 1)
-					JCol2Dir := true
-			}
-
-			If JCol1Dir
-				JCol2Dir := false
-
-			If JCol2Dir
-				JCol1Dir := false
-
-		}
-
-	; Sortierung je nach gewählter Spalte vornehmen
-	; Idee von: https://www.autohotkey.com/boards/viewtopic.php?t=68777
-		If      	(EventNr = 2) {    ; Spalte 2 - sortiert wird nach der unsichtbaren Spalte 3
-
-			admGui_ColSort("admJournal", EventNr, (JCol2Dir := !JCol2Dir))
-			Addendum.InfoWindow.JournalSort := EventNr " " (JCol2Dir ? "1":"0")
-
-		}
-		else If	(EventNr = 1) {
-
-			admGui_ColSort("admJournal", EventNr, (JCol1Dir := !JCol1Dir))
-			Addendum.InfoWindow.JournalSort := EventNr " " (JCol1Dir ? "1":"0")
-
-		}
-
-
-}
-
-admGui_ColorRow(hLV, rowNr, paint=true)                      	{                	; eine Zeile einfärben
-
-	global 	hadm
-	static 	bcolor := 0x995555, tcolor := 0xFFFFFF
-
-	If !Addendum.InfoWindow.RowColors
-		return
-
-	If paint
-		res := LV_Colors.Row(hLV, rowNr, bcolor, tcolor)
-	else
-		res := LV_Colors.Row(hLV, rowNr)
-
-	SciTEOutput("ColorRow: " res)
-	;GuiControl, adm: +Redraw, admJournal
-	WinSet, Redraw, , % "ahk_id " hadm
-
-}
-
-admGui_ColSort(LVName, col, SortDest)                         	{                	; Helfer für admGui_Sort
-
-	global 	admHJournal
-
-	admGui_Default(LVName)
-
-	If (LVName = "admJournal")
-		If (col = 2)
-			col := 3, Type := "Integer"
-		else
-			Type := "Text"
-
-	LV_ModifyCol(col, (SortDest ? "Sort" : "SortDesc") " " Type)
-	LV_SortArrow(admHJournal, col, (SortDest ? "up":"down"))
-
-}
-
-admGui_OCRButton(status)                                           	{                	; ändert den Text und Modus des OCR Buttons im Journal Tab
-
-	RegExMatch(status, "i)^\s*(?<Enabled>[\+\-])\s*(?<Text>[\pL-\s]+)\s*$", Button)
-
-	If (ButtonEnabled ="+")
-		ButtonEnabled :="Enable"
-	else if (ButtonEnabled ="-")
-		ButtonEnabled :="Disable"
-	else
-		ButtonEnabled :="Enable"
-
-	Gui, adm: Default
-	GuiControl, % "adm: " ButtonEnabled, AdmButton4
-	GuiControl, % "adm: ", AdmButton4, % ButtonText
-
-}
-
-; -------- Kontextmenu
+; -------- Kontextmenu und zugehörige Funktionen
 admGui_CM(MenuName)                                               	{                 	; Kontextmenu des Journal
 
 		; fehlt: nachschauen ob im Befundordner ein Backup-Verzeichnis angelegt ist
 		; auch für Tastaturkürzelbefehle in allen Tabs (01.07.2020)
 
-		global 	admHJournal, admHPDFReports, admFile, rcEvInfo, hadm, PdfReports
+		global 	admHJournal, admHReports, admFile, rcEvInfo, hadm, PatDocs
 		static 	newadmFile, rowNr
 
+		Addendum.iWin.firstTab	:= "Journal"
 		If RegExMatch(MenuName, "^J")
 			admGui_Default("admJournal")
 
 		rowSel  	:= LV_FindRow("admJournal", 1, admFile)
 		blockthis 	:= false
-		For key, inprogress in Addendum.InfoWindow.FilesStack
+		For key, inprogress in Addendum.iWin.FilesStack
 			If (inprogress = admFile) {
 				blockthis := true
 				break
 			}
+
+		; Callback nicht ausführen wenn ein Menu ausgeführt wird
+			Addendum.PopUpMenuCallback := ""
 
 	; Menupunkte ohne PDF Schreibzugriffe auf PDF Datei
 		If      	InStr(MenuName, "JRefresh")	{	; Listview aktualisieren
 			admGui_Reload()
 			return
 		}
-		else if 	InStr(MenuName, "JOpen") 	{  ; Listview auffrischen
+		else if	InStr(MenuName, "JOpen") 	{	; Listview auffrischen
 			If blockthis {
-				PraxTT("Die wird bearbeitet.`n...bitte warten...", "1 0")
+				PraxTT("Die Datei wird bearbeitet.`n...bitte warten...", "1 0")
 				Return
 			}
 			FuzzyKarteikarte(admFile)
 			return
 		}
-		else if 	InStr(MenuName, "JView")  	{ 	; PDF mit dem Standard PDF Anzeigeprogramm öffnen
+		else if	InStr(MenuName, "JView")  	{	; PDF mit dem Standard PDF Anzeigeprogramm öffnen
 			If blockthis {
 				PraxTT("Die wird bearbeitet.`n...bitte warten...", "1 0")
 				Return
@@ -1143,7 +1581,7 @@ admGui_CM(MenuName)                                               	{            
 		}
 
 	; Menupunkte mit Schreibzugriff auf PDF Datei
-		If         	InStr(MenuName, "JDelete") 	{	; Datei löschen
+		If      	InStr(MenuName, "JDelete")	{	; Datei löschen
 
 			If blockthis {
 				PraxTT("Die Datei wird gerade bearbeitet.`n...bitte warten...", "1 0")
@@ -1158,6 +1596,7 @@ admGui_CM(MenuName)                                               	{            
 			If !FileExist(Addendum.BefundOrdner "\backup\" admFile)
 				FileCopy, % Addendum.BefundOrdner "\" admFile, % Addendum.BefundOrdner "\backup\" admFile
 			FileDelete, % Addendum.BefundOrdner "\" admFile
+			FileDelete, % Addendum.BefundOrdner "\Text\" RegExReplace(admFile, "\.pdf$", ".txt")
 
 		; Datei aus der Listview entfernen
 			admGui_Default("admJournal")
@@ -1168,151 +1607,84 @@ admGui_CM(MenuName)                                               	{            
 			admGui_Reports()
 
 		}
-		else if 	InStr(MenuName, "JOCR")   	{	; OCR einer Datei
+		else if	InStr(MenuName, "JOCR")  	{	; OCR einer Datei
 
-				If blockthis {
+			; Abbruch wenn gerade ein OCR Vorgang läuft
+				If Addendum.Thread["tessOCR"].ahkReady() {
+					PraxTT("Es läuft gerade noch ein Texterkennungsvorgang!`n...bitte warten...", "2 0")
+					return
+				}
+				else If blockthis {
 					PraxTT("Diese Datei ist gerade in Bearbeitung.`n...bitte warten...", "1 0")
 					return
 				}
 
 			; Nutzerhinweise anzeigen
-				InfoText := ""
-				If !isSearchablePDF(Addendum.BefundOrdner "\" admFile) {
-					SciTEOutput("`nPDF [" admFile "] bisher ohne Texterkennung. Starte Tesseract..")
+				If !PDFisSearchable(Addendum.BefundOrdner "\" admFile) {
+					PraxTT("PDF [" admFile "] bisher ohne Texterkennung. Starte Tesseract..", "1 0")
+					Sleep 1000
 				}
 				else                                                                                                                                                  	{
-					InfoText := ">> OCR Text vorhanden <<`n" admFile "`nBei erneuter Ausführung werden die bisherigen Textdaten gelöscht.`nDennoch ausführen?"
-					MsgBox, 4	, Addendum für Albis on Windows, % InfoText
+					MsgBox, 4	, Addendum für Albis on Windows, %	">> OCR Text vorhanden <<`n" admFile "`n"
+																						. 	"Bei erneuter Ausführung werden die bisherigen Textdaten gelöscht.`n"
+																						.	"Dennoch ausführen?"
 					IfMsgBox, No
 						return
+					PraxTT("Die Texterkennung der Datei < " admFile " > wird jetzt ausgeführt.", "1 0")
+					Sleep 1000
 				}
 
-				PraxTT("Die Texterkennung der Datei < " admFile " > wird jetzt ausgeführt.", "1 0")
-				Sleep 1000
-				Addendum.InfoWindow.FilesStack.InsertAt(1, admFile)
-				admGui_ColorRow(admHJournal, rowSel)                                				; Listview coloring - in der Funktion wird geprüft, ob die coloring aktiviert ist
-				admGui_OCRButton("+OCR abbrechen")                                           	; OCR Vorgang anzeigen
+			; OCR Vorgang anzeigen
+				Addendum.iWin.FilesStack.InsertAt(1, admFile)
+				admGui_OCRButton("+OCR abbrechen")
 
 			; OCR Starten als echter Thread, nach Abschluß eines Vorgangs schickt der Thread eine Nachricht ans Addendum-Skript
 				TesseractOCR(admfile)
 
 			return
 		}
-		else if 	InStr(MenuName, "JOCRAll") 	{	; OCR aller offenen Dateien
+		else if	InStr(MenuName, "JOCRAll")	{	; OCR aller offenen Dateien
 
-			If Addendum.Thread["tessOCR"].ahkReady() || (Addendum.InfoWindow.FilesStack.Count() > 0) {
-				PraxTT("Ein Texterkennungsvorgang läuft im Moment noch.`n...bitte abwarten...", "1 0")
+			If Addendum.Thread["tessOCR"].ahkReady() || (Addendum.iWin.FilesStack.Count() > 0) {
+				PraxTT("Ein Texterkennungsvorgang läuft im Moment noch.`n...bitte abwarten...", "3 0")
 				return
 			}
-			OCRRenameAllFiles()
+
+			admGui_OCRAllFiles()
 
 		}
-		else if 	InStr(MenuName, "JRecog")   	{	; automatische Dateinamenbenennung
-
+		else if	InStr(MenuName, "JRecog1")	{	; Datei automatisch kategorisieren
 				If blockthis {
 					PraxTT("Diese Datei ist gerade in Bearbeitung.`n...bitte warten...", "1 0")
 					return
 				}
-
-				;Addendum.InfoWindow.FilesStack.Push(admFile)
-
-			; nicht ändern wenn Datei einen Patientennamen trägt
-				;~ If RxNames(admFile, "ContainsName") {
-					;~ InfoText := "Die Datei wurde schon einem Patienten zugeordnet.`n" admFile "`nMöchten Sie automatische Benennung dennoch durchführen?"
-					;~ MsgBox, 4	, Addendum für Albis on Windows, % InfoText
-					;~ IfMsgBox, No
-						;~ return
-					;~ withoutName := RxNames(admFile, false)                                           	; alles nach dem Namen speichern
-					;~ withoutName := RegExReplace(withoutname, "\s*\,\s*Befund\s*\.pdf")
-				;~ }
-
-			; Pfadevariablen
-				pdfPath	:= Addendum.Befundordner "\" admFile
-				txtPath	:= Addendum.Befundordner "\Text\"  StrReplace(admFile, ".pdf", ".txt")
-
-			; Textlayer der PDF extrahieren und laden
-				If FileExist(txtPath)
-					PdfText := FileOpen(txtPath, "r").Read()
-				else 	{
-					if InStr(FileExist("T:\"), "D")
-						tmpPath := "T:"
-					else
-						tmpPath := A_Temp
-
-					PdfToText(pdfPath, 0, "UTF-8", tmpPath "\tmp.txt")
-					PdfText := FileOpen(tmpPath "\tmp.txt", "r").Read()
-					FileDelete, % tmpPath "\tmp.txt"
-				}
-
-				If (StrLen(PdfText) = 0) {
-					PraxTT("Es konnte kein Text extrahiert werden.`nDer Vorgang wurde abgebrochen.", "2 0")
-					return
-				}
-
-			; Ausgabe von Wort und Zeichenzahl der Datei
-				wordcount	:= StrSplit(PdfText, " ").MaxIndex()
-				charcount	:= StrLen(RegExReplace(PdfText, "\s"))
-				SciTEOutput("`n[Textanalyse startet]`n  Dokument: " pdfPath " enthält: " wordcount " Worte mit insgesamt " charcount  " Zeichen")
-
-			; RegEx Auswertungen
-				found := FindName(PdfText)
-				If IsObject(found)  {
-
-					if (found.Count() = 1) {
-
-						For PatID, Pat in found {
-							newadmFile := found[PatID].Nn ", " found[PatID].Vn ", " (StrLen(withoutname) = 0 ? "Befund" : withoutname)	; " [" PatID "]
-							break
-						}
-
-						SciTEOutput("  neuer Name:`t" newadmFile ".pdf")
-						;admGui_Rename(admFile,, newadmFile)
-						return
-
-						admGui_Reload()
-
-					}
-					else {
-
-						For PatID, Pat in found
-							t .= "   [" PatID "] " Pat.Nn ", " Pat.Vn " geb.am " Pat.Gd "`n"
-						SciTEOutput("  Das Dokument konnte nicht eindeutig zugeordnet werden. Folgende Namen stehen zu Auswahl:`n" t)
-
-					}
-
-				}
-				else {
-					SciTEOutput("  Im Dokument konnten keine Patientennamen erkannt werden.")
-				}
-
-			return
+				admCM_JRecog(admFile)
+				return
 		}
-		else if 	InStr(MenuName, "JRename") {	; manuelles Umbenennen
-
+		else if	InStr(MenuName, "JRecog2")	{	; alle Dateien kategorisieren
+			If Addendum.Thread["tessOCR"].ahkReady() || (Addendum.iWin.FilesStack.Count() > 0) {
+				PraxTT("Ein Texterkennungsvorgang läuft im Moment noch.`n...bitte abwarten...", "1 0")
+				return
+			}
+			admCM_JRenAll()
+		}
+		else if	InStr(MenuName, "JRename")	{	; manuelles Umbenennen
 			If blockthis {
 				PraxTT("Die Datei wird gerade bearbeitet.`n...bitte warten...", "1 0")
 				Return
 			}
 			admGui_Rename(admFile)
-
 		}
-		else if 	InStr(MenuName, "JRenAll")   	{	; automatische Umbenennung aller unbenannten Dateien
-
-			If Addendum.Thread["tessOCR"].ahkReady() || (Addendum.InfoWindow.FilesStack.Count() > 0) {
-					PraxTT("Ein Texterkennungsvorgang läuft im Moment noch.`n...bitte abwarten...", "1 0")
-					return
+		else if	InStr(MenuName, "JSplit")   	{	; manuelles Aufteilen einer PDF Datei
+			If blockthis {
+				PraxTT("Die Datei wird gerade bearbeitet.`n...bitte warten...", "1 0")
+				Return
 			}
-
-			notNamed := Array()
-			For idx, pdf in ScanPool
-				If !RxNames(pdf.name, "ContainsName")
-					notNamed.Push(pdf.name)
-
-			If (notNamed.Count() > 0)
-				Autonaming(notNamed)
-
+			admGui_Rename(admFile	,	"Aufteilen der PDF-Seiten auf mehrere Datein.`n"
+													.	"Schreiben Sie: 1-2 D1, 3-4 D2`n"
+													.	"Datei 1 erhält die Seiten 1-2 und Datei 2 die Seiten 3-4`n" )
 		}
-		else if 	InStr(MenuName, "JImport")	{	; Datei in geöffnete Karteikarte importieren
+		else if	InStr(MenuName, "JImport")	{	; Datei in geöffnete Karteikarte importieren
 			If blockthis {
 				PraxTT("Die wird bearbeitet.`n...bitte warten...", "1 0")
 				Return
@@ -1323,172 +1695,827 @@ admGui_CM(MenuName)                                               	{            
 return
 }
 
-admGui_OCR(pdfDoc, Mode="Text")                             	{                	; kompletten Text einer PDF-Datei per tesseract cmdline tool extrahieren
+admCM_JRecog(admFile)                                              	{              	; Kontextmenu: JRecog - einzelner Datei automatisch einen Namen geben
 
-	If      	(Mode = "Text1") 	{
+	; Pfade
+		pdfPath	:= Addendum.Befundordner "\" admFile
+		txtPath	:= Addendum.Befundordner "\Text\"  StrReplace(admFile, ".pdf", ".txt")
 
-		Loop % (PageMax := PdfInfo(pdfDoc, "Pages")) {
+	; zurück wenn PDF keinen Textlayer hat
+		If !PDFisSearchable(pdfPath) {
+			PraxTT("PDF Datei enthält keinen Textlayer.`nFühren Sie zuerst eine Texterkennung durch!", "2 1")
+			return
+		}
 
-			PraxTT(	"OCR Vorgang für Dokument:"                           	"`n"
-					. 	pdfDoc                                                             	"`n"
-					.	"Seite " A_Index " von " PageMax " wird bearbeitet."	"`n"
-					.	"konvertiere in png Datei.", "0 2")
+	; Textlayer der PDF extrahieren und laden
+		If !FileExist(txtPath) {
 
-			pngPath := PdfToPng(pdfDoc, A_Index)
+			; PDF to Text per commandline Befehl falls kein Text extrahiert wurde
+				stdout := StdOutToVar(	Addendum.PDF.xpdfPath "\pdftotext.exe"
+												.	" -f 1 -l " PDFGetPages(pdfPath, Addendum.PDF.qpdfPath)
+												. 	" -bom -enc"
+												. 	" " q "UTF-8" 	q
+												.	" " q pdfPath 	q
+												. 	" " q txtPath 	q)
 
-			PraxTT(	"OCR Texterkennungsvorgang für Dokument:"     	"`n"
-					.	pdfDoc                                                                	"`n"
-					.	"Seite " A_Index " von " PageMax " wird bearbeitet."	"`n"
-					.	"Tesseract OCR-Vorgang läuft.", "0 2")
-
-			;PdfText .= OCR(pngPath, "deu") "`n"
-			;SciTEOutput(A_Index ": Textlänge: " StrLen(PdfText))
+				If !FileExist(txtPath) {
+					PraxTT("Es konnte kein Text extrahiert werden!`n[" admFile "]", "2 1")
+					return
+				}
 
 		}
-		return PdfText
 
-	}
-	else If 	(Mode = "OCR") 	{
+	; Textinhalt lesen
+		PdfText := FileOpen(txtPath, "r").Read()
+		If (StrLen(Trim(PdfText)) = 0) {
+			PraxTT("Der extrahierte Text enthält keine Zeichen.`n[" admFile "]", "2 1")
+			FileDelete, % txtPath
+			return
+		}
 
-	}
+	; ImportGui: Anzeigen von Wort und Zeichenzahl der Datei
+		outmsg := "[Textanalyse:`t" 	admFile "]"                                                	"`n"
+					. 	"Wörter:        `t"   	StrSplit(PdfText, " ").MaxIndex() 						"`n"
+					. 	"Zeichenzahl:`t"   	StrLen(RegExReplace(PdfText, "[\s\n\r\f]"))
+		admGui_ImportGui(true, outmsg, "admJournal")
 
+	; RegEx Auswertungen
+		fNames	:= FindDocNames(PdfText)
+		fDates 	:= FindDocDate(PdfText)
+		admGui_ImportGui(false, "Autonaming Dokument`n" admFile "`nläuft", "admJournal")
+		If IsObject(fNames)  {
 
+			if (fNames.Count() = 1) {
+				For PatID, Pat in fNames {
+					newfilename := fNames[PatID].Nn ", " fNames[PatID].Vn ", " ;(StrLen(withoutname) = 0 ? "Befund" : withoutname)	; " [" PatID "]
+					break
+				}
+
+				If IsObject(fDates)
+					If fDates.Behandlung[1]
+						newfilename .= "v. " fDates.Behandlung[1]
+					else
+						newfilename .= "v. " fDates.Dokument[1]
+
+			; wird umbenannt
+				admGui_Rename(admFile,, newfilename ".pdf")
+				return
+
+			}
+			else {
+				For PatID, Pat in found
+					t .= "   [" PatID "] " Pat.Nn ", " Pat.Vn " geb.am " Pat.Gd "`n"
+				SciTEOutput("  Das Dokument konnte nicht eindeutig zugeordnet werden. Folgende Namen stehen zu Auswahl:`n" t)
+			}
+		}
+		else {
+
+			PraxTT("Dokument: " admFile "`nkonnte keinem Patienten zugeordnet werden", "4 1")
+
+		}
+
+return
 }
 
-admGui_Rename(filename, prompt="", newfilename="")   	{                	; Dialog für Dokument umbenennen
+admCM_JRenAll()                                                           	{              	; Kontextmenu: automatisiert die Benennung aller unbenannten PDF-Dateien
+
+	/*  mögliche Varianten Datumsangaben
+
+		Therapiekontrolle bei COPD am 15.12.20
+		CT horn and Akatomee mit LV, Kontrastmittelgabe vom 16.12.2020;
+		ambulante Vorstellung zuletzt am 14.12.2020.
+		MRT der BWS vom 14.12.2020
+		Aufnahme am: 20.12.2020 um 21:08 Uhr
+		Stationärer Aufenthalt: \n\r Vom 17.12.2020 bis zum 20.12.2020 auf unserer neurochirurgischen Station M115B
+
+	 */
 
 	; Variablen
-		global hadm
-		static admRen_Width 	:= 400
-		static admRen_Height	:= 145
+		static newadmFile, lastnewadmFile
 
-		if (StrLen(prompt) = 0)
-			prompt := "Ändern Sie hier die Dateibezeichnung.`nDrücken Sie anschließend 'OK' oder 'ENTER'"
+		filenamechanged := false
 
-		admPos	:= GetWindowSpot(hadm)
-		RnWidth	:= admPos.W + (2 * admPos.BW) + 10
-		RnWidth	:= RnWidth < 400 ? admRen_Width : RnWidth
-
-	; PDF Vorschau anzeigen
-		hPV := admGui_PDFPreview(fileName)
-
-	; Inputbox anzeigen
-		SplitPath, filename,,, fileext, fileout
-		newfilename := Trim(newfilename)
-		If (StrLen(newfilename) > 0)
-			SplitPath, newfilename,,,, fileout
-
-		InputBox, newadmFile	, % "Dokument umbenennen - Addendum für AlbisOnWindows"
-									    	, % prompt
-											,   ; Hide
-											, % RnWidth
-											, % admRen_Height
-											, % admPos.X + admPos.W -	 RnWidth + 5
-											, % admPos.Y + admPos.H
-											, % "Locale"
-											,  ; Timeout
-											, % fileout
-
-	; PDF Vorschau schliessen
-		Gui, admPV: Destroy
-
-	; Nutzereingabe auswerten
-		newadmFile .= "." fileext
-		If ErrorLevel || (newadmFile = filename) || (StrLen(newadmFile) = 0) {
-
-			If (newadmFile = filename) && !ErrorLevel
-				PraxTT("Sie haben den Dateinamen nicht geändert!", "2 1")
-			else if (StrLen(newadmFile) = 0)
-				PraxTT("Ihr neuer Dateiname enthält keine Zeichen.", "2 1")
-
-			RedrawWindow(hadm)
-			return
-
-		}
-
-	; Datei umbenennen
-		FileMove, % Addendum.BefundOrdner "\" filename, % Addendum.BefundOrdner "\" newadmFile, 1
-		If ErrorLevel {
-			MsgBox, 0x1024, Addendum für Albis on Windows, % 	"Das Umbenennen der Datei`n"
-																							.	"  <" filename ">  `n"
-																							. 	"wurde von Windows aufgrund des`n"
-																							.	"Fehlercode (" A_LastError ") abgelehnt."
-			RedrawWindow(hadm)
+	; Dateinamen unbenannter PDF-Dateien einsammeln
+		If !IsObject(unnamed := GetUnamedDocuments()) {
+			PraxTT("Keine Dateien für eine automatische Umbennung vorhanden!", "1 2")
 			return
 		}
 
-	; zugehörige Text Datei umbenennen
-		If (fileext = "pdf") && FileExist(Addendum.BefundOrdner "\Text\" fileout ".txt")
-			FileMove, % Addendum.BefundOrdner "\Text\" fileout ".txt", % Addendum.BefundOrdner "\Text\" StrReplace(newadmFile, ".pdf", ".txt"), 1
+	; Patienten und Dokumentdatum finden
+		docPath := Addendum.BefundOrdner
+		For idx, filename in unnamed {
 
-	; Backup Datei umbenennen
-		If (fileext = "pdf") && FileExist(Addendum.BefundOrdner "\Backup\" fileName)
-			FileMove, % Addendum.BefundOrdner "\Backup\" fileName, % Addendum.BefundOrdner "\Backup\" newadmFile, 1
+			; Pfade festlegen
+				pdfPath  	:= docPath "\" filename
+				bupPath 	:= docPath "\Backup\" filename
+				txtPath   	:= docPath "\Text\" StrReplace(filename, ".pdf", ".txt")
+				counter  	:= idx "/" unnamed.Count()
+
+			; optional Text extrahieren
+				If PDFisSearchable(pdfPath) && !FileExist(txtpath) {
+
+					; Fortschritt anzeigen
+						admCM_JRnProgress([counter, filename, "Text wird extrahiert....", "", "", lastnewadmFile])
+
+					; pdftotext extrahiert den Text aus der PDF Datei
+						cmdline := Addendum.PDF.xpdfPath "\pdftotext.exe"
+														. 	" -f 1 -l " PDFGetPages(pdfPath, Addendum.PDF.qpdfPath)
+														. 	" -bom -enc UTF-8"
+														.	" " q pdfPath q
+														. 	" " q txtpath q
+						stdout := StdOutToVar(cmdline)
+
+						If !FileExist(txtpath) {
+							;SciTEOutput(" [" cmdline "]`n" stdout)
+							continue
+						}
+
+				} else if !PDFisSearchable(pdfPath) {
+					; Protokollierung
+						PraxTT("Datei " idx " " filename " ist nicht durchsuchbar" )
+						continue
+				}
+
+			; extrahierten Text lesen
+				doctext := FileOpen(txtpath, "r").Read()
+				If (StrLen(Trim(doctext)) = 0) {
+					PraxTT("Der extrahierte Text enthält keine Zeichen.`n[" admFile "]", "2 2")
+					FileDelete, % txtPath
+					continue
+				}
+
+			; Fortschritt anzeigen
+				words := StrSplit(doctext, " ").MaxIndex(), chars := StrLen(RegExReplace(doctext, "[\s\n\r\f]"))
+				admCM_JRnProgress([counter, filename, "Textinhalt wird analysiert....", words, chars, lastnewadmFile])
+
+			; Patientennamen und Behandlungs- oder Dokumentdatum finden
+				fNames	:= FindDocNames(doctext)
+				fDates 	:= FindDocDate(doctext)
+
+			; Datei umbenennen
+				If (IsObject(fNames) && fNames.Count() = 1) {
+
+					; Name des Patienten
+						newadmFile := ""
+						For PatID, Pat in fNames {
+							If (StrLen(Trim(Pat.Nn)) > 0 && StrLen(Trim(Pat.Vn)) > 0) { 				; Abbruch wenn keine Name erkannt wurde
+								newadmFile := fNames[PatID].Nn ", " fNames[PatID].Vn ", "
+								break
+							}
+						}
+						If (StrLen(newadmFile) = 0)
+							continue
+
+					; Behandlungzeitraum oder Datum des Dokuments
+						If IsObject(fDates)
+							If fDates.Behandlung[1]
+								newadmFile .= "v. " fDates.Behandlung[1] " "
+							else
+								newadmFile .= "v. " fDates.Dokument[1] " "
+
+					; Anzeige von Wort und Zeichenzahl der Datei
+						admCM_JRnProgress([counter, filename, "neuen Dateinamen erstellt", words, chars, lastnewadmFile])
+						lastnewadmFile := newadmFile
+
+					; Debug
+						 If ((res := Weitermachen("Datei: " counter "`nBez.: " newadmFile "`nWeitermachen?") <> 1))
+							break
+
+					; Umbenennen von Original, Backup und Textdatei
+						If (StrLen(newadmFile) > 0) {
+							filenamechanged := true
+							FileMove, % pdfPath	, % docPath "\" newadmFile ".pdf"           	, 1               	; Originaldatei umbenennen
+							FileMove, % bupPath	, % docPath "\Backup\" newadmFile ".pdf"	, 1               	; Backupdatei umbenennen
+							FileMove, % txtPath	, % docPath "\Text\" newadmFile ".txt"     	, 1           		; zugehörige Text Datei umbenennen
+							newadmFile := ""
+						}
+
+				}
+				else if (IsObject(fNames) && fNames.Count() < 1) {
+					PraxTT("Dokument: " filename "`nkonnte keinem Patienten zugeordnet werden", "4 1")
+				}
+				else If (IsObject(fNames) && fNames.Count() > 1) {
+					t := ""
+					For PatID, Pat in fNames
+						t .= " `t[" PatID "] " Pat.Nn ", " Pat.Vn " geb.am " Pat.Gd "`n"
+
+					SciTEOutput("  [" idx "/" unnamed.Count() "]`n  1: " filename "`n  2: #keine eindeutige Zuordnung möglich")
+					SciTEOutput("  Namen:       `t" 	fNames.Count())
+					SciTEOutput("  Beh. Datum:`t" 	fDates.Behandlung.Count())
+					SciTEOutput("  Doc. Datum:`t" 	fDates.Dokument.Count())
+					SciTEOutput(t)
+					SciTEOutput("  -------------------------------------------------------------------" )
+				}
+				else {
+					PraxTT("Dokument: " filename "`nkonnte keinem Patienten zugeordnet werden", "4 1")
+				}
+
+		}
+
+	; Anzeige schliessen
+		admGui_ImportGui(false, "Autonaming Dokument`n" admFile "`nläuft", "admJournal")
 
 	; Anzeige auffrischen
-		admGui_Reload()
+		If filenamechanged {
+			admGui_Journal(true)
+			PatDocs := admGui_Reports()
+			RedrawWindow(hadm)
+		}
+
+return
+}
+
+admCM_JRnProgress(ProgressText)                                 	{              	; zeigt den Fortschritt beim Umbennen an
+
+		static outmsgTitle := "Automatische Dateinamengenerierung`n`n"
+
+	; nur eine Zahl übergeben dann wird die Progressbar verändert
+		If !RegExMatch(ProgrressText, "^\d+$") {
+
+			outmsg :="Zähler:   `t"		ProgressText.1      	"`n"
+						.	"Name:   `t"  	ProgressText.2      	"`n"
+						. 	"Status:   `t"     	ProgressText.3     	"`n"
+						. 	"Wörter:  `t"   	ProgressText.4	   	"`n"
+						. 	"Zeichen:`t"   	ProgressText.5   	"`n"
+						. 	"`n- - - letzter Fund - - -`n" newadmFile
+
+			admGui_ImportGui(true, outmsgTitle . outmsg, "admJournal")
+
+		}
 
 }
 
-admGui_PDFPreview(fileName)                                         	{                	; zeigt eine Vorschau der PDF Datei an
 
-		global 	hadm
-		static 	hadmPV, PVPic1
+; -------- Zusatzfunktionen
+admGui_TPSuche()                                                        	{                	; wann war ein Patient da
 
-		PdftoPngexe := Addendum.xpdfPath "\PdftoPng.exe"
-		If !FileExist(PdfToPngexe) {
-			SciTEOutput(PdftoPngexe " ist nicht vorhanden.")
+	TPFullPath	:= Addendum.DBPath "\Tagesprotokolle"
+	Gui, adm: Submit, NoHide
+
+	If (StrLen(admTPSuche) = 0)
+		return
+
+	;~ Loop, Files, *.txt, R
+	;~ {
+
+
+	;~ }
+
+}
+
+admGui_LaborblattDruck(Printer, Druckspalten)                 	{                	; automatisiert den Laborblattdruck, stellt vorherige Ansicht wieder her
+
+		static AlbisViewType
+
+		AlbisViewType := AlbisGetActiveWindowType(true)
+
+		If InStr(Printer, "Microsoft Print to PDF")
+			savePath := Addendum.ExportOrdner "\Laborwerte-" RegExReplace(AlbisCurrentPatient(), "[\s]") ".pdf"
+		else
+			savePath := ""
+
+		If !(res := AlbisLaborblattExport(Druckspalten, savePath, Printer))
+			PraxTT("Der Ausdruck von Laborwerten ist fehlgeschlagen.`nFehlercode: " res, "4 1")
+
+		If (AlbisViewType <> AlbisGetActiveWindowType(true))
+			AlbisKarteikartenAnsicht(AlbisViewType)
+
+}
+
+
+; -------- PDF Dateien umbenennen / teilen
+admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog für Dokument umbenennen oder teilen
+
+		global
+
+		local fSize, edW	, txtfile, row, rowFilename
+		local cp, dp, gs, admPos, title, fileout, vctrl, ENr
+		local key, pdf, TLines, found, monIndex, admScreen, RNx, RNWidth
+
+		static RNminWidth := 350
+		static BEZPath, Beschreibung
+		static wT, Patname, Inhalt, Datum, Bezeichner, oPV
+		static oldadmFile, newadmFile, FileExt, FileOutExt, oldfilename
+		static rxMonths := "\(Jan*u*a*r*|Febr*u*a*r*|Mä*a*rz|Apr*i*l*|Mai|Jun*i*|Jul*i*|Aug*u*s*t*|Sept*e*m*b*e*r*|Okt*o*b*e*r*|Nov*e*m*b*e*r*|Dez*e*m*b*e*r*)"
+
+
+	; PDF Vorschau anzeigen in neuem Sumatrafenster oder wenn geöffnet in diesem Fenster
+		If !IsObject(oPV) {
+			oPV := admGui_PDFPreview(fileName)
+			If !IsObject(oPV)
+				return
+		} else {
+			If (oPV.Previewer = "Sumatra") {
+				SumatraDDE(oPV.ID, "OpenFile"	, Addendum.BefundOrdner "\" filename, 0, 1, 0)
+				Sleep 400
+				SumatraDDE(oPV.ID, "SetView"	, Addendum.BefundOrdner "\" filename, "single page", "fit page")
+			}
+			else
+				return
+		}
+
+	; Vorbereitung: Dokument zerlegen
+		If Instr(prompt, "Aufteilen") {
+			title    	:= "Dokument zerlegen"
+			fileout	:= ""
+		}
+	; Vorbereitung: Dokument umbenennen
+		else {
+
+			oldadmFile := filename
+			If (StrLen(newfilename) = 0)
+				newfilename := filename
+
+			SplitPath, newfilename,,, FileExt, FileOutExt
+
+			If (FileExt = "pdf") {
+				If RegExMatch(FileOutExt, "^\s*(?<N>.*)?,\s*(?<I>.*)?v\.\s(?<D>.*)\s*$", FOE) {
+					Patname	:= RegExReplace(FOEN	, "[\s,]+$")
+					Inhalt 		:= RegExReplace(FOEI 	, "[\s,]+$")
+					Datum 		:= RegExReplace(FOED	, "^[\s,v\.]+")
+				} else {
+					Patname	:= ""
+					Inhalt    	:= RegExMatch(FileOutExt, "^\s*[\d_]+$") ? "" : FileOutExt
+					Datum  	:= GetFileTime(Addendum.BefundOrdner "\" filename, "C")
+				}
+			} else {
+					Patname 	:= ""
+					Inhalt    	:= RegExMatch(FileOutExt, "^\s*[\d_]+$") ? "" : FileOutExt
+					Datum  	:= GetFileTime(Addendum.BefundOrdner "\" filename, "C")
+			}
+
+		}
+
+	; Datei mit Inhaltsbezeichnungen laden
+		If !FileExist(BEZPath := Addendum.DBPath "\Dictionary\Befundbezeichner.txt") {
+			FilePathCreate(Addendum.DBPath "\Dictionary")
+		} else {
+			Bezeichner := FileOpen(BEZPath, "r", "UTF-8").Read()
+			Bezeichner := StrSplit(Bezeichner, "`n", "`r")
+		}
+
+	; Gui wird bei erneutem Aufruf nicht erneut erstellt
+		If WinExist("Addendum (Datei umbenennen) ahk_class AutoHotkeyGUI") {
+			gosub RNEFill
 			return
 		}
 
-		If (filetest := FileOpen("T:\test.txt", "w")) {
-			filetest.Close()
-			tempPath := "T:"
-		} else
-			tempPath := A_Temp
+; Rename Gui                                     	;{
 
-		pngExtract_cmdline := PdftoPngexe " -f 1 -l 1 -r 100 -aa yes -freetype yes -aaVector yes " q Addendum.BefundOrdner "\" fileName q " " q tempPath "\PdfPreview" q
-		RunWait, % pngExtract_cmdline,, Hide
-
-		If !FileExist(tempPath "\PdfPreview-000001.png") {
-			PraxTT("PDF Vorschau konnte nicht erstellt werden.", "2 0")
-			return
-		}
-
-		scaleX 	:= 700/900
-		picH 	:= A_ScreenHeight - 50
-		picW 	:= Round(picH * scaleX)
-
-		Gui, admPV: New 	, +ToolWindow -DPIScale +HWndhadmPV	+Border
-		Gui, admPV: Margin	, 5, 5
-		;Gui, admPV: Add   	, Picture, % "xm ym vPVPic1 0xE BackGroundTrans", % tempPath "\PdfPreview-000001.png"
-		pic := tempPath "\PdfPreview-000001.png"
-		Gui, admPV: Add  	, ActiveX, % "w" picW " h" picH, % "mshtml:<img src='" pic "' height='100%' />"
-		;Gui, admPV: Add  	, ActiveX, % "w" picW " h" picH, % "mshtml:<iframe src=" q Addendum.BefundOrdner "\" fileName q " height=" q "100%" q "></iframe>"
-		Gui, admPV: Show	, % "AutoSize NA Hide", Pdf Vorschau
+		wT          	:= 0
+		edW     	:= 100
+		fSize     	:= (A_ScreenWidth > 1920 ? 10 : 9)
 		admPos	:= GetWindowSpot(hadm)
-		PV    		:= GetWindowSpot(hadmPV)
-		Gui, admPV: Show, % "x" (admPos.X - PV.W - 5) " y0 NA", Pdf Vorschau
-		;Gui, admPV: Show, % "x50 y50 NA", ScanPool - Pdf Vorschau
+		RNWidth	:= admPos.W - (2*admPos.BW)
+		RNWidth	:= RnWidth < RNminWidth ? RNminWidth : RnWidth
 
+		Gui, RN: new, % "AlwaysOnTop -DpiScale -ToolWindow -Caption +Border HWNDhadmRN"
+		Gui, RN: Margin, 5, 5
 
-return hadmPV
+		;-: Hinweise
+		Gui, RN: Font, % "s" fSize - 1
+		Gui, RN: Add, Text, % "xm ym Center vRNC1"                     	, % "[ Pfeil ⏶& ⏷ von Feld zu Feld, Eingabe für Umbenennen ]"
+
+		;-: Eingabefelder
+		Gui, RN: Font, % "s" fSize
+		Gui, RN: Add, Text, % "xm y+8 Right vRNT1 "                                             	, % "Name"
+		Gui, RN: Add, Edit, % "x+5 w" edW " r1 vRNE1 HWNDRNhE1 gRNEHandler"	, % Patname
+		Gui, RN: Add, Text, % "xm y+5 Right vRNT2 " 	                                         	, % "Inhalt"
+		Gui, RN: Add, Edit, % "x+5 w" edW " r1 vRNE2 HWNDRNhE2 gRNEHandler"	, % Inhalt
+		Gui, RN: Add, Text, % "xm y+5 Right vRNT3 "                                             	, % "Datum"
+		Gui, RN: Add, Edit, % "x+5 w" edW " r1 vRNE3 HWNDRNhE3 gRNEHandler"	, % Datum
+
+		;-: Name, Inhalt, Datum - Steuerelemente auf gleiche Breite bringen, Edit-Felder maximieren
+		Loop, 3 {
+			cp 	:= GuiControlGet("RN", "Pos", "RNT" A_Index)
+			wT	:= cp.W > wT ? cp.W : wT
+		}
+		Loop, 3 {
+			GuiControl, RN:Move, % "RNT" A_Index, % "w" wT
+			cp := GuiControlGet("RN", "Pos", "RNT" A_Index)
+			GuiControl, RN:Move, % "RNE" A_Index, % "x" cp.X + wT + 5 " y" cp.Y - 3 " w" RNWidth - wT - 15
+		}
+
+		;-: maximale Zeichenzahl
+		cp := GuiControlGet("RN", "Pos", "RNE3")
+		Gui, RN: Font, % "s" fSize - 1 " cWhite", Calibri
+		Gui, RN: Add, Progress	, % "x0      	y" cp.Y+cp.H+5 " w10 h20 c7B89BB vRNPG1 HWNDRNhPG1"     	, 100
+		Gui, RN: Add, Text    	, % "x" cp.X "	y" cp.Y+cp.H+7 "  Left Backgroundtrans vRNHW1"                     	, % "verbrauchte Zeichen (Inhalt+Datum):"
+		dp := GuiControlGet("RN", "Pos", "RNHW1")
+		Gui, RN: Font, % "s" fSize - 1 " cWhite Bold", Consolas
+		chars := (StrLen(Inhalt) + StrLen(Datum))
+		chars := SubStr("00" chars, -1) . " / 70"
+		Gui, RN: Add, Text, % "x+5                                          	Left Backgroundtrans vRNLen "                        	, % chars
+		GuiControl, RN: Move, % "RNPG1", % "h" dp.H + 5
+
+		;-: Dateinamenvorschau
+		Gui, RN: Font, % "s" fSize - 1 " cBlack Normal", Arial
+		Gui, RN: Add, Progress	, % "x0 y" dp.Y+dp.H+5 " w10 h20 cAfC2ff vRNPG2 HWNDRNhPG2"             	, 100
+		Gui, RN: Add, Text, % "x5 y" dp.Y+dp.H+7 " w" edW " h" dp.H*2 " Center	Backgroundtrans vRNPV "     	, % admGui_FileName(Patname, Inhalt, Datum)
+		cp := GuiControlGet("RN", "Pos", "RNPV")
+		GuiControl, RN: Move, % "RNCancel", % "h" cp.H + dp.H + 10
+
+		;-: OK, Abbruch
+		Gui, RN: Font, % "s" fSize
+		Gui, RN: Add, Button, % "xm                         	Center vRNOK  	gRNProceed"         	, % "Umbennen"
+		Gui, RN: Add, Button, % "x+20                  	Center vRNCancel	gRNProceed"         	, % "Abbruch"
+		cp := GuiControlGet("RN", "Pos", "RNE3"), dp := GuiControlGet("RN", "Pos", "RNCancel")
+		GuiControl, RN: Move, % "RNCancel", % "x" cp.X + cp.W - dp.W
+
+		;-: Show Hide
+		monIndex  	:= GetMonitorIndexFromWindow(hadm)
+		admScreen	:= ScreenDims(monIndex)
+		RNx := ((admPos.X - 2*admPos.BW) + RnWidth) > admScreen.W ? admScreen.W - RnWidth : admPos.X - 2*admPos.BW
+
+		Gui, RN: Show, % "x" RNx " y" admPos.Y + admPos.H " w" RNWidth " Hide", Addendum (Datei umbenennen)
+
+		;-: Titel und Preview anpassen
+		gs := GetWindowSpot(hadmRN)
+		GuiControl, RN: Move, % "RNC1"	, % "w"   	gs.CW - 5
+		GuiControl, RN: Move, % "RNPV"	, % "w"  	gs.CW - 5
+		GuiControl, RN: Move, % "RNE1"	, % "w"  	gs.CW - wT - 15
+		GuiControl, RN: Move, % "RNE2"	, % "w"  	gs.CW - wT - 15
+		GuiControl, RN: Move, % "RNE3"	, % "w"  	gs.CW - wT - 15
+
+		;-: Zeichenzähler zentrieren
+		dp := GuiControlGet("RN", "Pos", "RNHW1")
+		cp := GuiControlGet("RN", "Pos", "RNLen")
+		dcpLen := dp.W + 5 + cp.W
+		dcpMid := Floor(dcpLen/2)
+		gsMid	:= Floor(gs.w/2)
+		gsLeft	:= (gsMid - dcpMid)
+		GuiControl, RN: Move, % "RNHW1"	, % "x" gsLeft
+		GuiControl, RN: Move, % "RNLen"  	, % "x" gsLeft + dp.W + 5
+
+		;-: Abbruch Button verschieben
+		dp := GuiControlGet("RN", "Pos", "RNCancel")
+		GuiControl, RN: Move, % "RNCancel", % "x" gs.W - dp.W - 5
+
+		;-: Progress anpassen
+		cp := GuiControlGet("RN", "Pos", "RNPV")
+		GuiControl, RN: Move, % "RNPG1"	, % "x0 w" gs.W
+		GuiControl, RN: Move, % "RNPG2"	, % "x0 w" gs.W
+		WinSet, ExStyle, 0x0, % "ahk_id " RNhPG1
+		WinSet, ExStyle, 0x0, % "ahk_id " RNhPG2
+
+		;-: Show
+		Gui, RN: Show
+
+		Hotkey, IfWinActive, % "Addendum (Datei umbenennen)"
+		Hotkey, Escape 	, RNGuiClose
+		Hotkey, Up    	, RNGuiUpDown
+		Hotkey, Down	, RNGuiUpDown
+		Hotkey, Enter	, RNProceed
+		Hotkey, IfWinActive
+
+		;}
+
+RNEFill:                                               	;{   Inhalte einfügen
+
+	; Editfelder befüllen und Vorschau anzeigen
+		GuiControl, RN:, RNPV	, % admGui_FileName(Patname, Inhalt, Datum)
+		GuiControl, RN:, RNE1	, % PatName
+		GuiControl, RN:, RNE2	, % Inhalt
+		GuiControl, RN:, RNE3	, % Datum
+
+	; Focus je nach Inhalt der Eingabefelder setzen
+		If !PatName
+			GuiControl, RN: Focus, RNE1
+		else
+			GuiControl, RN: Focus, RNE2
+
+return ;}
+
+RNEHandler:                                      	;{   Dateinamenvorschau
+
+	Gui, RN: Submit, NoHide
+
+	RegExMatch(A_GuiControl, "\d", nr)
+
+	GuiControl, RN:, % "RNLen", % SubStr("00" (charsNow := StrLen(RNE2) + StrLen(RNE3)), -1) " / 70 "
+	If (charsNow > 70) {
+		BlockInput, Send
+		xc := charsNow - 70
+		Send, % "{BackSpace " xc "}"
+		BlockInput, Off
+	}
+
+	Gui, RN: Submit, NoHide
+	GuiControl, RN:, RNPV, % admGui_FileName(RNE1, RNE2, RNE3)
+
+return ;}
+
+RNProceed:                                       	;{   Datei wird umbenannt, PDF-Viewer-Vorschau wird geschlossen
+
+	; Abbruch ohne Dateinamenänderung
+		If (A_GuiControl = "RNCancel") {
+			gosub RNGuiClose
+			return
+		}	else if (A_GuiControl <> "RNOK") && (A_ThisHotkey <> "Enter")
+			return
+
+		Gui, RN: Submit, NoHide
+		newadmFile := admGui_FileName(RNE1, RNE2, RNE3)
+
+	; Nutzer hat OK oder Enter gedrückt, aber nichts geändert
+		If ((newadmFile . FileExt) = filename) {
+			PraxTT("Sie haben den Dateinamen nicht geändert!", "2 1")
+			gosub RNGuiBeenden
+			return
+		}
+
+	; Nutzer hat alles gelöscht
+		If (StrLen(newadmFile) = 0) {
+			PraxTT("Ihr neuer Dateiname enthält keine Zeichen.", "2 1")
+			gosub RNGuiBeenden
+			return
+		}
+
+	; neue Inhaltsbeschreibung speichern
+		found := false, TLines := ""
+		For idx, Beschreibung in Bezeichner {
+			TLines .= Beschreibung "`n"
+			If (Beschreibung = RNE2) {
+				found := true
+				break
+			}
+		}
+		If !found {
+			TLines .= RNE2
+			Sort, TLines
+			FileOpen(BEZPath, "w", "UTF-8").Write(TLines)
+		}
+
+	; Originaldatei umbennen
+		newadmFile := newadmFile "." FileExt
+		FileMove, % Addendum.BefundOrdner "\" oldadmFile, % Addendum.BefundOrdner "\" newadmFile, 1
+		If ErrorLevel {
+			MsgBox, 0x1024, Addendum für Albis on Windows
+									, % 	"Das Umbenennen der Datei`n"
+									.	"  <" oldadmFile ">  `n"
+									. 	"wurde von Windows aufgrund des`n"
+									.	"Fehlercode (" A_LastError ") abgelehnt."
+			gosub RNGuiBeenden
+			return
+		}
+
+	; Backup Datei umbennen
+		If (fileext = "pdf") && FileExist(Addendum.BefundOrdner "\Backup\" oldadmFile)
+			FileMove, % Addendum.BefundOrdner "\Backup\" oldadmFile, % Addendum.BefundOrdner "\Backup\" newadmFile, 1
+
+	; Textdokument umbennen
+		txtfile := Addendum.BefundOrdner "\Text\" RegExReplace(oldadmFile, "\.\w+$", ".txt")
+		If (FileExt = "pdf") && FileExist(txtfile)
+			FileMove, % txtfile, % Addendum.BefundOrdner "\Text\" RegExReplace(newadmFile, "\.pdf$", ".txt"), 1
+
+	; ScanPool auffrischen
+		For key, pdf in ScanPool
+			If (pdf.name = oldadmFile) {
+				ScanPool[key].name := newadmFile
+				break
+			}
+
+	; Journal auffrischen
+		admGui_Default("admJournal")
+		Loop % LV_GetCount() {
+			LV_GetText(rowFilename, row := A_Index, 1)
+			If Instr(rowFilename, oldadmFile) {
+				LV_Modify(row,, newadmFile)
+				break
+			}
+		}
+
+;}
+
+RNGuiBeenden:                                   	;{   weitere Dateien umbenennen
+
+	; nachschauen ob eine weitere Datei zum Umbenennen zur Verfügung steht
+		admGui_Default("admJournal")
+
+	; nächste Datei finden
+		rows := LV_GetCount()
+		LV_GetNext(row)
+		startrow := row := row = 0 ? 1 : row
+		 ToolTip, Suche nächstes Dokument
+		Loop {
+
+			row := row = rows ? 1 : row + 1
+			LV_Modify(row = 1 ? rows : row-1, "-Select")
+			LV_Modify(row, "Select")
+			Sleep 200
+			If (row = startrow)
+				break
+			If (A_Index > rows) {
+				startrow := row
+				break
+			}
+
+			LV_GetText(filename, row, 1)
+			If !string.isFullNamed(FileName)
+				break
+
+		}
+		ToolTip
+
+	; weiteres Dokument umbenennen?
+		If (row <> startrow) && (filename <> oldfilename) {
+			oldfilename := filename
+			MsgBox, 0x4, Addendum für Albis on Windows, % "Möchten Sie mit der nächsten`n[" filename "]`nDatei fortfahren ?", 30
+			IfMsgBox, Yes
+			{
+				admGui_Rename(filename)
+				return
+			}
+		}
+;}
+
+RNGuiClose:
+RNGuiEscape:                                    	;{   Fenster definitiv schliessen
+
+	; Gui beenden
+		Gui, RN: Destroy
+
+	; PDF Previewer beenden
+		If (oPV.Previewer = "Sumatra")
+			oPV := admGui_SumatraClose(oPV.PID, oPV.ID)
+
+	; Hotkeys freigeben
+		;~ Hotkey, IfWinActive, % "Addendum (Datei umbenennen)"
+		;~ Hotkey, Up, Off
+		;~ Hotkey, Down, Off
+		;~ Hotkey, Enter, Off
+		;~ Hotkey, IfWinActive
+
+	; Journal fokussieren
+		admGui_Default("admJournal")
+		GuiControl, adm: Focus, AdmJournal
+
+		oPV := ""
+
+return ;}
+
+RNGuiUpDown:                                   	;{   mit den Pfeiltasten zwischen den Eingabefeldern wechseln
+
+	Gui, RN: Submit, NoHide
+	GuiControlGet, vctrl, RN:Focus
+	RegExMatch(vctrl, "Edit(?<nr>\d)", E)
+
+	If (A_ThisHotkey = "Up")
+		If (ENr = 1)
+			GuiControl, RN:Focus, RNE3
+		else
+			Send, {LShift Down}{Tab}{LShift Up}
+	else if (A_ThisHotkey = "Down")
+		If (ENr = 3)
+			GuiControl, RN:Focus, RNE1
+		else
+			Send, {Tab}
+
+return ;}
 }
 
-admGui_View(filename)                                                 	{              	; Befund-/Bildanzeigeprogramm aufrufen
+admGui_SumatraClose(PID, ID="")                                 	{                	; Hilfsfunktion: admGui_Rename
 
-	;SciTEOutput(Addendum.BefundOrdner "\" filename)
-	If (StrLen(filename) = 0) || !FileExist(Addendum.BefundOrdner "\" filename)
+	Process, Close, % PID
+	If !ErrorLevel
+		SumatraInvoke("Exit", ID)
+
+}
+
+admGui_FileName(PatName, inhalt, Datum)                  	{                	; Hilfsfunktion: admGui_Rename
+
+	retStr := RegExReplace(PatName, "[\s,]+$") ", "
+	retStr .= Trim(RegExReplace(inhalt, "[\s,]+$"))
+	retStr .= StrLen(Datum) > 0 ? " v. " Trim(RegExReplace(Datum, "^[\s,v\.]+")) : ""
+
+return retStr
+}
+
+
+; --------- PDF/Bild Viewer
+admGui_PDFPreview(fileName)                                      	{               	; PDF Vorschau
+
+		global 	hadm, PIDSumatra
+
+		static 	hadmPV, PVPic1, PVbw, PVfw, imagick
+		static 	SmtraExist := false, SmtraInit := true
+		static 	SumatraCMD
+		static 	SmtraClass := "ahk_class SUMATRA_PDF_FRAME"
+
+	; Fensterposition ermitteln
+		admPos	:= GetWindowSpot(hadm)
+		monIndex	:= GetMonitorIndexFromWindow(hadm)
+		Mon     	:= ScreenDims(monIndex)
+
+	; Dateipfad anpassen
+		If RegExMatch(filename, "[A-Z]\:\\")
+			pdfPath	:= fileName
+		else
+			pdfPath	:= Addendum.BefundOrdner "\" fileName
+
+		pages := PDFGetPages(pdfPath, Addendum.PDF.qpdfPath)
+
+	; nutzt den Sumatra PDF READER zur Vorschau (sehr schnelle PDF Darstellung!)
+	; prüft ob Sumatra installiert ist, falls nicht wird die PDF Datei mit imagemagick konvertiert
+		If SmtraInit {
+			SmtraInit := false
+			SumatraCMD := GetAppImagePath("SumatraPDF")
+			If (StrLen(SumatraCMD) > 0) && FileExist(SumatraCMD)
+				SmtraExist := true
+			else
+				SumatraCMD := ""
+		}
+
+	; ohne SumatraPDF Bilder mit ImageMagick convert auspacken und in eigener Gui zeigen
+		If       	(StrLen(SumatraCMD) = 0) {
+
+				If (StrLen(imagick) = 0) && FileExist("T:\cmd\convert.exe") {
+					tempPath 	:= "T:"
+					imagick  	:= tempPath "\cmd\convert.exe"
+				} else {
+					tempPath	:= A_Temp
+					imagick 	:= Addendum.PDF.imagickPath "\convert.exe"
+				}
+
+				pdfconvert	:= imagick " -resize x" Round(Mon.H * 0.8) " -border 3 " q pdfPath q " " q tempPath "\prevPic.jpg" q
+				prevPic  	:= tempPath "\prevPic" (pages = 1 ? "" : "-1") ".jpg"
+				Stdout   	:= StdoutToVar(pdfconvert) ;,, Hide
+
+				If !FileExist(prevPic) {
+					PraxTT("PDF Vorschau konnte nicht erstellt werden.", "2 0")
+					return
+				}
+
+				Gui, admPV: New 	, % "+ToolWindow -DPIScale +HWndhadmPV +Border"
+				Gui, admPV: Margin	, 5, 5
+				Gui, admPV: Add   	, Button	, % "xm 	ym 	vPVbw 	0xE BackGroundTrans gPVHandler"	, % " << "
+				Gui, admPV: Add   	, Button	, % "x+10 ym 	vPVfw 	0xE BackGroundTrans gPVHandler" 	, % " >> "
+				Gui, admPV: Add   	, Picture, % "xm  	y+5 	vPVPic1	0xE BackGroundTrans"                   	, % prevPic
+				Gui, admPV: Show	, % "AutoSize NA Hide", % "Pdf Vorschau - Seite 1/" pages " [" filename "]"
+				PV := GetWindowSpot(hadmPV)
+				Gui, admPV: Show, % "x" (admPos.X - PV.W - 5) " y" Round(Mon.B/2) - Round(PV.H/2) " NA"
+				activeID := hadmPV, Previewer := "admPV"
+
+		}
+	; automatische Größenanpassung des Sumatra PDF Reader
+		else if 	(StrLen(SumatraCMD) > 0) {
+
+			; DetectHidden... merken
+				lDetectHiddenWin := A_DetectHiddenWindows
+				DetectHiddenWindows, On
+
+				Run, % q SumatraCMD q " -view " q "single page" q " -zoom " q "fit page" q " " q pdfPath q,, UseErrorLevel, PIDSumatra   ; -new-window
+				WinWait        	, % SmtraClass,, 6
+				WinActivate		, % SmtraClass
+				WinWaitActive	, % SmtraClass,, 1
+
+				hSumatra := WinExist(SmtraClass)
+				WinGet      	,	SumatraPID, PID, % "ahk_id " hSumatra
+				ControlGet	,	hSumatraCnvs, HWND,, SUMATRA_PDF_CANVAS1, % "ahk_id " hSumatra
+				WinGetPos	,,	stY,, stH, ahk_class Shell_TrayWnd
+				;WinSet      	,	Style, 0x16C40000, % "ahk_id " hSumatra  ; Minimieren, Maximieren und Beenden werden entfernt
+
+				AspectRatio	:= 1.5
+				smtraWin   	:= GetWindowSpot(hSumatra)
+				smtraCnvs 	:= GetWindowSpot(hSumatraCnvs)
+				smtraTBarH	:= smtraWin.H - smtraCnvs.H
+				smtraH     	:= Mon.H - stH
+				smtraW     	:= Floor(smtraH/1.2)                 			; A4 Seite 29,7:21,0 (cm) ~ 1.41 --- geht nur 1.2?
+				smtraX        	:= admPos.X - smtraW
+
+				DllCall("SetWindowPos", "Ptr", hSumatra	, "Ptr", 0, "Int", smtraX, "Int", 5, "Int", smtraW, "Int", smtraH, "UInt", 0x40) ;SHOW_WINDOW
+				DetectHiddenWindows, % lDetectHiddenWin
+				activeID := hSumatra, activePID := SumatraPID, Previewer := "Sumatra"
+			}
+
+
+return {"Previewer": previewer, "ID": activeID, "PID": activePID, "Path": SumatraCMD}
+
+
+PVHandler:
+
+return
+}
+
+admGui_View(filename)                                                 	{               	; Befund-/Bildanzeigeprogramm aufrufen
+
+	filepath := Addendum.BefundOrdner "\" filename
+	If (StrLen(filename) = 0) || !FileExist(filepath)
 		return 0
 
 	If RegExMatch(filename, "\.jpg|png|tiff|bmp|wav|mov|avi$") {
 		PraxTT("Anzeigeprogramm wird geöffnet", "3 0")
-		Run % q Addendum.BefundOrdner "\" filename q
+		Run % q filepath q
 	}
 	else {
+		If !FileExist(pdfReaderPath := Addendum.PDF.ReaderAlternative)
+			If !FileExist(pdfReaderPath := Addendum.PDF.Reader) {
+				PraxTT("Es konnte kein PDF-Anzeigeprogramm gefunden werden", "2 1")
+				return
+			}
 		PraxTT("PDF-Anzeigeprogramm wird geöffnet", "3 0")
-		If !isCorruptPDF(Addendum.BefundOrdner "\" filename)
-			Run % Addendum.PDFReaderFullPath " " q Addendum.BefundOrdner "\" filename q
+		If !PDFisCorrupt(filepath)
+			Run % q pdfReaderPath q " " q filepath q
 		else
 			PraxTT("PDF Datei:`n>" fileName "<`nist defekt", "2 0")
 	}
@@ -1499,211 +2526,21 @@ admGui_View(filename)                                                 	{        
 return 1
 }
 
+admGui_GetAllPdfWin()                                                 	{               	; Namen aller angezeigten PdfReader ermitteln
 
-admGui_ImportGui(Show=true, IGmsg=""                                           	; Hinweisfenster für laufenden Importvorgang
-	, gctrl="AdmPdfReports")                                            	{
-
-	global adm2, hadm, hadm2, AdmImporter, AdmJournal
-
-	If Show {
-
-	; zeigt den Hinweis auch an wenn das Infofenster neu gezeichnet wurde
-		If Addendum.Importing && (StrLen(last_IGmsg) > 0)
-			IGmsg := last_IGmsg, gctrl := last_ctrl
-		else if !Addendum.Importing
-			last_IGmsg := IGmsg, last_ctrl := gctrl, Addendum.Importing := true
-
-		If StrLen(IGmsg) = 0
-			IGmsg := "Importvorgang läuft...`nbitte nicht unterbrechen!"
-
-		GuiControlGet, rpos, adm: Pos, % gCtrl
-
-		Gui, adm2: New	, +HWNDhadm2 +ToolWindow -Caption +Parent%hadm%
-		Gui, adm2: Color	, cAA0000
-		Gui, adm2: Font	, s10 q5 cFFFFFF Bold, % Addendum.StandardFont
-		Gui, adm2: Add	, Text, % "x" 0 " y" Floor(rposH//4) " w" rposW " Center vAdmImporter"	, % IGmsg
-		Gui, adm2: Show	, % "x" rposX " y" rposY " w" rposW " h" rposH " Hide NA"                     	, AdmImportLayer
-
-		GuiControlGet, cpos, adm2: Pos, AdmImporter
-		GuiControl, adm2: Move, AdmImporter, % "y" Floor(rposH // 2 - cposH // 2)
-		Gui, adm2: Show	, % "NA"
-
-		WinSet, Style         	, 0x50020000	, % "ahk_id " hadm2
-		WinSet, ExStyle	    	, 0x0802009C	, % "ahk_id " hadm2
-		WinSet, Transparent	, 220             	, % "ahk_id " hadm2
-
-	} else {
-
-		Gui, adm2: Destroy
-		last_IGmsg := last_ctrl := ""
-		Addendum.Importing := false
-
-	}
-
-}
-
-admGui_ImportFromJournal(report)                               	{                 	; Einzelimport-Funktion vom Journal
-
-		global 	admHPDFReports, hadm
-		static 	WZEintrag	:= {"LASV":"Anfragen", "Anfrage":"Anfragen", "Antrag":"Anfragen", "Lageso":"Anfragen", "Lebensversicherung":"Anfragen"}
-		static 	rxPerson 	:= "[A-ZÄÖÜ][\pL]+[\s-]*([A-ZÄÖÜ][\pL-]+)*"
-
-	; Nutzer abfragen
-		If Addendum.InfoWindow.ConfirmImport {
-			message :=	"Wollen Sie die Datei:`n"
-							. 	(StrLen(Report) >30 ? SubStr(Report, 1, 30) "..." : Report) "  dem Pat.`n"
-							. 	AlbisCurrentPatient() " zuordnen ?"
-			MsgBox, 262148, Importieren ? - Addendum für AlbisOnWindows, % message
-			IfMsgBox, No
-				return
-		}
-
-	; Befund importieren
-		If      	RegExMatch(report, "\.pdf")                                             	{
-
-			Addendum.FuncCallback := "GetPDFViewerArg"
-			If AlbisImportierePdf(report) {
-
-				If FileExist(Addendum.BefundOrdner "\Backup\" report)        ; PDF in einen anderen Ordner verschieben
-					FileMove, % Addendum.BefundOrdner "\Backup\" report, % Addendum.BefundOrdner "\Backup\Importiert\" report, 1
-				For idx, pdf in ScanPool
-					If InStr(pdf.name, report)
-						ScanPool.RemoveAt(idx)
-
-			}
-
-		}
-		else If	RegExMatch(report, "\.jpg|png|tiff|bmp|wav|mov|avi$")	{
-			If !AlbisImportiereBild(report, RegExReplace(report, "^\s*[\p{L}-]+[\,\s]+[\p{L}-]+"))
-				return
-		}
-		else
-			return
-
-	; Re-Indizieren, Gui auffrischen, Importprotokoll
-		FileAppend, % A_DD "." A_MM "." A_YYYY ", " A_Hour ":" A_Min " - " report "`n", % Addendum.Befundordner "\PdfImportLog.txt"
-		while, % (StrLen(Addendum.FuncCallback) > 0) {
-			Sleep, 50
-			If (A_Index > 20)  ; 1 Sekunde
-				break
-		}
-
-		admGui_Journal(true)
-		admGui_Reports()
-		admGui_ShowTab("Journal")
-
-return
-}
-
-admGui_ShowTab(TabName, hTab="")                          	{                	; ein bestimmten Tab nach vorne holen
-
-		global admHTab
-		static admGuiTabs := {"Patient":0, "Journal":1, "Protokoll":2, "Info":3, "Netzwerk":4}
-
-	; (TCM_SETCURFOCUS (0x1330)
-		SendMessage, 0x1330, % (RegExMatch(TabName, "^\d+$") ? TabName : admGuiTabs[TabName]),,, % "ahk_id " (StrLen(hTab) = 0 ? admHTab : hTab)
-
-		;~ SciTEOutput("EL: " ErrorLevel ", " StrLen(hTab))
-		;~ SciTEOutput("SendMessage, 0x1330, " (RegExMatch(TabName, "^\d+$") ? TabName : admGuiTabs[TabName]) ",,, % " q "ahk_id " (StrLen(hTab) = 0 ? admHTab : hTab) q )
-
-return ErrorLevel
-}
-
-admGui_FileImport()                                                     	{                	; Befundimport für alle Befunde eines Patienten
-
-	global PdfReports
-
-	Imports := ""
-	admGui_Default("admPdfReports")                         	; Journallistview als Default setzen
-
-	For key, pdf in PdfReports		{
-
-		imported	:= ""
-		report 	 	:= pdf.name
-
-		If RegExMatch(report, "\.(jpg|png|tiff|bmp|wav|mov|avi)$")	{	; Image importieren
-
-			If !AlbisImportiereBild(report, RegExReplace(report, "^\s*[\p{L}-]+[\,\s]+[\p{L}-]+")) {
-				;SciTEOutput("Datei (" Report ") wurde nicht importiert.", 0, 1)
-				continue
-			} else {
-				If FileExist(Addendum.BefundOrdner "\Backup\" report)        ; PDF in einen anderen Ordner verschieben
-					FileMove, % Addendum.BefundOrdner "\Backup\" report, % Addendum.BefundOrdner "\Backup\Importiert\" report, 1
-				FileAppend, % A_DD "." A_MM "." A_YYYY ", " A_Hour ":" A_Min " - " report "`n", % Addendum.Befundordner "\PdfImportLog.txt"
-				imported := Report
-			}
-
-		}
-		else {                                                                                    ; Pdf importieren
-
-			Addendum.FuncCallback := "GetPDFViewerArg"
-			If !AlbisImportierePdf(report) {
-				;SciTEOutput("Datei (" Report ") wurde nicht importiert.", 0, 1)
-				continue
-			}	else {
-				FileAppend, % A_DD "." A_MM "." A_YYYY ", " A_Hour ":" A_Min " - " report ".pdf`n", % Addendum.Befundordner "\PdfImportLog.txt"
-				while, % (StrLen(Addendum.FuncCallback) > 0) {
-					Sleep, 50
-					If (A_Index > 40)
-						break
-				}
-				imported := Report
-				For key, pdf in ScanPool
-					If InStr(pdf.name, report)
-						ScanPool.RemoveAt(key)
-			}
-
-		}
-
-		If (StrLen(imported) > 0)                   			{                        	; importierten Eintrag aus der Listview entfernen
-
-				Imports .= imported "`n"
-				admGui_Default("admPdfReports")
-				Loop % LV_GetCount() {
-					LV_GetText(celltext, A_Index, 2)
-					If InStr(imported, celltext) {
-						LV_Delete(A_Index)
-						break
-					}
-				}
-
-		}
-
-	}
-
-	PdfReports := Array()
-
-return Imports
-}
-
-admGui_RemoveImports(ImportList)                               	{                 	; PdfReport-Array aufräumen
-
-	global PdfReports
-
-	Loop, Parse, % RTrim(ImportList, "`n"), `n
-		Loop % PdfReports.MaxIndex()
-			If InStr(PdfReports[A_Index], A_LoopField) {
-				PdfReports.RemoveAt(A_Index)
-				continue
-			}
-
-}
-
-admGui_GetAllPdfWin()                                                 	{                	; Namen aller angezeigten PdfReader ermitteln
-
-	WinGet, tmpListe, List, % "ahk_class " Addendum.PDFReaderWinClass
+	WinGet, tmpListe, List, % "ahk_class " Addendum.PDF.ReaderWinClass
 	Loop % tmpListe
 		PreReaderListe .= tmpListe%A_Index% "`n"
 
 return PreReaderListe
 }
 
-admGui_ShowPdfWin(PreReaderListe)                             	{               	; PdfReaderfenster nach vorne holen
+admGui_ShowPdfWin(PreReaderListe)                             	{               	; PDF-Readerfenster nach vorne holen
 
 	; funktioniert nicht wenn man nur ein Fenster (eine Instanz) des PdfReader eingestellt hat
 	; die Tabs im FoxitReader bekomme ich nicht ermittelt und somit auch nicht angesteuert
 
-	WinGet, tmpListe, List, % "ahk_class " Addendum.PDFReaderWinClass
+	WinGet, tmpListe, List, % "ahk_class " Addendum.PDF.ReaderWinClass
 	Loop % tmpListe
 		ReaderListe .= tmpListe%A_Index% "`n"
 	ReaderListe := PreReaderListe "`n" ReaderListe
@@ -1716,109 +2553,680 @@ admGui_ShowPdfWin(PreReaderListe)                             	{               	
 
 }
 
-admGui_SaveStatus()                                                        	{                	; Anzeigestatus des Infofenster sichern
+admGui_ThumbnailView(lparam, wParam, xParam)        	{                	; PDF-Dateien sollen hiermit einblendbar werden ohne einen PDF-Reader aufzurufen
 
-	global
-	Gui, adm: Submit, Hide
-	GuiControlGet, ProtokollTag, adm:, admTPTag
-	;SciTEOutput("Tab: " admTabs ", Tag: " ProtokollTag)
-	IniWrite, % ProtokollTag                                 	, % Addendum.AddendumIni, % compname, % "Infofenster_Tagesprotokoll_Datum"
+	CoordMode, Mouse, Screen
+	global admHJournal, admHReports, hadm, adm
 
-	If (InStr(admTabs, "Protokoll")) {        ; speichert die Scrollviewposition
-		admGui_Default("admProtokoll")
-		admTabs .= " " LV_GetScrollViewPos(admHJournal)
-	}
-	IniWrite, % admTabs                                      	, % Addendum.AddendumIni, % compname, % "Infofenster_aktuelles_Tab"
-	IniWrite, % Addendum.InfoWindow.JournalSort	, % Addendum.AddendumIni, % compname, % "Infofenster_JournalSortierung"
+	MouseGetPos, mx, my, hWin, hControl, 2
+	oAcc := AccObj_FromPoint(mx, my)
+	role := "hwin: " xParam ", hControl: " wParam "`nChildCount: " oAcc.accChildCount "`nName: " oAcc.accName(1) "`nValue: " oAcc.accValue(1)
+	;ToolTip, % role, 800, 1, 15
 
 }
 
-admGui_Karteikarte(PatID)                                             	{              	; fragt ob eine Karteikarte geöffnet werden soll
+AccObj_FromPoint(X := "", Y := "") {
 
-	If !Addendum.PatAkteSofortOeffnen {
-		MsgBox, 4, Patientenakte öffnen?, % "Möchte Sie die Akte des Patienten:`n(" PatID ") " oPat[PatID].Nn ", " oPat[PatID].Vn " geb.am " oPat[PatID].Gd "`nöffnen?"
-		IfMsgBox, No
-			return
+	; AccessibleObjectFromPoint()
+	; Retrieves the address of the IAccessible interface pointer for the object displayed at a specified point on the screen.
+	; --------------------------------------------------------------------------------------------------------------------------------
+
+	If (X = "") || (Y = "")
+		DllCall("GetCursorPos", "Int64P", PT)
+	Else
+		PT := (X & 0xFFFFFFFF) | (Y << 32)
+	VarSetCapacity(CID, 24, 0)
+	HR := DllCall("Oleacc.dll\AccessibleObjectFromPoint", "Int64", PT, "PtrP", IAP, "Ptr", &CID, "UInt")
+
+Return (HR = 0 ? New AccObj_Object(IAP, NumGet(CID, 8, "Int")) : False)
+}
+
+
+; -------- Importieren
+admGui_ImportGui(Show=true, msg="", gctrl="")              	{                 	; Fenster für laufende Prozesse
+
+	global adm, adm2, hadm, hadm2, admImporter, admImporterPrg, admJournal, last_msg, last_ctrl
+	global admHTab
+
+	If (StrLen(gCtrl) = 0) {
+		gCtrl := "admReports"
+		res := admGui_ShowTab("Patient", admHTab)
+	}
+	else if (gCtrl = "admJournal") {
+		res := admGui_ShowTab("Journal", admHTab)
 	}
 
-	AlbisAkteOeffnen(oPat[PatID].Nn ", " oPat[PatID].Vn, PatID)
+	If Show {
+
+		; zeigt den Hinweis auch an wenn das Infofenster neu gezeichnet wurde
+			If Addendum.Importing && (StrLen(msg) > 0) {
+				gctrl := last_ctrl
+				If (last_msg <> msg) {
+					GuiControl, adm2:, AdmImporter, % msg
+					last_msg := msg
+				}
+				return
+			}
+			else if !Addendum.Importing {
+				last_msg := msg, last_ctrl 	:= gctrl
+				Addendum.Importing := true
+				If StrLen(msg) = 0
+					msg := "Importvorgang läuft...`nbitte nicht unterbrechen!"
+			}
+
+			GuiControlGet, rpos, adm: Pos, % gCtrl
+
+			Gui, adm2: New	, +HWNDhadm2 +ToolWindow -Caption +Parent%hadm%
+			Gui, adm2: Color	, cAA0000
+			Gui, adm2: Font	, s10 q5 cFFFFFF Bold, % Addendum.Default.Font
+
+			MsgOpt := InStr(msg, "Dateinamen") ? "" : "Center", PrgOpt := ""
+			Gui, adm2: Add	, Text    	, % "x30 y1 w" (rposW-30) " " MsgOpt " vadmImporter"  	, % msg
+
+			PrgOpt := ""
+			;Gui, adm2: Add	, Progress	, % "x30 y" rposH-30 " w" rposW-30 " vAdmImporterPrg"
+
+			Gui, adm2: Show	, % "x" rposX " y" rposY " w" rposW " h" rposH " Hide NA"              	, admImportLayer
+
+			GuiControlGet, cpos, adm2: Pos, admImporter
+			GuiControl, adm2: Move, admImporter, % "y" Floor(rposH // 2 - cposH // 2)
+			Gui, adm2: Show	, % "NA"
+
+			WinSet, Style         	, 0x50020000	, % "ahk_id " hadm2
+			WinSet, ExStyle	    	, 0x0802009C	, % "ahk_id " hadm2
+			WinSet, Transparent	, 180             	, % "ahk_id " hadm2
+
+	} else {
+
+			Gui, adm2: Destroy
+			last_msg := last_ctrl := ""
+			Addendum.Importing := false
+
+	}
+
+}
+
+admGui_ImportJournalAll(files="")                                    	{               	; Journal: 	Import aller vollständig benannten Dateien
+
+		global admHTab
+
+		admGui_Default("admJournal")
+		GuiControl, % "adm: Enable0"	, AdmButton2
+		GuiControl, % "adm:"            	, AdmButton2, % "...importiere"
+
+		Addendum.ImportRunning := true
+		waituser := 10
+		Loop % LV_GetCount() {                                                ; Dokumente ohne Personennamen werden ignoriert
+
+			 ; enthält keinen Personennamen dann weiter
+				LV_GetText(rowFile, A_Index, 1)
+				If !string.isFullNamed(rowFile)
+					continue
+
+			; weiter mit Nachfrage
+				If (Addendum.iWin.Imports > 0) {
+					MsgBox, 0x1021, % "Addendum", % "Weiteres Dokument importieren?`n[" rowFile "]", % (A_Index < 3 ? waituser : waituser/2 )
+					IfMsgBox, Cancel
+					{
+						Addendum.ImportRunning	:= false
+						break
+					}
+				}
+
+			; Importieren jetzt
+				filePath := Addendum.BefundOrdner "\" rowFile
+				If RegExMatch(filePath, "\.pdf$") && FileExist(filePath) && !FileIsLocked(filePath) && PDFisSearchable(filepath) {
+
+					If FuzzyKarteikarte(rowFile) {
+						If admGui_ImportFromJournal(rowFile) {
+							Addendum.iWin.Imports ++
+							return
+						}
+					}
+					else {
+						PraxTT("Es konnte kein passender Patient gefunden werden.", "3 0")
+						break
+					}
+				}
+
+		}
+
+		Addendum.iWin.Imports	:= 0
+		Addendum.ImportRunning	:= false
+
+		GuiControl, % "adm:"            	, AdmButton2, % "Importieren"
+		If (LV_GetCount() > 0)
+			GuiControl, % "adm: Enable1"	, AdmButton2
+
+		admGui_InfoText("Journal")
+		admGui_InfoText("Patient")
 
 return
 }
 
+admGui_ImportFromJournal(filename)                              	{               	; Journal: 	Einzelimport-Funktion
+
+		global 	admHPDFfilenames, hadm, admHTab
+		static 	WZEintrag	:= {"LASV":"Anfragen", "Anfrage":"Anfragen", "Antrag":"Anfragen", "Lageso":"Anfragen", "Lebensversicherung":"Anfragen"}
+		static 	rxPerson 	:= "[A-ZÄÖÜ][\pL]+[\s-]*([A-ZÄÖÜ][\pL-]+)*"
+
+	; Nutzer abfragen
+		currPat 	:= AlbisCurrentPatient()
+		Pat		:= string.GetNames(filename)
+		If Addendum.iWin.ConfirmImport || (!InStr(currPat, Pat.Nn) && !InStr(currPat, Pat.Vn)) {
+			message :=	"Wollen Sie die Datei:`n"
+							. 	(StrLen(filename) >30 ? SubStr(filename, 1, 30) "..." : filename) "  dem Pat.`n"
+							. 	currPat " zuordnen ?"
+			MsgBox, 262148, Importieren ? - Addendum für AlbisOnWindows, % message
+			IfMsgBox, No
+				return 0
+		}
+
+	; Befund importieren
+		If      	RegExMatch(filename, "\.pdf")                                             	{
+				Addendum.FuncCallback := "GetPDFViewerArg"
+				If !AlbisImportierePdf(filename)
+					return 0
+				admGui_MoveFile(filename)             	; PDF in einen anderen Ordner verschieben
+				docID := pdfpool.Remove(filename)	; aus ScanPool entfernen
+		}
+		else If	RegExMatch(filename, "\.(jpg|png|tiff|bmp|wav|mov|avi)$")	{
+				If !AlbisImportiereBild(filename, string.ReplaceNames(filename))
+					return 0
+		}
+		else
+			return 0
+
+	; Re-Indizieren, Gui auffrischen, Importprotokoll
+		FileAppend, % datestamp() "| " filename "`n", % Addendum.Befundordner "\PdfImportLog.txt"
+		while, % (StrLen(Addendum.FuncCallback) > 0) {
+			Sleep, 50
+			If (A_Index > 60)  ; 3 Sekunden
+				break
+		}
+
+		admGui_Journal(false)
+		PatDocs := admGui_Reports()
+		admGui_ShowTab("Journal", admHTab)
+		admGui_InfoText("Journal")
+
+return 1
+}
+
+admGui_ImportFromPatient()                                            	{               	; Patient:	Befundimport alle Befunde
+
+	global PatDocs
+
+	Imports := ""
+	admGui_Default("admReports")                         	; Journallistview als Default setzen
+
+	For key, file in PatDocs		{
+
+		imported	:= ""
+		filename  	:= file.name
+
+		If RegExMatch(filename, "\.(jpg|png|tiff|bmp|wav|mov|avi)$")	{	; Bild importieren
+
+			If !AlbisImportiereBild(filename, string.ReplaceNames(filename))
+				continue
+
+			imported := filename
+			FileAppend, % datestamp() "| " filename "`n", % Addendum.Befundordner "\PdfImportLog.txt"
+			If FileExist(Addendum.BefundOrdner "\Backup\" filename)        ; PDF in einen anderen Ordner verschieben
+				FileMove, % Addendum.BefundOrdner "\Backup\" filename, % Addendum.BefundOrdner "\Backup\Importiert\" filename, 1
+
+		}
+		else {                                                                                         	; Pdf importieren
+
+			Addendum.FuncCallback := "GetPDFViewerArg"
+			If !AlbisImportierePdf(filename)
+				continue
+
+			; Logfile schreiben. Backup und Textdateien verschieben
+				imported := filename
+				FileAppend, % datestamp() "| " filename "`n", % Addendum.Befundordner "\PdfImportLog.txt"
+				admGui_MoveFile(filename)
+				docID := pdfpool.Remove(filename)
+
+			; wartet auf den FoxitReader
+				while, % (StrLen(Addendum.FuncCallback) > 0) {
+					Sleep, 50
+					If (A_Index > 40)
+						break
+				}
+
+		}
+
+		If (StrLen(imported) > 0)                   			{                              	; importierten Eintrag aus der Listview entfernen
+			Imports .= imported "`n"
+			admGui_Default("admReports")
+			Loop % LV_GetCount() {
+				LV_GetText(celltext, A_Index, 1)
+				If (imported = celltext) {
+					LV_Delete(A_Index)
+					break
+				}
+			}
+		}
+
+	}
+
+	; PDF-Reports leeren
+		PatDocs.RemoveAt(1, pdfmax)
+
+return Imports
+}
+
+admGui_MoveFile(filename)                                             	{               	; behandelt die PDF Backup Dateien
+
+	; Backup PDF in anderen Ordner verschieben
+		If FileExist(Addendum.BefundOrdner "\Backup\" filename)
+			FileMove, % Addendum.BefundOrdner "\Backup\" filename, % Addendum.BefundOrdner "\Backup\Importiert\" filename, 1
+
+	; PDF-Text in anderen Ordner verschieben
+		txtfilename := RegExReplace(filename, "\.pdf$", ".txt")
+		If FileExist(Addendum.BefundOrdner "\Text\" txtfilename)        ; PDF in einen anderen Ordner verschieben
+			FileMove, % Addendum.BefundOrdner "\Text\" txtfilename, % Addendum.BefundOrdner "\Text\Backup\" txtfilename, 1
+
+}
+
+
+; -------- Karteikarte
+FuzzyKarteikarte(NameStr)                                             	{               	; fuzzy name matching function, öffnet eine Karteikarte
+
+	; prüft ob Namen übergeben wurden
+		If !IsObject(Pat := string.GetNames(NameStr)) {
+			PraxTT(	"Die Dateibezeichnung enthält keinen Namen eines Patienten.`nDer Karteikartenaufruf wird abgebrochen!", "3 2")
+			return
+		}
+
+	; passende Patienten suchen
+		Patients := admDB.StringSimilarityEx(Pat.Nn, Pat.Vn)
+		m := Patients.diff
+		Patients.Delete("diff")
+
+	; Karteikartenfunktion aufrufen
+		If (Patients.Count() = 1) {
+
+			For PatID, Patient in Patients
+				return admGui_Karteikarte(PatID)
+
+		} else {
+
+			SciTEOutput(NameStr ": " Pat.Nn ", " Pat.Vn)
+			SciTEOutput(" (matches: " Patients.Count() ") mindiff: " m.minDiff ", [" m.bestID "] " m.bestNn ", " m.bestVn)
+			For PatID, Pat in Patients
+				SciTEOutput(" [" PatID "] " Pat.Nn ", " Pat.Vn)
+			return 0
+		}
+
+return 1
+}
+
+admGui_Karteikarte(PatID)                                             	{               	; fragt ob eine Karteikarte geöffnet werden soll
+
+	If !Addendum.PDF.PatAkteSofortOeffnen {
+		MsgBox, 4	, % "Patientenakte öffnen ?"
+						, % "Möchte Sie die Akte des Patienten:`n"
+						. 	  "(" PatID ") " oPat[PatID].Nn ", " oPat[PatID].Vn " geb.am " oPat[PatID].Gd "`n"
+						.	  "öffnen?"
+		IfMsgBox, No
+			return 0
+	}
+
+return AlbisAkteOeffnen(oPat[PatID].Nn ", " oPat[PatID].Vn, PatID)
+}
+
+
+; -------- Gui Einstellungen speichern
+admGui_PatLog(PatID, cmd, LogText)                             	{                 	; individuelles Patienten Logbuch
+
+ 	; zurück falls Nutzer keine Protokollerstellung wünscht
+		If !Addendum.PatLog
+			return
+
+		PatientDir 	:= PatDir(PatID)
+		If InStr(cmd, "AddToLog") {
+			timeStamp := A_DD "." A_MM "." A_YYYY " " A_Hour ":" A_Min ":" A_Sec "`t"
+			FileAppend, % timeStamp . LogText "`n", % PatientDir "\log.txt"
+		}
+
+}
+
+admGui_SaveStatus()                                                      	{               	; Anzeigestatus des Infofenster sichern
+
+	; letzte Änderung: 13.02.2021
+
+		global admHJournal, adm, hadm, admTPTag, admTabs
+
+	; Gui auslesen
+		Gui, adm: Submit, Hide
+		GuiControlGet, ProtokollTag, adm:, admTPTag
+		JournalSort := LV_GetScrollViewPos(admHJournal)
+
+	; bei Bedarf in der ini speichern
+		If (Addendum.iWin.firstTab <> admTabs)
+			IniWrite, % admTabs     	, % Addendum.Ini, % compname, % "Infofenster_aktuelles_Tab"
+		If (Addendum.iWin.JournalSort <> JournalSort)
+			IniWrite, % JournalSort  	, % Addendum.Ini, % compname, % "Infofenster_JournalSortierung"
+		If (Addendum.iWin.TProtDate <> ProtokollTag)
+			IniWrite, % ProtokollTag	, % Addendum.Ini, % compname, % "Infofenster_Tagesprotokoll_Datum"
+
+	; sichern im Addendum Objekt
+		Addendum.iWin.firstTab    	:= admTabs
+		Addendum.iWin.TProtDate 	:= ProtokollTag
+		Addendum.iWin.JournalSort	:= JournalSort
+
+}
+
+
+; -------- Callback Funktionen
+admGui_CheckJournal(pdffile, ThreadID)                          	{                	; Ausführung jedesmal nach erfolgreicher Erstellung einer PDF durch TesseractOCR()
+
+		global admHJournal
+
+		admGui_Default("admJournal")
+
+	; Farb-Markierung entfernen
+		If (rowNr := LV_FindRow("admJournal",1, pdffile)) {
+			LV_Modify(rowNr, "ICON3")                                        	; ICON für durchsuchbare PDF hinzufügen
+			;admGui_ColorRow(admHJournal, rowNr, false)          	; Hintergrundfarbe der Zeile wird entfernt
+		}
+
+	; Datei aus dem Stapel entfernen
+		For idx, inprogress in Addendum.iWin.FilesStack
+			If (inprogress = pdfFile) {
+				Addendum.iWin.FilesStack.RemoveAt(idx)
+				break
+			}
+
+	; ScanPool Array ändern und BefundIndex sichern
+		oPDF := pdfpool.Add(Addendum.BefundOrdner, pdfFile)
+
+	; Nachricht an den OCR-Thread: OCR Vorgang fortsetzen
+		Send_WM_CopyData("continue", ThreadID)
+
+}
+
+admGui_FolderWatch(path, changes)                             	{                	; wird aufgerufen wenn neue PDF-Dateien im Befundordner vorhanden sind
+
+	; letzte Änderung: 13.02.2021
+
+		global hadm
+
+		static staticFileCount	:= 0
+		static filecount        	:= 0
+		static func_AutoOCR	:= func("admGui_OCRAllFiles")
+
+	; untersucht alle veränderten oder hinzugfügten Dateien
+		For Each, Change In Changes {
+
+			action   	:= change.action
+			name    	:= change.name
+
+			If RegExMatch(name, "\.pdf$")
+				If RegExMatch(action, "1|3|4")	{
+
+					SplitPath, name, filename, filepath
+					If IsObject(oPDF := pdfpool.Add(filepath, filename)) {
+
+						; neue Datei zu Listview hinzufügen und Info's ändern
+							;Controls("", "reset", "")
+							;If Controls("", "ControlFind, AddendumGui, AutoHotkeyGUI, return hwnd", "ahk_class OptoAppClass") {
+							If hadm {
+								admGui_Default("admJournal")
+								LV_Add((oPDF.isSearchable ? "ICON3" : "ICON1"), oPDF.name, oPDF.pages, oPDF.filetime, oPDF.timeStamp)
+								admGui_InfoText("Journal")
+							}
+
+						; Dateizähler erhöhen
+							staticFileCount 	++
+							filecount        	++
+
+						; Datei hat noch keine Texterkennung* erhalten, Timer mit Verzögerung wird gestartet
+						;                                  	*wird nur auf dem Client ausgeführt der in der Addendum.ini hinterlegt ist
+							If Addendum.OCR.AutoOCR && (Addendum.OCR.Client = compname) && !oPDF.isSearchable
+								SetTimer, % func_AutoOCR, % "-" (Addendum.OCR.AutoOCRDelay*1000)
+
+					}
+
+				}
+			; Datei wurde gelöscht
+				else If RegExMatch(action, "2")	{
+
+					SplitPath, name, filename, filepath
+					oPDF := pdfpool.Remove(filepath, filename)
+					Controls("", "reset", "")
+					If Controls("", "ControlFind, AddendumGui, AutoHotkeyGUI, return hwnd", "ahk_class OptoAppClass") {
+						admGui_Default("admJournal")
+						row := LV_FindRow("admJournal", 1, oPDF.name)
+						LV_Delete(row)
+						admGui_InfoText("Journal")
+					}
+
+				}
+		}
+
+		If filecount {
+			msg := filecount " Befund" (filecount = 1 ? " wurde" : "e wurden" ) " hinzufügt!"
+			Controls("", "reset", "")
+			If Controls("", "ControlFind, AddendumGui, AutoHotkeyGUI, return hwnd", "ahk_class OptoAppClass") {
+				admPos := GetWindowSpot(hadm)
+				Splash(msg, 6, admPos.X+30, admPos.Y + admPos.H - 30, admPos.W - 60, hadm)
+			}
+			else
+				TrayTip("Befundordner", msg, 6)
+
+		}
+		filecount := 0
+
+}
+
+class pdfpool                                                                 	{               	; verwaltet das ScanPool Objekt
+
+	; Abhängigkeiten - Addendum_PdfHelper.ahk
+
+	; sucht nach Dateinamen im Pool
+		inPool(filename) {
+
+			For docID, PDF in ScanPool
+				If (PDF.name = filename)
+					return docID
+
+		return 0
+		}
+
+	; fügt Datei mit allen notwendigen Informationen dem Scanpool hinzu
+		Add(path, filename) {
+
+			If !this.inPool(filename) {
+
+				FileGetSize	, FSize       	, % (pdfPath := path "\" filename), K
+				FileGetTime	, timeStamp 	, % pdfPath, C
+				FormatTime	, FTime     	, % timeStamp, dd.MM.yyyy
+
+				oPDF := {"name"          	: filename
+							, 	"filesize"        	: FSize
+							, 	"timestamp"    	: timeStamp
+							, 	"filetime"        	: FTime
+							, 	"pages"         	: PDFGetPages(pdfPath, Addendum.PDF.qpdfPath)
+							, 	"isSearchable"	: (PDFisSearchable(pdfPath)?1:0)}
+
+				ScanPool.Push(oPDF)
+
+			return oPDF
+			}
+
+		return
+		}
+
+	; Datei entfernen
+		Remove(path, filename) {
+
+			If (docID := this.inPool(filename))
+				return ScanPool.RemoveAt(docID)
+
+		return
+		}
+
+	; ScanPool komplett leeren
+		Empty() {
+
+			Loop % (mxIdx := ScanPool.MaxIndex())
+				ScanPool.Pop()
+
+		return mxIdx
+		}
+
+	; ScanPool speichern/laden
+		Load(path) {
+			return JSONData.Load(path "\PdfDaten.json", "", "UTF-8")
+		}
+
+		Save(path) {
+			return JSONData.Save(path "\PdfDaten.json", ScanPool, true,, 1, "UTF-8")
+		}
+
+}
+
+GetPDFViewerArg(class, hwnd)                                       	{               	; commandline des PDF Anzeigeprogramms auslesen
+
+	WinGet PID, PID, % "ahk_id " hwnd
+
+    StrQuery := "SELECT * FROM Win32_Process WHERE ProcessId=" . PID
+    Enum := ComObjGet("winmgmts:").ExecQuery(StrQuery)._NewEnum
+    If (Enum[Process]) {
+		Viewercmdline := Process.CommandLine
+		;SciTEOutput("Foxit: " Viewercmdline)
+	}
+	Addendum.FuncCallback := ""
+
+	;SciTEOutput("Foxit: " Viewercmdline)
+	; FileAppend, % datestamp() " - " report "`n", % Addendum.Befundordner "\PdfImportLog.txt"
+}
+
+
 ; ------------------------ Texterkennung
-TesseractOCR(files)                                                         	{                	; erstellt einen zusätzlichen echten Thread
+TesseractOCR(files)                                                         	{               	; erstellt einen zusätzlichen echten Thread
 
-	global Settings, autoexecScript, tessOCRRunning
-	;SciTEOutput("OCRThread: " Addendum.Threads.OCR)
+	 /*  Funktionsweise
 
-	Settings := {	"SetName"                             	: "threadOCR"
-					,	"UseRamDisk"                        	: "T:"
-					,	"tesspath"                               	: Addendum.AddendumDir "\include\OCR"
-					,	"xpdfpath"            	                 	: Addendum.AddendumDir "\include\xpdf"
-					,	"documentPath"                        	: Addendum.BefundOrdner
-					,	"backupPath"                	         	: Addendum.BefundOrdner "\backup"
-					,	"txtOCRPath"        	                 	: Addendum.BefundOrdner "\Text"
-					,	"OCRLogPath"      	                  	: Addendum.DBPath "\OCRTime_Log.txt"
-					,	"tessconfig"                            	: ""
-					,	"cmdlinePlus"                            	: "--psm 6 --oem 3"
-					,	"useData"                               	: "best"
-					,	"uselang"                               	: "deu"
-					,	"useleptonica"                           	: "false"
-					,	"convertwith"                           	: "convert"
-					,	"ProcessID"                             	: DllCall("GetCurrentProcessId")
-					,	"ScriptID"                                	: (Addendum.MsgGui.hMsgGui)
-					,	"showprogress"                        	: "true"
-					,	"writelog"             	                 	: "true"
-					,	"backupfiles"                            	: "true"
-					,	"corrupt_files_try_again"           	: 3
-					,	"stopOCR_num_fails"              	: 2
-					,	"callbackFunc"                          	: "OCRReady"}
 
-    autoexecScript =
-	(
-	#NoTrayIcon
-	#Persistent
-	SetBatchLines, -1
-	DetectHiddenWindows On
-	SetTitleMatchMode 2
+	#	Erstellung des Threads:
 
-	global hOCR
-	global threadcontrol
-	global q := Chr(0x22)              	; q := "
+		- 	ein Teil des Threads wird in Addendum.ini in die Variable >Addendum.Threads.OCR< geladen (Addendum_OCR.ahk)
+		- 	die Funktion TesseractOCR() bringt die Skriptzeilen die als Autoexec-Bereich eines Autohotkey-Skriptes bezeichnet werden
+			und die Parameter für die aufgerufene Funkion tessOCRPdf() in Form von 2 Objekten
+		-	die beiden Teile werden zu einem Skript zusammengefügt und per AutohotkeyH Befehl AHKThread(script) ausgeführt
 
-	###files
-	###settings
 
-	Gui, OCR: New, +hwndhOCR +ToolWindow
-	Gui, OCR: Show, Hide NA, Addendum tessOCR processor
-	OnMessage(0x4a, "Receive_WM_COPYDATA")
+	#	Kommunikation zwischen Thread und Skript:
 
-	If isObject(files) {
-		filesmax := files.MaxIndex()
-		For idx, pdffile in files {
+		-	zwischen dem Thread und Skript werden Nachrichten getauscht
+		-	der Thread meldet die Fertigstellung einer Datei und wartet auf Nachricht vom Skript das es	weitermachen soll.
+			Dies ermöglicht dem Skript eigene Vorgänge auszuführen oder abzuschliessen bevor die nächste
+			Datei fertiggestellt wird.
+		- die Kommunikationsfunktionen des Skriptes finden sich in Addendum.ahk und vom Thread in Addendum_OCR.ahk
+
+	*/
+
+	global Settings, autoexecScript
+
+	If (Addendum.OCR.Client <> compname) || (StrLen(Addendum.OCR.Client) = 0)
+		return
+
+	; Konfiguration und Skript;{
+		tessconfig1 =
+					(LTrim Join|
+							tessedit_create_boxfile        	1
+							tessedit_create_hocr           	1
+							tessedit_create_pdf            	1
+							tessedit_create_tsv               	1
+							tessedit_create_txt               	1
+
+							load_bigram_dawg	                    	True
+							tessedit_enable_bigram_correction		True
+							tessedit_bigram_debug	                  	3
+							save_raw_choices	                         	True
+							save_alt_choices	                         	True
+					)
+
+		tessconfig2 =
+					(LTrim Join|
+							tessedit_create_pdf            	1
+							tessedit_create_tsv               	1
+							tessedit_create_txt               	1
+					)
+
+		Settings := {	"SetName"                             	: "threadOCR"
+						,	"UseRamDisk"                        	: "T:"
+						,	"imagickPath"                           	: Addendum.PDF.imagickPath
+						,	"qpdfPath"                             	: Addendum.PDF.qpdfPath
+						,	"tessPath"                               	: Addendum.PDF.tessPath
+						,	"xpdfPath"            	                 	: Addendum.PDF.xpdfPath
+						,	"documentPath"                        	: Addendum.BefundOrdner
+						,	"backupPath"                	         	: Addendum.BefundOrdner "\backup"
+						,	"txtOCRPath"        	                 	: Addendum.BefundOrdner "\Text"
+						,	"OCRLogPath"      	                  	: Addendum.DBPath "\OCRTime_Log.txt"
+						,	"tessconfig"                            	: tessconfig2
+						,	"tessCmdPlus"                           	: "--psm 1 --oem 2"
+						,	"useData"                               	: "best"
+						,	"uselang"                               	: "deu"
+						,	"preprocessing"                       	: "imagemagick"
+						,	"convertwith"                           	: "pdfimages"
+						,	"debug"                                  	: "1"
+						,	"writelog"             	                 	: "true"
+						,	"backupfiles"                            	: "true"
+						,	"callbackFunc"                          	: "OCRReady"
+						,	"ProcessID"                             	: DllCall("GetCurrentProcessId")                      	; nicht ändern!
+						,	"ScriptID"                                	: (Addendum.MsgGui.hMsgGui)}                    	; nicht ändern!
+
+		autoexecScript =
+		(
+		#NoTrayIcon
+		#Persistent
+		SetBatchLines, -1
+		DetectHiddenWindows On
+		SetTitleMatchMode 2
+
+		global hOCR
+		global threadcontrol
+		global q := Chr(0x22)              	; q := "
+
+		###files
+		###settings
+
+		Gui, OCR: New, +hwndhOCR +ToolWindow
+		Gui, OCR: Show, Hide NA, Addendum tessOCR processor
+		OnMessage(0x4a, "Receive_WM_COPYDATA")
+
+		If isObject(files) {
+			filesmax := files.MaxIndex()
+			For idx, pdffile in files {
+				threadcontrol := true
+				SciTEOutput("``n> Bearbeite " idx "/" filesmax ": [" pdffile "]")
+				pdfText := tessOCRPdf(pdffile, settings)
+				Send_WM_CopyData("OCR_processed|" pdffile "|" hOCR, settings.ScriptID)
+				While threadcontrol
+					sleep, 100
+			}
+		}
+		else {
+			filesmax := 1
 			threadcontrol := true
-			SciTEOutput("``n> Bearbeite " idx "/" filesmax ": [" pdffile "]")
-			pdfText := tessOCRPdf(pdffile, settings)
-			Send_WM_CopyData("OCR_processed|" pdffile "|" hOCR, settings.ScriptID)
+			SciteOutPut(" ")
+			pdfText := tessOCRPdf(files, settings)
+			Send_WM_CopyData("OCR_processed|" files "|" hOCR, settings.ScriptID)
 			While threadcontrol
 				sleep, 100
 		}
-	}
-	else {
-		filesmax := 1
-		threadcontrol := true
-		pdfText := tessOCRPdf(files, settings)
-		Send_WM_CopyData("OCR_processed|" files "|" hOCR, settings.ScriptID)
-		While threadcontrol
-			sleep, 100
-	}
 
-	Send_WM_CopyData("OCR_ready|" filesmax "|" hOCR, settings.ScriptID)
-	;SciteOutPut("send message to: " settings.ScriptID " - processing is done. ")
+		Send_WM_CopyData("OCR_ready|" filesmax "|" hOCR, settings.ScriptID)
+		;SciteOutPut("send message to: " settings.ScriptID " - processing is done. ")
 
-	ExitApp
-	)
+		ExitApp
+		)
+	;}
 
 	; schreibe das/die Objekt/e als Skriptcode
 		If IsObject(files) {
@@ -1830,6 +3238,7 @@ TesseractOCR(files)                                                         	{  
 		else
 			repfiles := "files := " q files q
 
+	; stellt die Einstellungen zusammen
 		repset := "settings := {"
 		For key, val in Settings {
 			repset .= q key q ":" . ((val = "true") || (val = "false") || RegExMatch(val, "^(\d+|0x\w+)$") ? val : q val q) ", "
@@ -1839,18 +3248,46 @@ TesseractOCR(files)                                                         	{  
 	; Skript zusammensetzen
 		autoexec	:= StrReplace(autoexecScript	, "###files"   	, repfiles)
 		autoexec	:= StrReplace(autoexec       	, "###settings"	, repset)
-		ocrfuncs	:= Addendum.Threads.OCR
-		script := autoexec "`n" ocrfuncs
-		FileOpen("T:\OCRScript.ahk", "w", "utf-8").write(script)
+		script := autoexec "`n" Addendum.Threads.OCR
 
 	; OCR-Thread starten
-		If !Addendum.Thread["tessOCR"].ahkReady()
+		If !Addendum.Thread["tessOCR"].ahkReady() {
+			admGui_OCRButton("+OCR abbrechen")
 			Addendum.Thread["tessOCR"] := AHKThread(script)
+			Addendum.tessOCRRunning := true
+		}
 
 
 }
 
-GetNoOCRFiles()                                                           	{              	; stellt PDF Dateien ohne Text zusammen für TesseractOCR
+admGui_OCRAllFiles()                                                      	{               	; Texterkennung aller unbearbeiteten PDF-Dateien
+
+	static noOCR
+
+	If Addendum.OCR.AutoOCR && (Addendum.OCR.Client = compname) && Addendum.Thread["tessOCR"].ahkReady() {
+		Addendum.OCR.RestartAutoOCR := true
+		admGui_OCRButton("+OCR abbrechen")
+		return
+	}
+
+	noOCR := GetNoOCRFiles()
+	If (noOCR.MaxIndex() > 0) {
+
+		For key, filename in noOCR
+			Addendum.iWin.FilesStack.Push(admFile)
+
+		admGui_OCRButton("+OCR abbrechen")
+		Addendum.OCR.RestartAutoOCR := false
+		TesseractOCR(noOCR)
+
+	}
+	else
+		admGui_OCRButton("-OCR ausführen")
+
+return
+}
+
+GetNoOCRFiles()                                                           	{               	; stellt PDF Dateien ohne Text zusammen für TesseractOCR
 
 	global admHJournal
 
@@ -1859,685 +3296,87 @@ GetNoOCRFiles()                                                           	{    
 	For idx, pdf in ScanPool
 		If !pdf.isSearchable {
 
-		; Datei ist in Bearbeitung (z.B. OCR Vorgang), dann ignorieren
-			InStack := false
-			For stackindex, stackfile in Addendum.InfoWindow.FilesStack
-				If (stackfile = pdf.name) {
-					InStack := true
-					break
-				}
-			If Instack
-				continue
+			; Datei ist in Bearbeitung (z.B. OCR Vorgang), dann ignorieren
+				InStack := false
+				For stackindex, stackfile in Addendum.iWin.FilesStack
+					If (stackfile = pdf.name) {
+						InStack := true
+						break
+					}
 
-		; Datei hinzufügen
-			noOCR.Push(pdf.name)
-			admGui_ColorRow(admHJournal, LV_FindRow("admJournal", 1, pdf.name), true) 			; kann per Flag ausgeschaltet werden
+			; Datei hinzufügen
+				If !Instack {
+					noOCR.Push(pdf.name)
+					;admGui_ColorRow(admHJournal, LV_FindRow("admJournal", 1, pdf.name), true) 			; kann per Flag ausgeschaltet werden
+				}
 
 		}
-
 
 return noOCR
 }
 
-OCRRenameAllFiles()                                                     	{                	; Texterkennung und automatische Bezeichnung aller unbearbeiteten PDF-Dateien
+GetUnamedDocuments(refreshDocs=false)                      	{                	; erstellt einen Array mit den Dateinamen unbezeichneter Dokumente
 
-	static noOCR
+	; ScanPool ist global
+	unnamed := Array()
 
-	noOCR := GetNoOCRFiles()
-	If (noOCR.MaxIndex() > 0) {
+	If refreshDocs
+		admGui_Reload(true)
 
-		For key, filename in noOCR
-			Addendum.InfoWindow.FilesStack.Push(admFile)
+	For idx, pdf in ScanPool
+		If !string.ContainsName(pdf.name)
+			unnamed.Push(pdf.name)
 
-		admGui_OCRButton("+OCR abbrechen")
-		TesseractOCR(noOCR)
-		;Autonaming(noOCR)
-		admGui_OCRButton("-OCR ausführen")
+	If (unnamed.MaxIndex() = 0)
+		return
 
-	}
-	else
-		admGui_OCRButton("-OCR ausführen")
-
-	SciTEOutput("noOCR: " noOCR.MaxIndex())
-
-return
+return unnamed
 }
 
-Autonaming(notNamed)                                                	{                	; automatisiert die Benennung aller unbenannten PDF-Dateien
 
-	; pdftotext -f 1 -l 1 -layout -enc UTF-8 -bom test4.pdf test4.txt
-
-	; Variablen
-		docPath := Addendum.BefundOrdner
-
-	; verarbeitet Dateilisten in Form eines linearen Array
-	; es kann auch einfach nur ein Dateiname als String übergeben werden
-		If !IsObject(notNamed) {
-			noName := Array()
-			noName.Push(notNamed)
-		} else
-			noName := notNamed
-
-	; for-loop through files
-		For idx, filename in noName
-			If !RxNames(filename, "ContainsName")  {            	; PDF sollen in der Form Nachname[-Nachname2], Vorname[-Vorname2], Beschreibungstext.......pdf vorliegen
-
-				newfilename	:= ""
-				pdfPath     	:= docPath "\" filename
-				bupPath     	:= docPath "\Backup\" filename
-				txtPath      	:= docPath "\Text\" StrReplace(filename, ".pdf", ".txt")
-
-				If !isSearchablePDF(pdfPath) ;|| !FileExist(txtPath) || !FileExist (pdfPath)
-					continue
-
-				PdfText := FileOpen(txtpath, "r").Read()
-				SciTEOutput(fileName ": " StrLen(PdfText))
-				found := FindName(PdfText)
-				If IsObject(found) {
-
-					If (found.Count() = 1)
-						For PatID, Pat in found {
-							newfilename := found[PatID].Nn ", " found[PatID].Vn ", Befund.pdf"
-							SciTEOutput("  neuer Name:   `t" newfilename)
-							break
-						}
-					else If (found.Count() > 1) {
-						newfilename := "--enthält " found.Count() " Patientennamen-- " filename
-						SciTEOutput("  Dokument:   `t" newfilename)
-					}
-
-					If (StrLen(newfilename) > 0) {
-							FileMove, % pdfPath	, % docPath "\" newfilename, 1                                                	; Originaldatei umbenennen
-							FileMove, % bupPath	, % docPath "\Backup\" newfilename, 1 		                               	; Backupdatei umbenennen
-							FileMove, % txtPath	, % docPath "\Text\" StrReplace(newfilename, ".pdf", ".txt"), 1 		; zugehörige Text Datei umbenennen
-					}
-				}
-			}
-
-
-	; Anzeige auffrischen
-		admGui_Journal(true)
-		admGui_Reports()
-		RedrawWindow(hadm)
-
-return
-}
-
-; ------------------------ PDF Funktionen, Umbennen
-isSearchablePDF(pdfFilePath)                                             {               	;-- durchsuchbare PDF Datei?
-
-	If !(fileobject := FileOpen(pdfFilePath, "r", "CP1252")) {
-		SciTEOutput("fileopen error: " pdfFilePath)
-		return 0
-	}
-
-	while !fileobject.AtEof {
-		line := fileobject.ReadLine()
-		If RegExMatch(line, "i)\/PDF\s*\/Text") {
-			filepos := fileObject.pos
-			fileObject.Close()
-			return filepos
-		}
-		else If RegExMatch(line, "Length\s(?<seek>\d+)", file) {    	; binären Inhalt überspringen
-			fileobject.seek(fileseek, 1)                                           	; •1 (SEEK_CUR): Current position of the file pointer.
-		}
-	}
-
-	fileObject.Close()
-
-return 0
-}
-
-GetPDFPages(pdfFilePath)                                              	{               	;-- gibt die Anzahl der Seiten einer PDF zurück
-
-	If !(fileobject := FileOpen(pdfFilePath, "r", "CP1252"))
-		return 0
-
-	while !fileobject.AtEof {
-		line := fileobject.ReadLine()
-		If RegExMatch(line, "i)\/Count\s+(\d+)", pages) {
-			fileObject.Close()
-			return pages1
-		}
-		else If RegExMatch(line, "Length\s(?<seek>\d+)", file) {    	; binären Inhalt überspringen
-			fileobject.seek(fileseek, 1)                                           	; •1 (SEEK_CUR): Current position of the file pointer.
-		}
-	}
-
-	fileObject.Close()
-
-return 0
-}
-
-isCorruptPDF(pdfFilePath)                                                 	{                	;-- prüft ob die PDF Datei defekt ist
-
-	If !(fileobject := FileOpen(pdfFilePath, "r", "CP1252"))
-		return 0
-
-	VarSetCapacity(EndOfFile, 5)
-	fileobject.seek(fileobject.Length - 6, 1)
-	fileobject.RawRead(EndOfFile, 5)
-
-return InStr(StrGet(&EndOfFile, 5, "CP0"), "EOF") ? false : true
-}
-
-FileIsLocked(FullFilePath)                                                 	{              	;-- ist die Datei gesperrt?
-
-	f := FileOpen(FullFilePath, "rw")
-	LE		:= A_LastError
-	iO 	:= IsObject(f)
-	If iO
-		f.Close()
-
-return LE = 32 ? true : false
-}
-
-GetPDFViewerArg(class, hwnd)                                        	{               	;-- Prozess commandline des PDF Anzeigeprogramms auslesen
-
-	WinGet PID, PID, % "ahk_id " hwnd
-
-    StrQuery := "SELECT * FROM Win32_Process WHERE ProcessId=" . PID
-    Enum := ComObjGet("winmgmts:").ExecQuery(StrQuery)._NewEnum
-    If (Enum[Process]) {
-		Viewercmdline := Process.CommandLine
-		SciTEOutput("Foxit: " Viewercmdline)
-	}
-	Addendum.FuncCallback := ""
-
-	SciTEOutput("Foxit: " Viewercmdline)
-	; FileAppend, % A_DD "." A_MM "." A_YYYY ", " A_Hour ":" A_Min " - " report ".pdf`n", % Addendum.Befundordner "\PdfImportLog.txt"
-}
-
-zlib_Decompress(Byref Decompressed
-, Byref CompressedData, DataLen
-, OriginalSize = -1)                                                          	{              	;-- zum Dekodieren von stream-Objekten in PDF Dokumenten
-
-	; http://www.autohotkey.com/forum/viewtopic.php?t=68170
-
-	OriginalSize := (OriginalSize > 0) ? OriginalSize : DataLen*10 ;should be large enough for most cases
-	VarSetCapacity(Decompressed,OriginalSize)
-	ErrorLevel := DllCall("zlib1\uncompress", "Ptr", &Decompressed, "UIntP", OriginalSize, "Ptr", &CompressedData, "UInt", DataLen)
-
-return ErrorLevel ? 0 : OriginalSize
-}
-
-; ------------------------ Dateien kategorisieren/benennen
-FindName(text)                                                             	{              	;-- PDF renaming - Hilfsfunktion
-
-		;				        			,	"(?<name2>[A-Z][\pL-]+)[.,;\s]+(?<name1>[A-Z][\pL-]+)[.,;\s]+[(gebo).(ren)(am)\*\s]*[,:.;\s]*\d{1,2}[.,;\s]+\w+[.,;:\s]+\d{2,4}"
-		static ThousandYear	:= SubStr(A_YYYY, 1, 2)
-		static HundredYear	:= SubStr(A_YYYY, 3, 2)
-
-		static MonthNrs
-		static excludeIDs    	:= "2"
-		static rxMonths      	:= "Janu*a*r*|Febr*u*a*r*|Mä*a*rz|Apri*l*|Mai|Juni*|Juli*|Augu*s*t*|Septe*m*b*e*r*|Okto*b*e*r*|Nove*m*b*e*r*|Deze*m*b*e*r*"
-		static	rxDates         	:= [	"(?<Tag>\d{1,2})[.,;](?<Monat>\d{1,2})[.,;](?<Jahr>(\d{4}|\d{2}))[\s:,;.]"
-						                	,	"(?<Tag>\d{1,2})[.,;\s]+(?<Monat>\d{1,2}|" rxMonths ")[.,;\s]+(?<Jahr>(\d{4}|\d{2}))"]
-		static rxPerson       	:= "[A-ZÄÖÜ][\pL]+[\s-]*([A-ZÄÖÜ][\pL-]+)*"
-		static RxNames       	:= [	"[(Frau)(Herr)\s]*(?<name2>" rxPerson ")[.,;]+\s*(?<name1>" rxPerson ")[.,;\s]+[(gebo).(ren)(am)\*\s]*[,:.;\s]*\d{1,2}[.,;\s]+\w+[.,\s]+\d{2,4}"
-								        	,	"[Nn]ame[\s\w]*[;:\s]+(?<name2>" rxPerson "[.,\s]+(?<name1>" rxPerson ")"
-								        	,	"[(Pat.)(Patient)(Patienti|en)]+[;,:.\s]+(?<name2>" rxPerson ")[.,\s]+(?<name1>" rxPerson ")"
-								        	,	"i)(Nach)*name[:,;.\s]+(?<name2>[A-Z][\pL-]+).*Vo(rn|m)ar*me[:,;.\s]+(?<name1>[A-Z][\pL-]+)"
-						        			,	"i)Vo(rn|m)ar*me[:,;.\s]+(?<name1>[A-Z][\pL-]+).*(Nach)*name[:,;.\s]+(?<name2>[A-Z][\pL-]+)"]
-
-		If !IsObject(MontNrs)
-			MonthNrs := StrSplit(rxMonths, "|")
-
-		PatBuf	:= Object()
-		sText := StrSplit(text, "`n", "`r")
-
-	; ---------------------------------------------------------------------------------------------------------------------------------------------------
-	; Methode 1:	RegEx Strings nutzen
-	; ---------------------------------------------------------------------------------------------------------------------------------------------------
-	; - benutzt RegEx-Strings aus RxNames um Patientennamen zu finden
-	; -
-	;
-		For RxIdx, rxString in RxNames {
-
-			spos	:= spose := 1
-			Next	:= false
-
-			;while (spos := RegExMatch(text, rxString, Pat, spos)) {
-			Loop, % sText.MaxIndex() {
-
-				If !RegExMatch(sText[A_Index], rxString, Pat)
-					continue
-
-			  ; trennt den String in Nachname (PatName2) und Vorname (PatName1)
-				If (StrLen(PatName1) > 0) && (StrLen(PatName2) > 0) {
-					spose  += StrLen(PatName2 PatName1)
-				} else if (StrLen(PatName) > 0) {
-					spose  += StrLen(PatName)
-					PatName1 := StrSplit(PatName, "\s+").1
-					PatName2 := StrSplit(PatName, "\s+").2
-				}
-
-				spos  += StrLen(Pat)
-				;SciTEOutput("  <" PatName2 ", " PatName1 ">")
-			  ; schaut ob der gefundene Name in der Datenbank ist
-				PatIDArr := admDB.StringSimilarityID(PatName1, PatName2, 0.12)
-				If IsObject(PatIDArr)
-					For idx, PatID in PatIDArr {
-
-						If PatID in %excludeIDs%
-							continue
-
-						;Next := true
-						If !PatBuf.haskey(PatID) {
-							PatBuf[PatID] := {"Nn":oPat[PatID].Nn, "Vn":oPat[PatID].Vn, "Gd":oPat[PatID].Gd, "hits":1, "method":1}
-							SciTEOutput("  Methode 1[" RxIdx "]:`t" PatID " , hits: " PatBuf[PatID].hits ", Name: " PatBuf[PatID].Nn ", "PatBuf[PatID].Vn ", " PatBuf[PatID].Gd)
-						}
-
-						;SciTEOutput("Methode 1: " PatID " , hits: " PatBuf[PatID] ", Name: " PatName1 ", " PatName2)
-
-					}
-
-			}
-
-			If Next
-				break
-		}
-
-	; ---------------------------------------------------------------------------------------------------------------------------------------------------
-	; Methode 2:	Suche nach Patientennamen über gefundene Geburtstage
-	; ---------------------------------------------------------------------------------------------------------------------------------------------------
-		spos := 1
-		while (spos := RegExMatch(text, rxDates[2], D, spos)) {
-
-			spos += StrLen(D)
-
-		  ; Monat wurde als Wort geschrieben, dann die Nummer des Monats ermitteln
-			If !RegExMatch(DMonat, "\d{1,2}")
-				For nr, rxMonth in MonthNrs
-					If RegExMatch(DMonat, rxMonth) {
-						DMonat := nr
-						break
-					}
-
-		  ; für Datumsformate 01.08.24, erstellt bei größeren Jahren als das aktuelle Jahr (zB. 20), 01.08.1924
-			If (StrLen(DJahr) = 2)
-				DJahr := (DJahr > HundredYear) ? (SubStr("00" (ThousendYear - 1), -1) . DJahr) : (SubStr("00" (ThousendYear), -1) . DJahr)
-
-		  ; sucht nach Patienten mit passenden Geburtstagen
-			Datum   	:= SubStr("00" DTag, -1) "." SubStr("00" DMonat, -1) "." DJahr
-			PatIDArr	:= admDB.MatchID("gd", Datum)
-			If IsObject(PatIDArr)
-				For idx, PatID in PatIDArr {
-
-					If PatID in %excludeIDs%
-						continue
-
-				 ; bekommt zwei Treffer-Punkte wenn zuvor
-					If PatBuf.haskey(PatID) {
-
-						If (PatBuf[PatID].method = 1)
-							PatBuf[PatID].hits += 2
-						else
-							PatBuf[PatID].hits += 1
-
-					} else {
-
-						PatBuf[PatID] := {"Nn":oPat[PatID].Nn, "Vn":oPat[PatID].Vn, "Gd":oPat[PatID].Gd, "hits":1, "method":2}
-						If InStr(text, oPat[PatID].Nn) && InStr(text, oPat[PatID].Vn)
-							PatBuf[PatID].hits += 2
-
-					}
-
-					SciTEOutput("  Methode 2:    `t" PatID " , hits: " PatBuf[PatID].hits ", Datum: " RegExReplace(D, "[\n\r]"))
-
-				}
-
-		}
-
-	; ---------------------------------------------------------------------------------------------------------------------------------------------------
-	; Methode 3:	Findet zwei aufeinander folgende Worte mit Großbuchstaben am Anfang (Personennamen, Eigennamen ...)
-	;               	und vergleicht diese per StringSimiliarity-Algorithmus mit den Namen in der Addendum-Patientendatenbank
-	; ---------------------------------------------------------------------------------------------------------------------------------------------------
-		goto FindNameLabel
-		spos := 1
-		while (spos := RegExMatch(text, "([A-Z][\pL-]+)[\s,.]+([A-Z][\pL-]+)", name, spos)) {
-
-				;SciTEOutput("spos: " spos)
-			; überflüssige Zeichen entfernen
-				name1 := RegExReplace(name1, "[\s\n\r]"),
-				name2 := RegExReplace(name2, "[\s\n\r]")
-
-			; Bindestrichworte ignorieren
-				If RegExMatch(name1, "\-$") {
-					spos += StrLen(name1)                    ; ein Wort weiter
-					continue
-				} else if RegExMatch(name2, "\-$") {
-					spos += StrLen(name)                     ; beide Wörter weiter
-					continue
-				} else if (StrLen(name1) = 0) || (StrLen(name2) = 0) {
-					spos += StrLen(name)
-					continue
-				}
-
-				PatIDArr := admDB.StringSimilarityID(name1, name2)
-				If IsObject(PatIDArr) {
-					spos += StrLen(name)
-					For idx, PatID in PatIDArr {
-						If PatBuf.haskey(PatID)
-							PatBuf[PatID] += 1
-						else
-							PatBuf[PatID] := 1
-						SciTEOutput("  Methode 3:`t" PatID " , hits: " PatBuf[PatID])
-					}
-
-				}
-				else
-					spos += StrLen(name1)
-
-		}
-FindNameLabel:
-	; höchste Trefferzahl ermitteln
-		maxHits := 0, equal := false, BestHits := Object()
-		For PatID, Pat in PatBuf {
-			SciTEOutput("  hitpoints:   `t`t" Pat.hits " - (" PatID ") " Pat.Nn ", " Pat.Vn)
-			If (Pat.hits > maxHits)
-				maxHits := Pat.hits
-		}
-
-	; alle Namen mit gleicher Trefferanzahl werden behalten
-		For PatID, Pat in PatBuf
-			If (Pat.hits = maxHits)
-				BestHits[PatID] := {"Nn":Pat.Nn, "Vn":Pat.Vn, "Gd":Pat.Gd}
-
-return BestHits
-}
-
-RxNames(Str, RxMatch="GetNames")                                	{                	;-- Stringfunktion für die Behandlung von PDF-Dateinamen
-
-	static rxPerson	:= "[A-ZÄÖÜ][\pL]+[\s-]*([A-ZÄÖÜ][\pL-]+)*"
-	static RxExtract	:= "^\s*(?<NN>" rxPerson ")[\s,]+(?<VN>" rxPerson ")[\s,]+(?<DokTitel>.*)*" ;?\.[a-z]*
-	static RxName	:= "^\s*(?<NN>" rxPerson ")[\s,]+(?<VN>" rxPerson ")[\s,]+"
-
-	if (RxMatch = "ContainsName")
-		return RegExMatch(Str, RxName)
-	else If (RxMatch = "GetNames") {
-		RegExMatch(Str, RxExtract, Pat)
-		return {"Nn":PatNN, "Vn":PatVN, "DokTitel":PatDokTitel}
-	}
-	else if (RxMatch ="ReplaceNames")
-		return RegExReplace(Str, RxName)
-
-}
-
-FuzzyKarteikarte(NameStr, OnlyPatID=false)                   	{                 	;-- fuzzy name matching function, öffnet eine Karteikarte
-
-	; mit OnlyPatID = true kann man nur einen String mit enthaltenem Patientennamen testen und bekommt bei einem Treffer die Patienten-ID zurück
-
-		static rxPerson := "[A-ZÄÖÜ][\pL]+[\s-]*([A-ZÄÖÜ][\pL-]+)*"
-
-		DiffSafe 	:= Array()
-		minDiff		:= 100
-		PatFound 	:= true
-		umlauts 	:= {"Ä":"Ae", "Ü":"Ue", "Ö":"Oe", "ä":"ae", "ü":"ue", "ö":"oe", "ß":"sz"}
-
-
-		If !IsObject(Pat := RxNames(NameStr, "GetNames")) {
-			PraxTT(	"Die Dateibezeichnung enthält keinen Namen eines Patienten.`nDer Karteikartenaufruf wird abgebrochen!", "3 2")
-			Sleep 3000
-			return
-		}
-
-		NVName 	:= RegExReplace(Pat.Nn Pat.Vn	, "[\s]")         	; NachnameVorname
-		VNName 	:= RegExReplace(Pat.Vn Pat.Nn	, "[\s]")         	; VornameNachname
-		;SciTEOutput(NVName "`n" VNName)
-
-	; Stringdifference Methode mit Suche des Patienten in der Addendum Patientendatenbank     	;{
-		For PatID, Pat in oPat 		{
-
-				If InStr(PatID, "MaxPat")
-					break
-
-			; Leerzeichen und Minus aus den Namen entfernen
-				DbName	:= RegExReplace(Pat.Nn Pat.Vn, "[\s]")         	; NachnameVorname
-
-			; Stringdifferenz Methode anwenden
-				DiffA     	:= StrDiff(DBName, NVname)
-				DiffB     	:= StrDiff(DbName, VNname)
-				Diff        	:= DiffA <= DiffB ? DiffA : DiffB
-
-			 ; Treffergenauigkeit (Stringsimilarity) kleiner gleich 0.11
-			 ; -> passender Patient wurde gefunden. Karteikarte des Patienten wird aufgerufen
-				If (Diff <= 0.11) {
-					If !OnlyPatID
-						admGui_Karteikarte(PatID)
-					return {"ID":PatID, "Nn":Pat.Nn, "Vn":Pat.Vn, "Gd":Pat.Gd}
-				}
-
-			; sammelt den kleinsten Differenzwert
-				If (Diff < minDiff)
-					minDiff	:= Diff, bestDiff := PatID, bestNn := Pat.Nn, bestVn := Pat.Vn, bestGd := Pat.Gd
-
-			; enthält eine der beiden Zeichenketten 2 Zeichen mehr als die andere wird die Patienten ID gepuffert
-				If ( Diff <= 0.13 && Diff > 0.11 )
-					If (Abs(StrLen(DbName) - StrLen(NVname)) > 2)
-						DiffSafe.Push(PatID)
-
-		}
-
-		If (minDiff < 0.2) {
-			If !OnlyPatID
-				admGui_Karteikarte(bestDiff)
-			return {"ID":bestDiff, "Nn":bestNn, "Vn":bestVn, "Gd":bestGd}
-		}
-
-	; kein Treffer dann leeren String zurückgeben
-		If OnlyPatID
-			return "#" minDiff ", " bestDiff
-		; kann entfernt werden?
-		;~ If RegExMatch(DbName, "^" VNname) || RegExMatch(DbName, "^" NVname) 	{
-
-				;~ MsgBox, 4, Patientenakte öffnen?, % "Möchten Sie die Akte des Patienten:`n(" PatID ") " Pat.Nn ", " Pat.Vn " geb.am " Pat.Gd "`nöffnen?"
-				;~ IfMsgBox, Yes
-					;~ AlbisAkteOeffnen(Pat.Nn ", " Pat.Vn, PatID)
-				;~ IfMsgBox, No
-					;~ return false
-				;~ return true
-
-		;~ }
-
-		;}
-
-	; Suchen über die Albis Patientensuche                                                                                	;{
-
-		; Code nimmt die ersten beiden Buchstaben vom Vor- und Zuname und übergibt sie dem Patient öffnen Dialog
-		; stehen mehrere Personen zur Auswahl im Dialog "Patient auswählen" wird per String Differenz der dichteste Treffer gesucht
-		; wenn Albis für diese Kombination nur einen Treffer hat, wird sofort die Akte geöffnet (unabhängig vom Skript)
-		; --- die umlautveränderten Namen werden hier für die Suche noch nicht genutzt!!
-		PatMatches 	:= Object()
-
-		PraxTT("Der Patient ist nicht in der Datenbank!`nVersuche es mit einer Patientensuche über den Albisdialog.", "6 0")
-		Sleep, 200
-
-	; öffnet den Dialog "Öffne Patient" und übergibt nur die ersten beiden Buchstaben vom Vor- und Zunamen
-		AlbisDialogOeffnePatient("open", SubStr(name[1], 1, 2) ", " SubStr(name[2], 1, 2))
-
-		while !(WinExist("Patient auswählen ahk_class #32770") || WinExist("ALBIS ahk_class #32770", "Patient <") || (A_Index > 40))
-			Sleep 50
-
-		; Patient ist nicht vorhanden ;{
-			while (hwnd := WinExist("ALBIS ahk_class #32770", "Patient <")) && (A_Index < 10) 	{
-				PatFound := false
-				VerifiedClick("Button1", hwnd,,, true) ; OK
-				WinWait, % "Patient öffnen ahk_class #32770",, 2
-				If WinExist("Patient öffnen ahk_class #32770") {
-					AlbisDialogOeffnePatient("close")
-					PraxTT("Albis hat keine Patienten zur Auswahl gestellt.`nEs kann keine Suche durchgeführt werden.", "6 2")
-					return false
-				}
-				sleep, 200
-			}
-		;}
-
-		If (hwnd := WinExist("Patient auswählen ahk_class #32770")) {
-
-			PatFound	:= true
-			LVPats   	:= AlbisLVContent(hwnd, "SysListView321", "Name|Vorname|Geb.-Datum")
-			For row, Patient in LVPats	{
-				Patient.2 := StrReplace(Patient.2, "-")
-				Patient.3 := StrReplace(Patient.3, "-")
-				If (StrDiff(Patient.2 Patient.3, Name.1 Name.2) <= 0.12 ) || (StrDiff(Patient.2 Patient.3, Name.2 Name.1) <= 0.12 )
-					PatMatches.Push(Patient)
-			}
-
-			If (PatMatches.MaxIndex() = 1) {
-
-				hinweis :=  "Ich denke dieser Patient könnte es sein:`n`n" PatMatches[1][2] "," PatMatches[1][3] ", geb. am " PatMatches[1][4]
-				hinweis .= "`nletzter Behandlungstag: " PatMatches[1][6] "`n`nSoll ich diese Akte öffnen?"
-
-				Msgbox, 0x1024, Addendum für Albis on Windows, % hinweis
-				IfMsgBox, No
-					return
-
-				VerifiedClick("Button2", "Patient auswählen ahk_class #32770",,, true)
-				WinWait, % "Patient öffnen ahk_class #32770",, 3
-				If ErrorLevel	{
-					MsgBox, Der Patient öffnen Dialog fehlt mir jetzt`num weiter zu machen!
-					return false
-				}
-				VerifiedSetText("Edit1", PatMatches[1][5], "Patient öffnen ahk_class #32770", 200)
-
-			; Akte wird jetzt geöffnet durch drücken von OK
-				while WinExist("Patient öffnen ahk_class #32770") 	{
-
-					VerifiedClick("Button2", "Patient öffnen ahk_class #32770")	    	; Button OK drücken
-					WinWaitClose, Patient öffnen ahk_class #32770,, 1
-					If WinExist("Patient öffnen ahk_class #32770") {	                     	; Fenster ist immer noch da? Dann sende ein ENTER.
-							WinActivate, Patient öffnen ahk_class #32770
-							ControlFocus, Edit1, Patient öffnen ahk_class #32770
-							SendInput, {Enter}
-					}
-					If (A_Index > 10) {
-						PatFound := false
-						break
-					}
-					sleep, 200
-
-				}
-
-			}
-			else
-				PatFound := false
-
-			VerifiedClick("Button2", "Patient auswählen ahk_class #32770",,, true) ; Abbruch
-			AlbisDialogOeffnePatient("close")
-
-		}
-
-	;}
-
-return PatFound
-}
-
-class admDB {                                                                                    	;-- AddendumDB - Klasse für DB (Objekt) Handling (im Moment nur Suche)
-
-	; das globale oPat-Objekt wird benötigt (wird per )
-
-	; Patienten ID Suche per Stringvergleich
-	; key:	kann sein Nn, Vn, Gd, Kasse
-	; val: 	zu suchender Eintrag
-		MatchID(key, val) {
-
-			PatIDArr	:= Array()
-
-			For PatID, PatData in oPat
-				If (PatData[key] = val)
-					PatIDArr.Push(PatID)
-
-		return PatIDArr
-		}
-
-	; Patienten ID Suche per String-Similarity Funktion
-		StringSimilarityID(name1, name2, diffmin=0.09) {
-
-			PatIDArr	:= Array()
-			minDiff 	:= 100
-			NVname 	:= RegExReplace(name1 . name2, "[\s]")
-			VNname 	:= RegExReplace(name2 . name1, "[\s]")
-
-			For PatID, Pat in oPat 		{
-
-				If InStr(PatID, "MaxPat")
-					break
-
-				DbName	:= RegExReplace(Pat.Nn Pat.Vn, "[\s]")
-				DiffA     	:= StrDiff(DBName, NVname)
-				DiffB     	:= StrDiff(DbName, VNname)
-				Diff        	:= DiffA <= DiffB ? DiffA : DiffB
-
-				If (Diff <= diffmin)
-					PatIDArr.Push(PatID)
-				else If (Diff < minDiff)
-					minDiff	:= Diff, bestDiff := PatID, bestNn := Pat.Nn, bestVn := Pat.Vn, bestGd := Pat.Gd
-
-			}
-
-		return PatIDArr
-		}
-
-}
-
-BefundIndex(save=true)                                                  	{	               	;-- liest den Befundordner ein
+; ------------------------ Dateien indizieren
+BefundIndex(save=true)                                                  	{	               	;-- erststellt das ScanPool Objekt neu
 
 	; WICHTIG!: braucht eine globale Variable im aufrufenden Skript: ScanPool := Object()
+		global admPatientTitle, admJournalTitle
 
-		PDFfiles 	:= Array()
+	; ScanPool nicht neu indizieren, nur die Einträge einzeln löschen, damit es kein neues Objekt wird
+		pdfpool.Empty()
 
-		Loop, % (MaxIndex := ScanPool.MaxIndex())
-			ScanPool.RemoveAt(MaxIndex + 1 - A_Index)
+	; alle pdf Dokumente des Befundordners dem ScanPool Objekt hinzufügen
+		files  	:= GetFilesInDir(Addendum.BefundOrdner, "*.pdf")
+		iLen  	:= StrLen(files.MaxIndex())-1
+		fcount	:= SubStr("00000" files.MaxIndex(), -1*iLen)
 
-	; alle pdf Dokumente in ein weiteres temp. Objekt einlesen
-		Loop, Files, % Addendum.BefundOrdner "\*.pdf"
-			PDFFiles.Push(A_LoopFileName)
-
-		For idx, pdfname in PDFfiles {
-
-			pdfPath := Addendum.BefundOrdner "\" pdfname
-			FileGetSize	, FSize	, % pdfPath, K
-			FileGetTime	, FTime	, % pdfPath, C
-			ScanPool.Push({	"name"          	: pdfname
-									, 	"filesize"        	: FSize
-									,	"filetime"        	: FTime
-									,	"pages"         	: GetPDFPages(pdfPath)
-									,	"isSearchable"	: (isSearchablePDF(pdfPath) ? 1 : 0)})
+	; gefundene Dateien dem ScanPool Objekt hinzufügen, den Fortschritt anzeigen
+		For idx, filename in files {
+			pdfpool.Add(Addendum.BefundOrdner, filename)
+			InfoText := "indiziere Dokument: " SubStr("00000" A_Index, -1*iLen) " von " fcount
+			GuiControl, adm: , admPatientTitle, % InfoText
+			GuiControl, adm: , admJournalTitle	, % InfoText
 		}
 
 return ScanPool.MaxIndex()
 }
 
-SaveBefundIndex()                                                         	{                	;-- speichert Daten des Befundordners in einer Datei
+GetPDFData(path, pdfname)                                           	{               	;-- erstellt Daten über PDF-Dateien für das ScanPool-Objekt
 
-	; speichern des Index im json Format
-		JSONStr := JSON.Dump(ScanPool,, 4)
-		indexfile := FileOpen(Addendum.BefundOrdner "\PDFIndex.json", "w", "UTF-8")
-		indexfile.Write(JSONStr)
-		indexfile.Close()
+	pdfPath := path "\" pdfname
+	FileGetSize	, FSize       	, % pdfPath, K
+	FileGetTime	, timeStamp 	, % pdfPath, C
+	FormatTime	, FTime     	, % timeStamp, dd.MM.yyyy
 
+return {	"name"          	: pdfname
+		, 	"filesize"          	: FSize
+		, 	"timestamp"   	: timeStamp
+		, 	"filetime"       	: FTime
+		, 	"pages"          	: PDFGetPages(pdfPath, Addendum.PDF.qpdfPath)
+		, 	"isSearchable"	: (PDFisSearchable(pdfPath)?1:0)}
 }
+
 
 ; ------------------------ Hilfsfunktionen
-PatDir(PatID)                                                                 	{               	;-- berechnet den Addendum-Datenpfad für einen Patienten
-
-	; Addendum speichert zusätzliche Daten zum Patienten in einem extra Ordnerverzeichnis nach folgendem Schema:
-	; 	- die Sortierung erfolgt anhand der Patienten ID von Albis
-	;	- maximal 1000 Unterverzeichnisse pro Ordner, ein Ordner mit der Bezeichnung 8000 enthält alle Patientenunterordner zwischen 7001-8000
-	;
-	; die Funktion legt noch nicht vorhandene Ordner/Unterordner automatisch an
-
-	BaseNum	:= Round((PatID / 1000) ) * 1000
-	IDBase  	:= (PatID - BaseNum <= 0) ? BaseNum : BaseNum + 1000
-	PatientDir 	:= Addendum.DBPath "\PatData\" IDBase "\" PatID
-	If !InStr(FileExist(PatientDir), "D")
-			FileCreateDir, % PatientDir
-
-return PatientDir
-}
-
-ClientsOnline2()                                                              	{              	;-- gibt einen Array mit den Namen der Netzwerkgeräte zurück
+ClientsOnline2()                                                            	{               	;-- gibt einen Array mit den Namen der Netzwerkgeräte zurück
 
 	For clientName, prop in Addendum.LAN.Clients {
 
@@ -2549,7 +3388,7 @@ ClientsOnline2()                                                              	{
 return
 }
 
-ClientsOnline()                                                              	{                	;-- gibt einen Array mit den Namen der Netzwerkgeräte zurück
+ClientsOnline()                                                              	{               	;-- gibt einen Array mit den Namen der Netzwerkgeräte zurück
 
 	; der Shell Befehl 'net view' gibt eine Liste aller vorhandenen (eingeschalteten) Netzwerkgeräte im LAN aus
 	; die Liste wird nach Gerätenamen durchsucht und mit den in der Addendum.ini vorhandenen Netzwerkgeräten verglichen
@@ -2574,46 +3413,90 @@ ClientsOnline()                                                              	{ 
 return clients
 }
 
-; ------------------------ Gui / Fenster Funktionen
-LV_GetColWidth(hLV, ColN) {                                               	;-- gets the width of a column
+GetLastGVU(PatID) {
 
-	; from AutoGui
-    SendMessage 0x101F, 0, 0,, % "ahk_id " hLV ; LVM_GETHEADER
-    hHeader := ErrorLevel
-    cbHDITEM := (4 * 6) + (A_PtrSize * 6)
-    VarSetCapacity(HDITEM, cbHDITEM, 0)
-    NumPut(0x1, HDITEM, 0, "UInt") ; mask (HDI_WIDTH)
-    SendMessage, % A_IsUnicode ? 0x120B : 0x1203, ColN - 1, &HDITEM,, % "ahk_id " hHeader ; HDM_GETITEMW
+	static GVFile
+	static LGVULenDataset := 6+8
 
-Return (ErrorLevel != "FAIL") ? NumGet(HDITEM, 4, "UInt") : 0
-}
+	If (StrLen(GVFile) = 0)
+		GVFile := Addendum.DBPath "\lastGVU.db"
 
-LV_GetScrollViewPos(hwnd) {
+	If !FileExist(GVFile) {
 
-	Loop, % LV_GetCount() {
-		SendMessage, 0x10B6, % A_Index,,, % "ahk_id " hwnd 	; LVM_ISITEMVISIBLE -> findet das erste sichtbares Item
-		If ErrorLevel {
-			SciTEOutput("firstvisible item:" A_Index)
-			return A_Index
-		}
+		MsgBox, % "File lastGVU.db not found`n" GVFile
+		return
 	}
+	VarSetCapacity(recordbuf, LGVULenDataset, 0x20)
 
+	lgvu := FileOpen(GVFile, "r", "UTF-8")
+	lgvu.Seek(((PatID-1)*LGVULenDataset) + 1, 0)
+	bytes	:= lgvu.RawRead(recordbuf, LGVULenDataset)
+	set 	:= StrGet(&recordbuf, LGVULenDataset, "UTF-8")
+	LGVUPatID	:= LTrim(SubStr(set, 1, 6), "0")
+	LGVUDate	:= SubStr(Set, 7, 8)
+
+return set " [" LGVUPatID "] . [" LGVUDate "]"
 }
 
-LV_FindRow(LV, col, searchStr) {                                           	;-- search for a string in listview col, returns row
 
-	Gui, adm: ListView, % LV
+; ------------------------ Debugfunktionen
+ParseStdOut(stdOut, indent="    `t")                               	{
 
-	Loop % LV_GetCount() {
-		LV_GetText(cmpStr, rowFind := A_Index, col)
-		If InStr(cmpStr, searchStr)
-			return rowFind
+	For i, line in StrSplit(stdOut, "`n", "`r")
+		t .= StrLen(line) > 0 ? indent . line "`n" : ""
+
+return RTrim(t, "`n")
+}
+
+
+; ------------------------ Gui / Fenster Funktionen
+CalcIdealWidthEx(hLB, Content="", Delim="|"
+	, FontOptions="", FontName="", rows=0)                   	{              	;-- berechnet die Anzeigebreite eines Textes in Pixel
+
+		DestroyGui := MaxW := 0
+		static SM_CVXSCROLL
+
+		If !SM_CVXSCROLL
+			SysGet, SM_CVXSCROLL, 2                                        	; width of a vertical scrollbar
+
+		If !hLB	{
+			If (StrLen(Content) = 0)
+				Return -1
+
+				Gui, LB_EX_CalcContentWidthGui: New	, % "+Delimiter" Delim
+				Gui, LB_EX_CalcContentWidthGui: Font	, % FontOptions, % FontName
+				Gui, LB_EX_CalcContentWidthGui: Add	, ListBox, % "+HWNDhLB " (rows = 0 ? "" : "r" rows), % Content
+				DestroyGui := True
+
 		}
 
-return 0
+		ControlGet, Content, List,,, % "ahk_id " hLB                        ; Inhalt ermitteln
+		Items := StrSplit(Content, "`n")
+
+		SendMessage, 0x31, 0, 0,, % "ahk_id " hLB                     	; WM_GETFONT
+		hFont	:= ErrorLevel
+
+		hDC  	:= DllCall("User32.dll\GetDC", "Ptr", hLB, "UPtr")
+		DllCall("Gdi32.dll\SelectObject", "Ptr", hDC, "Ptr", hFont)
+
+		VarSetCapacity(SIZE, 8, 0)
+		For Each, Item In Items	{
+			DllCall("Gdi32.dll\GetTextExtentPoint32", "Ptr", HDC, "Ptr", &Item, "Int", StrLen(Item), "UIntP", Width)
+			MaxW := Width > MaxW ? Width : MaxW
+		}
+
+		DllCall("User32.dll\ReleaseDC", "Ptr", hLB, "Ptr", hDC)
+
+	; einfachste Umsetzung um einfach nur herauszufinden ob eine vertikale Scrollbar existiert
+		SBVERT_Exist := (Items.MaxIndex() > rows) ? true : false
+
+		If (DestroyGui)
+			Gui, LB_EX_CalcContentWidthGui: Destroy
+
+Return MaxW + (SBVERT_Exist = true ? SM_CVXSCROLL : 0) + 8 ; + 8 for the margins
 }
 
-GuiControlActive(CtrlName, GuiName) {                             	;-- bestimmt ob ein GuiControl den Eingabefocus hat
+GuiControlActive(CtrlName, GuiName)                          	{                	;-- bestimmt ob ein GuiControl den Eingabefocus hat
 
 	Gui, %GuiName%: Default
 	GuiControlGet, fCtrl, FocusV ;% "ahk_id " hWin
@@ -2623,795 +3506,166 @@ GuiControlActive(CtrlName, GuiName) {                             	;-- bestimmt 
 return false
 }
 
-RedrawWindow(hwnd) {                                                       	;-- zeichnet eine Autohotkey Gui komplett neu
+LV_GetSelected(LV_Name)                                             	{              	;-- ermittelt alle ausgewählten Einträge
+
+	admGui_Default(LV_Name)
+	cRow:=0, JFiles:=Array()
+
+	Loop
+		If (cRow := LV_GetNext(cRow)) {
+			LV_GetText(fname, cRow, 1)
+			JFiles.Push(fname)
+		}
+		else
+			break
+
+	if JFiles.MaxIndex() = 1
+		return JFiles[1]
+	else if (JFiles.MaxIndex() > 1)
+		return JFiles
+	else
+		return ""
+}
+
+RedrawWindow(hwnd=0)                                              	{                 	;-- zeichnet eine Autohotkey Gui komplett neu
+
+	global hadm
 
 	static RDW_INVALIDATE 	:= 0x0001
 	static	RDW_ERASE           	:= 0x0004
 	static RDW_FRAME          	:= 0x0400
 	static RDW_ALLCHILDREN	:= 0x0080
 
-	dllcall("RedrawWindow", "Ptr", hwnd, "Ptr", 0, "Ptr", 0, "UInt", RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN)
-
+return dllcall("RedrawWindow", "Ptr", (hwnd = 0 ? hadm : hwnd), "Ptr", 0, "Ptr", 0, "UInt", RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN)
 }
 
-UpdateWindow(hwnd) {                                                      	;-- sends WM_Paint to Update a window
-return dllcall("UpdateWindow", "Ptr", hwnd)
+
+GetFilesInDir(path, filepattern:="*.*", options:="")               	{
+
+	files := Array()
+	Loop, Files, % path "\" filepattern, % (options ? options : "")
+		files.Push(A_LoopFileName)
+
+return files
 }
 
-; ------------------------- WEB Gui
-CreateHTML(nprop) {
+SumatraDDE(hSumatra, cmd, params*) 								{         			;-- Befehle an Sumatra per DDE schicken
 
-	static networkHTML := "
-( ; html
-	<!DOCTYPE html><html>
-	<head>
-	<meta http-equiv='X-UA-Compatible' content='IE=edge'>
-	<style>
+	/*  DESCRIPTION
 
-	html, body {
-			width: 100%; height: 100%;
-			margin: 0; padding: 0;
-			font-family: sans-serif;
-		}
+		https://github.com/sumatrapdfreader/sumatrapdf/issues/1398
+		https://gist.github.com/nod5/4d172a31a3740b147d3621e7ed9934aa
+		functions Send_WM_COPYDATA() and RECEIVE_WM_COPYDATA() are required
+		Required data to tell SumatraPDF to interpret lpData as DDE command text, always 0x44646557
 
-	body {
-			display: flex;
-			flex-direction: column;
-		}
+		SumatraPDF DDE command unicode text, https://www.sumatrapdfreader.org/docs/DDE-Commands.html
 
-	.main {
-			 font-size: 9pt;
-			padding: 1em;
-			overflow: auto;
-		}
+		DDE Commands
+		Sumatra can be controlled in a limited way from other software by sending DDE commands. They are mostly
+		used to use SumatraPDF as a preview tool from e.g. LaTeX editors that generate PDF files.
 
-	.row {
-		  display: flex;
-		  flex-wrap: wrap;
-		  justify-content: space-between;
-		}
+		Format of DDE comands
+			Single DDE command:   	[Command(parameter1, parameter2, ..., )]
+			Multiple DDE commands: 	[Command1(parameter1, parameter2, ..., )][Command2(...)][...]
 
-    .w-50 {
-      width: 48%;
-    }
+		List of DDE commands:
+        	[Open file]
+			format:     	[Open("<pdffilepath>"[,<newwindow>,<focus>,<forcerefresh>])]
+			arguments:	if newwindow is 1 then a new window is created even if the file is already open
+								if focus is 1 then the focus is set to the window
+								if forcerefresh is 1 the command forces the refresh of the file window if already open
+								(useful for files opened over network that don't get file-change notifications)".
+			example:   	[Open("c:\file.pdf", 1, 1, 0)]
 
-    .w-100 {
-      width: 100%;
-    }
+			[Forward-Search]
+			format: [ForwardSearch(["<pdffilepath>",]"<sourcefilepath>",<line>,<column>[,<newwindow>,<setfocus>])]
+			arguments:
+			pdffilepath:     	path to the PDF document (if this path is omitted and the document isn't already open,
+	                    			SumatraPDF won't open it for you)
+			column:         	this parameter is for future use (just always pass 0)
+			newwindow:  	1 to open the document in a new window (even if the file is already opened)
+			focus:             	1 to set focus to SumatraPDF's window.
+			examples:     	[ForwardSearch("c:\file.pdf","c:\folder\source.tex",298,0)]
+                                   	[ForwardSearch("c:\folder\source.tex",298,0,0,1)]
 
-	</style>
-	</head>
+           	[GotoNamedDest]
+           	format:         	[GotoNamedDest("<pdffilepath>","<destination name>")]
+           	example:       	[GotoNamedDest("c:\file.pdf", "chapter.1")]
+           	note:             	the pdf file must be already opened
 
-	<body>
+           	[Go to page]
+           	format:         	[GotoPage("<pdffilepath>",<page number>)]
+           	example:       	[GotoPage("c:\file.pdf", 37)]
+           	note:             	the pdf file must be already opened.
 
-	<header>
-	</header>
-
-	<div class='main'>
-
-		<div class='row'>
-			###ROWBUTTONS
-		</div>
-
-	</div>
-
-	</body>
-	</html>
-
-)"
-
-/*
-
-
-
-
-*/
-
-	networkHTML := StrReplace(networkHTML, "###ROWBUTTONS", "<button class='w-50' onclick='ahk.Example1_Button(event)'>Anmeldung</button>")
-	htmlpath := A_Temp "\admGui_LanInterface.html"
-	FileOpen(htmlpath, "w", "UTF-8").write(networkHTML)
-
-return htmlpath
-
-}
-
-class NeutronEmbedded {
-
-	/* NeutronEmbedded.ahk v1.0.0
-
-		this is a modification of the Neutron WebGui class in order to be able to integrate it into an existing Gui
-
-		Copyright (c) 2020 Philip Taylor (known also as GeekDude, G33kDude)
-		https://github.com/G33kDude/Neutron.ahk
-
-		MIT License
-
-		Permission is hereby granted, free of charge, to any person obtaining a copy
-		of this software and associated documentation files (the "Software"), to deal
-		in the Software without restriction, including without limitation the rights
-		to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-		copies of the Software, and to permit persons to whom the Software is
-		furnished to do so, subject to the following conditions:
-
-		The above copyright notice and this permission notice shall be included in all
-		copies or substantial portions of the Software.
-
-		THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-		IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-		FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-		AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-		LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-		OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-		SOFTWARE.
+        	[SetView]
+   			format: 			[SetView("<pdffilepath>","<view mode>",<zoom level>[,<scrollX>,<scrollY>])]
+   			arguments:
+   			view mode: 		"single page"
+   									"facing"
+    								"book view"
+    								"continuous"
+    								"continuous facing"
+    								"continuous book view"
+   			zoom level : 		either a zoom factor between 8 and 6400 (in percent) or one
+	                            	of -1 (Fit Page), -2 (Fit Width) or -3 (Fit Content)
+   			scrollX, scrollY: 	PDF document (user) coordinates of the point to be visible in the top-left of the window
+   			example: 			[SetView("c:\file.pdf","continuous",-3)]
+   			note: 				the pdf file must already be opened
+    		Example:			[SetView("c:\file.pdf","continuous",-3)]
 
 	 */
 
+		static dwData := 0x44646557
 
-	; --- Constants ---          	;{
-	static VERSION := "1.0.0"
+		lpData := { 	"OpenFile"         	: ("[Open(""p1"",p2,p3,p4)]")
+														; p1=filepath, p2=sourcefilepath, p3=1 for focus, p4=1 for force refresh
 
-	; Windows Messages
-	, WM_DESTROY := 0x02
-	, WM_SIZE := 0x05
-	, WM_NCCALCSIZE := 0x83
-	, WM_NCHITTEST := 0x84
-	, WM_NCLBUTTONDOWN := 0xA1
-	, WM_KEYDOWN := 0x100
-	, WM_KEYUP := 0x101
-	, WM_SYSKEYDOWN := 0x104
-	, WM_SYSKEYUP := 0x105
-	, WM_MOUSEMOVE := 0x200
-	, WM_LBUTTONDOWN := 0x201
+														; [p1=filepath,] p2=sourcefilepath, p3=line, p4=column[, p5=1 for new window, p6=1 to set focus]
+						,	"ForwardSearch" 	: ("[ForwardSearch(""p1"",""p2"",p3,p4,p5,p6)]")
 
-	; Virtual-Key Codes
-	, VK_TAB           	:= 0x09
-	, VK_SHIFT         	:= 0x10
-	, VK_CONTROL 	:= 0x11
-	, VK_MENU       	:= 0x12
-	, VK_F5             	:= 0x74
+														; p1=filepath, p2=destination name
+						,	"GotoNamedDest"	: ("[GotoNamedDest(""p1"",""p2"")]")
 
-	; Non-client hit test values (WM_NCHITTEST)
-	, HT_VALUES := [[13, 12, 14], [10, 1, 11], [16, 15, 17]]
+														; p1=filepath, p2=PageNr
+						,	"GotoPage"        	: ("[GotoPage(""p1"",p2)]")
 
-	; Registry keys
-	, KEY_FBE := "HKEY_CURRENT_USER\Software\Microsoft\Internet Explorer\MAIN"
-	. "\FeatureControl\FEATURE_BROWSER_EMULATION"
+														; p1=filepath, p2=view mode, p3=zoom level [, p4=scrollX, p5=scrollY>]
+						,	"SetView"           	: ("[SetView(""p1"",""p2"",p3,p4,p5)]")}
 
-	; Undoucmented Accent API constants
-	; https://withinrafael.com/2018/02/02/adding-acrylic-blur-to-your-windows-10-apps-redstone-4-desktop-apps/
-	, ACCENT_ENABLE_BLURBEHIND	:= 3
-	, WCA_ACCENT_POLICY          	:= 19
+		For index, param in params
+			lpData[cmd] := StrReplace(lpData[cmd], "p" index, param)
 
-	; Other constants
-	, EXE_NAME := A_IsCompiled ? A_ScriptName : StrSplit(A_AhkPath, "\").Pop()
+		lpData[cmd] := RegExReplace(lpData[cmd], ",*\""*\s*p\d\s*\""*\,*")
 
+		;SciTEOutput(" " lpData[cmd])
 
-	; --- Instance Variables ---
-
-	LISTENERS := [this.WM_DESTROY, this.WM_SIZE, this.WM_NCCALCSIZE
-	, this.WM_KEYDOWN, this.WM_KEYUP, this.WM_SYSKEYDOWN, this.WM_SYSKEYUP
-	, this.WM_LBUTTONDOWN]
-
-	; Maximum pixel inset for sizing handles to appear
-	border_size := 6
-
-	; The window size
-	;w := 800
-	;h := 1024
-
-	; Modifier keys as seen by neutron
-	MODIFIER_BITMAP := {this.VK_SHIFT: 1<<0, this.VK_CONTROL: 1<<1
-	, this.VK_MENU: 1<<2}
-	modifiers := 0
-
-	; Shortcuts to not pass on to the web control
-	disabled_shortcuts :=
-	( Join ; ahk
-	{
-		0: {
-			this.VK_F5: true
-		},
-		this.MODIFIER_BITMAP[this.VK_CONTROL]: {
-			GetKeyVK("F"): true,
-			GetKeyVK("L"): true,
-			GetKeyVK("N"): true,
-			GetKeyVK("O"): true,
-			GetKeyVK("P"): true
-		}
-	}
-	)
-	;}
-
-	; --- Properties ---          	;{
-	; Get the JS DOM object
-	doc[]	{
-
-		get
-		{
-			return this.wb.Document
-		}
-
-	}
-
-	; Get the JS Window object
-	wnd[]	{
-
-		get
-		{
-			return this.wb.Document.parentWindow
-		}
-
-	}
-
-	;}
-
-	; --- Construction, Destruction, Meta-Functions --- ;{
-	__New(html:="", css:="", js:="", nprop:="") 	{
-
-		/* nprop description
-
-			nprop := {"title"         	: "Neutron"
-						, 	"x"             	: 1
-						, 	"y"             	: 20
-						, 	"w"             	: 600
-						, 	"h"            	: 400
-						, 	"hparent"    	: hadm
-						,	"parentgui"	: "adm"}
-
-		 */
-
-		static wb
-
-		; Create necessary circular references
-		this.bound := {}
-		this.bound._OnMessage := this._OnMessage.Bind(this)
-
-		; Bind message handlers
-		for i, message in this.LISTENERS
-			OnMessage(message, this.bound._OnMessage)
-
-		; Create and save the GUI
-		If IsObject(nprop) {
-			this.hWnd      	:= nprop.hparent
-			this.x             	:= nprop.x
-			this.y             	:= nprop.y
-			this.w            	:= nprop.w
-			this.h            	:= nprop.h
-			this.parentgui	:= nprop.parentgui
-			this.title          	:= nprop.title
-		}
-
-		; Creating an ActiveX control with a valid URL instantiates a
-		; WebBrowser, saving its object to the associated variable. The "about"
-		; URL scheme allows us to start the control on either a blank page, or a
-		; page with some HTML content pre-loaded by passing HTML after the
-		; colon: "about:<!DOCTYPE html><body>...</body>"
-
-		; Read more about the WebBrowser control here:
-		; http://msdn.microsoft.com/en-us/library/aa752085
-
-		; For backwards compatibility reasons, the WebBrowser control defaults
-		; to IE7 emulation mode. The standard method of mitigating this is to
-		; include a compatibility meta tag in the HTML, but this requires
-		; tampering to the HTML and does not solve all compatibility issues.
-		; By tweaking the registry before and after creation of the control we
-		; can opt-out of the browser emulation feature altogether with minimal
-		; impact on the rest of the system.
-
-		; Read more about browser compatibility modes here:
-		; https://docs.microsoft.com/en-us/archive/blogs/patricka/controlling-webbrowser-control-compatibility
-
-		RegRead, fbe, % this.KEY_FBE, % this.EXE_NAME
-		RegWrite, REG_DWORD, % this.KEY_FBE, % this.EXE_NAME, 0
-
-		Gui, % this.hWnd ":Add", ActiveX, % "vwb hWndhWB x" this.x " y" this.y " w" this.w " h" this.h, about:blank
-		if (fbe = "")
-			RegDelete, % this.KEY_FBE, % this.EXE_NAME
-		else
-			RegWrite, REG_DWORD, % this.KEY_FBE, % this.EXE_NAME, % fbe
-
-		; Save the WebBrowser control to reference later
-		this.wb  	:= wb
-		this.hWB	:= hWB
-
-		; Connect the web browser's event stream to a new event handler object
-		ComObjConnect(this.wb, new this.WBEvents(this))
-
-		; Compute the HTML template if necessary
-		if !(html ~= "i)^<!DOCTYPE")
-			html := Format(this.TEMPLATE, css, title, html, js)
-
-		; Write the given content to the page
-		this.doc.write(html)
-		this.doc.close()
-
-		; Inject the AHK objects into the JS scope
-		this.wnd.neutron 	:= this
-		this.wnd.ahk     	:= new this.Dispatch(this)
-
-		; Wait for the page to finish loading
-		while wb.readyState < 4
-			Sleep, 50
-
-		; Subclass the rendered Internet Explorer_Server control to intercept
-		; its events, including WM_NCHITTEST and WM_NCLBUTTONDOWN.
-		; Read more here: https://forum.juce.com/t/_/27937
-		; And in the AutoHotkey documentation for RegisterCallback (Example 2)
-
-		dhw := A_DetectHiddenWindows
-		DetectHiddenWindows, On
-		ControlGet, hWnd, hWnd,, Internet Explorer_Server1	, % "ahk_id" this.hWnd
-		this.hIES    	:= hWnd
-		ControlGet, hWnd, hWnd,, Shell DocObject View1  	, % "ahk_id" this.hWnd
-		this.hSDOV 	:= hWnd
-		DetectHiddenWindows, %dhw%
-
-		this.pWndProc   	:= RegisterCallback(this._WindowProc, "", 4, &this)
-		this.pWndProcOld	:= DllCall("SetWindowLong" (A_PtrSize == 8 ? "Ptr" : "")
-													, "Ptr"	, this.hIES          	; HWND     	hWnd
-													, "Int" 	, -4                    	; int          	nIndex (GWLP_WNDPROC)
-													, "Ptr"	, this.pWndProc 	; LONG_PTR	dwNewLong
-													, "Ptr")                             	; LONG_PTR
-
-		; Stop the WebBrowser control from consuming file drag and drop events
-		this.wb.RegisterAsDropTarget := False
-		DllCall("ole32\RevokeDragDrop", "UPtr", this.hIES)
-	}
-	;}
-
-	; --- Event Handlers ---  	;{
-	_OnMessage(wParam, lParam, Msg, hWnd)	{
-
-		if (hWnd == this.hWnd)		{
-
-			; Handle messages for the main window
-			 if 	(Msg == this.WM_DESTROY)			{
-
-				; Clean up all our circular references so that the object may be
-				; garbage collected.
-				for i, message in this.LISTENERS
-					OnMessage(message, this.bound._OnMessage, 0)
-				ComObjConnect(this.wb)
-				this.bound := []
-
-			}
-
-		}
-		else if (hWnd == this.hIES || hWnd == this.hSDOV)		{
-
-			; Handle messages for the rendered Internet Explorer_Server
-			pressed 	:= (Msg == this.WM_KEYDOWN	|| Msg == this.WM_SYSKEYDOWN)
-			released	:= (Msg == this.WM_KEYUP     	|| Msg == this.WM_SYSKEYUP)
-
-			if (pressed || released)			{
-
-				; Track modifier states
-				if (bit := this.MODIFIER_BITMAP[wParam])
-					this.modifiers := (this.modifiers & ~bit) | (pressed * bit)
-
-				; Block disabled key combinations
-				if (this.disabled_shortcuts[this.modifiers, wParam])
-					return 0
-
-
-				; When you press tab with the last tabbable item in the
-				; document already selected, focus will be taken from the IES
-				; control and moved to the SDOV control. The accelerator code
-				; from the AutoHotkey installer uses a conditional loop in an
-				; attempt to work around this behavior, but as implemented it
-				; did not work correctly on my system. Instead, listen for the
-				; tab up event on the SDOV and swap it for a tab down before
-				; translating it. This should prevent the user from tabbing to
-				; the SDOV in most cases, though there may still be some way to
-				; tab to it that I am not aware of. A more elegant solution may
-				; be to subclass the SDOV like was done for the IES, then
-				; forward the WM_SETFOCUS message back to the IES control.
-				; However, given the relative complexity of subclassing and the
-				; fact that this message substution approach appears to work
-				; just as well, we will use the message substitution. Consider
-				; implementing the other approach if it turns out that the
-				; undesirable behavior continues to manifest under some
-				; circumstances.
-				Msg := hWnd == this.hSDOV ? this.WM_KEYDOWN : Msg
-
-				; Modified accelerator handling code from AutoHotkey Installer
-				Gui +OwnDialogs ; For threadless callbacks which interrupt this.
-				pipa := ComObjQuery(this.wb, "{00000117-0000-0000-C000-000000000046}")
-				VarSetCapacity(kMsg, 48), NumPut(A_GuiY, NumPut(A_GuiX
-				, NumPut(A_EventInfo, NumPut(lParam, NumPut(wParam
-				, NumPut(Msg, NumPut(hWnd, kMsg)))), "uint"), "int"), "int")
-				r := DllCall(NumGet(NumGet(1*pipa)+5*A_PtrSize), "ptr", pipa, "ptr", &kMsg)
-				ObjRelease(pipa)
-
-				if (r == 0) ; S_OK: the message was translated to an accelerator.
-					return 0
-				return
-			}
-		}
-	}
-
-	_WindowProc(Msg, wParam, lParam)	{
-		Critical
-		hWnd := this
-		this := Object(A_EventInfo)
-
-		if (Msg == this.WM_NCHITTEST)		{
-			; Check to see if the cursor is near the window border, which
-			; should be treated as the "non-client" drag-to-resize area.
-			; https://autohotkey.com/board/topic/23969-/#entry155480
-
-			; Extract coordinates from LOWORD and HIWORD (preserving sign)
-			x := lParam<<48>>48, y := lParam<<32>>48
-
-			; Get the window position for comparison
-			WinGetPos, wX, wY, wW, wH, % "ahk_id" this.hWnd
-
-			; Calculate positions in the lookup tables
-			row	:= (x < wX + this.BORDER_SIZE) ? 1 : (x >= wX + wW - this.BORDER_SIZE) ? 3 : 2
-			col	:= (y < wY + this.BORDER_SIZE) ? 1 : (y >= wY + wH - this.BORDER_SIZE) ? 3 : 2
-
-			return this.HT_VALUES[col, row]
-
-		}
-		else if (Msg == this.WM_NCLBUTTONDOWN)		{
-			; Hoist nonclient clicks to main window
-			return DllCall("SendMessage", "Ptr", this.hWnd, "UInt", Msg, "UPtr", wParam, "Ptr", lParam, "Ptr")
-		}
-
-		; Otherwise (since above didn't return), pass all unhandled events to the original WindowProc.
-		Critical, Off
-		return DllCall("CallWindowProc"
-							, 	"Ptr"   	, this.pWndProcOld 	; WNDPROC lpPrevWndFunc
-							, 	"Ptr"   	, hWnd                   	; HWND    hWnd
-							, 	"UInt"	, Msg                    	; UINT    Msg
-							, 	"UPtr"	, wParam              	; WPARAM  wParam
-							, 	"Ptr"  	, lParam                	; LPARAM  lParam
-							, 	"Ptr")                                 	; LRESULT
-	}
-	;}
-
-	; --- Instance Methods ---	;{
-	; Loads an HTML file by name (not path). When running the script uncompiled,
-	; looks for the file in the local directory. When running the script
-	; compiled, looks for the file in the EXE's RCDATA. Files included in your
-	; compiled EXE by FileInstall are stored in RCDATA whether they get
-	; extracted or not. An easy way to get your Neutron resources into a
-	; compiled script, then, is to put FileInstall commands for them right below
-	; the return at the bottom of your AutoExecute section.
-	;
-	; Parameters:
-	;   fileName - The name of the HTML file to load into the Neutron window.
-	;              Make sure to give just the file name, not the full path.
-	;
-	; Returns: nothing
-	;
-	; Example:
-	;
-	; ; AutoExecute Section
-	; neutron := new NeutronWindow()
-	; neutron.Load("index.html")
-	; neutron.Show()
-	; return
-	; FileInstall, index.html, index.html
-	; FileInstall, index.css, index.css
-	;
-	Load(fileName)	{
-		; Complete the path based on compiled state
-		if A_IsCompiled
-			url := "res://" this.wnd.encodeURIComponent(A_ScriptFullPath) "/10/" fileName
-		else
-			url := A_WorkingDir "/" fileName
-
-		; Navigate to the calculated file URL
-		this.wb.Navigate(url)
-
-		; Wait for the page to finish loading
-		while this.wb.readyState < 3
-			Sleep, 50
-
-		; Inject the AHK objects into the JS scope
-		this.wnd.neutron 	:= this
-		this.wnd.ahk     	:= new this.Dispatch(this)
-
-		; Wait for the page to finish loading
-		while this.wb.readyState < 4
-			Sleep, 50
-	}
-
-	; Shorthand method for document.querySelector
-	qs(selector)	{
-		return this.doc.querySelector(selector)
-	}
-
-	; Shorthand method for document.querySelectorAll
-	qsa(selector)	{
-		return this.doc.querySelectorAll(selector)
-	}
-
-	; Passthrough method for the Gui command, targeted at the Neutron Window
-	; instance
-	Gui(subCommand, value1:="", value2:="", value3:="")	{
-		Gui, % this.hWnd ":" subCommand, %value1%, %value2%, %value3%
-	}
-	;}
-
-	; --- Static Methods ---    	;{
-	; Given an HTML Collection (or other JavaScript array), return an enumerator
-	; that will iterate over its items.
-	;
-	; Parameters:
-	;     htmlCollection - The JavaScript array to be iterated over
-	;
-	; Returns: An Enumerable object
-	;
-	; Example:
-	;
-	; neutron := new NeutronWindow("<body><p>A</p><p>B</p><p>C</p></body>")
-	; neutron.Show()
-	; for i, element in neutron.Each(neutron.body.children)
-	;     MsgBox, % i ": " element.innerText
-	;
-	Each(htmlCollection)	{
-		return new this.Enumerable(htmlCollection)
-	}
-
-	; Given an HTML Form Element, construct a FormData object
-	;
-	; Parameters:
-	;   formElement - The HTML Form Element
-	;   useIdAsName - When a field's name is blank, use it's ID instead
-	;
-	; Returns: A FormData object
-	;
-	; Example:
-	;
-	; neutron := new NeutronWindow("<form>"
-	; . "<input type='text' name='field1' value='One'>"
-	; . "<input type='text' name='field2' value='Two'>"
-	; . "<input type='text' name='field3' value='Three'>"
-	; . "</form>")
-	; neutron.Show()
-	; formElement := neutron.doc.querySelector("form") ; Grab 1st form on page
-	; formData := neutron.GetFormData(formElement) ; Get form data
-	; MsgBox, % formData.field2 ; Pull a single field
-	; for name, element in formData ; Iterate all fields
-	;     MsgBox, %name%: %element%
-	;
-	GetFormData(formElement, useIdAsName:=True)	{
-
-		formData := new this.FormData()
-
-		for i, field in this.Each(formElement.elements)		{
-			; Discover the field's name
-			name := ""
-			try ; fieldset elements error when reading the name field
-				name := field.name
-			if (name == "" && useIdAsName)
-				name := field.id
-
-			; Filter against fields which should be omitted
-			if (name == "" || field.disabled || field.type ~= "^file|reset|submit|button$")
-				continue
-
-			; Handle select-multiple variants
-			if (field.type == "select-multiple")			{
-				for j, option in this.Each(field.options)
-					if (option.selected)
-						formData.add(name, option.value)
-				continue
-			}
-
-			; Filter against unchecked checkboxes and radios
-			if (field.type ~= "^checkbox|radio$" && !field.checked)
-				continue
-
-			; Return the field values
-			formData.add(name, field.value)
-		}
-
-		return formData
-	}
-
-	; Given a potentially HTML-unsafe string, return an HTML safe string
-	; https://stackoverflow.com/a/6234804
-	EscapeHTML(unsafe)	{
-		unsafe := StrReplace(unsafe, "&", "&amp;")
-		unsafe := StrReplace(unsafe, "<", "&lt;")
-		unsafe := StrReplace(unsafe, ">", "&gt;")
-		unsafe := StrReplace(unsafe, """", "&quot;")
-		unsafe := StrReplace(unsafe, "''", "&#039;")
-		return unsafe
-	}
-
-	; Wrapper for Format that applies EscapeHTML to each value before passing
-	; them on. Useful for dynamic HTML generation.
-	FormatHTML(formatStr, values*)	{
-		for i, value in values
-			values[i] := this.EscapeHTML(value)
-		return Format(formatStr, values*)
-	}
-	;}
-
-	; --- Nested Classes ---    	;{
-	; Proxies method calls to AHK function calls, binding a given value to the
-	; first parameter of the target function.
-	;
-	; For internal use only.
-	;
-	; Parameters:
-	;   parent - The value to bind
-	;
-	class Dispatch	{
-
-		__New(parent)		{
-			this.parent := parent
-		}
-
-		__Call(params*)		{
-			; Make sure the given name is a function
-			if !(fn := Func(params[1]))
-				throw Exception("Unknown function: " params[1])
-
-			; Make sure enough parameters were given
-			if (params.length() < fn.MinParams)
-				throw Exception("Too few parameters given to " fn.Name ": " params.length())
-
-			; Make sure too many parameters weren't given
-			if (params.length() > fn.MaxParams && !fn.IsVariadic)
-				throw Exception("Too many parameters given to " fn.Name ": " params.length())
-
-			; Change first parameter from the function name to the neutron instance
-			params[1] := this.parent
-
-			; Call the function
-			return fn.Call(params*)
-		}
-	}
-
-	; Handles Web Browser events
-	; https://docs.microsoft.com/en-us/previous-versions/windows/internet-explorer/ie-developer/platform-apis/aa768283%28v%3dvs.85%29
-	;
-	; For internal use only
-	;
-	; Parameters:
-	;   parent - An instance of the Neutron class
-	;
-	class WBEvents	{
-
-		__New(parent)		{
-			this.parent := parent
-		}
-
-		DocumentComplete(wb)		{
-			; Inject the AHK objects into the JS scope
-			wb.document.parentWindow.neutron := this.parent
-			wb.document.parentWindow.ahk := new this.parent.Dispatch(this.parent)
-		}
-	}
-
-	; Enumerator class that enumerates the items of an HTMLCollection (or other
-	; JavaScript array).
-	;
-	; Best accessed through the .Each() helper method.
-	;
-	; Parameters:
-	;   htmlCollection - The HTMLCollection to be enumerated.
-	;
-	class Enumerable	{
-		i := 0
-
-		__New(htmlCollection)		{
-			this.collection := htmlCollection
-		}
-
-		_NewEnum()		{
-			return this
-		}
-
-		Next(ByRef i, ByRef elem)		{
-			if (this.i >= this.collection.length)
-				return False
-			i := this.i
-			elem := this.collection.item(this.i++)
-			return True
-		}
-	}
-
-	; A collection similar to an OrderedDict designed for holding form data.
-	; This collection allows duplicate keys and enumerates key value pairs in
-	; the order they were added.
-	class FormData	{
-
-		names := []
-		values := []
-
-		; Add a field to the FormData structure.
-		;
-		; Parameters:
-		;   name - The form field name associated with the value
-		;   value - The value of the form field
-		;
-		; Returns: Nothing
-		;
-		Add(name, value)		{
-			this.names.Push(name)
-			this.values.Push(value)
-		}
-
-		; Get an array of all values associated with a name.
-		;
-		; Parameters:
-		;   name - The form field name associated with the values
-		;
-		; Returns: An array of values
-		;
-		; Example:
-		;
-		; fd := new NeutronWindow.FormData()
-		; fd.Add("foods", "hamburgers")
-		; fd.Add("foods", "hotdogs")
-		; fd.Add("foods", "pizza")
-		; fd.Add("colors", "red")
-		; fd.Add("colors", "green")
-		; fd.Add("colors", "blue")
-		; for i, food in fd.All("foods")
-		;     out .= i ": " food "`n"
-		; MsgBox, %out%
-		;
-		All(name)		{
-			values := []
-			for i, v in this.names
-				if (v == name)
-					values.Push(this.values[i])
-			return values
-		}
-
-		; Meta-function to allow direct access of field values using either dot
-		; or bracket notation. Can retrieve the nth item associated with a given
-		; name by passing more than one value in when bracket notation.
-		;
-		; Example:
-		;
-		; fd := new NeutronWindow.FormData()
-		; fd.Add("foods", "hamburgers")
-		; fd.Add("foods", "hotdogs")
-		; MsgBox, % fd.foods ; hamburgers
-		; MsgBox, % fd["foods", 2] ; hotdogs
-		;
-		__Get(name, n := 1)		{
-			for i, v in this.names
-				if (v == name && !--n)
-					return this.values[i]
-		}
-
-		; Allow iteration in the order fields were added, instead of a normal
-		; object's alphanumeric order of iteration.
-		;
-		; Example:
-		;
-		; fd := new NeutronWindow.FormData()
-		; fd.Add("z", "3")
-		; fd.Add("y", "2")
-		; fd.Add("x", "1")
-		; for name, field in fd
-		;     out .= name ": " field ","
-		; MsgBox, %out% ; z: 3, y: 2, x: 1
-		;
-		_NewEnum()		{
-			return {"i": 0, "base": this}
-		}
-		Next(ByRef name, ByRef value)		{
-			if (++this.i > this.names.length())
-				return False
-			name := this.names[this.i]
-			value := this.values[this.i]
-			return True
-		}
-	}
-
-	;}
-
+return SendEx_WM_COPYDATA(hSumatra, dwData, lpData[cmd])
 }
 
+SendEx_WM_COPYDATA(hWin, dwData, lpData) 				{              	;-- für die Kommunikation mit Sumatra und SumatraDDE()
 
+	VarSetCapacity(COPYDATASTRUCT, 3*A_PtrSize, 0)
+    cbData := (StrLen(lpData) + 1) * (A_IsUnicode ? 2 : 1)
+    NumPut(dwData	, COPYDATASTRUCT, 0*A_PtrSize)
+    NumPut(cbData 	, COPYDATASTRUCT, 1*A_PtrSize)
+    NumPut(&lpData	, COPYDATASTRUCT, 2*A_PtrSize)
+	SendMessage, 0x4a, 0, &COPYDATASTRUCT,, % "ahk_id " hWin ; 0x4a WM_COPYDATA
+
+return ErrorLevel == "FAIL" ? false : true
+}
+
+/*
+
+CheckJournal() { ...
+;~ For idx, pdf in ScanPool
+	;~ If (pdf.name = pdfFile) {
+		;~ ScanPool[idx] := GetPDFData(Addendum.BefundOrdner, pdfFile)
+		;~ break
+	;~ }
+
+BefundIndex() { ....
+ScanPool.Push(GetPDFData(Addendum.BefundOrdner, filename))
+
+*/
 

@@ -105,3 +105,4 @@ admSendText(to, Text) {
 		SciTEOutput("can't connected to: " to)
 
 }
+

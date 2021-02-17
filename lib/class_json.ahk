@@ -1,7 +1,15 @@
 /**
- * Lib: JSON.ahk
- *     JSON lib for AutoHotkey.
+ * Lib: class_JSON.ahk
+ *     JSON lib for AutoHotkey
+ *		- this is a modified version by Ixiko from original class made by cocobelgica
+ *		- modifications base on my needs in handling json strings for my project "Addendum für Albis on Windows"
+ *		- generally there should be no problem to use my modifications in other cases
  * Version:
+ *		v2.1.5 [28/01/2021]
+ *			- added class JSONDATA for loading and saving data from or to harddisk
+ *     	v2.1.4 [updated 01/09/2021 (MM/DD/YYYY)]
+ *			- changed for Addendum für Albis on Windows
+ *			- new parameter: encoding - load and dumps json strings in UTF-8
  *     v2.1.3 [updated 04/18/2016 (MM/DD/YYYY)]
  * License:
  *     WTFPL [http://wtfpl.net/]
@@ -11,12 +19,41 @@
  *     Use #Include JSON.ahk or copy into a function library folder and then
  *     use #Include <JSON>
  * Links:
- *     GitHub:     - https://github.com/cocobelgica/AutoHotkey-JSON
- *     Forum Topic - http://goo.gl/r0zI8t
- *     Email:      - cocobelgica <at> gmail <dot> com
+ *     GitHub:      	- https://github.com/cocobelgica/AutoHotkey-JSON
+ *     Forum Topic 	- http://goo.gl/r0zI8t
+ *     Email:       	- cocobelgica <at> gmail <dot> com
  */
 
+class JSONData {
 
+	Load(filepath, reviver:="", encoding:="ANSI") {
+
+		If !FileExist(filepath)
+			throw A_ThisFunc ": file not exist`n" filepath
+
+		oJSON := JSON.Load(FileOpen(filepath, "r", encoding).Read())
+
+		If !IsObject(oJSON) || (oJSON.Count() = 0)
+			throw A_ThisFunc ": loading json data from file failed! Returned object is empty"
+
+	return oJSON
+	}
+
+	Save(filepath, oJSON, overwrite:=false, replacer:="", space:="", encoding:="ANSI") {
+
+		If FileExist(filepath) && !overwrite
+			return 99
+		else
+			FileDelete, % filepath
+
+		FileOpen(filepath, "w", encoding).Write(JSON.Dump(oJSON, replacer, space, encoding))
+		If !ErrorLevel
+			return A_LastError
+
+	return 0
+	}
+
+}
 
 /**
  * Class: JSON
@@ -41,9 +78,10 @@ class JSON {
 	 */
 	class Load extends JSON.Functor {
 
-		Call(self, ByRef text, reviver:="") 	{
+		Call(self, ByRef text, reviver:="", encoding:="ANSI") 	{
 
 			this.rev := IsObject(reviver) ? reviver : false
+			this.encoding := encoding
 		; Object keys(and array indices) are temporarily stored in arrays so that
 		; we can enumerate them in the order they appear in the document/text instead
 		; of alphabetically. Skip if no reviver function is specified.
@@ -72,14 +110,10 @@ class JSON {
 
 				if InStr(",:", ch) {
 						next := (is_key := !is_array && ch == ",") ? quot : json_value
-
 				} else if InStr("}]", ch) {
-
 						ObjRemoveAt(stack, 1)
 						next := stack[1]==root ? "" : stack[1].IsArray ? ",]" : ",}"
-
 				} else {
-
 					if InStr("{[", ch) {
 					; Check if Array() is overridden and if its return value has
 					; the 'IsArray' property. If so, Array() will be called normally,
@@ -164,8 +198,7 @@ class JSON {
 						next := holder==root ? "" : is_array ? ",]" : ",}"
 					} ; If InStr("{[", ch) { ... } else
 
-					is_array? key := ObjPush(holder, value) : holder[key] := value
-
+					is_array ? key := ObjPush(holder, value) : holder[key] := value
 					if (this.keys && this.keys.HasKey(holder))
 						this.keys[holder].Push(key)
 				}
@@ -232,10 +265,10 @@ class JSON {
 	 */
 	class Dump extends JSON.Functor {
 
-		Call(self, value, replacer:="", space:="") {
+		Call(self, value, replacer:="", space:="", encoding:="ANSI") {
 
 			this.rep := IsObject(replacer) ? replacer : ""
-
+			this.encoding := encoding
 			this.gap := ""
 			if (space) {
 				static integer := "integer"
@@ -322,7 +355,7 @@ class JSON {
 
 		Quote(string) {
 
-			static quot := Chr(34), bashq := "\" . quot
+			static quot := Chr(34), bashq := "\" quot
 
 			if (string != "") {
 				  string := StrReplace(string,  "\",  "\\")
@@ -335,8 +368,10 @@ class JSON {
 				, string := StrReplace(string, "`t",  "\t")
 
 				static rx_escapable := A_AhkVersion<"2" ? "O)[^\x20-\x7e]" : "[^\x20-\x7e]"
-				while RegExMatch(string, rx_escapable, m)
-					string := StrReplace(string, m.Value, Format("\u{1:04x}", Ord(m.Value)))
+
+				If (this.encoding != "UTF-8")
+					while RegExMatch(string, rx_escapable, m)
+						string := StrReplace(string, m.Value, Format("\u{1:04x}", Ord(m.Value)))
 
 			}
 
@@ -380,3 +415,6 @@ class JSON {
 		}
 	}
 }
+
+
+

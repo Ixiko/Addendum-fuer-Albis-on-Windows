@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                          	   ausgelagerte Funktionen für die Automatisierung der Formularbefüllung der GVU - z.Z. nicht in Benutzung
-;                                                            	by Ixiko started in September 2017 - last change 03.10.2020 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 01.02.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ;		func_ZeigeGVUs              	:= Func("GVU_Gui")
@@ -44,14 +44,14 @@ GVU_GUI() {
 		GVULVOptions	:= "xm w" GVULV_Width " r30 BackgroundAAAAFF Grid NoSort"
 
 		Gui, GGVU: New  	, +AlwaysOnTop +HwndhGVU -DPIScale
-		Gui, GGVU: Font  	, S10 Normal q5, % Addendum.StandardFont
+		Gui, GGVU: Font  	, S10 Normal q5, % Addendum.Default.Font
 		Gui, GGVU: Margin	, 5, 5
 		Gui, GGVU: Add   	, Text    	, xm ym+3                                                                               	, % "angezeigtes Quartal:"
 		Gui, GGVU: Add    	, ListBox	, x+5 ym+3 r1 gGVU_LBEvent vLBQuartale                              	, % Quartale
 		Gui, GGVU: Add   	, Button  	, x+5 ym w200 gGVU_Ablaufstarten vGVU_Run +0x00000300  	, % "Formularerstellung starten"
-		Gui, GGVU: Font  	, s8 Normal q5, % Addendum.StandardFont
+		Gui, GGVU: Font  	, s8 Normal q5, % Addendum.Default.Font
 		Gui, GGVU: Add   	, Text     	, x+10 y10 w250 vZText                                                          	, % "Vorsorgen unbearbeitet: " GVUListe[Lnr].Liste.MaxIndex()
-		Gui, GGVU: Font  	, S10 Normal q5, % Addendum.StandardFont
+		Gui, GGVU: Font  	, S10 Normal q5, % Addendum.Default.Font
 		Gui, GGVU: Add   	, Progress	, % "xm w" GVUPrg_Width " h20 CBLime BackgroundEEEEEE cBlue vGVUProgress", % "0"
 		Gui, GGVU: Add   	, Text    	, % "x+5 w" (GVULV_Width - GVUPrg_Width - 5) " vGVUTextProgress"                                                 	, % ""
 		Gui, GGVU: Add   	, Listview	, % GVULVOptions " vGVU_LV HWNDhGVU_LV"                    	, % "U-Nr|bearbeitet|PatientenID|Name|Geburtsdatum|Untersuchungsdatum|Hinweis"
@@ -531,6 +531,20 @@ GVU_WarteAufAlteDaten:                                                          
 		}
 
 return ;}
+
+PatDBSave(AddendumDBPath) {                                                                       	;-- zum Sichern der Patientendatenbank
+
+	dbFile:= FileOpen(AddendumDbPath "\Patienten.txt", "w", "UTF-8")
+	For PatID, obj in oPat
+	{
+			line           	:=  PatID ";" obj.Nn ";" obj.Vn ";" obj.Gt ";" obj.Gd ";" obj.Kk ";" obj.letzteGVU
+			dataToWrite	.=  RTrim(line, ";") "`n"
+	}
+	dbFile.Write(dataToWrite)
+	dbFile.Close()
+
+return
+}
 
 /*  Addendum.ahk - Label EventHook_WinHandler:
 

@@ -1,6 +1,6 @@
 ﻿PraxTT(Textmsg, Params:="3 0 B") {																				;--Tooltip Ersatz im Addendum/Nutzer Design mit off-Timer Feature
 
-	/* FUNKTIONSBESCHREIBUNG,  last change: 15.10.2020
+	/* FUNKTIONSBESCHREIBUNG,  last change: 16.02.2021
 	   *
 		*	Textmsg: 	Inhalt der Nachricht
 		*	Param	: 	ein mit Space zu trennender String für verschiedene Parameter
@@ -18,6 +18,7 @@
 		*	             	18.06.2020	- Params kann jetzt ein Objekt sein (noch nicht vollständig umgesetzt!).
 		*                                   	   Beispiel: PraxTT("Textnachricht", {timeout:3, zoom:0, position:"Bottom", parent:"ahk_class OptoAppClass"} - OptoAppClass ist das Albisfenster
 		*                                    	- der ToolTip wird standardmäßig innerhalb des Albisfenster eingeblendet
+		*					15.02.2021	- Performanceverbesserungen, Code gekürzt
 		*
 	   *
 	*/
@@ -33,11 +34,11 @@
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	; VARIABLEN DEFINIEREN
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-		static   Font, BoldFont, FontSize, FontColor1, FontColor2, GuiBgColor1, GuiBgColor2, MrgX_Def, MrgY_Def
+		static   FontSize, FntCol1, FntCol2, BgCol1, BgCol2, MrgX_Def, MrgY_Def
 				, ModulName, T, BLEND, SLIDE, CENTER, ACTIVATE, HOR_POSITIVE, HOR_NEGATIVE, VER_POSITIVE
 				, VER_NEGATIVE, DefaultGui
 
-		global PraxTT, hPraxTT, PraxTTRunning, PraxTTDuration, PraxTTCounter1, PraxTTCounter2
+		global PraxTT, PraxTThGui, PraxTTRunning, PraxTTDuration, PraxTTCnt1, PraxTTCnt2
 
 		ParentID	:= 0
 	;}
@@ -49,15 +50,12 @@
 	  ; einmaliges Initialisieren bestimmter Parameter
 		If !PraxTTrunning {
 
-			IniRead, Font                	, % Addendum.AddendumIni, Addendum, StandardFont     	, Futura Bk Bt
-			IniRead, BoldFont      	, % Addendum.AddendumIni, Addendum, StandardBoldFont	, Futura Mk Md
-			IniRead, FontSize       	, % Addendum.AddendumIni, Addendum, StandardFontSize	, 9
-			IniRead, FontColor1    	, % Addendum.AddendumIni, Addendum, PraxTTFontColor1	, White
-			IniRead, FontColor2    	, % Addendum.AddendumIni, Addendum, PraxTTFontColor2	, Black
-			IniRead, GuiBgColor1	, % Addendum.AddendumIni, Addendum, PraxTTBgColor1 	, 202842
-			IniRead, GuiBgColor2	, % Addendum.AddendumIni, Addendum, PraxTTBgColor2 	, 6d8fff
+			IniRead, FntCol1  	, % Addendum.Ini, Addendum, PraxTTFontColor1	, White
+			IniRead, FntCol2  	, % Addendum.Ini, Addendum, PraxTTFontColor2	, Black
+			IniRead, BgCol1	, % Addendum.Ini, Addendum, PraxTTBgColor1 	, 202842
+			IniRead, BgCol2	, % Addendum.Ini, Addendum, PraxTTBgColor2 	, 6d8fff
 
-			ModulName        	:= StrReplace(A_ScriptName, "`.ahk", "")
+			ModulName        	:= StrReplace(A_ScriptName, ".ahk", "")
 			MrgX_Def            	:= 4                    	; x margin
 			MrgY_Def            	:= 4                    	; y margin
 			BLEND					:= 0x00080000	; Uses a fade effect.
@@ -82,9 +80,9 @@
 	  ; die Parameter verrechnen, erster Parameter ist wird ein statisches Fenster geschlossen
 		If !IsObject(Params) {
 
-			lifetime						:= StrSplit(Params, A_Space).1
-			FontSizeMultiplicator	:= StrSplit(Params, A_Space).2
-			ScreenPosition			:= StrSplit(Params, A_Space).3
+			lifetime						:= StrSplit(Params, " ").1
+			FontSizeMultiplicator	:= StrSplit(Params, " ").2
+			ScreenPosition			:= StrSplit(Params, " ").3
 
 		} else {
 
@@ -107,10 +105,10 @@
 			FontSizeMultiplicator := FontSizeMultiplicator * 2
 
 	  ; ZoomLevel kleiner 0 ist gesperrt
-		MrgAddX	:= FontSizeMultiplicator < 0 ? 0 : (FontSizeMultiplicator//2)
+		MrgAddX	:= FontSizeMultiplicator < 0 ? 0 : Floor(FontSizeMultiplicator//2)
 		MrgX    	:= MrgX_Def + MrgAddX
 		MrgY    	:= MrgY_Def
-		cFontSize	:= FontSize + FontSizeMultiplicator
+		cFontSize	:= Addendum.Default.FontSize + FontSizeMultiplicator
 
 	  ; tFont - In- oder Dekrement für Titelfont des Fenster
 		tFont:= 1.25
@@ -121,10 +119,10 @@
 	; AUSBLENDEN WENN LIFETIME OFF IST, TIMER BEENDEN WENN FUNKTIONSAUFRUF VORZEITIG KOMMT
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
 		If InStr(lifetime, "off") {
-			SetTimer, PraxTToff, -40
+			gosub PraxTTOff
 			return
-		} else if WinExist("ahk_id " hPraxTT) {
-			SetTimer, PraxTTOff, Off
+		} else if WinExist("PraxTT-Info ahk_class AutoHotkeyGUI") {
+			;SetTimer, PraxTTOff, Off
 			gosub PraxTTOff
 		}
 	;}
@@ -132,23 +130,23 @@
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	; GUI ERSTELLEN ODER INHALTE AUFFRISCHEN
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-		Gui, PraxTT: New, AlwaysOnTop +ToolWindow -Caption -DPIScale +Disabled +E0x8000000 HWNDhPraxTT 	;	Border				;-MaximizeBox -MinimizeBox
-		Gui, PraxTT: Color, % "c" GuiBgColor2
-		Gui, PraxTT: Margin, 0, 0
+		Gui, PraxTT: New      	, AlwaysOnTop +ToolWindow -Caption -DPIScale +Disabled +E0x8000000 HWNDPraxTThGui
+		Gui, PraxTT: Color     	, % "c" BgCol2
+		Gui, PraxTT: Margin  	, 0, 0
 
 	  ; ADD: Progress als andere Hintergrundfarbe für den Titel
-		Gui, PraxTT: Add, Progress, % "x0 y0 h" Floor(cFontSize*tFont)+10 " Background" GuiBgColor1 " HWNDhProgress" , Addendum für AlbisOnWindows
+		Gui, PraxTT: Add       	, Progress, % "x0 y0 h" Floor(cFontSize*tFont)+10 " Background" BgCol1 " HWNDhProgress" , Addendum für AlbisOnWindows
 		Control, ExStyle, -0x20000, , % "ahk_id " hProgress
 
 	  ; ADD: Title
-		Gui, PraxTT: Font				, % "q5 s" Floor(cFontSize*tFont) " c" FontColor1, %BoldFont%
-		Gui, PraxTT: Add, Text		, % "x" MrgX " y0 BackgroundTrans Center HWNDhTitle" , % ModulName
+		Gui, PraxTT: Font   		, % "q5 s" Floor(cFontSize*tFont) " c" FntCol1, % Addendum.Default.BoldFont
+		Gui, PraxTT: Add, Text	, % "x" MrgX " y0 BackgroundTrans Center HWNDhTitle" , % ModulName
 
 		ControlGetPos,TitleX,, TitleW, TitleH,, % "ahk_id " hTitle
 		ControlMove,, 0, 0, % TitleW+MrgX, % TitleH+3, % "ahk_id " hProgress
 
 	  ; Add: Informationstexte
-		Gui, PraxTT: Font, % "q5 s" cFontSize " c" FontColor2, % Font
+		Gui, PraxTT: Font, % "s" cFontSize " c" FntCol2, % Addendum.Default.Font
 		linespace	:= Floor(cFontSize * 0.5)
 		cwMax  	:= TitleW + (2*MrgX)					; für Ermittlung der maximalen Breite der Anzeige (zentrieren!)
 		Loop, Parse, TextMsg, `n
@@ -163,53 +161,58 @@
 				If RegExMatch(printline, "(?<=#)\-*\d+", plusSize)
 					printline := StrReplace(printline, "#" plusSize, "")
 
-				Gui, PraxTT: Font, % "q5 s" (cFontSize + plusSize) " c" FontColor2, % Font
+				Gui, PraxTT: Font, % "s" (cFontSize + plusSize) " c" FntCol2, % Addendum.Default.Font
 				Gui, PraxTT: Add, Text, % "x" MrgX " y+" linespace " Center BackgroundTrans", % printline
 
-				ControlGetPos,,, cw,, % "Static" (A_Index + 1), % "ahk_id " hPraxTT
+				ControlGetPos,,, cw,, % "Static" (A_Index + 1), % "ahk_id " PraxTThGui
 				cwMax	:= cw > cwMax ? cw : cwMax															;wenn cw größer als cwMax denn soll cwMax=cw sein, ansonsten gilt  cwMax=cwMax
 		}
 
 		Gui, PraxTT: Add, Text, % "x" MrgX " y+" cFontSize/4 " BackgroundTrans", % " "
-		Gui, PraxTT: Show, % "AutoSize Center NoActivate Hide"
+		Gui, PraxTT: Show, % "AutoSize Center NA Hide"
 
 	  ; ermitteln der Fenstergrößen und nachträgliches Zentrieren des Textes
-		Prax := GetWindowSpot(hPraxTT), controls := GetControls(hPraxTT)
-		max := controls.MaxIndex()
-		Loop % max
+		Prax   	:= GetWindowSpot(PraxTThGui)
+		controls	:= GetControls(PraxTThGui)
+		Loop % controls.MaxIndex()
 			If (A_Index > 2) {
 				Control, Style, +0x1,				   , % "ahk_id " controls[A_Index].Hwnd
 				ControlMove,, 0,, % Prax.W	  ,, % "ahk_id " controls[A_Index].Hwnd
 			}
 
 	  ; Positionieren der Gui oberhalb der Taskbar
-		Prax	:= GetWindowSpot(hPraxTT)
+		Prax	:= GetWindowSpot(PraxTThGui)
 		ov		:= ParentID ? GetWindowSpot(ParentID) : GetWindowSpot(AlbisWinID())
-		If !(ov.X < -5000)  ; Fenster sollte im sichtbaren Monitorbereich sein
-			SetWindowPos(hPraxTT, ov.X + Floor(ov.CW/2) - Floor(Prax.CW/2), ov.Y + ov.H - Prax.H - 19, Prax.W, Prax.H)
+	; Fenster im sichtbaren Monitorbereich positionieren
+		If !(ov.X < -30)
+			SetWindowPos(PraxTThGui, ov.X+Floor(ov.CW/2)-Floor(Prax.CW/2), ov.Y+ov.H-Prax.H-19, Prax.W, Prax.H)
 		else {
-			WinGetPos,, stY,,, ahk_class Shell_TrayWnd
-			SetWindowPos(hPraxTT, Prax.WindowX, ( stY - Prax.WindowH - 18), Prax.WindowW, Prax.WindowH)
+			WinGetPos,, stY,,, % "ahk_class Shell_TrayWnd"
+			SetWindowPos(PraxTThGui, Prax.X, stY-Prax.H-18, Prax.W, Prax.H)
 		}
 
 	  ; erkennt das ein Counter gewünscht ist, matched 'Warte bis zu 10s ...' , matched nicht 'Der Prozeß hat 13.66s gebraucht'
-		Gui, PraxTT: Font, % "q5 s" cFontSize*0.8 " c" FontColor2, % Font
-		Gui, PraxTT: Add, Text, % "x5 y" Prax.H - 15 " vPraxTTCounter1 Center BackgroundTrans", ---
-		Gui, PraxTT: Add, Text, % "x5 y" Prax.H - 15 " vPraxTTCounter2 Center BackgroundTrans", ---
+		Prax	:= GetWindowSpot(PraxTThGui)
+		Gui, PraxTT: Font	, % "s" cFontSize*0.8 " c" FntCol2, % Addendum.Default.Font
+		Gui, PraxTT: Add	, Text, % "x5 y" Prax.H - 15 " vPraxTTCnt1 Center BackgroundTrans", % "---"
+		Gui, PraxTT: Add	, Text, % "x5 y" Prax.H - 15 " vPraxTTCnt2 Center BackgroundTrans", % "---"
 
 		If RegExMatch(TextMsg, "i)(?<=\s)\d+(?=s\s)", time) {
-			GuiControl, PraxTT:, PraxTTCounter1, % time "s"
-			GuiControl, PraxTT:, PraxTTCounter2, % time "s"
+			GuiControl, PraxTT:, PraxTTCnt1, % time "s"
+			GuiControl, PraxTT:, PraxTTCnt2, % time "s"
 		} else {
-			GuiControl, PraxTT:, PraxTTCounter1, % "---"
-			GuiControl, PraxTT:, PraxTTCounter2, % "---"
+			GuiControl, PraxTT:, PraxTTCnt1, % "---"
+			GuiControl, PraxTT:, PraxTTCnt2, % "---"
 		}
 
-		GuiControl, MoveDraw, % hProgress	, % "w" (Prax.CW + MrgX) " h" ( TitleH + 3 )
-		GuiControl, MoveDraw, % hTitle		, % "x"  (Prax.CW + MrgX)//2 - (TitleW//2)
+		GuiControl, MoveDraw, % hProgress	, % "w" (Prax.CW+MrgX) " h" ( TitleH + 3 )
+		GuiControl, MoveDraw, % hTitle		, % "x"  Floor((Prax.CW+MrgX)//2)-Floor(TitleW//2)
 
 	  ; Einblenden mit Animation wenn keine Teamviewerverbindung besteht
-		Gui, PraxTT: Show, % "AutoSize NoActivate", % "PraxTT-Info"
+		Gui, PraxTT: Show, % "AutoSize NA", % "PraxTT-Info"
+
+		If Addendum.PraxTTDebug
+			SciTEOutput("PraxTT: " StrReplace(TextMsg, "`n", " | "))
 
 	  ; verhindern das die PraxTT-Gui die Default-Gui ist
 		If GuiDefault
@@ -228,8 +231,9 @@
 return controls.MaxIndex()
 
 PraxTTOff:																																									;{
+	SetTimer, PraxTTOff, Off
 	If !WinExist("ahk_class TV_Control") && !IsRemoteSession()
-		AnimateWindow(hPraxTT, PraxTTDuration, BLEND)
+		AnimateWindow(PraxTThGui, PraxTTDuration, BLEND)
 	Gui, PraxTT: Destroy
 	If GuiDefault
 		Gui, %DefaultGui%: Default

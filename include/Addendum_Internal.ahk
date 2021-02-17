@@ -1,97 +1,44 @@
-﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
-;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 26.08.2020 - this file runs under Lexiko's GNU Licence
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
+;                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
+;                                            	by Ixiko started in September 2017 - last change 14.02.2021 - this file runs under Lexiko's GNU Licence
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; INTERNE FUNKTIONEN                                                                                                                                                                                                                          	(14)
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; (01) TimeCode                                    	(02) PrintArr                                  	(03) GetHex                                  	(04) GetDec
-; (05) SetWinEventHook                         	(06) UnhookWinEvent                    	(07) StdOutToVar                          	(08) IsProcessElevated                         	(09) RunAsTask
-; (10) Json2Obj                                     	(11) IniReadExt                              	(12) IniAppend                              	(13) hk                                               	(14) Errorbox
-
-;1
-TimeCode(DaT) {                                                                                                                  	;-- used for protokoll functions - Month & Time (DaT) = 1 - it's clear!
-
-	If DaT = 1
-		TC:= A_DD "." A_MM "." A_YYYY "`, "
-
-		TC.= A_Hour ":" A_Min ":" A_Sec "`." A_MSec
-
-return TC
-}
-;2
-PrintArr(Arr, Option := "w800 h500, Object name", GuiNum:= 90		                                    	;-- show values of an array in a listview gui for debugging
-, Colums:= "Nr|PatID|", statustext:="Gesamtzahl") {
-	static initGui:= []
-	Option:= StrSplit(Option, ",")
-
-    for index, obj in Arr {
-        if (A_Index = 1) {
-            for k, v in obj {
-                Columns .= k "|"
-                cnt++
-            }
-			If !(init[GuiNum]) {
-					Gui, %GuiNum%: Margin, 0, 0
-					Gui, %GuiNum%: Add, ListView, % Option[1], % Columns
-					Gui, %GuiNum%: Add, Statusbar
-					init[GuiNum]:= 1
-			}
-        }
-        RowNum := A_Index
-        Gui, %GuiNum%: default
-        LV_Add("")
-        for k, v in obj {
-            LV_GetText(Header, 0, A_Index)
-            if (k <> Header) {
-                FoundHeader := False
-                loop % LV_GetCount("Column") {
-                    LV_GetText(Header, 0, A_Index)
-                    if (k <> Header)
-                        continue
-                    else {
-                        FoundHeader := A_Index
-                        break
-                    }
-                }
-                if !(FoundHeader) {
-                    LV_InsertCol(cnt + 1, "", k)
-                    cnt++
-                    ColNum := "Col" cnt
-                } else
-                    ColNum := "Col" FoundHeader
-            } else
-                ColNum := "Col" A_Index
-            LV_Modify(RowNum, ColNum, (IsObject(v) ? "Object()" : v))
-        }
-    }
-    loop % LV_GetCount("Column")
-        LV_ModifyCol(A_Index, "AutoHdr")
-	SB_SetText("   " LV_GetCount() " " statustext)
-
-    Gui, %GuiNum%: Show,, % Option[2]
-	return RowNum
-}
-;3
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; FUNKTIONEN  	|                                                 	|                                                 	|                                                 	|                                             	(23)
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; Umwandeln:		|	GetHex                                    	GetDec
+; WinEventhook: 	|	SetWinEventHook                     	UnhookWinEvent
+; Prozesse:			|	StdOutToVar                            	IsProcessElevated				     		ProcessExist									ScriptIsRunning
+;								GetAppImagePath						GetAppsInfo
+; IPC:					|	Receive_WM_COPYDATA	    	Send_WM_COPYDATA			    	GetAddendumID
+; INI: 					|	IniReadExt                                	IniAppend                                  	StrUtf8BytesToText
+; MsgBox:				|	KurzePause	                          	Weitermachen
+; Dateien:				|	FileIsLocked                             	FilePathCreate						    	FilePathExist                               	isFullFilePath
+; Sonstiges:			|	IsRemoteSession
+;______________________________________________________________________________________________________________________________________________
+; UMWANDELN (2)
 GetHex(hwnd) {                                                                                                                    	;-- Umwandlung Dezimal nach Hexadezimal
-return Format("0x{:x}", hwnd)
+return Format("0x{:X}", hwnd)
 }
-;4
+
 GetDec(hwnd) {                                                                                                                    	;-- Umwandlung Hexadezimal nach Dezimal
 return Format("{:u}", hwnd)
 }
-;5
-SetWinEventHook(eventMin, eventMax, hmodWinEventProc, lpfnWinEventProc, idProcess, idThread, dwFlags) {
-	return DllCall("SetWinEventHook", "uint", eventMin, "uint", eventMax, "Uint", hmodWinEventProc	, "uint", lpfnWinEventProc, "uint", idProcess, "uint", idThread, "uint", dwFlags)
+
+;______________________________________________________________________________________________________________________________________________
+; WINEVENTHOOK (2)
+SetWinEventHook(evMin, evMax, hmodWEvProc, lpfnWEvProc, idProcess, idThread, dwFlags) { 	;-- WinEventHook starten
+	return DllCall("SetWinEventHook", "uint", evMin, "uint", evMax, "Uint", hmodWEvProc	, "uint", lpfnWEvProc, "uint", idProcess, "uint", idThread, "uint", dwFlags)
 }
-;6
-UnhookWinEvent(hWinEventHook, HookProcAdr) {
+
+UnhookWinEvent(hWinEventHook, HookProcAdr) {                                                                    	;-- WinEventHook beenden
 	DllCall( "UnhookWinEvent", "Ptr", hWinEventHook )
 	DllCall( "GlobalFree", "Ptr", HookProcAdr ) ; free up allocated memory for RegisterCallback
 }
-;7
+
+;______________________________________________________________________________________________________________________________________________
+; PROZESSE (4)
 StdoutToVar(sCmd, sEncoding:="UTF-8", sDir:="", ByRef nExitCode:=0) {                               	;-- cmdline Ausgabe in einen String umleiten
 
     DllCall( "CreatePipe",           PtrP,hStdOutRd, PtrP,hStdOutWr, Ptr,0, UInt,0 )
@@ -134,7 +81,7 @@ StdoutToVar(sCmd, sEncoding:="UTF-8", sDir:="", ByRef nExitCode:=0) {           
 
 Return sOutput
 }
-;8
+
 IsProcessElevated(ProcessID) {                                                                                                	;-- ermittelt ob ein Prozess mit UAC-Virtualisierung läuft
     if !(hProcess := DllCall("OpenProcess", "uint", 0x0400, "int", 0, "uint", ProcessID, "ptr"))
         throw Exception("OpenProcess failed", -1)
@@ -144,199 +91,189 @@ IsProcessElevated(ProcessID) {                                                  
         throw Exception("GetTokenInformation failed", -1), DllCall("CloseHandle", "ptr", hToken) && DllCall("CloseHandle", "ptr", hProcess)
     return IsElevated, DllCall("CloseHandle", "ptr", hToken) && DllCall("CloseHandle", "ptr", hProcess)
 }
-;9
-RunAsTask() {                                                                                                                        	;-- automatische UAC Virtualisierung für Skripte
 
- ;  By SKAN,  http://goo.gl/yG6A1F,  CD:19/Aug/2014 | MD:22/Aug/2014
+ProcessExist(ProcName, cmd:="") {                                                                                            	;-- sucht nur nach Autohotkeyprozessen
 
-  Local CmdLine, TaskName, TaskExists, XML, TaskSchd, TaskRoot, RunAsTask
-  Local TASK_CREATE := 0x2,  TASK_LOGON_INTERACTIVE_TOKEN := 3
+	; use cmd = "PID" to receive the PID of an Autohotkey process
+	q := Chr(0x22)
 
-  Try TaskSchd  := ComObjCreate( "Schedule.Service" ),    TaskSchd.Connect()
-    , TaskRoot  := TaskSchd.GetFolder( "\" )
-  Catch
-      Return "", ErrorLevel := 1
+	StrQuery := "Select * from Win32_Process Where Name Like 'AutoHotkey%'"
+	For Process in winmgmts.ExecQuery(StrQuery)
+	{
+			RegExMatch(Process.CommandLine, "\w+\.ahk(?=\" q ")", name)
+			If InStr(name, ProcName)
+				If StrLen(cmd) = 0
+					return true
+				else
+					return Process[cmd]
+	}
 
-  CmdLine       := ( A_IsCompiled ? "" : """"  A_AhkPath """" )  A_Space  ( """" A_ScriptFullpath """"  )
-  TaskName      := "[RunAsTask] " A_ScriptName " @" SubStr( "000000000"  DllCall( "NTDLL\RtlComputeCrc32"
-                   , "Int",0, "WStr",CmdLine, "UInt",StrLen( CmdLine ) * 2, "UInt" ), -9 )
-
-  Try RunAsTask := TaskRoot.GetTask( TaskName )
-  TaskExists    := ! A_LastError
-
-  If ( not A_IsAdmin and TaskExists )      {
-
-    RunAsTask.Run( "" )
-    ExitApp
-
-  }
-
-  If ( not A_IsAdmin and not TaskExists )  {
-
-    Run *RunAs %CmdLine%, %A_ScriptDir%, UseErrorLevel
-    ExitApp
-
-  }
-
-  If ( A_IsAdmin and not TaskExists )      {
-
-    XML := "
-    ( LTrim Join
-      <?xml version=""1.0"" ?><Task xmlns=""http://schemas.microsoft.com/windows/2004/02/mit/task""><Regi
-      strationInfo /><Triggers /><Principals><Principal id=""Author""><LogonType>InteractiveToken</LogonT
-      ype><RunLevel>HighestAvailable</RunLevel></Principal></Principals><Settings><MultipleInstancesPolic
-      y>Parallel</MultipleInstancesPolicy><DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries><
-      StopIfGoingOnBatteries>false</StopIfGoingOnBatteries><AllowHardTerminate>false</AllowHardTerminate>
-      <StartWhenAvailable>false</StartWhenAvailable><RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAva
-      ilable><IdleSettings><StopOnIdleEnd>true</StopOnIdleEnd><RestartOnIdle>false</RestartOnIdle></IdleS
-      ettings><AllowStartOnDemand>true</AllowStartOnDemand><Enabled>true</Enabled><Hidden>false</Hidden><
-      RunOnlyIfIdle>false</RunOnlyIfIdle><DisallowStartOnRemoteAppSession>false</DisallowStartOnRemoteApp
-      Session><UseUnifiedSchedulingEngine>false</UseUnifiedSchedulingEngine><WakeToRun>false</WakeToRun><
-      ExecutionTimeLimit>PT0S</ExecutionTimeLimit></Settings><Actions Context=""Author""><Exec>
-      <Command>"   (  A_IsCompiled ? A_ScriptFullpath : A_AhkPath )       "</Command>
-      <Arguments>" ( !A_IsCompiled ? """" A_ScriptFullpath  """" : "" )   "</Arguments>
-      <WorkingDirectory>" A_ScriptDir "</WorkingDirectory></Exec></Actions></Task>
-    )"
-
-    TaskRoot.RegisterTask( TaskName, XML, TASK_CREATE, "", "", TASK_LOGON_INTERACTIVE_TOKEN )
-
-  }
-
-Return TaskName, ErrorLevel := 0
+return false
 }
-;10
-Json2Obj( str ) {                                                                                                                    	;-- Uses a two-pass iterative approach to deserialize a json string
 
-	; Copyright © 2013 VxE. All rights reserved.
+ScriptIsRunning(scriptname) {                                                                                                 	;-- ein bestimmtes Skript wird ausgeführt?
 
-	quot := """" ; firmcoded specifically for readability. Hardcode for (minor) performance gain
-	ws := "`t`n`r " Chr(160) ; whitespace plus NBSP. This gets trimmed from the markup
-	obj := {} ; dummy object
-	objs := [] ; stack
-	keys := [] ; stack
-	isarrays := [] ; stack
-	literals := [] ; queue
-	y := nest := 0
+	for Prozess in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")
+        If RegExMatch(Prozess.commandline, scriptname "\.ahk")
+			 return Prozess.ProcessID
 
-; First pass swaps out literal strings so we can parse the markup easily
-	StringGetPos, z, str, %quot% ; initial seek
-	while !ErrorLevel
-	{
-		; Look for the non-literal quote that ends this string. Encode literal backslashes as '\u005C' because the
-		; '\u..' entities are decoded last and that prevents literal backslashes from borking normal characters
-		StringGetPos, x, str, %quot%,, % z + 1
-		while !ErrorLevel
-		{
-			StringMid, key, str, z + 2, x - z - 1
-			StringReplace, key, key, \\, \u005C, A
-			If SubStr( key, 0 ) != "\"
-				Break
-			StringGetPos, x, str, %quot%,, % x + 1
-		}
-	;	StringReplace, str, str, %quot%%t%%quot%, %quot% ; this might corrupt the string
-		str := ( z ? SubStr( str, 1, z ) : "" ) quot SubStr( str, x + 2 ) ; this won't
+return 0
+}
 
-	; Decode entities
-		StringReplace, key, key, \%quot%, %quot%, A
-		StringReplace, key, key, \b, % Chr(08), A
-		StringReplace, key, key, \t, % A_Tab, A
-		StringReplace, key, key, \n, `n, A
-		StringReplace, key, key, \f, % Chr(12), A
-		StringReplace, key, key, \r, `r, A
-		StringReplace, key, key, \/, /, A
-		while y := InStr( key, "\u", 0, y + 1 )
-			if ( A_IsUnicode || Abs( "0x" SubStr( key, y + 2, 4 ) ) < 0x100 )
-				key := ( y = 1 ? "" : SubStr( key, 1, y - 1 ) ) Chr( "0x" SubStr( key, y + 2, 4 ) ) SubStr( key, y + 6 )
+GetAppImagePath(appname) {
 
-		literals.insert(key)
+	headers:= {	"DISPLAYNAME"                  	: 1
+					,	"VERSION"                         	: 2
+					, 	"PUBLISHER"             	         	: 3
+					, 	"PRODUCTID"                    	: 4
+					, 	"REGISTEREDOWNER"        	: 5
+					, 	"REGISTEREDCOMPANY"    	: 6
+					, 	"LANGUAGE"                     	: 7
+					, 	"SUPPORTURL"                    	: 8
+					, 	"SUPPORTTELEPHONE"       	: 9
+					, 	"HELPLINK"                        	: 10
+					, 	"INSTALLLOCATION"          	: 11
+					, 	"INSTALLSOURCE"             	: 12
+					, 	"INSTALLDATE"                  	: 13
+					, 	"CONTACT"                        	: 14
+					, 	"COMMENTS"                    	: 15
+					, 	"IMAGE"                            	: 16
+					, 	"UPDATEINFOURL"            	: 17}
 
-		StringGetPos, z, str, %quot%,, % z + 1 ; seek
-	}
+   appImages := GetAppsInfo({mask: "IMAGE", offset: A_PtrSize*(headers["IMAGE"] - 1) })
+   Loop, Parse, appImages, "`n"
+	If Instr(A_loopField, appname)
+		return A_loopField
 
-	; Second pass parses the markup and builds the object iteratively, swapping placeholders as they are encountered
-	key := isarray := 1
+return ""
+}
 
-	; The outer loop splits the blob into paths at markers where nest level decreases
-	Loop Parse, str, % "]}"
-	{
-		StringReplace, str, A_LoopField, [, [], A ; mark any array open-brackets
+GetAppsInfo(infoType) {
 
-		; This inner loop splits the path into segments at markers that signal nest level increases
-		Loop Parse, str, % "[{"
-		{
-			; The first segment might contain members that belong to the previous object
-			; Otherwise, push the previous object and key to their stacks and start a new object
-			if ( A_Index != 1 )
-			{
-				objs.insert( obj )
-				isarrays.insert( isarray )
-				keys.insert( key )
-				obj := {}
-				isarray := key := Asc( A_LoopField ) = 93
-			}
+	static CLSID_EnumInstalledApps := "{0B124F8F-91F0-11D1-B8B5-006008059382}"
+        , IID_IEnumInstalledApps  := "{1BC752E1-9046-11D1-B8B3-006008059382}"
 
-			; arrrrays are made by pirates and they have index keys
-			if ( isarray )
-			{
-				Loop Parse, A_LoopField, `,, % ws "]"
-					if ( A_LoopField != "" )
-						obj[key++] := A_LoopField = quot ? literals.remove(1) : A_LoopField
-			}
-			; otherwise, parse the segment as key/value pairs
-			else
-			{
-				Loop Parse, A_LoopField, `,
-					Loop Parse, A_LoopField, :, % ws
-						if ( A_Index = 1 )
-                            key := A_LoopField = quot ? literals.remove(1) : A_LoopField
-						else if ( A_Index = 2 && A_LoopField != "" )
-                            obj[key] := A_LoopField = quot ? literals.remove(1) : A_LoopField
-			}
-			nest += A_Index > 1
-		}
+        , DISPLAYNAME := 0x00000001
+        , VERSION := 0x00000002
+        , PUBLISHER := 0x00000004
+        , PRODUCTID := 0x00000008
+        , REGISTEREDOWNER := 0x00000010
+        , REGISTEREDCOMPANY := 0x00000020
+        , LANGUAGE := 0x00000040
+        , SUPPORTURL := 0x00000080
+        , SUPPORTTELEPHONE := 0x00000100
+        , HELPLINK := 0x00000200
+        , INSTALLLOCATION := 0x00000400
+        , INSTALLSOURCE := 0x00000800
+        , INSTALLDATE := 0x00001000
+        , CONTACT := 0x00004000
+        , COMMENTS := 0x00008000
+        , IMAGE := 0x00020000
+        , READMEURL := 0x00040000
+        , UPDATEINFOURL := 0x00080000
 
-		If !--nest
-			Break
+   pEIA := ComObjCreate(CLSID_EnumInstalledApps, IID_IEnumInstalledApps)
 
-		; Insert the newly closed object into the one on top of the stack, then pop the stack
-		pbj := obj
-		obj := objs.remove()
-		obj[key := keys.remove()] := pbj
-		If ( isarray := isarrays.remove() )
-			key++
+   while DllCall(NumGet(NumGet(pEIA+0) + A_PtrSize*3), Ptr, pEIA, PtrP, pINA) = 0  {
+      VarSetCapacity(APPINFODATA, size := 4*2 + A_PtrSize*18, 0)
+      NumPut(size, APPINFODATA)
+      mask := infoType.mask
+      NumPut(%mask%, APPINFODATA, 4)
 
-	}
+      DllCall(NumGet(NumGet(pINA+0) + A_PtrSize*3), Ptr, pINA, Ptr, &APPINFODATA)
+      ObjRelease(pINA)
+      if !(pData := NumGet(APPINFODATA, 8 + infoType.offset))
+         continue
+      res .= StrGet(pData, "UTF-16") . "`n"
+      DllCall("Ole32\CoTaskMemFree", Ptr, pData)  ; not sure, whether it's needed
+   }
+   Return res
+}
 
-	Return obj
-} ; json_toobj( str )
-;11
-IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="") {                                                  	;-- eigene IniRead funktion für Addendum
+;______________________________________________________________________________________________________________________________________________
+; INTERPROZESSCOMMUNICATION (3)
+Receive_WM_COPYDATA(wParam, lParam) {                                                                         	;-- empfängt Nachrichten von anderen Skripten
+
+    StringAddress	:= NumGet(lParam + 2*A_PtrSize)
+	fn_MsgWorker	:= Func("MessageWorker").Bind(StrGet(StringAddress))
+	SetTimer, % fn_MsgWorker, -10
+
+return
+}
+
+Send_WM_COPYDATA(ByRef StringToSend, ScriptID) {                                                            	;-- für die Interskriptkommunikation - keine Netzwerkkommunikation!
+
+    static TimeOutTime            	:= 4000
+
+    Prev_DetectHiddenWindows	:= A_DetectHiddenWindows
+    Prev_TitleMatchMode         	:= A_TitleMatchMode
+    DetectHiddenWindows On
+    SetTitleMatchMode 2
+
+    VarSetCapacity(CopyDataStruct, 3*A_PtrSize, 0)
+    SizeInBytes := (StrLen(StringToSend) + 1) * (A_IsUnicode ? 2 : 1)
+    NumPut(SizeInBytes, CopyDataStruct, A_PtrSize)
+    NumPut(&StringToSend, CopyDataStruct, 2*A_PtrSize)
+
+    SendMessage, 0x4a, 0, &CopyDataStruct,, % "ahk_id " ScriptID,,,, % TimeOutTime ; 0x4a is WM_COPYDATA.
+	eL := ErrorLevel
+
+    DetectHiddenWindows, % Prev_DetectHiddenWindows 	; Restore original setting for the caller.
+    SetTitleMatchMode	 ,  % Prev_TitleMatchMode         	; Same.
+
+return eL  ; Return SendMessage's reply back to our caller.
+}
+
+GetAddendumID() {                                                                                                              	;-- für Interskriptkommunikation
+	Prev_DetectHiddenWindows := A_DetectHiddenWindows
+    Prev_TitleMatchMode := A_TitleMatchMode
+    DetectHiddenWindows On
+    SetTitleMatchMode 2
+	AddendumID := WinExist("Addendum Message Gui ahk_class AutoHotkeyGUI")
+	DetectHiddenWindows 	, % Prev_DetectHiddenWindows  	; Restore original setting for the caller.
+    SetTitleMatchMode     	, % Prev_TitleMatchMode           	; Same.
+return AddendumID
+}
+
+;______________________________________________________________________________________________________________________________________________
+; INI (3)
+IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="", convert:=true) {                             	;-- eigene IniRead funktion für Addendum
 
 	; beim ersten Aufruf der Funktion !nur! Übergabe des ini Pfades mit dem Parameter SectionOrFullFilePath
 	; die Funktion behandelt einen geschriebenen Wert der "ja" oder "nein" ist, als Wahrheitswert, also true oder false
-	; letzte Änderung: 26.08.2020
+	; UTF-16 in UTF-8 Zeichen-Konvertierung
+	; Der Pfad in Addendum.Dir wird einer anderen Variable übergeben. Brauche dann nicht immer ein globales Addendum-Objekt
+	; letzte Änderung: 31.01.2021
 
+		static admDir
 		static WorkIni
 
 	; Arbeitsini Datei wird erkannt wenn der übergebene Parameter einen Pfad ist
 		If RegExMatch(SectionOrFullFilePath, "^[A-Z]\:.*\\")	{
 			If !FileExist(SectionOrFullFilePath)	{
-					MsgBox,, Addendum für AlbisOnWindows, % "Die .ini Datei existiert nicht!`n`n" WorkIni "`n`nDas Skript wird jetzt beendet.", 10
-					ExitApp
+				MsgBox,, % "Addendum für AlbisOnWindows", % "Die .ini Datei existiert nicht!`n`n" WorkIni "`n`nDas Skript wird jetzt beendet.", 10
+				ExitApp
 			}
 			WorkIni := SectionOrFullFilePath
+			If RegExMatch(WorkIni, "[A-Z]\:.*?AlbisOnWindows", rxDir)
+				admDir := rxDir
+			else
+				admDir := Addendum.Dir
 			return WorkIni
 		}
 
 	; Workini ist nicht definiert worden, dann muss das komplette Skript abgebrochen werden
 		If !WorkIni {
-			MsgBox,, Addendum für AlbisOnWindows, % "Bei Aufruf der Funktion IniReadExt`nmuss als erstes der Dateipfad zur ini Datei`nübergeben werden.`n`nDas Skript wird jetzt beendet.", 10
+			MsgBox,, Addendum für AlbisOnWindows, %	"Bei Aufruf von IniReadExt muss als erstes`n"
+																			. 	"der Pfad zur ini Datei übergeben werden.`n"
+																			.	"Das Skript wird jetzt beendet.", 10
 			ExitApp
 		}
 
-	; Section, Key einlesen
+	; Section, Key einlesen, ini Encoding in UTF.8 umwandeln
 		IniRead, OutPutVar, % WorkIni, % SectionOrFullFilePath, % Key
-		OutPutVar := StrReplace(OutPutVar, "Ã¼", "ü")
+		If convert
+			OutPutVar := StrUtf8BytesToText(OutPutVar)
 
 	; Bearbeiten des Wertes vor Rückgabe
 		If InStr(OutPutVar, "ERROR")
@@ -344,17 +281,19 @@ IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="") {                  
 				OutPutVar := DefaultValue
 				IniWrite, % DefaultValue, % WorkIni, % SectionOrFullFilePath, % key
 				If ErrorLevel
-					MsgBox, % "Der Defaultwert <" DefaultValue "> konnte geschrieben werden.`n`n" WorkIni
+					TrayTip, % A_ScriptName, % "Der Defaultwert <" DefaultValue "> konnte geschrieben werden.`n`n[" WorkIni "]", 2
 			}
 			else return "ERROR"
 		else if InStr(OutPutVar, "%AddendumDir%")
-				return StrReplace(OutPutVar, "%AddendumDir%", Addendum.AddendumDir)
+				return StrReplace(OutPutVar, "%AddendumDir%", admDir)
+		else if RegExMatch(OutPutVar, "%\.exe$") && !RegExMatch(OutPutVar, "i)[A-Z]\:\\")
+				return GetAppImagePath(OutPutVar)
 		else if RegExMatch(OutPutVar, "i)^\s*(ja|nein)\s*$", bool)
 				return (bool1= "ja") ? true : false
 
 return Trim(OutPutVar)
 }
-;12
+
 IniAppend(value, filename, section, key) {                                                                                 	;-- vorhandenen Werten weitere Werte hinzufügen
 
 	IniRead, schreib, % filename, % section, % key
@@ -363,68 +302,86 @@ IniAppend(value, filename, section, key) {                                      
 	IniWrite, % schreib . value, % filename, % section, % key	;, UTF-8
 
 }
-;13
-hk(keyboard:=0, mouse:=0, message:="", timeout:=3) {                                                       	;-- Tastatur- und/oder Mauseingriffe abschalten
 
-	;https://www.autohotkey.com/boards/viewtopic.php?f=6&t=33925
-	;!F1::hk(1,1,"Keyboard keys and mouse buttons disabled!`nPress Alt+F2 to enable")   ; Disable all keyboard keys and mouse buttons
-	;!F2::hk(0,0,"Keyboard keys and mouse buttons restored!")         ; Enable all keyboard keys and mouse buttons
-	;!F3::hk(1,0,"Keyboard keys disabled!`nPress Alt+F2 to enable")   ; Disable all keyboard keys (but not mouse buttons)
-	;!F4::hk(0,1,"Mouse buttons disabled!`nPress Alt+F2 to enable")   ; Disable all mouse buttons (but not keyboard keys)
-
-   static AllKeys
-   static optKeyboard, optMouse
-
-   if !AllKeys {
-      s := "||NumpadEnter|Home|End|PgUp|PgDn|Left|Right|Up|Down|Del|Ins|"
-      Loop, 254
-         k := GetKeyName(Format("VK{:0X}", A_Index))
-       , s .= InStr(s, "|" k "|") ? "" : k "|"
-      For k,v in {Control:"Ctrl",Escape:"Esc"}
-         AllKeys := StrReplace(s, k, v)
-      AllKeys := StrSplit(Trim(AllKeys, "|"), "|")
-   }
-   ;------------------
-   For k,v in AllKeys {
-      IsMouseButton := Instr(v, "Wheel") || Instr(v, "Button")
-      Hotkey, *%v%, Block_Input, % (keyboard && !IsMouseButton) || (mouse && IsMouseButton) ? "On" : "Off"
-   }
-   if (StrLen(message) > 0) {
-      Progress, B1 M FS12 ZH0, %message%
-	  optKeyboard	:= keyboard
-	  optMouse    	:= mouse
-      SetTimer, HkTimeoutTimer, % -1000*timeout
-   }
-   else
-      Progress, Off
-
-Block_Input:
-Return
-
-hkTimeoutTimer:
-
-   Progress, Off
-   If (optKeyboard=1) || (optMouse=1)
-		hk(0, 0, "Die Sperrung des Nutzereingriffes ist aufgrund des übergebenen Zeitintervalles aufgehoben worden!" )
-
-Return
+StrUtf8BytesToText(vUtf8) {                                                                                                       	;-- Umwandeln von Text aus .ini Dateien in UTF-8
+	if A_IsUnicode 	{
+		VarSetCapacity(vUtf8X, StrPut(vUtf8, "CP0"))
+		StrPut(vUtf8, &vUtf8X, "CP0")
+		return StrGet(&vUtf8X, "UTF-8")
+	} else
+		return StrGet(&vUtf8, "UTF-8")
 }
-;14
-ErrorBox(ErrorString, CallingScript:="", Screenshot:=false) {                                                       	;-- eine Funktion um Daten ins Fehlerlogbuch zu schreiben
 
-	;Fehlerlogbuch V1.0 : Verzeichnis - logs'n'data\ErrorLogs\Errorbox.txt
-	;Screenshot kann eine Zahl>0 sein für den jeweiligen Monitor oder "All" dann macht er einen Screenshot von allen Monitoren des Clients
-	logpath:= AddendumDir "\logs'n'data\ErrorLogs"
+;______________________________________________________________________________________________________________________________________________
+; MESSAGEBOX (2)
+KurzePause(Pausenzeit:=5) {                                                                                                   	;-- kurze Pause (Debug Hilfe)
 
-	Zeitstempel:=  TimeCode(1) . " | "
-	Computer:= A_ComputerName . " | "
-	If (CallingScript="")
-			CallingScript:= A_ScriptName
-	CallingScript.= " | "
+	MsgBox, 0x1024, % "Kurze Pause", % "MACH WEITER !!!", % Pausenzeit
+	IfMsgBox, No
+		return 0
 
-	FileAppend, % Zeitstempel Computer Skript SC ErrorString "`n", % logpath "\Errorbox.txt"
-
+return 1
 }
+
+Weitermachen(Message="", Title="Guck!", TimeOut=0) {                                                          	;-- weiter oder abbrechen (Debug Hilfe)
+
+	msg := StrLen(Message) > 0  ? Message "`n" : "Weiter oder Abbrechen?"
+	tout	:= TimeOut ? TimeOut : ""
+	MsgBox, 0x1021, % Title, % msg, % tout
+	IfMsgBox, Cancel
+		return 0
+
+return 1
+}
+:*R:.wm::If !Weitermachen()`nreturn 99
+
+;______________________________________________________________________________________________________________________________________________
+; DATEIEN (4)
+FileIsLocked(FullFilePath)  {                                                                                                       	;-- ist die Datei gesperrt?
+
+	file	:= FileOpen(FullFilePath, "rw")
+	LE		:= A_LastError
+	iO 	:= IsObject(file)
+	If iO
+		file.Close()
+
+return LE = 32 ? true : false
+}
+
+FilePathCreate(path) {                                                                                                              	;-- erstellt einen Dateipfad falls dieser noch nicht existiert
+
+	If !FilePathExist(path) {
+		FileCreateDir, % path
+		If ErrorLevel
+			return 0
+		else
+			return 1
+	}
+
+return 1
+}
+
+FilePathExist(path) {                                                                                                                 	;-- prüft ob ein Dateipfad vorhanden ist
+	If !InStr(FileExist(path "\"), "D")
+		return 0
+return 1
+}
+
+isFullFilePath(path) {                                                                                                               	;-- prüft Pfadstring auf die Angabe eines Laufwerkes
+	If RegExMatch(path, "[A-Z]\:\\")
+		return 1
+return 0
+}
+
+;______________________________________________________________________________________________________________________________________________
+; SONSTIGES (1)
+IsRemoteSession() {                                                                                                                 	;-- true oder false wenn eine RemoteSession besteht
+	SysGet, SessionRS, 4096
+	If (SessionRS <> 0)
+		return true
+return false
+}
+
 
 
 

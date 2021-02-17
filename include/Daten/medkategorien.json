@@ -1,14 +1,10 @@
 ﻿{
     "Actraphane": {
-        "ingredient": "",
+        "ingredient": " Insulin (human), normal und I. Isophan (human)",
         "use": "Diabetes (Insulin)"
     },
     "Actrapid": {
         "ingredient": "Insulin (human), normal",
-        "use": "Diabetes"
-    },
-    "Actrapid Penfill": {
-        "ingredient": "Insulin (human)",
         "use": "Diabetes"
     },
     "Aldactone": {
@@ -43,16 +39,28 @@
         "ingredient": "Amlodipin",
         "use": "Blutdruck"
     },
+    "Amlodipin AWD": {
+        "ingredient": "Amlodipin",
+        "use": "Bluthochdruck"
+    },
+    "Ampho Moronal": {
+        "ingredient": "Amphotericin B",
+        "use": "Candida/Soor"
+    },
     "Anoro": {
         "ingredient": "",
         "use": "Lunge - COPD"
     },
+    "Arcoxia": {
+        "ingredient": "Etoricoxib",
+        "use": "Schmerzen"
+    },
     "Ass": {
-        "ingredient": "Acetylsalicyls\u00e4ure",
+        "ingredient": "Acetylsalicylsäure",
         "use": "Gerinnung"
     },
     "Ass Protect": {
-        "ingredient": "Acetylsalicyls\u00e4ure",
+        "ingredient": "Acetylsalicylsäure",
         "use": "Gerinnung"
     },
     "Atmadisc Forte": {
@@ -63,6 +71,10 @@
         "ingredient": "Atorvastatin",
         "use": "Cholesterin"
     },
+    "Azithromycin": {
+        "ingredient": "Azithromycin",
+        "use": "mit Antibiotika therapierbarer Infekt"
+    },
     "Baclofen": {
         "ingredient": "Baclofen",
         "use": "Spastik"
@@ -70,6 +82,10 @@
     "Beloc": {
         "ingredient": "Metoprololsuccinat",
         "use": "Blutdruck"
+    },
+    "Beloc Zok": {
+        "ingredient": "Metoprolol",
+        "use": "Bluthochdruck"
     },
     "Berlinsulin H Basal": {
         "ingredient": "Insulin (human), normal",
@@ -85,23 +101,27 @@
     },
     "Betahistin": {
         "ingredient": "Betahistin",
-        "use": "Schwindelanf\u00e4lle"
+        "use": "Schwindelanfälle"
     },
     "Betmiga": {
         "ingredient": "Mirabegon",
-        "use": "Blasenentleerungsst\u00f6rung"
+        "use": "Blasenentleerungsstörung"
     },
     "Biso": {
         "ingredient": "Bisoprolol",
-        "use": "Blutdruck"
+        "use": "Blutdruck/Herzrhythmus"
     },
     "BisoHEXAL": {
         "ingredient": "Bisoprolol",
-        "use": "Blutdruck"
+        "use": "Blutdruck/Herzrhythmus"
     },
     "Bisoprolol": {
         "ingredient": "Bisoprolol",
         "use": "Blutdruck/Herzrhythmus"
+    },
+    "Bisoprolol Rat": {
+        "ingredient": "Bisoprolol",
+        "use": "Bluthochdruck"
     },
     "Blopress": {
         "ingredient": "Candesartan",
@@ -139,6 +159,10 @@
         "ingredient": "Betametason",
         "use": "Allergie (Kortison)"
     },
+    "Celestamine N": {
+        "ingredient": "Celestamine",
+        "use": "Wespengiftallergie"
+    },
     "Cipralex": {
         "ingredient": "Citalopram",
         "use": "Stimmung"
@@ -163,6 +187,14 @@
         "ingredient": "Colecalciferol",
         "use": "Vitamin D"
     },
+    "Colestyramin": {
+        "ingredient": "Colestyramin 20",
+        "use": "Galle"
+    },
+    "Cymbalta": {
+        "ingredient": "Duloxetin",
+        "use": "Psyche"
+    },
     "Decoderm": {
         "ingredient": "Flupredniden",
         "use": "Haut/Kortison"
@@ -181,19 +213,35 @@
     },
     "Dorzocomp": {
         "ingredient": "Dorzolamid",
-        "use": "gr\u00fcner Star"
+        "use": "grüner Star"
+    },
+    "Duodart": {
+        "ingredient": "Dutasterid und Tamsulosin",
+        "use": "Prostata"
     },
     "Ebrantil": {
         "ingredient": "Urapidil",
-        "use": "Bluthochdruck, ausgepr\u00e4gt"
+        "use": "Bluthochdruck, ausgeprägt"
     },
     "Eliquis": {
         "ingredient": "Apixaban",
         "use": "Gerinnung"
     },
+    "Elontril": {
+        "ingredient": "Bupropion",
+        "use": "Psyche"
+    },
+    "Enalagamma": {
+        "ingredient": "Enalapril",
+        "use": "Buthochdruck"
+    },
     "Enalapril": {
         "ingredient": "Enalapril",
         "use": "Blutdruck"
+    },
+    "Enalapril Comp": {
+        "ingredient": "Enalapril",
+        "use": "Bluthochdruck"
     },
     "Escitalopram": {
         "ingredient": "Escitalopram",
@@ -205,7 +253,7 @@
     },
     "Euthyrox": {
         "ingredient": "L-Thyroxin",
-        "use": "Schilddr\u00fcse"
+        "use": "Schilddrüse"
     },
     "Exforge": {
         "ingredient": "Valsartan u. Amlodipin",
@@ -215,9 +263,21 @@
         "ingredient": "Valsartan und Amlodipin und HCT",
         "use": "Blutdruck"
     },
+    "Ezetimib": {
+        "ingredient": "Ezetimib",
+        "use": "Cholesterin"
+    },
+    "Ezetimib Micro": {
+        "ingredient": "Ezetimib",
+        "use": "Cholesterin"
+    },
     "Falithrom": {
         "ingredient": "Phenprocoumon",
         "use": "Gerinnung"
+    },
+    "Fastjekt Autoinjektor": {
+        "ingredient": "Epinephrin",
+        "use": "Wespengiftallergie"
     },
     "Fenofibrat": {
         "ingredient": "Fenofibrat",
@@ -226,6 +286,10 @@
     "Ferro": {
         "ingredient": "Eisen(II)-Ion",
         "use": "Eisen"
+    },
+    "Ferro Sanol": {
+        "ingredient": "Eisen-(III)-Ion",
+        "use": "Blutarmut/Eisenmangel"
     },
     "Fexofenaderm": {
         "ingredient": "Fexofenadin",
@@ -240,12 +304,20 @@
         "use": "Cholesterin"
     },
     "Folsaeure": {
-        "ingredient": "Fols\u00e4ure",
-        "use": "Fols\u00e4ure Mangelzust\u00e4nde"
+        "ingredient": "Folsäure",
+        "use": "Folsäure Mangelzustände"
     },
     "Formoterol": {
         "ingredient": "Formoterol",
         "use": "Asthma/COPD"
+    },
+    "Formoterol Easyhaler": {
+        "ingredient": "Formoterol",
+        "use": "Asthma/COPD"
+    },
+    "Formoterol-CT": {
+        "ingredient": "Formoterol",
+        "use": "Asthma/chron.Bronchitis"
     },
     "Forxiga": {
         "ingredient": "Dapagliflozin",
@@ -268,10 +340,18 @@
         "use": "Schmerzen"
     },
     "Gingium": {
-        "ingredient": "Gingkobl\u00e4tter Trockenextrakt",
+        "ingredient": "Gingkoblätter Trockenextrakt",
         "use": "Demenz"
     },
+    "Glibenclamid SANDOZ": {
+        "ingredient": "Glibenclamid",
+        "use": "Diabetes"
+    },
     "Glimepirid": {
+        "ingredient": "Glimepirid",
+        "use": "Diabetes"
+    },
+    "Glimepirid Winthrop": {
         "ingredient": "Glimepirid",
         "use": "Diabetes"
     },
@@ -281,7 +361,7 @@
     },
     "Gynokadin": {
         "ingredient": "Estradiol",
-        "use": "Gyn\u00e4kologisch"
+        "use": "Gynäkologisch"
     },
     "Hct": {
         "ingredient": "Hydrochlorothiazid",
@@ -319,12 +399,20 @@
         "ingredient": "Indapamid",
         "use": "Blutdruck (Wassertbl.)"
     },
+    "Insuman Basal": {
+        "ingredient": "Insulin Isophan (human)",
+        "use": "Diabetes"
+    },
     "Janumet": {
         "ingredient": "Metformin u. Sitagliptin",
         "use": "Diabetes"
     },
     "Januvia": {
         "ingredient": "Sitaglitpin",
+        "use": "Diabetes"
+    },
+    "Jardiance": {
+        "ingredient": "Empagliflozin",
         "use": "Diabetes"
     },
     "Karvezide": {
@@ -341,19 +429,27 @@
     },
     "L Thyrox": {
         "ingredient": "Levothyroxin",
-        "use": "Schilddr\u00fcse"
+        "use": "Schilddrüse"
     },
     "L Thyroxin": {
         "ingredient": "Levothyroxin",
-        "use": "Schilddr\u00fcse"
+        "use": "Schilddrüse"
     },
     "L-Thyroxin": {
         "ingredient": "Levothyroxin",
-        "use": "Schilddr\u00fcse"
+        "use": "Schilddrüse"
+    },
+    "L-Thyroxin sto": {
+        "ingredient": "L-Thyroxin",
+        "use": "Schilddrüse"
     },
     "Lantus": {
         "ingredient": "Insulin glargin",
         "use": "Diabetes"
+    },
+    "Latanomed": {
+        "ingredient": "Latanoprost",
+        "use": "Augen"
     },
     "Lercanidipin": {
         "ingredient": "Lercanidipin",
@@ -367,7 +463,7 @@
         "ingredient": "Levetiracetam",
         "use": "Epilepsie"
     },
-    "Levodopa Bens Beta": {
+    "Levodopa Bens": {
         "ingredient": "Levodopa und Decarboxylasehemmer",
         "use": "Parkinson"
     },
@@ -401,11 +497,11 @@
     },
     "Mesala": {
         "ingredient": "Mesalazin",
-        "use": "Darmentz\u00fcndung"
+        "use": "Darmentzündung"
     },
     "Mesalazin": {
         "ingredient": "Mesalazin",
-        "use": "Darmentz\u00fcndung"
+        "use": "Darmentzündung"
     },
     "Metamizol": {
         "ingredient": "Metamizol",
@@ -439,9 +535,13 @@
         "ingredient": "Metoprolol",
         "use": "Blutdruck/Herzrhythmus"
     },
-    "Metoprolol Acino": {
+    "Metoprolol Su": {
+        "ingredient": "Metoprololsuccinat",
+        "use": "Blutdruck / Puls"
+    },
+    "Metoprolol Z": {
         "ingredient": "Metoprolol",
-        "use": "Blutdruck"
+        "use": "Bluthochdruck"
     },
     "Metoprololsu": {
         "ingredient": "Metoprolol",
@@ -459,6 +559,10 @@
         "ingredient": "Mirtazapin",
         "use": "Stimmung"
     },
+    "Morphin": {
+        "ingredient": "Morphin",
+        "use": "Schmerzen"
+    },
     "Movicol": {
         "ingredient": "Macrogol",
         "use": "Stuhlgang"
@@ -473,6 +577,10 @@
     },
     "Nebilet": {
         "ingredient": "Nebivolol",
+        "use": "Blutdruck"
+    },
+    "Nifedipin": {
+        "ingredient": "Nifedipin",
         "use": "Blutdruck"
     },
     "Nitrangin": {
@@ -511,6 +619,10 @@
         "ingredient": "Oxycodon-Hydrochlorid",
         "use": "Schmerzen/Morphin-BTM"
     },
+    "Oxycodon/Naloxon": {
+        "ingredient": "Oxycodon und Naloxon",
+        "use": "Schmerzen [Morphin]"
+    },
     "Palexia": {
         "ingredient": "Tapentadol",
         "use": "Schmerzen"
@@ -531,9 +643,13 @@
         "ingredient": "Pantoprazol",
         "use": "Magen"
     },
+    "Pradaxa": {
+        "ingredient": "Dabigatran",
+        "use": "Gerinnung/VHF"
+    },
     "Prednisolon": {
         "ingredient": "Prednisolon",
-        "use": "Entz\u00fcndung/Kortison"
+        "use": "Entzündung/Kortison"
     },
     "Pregabalin": {
         "ingredient": "Pregabalin",
@@ -549,11 +665,15 @@
     },
     "Progestan": {
         "ingredient": "Progesteron",
-        "use": "Gyn\u00e4kologisch"
+        "use": "Gynäkologisch"
     },
-    "Promethazin-Neurax TEI": {
-        "ingredient": "Preomethazin",
-        "use": "Psyche/Asthmaanfall"
+    "Promethazin-Neurax": {
+        "ingredient": "Promethazin",
+        "use": "Psyche"
+    },
+    "Protaphane Penfill": {
+        "ingredient": "Insulin Isophan",
+        "use": "Diabetes"
     },
     "Rami/Amlodipin": {
         "ingredient": "Ramipril und Amlodipin",
@@ -563,9 +683,17 @@
         "ingredient": "Ramipril und Amlodipin",
         "use": "Bluthochdruck"
     },
+    "Ramilich": {
+        "ingredient": "Ramipril",
+        "use": "Bluthochdruck"
+    },
     "Ramipril": {
         "ingredient": "Ramipril",
         "use": "Blutdruck"
+    },
+    "Ramipril Comp": {
+        "ingredient": "Ramipril/Hydrochlorothiazid",
+        "use": "Hypertonie"
     },
     "Ramipril/Amlo": {
         "ingredient": "Ramipril und Amlodipin",
@@ -597,7 +725,7 @@
     },
     "Rivotril": {
         "ingredient": "Clonazepam",
-        "use": "Unruhezust\u00e4nde"
+        "use": "Unruhezustände"
     },
     "Rolufta": {
         "ingredient": "Umeclidinium bromid",
@@ -623,7 +751,7 @@
     },
     "Sativex": {
         "ingredient": "Cannabinoide",
-        "use": "Muskelkr\u00e4mpfe bei neurologischer Grunderkrankung"
+        "use": "Muskelkrämpfe bei neurologischer Grunderkrankung"
     },
     "Sertralin": {
         "ingredient": "Sertralin",
@@ -637,17 +765,33 @@
         "ingredient": "Simvastatin",
         "use": "Cholesterin"
     },
+    "Siofor": {
+        "ingredient": "Metformin",
+        "use": "Diabetes"
+    },
+    "Solaraze": {
+        "ingredient": "Diclofenac, Natriumsalz",
+        "use": "Hautveränderungen"
+    },
     "Solifenacin": {
         "ingredient": "Solifenacin",
-        "use": "Blasenentleerungsst\u00f6rung"
+        "use": "Blasenentleerungsstörung"
     },
     "Spiriva": {
         "ingredient": "Tiotropiumbromid",
         "use": "COPD"
     },
+    "Spiriva Respimat": {
+        "ingredient": "Tiotropiumbromid",
+        "use": "chron.Bronchitis"
+    },
     "Spironolacton": {
         "ingredient": "Spironolacton",
         "use": "Wassertbl."
+    },
+    "Spironolacton Accord": {
+        "ingredient": "Spironolacton",
+        "use": "Herzschwäche"
     },
     "Tamox": {
         "ingredient": "Tamoxifen",
@@ -671,7 +815,7 @@
     },
     "Tavu": {
         "ingredient": "Timolol und Latanoprost",
-        "use": "gr\u00fcner Star"
+        "use": "grüner Star"
     },
     "Telmisartan": {
         "ingredient": "Telmisartan",
@@ -687,7 +831,7 @@
     },
     "Tilidin": {
         "ingredient": "Tilidin/Naloxon",
-        "remark": "Gefahr der Gew\u00f6hnung/Abh\u00e4ngigkeit!",
+        "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
         "use": "Schmerzen (Morphin)"
     },
     "Torasemid": {
@@ -696,12 +840,12 @@
     },
     "Tramadol": {
         "ingredient": "Tramadol",
-        "remark": "Gefahr der Gew\u00f6hnung/Abh\u00e4ngigkeit!",
+        "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
         "use": "Schmerzen (Morphin)"
     },
     "Tramal": {
         "ingredient": "Tramadol",
-        "remark": "Gefahr der Gew\u00f6hnung/Abh\u00e4ngigkeit!",
+        "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
         "use": "Schmerzen (Morphin)"
     },
     "Trulicity": {
@@ -710,7 +854,7 @@
     },
     "Trusopt": {
         "ingredient": "Dorzolamid",
-        "use": "Auge (gr\u00fcner Star)"
+        "use": "Auge (grüner Star)"
     },
     "Ultibro": {
         "ingredient": "Indacaterol und Glycopyrronium bromid",
@@ -746,7 +890,7 @@
     },
     "Vitamin B12": {
         "ingredient": "Cyanocobalamin",
-        "use": "Perniziosa (Vitamin B12 Mangelzust\u00e4nde)"
+        "use": "Perniziosa (Vitamin B12 Mangelzustände)"
     },
     "Vocado": {
         "ingredient": "Olmesartan und Amlodipin",
@@ -766,11 +910,11 @@
     },
     "Zolpidem": {
         "ingredient": "Zolpidem",
-        "remark": "Gefahr der Gew\u00f6hnung/Abh\u00e4ngigkeit!",
+        "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
         "use": "Schlaf"
     },
     "Zostex": {
         "ingredient": "Brivudin",
-        "use": "G\u00fcrtelrose/ausgepr\u00e4gter Lippenherpes"
+        "use": "Gürtelrose/ausgeprägter Lippenherpes"
     }
 }

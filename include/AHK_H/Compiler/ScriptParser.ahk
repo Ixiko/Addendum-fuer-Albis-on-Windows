@@ -9,16 +9,16 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList := "", FirstS
 		FirstScriptDir := ScriptDir
 		IsFirstScript := true
 		Options := { comm: ";", esc: "``", directives: [] }
-		
+
 		OldWorkingDir := A_WorkingDir
 		SetWorkingDir, %ScriptDir%
 	}
-	
+
 	If !FileExist(AhkScript)
 		if !iOption
 			Util_Error((IsFirstScript ? "Script" : "#include") " file """ AhkScript """ cannot be opened.")
 		else return
-	
+
 	cmtBlock := false, contSection := false, ignoreSection := false
 	Loop,Read, %AhkScript%
 	{
@@ -61,7 +61,7 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList := "", FirstS
 				contSection := true
 			else if StrStartsWith(tline, ")")
 				contSection := false
-			
+
 			tline := RegExReplace(tline, "\s+" RegExEscape(Options.comm) ".*$", "")
 			if !contSection && RegExMatch(tline, "i)^#Include(Again)?[ \t]*[, \t]?\s+(.*)$", o)
 			{
@@ -70,7 +70,7 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList := "", FirstS
 				IncludeFile := o2
 				if RegExMatch(IncludeFile, "\*[iI]\s+?(.*)", o)
 					IgnoreErrors := true, IncludeFile := Trim(o1)
-				
+
 				if RegExMatch(IncludeFile, "^<(.+)>$", o)
 				{
 					if IncFile2 := FindLibraryFile(o1, FirstScriptDir)
@@ -79,22 +79,22 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList := "", FirstS
 						goto _skip_findfile
 					}
 				}
-				
+
 				StringReplace, IncludeFile, IncludeFile, `%A_ScriptDir`%, %FirstScriptDir%, All
 				StringReplace, IncludeFile, IncludeFile, `%A_AppData`%, %A_AppData%, All
 				StringReplace, IncludeFile, IncludeFile, `%A_AppDataCommon`%, %A_AppDataCommon%, All
 				StringReplace, IncludeFile, IncludeFile, `%A_LineFile`%, %AhkScript%, All
-				
+
 				if InStr(FileExist(IncludeFile), "D")
 				{
 					SetWorkingDir, %IncludeFile%
 					continue
 				}
-				
+
 				_skip_findfile:
-				
+
 				IncludeFile := Util_GetFullPath(IncludeFile)
-				
+
 				AlreadyIncluded := false
 				for k,v in FileList
 				if (v = IncludeFile)
@@ -133,7 +133,7 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList := "", FirstS
 		}else if StrStartsWith(tline, "*/")
 			cmtBlock := false
 	}
-	
+
 	Loop, % !!IsFirstScript ; equivalent to "if IsFirstScript" except you can break from the block
 	{
 		SB_SetText("Auto-including any functions called from a library...")
@@ -150,7 +150,7 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList := "", FirstS
 		FileAppend,%ScriptText%,%ilibfile%.script, UTF-8
 		RunWait, % """" comspec """ /C """"" AhkPath """ /iLib """ ilibfile """ /ErrorStdOut /E """ ilibfile ".script"" 2>""" ilibfile ".error""""", %FirstScriptDir%, HIDE UseErrorLevel
 		if (ErrorLevel = 2)
-		{		
+		{
 			FileRead,script_error,%ilibfile%.error
 			FileDelete, %ilibfile%.error
 			line_error:=SubStr(line_error:=SubStr(script_error,StrLen(ilibfile) + 10),1,InStr(line_error,")")-1)
@@ -170,45 +170,46 @@ PreprocessScript(ByRef ScriptText, AhkScript, ExtraFiles, FileList := "", FirstS
 		FileDelete, %ilibfile%.error
 		StringTrimRight, ScriptText, ScriptText, 1 ; remove trailing newline
 	}
-	
+
 	if OldWorkingDir
 		SetWorkingDir, %OldWorkingDir%
-	
+
 	if IsFirstScript
 		return Options.directives
 }
 
-FindLibraryFile(name, ScriptDir)
-{
+FindLibraryFile(name, ScriptDir){
 	FileGetShortCut,%A_AhkPath%\lib.lnk,target
 	libs := [ScriptDir "\Lib", A_MyDocuments "\AutoHotkey\Lib", A_ScriptDir "\..\Lib", A_AhkPath "\Lib",A_ScriptDir "\..\..\Lib",target]
 	if p := InStr(name, "_")
 		name_lib := SubStr(name, 1, p-1)
-	
-	for each,lib in libs
-	{
+
+	for each,lib in libs	{
 		file := lib "\" name ".ahk"
 		If FileExist(file)
 			return file
-		
+
 		if !p
 			continue
-		
+
 		file := lib "\" name_lib ".ahk"
 		If FileExist(file)
 			return file
 	}
 }
 
-StrStartsWith(ByRef v, ByRef w)
-{
+StrStartsWith(ByRef v, ByRef w){
 	return SubStr(v, 1, StrLen(w)) = w
 }
 
-RegExEscape(t)
-{
+RegExEscape(t){
 	static _ := "\.*?+[{|()^$"
 	Loop, Parse, _
 		StringReplace, t, t, %A_LoopField%, \%A_LoopField%, All
 	return t
 }
+
+
+
+
+

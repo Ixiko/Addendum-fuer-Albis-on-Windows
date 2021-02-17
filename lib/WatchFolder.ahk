@@ -49,9 +49,9 @@
 ;     FILE_NOTIFY_CHANGE_SECURITY      = 256	(0x00000100) : Notify about any security-descriptor change.
 ;     FILE_NOTIFY_INFORMATION        											msdn.microsoft.com/en-us/library/aa364391(v=vs.85).aspx
 ;     FILE_ACTION_ADDED                        	= 1   	(0x00000001) : The file was added to the directory.
-;     FILE_ACTION_REMOVED                    	= 2   	(0x00000002) : The file was removed from the directory.
+;     FILE_ACTION_REMOVED                   	= 2   	(0x00000002) : The file was removed from the directory.
 ;     FILE_ACTION_MODIFIED                   	= 3   	(0x00000003) : The file was modified.
-;     FILE_ACTION_RENAMED                    	= 4   	(0x00000004) : The file was renamed (not defined by Microsoft).
+;     FILE_ACTION_RENAMED                   	= 4   	(0x00000004) : The file was renamed (not defined by Microsoft).
 ;     FILE_ACTION_RENAMED_OLD_NAME	= 4   	(0x00000004) : The file was renamed and this is the old name.
 ;     FILE_ACTION_RENAMED_NEW_NAME= 5   	(0x00000005) : The file was renamed and this is the new name.
 ;     GetOverlappedResult            													msdn.microsoft.com/en-us/library/ms683209(v=vs.85).aspx
@@ -85,16 +85,13 @@ WatchFolder(Folder, UserFunc, SubTree := False, Watch := 0x03) {
    ; ======================================================
    If (Folder = TimerID)    { ; called by timer
 
-		  If (ObjCount := EventArray.Length()) && !Paused
-		  {
+		  If (ObjCount := EventArray.Length()) && !Paused		  {
 			 ObjIndex := DllCall("WaitForMultipleObjects", "UInt", ObjCount, "Ptr", &WaitObjects, "Int", 0, "UInt", 0, "UInt")
-			 While (ObjIndex >= 0) && (ObjIndex < ObjCount)
-			{
+			 While (ObjIndex >= 0) && (ObjIndex < ObjCount)			{
 					FolderName := WatchedFolders[ObjIndex + 1]
 					D := WatchedFolders[FolderName]
 
-					If DllCall("GetOverlappedResult", "Ptr", D.Handle, "Ptr", D.OVLAddr, "UIntP", BytesRead, "Int", True)
-					{
+					If DllCall("GetOverlappedResult", "Ptr", D.Handle, "Ptr", D.OVLAddr, "UIntP", BytesRead, "Int", True)					{
 						   Changes := []
 						   FNIAddr := D.FNIAddr
 						   FNIMax := FNIAddr + BytesRead

@@ -1,7 +1,6 @@
 ﻿BEACHTEN SIE FOLGENDES VOR DEM ERSTEN AUSFÜHREN VON ADDENDUM
 
-es müssen derzeit noch 2 Schritte manuell durchgeführt werden, da ich bisher kein funktionierendes Installationsskript
-entwerfen konnte.
+es müssen derzeit noch 2 Schritte manuell durchgeführt werden, da ich bisher kein Installationsskript entworfen habe.
 
 1. kopieren Sie die die Fonts Futura und jkpAwesome (\support -Verzeichnis) in das C:\Windows\Fonts Verzeichnis
 2. kopieren Sie die vcruntime140.dll (\include\Autohotkey_H\x64w) nach C:\Windows\System32 Verzeichnis (Autohotkey_H kann sonst nicht gestartet werden)

@@ -1,3 +1,4 @@
+AlbisAbrechnungsscheinAktuell() \naktuelle Art des Abrechnungsscheines (Abrechnung, Privat, Notfall, Überweisung ...)
 AlbisAbrechnungsscheinVorhanden(Quartal) \nFunktion nutzt das ComboBox1 Element auf der Hauptoberfläche
 AlbisAbrechnungVorbereiten(Set) \nbearbeitet den Dialog Abrechnung vorbereiten
 AlbisActivate(waitingtime) \naktiviert das Albisfenster\nwaitingtime = maximale Wartezeit in Sekunden bis Albis aktiviert sein sollte
@@ -7,14 +8,25 @@ AlbisAkteGeoeffnet(Nachname, Vorname, GebDatum="") \nkontrolliert ob die Akte mi
 AlbisAkteOeffnen(Name_or_ID_or_BD) \nöffnet eine Patientenakte über Name, ID oder Geburtsdatum
 AlbisAkteSchliessen(CaseTitle:="") \nFunktion schließt eine Patientenakte und überprüft ob diese wirklich geschlossen wurde
 AlbisAktuellePatID() \nliest aus dem Fenstertitel nur die PatientenID aus
+AlbisAutoLogin(MsgBoxZeit:=10) \nloggt den jeweiligen Nutzer automatisch ein
+AlbisBehandlungsliste([Options:=""]) \nPrivat/Behandlungsliste anzeigen
+AlbisCaveAddRows(hCave, RowsToAdd) \nfügt Cave! von neue Zeilen hinzu
+AlbisCaveGetCellFocus(hCave) \nermittelt die aktuell ausgewählte Reihe und Spalte
+AlbisCaveSetCellFocus(hCave, row, column) \nsetzt den Eingabefokus in Zeile und Spalte
+AlbisCaveUnFocus(hCave) \nentfernt den Eingabefokus
+AlbisCloseLastActivePopups(AlbisWinID) \nschließt alle PopUp-Fenster bis keines mehr da ist
+AlbisClosePopups() \nschließt alle PopUp-Fenster in Albis
+AlbisCopyCut() \nspeichert alles was mit Strg+c oder Strg+x in Albis kopiert wird in eine Datei
 AlbisCurrentPatient()	\nsucht den aktuellen Patientennamen raus
 AlbisDateiAnzeigen(FullFilePath) \nöffnet eine Datei zur Ansicht in Albis, überprüft auf das korrekte Dateiformat
 AlbisDateiSpeichern(FullFilePath, overwrite:= false) \nspeichert von Albis erstellte Auswertungen, Protokolle, Statistiken oder Listen
+AlbisDefaultLogin(key) \nliest die Default User und Passwordeinstellung aus und gibt ein Array zurück (als Class wäre das auch nicht schlecht)
 AlbisDialogOeffnePatient(command:="invoke", pattern:="" ) \nstartet den Dialog zum Öffnen einer Patientenakte per Tastatureingabe
 AlbisDruckeBlankoFormular(Art [, BnPlus:=0]) \nFunktion zum Ausdrucken von Blankoformularen
 AlbisDruckeLaborblatt(Spalten, Drucker:="", SaveDir:="") \nAutomatisiertes Drucken eines Laborbefundes
 AlbisDruckePatientenAusweis() \ndruckt den Patientenausweis
-AlbisErstelleTagesprotokoll(Periode:="", SaveFolder:="", CloseProtokoll:=1) \Erstellen und Speichern von Tagesprotokollen
+AlbisIsElevated() \nstellt fest ob Albis mit UAC Virtualisierung gestartet wurde
+AlbisErstelleTagesprotokoll(Periode:="", SaveFolder:="", CloseProtokoll:=1) \nErstellen und Speichern von Tagesprotokollen
 AlbisErstelleZiffernStatistik(Quartal:="aktuell", Zeitraum:="", Tag:="", Arztwahl:="", SaveToFile:="", CloseStatistik:=true) \nErstellen von Ziffernstatistiken
 AlbisExist() \nschaut nach ob Albis läuft, gibt wahr oder falsch zurück
 AlbisFehlendeLkoEintragen(oGB, [FilePathToObject:=""]) \nüberträgt Daten eines im Abrechnungshelfer erstellten Protokolls nach Albis
@@ -39,11 +51,16 @@ AlbisGetListView(WinTitle, WinClass, Colum) \nListview eines Fenster auslesen
 AlbisGetOpenMDITabs() \ngibt ein Array mit den Bezeichnern aller Tabs des Dokumentenfensters zurück
 AlbisHautkrebsScreening(Pathologie:="opb", PlusGVU:=true, WinClose:=true ) \nbefüllt das eHautkrebsScreening (nicht Dermatologen) Formular
 AlbisHeilMittelKatologPosition() \nverschiebt den Heilmittelkatalog in die Mitte des aktuellen Monitors
+AlbisHotKeyHilfe([AddendumHelp:="", PraxomatHelp:=""]) \nblendet die aktuellen zusätzlichen Hotkeys in der Albisstatusbar ein
 AlbisInBehandlungSetzen() \nPraxomat Funktion - setzt den Pat. im Wartezimmer in Behandlung und danach wird der Timer gestartet
 AlbisIsBlocked([AlbisWinID, autoclose]) \nautoclose=0 nur Rückgabe eines Objektes, 1 schliessen aller blockierenden Fenster nach Rückfrage, 2 schliessen ohne Rückfrage
+AlbisKarteikartenAnsicht(PatientFensterCB) \nverändert die akutelle Auswahl der Combobox in der PatientFensterToolbar (Karteikarte,Abrechnung,Laborblatt...)
+AlbisKarteikarteAktiv() \ngibt true zurück wenn eine Karteikarte angezeigt wird
 AlbisKarteikarteAktivieren() \naktiviert die Karteikarte
 AlbisKarteikartenFocusSetzen(Control) \nbeste Funktion für den Schreibzugriff auf die Karteikarte
+AlbisKopiekosten(Kopiepreis) \nberechnet Kopiekosten und schreibt einen GOÄ fähigen Text in die Karteikarte oder Privatschein
 AlbisLaborAuswählen(Laborname) \nfür das Fenster Labor auswählen
+AlbisLaborblattExport(PrintRange, SaveAs="", Printer="Microsoft Print to PDF") \nPDF Export des Laborblattes
 AlbisLaborDaten()	\nbearbeitet das "Labordaten importieren" Fenster und öffnet im Anschluss das Laborbuch
 AlbisLaborDatenholen() \nöffnet das Fenster Daten holen
 AlbisLeseProgrammDatum() \nliest das eingestellte Programmdatum aus
@@ -71,10 +88,13 @@ AlbisRezeptFelderLoeschen(hMuster16) \n(primär) Hilfsfunktion für die Rezepthe
 AlbisRezeptHelfer(tag, Schalter) \n(Hilfsmittel-/Kassen-/Btm-) Rezepte schreiben ohne eine Liste aufrufen zu müssen
 AlbisRezeptHelferGui(dbfile) \nSchnellrezept - Standardrezepte für bestimmte Diagnosen/Hilfsmittel mit einem Klick erstellen
 AlbisRezeptSchalterLoeschen(hMuster16) \n(primär) Hilfsfunktion für die Rezepthelfer Gui
+AlbisSaveAsPDF(filePath, printer="Microsoft Print to PDF", fromFunc="") \nAusdruck/Speichern per PDF-Druckertreiber
 AlbisSchliesseProgrammDatum() \nschließt das Programmdatumsfenster
 AlbisSchreibeInKarteikarte([ArztKennung="", Datum="", Kuerzel="", Eintrag=""]) \nschreibt eine gesamte Zeile in die Karteikarte
 AlbisSchreibeLkMitFaktor(Leistungskomplex [, StandardFaktor:=""]) \nVereinfachung für das Senden von Leistungskomplexen per Hotstring
+AlbisSchreibeSequenz(sequenz) \nBlöcke von verschiedenen Kürzeleintragungen realisieren
 AlbisSendInputLT(kk, inhalt, kk_Ausnahme, kk_voll) \nschreibt die übergebenen Daten in die Patientenakte\nkk - steht für Karteikürzel - am besten nur L mehr nicht für kk, Albis ergänzt je nach Abrechnungsschein zu lko/lkü usw.\ninhalt ist die zugehörige Ziffer, Wert oder der Text der zum Kürzel eingegeben werden muss.
+AlbisSelectAll() \nkompletten Text markieren
 AlbisSetCaveZeile(nr, txt, [NoClose:=false]) \nüberschreibt eine Zeile im cave! von - Fenster\nNoClose = true - das cave!von Fenster nach Abschluß der Funktion nicht geschlossen
 AlbisSetzeProgrammDatum([Datum:=""]) \nstellt das Programmdatum ein\nist Datum leer, wird das aktuelle Tagesdatum eingetragen
 AlbisStatus() \nermittelt ob Albis bereit ist um Befehle zu empfangen und gibt eine Fehlermeldung aus
@@ -86,28 +106,144 @@ AlbisVersArt() \nliest die Versichertenart aus der Titelzeile des Albisfenster
 AlbisZeigeKarteikarte() \nschaltet zur Karteikartenansicht
 AlbisZeigeLaborBlatt() \nschaltet auf das Laborblatt
 
+CheckAISConnector() \nsieht nach ob der AIS Connector (Laborverbindungsprogramm) läuft und startet es bei Bedarf neu
 IfapVerordnung(Medikament, printsilent:=true) \nMedikament über ifap verordnen und Dosiszettel (MS Word Dokument) automatisch ausdrucken
+
+AlbisLaborwertGrenzen(AlbisDBPath, LbrFilePath, Anzeige=true) \nBerechnung der durchschnittlichen Abweichung v. Grenzwert
+AlbisLabParam() \n
+
+ConvertDBASEDate(DBASEDate) \nDatumskonvertierung von YYYYMMDD nach DD.MM.YYYY
+ConvertGerDateToEng(dateStr)\neigene Funktion konvertiert das deutsche Datumsformat in das übliche englische
+DateDiff(fnTimeUnits, fnStartDate, fnEndDate) \nberechnet Tagesdifferenzen zwischen zwei Tagen
+DaysInMonth(date:="") \nerrechnet die Anzahl der Tage des Monats
+DLD(s, t) \nDamerauLevenshteinDistance
+FindDocDate(Text, debug=false) \nBehandlungstage und/oder Erstellungsdatum des Dokuments
+FindDocDate_GetMaxHits(datesObj) \n
+FindDocNames(Text, debug=false) \nsucht Namen von Patienten im Dokument
+FindDocPages(Text) \nZeilen je Seite durch Suche nach Pagebreaks im Text
+FindDocSender(Text)
+FormatedFileCreationTime(filepath) \nermittelt das Erstellungsdatum einer Datei und gibt diese formatiert ins deutsche Format zurück
+FuzzyFind(dict, query) \nCreates an array of match objects
+FuzzyNameMatch(Name1, Name2, diffmax := 0.12) \nFuzzy Suchfunktion für Vor- und Nachnamensuche
+FuzzySearch(string1, string2) \n
+GetTextDates(txt) \n
+GetQuartal(Datum, Trenner:="") \nberechnet zu welchem Quartal das übergebene Datum gehört
+GetQuartalEx(Datum, Format:="QQYY") \nflexiblere Ausgabeformate als bei der GetQuartal Funktion
+HowLong(Date1,Date2) \nberechnet die Anzahl der Jahren, Monate und Tage zw. zwei Tagesdatums
+leapyear(year) \nSchaltjahr
+QuartalTage(Quartal) \nzur Berechnung von wichtigen Tagen eines Quartals im Jahr
+StrDiff(str1, str2, maxOffset:=5) \nSIFT3 : Super Fast and Accurate string distance algorithm, Nutze ich um Rechtschreibfehler auszugleichen
+StrSplitEx(str, nr=1, splitchar:="|") \nTrim-Split mit Rückgabe eines Wertes (keine Array-Rückgabe)
+TimeCode(DaT) \nPraxomat-Functions: used for protokoll functions - Month & Time (DaT) = 1 - it's clear!
+VorUndNachname(Name) \nteilt einen Komma-getrennten String und entfernt Leerzeichen am Anfang und Ende eines Namens
+VorquartaleR(Datum, Anzahl, returnFormat="String") \nerstellt einen formatierten String für den Vergleich
+
+CreateDBIndex(DB:="BEFUND", ReIndex:=false) \nIndexerstellung einer Albis-Datenbank durchführen
+CreateIndex_BEFUND(basedir, savepath) \nindiziert die BEFUND.dbf nach Quartalen
+DBASEStructs(AlbisPath [, DBStructsPath:=""]) \nanalysiert alle DBF Dateien im albiswin\db Ordner
+GetBefundDBF(ByRef noIndex)
+GetDBFData(DBpath [,p="",out="",s=0,opts="",dbg=0,dbgOpts=""]) \nholt Daten aus einer beliebigen Datenbank
+Leistungskomplexe([PatID=0, StartQuartal="2009-4", SaveToPath=""]) \nsammelt, erstellt eine Datenbank für den Abrechnungshelfer
+PatientDBF([basedir="", infilter="", outfilter="", debug=0]) \ngibt nur benötigte Daten der DBASE Datei: 'albiswin\db\PATIENT.DBF' zurück
+ReadDbf(dbfPath [, SaveTo="", options=""]) \nDBase-Datenbankkonvertierung\nSaveTo=Dateipfad und Name der Textdatei in die gespeichert werden soll\noptions - ein AHK Object mit folgenden Key's: StartWithSet, MaxDataSets, Search, CloseAfterRead
+ReadDBASEIndex(admDBPath, DBASEFileName) \nliest zuvor erstellte Indizes ein
+ReadPatientDBF(basedir="", infilter="", outfilter="", debug=0) \ngibt nur benötigte Daten der albiswin\db\PATIENT.DBF zurück
+
+
+PDFGetEOLBytes(pdfFilePath) \nend-of-line Zeichen einer PDF ermitteln
+PDFGetPages(pdfFilePath , qpdfPath:="") \ngibt die Anzahl der Seiten einer PDF zurück
+PDFGetVersion(pdfFilePath) \ndie Version einer PDF Datei auslesen
+PDFGetXREF(pdfFilePath, EOLBytes=0) \nunverschlüsselte XREF Metadaten lesen
+PDFisCorrupt(pdfFilePath) \nprüft ob die PDF Datei defekt ist
+PDFisSearchable(pdfFilePath) \ndurchsuchbare PDF Datei?
+PdfToText(PdfPath, pages[, enc="UTF-8", SaveToFile=""])\nextract text layer via xpdf commandline tools\nenc - encoding of text output, SaveToFile - full filepath to text file or when empty uses path stored in Addendum.Befundordner
+PdfToPng(PdfPath, page=1, dpi=300, PreviewPath="") \nusing xpdf's pdfto
+PngPdfInfo(PdfPath, opt:="", lastpage:=1) \nusing xpdf's pdfinfo to get metadata and Pdf Info's
+PdfAddMetaDataInfo(PdfPath, InfoObject, RplOrigin:=true, DelTmpFiles:=true, TempPath:= "PdfPath" ) \n
+MetaDatenAnzeigen(PdfPath, ShowInfo:=false) \nzeigt die Metadaten einer PDF Datei an
+
+PIC_GUI(GuiName, byref File, GDIx, GDIy , GDIw, GDIh, WTitle:="")
+PraxTT(Textmsg, Params="3 0") \nTextmsg (Text der angezeigt werden soll), [Params="3 0 B"]\n    Zahl 1: Anzeigedauer in Sekunden\n    2: wird zur eingestellten Schriftgröße addiert (kann auch negativ sein)\n    3: Position - B(ottom),T(op),L(eft),R(ight),M(iddle)
+
+
+MicroDicom_VideoExport(DestPath="") \nautomatischer Export in ein Videoformat mit Dateinamenerstellung anhand von Dicom Tags
+MicroDicom_Invoke(command, MicroDicomID="", WinToWait="", TimeToWait=6) \nMenuaufrufe für MicroDicom 64bit
+MicroDicom_BuildFileName(hDicomTags) \nerstellt einen sinnvollen Dateinamen für den Export
+
+
+MDCalc.BMI(weightkg, heightmeters) \ni never calculate the BMI, but maybe you!
+MDCalc.WaistToHeightRatio(waistcfcm, heightcm, precision:=2) \nwaist to height ratio
+MDCalc.highDoseAmoxicillin(kg) \nAmoxicillin - Medication advice as text
+MDCalc.KOF(heightcm, weight, precision:=2, formula:="Dubois") \ncorrection of body surface base on height and weight for adults and children
+MDCalc.LabUnitsConverter(Lab, LabVal, Unit, Precision:=3, lang:="") \nlaboratory units converter
+MDCalc.CKD_EPI(Scr, Units, height, weight, age, sex, african:=false, precision:=2) \n
+MDCalc.WeightBasedDose(kg, mgPerKg, suspConc, maxMg) \n
+MDCalc.ntproBNPcorrection(NTproBNP, eGFR) \n
+
+
+FilePathCreate(path) \nerstellt einen Dateipfad falls dieser noch nicht existiert
+FilePathExist(path) \nprüft ob ein Dateipfad vorhanden ist
+isFullFilePath(path) \nprüft Pfadstring auf die Angabe eines Laufwerkes
+GetAddendumDbPath() \nliest den Pfad zum Datenbankordner aus der Addendum.ini
+GetAlbisPath() \nliest das Albisinstallationsverzeichnis aus der Registry
+
+
+CountValidKeys(arr) \nzählt die gültigen Einträge im Array
+GetFileData(path, pdfname) \nlädt ScanPool Daten
+PatInDB(PatDb, Name)
+PatInDB_SiftNgram(Name) \n
+PatDb(Pat, cmd:="") \nüberprüft die Addendum Patientendatenbank und führt auch das alternative Tagesprotokoll
+ReadPatientDatabase(PatDBPath) \nliest die .csv Datei Patienten.txt als Object() ein
+PatDBSave(AddendumDBPath) \nzum Sichern der Patientendatenbank
+ScanPoolArray(cmd, param="", opt="")\nScanpool-Objekt Handler - enthält Daten des Befundordners
+ReadDir(dir, ext) \nliest ein Verzeichnis ein, ext=Dateiendung
+ReadPdfIndex(PdfIndexFile) \nerstellt das ScanPool Object### geändert jetzt fehlerhaft - ist noch für scanpool.ahk
+RefreshPdfIndex(BefundOrdner) \nfrischt das ScanPool Object auf
+ReadGVUListe(path, Quartal) \nEinlesen der manuell angelegten untersuchten Patienten
+IstChronischKrank(PatID) \n
+InChronicList() \nNeuaufnahme in Chroniker Liste
+IstGeriatrischerPatient(PatID) \n
+
 
 Controls(Control, command, WinTitle, HiddenText=true, HiddenWin=true, MatchModeSpeed="slow")
 Control_SetTextAndResize(controlHwnd, newText) \nset a new text to a control and resize depending on textwidth and -height
 ControlSetTextEx(Control="", NewText="", WinTitle="", delay=0, WinText="", ExcludeTitle="", ExcludeText="")
-ConvertGerDateToEng(dateStr)\neigene Funktion konvertiert das deutsche Datumsformat in das übliche englische
-CreateDIBSection(w, h[, hdc="", bpp=32, ByRef ppvBits=0]) \nThe CreateDIBSection function creates a DIB (Device Independent Bitmap) that applications can write to directly
-
 ErrorBox(ErrorString[, CallingScript="", Screenshot=0]) \nPraxomat-Functions: eine Funktion um Daten ins Fehlerlogbuch zu schreiben\nCallingScript = Name des aufrufenden Skriptes , Screenshot = mit Option 1 wird ein Screenshot erstellt
+isActiveFocus(conditions) \nHotkey/Hotstring #If Bedingung Funktion
+
+
+FoxitInvoke(command, FoxitID="") \nwm_command wrapper for FoxitReader Version:  9.1
+FoxitReader_CloseAllPatientPDF() \nschließt nur die FoxitReader Fenster welche im BefundOrdner als Datei vorliegen
+FoxitReader_CloseSaveAs(hHook2) \nzum Schliessen des Dialogfenster "Speichern unter" (z.B. als Hookhandler)
+FoxitReader_ConfirmSaveAs(hHook1) \nzum Schliessen des Dialogfenster "Speichern unter bestätigen"
+FoxitReader_ExceptionDialog(hHook3) \nzum Schließen eines selten vorkommenden Dialogfensters
+FoxitReader_GetPages(FoxitID="") \naktuelle und maximale Seiten des aktuellen Dokumentes ermitteln
+FoxitReader_GetPDFPath() \nden aktuellen Dokumentenpfad im 'Speichern unter' Dialog auslesen
+FoxitReader_SignaturSetzen(FoxitID="") \nruft Signatur setzen auf und zeichnet eine Signatur in die linke obere Ecke des Dokumentes
+FoxitReader_SignDoc(hDokSig) \nBearbeiten des 'Dokument signieren' (Sign Document) Dialoges
+FoxitReader_ToPrint(FoxitID="", Printer="") \nDruck Dialoghandler - Ausdruck auf übergebenen Drucker
+FoxitReader_DokumentSignieren(docTitle:="", BefundOrdner:="") \nFoxitReader - Automatisierung des Signiervorganges - 1Click Automatisierung!
+FoxitReader_SignatureProcess() \n## unfertige ## Funktion wird nur einmalig ausgeführt (ScanPool Erststart)
+PdfReader_Close(ReaderTitleOrID, PDFReaderWinClass, CloseTabOnly:=0) \nschließen eines FoxitReader-Tabs oder Beenden einer PDF-Reader Instanz
+SumatraInvoke(command, SumatraID="") \nwm_command wrapper for SumatraPDF V3.1 & 3.2
+Sumatra_GetPages(SumatraID="") \naktuelle und maximale Seiten des aktuellen Dokumentes ermitteln
+Sumatra_ToPrint(SumatraID="", Printer="") \nDruck Dialoghandler - Ausdruck auf übergebenen Drucker
+
+Weitermachen(Message="", Title="Guck!", TimeOut=0) \nweiter oder abbrechen (Debug Hilfe)\nHotstring: :*R:.wm::If !Weitermachen()`nreturn 99
+
 
 FindWindow(WinTitle[, WinClass="", WinText="", ParentTitle="", ParentClass="", DetectHiddenWins="on", DectectHiddenTexts="on"])
-FormatedFileCreationTime(filepath) \nermittelt das Erstellungsdatum einer Datei und gibt diese formatiert ins deutsche Format zurück
-FoxitInvoke(FoxitMenu, FoxitID) \nwm_command wrapper for FoxitReader Version:  9.1
-FoxitReader_GetPDFPath() \nden aktuellen Dokumentenpfad im 'Speichern unter' Dialog auslesen
-FoxitReader_SignaturSetzen()
-FoxitReader_SignDoc(hDokSig, FoxitTitle, FoxitText:="") {\nWinhook-Handler zum Bearbeiten des Dokument signieren Dialoges
-
 GetAncestor(hWnd[, Flag=2])\nFlag: 1 - Parent , 2 - Root
 GetNextWindow(hwnd, wCmd)\nermittelt die Z-Ordnung der Fenster\nwCmd = 2 - handle to window below, 3 - handle to window above
 GetParent(hWnd)\nermittelt das Handle des Parent Fenster
-GetQuartal(Datum) \nDatum="heute" o. Datum im folgenden Format ist erlaubt: 13.02.2017 oder 13.2.17
 GetWindowInfo(hWnd) \nreturns Key:Val object (Keys: Window/ClientX|Y|W|H, Style, ExStyle, Active, BorderW|H, Atom, Version)
+
+
+GetAppImagePath(appname)
+GetAppsInfo(infoType)
+
+
+CreateDIBSection(w, h[, hdc="", bpp=32, ByRef ppvBits=0]) \nThe CreateDIBSection function creates a DIB (Device Independent Bitmap) that applications can write to directly
 Gdip_BitmapFromScreen([Screen=0, Raster=""])
 Gdip_BitmapFromHWND(hwnd)
 Gdip_CreateBitmapFromFile(sFile[, IconNumber=1, IconSize=""])
@@ -121,24 +257,21 @@ Gdip_SetBitmapToClipboard(pBitmap)
 Gdip_SetSmoothingMode(pGraphics, SmoothingMode)
 Gdip_SetCompositingMode(pGraphics[, CompositingMode=0])
 
+
 LV_EX_FindString(HLV, Str[, Start=0, Partial=false])
+LV_GetSelected(LV_Name) \nermittelt alle ausgewählten Einträge
 
 OnMessageOnOff(status) \ngehört zum ScanPool.ahk Script: status kann "On" oder "Off" sein
 ObjTree(ByRef obj[,Title="ObjTree",Options="+ReadOnly +Resize,GuiShow=w640 h480",ishwnd=-1]) \nzeigt ein den Inhalt eines Objektes an
 
-PatInDB(PatDb, Name)
-PdfToText(PdfPath, pages[, enc="UTF-8", SaveToFile=""])\nextract text layer via xpdf commandline tools\nenc - encoding of text output, SaveToFile - full filepath to text file or when empty uses path stored in Addendum.Befundordner
-PraxTT(Textmsg, Params="3 0") \nTextmsg (Text der angezeigt werden soll), [Params="3 0 B"]\n    Zahl 1: Anzeigedauer in Sekunden\n    2: wird zur eingestellten Schriftgröße addiert (kann auch negativ sein)\n    3: Position - B(ottom),T(op),L(eft),R(ight),M(iddle)
+Receive_WM_COPYDATA(wParam, lParam) \nempfängt Nachrichten von anderen Skripten die auf demselben Client laufen
+RedrawWindow(hwnd=0) \nzeichnet eine Autohotkey Gui komplett neu
 
-ReadDbf(dbfPath[, SaveTo="", options=""]) \nDBase-Datenbankkonvertierung\nSaveTo=Dateipfad und Name der Textdatei in die gespeichert werden soll\noptions - ein AHK Object mit folgenden Key's: StartWithSet, MaxDataSets, Search, CloseAfterRead
-
-ScanPoolArray(cmd, param="", opt="")\nScanpool-Objekt Handler - enthält Daten des Befundordners
 SetTextAndResize(controlHwnd, newText[, fontOptions="", fontName=""])
 SetWindowPos(hwnd, x, y, w, h [, hWndInsertAfter, uflag])
 SciTEOutput(Text[,Clear:=0,LineBreak:=1,Exit:=0])
 StrReplace(Heuhaufen, Suchtext [, Ersatztext, AusgabeVarAnzahl, Limit := -1]) \nAusgabeVarAnzahl - Geben Sie eine Variable an, in der die Anzahl gespeichert werden soll, wie oft der Heuhaufen ersetzt wurde (0, wenn keine)\nLimit - Fehlt Limit, gilt standardmäßig -1, dadurch werden alle Vorkommen des Musters ersetzt, die im Heuhaufen gefunden wurden.\nAnsonsten kann man angeben, wie oft der Heuhaufen ersetzt werden soll. Der Heuhaufen-Bereich rechts neben der letzten Ersetzung bleibt unverändert.
 
-TimeCode(DaT) \nPraxomat-Functions: used for protokoll functions - Month & Time (DaT) = 1 - it's clear!
 
 UpSizeControl(WinTitle, WinClass, UpSizedControl, ExpandDown, ExpandRight, CenterToWin:=0)
 
@@ -150,5 +283,8 @@ VerifiedSetText(CName, NewText, WTitle=""[, delay=200, WText=""])
 
 WaitAndActivate(WinTitle[Debug=1, DbgWhwnd=0]) \nwait for a window and the activates it\nif you want to use Debug function u must have a DebugWindow and a handle
 WaitForNewPopUpWindow(ParentWinID, LastPopUpWin, Wait) \nwaits for a new PopUpWindow for a given parent window id and returns an object containing Title, Class, Text and Hwnd of the new popup window\nParentWinID: hwnd of the parent window, LastPopUpWin: hwnd of the actual open last popup win (you have to get it before you call this function), Wait: is time in seconds
+WM_DISPLAYCHANGE(wParam, lParam) \neinsetzbar für Script-Editoren - AutoZoom bei Wechsel der Bildschirmauflösung
+WM_DEVICECHANGE( wParam, lParam) \nerkennt ob ein einlegen einer CD statt gefunden hat und gibt auch das Laufwerk aus - global drv
+DriveData(Drv) \nwas wurde eingelegt. Identifiziert das Laufwerk und die Art des Mediums
 
-
+RegExReplace_User_ahk_api(rxString:="\s+\{\s*;*\-*\-*\s*", replaceWith:=" \\n" )

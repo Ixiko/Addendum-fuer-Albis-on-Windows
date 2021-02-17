@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . .                                                                                                                                                          	. . . . . . . . . .
 ; . . . . . . . . .                                                 	ADDENDUM  ABRECHNUNGSHELFER                                            	. . . . . . . . . .
-											                			 Version:="0.98" , vom:="30.09.2020"
+											                			 Version:="0.98a" , vom:="01.02.2021"
 ; . . . . . . . . .                                                                                                                                                         	. . . . . . . . . .
 ; . . . . . . . . .  ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"	. . . . . . . . . .
 ; . . . . . . . . .         BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE         	. . . . . . . . . .
@@ -1427,12 +1427,12 @@ M3:                                                  	;	Pat. für GVU suchen    
 		MinGVUAbstand	:= 36                                              	; Angabe in Monate (hat sich geändert am 01.01.2020 auf 36 Monate - leider)
 		MinAlter            	:= 35                                            	; einmalig bis zum 35.LJ
 		MinAlterIntervall	:= 35
-		qname                	:= "0320"
-		maxMonth         	:= "09"
+		qname                	:= "0420"
+		maxMonth         	:= "12"
 		maxYear           	:= "17"
 		QYear              	:= "20" SubStr(qname, 3, 2)
 		LastQMonth      	:= (SubStr(qname, 1, 2) - 1) * 3 + 1 + 2
-		LastQDay          	:= days_in_month( QYear LastQMonth ) "." SubStr("0" LastQMonth, -1) "." QYear
+		LastQDay          	:= DaysInMonth( QYear LastQMonth ) "." SubStr("0" LastQMonth, -1) "." QYear
 
 		tpfilesDir            	:= AddendumDir "\Tagesprotokolle"
 		tprotfile             	:= Tagesprotokollpfad "\" QYear "-" SubStr(qname,2,1) "_TP-AbrH.txt"
@@ -1869,17 +1869,15 @@ M5:                                                  	;	Ziffern Statistik erstel
 					FullFilePath        	:= TagesprotokollPfad "\Auswertungen\20" Jahr "-" A_Index "_Ziffernstatistik.txt"
 
 					If !FileExist(FullFilePath) {
-						Quartal.aktuell	:= "0" A_Index  Jahr
+						Quartal.Aktuell	:= "0" . A_Index . Jahr
 						Quartal         	:= QuartalTage(Quartal)
-						Zeitraum       	:= Quartal.ErsterTag "," Quartal.LetzterTag
-						savedAs         	:= AlbisErstelleZiffernStatistik("", Zeitraum, "", "", FullFilePath)
+						savedAs         	:= AlbisErstelleZiffernStatistik("", Quartal.TDBeginn "," Quartal.TDEnde, "", "", FullFilePath)
 					}
 			}
 
 	}
 
 	MsgBox, 4, % A_ScriptName, Soll die erstellte Datei gleich kovertiert werden?
-
 	If MsgBox, No
 		return
 
@@ -1895,8 +1893,7 @@ M6:                                                  	;	Ziffern Statistik konver
 	Statistikfile 	:= TagesprotokollPfad "\Auswertungen\20" SubStr(Quartal,3,2) "-" SubStr(Quartal,2,1) "_Ziffernstatistik.txt"
 
 	ZFStats[Quartal]:= Object()
-	If !FileExist(Statistikfile)
-	{
+	If !FileExist(Statistikfile)	{
 			SplitPath, Statistikfile, outFileName
 			MsgBox, 1, % A_ScriptName, % "Eine Auswertungsdatei mit dem Name:`n" outFileName "`nexistiert nicht. Der Vorgang wird abgebrochen", 5
 			return
@@ -1906,12 +1903,10 @@ M6:                                                  	;	Ziffern Statistik konver
 	;MsgBox, % Statistikfile "`n" StrLen(statistik)
 	Loop, Parse, statistik, `n, `r
 	{
-			If RegExMatch(A_LoopField, RegExZSData, stat)
-			{
+			If RegExMatch(A_LoopField, RegExZSData, stat)			{
 					GuiControl,rxTP: , T5, % "Nr: " A_Index " - " statGoNr
 					statGoNr:= "#" statGoNr
-					If ZFStats[Quartal].HasKey(statGoNr)
-					{
+					If ZFStats[Quartal].HasKey(statGoNr)					{
 							ZFStats[Quartal][statGoNr].Anzahl      	:= +statAnzahl
 							ZFStats[Quartal][statGoNr].Punkte      	:= +statPunkte
 							ZFStats[Quartal][statGoNr].Euro         	:= +statEuro
@@ -1919,8 +1914,7 @@ M6:                                                  	;	Ziffern Statistik konver
 							ZFStats[Quartal][statGoNr].Fachgruppe	:= +statFachgruppe
 							ZFStats[Quartal][statGoNr].Abweichung	:= +statAbweichung
 					}
-					else
-					{
+					else					{
 							ZFStats[Quartal][statGoNr] := Object()
 							ZFStats[Quartal][statGoNr] := {"Anzahl":statAnzahl, "Punkte":statPunkte, "Euro":statEuro, "Prozent":statProzent, "Fachgruppe":statFachgruppe, "Abweichung":statAbweichung, "Leistungstext": statLeistungstext}
 					}
@@ -1932,13 +1926,13 @@ M6:                                                  	;	Ziffern Statistik konver
 
 	line:= Quartal "`n"
 	For Quartal, Ziffer in ZFStats
-		For GoNr, Data in Ziffer
-		{
-			line.= GoNr ";" SubStr("00000" Data.Anzahl, -3) ";" SubStr("00000" Data.Punkte, -4) ";" SubStr("00000" Data.Euro, -4) ";" SubStr("00000" Data.Prozent, -3) ";" SubStr("00000" Data.Fachgruppe, -3) ";" SubStr("00000" Data.Abweichung, -3) ";" Data.Leistungstext "`n"
+		For GoNr, Data in Ziffer		{
+			line .= GoNr ";" SubStr("00000" Data.Anzahl, -3) ";" SubStr("00000" Data.Punkte, -4) ";" SubStr("00000" Data.Euro, -4) ";" SubStr("00000" Data.Prozent, -3) ";" SubStr("00000" Data.Fachgruppe, -3) ";" SubStr("00000" Data.Abweichung, -3) ";" Data.Leistungstext "`n"
 			GuiControl,rxTP: , T6, % "Data.Anzahl: " Data.Anzahl
 		}
-	FileDelete, % TagesprotokollPfad "\" Quartal "-ZF.csv"
-	FileAppend, % line, % TagesprotokollPfad "\" Quartal "-ZF.csv"
+
+	FileDelete          	, % TagesprotokollPfad "\" Quartal "-ZF.csv"
+	FileAppend, % line	, % TagesprotokollPfad "\" Quartal "-ZF.csv"
 
 
 return
@@ -2954,9 +2948,8 @@ M13:                                                 	;	zähle alle Überweisung
 					Ueberweisungen.alle += 1
 					alle += 1
 
-					If (Ueberweisungen.Fachgruppen[Max] > (qw*fk)) {
+					If (Ueberweisungen.Fachgruppen[Max] > (qw*fk))
 						fk ++
-					}
 
 					;~ For FG, Ubw in Ueberweisungen.Fachgruppen 	{
 						;~ vonHundert:= Floor(Ubw/(qw*fk)) * 100
@@ -2974,9 +2967,7 @@ M13:                                                 	;	zähle alle Überweisung
 
 	FileDelete, % A_ScriptDir "\Fachgruppen.txt"
 	For FG, Ubw in Ueberweisungen.Fachgruppen
-	{
-			FileAppend, % FG "`t: " Ubw "`n", % A_ScriptDir "\Fachgruppen.txt"
-	}
+		FileAppend, % FG "`t: " Ubw "`n", % A_ScriptDir "\Fachgruppen.txt"
 
 return ;}
 M14:                                                 	;	Kürzelliste und Nutzerkategorisierung      	;{
@@ -2997,13 +2988,13 @@ M14:                                                 	;	Kürzelliste und Nutzerk
 	GuiControl, rxTP: , T3	, % "Ermitteln aller Aktenkürzel und Hinzufügen zur Kürzelliste"
 	GuiControl, rxTP: , T4	, % "<><><><><><><><><><><><><><><>"
 
-	Loop, 10
-	{
+	Loop, 10	{
+
 			JahrIndex	:= A_Index - 1
 			QJahr   	:= "20" (10 + JahrIndex)
 
-			Loop, 4
-			{
+			Loop, 4			{
+
 					ExamQuartals ++
 
 					aktQuartal:= SubStr("0" A_Index, -1) (10 + JahrIndex)
@@ -3012,8 +3003,7 @@ M14:                                                 	;	Kürzelliste und Nutzerk
 					QData   	:= TPObject(aktQuartal, PatIDFilter, false, false)
 					QKuerzel	:= QuartalsKuerzel_ermitteln(QData)
 
-					For Albiskuerzel, val in QKuerzel
-					{
+					For Albiskuerzel, val in QKuerzel			{
 						;	GuiControl, rxTP: , T7	, % "akutelles Kürzel: " Albiskuerzel
 						;	Sleep, 500
 						If !KuerzelListe.HasKey(Albiskuerzel)
@@ -3037,19 +3027,17 @@ M15:                                                	;	Fachgruppenthesaurus erst
 	FGMax 	:= 0
 	FgTv := []
 
-	If FileExist(A_ScriptDir "\data\Fachgruppen_Thesaurus.json")
-	{
+	If FileExist(A_ScriptDir "\data\Fachgruppen_Thesaurus.json")	{
+
 			Fachgruppen	:= Object()	; child Object Fachgruppen inklusive Zählung (gesamt und Quartal, Jahr)
 			Fachgruppen	:= new JSONFile(A_ScriptDir "\data\Fachgruppen_Thesaurus.json")
 
 			Gui, FGT: New
 			Gui, FGT: Add, TreeView	, % "xm ym w250 h900 gFachgruppenwahl vFachgruppen"
-			For FgID, Fachname in Fachgruppen.Object().IDName
-			{
+			For FgID, Fachname in Fachgruppen.Object().IDName			{
 					If !isObject(FgID)
 						FgTv[FgID]	:= TV_Add(Fachname)
-					else
-					{
+					else					{
 						FgTv[FgID]	:= TV_Add(Fachname.FG)
 						FgTv[FgID]	:= []
 						For FgSubID, Subspezialisierung in Fachname.FgID.Object(	)
@@ -3057,16 +3045,15 @@ M15:                                                	;	Fachgruppenthesaurus erst
 					}
 			}
 
-			For ThWort, FgID in Fachgruppen.Object().Thesaurus
-			{
+			For ThWort, FgID in Fachgruppen.Object().Thesaurus			{
 
 			}
+
 			Gui, FGT: Add, Button, % "x+5  ym gStoreName"    	, % "<"
 			Gui, FGT: Add, Button, % "y+5       gRemoveName"	, % ">"
 			Gui, FGT: Add, ListView, % "x+5 ym w300 h900 gFachbezeichner vFachbezeichner" , % "in den Tagesprotokollen verwendete Bezeichnungen"
 
-			If FileExist(TagesprotokollPfad "\Fachgruppenbezeichner.txt")
-			{
+			If FileExist(TagesprotokollPfad "\Fachgruppenbezeichner.txt")			{
 					FileRead, t, % TagesprotokollPfad "\Fachgruppenbezeichner.txt"
 					Loop, Parse, t, `n, `r
 					{
@@ -3084,16 +3071,14 @@ M15:                                                	;	Fachgruppenthesaurus erst
 			}
 			Gui, FGT: Show, AutoSize, Fachgruppen Thesaurus
 	}
-	else
-	{
+	else	{
 			MsgBox, % "Addendum - " A_ScriptName, % "Datei: '\data\Fachgruppen_Thesaurus.json' ist nicht vorhanden.`nDas Makro kann nicht ausgeführt werden."
 			return
 	}
 
 
 	return
-	For index, protokoll in Tagesprotokolle
-	{
+	For index, protokoll in Tagesprotokolle	{
 			Jahr      	:= protokoll.Jahr
 			Quartal	:= protokoll.Quartal "/" Jahr
 			TPFullPath:= protokoll.path "\" protokoll.filename
@@ -3103,15 +3088,12 @@ M15:                                                	;	Fachgruppenthesaurus erst
 			l:=""
 			Loop, Parse, tpDatei, `n, `r
 			{
-					If RegExMatch(A_LoopField, "\s*füb\s+([A-Za-zÄÖÜäöüß\s\/\.]+)[\,\(]", FG)
-					{
+					If RegExMatch(A_LoopField, "\s*füb\s+([A-Za-zÄÖÜäöüß\s\/\.]+)[\,\(]", FG)					{
 
 							FG:= StrReplace(Trim(FG1), " ", "-")
 							l.= FG1 "`n"
 							If !Fachgruppen.HasKey(FG)
-							{
 									Fachgruppen[FG] := 0
-							}
 
 							Fachgruppen[FG] += 1
 
@@ -3299,6 +3281,8 @@ QuartalZuProtokollname(QuartalsJahr) {
 return "20" Jahr "-" Quartal "_TP-AbrH.txt"
 }
 
+
+
 ;"Tagesprotokoll": "32802" - für Sendmessage
 ;----------------------------------------------------------------------------------------------------------------------------------------------
 ; RegEx Funktionen
@@ -3401,6 +3385,7 @@ TrimDiagnose(str) {                                                             
 return Trim(str)
 }
 
+
 ;}
 
 ;----------------------------------------------------------------------------------------------------------------------------------------------
@@ -3460,19 +3445,12 @@ ReadAndConvertFile(FilePath, ReadEncoding="CP1252", WriteEncoding="") {         
 
 	If FileExist(FilePath)	{
 
-		;~ f:= FileOpen(FilePath, "r", ReadEncoding)
-		;~ while (!f.AtEOF)
-			;~ txt .= f.ReadLine()
-		;~ f.Close()
 		txt := FileOpen(FilePath, "r", ReadEncoding).Read()
-
 		If (StrLen(WriteEncoding) > 0) 	{
-
 			SplitPath, FilePath,, Dir, fExt, fName
 			f:= FileOpen(FilePath, "w", WriteEncoding)
 			f.Write(txt)
 			f.Close
-
 		}
 
 	}
@@ -3693,6 +3671,50 @@ VorsorgelistenIDs2Arr(file) {                                                   
 			return ""
 }
 
+ReadPatientDatabase(PatDBPath) {										                        				;-- liest die .csv Datei Patienten.txt als Object() ein
+
+	PatDB := Object()
+	If !RegExMatch(PatDBPath, "\.json$")
+		PatDBPath := Addendum.DBPath "\Patienten.json"
+
+	If !FileExist(PatDBPath)
+		return PatDB
+
+return JSONData.Load(PatDBPath,, "UTF-8")
+}
+
+GetAddendumDbPath() {                                                                                       	;-- liest den Pfad zum Datenbankordner aus der Addendum.ini
+
+	If (AddendumDir = "") {
+			AddendumDir:= FileOpen("C:\albiswin.loc\AddendumDir","r").Read()
+			If !AddendumDir {
+					MsgBox, 262144 , % "Addendum - " A_ScriptName,
+					(LTrim
+						Der Pfad zu den Dateien für Albis on Windows ist nicht hinterlegt.
+						Bitte starten Sie das AddendumStarter-Skript aus dem Addendum-
+						Hauptverzeichnis, damit alle notwendigen Dateien und Verzeichnisse
+						lokalisiert werden können.
+						Das Skript wird jetzt beendet!
+					), 15
+					ExitApp
+			}
+	}
+
+	IniRead, AddendumDbPath, % AddendumDir . "\Addendum.ini", Addendum, AddendumDbPath
+	If InStr(AddendumDbPath, "Error") {
+			MsgBox, 262144 , % "Addendum - " A_ScriptName,
+			(LTrim
+				Es wurde noch kein Datenbankpfad durch das Hauptskript Addendum.ahk
+				angelegt. Diese Funktion greift auf Dateien in diesem Ordner zu.
+				Bitte starten Sie Addendum.ahk!
+			)
+			ExitApp
+	} else {
+		return StrReplace(AddendumDbPath, "%AddendumDir%", AddendumDir)
+	}
+
+}
+
 ;}
 
 ;----------------------------------------------------------------------------------------------------------------------------------------------
@@ -3723,7 +3745,7 @@ TPObject2(ConvQuartal, PatIDFilter:="", debug:=true, ShowProgress:=true) {      
 		QJahr      	:= "20" SubStr(ConvQuartal, -1)
 		Quartal    	:= LTrim(SubStr(ConvQuartal, 1, StrLen(ConvQuartal) - 2), "0")                         	; damit geht 0119 oder 119
 		LQMonat 	:= (Quartal - 1) * 3 + 1 + 2                                                                          	; letzter Monat des Quartals
-		LQTag     	:= days_in_month(QJahr LQMonat) "." SubStr("0" LQMonat, -1) "." QJahr
+		LQTag     	:= DaysInMonth(QJahr LQMonat) "." SubStr("0" LQMonat, -1) "." QJahr
 		tprot        	:= FileOpen(TPFilepath, "r").Read()
 		TP          	:= TPMax(tprot)                                                                                                ; zählt vorab die Zeilen und gibt die Anzahl gefundener PatientenID's zurück
 
@@ -3932,7 +3954,7 @@ TPObject(ConvQuartal, IDFilter:="", debug:=true, ShowProgress:=true) {          
 		QJahr          		:= "20" SubStr(ConvQuartal, -1)
 		Quartal           	:= LTrim(SubStr(ConvQuartal, 1, StrLen(ConvQuartal) - 2), "0")                         	; damit geht 0119 oder 119
 		LQMonat      	:= (Quartal - 1) * 3 + 1 + 2                                                                          	; letzter Monat des Quartals
-		LQTag           	:= days_in_month(QJahr LQMonat) "." SubStr("0" LQMonat, -1) "." QJahr
+		LQTag           	:= DaysInMonth(QJahr LQMonat) "." SubStr("0" LQMonat, -1) "." QJahr
 
 	; vorgeparstes Tagesprotokoll einlesen
 		FileRead, tprot, % TPFilepath
@@ -4184,19 +4206,15 @@ AddToTPObject(PatID, Datum, Kuerzel, Databuffer) {                              
 				If !IsObject(QData[PatID]["BTag"][Datum][Kuerzel])
 					QData[PatID]["BTag"][Datum][Kuerzel] := Object()
 
-				Loop % Ziffern.MaxIndex()
-				{
+				Loop % Ziffern.MaxIndex()		{
 						ziffer := Trim(Ziffern[A_Index])
-						If (StrLen(ziffer) > 0)
-						{
+						If (StrLen(ziffer) > 0)						{
 								QData[PatID]["BTag"][Datum][Kuerzel].Push(ziffer)
 
-								For ZiffIndex, QZiffer in QData[PatID]["Ziffern"]
-								{
+								For ZiffIndex, QZiffer in QData[PatID]["Ziffern"]		{
 										RegExMatch(QZiffer, "(?<Komplex>\d+)\(*x*\:*(?<Faktor>\d+)*\)*", Q)
 										RegExMatch(ziffer, "(?<Komplex>\d+)\(*x*\:*(?<Faktor>\d+)*\)*", T)
-										If (QKomplex = TKomplex)
-										{
+										If (QKomplex = TKomplex)		{
 												QFaktor := QFaktor=""	? 1: QFaktor
 												TFaktor	 :=  TFaktor=""	? 1: TFaktor
 												QData[PatID]["Ziffern"][ZiffIndex]:= QKomplex "(x:" QFaktor + TFaktor ")"
@@ -4483,7 +4501,6 @@ ScriptMem() {                                                                   
 		TMM := A_TitleMatchMode
 		DetectHiddenWindows, On
 		SetTitleMatchMode	 , 2
-		;WinGet, PID, PID, \%A_ScriptName% - ahk_class AutoHotkey
 		WinGet, PID, PID, % "\" A_ScriptName " ahk_class AutoHotkey"
 		DetectHiddenWindows, % DHW
 		SetTitleMatchMode	 , % TMM
@@ -4492,14 +4509,6 @@ ScriptMem() {                                                                   
 	DllCall("SetProcessWorkingSetSize", "UInt", h, "Int", -1, "Int", -1)
 	DllCall("CloseHandle", "Int", h)
 
-}
-
-Receive_WM_COPYDATA(wParam, lParam) {                                                         	;-- für die Kommunikation der Skripte untereinander - GUTE SACHE!!
-	global InComing
-    StringAddress := NumGet(lParam + 2*A_PtrSize)
-	InComing  	 := StrGet(StringAddress)
-	SetTimer, MessageWorker, -10
- return true
 }
 
 MessageWorker: ;{
@@ -4515,6 +4524,20 @@ return ;}
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; INCLUDES --- benötigte BIBLIOTHEKEN
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------;{
+	#Include %A_ScriptDir%\..\..\include\Addendum_Albis.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Controls.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Datum.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_DB.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Gdip_Specials.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Internal.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Menu.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_PdfHelper.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_PraxTT.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Protocol.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Screen.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Window.ahk
+
+	#include %A_ScriptDir%\..\..\lib\class_JSON.ahk
 	#include %A_ScriptDir%\..\..\lib\GDIP_All.ahk
 	#Include %A_ScriptDir%\..\..\lib\Sift.ahk
 	#Include %A_ScriptDir%\..\..\lib\ACC.ahk
@@ -4526,19 +4549,6 @@ return ;}
 	#Include %A_ScriptDir%\..\..\lib\TVH.ahk
 	#Include %A_ScriptDir%\..\..\lib\RMO.ahk
 	#Include %A_ScriptDir%\..\..\lib\SciTEOutput.ahk
-
-	#Include %A_ScriptDir%\..\..\include\Addendum_Albis.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_Controls.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_DB.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_Gdip_Specials.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_Internal.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_Menu.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_Misc.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_PdfHelper.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_Protocol.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_Screen.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_Window.ahk
-	#Include %A_ScriptDir%\..\..\include\Gui\PraxTT.ahk
 
 ;}
 

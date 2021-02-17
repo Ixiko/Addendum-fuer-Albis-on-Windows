@@ -1,9 +1,11 @@
-![Addendum.png](assets/AddendumLogo2020.png)
+
+
+![Addendum.png](assets/AddendumLogo2021.png)
 
 #### Extends the possibilities through surface analysis and manipulation
 
-### Version 1.44 vom 07.11.2020
-lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32.00 Unicode 64bit* , geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
+### preRelease Version 1.50 vom 16.02.2021
+lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32+ Unicode 64bit* , geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 <img src="Docs\TrennerExtraBreit.png" style="zoom: 67%;" />
 
@@ -12,9 +14,32 @@ lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32.00 Unicode 64bit* , 
 ###### * Arztinformationssystem (AIS), Arztsoftware, Praxissoftware, Praxisverwaltungssoftware, Praxisverwaltungssystem (PVS), Praxismanagementsoftware oder Ordinationsmanagementsoftware
 <img src="Docs/TrennerExtraBreit.png" style="zoom:67%;" />
 
+<h1> &#9733 NEUE FUNKTIONEN SEIT DEM LETZTEM RELEASE </h1>
 
+![](Docs/TrennerExtraBreit.png)
+
+<h3> &#10042; weitere Funktionen für das Infofenster</h3>
+
+<h3> &#10042; Texterkennung mit Tesseract</h3>      
+
+<h3> &#10042; Autobenennung von PDF-Dateien</h3>
+
+<h3> &#10042; Laborjournal</h3>
+
+<h3> &#10042 nativer Lesezugriff auf die Albis-Datenbankdateien</h3>
+
+<h3> &#10042; Export von Patientendaten in einem Durchgang (Dokumente, Laborblatt, Karteikarte) </h3>
+
+<h3> &#10042; Abrechnungshelfer (ähnlich der Albis internen Funktionen) im Infofenster </h3>
+
+
+
+![](Docs/TrennerExtraBreit.png)
 
 # ![Funktionen.png](Docs/Icons/Funktionen.png)  FUNKTIONSÜBERSICHT
+
+
+
 ## ![Addendum.png](Docs/Icons/Addendum.png) Addendum
 
 <h3> &#9733 PopupBlocker</h3>
@@ -33,7 +58,7 @@ lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32.00 Unicode 64bit* , 
 
 - kann auf Wunsch das Login in ihr Albisprogramm vornehmen
 
-<h3> &#9733 Patientendatenbank </h3>
+<h3> &#9733 eigene Patientendatenbank </h3>
 
 - für eine schnelle und fehlertolerante Suche nach Patienten
 
@@ -43,15 +68,26 @@ lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32.00 Unicode 64bit* , 
 
 <h3> &#9733 Infofenster </h3>
 
-- **zentral** in Albis **integriertes Tool für Dokument-Eingänge und Verwaltung des Praxisnetzwerk**. 
-- **Befund-/Bilddateien** können von dort ohne Umweg in die Patientenakte importiert, angezeigt und umbenannt werden
-- **OCR von PDF Dateien mit Tesseract 4** - PDF Dateien, ohne durchgeführte Texterkennung werden erkannt. Die Texterkennung wird im Hintergrund durchgeführt. Dies kann man vom Skript in der Nacht erledigen lassen. Erste Ergebnisse habe ich bei der automatischen Erkennung von Patientennamen erzielt. Ziel ist eine automatische Erkennung von Namen, des Inhaltes und eine gezieltes Entfernen leerer Seiten, Seitenzahl entsprechender Sortierung und die korrekte Ausrichtung jeder Seite
-- **Auflistung aller Karteikarten des Tages** (letzte Patienten).  Jetzt ist es möglich sich durch alle aufgezeichneten Arbeitstage zu blättern, so daß man direkt nach Patienten der vergangenen Wochen, Monate ... suchen kann  
-- **Anzeige aller Netzwerk-Arbeitsplätze**. Neu seit dieser Version ist der direkte Start einer Remotedesktopsitzung per Klick aus Albis heraus.
+zentral in Albis integriertes Tool für Dokument-Eingänge und Verwaltung des Praxisnetzwerk
+
+- **Patient**: zeigt den Posteingang des aktuellen Patienten und Informationen und Tipps zur Abrechnung an.
+- **Journal**: zeigt Dateien des Befundordners an. Hat Funktionen für Texterkennung und automatische Namenserkennung. Befund-/Bilddateien können von dort ohne Umweg in die Patientenakte importiert, angezeigt und umbenannt werden
+- **Protokoll**: Anzeige aller zuvor geöffneten Karteikarten des Tages. Der angezeigte Tag kann geblättert werden.
+- **Netzwerk:** direkter Start einer Remotedesktopsitzung per Klick 
+- **Extras**: häufiger benötigte Programme/Skripte lassen sich im Infofenster anzeigen und von dort aus auch starten
+
+<h3>&#9733 Texterkennung für PDF Dateien</h3>
+
+- mit Tesseract erreiche ich eine bessere Erkennungsrate als mit meinem bisherigen Texterkennungsprogramm
+- neu hinzugefügte PDF Dateien werden automatisch in PDF-Text Dateien umgewandelt
+
+<h3>&#9733 Kategorisierung von PDF Dateien</h3>
+
+- findet im Text der PDF den Patientennamen, das Erstellungsdatum des Dokumentes oder den Zeitraum eines Krankenhausaufenthaltes. Aus diesen Informationen wird ein neuer Dateiname generiert.
 
 <h3> &#9733 Unterstützung der PDF-Signierung </h3>
 
-- durch Druck auf einen Hotkey wird die aktuell im FoxitReader geöffnete PDF Datei signiert. (eine Signatur müssen Sie vorher im FoxitReader erstellt haben). Dadurch ist sogar eine ***gesetzeskonforme und rechtssichere Signierung*** der Dateien möglich. **Achtung:** es gibt keine kostenlose Software zur digitalen Signierung. Den [FoxitReader](https://www.foxitsoftware.com/de/pdf-reader/) müssen Sie bei professioneller Nutzung liszensieren lassen! Ebenso die genutzten Command-Line-Tools - [xpdf-Tools](http://www.xpdfreader.com/) und pdftk.
+- per Hotkey wird die aktuell im FoxitReader geöffnete PDF Datei signiert. (eine Signatur müssen Sie vorher im FoxitReader erstellt haben).<br>**Achtung:** es gibt keine kostenlose Software zur digitalen Signierung. Den [FoxitReader](https://www.foxitsoftware.com/de/pdf-reader/) müssen Sie bei professioneller Nutzung liszensieren lassen! Ebenso die genutzten Command-Line-Tools - [xpdf-Tools](http://www.xpdfreader.com/) und pdftk.
 
 <h3> &#9733 Menusuche </h3>
 
@@ -77,7 +113,7 @@ lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32.00 Unicode 64bit* , 
 
 <h3> &#9733 schönerer Verordnungsplan und besserer BMP </h3>
 
-* letzteres mag übertrieben sein. Den Bundeseinheitlichen Medikationsplan finde ich furchtbar und wüßte ihn nicht wirklich gut zu verwenden. Ich habe ein Skript geschrieben das die Vorgaben des BMP imitiert, dabei doch mehr Möglichkeiten und um einiges bessere Darstellungen von Informationen bietet
+* letzteres mag übertrieben sein. Den Bundeseinheitlichen Medikationsplan finde ich furchtbar. Ich habe ein Skript geschrieben das die Vorgaben des BMP imitiert, dabei doch mehr Möglichkeiten und um einiges bessere Darstellungen von Informationen bietet
 
 <h3> &#9733 Anzeige von Beginn und Ende der Lohnfortzahlung  </h3>
 
@@ -88,21 +124,37 @@ lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32.00 Unicode 64bit* , 
 <h3> &#9733 Kontextsensitive Texterweiterungen </h3>
 
 - Erkennung des Eingabekontext in der Karteikarte anhand des Albiskürzel (z.B. lko, dia, bef, info, lp, lbg) 
-- man kann sich Textkürzel anlegen die sich Dank Autohotkey automatisch zur Leistungskomplexen, Diagnosen, Befundtexten oder anderem erweitern 
-
-<h3> &#9733 Unterstützung des Laborabrufes </h3>
-
-- Übernimmt automatisch nach manuellem Start des Laborabrufes die weiteren Vorgänge bis hin zum Übertragen der Befunde ins Laborblatt  (funktioniert nur teilweise)
+- Anlegen eigener Textkürzel die sich automatisch zur Leistungskomplexen, Diagnosen, Befundtexten oder anderem erweitern lassen 
 
 <h3> &#9733 Automatisierung DICOM-Daten Umwandlung </h3>
 
-- [MicroDicom](https://www.microdicom.com), der freie DICOM-Viewer für Windows, wird automatisiert für eine schnelle Umwandlung der Daten in Bild- oder Videodateien (im Moment MRT/CT Aufnahmenumwandlung ins wmi Format (video))
+- [MicroDicom](https://www.microdicom.com), der freie DICOM-Viewer für Windows, wird automatisiert für eine schnelle Umwandlung der Daten in Bild- oder Videodateien (im Moment MRT/CT Aufnahmenumwandlung ins wmi Format (video)
 
-<h3> &#9733 Funktionsbibliothek für eigene Skriptentwicklung </h3>
+<h3> &#9733 RPA-Funktionsbibliothek</h3>
 
-- **107 Funktionen** zur Steuerung von Albis sind für die Entwicklung eigener Skripte vorhanden 
+- **118 Funktionen** zur Steuerung von Albis für die Entwicklung eigener Skripte  
 
+<h3> &#9733 native DBASE-Klasse	</h3>	
 
+- für die Analyse der von Albis verwendeten DBASE-Datei Strukturen, Portierung von oder Suche nach Daten
+
+<h3> &#9733 medizinische Berechnungen</h3>	
+
+- Funktionsbibliothek für Berechnungen von BMI, eGFR nach der CKD-EPI Formel, KOF und mehr
+
+<h3> &#9733 Karteikarten exportieren	</h3>	
+
+- Export der Karteikarte, des Laborblattes und aller Befunde über ein extra 
+
+<h3> &#9733 Laborjournal</h3>
+
+- schnelle Übersicht auffälliger Laborwerte der letzten Tage
+
+<h3> &#9733 Laborabruf</h3>
+
+- zeitgesteuerter Abruf von Labordaten mit anschliessendem Import
+
+[alle Änderungen in Addendum](Docs/Changes_Addendum_main.md)      [alle Änderungen in den Funktionsbibliotheken](Docs/Changes_Addendum_includes.md)
 
 ![](Docs/TrennerExtraBreit.png)
 
@@ -133,6 +185,12 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
 ![](Docs/TrennerExtraBreit.png)
 
 <br>
+
+## ![](Docs/Icons/Addendum.png) <u>Laborjournal</u>
+
+![](Docs/Laborjournal.png) 
+
+
 
 ## ![](Docs/Icons/Addendum.png) <u>Dauermedikamentenfenster</u>
 
@@ -211,38 +269,17 @@ Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter ande
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![](Docs/Icons/Monet.png) <u>MoNet</u> 
-
-**Monitor for your Network**
-
-![Beispielbild des Monet Modules](Docs/Modul%20MoNet%20Screenshot.png)
-
-Statusanzeige der Computer in der Praxis (im Moment nur an oder aus). Bestimmte Computer können für den Zugriff gesperrt werden um versehentliches Herunterfahren zu vermeiden. Entsperren geht nur per Passwort.
-
-Soll ein Clientkommunikationsmodul werden. angedachte Punkte:
-
-- **Herunterfahren** eines entfernten Clients von jedem Rechner aus
-- **Hochfahren** per WakeOnLan
-- **Kurznachrichtenchat** - die Albis interne Nachrichtenfunktion ist mal wieder ausgefallen
-- **Remote-Start** von Skripten auf anderen Clienten
-- **Überwachungsfunktionen** - melden z.B. eines Serverausfall, abgestürzter oder nicht funktionierender Software z.B. über eine Nachricht per Telegram App (Funktion)<br>
-
-**Beispielbild des Netzwerkmonitors**. 
-Die IP-Adressen und Namen der Rechner müssen in der Addendum.ini hinterlegt sein
-
-
-
-<img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
-
 ## ![InfoIcon](Docs/Icons/Infofenster.png) <u>Infofenster</u>
 
-**Befundeingang, Tagesprotokoll, Praxisinfos**
+**Befundeingang, Tagesprotokoll, Netzwerkübersicht, Praxisinfos**
 
 ![Infofenster](Docs/Infofenster.png)
 
+
+
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![](Docs/Icons/Abrechnungshelfer.png) <u>Abrechnungshelfer - optimieren Sie Ihre Abrechnung</u>
+## ![Abrechnungshelfer](Docs/Icons/Abrechnungshelfer.png) <u>Abrechnungshelfer</u> - optimieren Sie Ihre Abrechnung
 
 <b>mehr Statistiken, mehr Möglichkeiten der Automatisierung</b>
 
@@ -252,21 +289,49 @@ Erstellen Sie ein Tagesprotokoll und nutzen Sie diese Modul um von der Compugrou
 <br>fertige Statistiken:
 
 - **freie Statistik** - mittels *RegEx* in Tagesprotokollen suchen (**!nur die Gui ist fertig!**)
+
 - **Patienten für die Vorsorgeliste suchen** - findet Patienten bei denen eine Vorsorgeuntersuchung (GVU und/oder Hautkrebsscreening durchgeführt werden kann)
+
 - **nach fehlenden GB Ziffern suchen** - erstellt eine Liste von Patienten bei denen der geriatrische Basiskomplex noch nicht abgerechnet wurde
+
 - **fehlende Chronikerziffern** - erstellt eine Liste von Patienten bei denen die Ziffern 03220 oder 03221 nicht abgerechnet wurden, obwohl dies in den Vorquartalen erfolgt war 
+
 - **neue Chroniker finden** - findet Patienten bei denen man die Ziffern 03220/03221 ansetzen kann. Das Skript nutzt dazu eine Liste von ICD-Schlüsselnummern des Bewertungsausschusses nach § 87 Absatz 1 SGB V, die nach Einschätzung der AG medizinische Grouperanpassung chronische Krankheiten kodieren.
+
 - **Dauerdiagnosenstatistik** - listet und zählt alle Dauerdiagnosen aus dem gewählten Tagesprotokoll, jede Diagnose beeinhaltet auch eine Liste der entsprechenden Patienten
+
+  
+
+  <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
+
+## ![Export](D:/Autohotkey/GitHub/Addendum-fuer-Albis-on-Windows/Docs/Icons/Export.png) <u>Dokument Exporter</u> - einfach exportieren
+
+***Skript ist auch ohne Addendum lauffähig***
+
+![Addendum_Export.ahk](D:/Autohotkey/GitHub/Addendum-fuer-Albis-on-Windows/Docs/Addendum_exporter.jpg)
+
+- **Eingabe** von **Nachname, Vorname, Geburtsdatum oder Patientennummer** wie aus dem Dialog ‘Patient öffnen’ in Albis gewöhnt in die Suche
+- es werden alle mit den Suchkriterien übereinstimmenden Patienten angezeigt (nutzt die PATIENT.dbf im albiswin\db Verzeichnis)
+- **ein Klick** auf einen Patienten und alle Dokumente des Patienten werden angezeigt (BEFUND.dbf und BEFTEXT.dbf werden verknüpft)
+  - **die Ausgabe** **kann** nach Dateiendungen und nach den Texten in den Karteikarten **gefiltert werden**
+  - angezeigt wird das Karteikartendatum, die Dateiendung und der Karteikartentext
+- im Feld ***‘Basispfad für den Dokumentenexport’*** kann der eigene Wunschpfad eingegeben werden
+- Wählen Sie die zu exportierenden Dokumente indem Sie ein **Häkchen setzen** oder drücken Sie auf ***‘Alle Dokumente auswählen’***
+- mit ***‘Ausgewählte exportieren’*** werden die Dokumente in einen **automatisch erzeugten Unterpfad des Basispfades kopiert** 
+  - die Bezeichnung des **Unterpfades** ergibt sich aus **Nr, Nachname, Vorname** des gewählten Patienten
+  - der **Dateiname wird aus Karteikartendatum und dem Karteikartentext** gebildet 
+  - die **Zeichen** im Karteikartentext **werden** so **angepasst** das sie den Konventionen für Windows-Datei-Namen entsprechen (nicht erlaubte Zeichen werden entfernt)
+-  ist eine Datei für den gewählten Patienten schon exportiert wird dies mit einem ‘**X**’ in der Dokumentenliste angezeigt, bei PDF-Dokumenten wird ein ‘**S**’ für durchsuchbare PDF-Datei (PDF-Text) und die Seitenzahl angezeigt
 
 
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![Laborabruf](Docs/Icons/LaborAbruf.png) Laborabruf (teilweise in Addendum integriert)
+## ![Laborabruf](Docs/Icons/LaborAbruf.png) <u>Laborabruf</u> (teilweise in Addendum integriert)
 
 **Die Automatisierung für den Abruf der Laborwerte**
 
-- der Abruf der Laborwerte ist jetzt teilautomatisiert und ins Addendum-Skript integriert
+- der Abruf der Laborwerte ist teilautomatisiert und ins Addendum-Skript integriert (kommt leider mit bestimmten Situation nicht zurecht)
 - Skript erkennt einzelne Abschnitte des Abrufs von Labordaten und übernimmt dann die immer wieder kehrenden Eingabetätigkeiten
 
 - erkannt werden:
@@ -280,7 +345,7 @@ Erstellen Sie ein Tagesprotokoll und nutzen Sie diese Modul um von der Compugrou
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![GVU](Docs/Icons/GVU.png) Gesundheitsvorsorgeliste
+## ![GVU](Docs/Icons/GVU.png) <u>Gesundheitsvorsorgeliste</u>
 
 **automatisierte Formularerstellung**
 
@@ -366,9 +431,8 @@ Die Inhalte und Skripte dürfen AUSSCHLIESSLICH NUR von Praxisinhabern, interess
 
 ###### * (! für Juristen ! - Artikel ‘III.j’ ist Satire!)
 
-
 <br>
-<br>
+[GNU Licence for Addendum für Albis](Docs/GNU Licence for Addendum für Albis.pdf)
 
 <img src="Docs/TrennerExtraBreit.png" style="zoom: 67%;" />
 

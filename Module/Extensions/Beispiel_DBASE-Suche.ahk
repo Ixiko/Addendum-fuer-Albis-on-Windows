@@ -8,6 +8,11 @@
 	; Skriptstartzeit
 		starttime	:= A_TickCount
 
+	; Albis-Datenbank Pfad
+		RegExMatch(A_ScriptDir, ".*(?=\\Module)", AddendumDir)        ; Addendum-Verzeichnis
+		RegRead, PathAlbis, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, 1-MainPath
+		basedir    	:= PathAlbis "\db"
+
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 	; Objekte / Variablen
 	;-------------------------------------------------------------------------------------------------------------------------------------------
@@ -44,8 +49,31 @@
 													,	"KUERZEL" 	: "dia"
 													, 	"INHALT"   	: "rx+:\{I1\d\.|\{E1\d\."
 													,	"QUARTAL"	: ""}}
+		Search[5] 	:= {	"dbasefile"		: "BEFUND"
+							,	"output"     	: "Patienten m. Sigmadivertikulitis"
+							,	"showPatID"  	: false
+							,	"text"          	: "`t"
+							,	"fields"      	: {"DATUM"   	: "rx:20[12]\d\d\d\d\d"
+													,	"KUERZEL" 	: "dia"
+													, 	"INHALT"   	: "rx:\{K57\.2\d*"
+													,	"QUARTAL"	: ""}}
+		Search[6] 	:= {	"dbasefile"		: "BEFUND"
+							,	"output"     	: "Abstriche SARS-CoV-2"
+							,	"showPatID"  	: false
+							,	"text"          	: "`t"
+							,	"fields"      	: {"DATUM"   	: "rx:202[01]\d{4}"
+													,	"KUERZEL" 	: "dia"
+													, 	"INHALT"   	: "rx:\{.*(U99|U07|Z11)"}}
+		Search[7] 	:= {	"dbasefile"		: "BEFUND"
+							,	"output"     	: "Labor SARS-CoV-2 Meldungen"
+							,	"showPatID"  	: false
+							,	"text"          	: "`t"
+							,	"fields"      	: {"DATUM"   	: "rx:202[01]\d{4}"
+													,	"KUERZEL" 	: "labor"
+													, 	"INHALT"   	: "rx:SARS"}}
 
-		nr         	:= 4
+	; Suche
+		nr         	:= 7
 		With      	:= Object()
 		cSearch		:= Object()
 
@@ -60,26 +88,24 @@
 	; Datenbankpfad	- vollständiger Pfad zur Datenbank in der Form M:\albiswin\db\BEFUND.dbf
 	; debug                	- Ausgabe von Werten zur Kontrolle des Ablaufes, Voreinstellung: keine Ausgabe
 	;-------------------------------------------------------------------------------------------------------------------------------------------
-		befund   	:= new DBASE("C:\tmp\" search[nr].DBASEfile ".dbf", true)
-		befund := ""
+		befund   	:= new DBASE(basedir "\" search[nr].DBASEfile ".dbf", true)
 
-		ExitApp
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 	; Lesezugriff einrichten. Rückgabewert ist die Position des Dateizeigers
 	;-------------------------------------------------------------------------------------------------------------------------------------------
-		res        	:= befund.Open()
+		res        	:= befund.OpenDBF()
 
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 	; Suche starten. objekt.Search(StringObjekt [, exportPfad])
 	; StringObjekt	- Objekt mit den Feldnamen als key und einem RegExString als value
 	; exportPfad  	- optional ein Pfad - dann wird aber kein Array mit den extrahierten Zeilen zurückgegeben
 	;-------------------------------------------------------------------------------------------------------------------------------------------
-		matches 	:= befund.Search(Search[nr].fields)
+		matches 	:= befund.Search(Search[nr].fields, 0, 1)
 
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 	; Datenbankzugriff kann geschlossen werden
 	;-------------------------------------------------------------------------------------------------------------------------------------------
-		res         	:= befund.Close()
+		res         	:= befund.CloseDBF()
 
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 	; 1.Zeit - Lesedauer aus der Datenbankdatei
@@ -91,7 +117,7 @@
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 		For field, val in Search[nr].fields
 			If RegExMatch(val, "^\s*rx(?<mode>.)\:", s) {
-				cSearch[field] := {"mode":smode, "strings":StrSplit(RegExReplace(val, "^\s*rx.\:"), "|")}
+				cSearch[field] := {"mode":smode, "strings":  StrSplit(RegExReplace(val, "^\s*rx.\:"), "|")}
 				SciTEOutput( " field [" field "]: " cSearch[field].Mode ", "  cSearch[field].Count())
 			}
 
@@ -187,16 +213,15 @@
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 	; Datenbank Objekt freigegeben. Damit werden alle gespeicherten Daten gelöscht und Speicher freigegeben
 	;-------------------------------------------------------------------------------------------------------------------------------------------
-		ObjRelease(befund)
+		befund := ""
 		SciTEOutput(" Anzahl der Elemente vor Freigabe: " objSize1 ", danach: " (befund.GetCapacity() = "" ? 0 : befund.GetCapacity()))
 
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 	; extrahierte Daten ansehen
 	;-------------------------------------------------------------------------------------------------------------------------------------------
-		;Run, % filename
+		Run, % filename
 
 ExitApp
-
 
 
 #Include %A_ScriptDir%\..\..\Include\Addendum_DBASE.ahk

@@ -60,7 +60,7 @@ GetMonitorAt(Lx, Ly, Ldefault:=1) {                                             
 return Ldefault
 }
 
-screenDims(MonNr:=1) {	                                                                                        		    			;-- returns a key:value pair of width screen dimensions (only for primary monitor)
+ScreenDims(MonNr:=1) {	                                                                                        		    			;-- returns a key:value pair of width screen dimensions (only for primary monitor)
 
 	Sysget, MonitorInfo, Monitor, % MonNr
 	X	:= MonitorInfoLeft

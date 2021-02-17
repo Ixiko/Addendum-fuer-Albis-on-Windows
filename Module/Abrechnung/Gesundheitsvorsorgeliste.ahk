@@ -1,5 +1,5 @@
 ﻿
-;{ -----------------  Addendum für Albis on Windows - Modul Gesundheitsvorsorgeliste.ahk V1.89 vom 04.07.2020 -  Ixiko
+;{ -----------------  Addendum für Albis on Windows - Modul Gesundheitsvorsorgeliste.ahk V1.90 vom 25.12.2020 -  Ixiko
 
 ; 	nur lauffähig ab der Albis Version 12.071.005 (CG hatte mit dieser Albisversion eine Änderung des "Cave! von" Fenster eingeführt
 ;   und nur lauffähig mit der jeweils aktuellen Autohotkey-Version zum Versionsdatum
@@ -710,13 +710,15 @@ Ortho1: 										;{	GVU und HKS-Formular werden automatisiert aufgerufen und be
 		AlbisActivate(1)
 		ControlGetFocus, cFocus, % "ahk_id " AlbisWinID()
 		If InStr(cFocus, "Edit") || InStr(cFocus, "RichEdit")
-			SendInput, {Escape}
+			 SendInput, {Escape}
 
-		hCave := Albismenu(32778, "Cave! von")
-		hCave := Albismenu(32778, "Cave! von")
 		Clipboard := neueZeile
+		hCave := Albismenu(32778, "Cave! von")
+
 		Clipboard := neueZeile
-		MsgBox, 0x40000, Gesundheitsvorsorgeliste, % "neuen Text bitte einfügen:`n" neueZeile "`ndann hier auf OK drücken."
+		;res := AlbisCaveSetCellFocus(hCave, 9, 4)
+
+		MsgBox, 0x40000, Gesundheitsvorsorgeliste, % "Ergebnis: " res "`nneuen Text bitte einfügen:`n" neueZeile "`ndann hier auf OK drücken."
 		;AlbisSetCaveZeileEx(9, neueZeile, true)
 
 
@@ -784,180 +786,80 @@ AlbisSetCaveZeileEx(nr, txt, CloseCave=false) {	                                
 
 		SetKeyDelay, 10, 30
 
+		admTitel	:= "Addendum für Albis on Windows"
 		CaveVon 	:= "Cave! von ahk_class #32770"
 		slTime   	:= 100
 
 		AlbisActivate(1)
 
-	; CAVE! VON FENSTER AUFRUFEN
-		If !(hCave := Albismenu(32778, "Cave! von")) {
-			MsgBox, 0x40030, Addendum für Albis on Windows, % 	"Dialogfenster:`n 'Cave! von <" AlbisCurrentPatient() ">`nhat sich nicht aufrufen lassen!"
+	; CAVE! VON FENSTER - AUFRUFEN                                                    	;{
+		while !(hCave := Albismenu(32778, "Cave! von")) {
+			If (A_Index > 2) {
+				MsgBox, 0x40030, % admTitel, % 	"Dialogfenster:`n 'Cave! von <" AlbisCurrentPatient() ">`nist zum " A_Index "x nicht geöffnet worden.`nAbbrechen?"
+				IfMsgBox, Yes
+					return 0
+			}
+			MsgBox, 0x40030, % admTitel, % 	"Dialogfenster:`n 'Cave! von <" AlbisCurrentPatient() ">`nhat sich nicht aufrufen lassen!`nBitte manuell aufrufen!"
 		}
+	;}
 
-	; CAVE! VON FENSTER AKTIVIEREN
+	; CAVE! VON FENSTER - AKTIVIEREN                                                    	;{
 		WinActivate   	, % "ahk_id " hCave
 		WinWaitActive	, % "ahk_id " hCave,, 2
+	;}
 
-	; ein zweites mal CAVE! VON FENSTER AUFRUFEN
-		If !(hCave := Albismenu(32778, "Cave! von")) {
-			MsgBox, 0x40030, Addendum für Albis on Windows, % 	"Dialogfenster:`n 'Cave! von <" AlbisCurrentPatient() ">`nhat sich nicht aufrufen lassen!"
+	; HANDLES, ZEILENZAHL, AKTUELLEN FOCUS ERMITTELN                  	;{
+		ControlGetFocus, cFocus, % "ahk_id " hCave
+		ControlGet, hCaveLV, HWND,, SysListView321, % "ahk_id " hCave
+		ControlGet, rowCount, List, Count,, % "ahk_id " hCaveLV
+	;}
+
+	; NEUE ZEILEN ANLEGEN WENN PARAMETER - NR > ZEILENZAHL IST  	;{
+		If (nr > rowCount) {
+		    If !AlbisCaveAddRows(hCave, rowCount - nr)
+				return 0
 		}
+	;}
 
-	; FOCUS INS SYSLISTVIEW GEBEN
-		ControlGetFocus, FControl, % "ahk_id " hCave
-		If InStr(FControl, "Edit") {
-			SciTEOutput(A_LineNumber ": " FControl)
-			ControlSend,, % "{Escape}", % "ahk_id " hCave
-			SciTEOutput(A_LineNumber ": Escape gedrückt (" ErrorLevel ")")
-			sleep % slTime*5
-		}
-		ControlGetFocus, FControl, % "ahk_id " hCave
-		while !InStr(FControl, "SysListview") {
+	; NEUE DATEN EINTRAGEN                                                               	;{
 
-			ControlFocus 	 , SysListView321, % "ahk_id " hCave
-			ControlGetFocus, FControl     	 , % "ahk_id " hCave
-			SciTEOutput((fidx := A_Index + 1) ": " FControl)
+		Clipboard := txt
 
-			If InStr(FControl, "SysListview") || (A_Index > 10)
-				break
+		; setzt den Eingabefokus direkt in die spezifizierte Zelle der Tabelle
+		If !AlbisCaveSetCellFocus(hCave, nr, 4) {
 
-			If InStr(FControl, "Edit") {
+			MsgBox, 0x40000, Gesundheitsvorsorgeliste,
+					(LTrim
+					Ein Fehler ist aufgetreten.
+					Bitte wähle das Feld Beschreibung der Zeile %nr% manuell aus.
+					Drücke wenn Du fertig bist Ok!"
+					)
 
-				If      	(A_Index < 3) {
-					Send, {Escape}
-					SciTEOutput(A_LineNumber ": Escape gedrückt (" ErrorLevel ")")
-				}
-				else if	(A_Index < 10) {
-					ControlClick, SysListView321, % "ahk_id " hCave,, Left, 1
-				}
-				else
-					break
-
-				sleep % slTime * 2
-				continue
-
-			}
-
-			sleep % slTime * 2
-		}
-
-	; NOCHMALIGE ÜBERPRÜFUNG - DER FOKUS MUSS GESETZT SEIN
-		ControlGetFocus, FControl, % "ahk_id " hCave
-		SciTEOutput("EE: " FControl)
-		If !InStr(FControl, "SysListview") {
-			MsgBox, 0x40000, Gesundheitsvorsorgeliste, Bitte im Cave! von Dialog die ListView auswählen!
-			hCave := WinExist("Cave! von")
 			WinActivate   	, % "ahk_id " hCave
 			WinWaitActive	, % "ahk_id " hCave,, 2
-			ControlFocus 	, SysListView321, % "ahk_id " hCave
-		}
-
-		If (hCave := WinExist("Cave! von")) {
-			ControlSend, SysListview321, % "{HOME}", % "ahk_id " hCave
-			err := ErrorLevel
-			ControlGetFocus, FControl, % "ahk_id " hCave
-			SciTEOutput("Send {Home} (ErrorLevel:  " ErrorLevel ", Focus: " FControl ")")
-			sleep % slTime * 3
-		}
-
-	; bei neue Patienten ohne Eintragungen im cave Dialog kann eine beliebige Zeile nicht direkt angesprungen werden
-	; Der folgende Code prüft ob die gewünschte Zeile schon angelegt wurde. Wenn nicht wird diese angelegt.
-		If (hCave := WinExist("Cave! von")) {
-
-			SendMessage, 0x1004,,, SysListview321, % "ahk_id " hCave
-			caveZeilenMax := ErrorLevel
-			SciTEOutput("Zeilen: " caveZeilenMax)
-
-			If (caveZeilenMax < nr) {
-
-				; letzte Listenzeile auswählen
-					ControlSend, SysListview321, % "{End}", % "ahk_id " hCave
-					err := ErrorLevel
-					ControlGetFocus, FControl, % "ahk_id " hCave
-					SciTEOutput("Send {End} (ErrorLevel:  " Err ", Focus: " FControl ")")
-					sleep % slTime * 5
-
-				; Editfeld (Arzt) fokusieren
-					ControlSend, SysListview321, % "{SPACE}", % "ahk_id " hCave
-					err := ErrorLevel
-					ControlGetFocus, FControl, % "ahk_id " hCave
-					SciTEOutput("Send {Space} (ErrorLevel:  " Err ", Focus: " FControl ")")
-					sleep % slTime * 5
-
-				; solange TAB senden bis die gewünschte Listenzeile erreicht ist
-					Loop {
-
-						SendMessage, 0x1004,,, SysListview321, % "ahk_id " hCave
-						caveZeilenMax := ErrorLevel
-						SciTEOutput("Zeilen: " caveZeilenMax)
-						If (caveZeilenMax < nr) {
-
-							Loop 3 {
-								ControlSend, SysListview321, % "{TAB}", % "ahk_id " hCave
-								err := ErrorLevel
-								ControlGetFocus, FControl, % "ahk_id " hCave
-								SciTEOutput("Send {TAB} (ErrorLevel:  " Err ", Focus: " FControl ")")
-								sleep % slTime * 5
-							}
-							continue
-
-						} else if (caveZeilenMax = nr) {
-
-							Loop 2 {
-								ControlSend, SysListview321, % "{TAB}", % "ahk_id " hCave
-								err := ErrorLevel
-								ControlGetFocus, FControl, % "ahk_id " hCave
-								SciTEOutput("Send {TAB} (ErrorLevel:  " Err ", Focus: " FControl ")")
-								sleep % slTime * 5
-							}
-							break
-						}
-
-					}
-
-			}
-			else { 	; Listenzeile existiert, dann direkter Sprung
-
-				; im 'Cave! von' - Fenster zur n. Zeile springen (ACC Path 4.1.4.9)
-					Loop % (nr - 1) {
-						ControlSend, SysListview321, % "{Down}", % "ahk_id " hCave
-						err := ErrorLevel
-						ControlGetFocus, FControl, % "ahk_id " hCave
-						SciTEOutput("Send {Down} " A_Index " (ErrorLevel:  " Err ", Focus: " FControl ")")
-						sleep % slTime * 5
-					}
-				; 1.Editfeld (Arzt) fokusieren
-					ControlSend, SysListview321, % "{SPACE}", % "ahk_id " hCave
-					err := ErrorLevel
-					ControlGetFocus, FControl, % "ahk_id " hCave
-					SciTEOutput("Send {Space} (ErrorLevel:  " Err ", Focus: " FControl ")")
-					sleep % slTime * 5
-				; 1. und 2.Editfeld (Datum) fokussieren
-					Loop 2 {
-						ControlSend, SysListview321, % "{TAB}", % "ahk_id " hCave
-						err := ErrorLevel
-						ControlGetFocus, FControl, % "ahk_id " hCave
-						SciTEOutput("Send {TAB} (ErrorLevel:  " Err ", Focus: " FControl ")")
-						sleep % slTime * 5
-					}
-
-		}
-
-	}
-
-	; in dieses Feld den Text schreiben
-		If WinExist("ahk_id " hCave) {
-			ControlSendRaw, Edit1, % txt, % "ahk_id " hCave
+			ControlFocus, Edit1, % "ahk_id " hCave
 			sleep % slTime * 2
-			ControlGetText, cText, Edit1, % "ahk_id " hCave
+
 		}
+
+		Table := AlbisCaveGetCellFocus(hCave)
+		If (Table.row = nr) && (Table.col = 4) {
+			ControlSendRaw, Edit1, % txt, % "ahk_id " hCave
+			;SendInput, {LControl Down}v{LControl Up}
+		}
+
+	;}
+
+
+	; Text auslesen
+		sleep % slTime * 2
+		ControlGetText, cText, Edit1, % "ahk_id " hCave
 
 	; kontrollieren ob der Text eingefügt wurde, wenn nicht wird der Nutzer zur manuellen Intervention aufgefordert
 		If (cText <> txt) {
 
 			If !(res:= VerifiedSetText("Edit1", txt, "ahk_id " hCave, 500)) 	{
 
-				Clipboard := txt
 				Clipboard := txt
 				MsgBox, 0x40000, Gesundheitsvorsorgeliste,
 					(LTrim
@@ -982,7 +884,7 @@ AlbisSetCaveZeileEx(nr, txt, CloseCave=false) {	                                
 			}
 		}
 
-return ErrorLevel
+return res
 }
 
 WinWasCreated(WinTitle, WinClass:="", WinText:="") {
@@ -1193,11 +1095,12 @@ Return
 
 	#include %A_ScriptDir%\..\..\include\Addendum_Albis.ahk
 	#include %A_ScriptDir%\..\..\include\Addendum_Controls.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Datum.ahk
 	#Include %A_ScriptDir%\..\..\include\Addendum_DB.ahk
 	#include %A_ScriptDir%\..\..\include\Addendum_Gdip_Specials.ahk
 	#include %A_ScriptDir%\..\..\include\Addendum_Internal.ahk
-	#include %A_ScriptDir%\..\..\include\Addendum_Misc.ahk
 	#Include %A_ScriptDir%\..\..\include\Addendum_PdfHelper.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_PraxTT.ahk
 	#Include %A_ScriptDir%\..\..\include\Addendum_Protocol.ahk
 	#include %A_ScriptDir%\..\..\include\Addendum_Screen.ahk
 	#include %A_ScriptDir%\..\..\include\Addendum_Window.ahk
@@ -1207,7 +1110,6 @@ Return
 	#Include %A_ScriptDir%\..\..\lib\RemoteBuf.ahk
 	#Include %A_ScriptDir%\..\..\lib\SciTEOutput.ahk
 	#Include %A_ScriptDir%\..\..\lib\Sift.ahk
-	#include %A_ScriptDir%\..\..\include\Gui\PraxTT.ahk
 
 ;}
 

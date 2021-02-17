@@ -29,16 +29,17 @@ FehlerProtokoll(Exception, MsgToTelegram:= 1) {                                 
 
 		If IsObject(Exception)		{
 
-				startLine	:= (Exception.line - Range)
-				startLine	+= 1
+				startLine	:= (Exception.line - Floor(Range/2))
+				;startLine	+= 1
 				faultcode	:= "`tbetroffener Code (Bereich +-" Range "):`n"
 
 			; saves a range of code lines to file protocoll
-				FileRead, faultFile, % A_ScriptFullPath
+				FileRead, faultFile, % Exception.File
 				faultLine	:= StrSplit(faultFile, "`n", "`r")
+				faultcode 	:= "`t`t/*`n"
 				Loop, % Range
-					faultcode .= "`t`t`t" SubStr("00000" (startLine+A_Index), -4) ": " faultLine[(startLine+A_Index)] "`n"
-				faultcode	:= RTrim(faultcode, "`n")
+					faultcode .= "`t`t`t" SubStr("00000" (startLine+A_Index-1), -4) ": " faultLine[(startLine+A_Index-1)] "`n"
+				faultcode	.= " `t`t*/"
 
 				eMsg:= RegexReplace(exception.Message, "(\{)", q "$1" q)
 				eMsg:= RegexReplace(eMsg, "(\})", q "$1" q )

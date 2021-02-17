@@ -2,17 +2,21 @@
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                 liest Informationen aus der Addendum.ini ein für das globale Objekt Addendum
 ;                                                                              	!diese Bibliothek enthält Funktionen für Einstellungen des Addendum Hauptskriptes!
-;                                                            	by Ixiko started in September 2017 - last change 11.11.2020 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 16.02.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+return
 admObjekte() {                                                                                       	;-- Addendum-Objekt erweitern
 
  		Addendum.Chroniker            	:= Array()          	; Patient ID's der Chroniker
 		Addendum.Geriatrisch           	:= Array()         	; Patient ID's für geriatrisches Basisassement
+		Addendum.Default                  	:= Object()       	; Addendum Font/Farbeinstellungen
 		Addendum.Hooks                  	:= Object()       	; enthält Adressen der Callbacks der Hookprozeduren und anderes
 		Addendum.Labor	    	        	:= Object()			; Laborabruf und andere Daten für Laborprozesse
-		Addendum.Laborabruf            	:= Object()
-		Addendum.LAN	       	        	:= Object()			; LAN Kommunikationseinstellungen
+		Addendum.Laborabruf            	:= Object()         	; Statusinformationen zum Laborabruf
+		Addendum.OCR                     	:= Object()          	; Einstellungen für Texterkennung und Autonaming
+		Addendum.PDF                      	:= Object()          	; Einstellungen/Pfade für die Bearbeitung von PDF Dateien
+		Addendum.LAN	                    	:= Object()			; LAN Kommunikationseinstellungen
 		Addendum.LAN.Clients          	:= Object()          	; LAN Netzwerkgeräte Einstellungen
 		Addendum.Praxis                     	:= Object()        	; Praxisadressdaten
 		Addendum.Praxis.Sprechstunde	:= Object()       	; Daten zu Öffnungszeiten, Urlaubstagen
@@ -23,33 +27,40 @@ admObjekte() {                                                                  
 		Addendum.Drucker               	:= Object()          	; verschiedene Druckereinstellungen
 		Addendum.AktuellerTag	    	:= A_DD            	; der aktuelle Tag
 		Addendum.Kosten                  	:= Object()        	; hinterlegte Preise für Hotstringausgaben bei Privatabrechnungen
-		Addendum.Thread                  	:= Object()          	; enthält die PID's gestarteter Threads (z.B. AddendumToolbar)
+		Addendum.Thread                  	:= Object()          	; enthält die PID's gestarteter Threads (z.B. AddendumToolbar, Addendum_OCR.ahk)
 		Addendum.Threads                 	:= Object()         	; Skriptcode für Prozess-Threads
 		Addendum.Windows                	:= Object()        	; Fenstereinstellungen für andere Programme
 		Addendum.UndoRedo             	:= Object()          	; Undo/Redo Textbuffer
 		Addendum.UndoRedo.List        	:= Array()           	; Undo/Redo Textbuffer
+		Addendum.Module                  	:= Object()        	; Addendum Skriptmodule
+		Addendum.Tools                     	:= Object()			; externe Programme die z.B. über das Infofenster gestartet werden können
+		Addendum.PatExtra                	:= Object()          	; zusätzliche Informationen über Patienten
+
+
+		Addendum.PraxTTDebug := false
 
 }
 
 admVerzeichnisse() {                                                                             	;-- Programm- und Datenverzeichnisse (!ALS ERSTES AUFRUFEN! nach admObjekte)
 
-		Addendum.AddendumDir                	:= AddendumDir
-		Addendum.AddendumIni               	:= AddendumDir "\Addendum.ini"
+		Addendum.Dir                              	:= AddendumDir
+		Addendum.Ini                                 	:= AddendumDir "\Addendum.ini"
 
-		Addendum.DosisDokumentenPfad   	:= IniReadExt("Addendum" 	, "DosisDokumentenPfad"	)              	; MS Word Dateien mit eigenen Hinweisen zu Medikamentendosierungen
 		Addendum.DBPath                          	:= IniReadExt("Addendum" 	, "AddendumDBPath"     	)              	; Datenbankverzeichnis
 		Addendum.BefundOrdner                	:= IniReadExt("ScanPool"     	, "BefundOrdner"            	)             	; BefundOrdner = Scan-Ordner für neue Befundzugänge
 		Addendum.VideoOrdner                	:= IniReadExt("ScanPool"     	, "VideoOrdner"             	)             	; Video's z.B. aus Dicom CD's (CT Bilder u.a.)
 		Addendum.AlbisExe                         	:= IniReadExt("Albis"           	, "AlbisExe"                    	)             	; Pfad zum Albis-Stammverzeichnis
+		Addendum.DosisDokumentenPfad   	:= IniReadExt("Addendum" 	, "DosisDokumentenPfad"	)              	; MS Word Dateien mit eigenen Hinweisen zu Medikamentendosierungen
 
 		Addendum.TPPath	                        	:= Addendum.DBPath "\Tagesprotokolle\" A_YYYY                     	; Tagesprotokollverzeichnis
 		Addendum.TPFullPath                      	:= Addendum.TPPath "\" A_MM "-" A_MMMM "_TP.txt" 	               	; Name des aktuellen Tagesprotokolls
 
 		Addendum.ExportOrdner                	:= IniReadExt("ScanPool"   	, "ExportOrdner"        	, Addendum.BefundOrdner "\Export")  ;### ÜBERPRÜFUNG ANLEGEN
-		Addendum.AdditionalData_Path       	:= IniReadExt("Addendum"	, "AdditionalData_Path" 	, AddendumDir "\include\Daten")
+		Addendum.AdditionalData_Path       	:= AddendumDir "\include\Daten"
+
 
 	; Ordnerstruktur anlegen für die Verwaltung eingegangener Befunde, wenn ein BefundOrder in der ini angegeben wurde
-		If !InStr(Addendum.BefundOrdner, "Error") && RegExMatch(Addendum.BefundOrdner, "[A-Z]\:\\") {
+		If (!InStr(Addendum.BefundOrdner, "Error") && StrLen(Addendum.BefundOrdner) > 0) && isFullFilePath(Addendum.BefundOrdner) {
 
 			If !InStr(FileExist(Addendum.BefundOrdner "\Text"), "D")
 				FileCreateDir, % Addendum.BefundOrdner "\Text"
@@ -60,6 +71,29 @@ admVerzeichnisse() {                                                            
 			If !InStr(FileExist(Addendum.BefundOrdner "\Backup\Importiert"), "D")
 				FileCreateDir, % Addendum.BefundOrdner "\Backup\Importiert"
 
+		}
+
+	; Addendum Datenverzeichnis prüfen
+		If InStr(Addendum.DBPath, "Error")	|| !isFullFilePath(Addendum.DBPath)                  	{
+
+		; Anlegen des Verzeichnisses falls nicht vorhanden
+			If !FilePathExist(Addendum.Dir "\logs'n'data\_DB")
+				If !FilePathCreate(Addendum.DBPath := Addendum.Dir "\logs'n'data") {
+					MsgBox,, Addendum für AlbisOnWindows, %	"Das Verzeichnis für die Datenbank:`n" Addendum.DBPath
+																					. 	"`nkonnte nicht angelegt werden.`nDas Skript wird beendet!"
+
+					ExitApp
+				}
+				else if !FilePathCreate(Addendum.DBPath := Addendum.Dir "\logs'n'data\_DB") {
+					MsgBox,, Addendum für AlbisOnWindows, %	"Das Verzeichnis für die Datenbank:`n" Addendum.DBPath
+																					. 	"`nkonnte nicht angelegt werden.`nDas Skript wird beendet!"
+
+					ExitApp
+				}
+
+		; speichern des Verzeichnisses in der ini
+			IniWrite, % "%AddendumDir%\logs'n'data\_DB", % Addendum.Dir "\Addendum.ini", % "Addendum", % "AddendumDBPath"
+			Addendum.FirstDBAcess := true
 		}
 
 		;Addendum.7ZipDir                        	:= RegRead64("HKEY_CURRENT_USER\Software\7-Zip", "Path64")
@@ -89,34 +123,6 @@ GeriatrischListe() {                                                            
 		Loop, Parse, % FileOpen(filepath, "r", "UTF-8").Read(), `n, `r
 			If RegExMatch(A_LoopField, "^\d+", PatID)
 				Addendum.Geriatrisch.Push(PatID)
-
-}
-
-admAlbisMenuAufrufe() {                                                                       	;-- Menubezeichnungen und wm_command Befehle
-
-		Addendum.AlbisMenu := Object()        	; wm_command Daten für Dialogaufrufe in Albis
-		Addendum.AlbisMenu.Privatliquidation:= { "Auswahlliste": "33023"
-		, "Behandlungsliste": "32891"
-		, "Ausgangsbuch": "33125"
-		, "Offene_Posten": "32892"
-		, "Mahnliste": { "Alle": "33145"
-			, "Mahnstufe_1": "33142"
-			, "Mahnstufe_2": "33143"
-			, "Mahnstufe_3": "33144"
-			, "Mahnbescheid": "34192"
-			, "Fällige": "33850"}
-		, "Quittungsliste": "32893"
-		, "Stornierte_Restbeträge": "34864"
-		, "Journal": "32894"
-		, "Stornierte": "33851"
-		, "Buchungsliste": "33841"
-		, "Rechnungen_Buchungen": "33842"
-		, "Rechnungen_Mahnungen": "33844"
-		, "Kostenplan": "34067"
-		, "Faktorzuordnungen": "34155"
-		, "Quittungsliste_löschen": "32895"
-		, "Sachkostenaufstellung": "34080"
-		, "KH-Abschlag-_und_Vorteilsausgleich": "34156"}
 
 }
 
@@ -169,33 +175,54 @@ admFensterPositionen() {                                                        
 
 admFunktionen() {                                                                                 	;-- zuschaltbare Funktionen
 
-		tmp  := Trim(IniReadExt(compname, "AutoSize_Albis", "2k:nein,4k:nein" ))
-		Addendum.AlbisLocationChange  	:= RegExAutoPos(tmp)                                                                                           	; automatische Positionierung von Albis ist an
-		Addendum.AlbisGroesse            	:= IniReadExt(compname	, "Position_Albis"                               	, "w1922 h1080"	)  	; Größeneinstellung
-		Addendum.GVUAutomation			:= IniReadExt(compname	, "GVU_automatisieren"                    	, "nein"              	)  	; Automatisierung der GVU Formulare
-		Addendum.PDFSignieren   	    	:= IniReadExt(compname	, "FoxitPdfSignature_automatisieren" 	, "nein"              	)  	; Automatisierung PDF Signierung
-		Addendum.PDFSignieren_Kuerzel	:= IniReadExt(compname	, "FoxitPdfSignature__Kuerzel" 	      	, "Insert"            	)  	; Tastaturkürzel zum Auslösen des Signaturvorganges
-		Addendum.AutoCloseFoxitTab   	:= IniReadExt(compname	, "FoxitTabSchliessenNachSignierung"	, "Ja"                 	)  	; signiertes Dokument automatisch schliessen
-		Addendum.Labor.AbrufTimer         := IniReadExt(compname	, "Laborabruf_Timer"           	   	    	, "nein"              	) 	; zeitgesteuerter Laborabruf
-		Addendum.Labor.AutoAbruf 		    := IniReadExt(compname	, "Laborabruf_automatisieren"         	, "nein"              	) 	; Laborabruf bei manuellem Start automatisieren
-		Addendum.AddendumGui          	:= IniReadExt(compname	, "Infofenster_anzeigen"                  	, "ja"                 	)  	; Infofenster das den Inhalt des Bildvorlagen-Ordners anzeigt
-		Addendum.PatLog                      	:= IniReadExt(compname	, "Logbuch_Patienten"                     	, "ja"                 	)  	; Logbuch für Aktionen in der Karteikarte
-		Addendum.mDicom                     	:= IniReadExt(compname	, "MicroDicomExport_automatisieren"	, "ja"                 	)  	; Hilfe beim Export von Dicom CD's im MicroDicom Programm
-		Addendum.PopUpMenu              	:= IniReadExt(compname	, "PopUpMenu"                              	, "ja"                 	)  	; PopUpMenu integrieren
-		Addendum.ToolbarThread            	:= IniReadExt(compname	, "Toolbar_anzeigen"                         	, "nein"                 	)  	; die Addendum Toolbar starten
-		Addendum.Schnellrezept           	:= IniReadExt("Addendum"	, "Schnellrezept"                              	, "ja"                 	)  	; Schnellrezept integrieren
-		Addendum.ShowTrayTips           	:= IniReadExt("Addendum"	, "TrayTips_zeigen"                            	, "nein"                 	)  	; zeigt TrayTips
+	; Addendum.OptF. ???
 
-		If InStr(Addendum.Labor.AbrufTimer, "Error")
+	; automatische Positionierung von Albis ist an
+		tmp  := Trim(IniReadExt(compname, "AutoSize_Albis", "2k:nein,4k:nein" ))
+		Addendum.AlbisLocationChange  	:= RegExAutoPos(tmp)
+	; Größeneinstellung
+		Addendum.AlbisGroesse            	:= IniReadExt(compname	, "Position_Albis"                               	, "w1922 h1080"	)
+	; Automatisierung der GVU Formulare
+		Addendum.GVUAutomation			:= IniReadExt(compname	, "GVU_automatisieren"                    	, "nein"              	)
+	; Automatisierung PDF Signierung
+		Addendum.PDFSignieren   	    	:= IniReadExt(compname	, "FoxitPdfSignature_automatisieren" 	, "nein"              	)
+	; Tastaturkürzel zum Auslösen des Signaturvorganges
+		Addendum.PDFSignieren_Kuerzel	:= IniReadExt(compname	, "FoxitPdfSignature__Kuerzel" 	      	, "^Insert"            	)
+	; signiertes Dokument automatisch schliessen
+		Addendum.AutoCloseFoxitTab   	:= IniReadExt(compname	, "FoxitTabSchliessenNachSignierung"	, "Ja"                 	)
+	; zeitgesteuerter Laborabruf
+		Addendum.Labor.AbrufTimer         := IniReadExt(compname	, "Laborabruf_Timer"           	   	    	, "nein"              	)
+		If InStr(Addendum.Labor.AbrufTimer, "Error") || (StrLen(Addendum.Labor.AbrufTimer) = 0)
 			Addendum.Labor.AbrufTimer	:= false
-		If InStr(Addendum.Labor.AutoAbruf, "Error")
+	; Laborabruf bei manuellem Start automatisieren
+		Addendum.Labor.AutoAbruf 		    := IniReadExt(compname	, "Laborabruf_automatisieren"         	, "nein"              	)
+		If InStr(Addendum.Labor.AutoAbruf, "Error") || (StrLen(Addendum.Labor.AutoAbruf) = 0)
 			Addendum.Labor.AutoAbruf	:= false
+	; Infofenster das den Inhalt des Bildvorlagen-Ordners anzeigt
+		Addendum.AddendumGui          	:= IniReadExt(compname	, "Infofenster_anzeigen"                  	, "ja"                 	)
+	; Logbuch für Aktionen in der Karteikarte
+		Addendum.PatLog                      	:= IniReadExt(compname	, "Logbuch_Patienten"                     	, "ja"                 	)
+	; Hilfe beim Export von Dicom CD's im MicroDicom Programm
+		Addendum.mDicom                     	:= IniReadExt(compname	, "MicroDicomExport_automatisieren"	, "nein"                 	)
+	; PopUpMenu integrieren
+		Addendum.PopUpMenu              	:= IniReadExt(compname	, "PopUpMenu"                              	, "ja"                 	)
+	; die Addendum Toolbar starten
+		Addendum.ToolbarThread            	:= IniReadExt(compname	, "Toolbar_anzeigen"                         	, "nein"                 	)
+	; ermöglicht die sofortige Bearbeitung/Anzeige neuer Dateien
+		Addendum.WatchFolder            	:= IniReadExt(compname	, "BefundOrdner_ueberwachen"       	, "ja"                 	)
+	; Schnellrezept integrieren
+		Addendum.Schnellrezept           	:= IniReadExt("Addendum"	, "Schnellrezept"                              	, "ja"                 	)
+	; zeigt TrayTips
+		Addendum.ShowTrayTips           	:= IniReadExt("Addendum"	, "TrayTips_zeigen"                            	, "nein"                 	)
+	; AutoOCR - Eintrag wird nur auf dem dazu berechtigten Client angezeigt
+		Addendum.OCR.AutoOCR            	:= IniReadExt("OCR"      	, "AutoOCR"                                  	, "nein"                 	)
+
 
 }
 
 admGesundheitsvorsorge() {                                                                    	;-- Abstände zwischen Untersuchungen minimales Alter
 
-	Addendum.GVUAbstand                 	:= IniReadExt("Abrechnungshelfer"	, "minGVU_Abstand")
+	Addendum.GVUAbstand                 	:= IniReadExt("Abrechnungshelfer"	, "minGVUAbstand")
 	Addendum.GVUminAlter                	:= IniReadExt("Abrechnungshelfer"	, "minGVUAlter")
 	Addendum.GVUminAlterEinmalig   	:= IniReadExt("Abrechnungshelfer"	, "minGVUAlterEinmalig")
 	Addendum.GVUminAlterMehrmalig	:= IniReadExt("Abrechnungshelfer"	, "minGVUAlterMehrmalig")
@@ -211,63 +238,99 @@ admPIDHandles() {                                                               
 
 admInfoWindowSettings() {                                                                      	;-- AddendumGui/Infofenster
 
-	aufteilung =
-	(LTrim
-		Daten1=2, 1, 151, 132
-		Typ1=0
-		Daten2=152, 1, 318, 132
-		Typ2=0
-		Diagnosen=320, -1, 616, 255
-		Typ3=0
-		Medikamente=617, 0, 946, 256
-		Typ4=0
-		Cave=2, 132, 318, 256
-		Typ5=0
-		Termine=1368, 1, 1, 1
-		Typ6=0
-		Patientengruppen=946, -1, 1085, 111
-		Typ7=0
-		Anamnese=946, 111, 1367, 257
-		TypAnamnese=1
-		Allergie=9, 168, 184, 255
-		TypAllergien=1
-		Operation=628, 365, 727, 410
-		TypOperation=1
-		Familie=1086, 0, 1366, 111
-		AbrechAssist=947, 80, 1228, 163
-		Info=946, 111, 1368, 255
-	)
+		tmp1 := IniReadExt(compname, "InfoFenster_Position", "y2 w400 h340")
+		RegExMatch(tmp1, "y\s*(\d+)\s*w\s*(\d+)\s*h\s*(\d+)", match)
 
-	tmp1 := IniReadExt(compname, "InfoFenster_Position", "y2 w400 h340")
-	RegExMatch(tmp1, "y\s*(\d+)\s*w\s*(\d+)\s*h\s*(\d+)", match)
+		Addendum.iWin := {	"Y"                     	: match1
+									, 	"W"                    	: match2
+									,	"ReIndex"            	: false
+									,	"rowprcs"           	: 0
+									,	"Init"                    	: false
+									,	"ConfirmImport"   	: IniReadExt(compname, "Infofenster_Import_Einzelbestaetigung"  	, "Ja")
+									,	"firstTab"           	: IniReadExt(compname, "Infofenster_aktuelles_Tab"                     	, "Patient")
+									,	"TProtDate"         	: IniReadExt(compname, "Infofenster_Tagesprotokoll_Datum"       	, "Heute")
+									,	"JournalSort"      	: IniReadExt(compname, "Infofenster_JournalSortierung"               	, "3 1 1")
+									,	"LBDrucker"       	: IniReadExt(compname, "Infofenster_Laborblatt_Drucker"               	, "")
+									,	"LVScanPool"        	: {"W"	: (match2 - 10)
+																				,	"R"	: IniReadExt(compname, "InfoFenster_BefundAnzahl", 7)}}
 
-	Addendum.InfoWindow := {	"Y"                     	: match1
-											, 	"W"                    	: match2
-											,	"RefreshMinTime"	: 1500
-											,	"RefreshTime"    	: 5000
-											,	"ReIndex"            	: false
-											,	"rowprcs"           	: 0
-											,	"Init"                    	: false
-											,	"ConfirmImport"   	: IniReadExt(compname, "Infofenster_Import_Einzelbestaetigung"  	, "Ja")
-											,	"firstTab"           	: IniReadExt(compname, "Infofenster_aktuelles_Tab"                     	, "Patient")
-											,	"TProtDate"         	: IniReadExt(compname, "Infofenster_Tagesprotokoll_Datum"       	, "Heute")
-											,	"JournalSort"      	: IniReadExt(compname, "Infofenster_JournalSortierung"               	, "2 1")
-											,	"LVScanPool"        	: {"W"	: (match2 - 10)
-															            	,	"R"	: IniReadExt(compname, "InfoFenster_BefundAnzahl", 7)}}
+		Addendum.iWin.LISTENERS := {	"WM_CREATE"                          	: 0x01
+														, 	"WM_DESTROY"                     	: 0x02
+														, 	"WM_SIZE"                              	: 0x05
+														, 	"WM_ACTIVATE"                      	: 0x06
+														,	"WM_SETREDRAW"                  	: 0x0B
+														,	"WM_PAINT"                          	: 0x0F
+														, 	"WM_CLOSE"                          	: 0x10
+														, 	"WM_ERASEBKGND"              	: 0x14
+														,	"WM_SHOWWINDOW"          	: 0x18
+														, 	"WM_CHILDACTIVATE"          	: 0x22
+														,	"WM_NOTIFY"                          	: 0x4E
+														,	"WM_STYLECHANGED"          	: 0x7D
+														,	"WM_NCPAINT"                      	: 0x85
+														, 	"WM_NCCREATE"                  	: 0x81
+														,	"WM_SYNCPAINT"                  	: 0x88
+														, 	"WM_NCUAHDRAWCAPTION"	: 0xAE
+														, 	"WM_NCUAHDRAWFRAME"      	: 0xAF
+														, 	"WM_HSCROLL"                      	: 0x114
+														,	"WM_VSCROLL"                      	: 0x115
+														, 	"WM_CHANGEUISTATE"          	: 0x127
+														,	"WM_UPDATEUISTATE"          	: 0x128
+														, 	"WM_MOVING"                      	: 0x216
+														,	"WM_PARENTNOTIFY"              	: 0x210
+														, 	"WM_MDIACTIVATE"              	: 0x222
+														, 	"WM_CLEAR"                          	: 0x303}
 
-	this := Addendum.InfoWindow.firstTab
-	If InStr(this, "ERROR") || (StrLen(this) = 0)
-		Addendum.InfoWindow.firstTab := "Patient"
-	If RegExMatch(this, "(\w+)\s+(\d+)", tmp) {
-		Addendum.InfoWindow.firstTab     	:= tmp1
-		Addendum.InfoWindow.firstTabPos	:= tmp2
-	}
-	else
-		Addendum.InfoWindow.firstTabPos	:= 0
+	; zuletzt angezeigter Tab
+		thisT := Addendum.iWin.firstTab
+		If InStr(thisT, "ERROR") || (StrLen(thisT) = 0)
+			Addendum.iWin.firstTab := "Patient"
+		If RegExMatch(thisT, "(\w+)\s+(\d+)", tmp) {
+			Addendum.iWin.firstTab     	:= tmp1
+			Addendum.iWin.firstTabPos	:= tmp2
+		}
+		else
+			Addendum.iWin.firstTabPos	:= 0
 
-	this := Addendum.InfoWindow.TProtDate
-	If InStr(this, "ERROR") || (StrLen(this) = 0)
-		Addendum.InfoWindow.TProtDate := "Heute"
+	; Tab - Tagesprotokoll
+		thisT := Addendum.iWin.TProtDate
+		If InStr(thisT, "ERROR") || (StrLen(thisT) = 0)
+			Addendum.iWin.TProtDate := "Heute"
+
+	; Tab - Patient
+		Addendum.iWin.AbrHelfer	:= IniReadExt(compname, "Infofenster_Abrechnungshelfer", "ja"	)  	; Abrechnungshelfer anzeigen
+
+	Addendum.ImportRunning 	:= false
+	Addendum.iWin.Init	:= 0
+
+}
+
+admModule() {                                                                                       	;-- Liste der verfügbaren Module
+
+	; Einstellungen welche Module auf diesem Client benutzt werden dürfen
+		admModule := IniReadExt(compname, "Module")
+		For index, modulNr in StrSplit(admModule, ",") {
+			iniModul := IniReadExt("Module", "Modul" SubStr("00" modulNr, -1))
+			If InStr(iniModul, "Error")
+				continue
+			m 	:= StrSplit(iniModul, "|")
+			cmd	:= !RegExMatch(m.3, "^[A-Z]\:") ? AddendumDir "\" m.3 : m.3
+			ico	:= !RegExMatch(m.4, "^[A-Z]\:") ? AddendumDir "\" m.4 : m.4
+			Addendum.Module.Push({"name":m.2, "command":cmd, "ico":ico})
+		}
+
+}
+
+admTools() {                                                                                          	;-- Liste der verfügbaren externen Programme
+
+		Loop {
+			iniTool := IniReadExt("Module", "Tool" SubStr("00" A_Index, -1))
+			If InStr(iniTool, "Error")
+				break
+			m 	:= StrSplit(iniTool, "|")
+			cmd	:= !RegExMatch(m.3, "^[A-Z]\:") ? AddendumDir "\" m.3 : m.3
+			ico	:= !RegExMatch(m.4, "^[A-Z]\:") ? AddendumDir "\" m.4 : m.4
+			Addendum.Tools.Push({"name":m.2, "command":cmd, "ico":ico})
+		}
 
 }
 
@@ -278,20 +341,31 @@ admLaborDaten() {                                                               
 		Addendum.Laborabruf.Voll  	:= false
 
 		Addendum.Labor.LDTDirectory     	:= IniReadExt("LaborAbruf"	, "LDTDirectory"                        , "C:\Labor"	)
+		Addendum.Labor.ExecuteOn       	:= IniReadExt("LaborAbruf"	, "OnlyRunOnClient"                     	    , ""    	)  	; auf welchem/n Client/s der Laborabruf ausgeführt werden darf
+		Addendum.Labor.ExecuteFile       	:= IniReadExt("LaborAbruf"	, "Laborabruf_Extern"                    	    , ""    	)  	; externes Programm das für den Abruf ausgeführt werden muss
+		Addendum.Labor.ExecuteScript     	:= IniReadExt("LaborAbruf"	, "Laborabruf_Skript"                    	    , ""    	)  	; Skript das den Abruf übernimmt
 		Addendum.Labor.LaborName       	:= IniReadExt("LaborAbruf"	, "LaborName"                             	    , ""    	)  	; falls sie mehrere Labore haben, tragen Sie das aktuelle hier ein
 		Addendum.Labor.Laborkuerzel     	:= IniReadExt("LaborAbruf"	, "Aktenkuerzel"                            	    , "labor")  	; Karteikartenkürzel um Informationen ablegen zu können
 		Addendum.Labor.Alarmgrenze     	:= IniReadExt("LaborAbruf"	, "Alarmgrenze"                            	    , "30%"	)  	; Alarmierungsgrenze in Prozent oberhalb der Normgrenzen
-		Addendum.Labor.AbrufZeiten      	:= IniReadExt("LaborAbruf"	, "LaborAbruf_Zeiten"                    	    , ""    	)	; z.B. "06:00, 15:00, 19:00, 21:00"
+		                           AbrufZeiten      	:= IniReadExt("LaborAbruf"	, "LaborAbruf_Zeiten"                    	    , ""    	)	; z.B. "06:00, 15:00, 19:00, 21:00"
 		Addendum.Labor.Kennwort       	:= IniReadExt("LaborAbruf"	, "LaborKennwort"                        	    , ""    	)	; für order&entry per CGM-Channel
 		If InStr(Addendum.Labor.Kennwort, "Error")
 			Addendum.Labor.Kennwort := ""
+
+	; Laborabrufzeiten umwandeln in HHMM Format
+		Addendum.Labor.AbrufZeiten := Array()
+		spos := 1
+		while (spos := RegExMatch(AbrufZeiten, "(?<H>\d+)\:(?<M>\d+)", timer, spos)) {
+			spos += StrLen(timer)
+			Addendum.Labor.AbrufZeiten.Push("T" SubStr("00" timerH, -1) SubStr("00" timerM, -1) "00") ; eine Null als erste Zahl wird von AHK leider entfernt
+		}
 
 		; ACHTUNG:
 		; hier werden die Einstellungen für eine Alarmierung über Ihren eigenen Telegram-Bot eingelesen! Denken Sie immer daran die Telegram Token und ChatID's vor dem
 		; Zugriff Fremder oder auch dem eigenen Personal zu schützen
 		Addendum.Labor.TGramOpt        	:= IniReadExt("LaborAbruf", "TGramOpt"           	    , "nein")	        	; die Nummer ihres Telegram Bots und + oder - Tel z.b. "1+Tel"
 		If !((Addendum.Labor.TGramOpt = false) || RegExMatch(Addendum.Labor.TGramOpt, "^\d+\+|\-Tel")) 	; die Werte müssen einen exakten Syntax haben, sonst wird die Telegram Option gelöscht!
-			IniWrite, % "nein", % Addendum.AddendumIni, % "LaborAbruf", % "TGramOpt"
+			IniWrite, % "nein", % Addendum.Ini, % "LaborAbruf", % "TGramOpt"
 
 }
 
@@ -300,13 +374,13 @@ admLanProperties() {                                                            
 	; prüft auf den korrekt gesetzten Computernamen
 		CName		:= IniReadExt(compname, "ComputerName")
 		If (CName <> A_ComputerName)
-			IniWrite, % A_ComputerName, % Addendum.AddendumIni, % compname, % "ComputerName"
+			IniWrite, % A_ComputerName, % Addendum.Ini, % compname, % "ComputerName"
 
 	; hält die in der ini gespeicherte IP zu jedem Client aktuell
 		CompIP 	:= A_IPAddress1
 		storedIP    	:= IniReadExt(compname, "IP")
 		If (CompIP <> storedIP)
-			IniWrite, % CompIP, % Addendum.AddendumIni, % compname, % "IP"
+			IniWrite, % CompIP, % Addendum.Ini, % compname, % "IP"
 
 	; liest die Namen aller Clients ein welche überwacht werden sollen oder welche miteinander kommunizieren dürfen
 		For idx, clientName in StrSplit(IniReadExt("Computer", "Computer"), "|")
@@ -347,43 +421,65 @@ admMonitorInfo() {                                                              
 		Addendum.Monitor.Push("x" mon.X " y" mon.Y " w" mon.W " h" mon.H) ; ", Orientation: " mon.orient ", yEcke: " mon.yEdge ", yRand: " mon.yBorder
 		monDim := IniReadExt(compname, "Monitor" A_Index, Addendum.Monitor[A_Index])
 		If !IsRemoteSession() && (monDim <> Addendum.Monitor[A_Index])
-			IniWrite, % Addendum.Monitor[A_Index], % Addendum.AddendumIni, % compname, % "Monitor" A_Index
+			IniWrite, % Addendum.Monitor[A_Index], % Addendum.Ini, % compname, % "Monitor" A_Index
 
 	}
 
 }
 
-admPDFSettings()  {                                                                                	;-- Arbeitsverzeichnis, Einstellungen PDF Dokumentverarbeitung
+admPDFSettings()  {                                                                                	;-- PDF anzeigen/signieren
 
-		Addendum.xpdfPath				       	:= IniReadExt("ScanPool"     	, "xpdfPath"                                 	, AddendumDir "\include\xpdf")
-		Addendum.PDFReaderFullPath      	:= IniReadExt("ScanPool"     	, "PDFReaderFullPath"                 	, AddendumDir "\include\FoxitReader\FoxitReaderPortable\FoxitReaderPortable.exe")
-		Addendum.PDFReaderName        	:= IniReadExt("ScanPool"     	, "PDFReaderName"     	            	, "FoxitReader")
-		Addendum.PDFReaderWinClass    	:= IniReadExt("ScanPool"     	, "PDFReaderWinClass"               	, "classFoxitReader")
-		Addendum.SignatureCount        	:= IniReadExt("ScanPool"     	, "SignatureCount")
-		Addendum.SignaturePages        	:= IniReadExt("ScanPool"     	, "SignaturePages")
-		Addendum.SignatureWidth          	:= IniReadExt("ScanPool"     	, "Signature_Breite"                    	, 50)
-		Addendum.SignatureHeight          	:= IniReadExt("ScanPool"     	, "Signature_Hoehe"                    	, 25)
-		Addendum.Ort                             	:= IniReadExt("ScanPool"     	, "Ort")
-		Addendum.Grund                        	:= IniReadExt("ScanPool"     	, "Grund")
-		Addendum.SignierenAls             	:= IniReadExt("ScanPool"     	, "SignierenAls")
-		Addendum.DokumentSperren     	:= IniReadExt("ScanPool"     	, "DokumentNachDerSignierungSperren", "ja")
-		Addendum.Darstellungstyp         	:= IniReadExt("ScanPool"     	, "DarstellungsTyp")
-		Addendum.PasswortOn               	:= IniReadExt("ScanPool"     	, "PasswortOn", "nein")
-		Addendum.PatAkteSofortOeffnen  	:= IniReadExt("ScanPool"     	, "Patientenakte_sofort_oeffnen"   	, "ja")
-		Addendum.OCRclient                	:= IniReadExt("ScanPool"     	, "tessOCRClient")
+	; PDF Reader: 2 Programme sind möglich. Der FoxitReader wird nur für's Signieren verwendet (Startvorgang dauert zu lange)
+		Addendum.PDF.Reader                       	:= IniReadExt("ScanPool"     	, "PDFReader"                             	, AddendumDir "\include\FoxitReader\FoxitReaderPortable\FoxitReaderPortable.exe")
+		Addendum.PDF.ReaderName               	:= IniReadExt("ScanPool"     	, "PDFReaderName"     	            	, "FoxitReader")
+		Addendum.PDF.ReaderWinClass           	:= IniReadExt("ScanPool"     	, "PDFReaderWinClass"               	, "classFoxitReader")
+		Addendum.PDF.ReaderAlternative         	:= IniReadExt("ScanPool"     	, "PDFReaderAlternative"            	, "")
+		Addendum.PDF.ReaderAlternativeName	:= IniReadExt("ScanPool"     	, "PDFReaderAlternativeName"      	, "")
 
+		altReader := Addendum.PDF.ReaderAlternative, altName := Addendum.PDF.ReaderAlternativeName
+		If (altName = "ERROR") || (altReader = "ERROR") || (StrLen(altName) = 0)	|| (StrLen(altReader) = 0){
+				Addendum.PDF.ReaderAlternativeName	:= ""
+				Addendum.PDF.ReaderAlternative       	:= ""
+		}
 
-		SPData.xpdfPath				           	:= Addendum.xpdfPath
-		SPData.PDFReaderFullPath           	:= Addendum.PDFReaderFullPath
-		SPData.PDFReaderName              	:= Addendum.PDFReaderName
-		SPData.PDFReaderWinClass         	:= Addendum.PDFReaderWinClass
-		SPData.BefundOrdner                  	:= Addendum.BefundOrdner
+	; PDF signieren und Statistik
+		Addendum.PDF.SignatureCount          	:= IniReadExt("ScanPool"     	, "SignatureCount")
+		Addendum.PDF.SignaturePages          	:= IniReadExt("ScanPool"     	, "SignaturePages")
 
-		If (StrLen(Trim(Addendum.SignaturePages)) = 0)
-			Addendum.SignaturePages := 0
+		If InStr(Addendum.PDF.SignatureCount, "Error") || (StrLen(Trim(Addendum.PDF.SignatureCount)) = 0)
+			Addendum.PDF.SignatureCount := 0
+		If  InStr(Addendum.PDF.SignaturePages, "Error") || (StrLen(Trim(Addendum.PDF.SignaturePages)) = 0)
+			Addendum.PDF.SignaturePages := 0
 
-		If InStr(Addendum.OCRclient, "Error")
-			Addendum.OCRclient := ""
+		Addendum.PDF.SignatureWidth          	:= IniReadExt("ScanPool"     	, "Signature_Breite"                            	, 50)
+		Addendum.PDF.SignatureHeight        	:= IniReadExt("ScanPool"     	, "Signature_Hoehe"                            	, 25)
+		Addendum.PDF.Ort                              	:= IniReadExt("ScanPool"     	, "Ort"                                               	,, true)
+		Addendum.PDF.Grund                       	:= IniReadExt("ScanPool"     	, "Grund"                                           	,, true)
+		Addendum.PDF.SignierenAls                 	:= IniReadExt("ScanPool"     	, "SignierenAls"                                  	,, true)
+		Addendum.PDF.Darstellungstyp          	:= IniReadExt("ScanPool"     	, "DarstellungsTyp"                              	,, false)
+		Addendum.PDF.PasswortOn                	:= IniReadExt("ScanPool"     	, "PasswortOn"                                   	, "nein")
+		Addendum.PDF.PatAkteSofortOeffnen  	:= IniReadExt("ScanPool"     	, "Patientenakte_sofort_oeffnen"            	, "ja")
+		Addendum.PDF.DokumentSperren        	:= IniReadExt("ScanPool"     	, "DokumentNachDerSignierungSperren", "ja")
+
+}
+
+admOCRSettings() {                                                                                	;-- PDF Bearbeitung
+
+		Addendum.PDF.xpdfPath	                 	:= IniReadExt("OCR" , "xpdfPath"          	, AddendumDir "\include\OCR\xpdf")
+		Addendum.PDF.qpdfPath	                	:= IniReadExt("OCR" , "qpdfPath"         	, AddendumDir "\include\OCR\qpdf")
+		Addendum.PDF.tessPath	                	:= IniReadExt("OCR" , "tessPath"          	, AddendumDir "\include\OCR\tesseract")
+		Addendum.PDF.imagickPath                	:= IniReadExt("OCR" , "imagickPath"      	, AddendumDir "\include\OCR\imagick")
+
+	; welcher Client im Netzwerk die Texterkennung ausführen soll
+	; ist kein Client angegeben ist die Funktion ausgeschaltet, ein- und ausschalten läßt sich AutoOCR über das Traymenu
+		Addendum.OCR.Client                        	:= IniReadExt("OCR" , "OCRClient")
+		If InStr(Addendum.OCR.Client, "Error")                                	; ## Abfrage integrieren
+			Addendum.OCR.Client := ""
+
+	; Zeitverzögerung in Sekunden bis zum Start der Texterkennung,
+		Addendum.OCR.AutoOCRDelay           	:= IniReadExt("OCR" , "AutoOCR_Startverzoegerung", 30)
+		If InStr(Addendum.OCR.AutoOCRDelay, "Error")                   	; ## Abfrage integrieren
+			Addendum.OCR.AutoOCRDelay := 30
 
 }
 
@@ -400,6 +496,34 @@ admPraxisDaten() {                                                              
 	Addendum.Praxis.Sprechstunde    	:= Sprechstunde(IniReadExt("Allgemeines", "Sprechstunde"))
 	RegExMatch(Addendum.Praxis.Sprechstunde[A_DDDD], "(\d+)\:(\d+)$", Uhr)
 	Addendum.Praxis.TagesEnde     	:= ((Uhr1*3600) + (Uhr2*60)) * 1000	; ms von 0 Uhr bis zum Ende der Sprechstunde - für Shutdown Timer
+
+	Addendum.Praxis.Arzt := Array()
+	Loop {
+
+		Arzt := IniReadExt("Allgemeines", "Arzt" A_Index "Name")
+		Fach := IniReadExt("Allgemeines", "Arzt" A_Index "Abrechnung")
+
+		If InStr(Arzt, "Error") || (Arzt = "") {
+			Arzt := Addendum.Praxis.Name
+			ArztSucheBeenden := true
+		}
+
+		If InStr(Abr, "Error") || (Abr = "") {
+			Fach := "Hausarzt"
+			ArztSucheBeenden := true
+		}
+
+		Addendum.Praxis.Arzt.Push({"Name":Arzt, "Fach":Fach})
+
+		If ArztSucheBeenden
+			break
+
+	}
+
+	StandardArzt := IniReadExt("Allgemeines", "StandardArzt", 1)
+	If (StandardArzt > 0)
+		Addendum.Praxis.StandardArzt := StandardArzt
+
 
 }
 
@@ -419,27 +543,49 @@ admSicherheit() {                                                               
 
 admSonstiges() {                                                                                    	;-- sonstige Einstellungen oder Variablen setzen
 
-		Addendum.Help             	:= " | Strg+Pfeil runter - Akte schliessen |" 	; Hotkey Tips für die Statusbar von Albis
-										    	. 	 " Strg+Alt+F5 - Datum(HEUTE) |"
-										    	. 	 " Strg+F7/Alt+F7 - GVU |"
-										    	. 	 " Alt+m - Menusuche |"
+		local PatID, leistungen, tmp, abrdatum, ziffer
+
 		Addendum.useraway     	:= false                                                    	; true wenn Nutzer einen bestimmten Zeitraum keine Eingaben gemacht hat
 		Addendum.FirstDBAcess	:= false                                                    	; flag nur notwendig für den erstmaligen Aufruf von Addendum.ahk
+
+	; lädt Daten für den  Abrechnungshelfer
+		Path_PatExtra := Addendum.DBPath "\PatData\PatExtra.json"
+		If FileExist(Path_PatExtra) {
+
+			tmp := JSONData.Load(Path_PatExtra,, "UTF-8")
+			For PatID, leistungen in tmp
+				For ziffer, abrdatum in leistungen
+					If (StrLen(Trim(abrdatum)) > 0) {
+							If !IsObject(Addendum.PatExtra[PatID])
+								Addendum.PatExtra[PatID] := Object()
+							Addendum.PatExtra[PatID][ziffer] := abrdatum
+					}
+
+		; Daten werden nur bei Änderungen des PatExtra.json Files auf die Festplatte gesichert
+			lastPatExtra := IniReadExt("Abrechnungshelfer", "PatExtra_FileTime")
+			lastPatExtra := (lastPatExtra = "ERROR" || StrLen(lastPatExtra) = 0) ? "" : Trim(lastPatExtra)
+			FileGetTime, PatExtraFileTime, % Path_PatExtra, M
+			If (lastPatExtra <> PatExtraFileTime) {
+				JSONData.Save(Addendum.DBPath "\PatData\PatExtraXX.json", Addendum.PatExtra, true,, 1, "UTF-8")
+				IniWrite, % PatExtraFileTime, % Addendum.Ini, Abrechnungshelfer, PatExtra_FileTime
+			}
+
+		}
+		else
+			PraxTT("File not exist: " Addendum.DBPath "\PatData\PatExtra.json", "4 1")
 
 }
 
 admStandard() {                                                                                    	;-- Einstellungen für Addendum - Fenster und Dialoge
 
-		Addendum.StandardFont                	:= IniReadExt("Addendum"	, "StandardFont"        	)
-		Addendum.StandardBoldFont          	:= IniReadExt("Addendum"	, "StandardBoldFont"    	)
-		Addendum.StandardFontSize          	:= IniReadExt("Addendum"	, "StandardFontSize"    	)
-		Addendum.DefaultFntColor            	:= IniReadExt("Addendum"	, "DefaultFntColor"     	)
-		Addendum.DefaultBGColor            	:= IniReadExt("Addendum"	, "DefaultBGColor"     	)
-		Addendum.DefaultBGColor1          	:= IniReadExt("Addendum"	, "DefaultBGColor1"   	)
-		Addendum.DefaultBGColor2          	:= IniReadExt("Addendum"	, "DefaultBGColor2"   	)
-		Addendum.DefaultBGColor3          	:= IniReadExt("Addendum"	, "DefaultBGColor3"   	)
-		Addendum.hashtagNachricht         	:= IniReadExt("Addendum"	, "HASHtagNachricht", "")
-		Addendum.dpiF                               	:= screenDims().DPI / 96                                                                   	; DPI-Faktor
+		Addendum.Default.Font                  	:= IniReadExt("Addendum"	, "StandardFont"        	)
+		Addendum.Default.BoldFont          	:= IniReadExt("Addendum"	, "StandardBoldFont"    	)
+		Addendum.Default.FontSize           	:= IniReadExt("Addendum"	, "StandardFontSize"    	)
+		Addendum.Default.FntColor            	:= IniReadExt("Addendum"	, "DefaultFntColor"     	)
+		Addendum.Default.BGColor            	:= IniReadExt("Addendum"	, "DefaultBGColor"     	)
+		Addendum.Default.BGColor1          	:= IniReadExt("Addendum"	, "DefaultBGColor1"   	)
+		Addendum.Default.BGColor2          	:= IniReadExt("Addendum"	, "DefaultBGColor2"   	)
+		Addendum.Default.BGColor3          	:= IniReadExt("Addendum"	, "DefaultBGColor3"   	)
 
 }
 
@@ -503,7 +649,7 @@ admThreads() {                                                                  
 	; Toolbar-Thread starten oder beenden
 		If Addendum.ToolbarThread {
 
-			threadFilePath := Addendum.AddendumDir "\Module\Addendum\threads\AddendumToolbar.ahk"
+			threadFilePath := Addendum.Dir "\Module\Addendum\threads\AddendumToolbar.ahk"
 			If FileExist(threadFilePath) {                                                                                                                	; Skriptdatei vorhanden:
 
 				Addendum.Threads.Toolbar  	:= FileOpen(threadFilePath,"r").Read()                                                    ; Skriptdatei laden
@@ -518,7 +664,7 @@ admThreads() {                                                                  
 			} else {                                                                                                                                                	; Skriptdatei nicht vorhanden:
 
 				Addendum.ToolbarThread := false                                                                                                	; das erneute Aufrufen des Threads unterbinden
-				failpath := StrReplace(threadFilePath, Addendum.AddendumDir)
+				failpath := StrReplace(threadFilePath, Addendum.Dir)
 				failpath	:= StrReplace(failPath, "\AddendumToolbar.ahk")
 				PraxTT(	"Die Datei: AddendumToolbar.ahk ist nicht vorhanden.`n"                                                    	; Information zum Fehler für den Nutzer
 						. 	"Verzeichnis: " failpath, "3 3")
@@ -542,10 +688,9 @@ admThreads() {                                                                  
 	; Funktionsbibliothek für PDF OCR mit Tesseract
 		If (StrLen(Addendum.Threads.OCR) =0) {
 
-			threadFilePath := Addendum.AddendumDir "\Include\Addendum_OCR.ahk"
-			If FileExist(threadFilePath) {
+			threadFilePath := Addendum.Dir "\Include\Addendum_OCR.ahk"
+			If FileExist(threadFilePath)
 				Addendum.Threads.OCR := FileOpen(threadFilePath, "r").Read()
-			}
 			else
 				SciTEOutput("\Include\Addendum_OCR.ahk konnte nicht geladen werden.")
 
@@ -591,5 +736,7 @@ RegExScreenSize(iniStr, screenDim) {
 		throw Exception("ungültiger ini Eintrag: " iniStr, -1, "gültiges Format ist: 2k[MonNr,X,Y,W,H],4k[MonNr,X,Y,W,H]")
 return {"Mon":wMon, "X":wX, "Y":wY, "W":wW, "H":wH}
 }
+
+
 
 

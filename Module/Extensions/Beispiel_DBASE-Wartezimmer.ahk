@@ -11,8 +11,8 @@
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 	; Objekte / Variablen
 	;-------------------------------------------------------------------------------------------------------------------------------------------
-		basedir1 	:= "C:\tmp"
-		basedir2 	:= "M:\albiswin\db"
+		RegRead, PathAlbis, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, 1-MainPath
+		basedir    	:= PathAlbis "\db"
 		Search  	:= Array()
 		Search[1] 	:= {	"dbasefile"		: "WZIMMER"
 							,	"output"     	: "Wartezimmer-Arzt-19112020"
@@ -36,12 +36,12 @@
 	; Datenbankpfad	- vollständiger Pfad zur Datenbank in der Form M:\albiswin\db\BEFUND.dbf
 	; debug                	- Ausgabe von Werten zur Kontrolle des Ablaufes, Voreinstellung: keine Ausgabe
 	;-------------------------------------------------------------------------------------------------------------------------------------------
-		wzimmer   	:= new DBASE(basedir2 "\" search[nr].DBASEfile ".dbf", false)
+		wzimmer   	:= new DBASE(basedir "\" search[nr].DBASEfile ".dbf", false)
 
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 	; Lesezugriff einrichten. Rückgabewert ist die Position des Dateizeigers
 	;-------------------------------------------------------------------------------------------------------------------------------------------
-		res        	:= wzimmer.Open()
+		res        	:= wzimmer.OpenDBF()
 
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 	; Suche starten. objekt.Search(StringObjekt [, exportPfad])
@@ -53,7 +53,7 @@
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 	; Datenbankzugriff kann geschlossen werden
 	;-------------------------------------------------------------------------------------------------------------------------------------------
-		res         	:= wzimmer.Close()
+		res         	:= wzimmer.CloseDBF()
 
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 	; 1.Zeit - Lesedauer aus der Datenbankdatei

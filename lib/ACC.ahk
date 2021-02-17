@@ -342,7 +342,7 @@ class ACC_FILTERS {
 Acc_Init() {
     Static    h := DllCall("LoadLibrary","Str","oleacc","Ptr")
 }
-Acc_ObjectFromEvent(ByRef _idChild_, hWnd, idObject, idChild) {                                                                             ;DllCall("Oleacc.dll\AccessibleObjectFromWindow", "Ptr", HWND, "UInt", ObjID, "Ptr", &IID, "PtrP", IAP, "UInt")
+Acc_ObjectFromEvent(ByRef _idChild_, hWnd, idObject, idChild) {                              ;DllCall("Oleacc.dll\AccessibleObjectFromWindow", "Ptr", HWND, "UInt", ObjID, "Ptr", &IID, "PtrP", IAP, "UInt")
     Acc_Init()
     if (DllCall("oleacc\AccessibleObjectFromEvent"
               , "Ptr", hWnd
