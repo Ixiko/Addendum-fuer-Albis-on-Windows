@@ -18,19 +18,19 @@ lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32+ Unicode 64bit* , ge
 
 ![](Docs/TrennerExtraBreit.png)
 
-<h3> &#10042; weitere Funktionen für das Infofenster</h3>
+<h4> &#10042; weitere Funktionen für das Infofenster</h3>
 
-<h3> &#10042; Texterkennung mit Tesseract</h3>      
+<h4> &#10042; Texterkennung mit Tesseract</h3>      
 
-<h3> &#10042; Autobenennung von PDF-Dateien</h3>
+<h4> &#10042; Autobenennung von PDF-Dateien</h3>
 
-<h3> &#10042; Laborjournal</h3>
+<h4> &#10042; Laborjournal</h3>
 
-<h3> &#10042 nativer Lesezugriff auf die Albis-Datenbankdateien</h3>
+<h4> &#10042 nativer Lesezugriff auf die Albis-Datenbankdateien</h3>
 
-<h3> &#10042; Export von Patientendaten in einem Durchgang (Dokumente, Laborblatt, Karteikarte) </h3>
+<h4> &#10042; Export von Patientendaten in einem Durchgang (Dokumente, Laborblatt, Karteikarte) </h3>
 
-<h3> &#10042; Abrechnungshelfer (ähnlich der Albis internen Funktionen) im Infofenster </h3>
+<h4> &#10042; Abrechnungshelfer (ähnlich der Albis internen Funktionen) im Infofenster </h3>
 
 
 
