@@ -7,16 +7,17 @@
 ### preRelease Version 1.50 vom 16.02.2021
 lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32+ Unicode 64bit* , geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
-<img src="Docs\TrennerExtraBreit.png" style="zoom: 67%;" />
+![Trenner](Docs/TrennerExtraBreit.png)
 
 ### DIES IST KEINE OFFIZIELLE ERWEITERUNG FÜR ALBIS!
 ##### Der Hersteller der Praxissoftware Albis*, die Compugroup AG, hat mit dieser Software nichts zu tun, geschweige denn, wurde diese offiziell durch die CompuGroup AG legitimiert!
 ###### * Arztinformationssystem (AIS), Arztsoftware, Praxissoftware, Praxisverwaltungssoftware, Praxisverwaltungssystem (PVS), Praxismanagementsoftware oder Ordinationsmanagementsoftware
-<img src="Docs/TrennerExtraBreit.png" style="zoom:67%;" />
 
-<h1> &#9733 NEUE FUNKTIONEN SEIT DEM LETZTEM RELEASE </h1>
+![Trenner](Docs/TrennerExtraBreit.png)
 
-![](Docs/TrennerExtraBreit.png)
+<h2> &#9733 NEUE FUNKTIONEN SEIT DEM LETZTEM RELEASE </h1>
+
+![Trenner](Docs/TrennerExtraBreit.png)
 
 <h4> &#10042; weitere Funktionen für das Infofenster</h3>
 
@@ -154,7 +155,7 @@ zentral in Albis integriertes Tool für Dokument-Eingänge und Verwaltung des Pr
 
 - zeitgesteuerter Abruf von Labordaten mit anschliessendem Import
 
-[alle Änderungen in Addendum](Docs/Changes_Addendum_main.md)      [alle Änderungen in den Funktionsbibliotheken](Docs/Changes_Addendum_includes.md)
+[alle Änderungen in Addendum](Docs/Changes_Addendum_main.md)   |   [alle Änderungen in den Funktionsbibliotheken](Docs/Changes_Addendum_includes.md)
 
 ![](Docs/TrennerExtraBreit.png)
 
