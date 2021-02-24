@@ -4,7 +4,7 @@
 
 #### Extends the possibilities through surface analysis and manipulation
 
-### preRelease Version 1.50 vom 16.02.2021
+### preRelease Version 1.51 vom 24.02.2021
 lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32+ Unicode 64bit* , geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ![Trenner](Docs/TrennerExtraBreit.png)
@@ -19,29 +19,40 @@ lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32+ Unicode 64bit* , ge
 
 ![Trenner](Docs/TrennerExtraBreit.png)
 
-<h4> &#10042; weitere Funktionen für das Infofenster</h3>
+<h3>&#10042; wichtigste Neuerung: Addendum hat Zugriff auf die Albis Datenbanken (DBASE)</h3>
 
-<h4> &#10042; Texterkennung mit Tesseract</h3>      
+​		die folgenden Module sind deshalb möglich geworden:<br>
 
-<h4> &#10042; Autobenennung von PDF-Dateien</h3>
+- <h5>Laborjournal</h5>
 
-<h4> &#10042; Laborjournal</h3>
+- <h5>Export von Patientendaten in einem Durchgang (Dokumente, Laborblatt, Karteikarte)</h5>
 
-<h4> &#10042 nativer Lesezugriff auf die Albis-Datenbankdateien</h3>
+- <h5>Abrechnungshelfer (ähnlich der Albis internen Funktionen) im Infofenster</h5>
 
-<h4> &#10042; Export von Patientendaten in einem Durchgang (Dokumente, Laborblatt, Karteikarte) </h3>
+  <br>
 
-<h4> &#10042; Abrechnungshelfer (ähnlich der Albis internen Funktionen) im Infofenster </h3>
+<h3> &#10042; neue Erweiterungen für das Infofenster</h3>
 
+- <h5>automatische Texterkennung mit Tesseract (Hotfolder)</h5>      
+
+- <h5>automatische Kategorisierung von PDF-Dateien</h5>
+
+- <h5>Vereinfachung des manuellen Umbennens einer Datei mit Dateivorschau</h5>
+
+  
+
+<h3> &#10042; weitere Funktionen</h3>
+
+- <h5>medizinische Berechnungen, Karteikartenexport (besser als das was die Compugroup anbietet!), automatischer Laborabruf, ein übersichtlicheres Laborjournal, Faxanhänge aus Albis extrahieren, Albis reanimieren und ein bißchen mehr</h5>
+
+  
 
 
 ![](Docs/TrennerExtraBreit.png)
 
-# ![Funktionen.png](Docs/Icons/Funktionen.png)  FUNKTIONSÜBERSICHT
+## ![Addendum.png](Docs/Icons/Addendum48x48.png) Addendum
 
 
-
-## ![Addendum.png](Docs/Icons/Addendum.png) Addendum
 
 <h3> &#9733 PopupBlocker</h3>
 
@@ -63,10 +74,6 @@ lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32+ Unicode 64bit* , ge
 
 - für eine schnelle und fehlertolerante Suche nach Patienten
 
-<h3> &#9733 alternatives Tagesprotokoll </h3>
-
-- nach Arbeitsplatz-PC's getrenntes Tagesprotokoll. Dies könnte für einzelne Analysen interessant sein
-
 <h3> &#9733 Infofenster </h3>
 
 zentral in Albis integriertes Tool für Dokument-Eingänge und Verwaltung des Praxisnetzwerk
@@ -77,12 +84,12 @@ zentral in Albis integriertes Tool für Dokument-Eingänge und Verwaltung des Pr
 - **Netzwerk:** direkter Start einer Remotedesktopsitzung per Klick 
 - **Extras**: häufiger benötigte Programme/Skripte lassen sich im Infofenster anzeigen und von dort aus auch starten
 
-<h3>&#9733 Texterkennung für PDF Dateien</h3>
+<h3>&#9733 automatische Texterkennung für PDF Dateien</h3>
 
 - mit Tesseract erreiche ich eine bessere Erkennungsrate als mit meinem bisherigen Texterkennungsprogramm
 - neu hinzugefügte PDF Dateien werden automatisch in PDF-Text Dateien umgewandelt
 
-<h3>&#9733 Kategorisierung von PDF Dateien</h3>
+<h3>&#9733 automatische Kategorisierung von PDF Dateien</h3>
 
 - findet im Text der PDF den Patientennamen, das Erstellungsdatum des Dokumentes oder den Zeitraum eines Krankenhausaufenthaltes. Aus diesen Informationen wird ein neuer Dateiname generiert.
 
@@ -103,6 +110,7 @@ zentral in Albis integriertes Tool für Dokument-Eingänge und Verwaltung des Pr
   - Einstellen des aktuellen **Tagesdatums**
   - **Addition** von einer **Woche** oder einem **Monat** in **Datumsfeldern**, anstatt nur einem Tag wie bisher 
   - **neuer Shift + F3 Kalender** zeigt mehrere Monate an 
+  - **Hotstrings** für die schnelle Eingabe von Abrechnungsziffern (EBM und GOÄ)
 
 <h3> &#9733 erweitertes Kontextmenu </h3>
 
@@ -145,7 +153,7 @@ zentral in Albis integriertes Tool für Dokument-Eingänge und Verwaltung des Pr
 
 <h3> &#9733 Karteikarten exportieren	</h3>	
 
-- Export der Karteikarte, des Laborblattes und aller Befunde über ein extra 
+- Export von Karteikarte, Laborblatt und aller Befunde (Bilder-, Worddokumente und PDF-Dateien) ohne größeren Umweg.
 
 <h3> &#9733 Laborjournal</h3>
 
@@ -153,7 +161,19 @@ zentral in Albis integriertes Tool für Dokument-Eingänge und Verwaltung des Pr
 
 <h3> &#9733 Laborabruf</h3>
 
-- zeitgesteuerter Abruf von Labordaten mit anschliessendem Import
+- zeitgesteuerter Abruf von Labordaten mit anschliessendem Import in das Laborblatt der Patienten. Die Uhrzeiten des Abrufs können selbst festgelegt werden.
+
+<h3> &#9733 Outlook Anhänge extrahieren</h3>
+
+- Faxbefunde erreichen mich von der Fritzbox per EMail. Ein neues Skript extrahiert die als PDF angehängten Fax in den Befundordner. Durch die neue Hotfolder-Funktionalität wird dann sofort eine Texterkennung durchgeführt und anschliessend werden die Dateien kategorisiert.
+
+<h3> &#9733 Albis Reanimator</h3>
+
+- Albis hängt sich häufig auf? Mehrmals am Tag sämtliche geladene von Albis geladene Prozesse mit dem Taskmanager löschen damit dann endlich Albis wieder startet. Das macht der Albis Reanimator für Sie und sind sämtliche Prozesse entfernt wird Albis gestartet.
+
+<h3> &#9733 Listview-Inhalte kopieren</h3>
+
+- Sie brauchen den Inhalt des Wartezimmers, die Dauerdiagnosen, die Dauermedikamenten oder die Liste der Resistenztestung aus dem Laborblatt. Steuern Sie ihre Maus über das entsprechende Element und drücken Sie ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![c](Docs/Icons/shift_Left.png)+![c](Docs/Icons/Key-White-c.png) und Addendum kopiert nicht nur den Inhalt des Elementes sondern bereitet ihn auf damit sie ihn z.B. in ein Dokument per Paste einfügen können. 
 
 [alle Änderungen in Addendum](Docs/Changes_Addendum_main.md)   |   [alle Änderungen in den Funktionsbibliotheken](Docs/Changes_Addendum_includes.md)
 
@@ -173,15 +193,9 @@ zentral in Albis integriertes Tool für Dokument-Eingänge und Verwaltung des Pr
 
   
 
-## **Haben Sie keine Sorge vor dem Verlust von Praxisdaten durch die Verwendung der Skripte!**
-
-DIE SKRIPTE SCHREIBEN NICHTS IN IHRE DATENBANK! NOCH LESEN SIE ETWAS AUS IHRER DATENBANK AUS! SIE MACHEN DAS, WAS SIE AUCH TÄGLICH MACHEN: SIE ARBEITEN *!AUSSCHLIESSLICH!* MIT DER PROGRAMMOBERFLÄCHE! ES GIBT AUCH KEINERLEI FUNKTIONEN DIE IRGENDETWAS IN DEN AKTEN ODER IN IHREN DATEN LÖSCHEN WÜRDEN OHNE MINDESTENS ZUVOR EIN BACKUP DESSEN ANZULEGEN! ES WIRD KEINE INTERNETVERBINDUNG BENÖTIGT! DIE SKRIPTE VERSENDEN KEINE DATEN ÜBER DAS INTERNET AN IRGENDWEN!
-
 Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem normalen Texteditor lesen (Einschränkung: 2 Funktionen mit Maschinencode (Assembler) - einsehbar im Autohotkey-Forum). 
 
 #### *RECHTLICHE HINWEISE UND DIE LIZENSIERUNGSBEDINGUNGEN FINDEN SIE AM ENDE DES DOKUMENTES!*
-
-<br>
 
 ![](Docs/TrennerExtraBreit.png)
 
@@ -189,13 +203,13 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
 
 ## ![](Docs/Icons/Addendum.png) <u>Laborjournal</u>
 
-![](Docs/Laborjournal.png) 
+![](Docs/Screenshot - Laborjournal.png) 
 
-
+<img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
 ## ![](Docs/Icons/Addendum.png) <u>Dauermedikamentenfenster</u>
 
-![](Docs/Dauermedikamente.png) 
+![](Docs/Screenshot - Dauermedikamente.png) 
 
 Auswahlmöglichkeit aus voreingestellten Kategorien (in Patienten verständlichem Deutsch). Erreichbar nach Drücken (#) der ![](Docs/Icons/Raute.png) Taste in einer geöffneten Zeile. Die Kategorien lassen sich im Quelltext des Addendum.ahk-Skriptes jederzeit ändern. (an einer komfortableren Lösung wird gearbeitet). Mit der Tastenkombination (![](Docs\Icons\Key-White_Strg-Links.png)+ ![](Docs\Icons\hoch.png)oder![](Docs\Icons\runter.png)) lassen sich alle Einträge innerhalb der Ansicht verschieben.
 
@@ -203,7 +217,7 @@ Auswahlmöglichkeit aus voreingestellten Kategorien (in Patienten verständliche
 
 ## ![Addendum](Docs/Icons/Addendum.png) <u>neuer Shift+F3 Kalender</u>
 
-![Menu-Suche](Docs/NeuerShiftF3Kalender.png)
+![Menu-Suche](Docs/Screenshot - ShiftF3Kalender.png)
 
 
 
@@ -211,7 +225,7 @@ Auswahlmöglichkeit aus voreingestellten Kategorien (in Patienten verständliche
 
 ## ![Addendum](Docs/Icons/Addendum.png) <u>Menu-Suche</u>
 
-![Menu-Suche](Docs/Menu_Suche.png)
+![Menu-Suche](Docs/Screenshot - Menu_Suche.png)
 
 Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu finden dauert meist ziemlich lange. Drücke ![](Docs/Icons/Alt.png) + ![](Docs/Icons/Key-White-M.png) für einen Suchdialog und öffne den Menupunkt von hier aus - Danke an *Lexikos* dem Author von Autohotkey für dieses wunderbare Skript. 
 
@@ -239,7 +253,7 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
 
 **Ausdrucken von Rezepten/Über- und Einweisungen ohne gedrucktes Datum**
 
-![Formularhelfer](Docs/Formularhelfer.png)
+![Formularhelfer](Docs/Screenshot - Formularhelfer.png)
 
 * ein Fenster mit 5 Formularen (Kassenrezept, Privatrezept, Krankenhauseinweisung, Krankenbeförderung, Überweisung)
 * Auswahl der Formularanzahl 0 für keine und maximal 9 (auch über die Zifferntastatur), nach Eingabe einer Ziffer rückt der Eingabefocus zum nächsten Feld weiter. Ist alles eingegeben, dann nur noch Enter drücken. Den Rest übernimmt das Skript. Es ruft die jeweiligen Formulare auf, entfernt wenn notwendig den Haken am Datumsfeld, setzt automatisch die Anzahl und drückt den Knopf für Drucken. 
@@ -262,7 +276,7 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
 
 **mehr Funktionen im Rechtsklick Menu in der Karteikarte**
 
-![erweitertes Kontextmenu](Docs/erweitertes_Kontextmenu.png)
+![erweitertes Kontextmenu](Docs/Screenshot - erweitertes_Kontextmenu.png)
 
 Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter anderem Öffnen eines Formulares zum Bearbeiten oder direkter Druck. Wenn Sie PDF-Dateien oder Bild-Dateien direkt in die Karteikarte ablegen, können Sie diese Dateien ebenso Anzeigen oder Ausdrucken lassen. Und man kann diese in einen nach dem Patienten benannten Dateiordner exportieren (z.B. zur Erleichterung beim Arztwechsel). Versehentlich importierte Befunde lassen sich wieder in den Befundordner unter anderem Namen exportieren. Und da der Faxversand eigentlich auch nur ein Druckvorgang ist, geht auch das inklusive Abfrage der Faxnummer (wenn gewünscht)
 
@@ -274,7 +288,7 @@ Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter ande
 
 **Befundeingang, Tagesprotokoll, Netzwerkübersicht, Praxisinfos**
 
-![Infofenster](Docs/Infofenster.png)
+![Infofenster](Docs/Infofenster.gif)
 
 
 
@@ -284,7 +298,7 @@ Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter ande
 
 <b>mehr Statistiken, mehr Möglichkeiten der Automatisierung</b>
 
-<img src="Docs/Screenshot-Abrechnungshelfer.png" alt="Screenshot Abrechnungshelfer" style="zoom: 100%;" />
+<img src="Docs/Screenshot - Abrechnungshelfer.png" alt="Screenshot Abrechnungshelfer" style="zoom: 100%;" />
 
 Erstellen Sie ein Tagesprotokoll und nutzen Sie diese Modul um von der Compugroup nicht abgedeckte Regeln zu möglichen Abrechnungsziffern zu entwerfen oder nutzen Sie das Skript um Patienten bestimmten Gruppen zuzuordnen oder um eine erweiterte Statistik durchführen zu können
 <br>fertige Statistiken:
@@ -305,11 +319,13 @@ Erstellen Sie ein Tagesprotokoll und nutzen Sie diese Modul um von der Compugrou
 
   <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![Export](D:/Autohotkey/GitHub/Addendum-fuer-Albis-on-Windows/Docs/Icons/Export.png) <u>Dokument Exporter</u> - einfach exportieren
+## ![Export](Docs/Icons/Export.png) <u>Dokument Exporter</u> (einfach exportieren)
 
 ***Skript ist auch ohne Addendum lauffähig***
 
-![Addendum_Export.ahk](D:/Autohotkey/GitHub/Addendum-fuer-Albis-on-Windows/Docs/Addendum_exporter.jpg)
+![Addendum_Export.ahk](Docs/Addendum_Exporter.gif)
+
+
 
 - **Eingabe** von **Nachname, Vorname, Geburtsdatum oder Patientennummer** wie aus dem Dialog ‘Patient öffnen’ in Albis gewöhnt in die Suche
 - es werden alle mit den Suchkriterien übereinstimmenden Patienten angezeigt (nutzt die PATIENT.dbf im albiswin\db Verzeichnis)
@@ -322,13 +338,13 @@ Erstellen Sie ein Tagesprotokoll und nutzen Sie diese Modul um von der Compugrou
   - die Bezeichnung des **Unterpfades** ergibt sich aus **Nr, Nachname, Vorname** des gewählten Patienten
   - der **Dateiname wird aus Karteikartendatum und dem Karteikartentext** gebildet 
   - die **Zeichen** im Karteikartentext **werden** so **angepasst** das sie den Konventionen für Windows-Datei-Namen entsprechen (nicht erlaubte Zeichen werden entfernt)
--  ist eine Datei für den gewählten Patienten schon exportiert wird dies mit einem ‘**X**’ in der Dokumentenliste angezeigt, bei PDF-Dokumenten wird ein ‘**S**’ für durchsuchbare PDF-Datei (PDF-Text) und die Seitenzahl angezeigt
+-  ist eine Datei bereits exportiert wird diese mit einem ‘**X**’ in der Dokumentenliste angezeigt, bei PDF-Dokumenten wird ein ‘**S**’ für durchsuchbare PDF-Datei (PDF-Text) und die Seitenzahl angezeigt
 
 
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![Laborabruf](Docs/Icons/LaborAbruf.png) <u>Laborabruf</u> (teilweise in Addendum integriert)
+## ![Laborabruf](Docs/Icons/LaborAbruf.png) <u>Laborabruf</u>
 
 **Die Automatisierung für den Abruf der Laborwerte**
 
@@ -366,9 +382,9 @@ Erstellen Sie ein Tagesprotokoll und nutzen Sie diese Modul um von der Compugrou
 
 <img src="Docs/TrennerExtraBreit.png" style="zoom: 67%;" />
 
-# ![OutOfTheBox](Docs/Icons/OutOfTheBox.png)  <u>KEIN "OUT OF THE BOX"</u>
+# ![OutOfTheBox](Docs/Icons/OutOfTheBox.png)  <u>"OUT OF THE BOX"</u>
 
-Dies ist **"keine out of the box"** Lösung! Es müssen entsprechende Anpassungen an Ihre Praxisumgebung manuell in den Skripten vorgenommen werden. Entsprechende Kenntnisse in Programmier- oder Skriptsprachen sind hilfreich. Die Skripte basieren auf einer gemeinsamen speziellen Funktionsbibliothek (Praxomat_Functions.ahk) und weiteren Bibliotheken für AHK. Ich nutze keine Klassenbibliotheken, zum einen da ich in der Objekt orientieren Programmierung kaum wissen habe und zum anderen weil ich einfach davon ausgehe das OOP das es den meisten Kollegen auch so geht.
+Dies ist noch immer **"keine out of the box"** Lösung! Allerdings denke ich, bin ich diesem Ziel näher gekommen.
 <br>
 <img src="Docs/TrennerExtraBreit.png" style="zoom: 67%;" />
 
