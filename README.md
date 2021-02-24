@@ -203,7 +203,7 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
 
 ## ![](Docs/Icons/Addendum.png) <u>Laborjournal</u>
 
-![](Docs/Screenshot - Laborjournal.png) 
+![](Docs/Screenshot-Laborjournal.png) 
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
