@@ -1,19 +1,21 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 10.12.2020 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 20.02.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
-; FENSTER                                                                                                                                                                                                                                                   	(48)
+; FENSTER                                                                                                                                                                                                                                                   	(49)
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; ----- Get -----
 ; GetAncestor                                	GetLastActivePopup                   	GetParentList	                            	GetParent                                 	GetNextWindow
 ; GetWindowInfo								GetWindowSpot							GetWindow									FindChildWindow							FindWindow
 ; WinForms_GetClassNN               	WinForms_GetElementID
 ; ClientToScreen								RectOverlapsRect
-; IsClosed											IsResizable									 IsWindow                                    	IsWindowVisible                        	CheckWindowStatus
+; IsClosed											IsResizable									IsWindow                                    	IsWindowVisible                        	CheckWindowStatus
 ; WinGetTitle                                 	WinGetClass                             	WinGetText                               	WinGet                                  		WinGetMinMaxState
+; WinIsBlocked
 
-; ----- set -----
+; ----- Set -----
 ; SetWindowPos                             	WinMoveZ									MoveWinToCenterScreen				UpdateWindow								Redraw
 ; SetParentByID
 ; WaitForNewPopUpWindow            	WaitAndActivate                        	ActivateAndWait
@@ -48,7 +50,7 @@ GetParentList(ChildHwnd) {                                                      
 
 return List
 }
-GetParentClassList(ChildHwnd, WinHwnd) {                                                                                                    	;-- returns a list of comma separated WinTitles and WinClasses of all parent windows
+GetParentClassList(ChildHwnd, WinHwnd) {                                                                                  	;-- returns a list of comma separated WinTitles and WinClasses of all parent windows
 
 	;15.05.2019: Code shortend - using extra functions and while loop
 	List := Control_GetClassNN(WinHwnd, ChildHwnd) "|"
@@ -146,26 +148,32 @@ FindChildWindow(Parent, Child, DetectHiddenWindow="On") {                       
 	-it returns a comma separated list of hwnds or nothing if there's no match
 
 	-Parent parameter is an object(). Pass the following {Key:Value} pairs like this - WinTitle: "Name of window", WinClass: "Class (NN) Name", WinID: ParentWinID
-                                                                                                                                                                                                                                                                			*/
+	FindChildWindow({"ID":hwnd, "exe":"albis"}, {"class":"#32770"})
+*/
 
 		detect:= A_DetectHiddenWindows
-		global SearchChildTitle, SearchChildClass, active_id
-		global ChildHwnds := ""
+		global ChildTitle, ChildNN, ChildClass, ChildExe, active_id
+		global ChildHwnds
+
+		ChildHwnds := ""
 
 	; build ParentWinTitle parameter from ParentObject
 		If Parent.WinID
-				ParentWinTitle:= "ahk_id " Parent.ID
+			ParentWinTitle:= "ahk_id " Parent.ID
 		else
-				ParentWinTitle:= Parent.Title " ahk_class " Parent.Class
+			ParentWinTitle:= Parent.Title " ahk_class " Parent.Class
 
-		SearchChildTitle	:= Child.Title
-		SearchChildClass	:= Child.class
+		ChildTitle  	:= Child.Title
+		ChildClass	:= Child.class
+		ChildNN   	:= Child.classnn
+		ChildExe    	:= Child.Exe
 
-		DetectHiddenWindows, % DetectHiddenWindow  ; Due to fast-mode, this setting will go into effect for the callback too.
+		;DetectHiddenWindows, % DetectHiddenWindow  ; Due to fast-mode, this setting will go into effect for the callback too.
+		DetectHiddenWindows, Off
 		WinGet, active_id, ID, % ParentWinTitle
 
 	; For performance and memory conservation, call RegisterCallback() only once for a given callback:
-		if not EnumAddress  ; Fast-mode is okay because it will be called only from this thread:
+		if !EnumAddress  ; Fast-mode is okay because it will be called only from this thread:
 			EnumAddress := RegisterCallback("EnumChildWindow") ; , "Fast")
 
 		result:= DllCall("EnumChildWindows", "UInt", active_id, "UInt", EnumAddress, "UInt", 0)
@@ -178,64 +186,64 @@ return RTrim(ChildHwnds, ";")
 EnumChildWindow(hwnd, lParam) {                                                                                             	;--sub function of FindChildWindow
 
 	global ChildHwnds
-	global SearchChildTitle, SearchChildClass, active_id
+	global ChildTitle, ChildNN, ChildClass, ChildExe, active_id
 
-	WinGetTitle, childtitle, % "ahk_id " hwnd
-	childclassNN:= GetClassNN(hwnd, active_id)
+	If ChildNN
+		classMatched := InStr(GetClassNN(hwnd, active_id), ChildNN) 	? 1 : 0
+	else if ChildClass
+		classMatched := InStr(WinGetClass(hwnd), ChildClass)           	? 1 : 0
+	else
+		classMatched := 1
 
-	If InStr(childtitle, SearchChildTitle) && InStr(childclassNN, SearchChildClass)
-			ChildHwnds.= hwnd "`;"
+	ProcName := WinGet(hwnd, "ProcessName")
+
+	If InStr(WinGetTitle(hwnd), ChildTitle) && classMatched && InStr(ProcName, ChildExe)
+		ChildHwnds.= GetHex(hwnd) "`;"
 
 return true  ; Tell EnumWindows() to continue until all windows have been enumerated.
 }
 ;}
 
-FindWindow(WinTitle, WinClass:="", WinText:="", ParentTitle:="", ParentClass:="", DetectHiddenWins:="on", DectectHiddenTexts:="on") { ; Finds the requested window,and return it's ID
+FindWindow(WTitle,WClass="",WText="",PTitle="",PClass="",HiddenWins="on",HiddenText="on") {	;-- Finds the requested window,and return it's ID
+
 	; 0 if it wasn't found or chosen from a list
 	; originally from Evan Casey Copyright (c) under MIT License.
 	; changed for my purposes for Addendum for ALBIS On Windows , Ixiko on April-06-2018
 	; this version searches for ParentWindows if there is no WinText to check changed on April-27-2018
 
-	HWins	:= A_DetectHiddenWindows
-	HText	:= A_DetectHiddenText
-	DetectHiddenWindows	, % DetectHiddenWins
-	DetectHiddenText			, % DetectHiddenTexts
+	HWins := A_DetectHiddenWindows, HText := A_DetectHiddenText
+	DetectHiddenWindows	, % HiddenWins
+	DetectHiddenText			, % HiddenText
 
-		If Instr(WinClass, "Afx:")
-				SetTitleMatchMode, RegEx
-		else
-		{
-				SetTitleMatchMode, 2
-				SetTitleMatchMode, slow
-		}
+	If Instr(WClass, "Afx:")
+		SetTitleMatchMode, RegEx
+	else		{
+		SetTitleMatchMode, 2
+		SetTitleMatchMode, slow
+	}
 
-	if WinClass = ""
-		sSearchWindow := WinTitle
+	if !WClass
+		sSearchWindow := WTitle
 	else
-		sSearchWindow := WinTitle . " ahk_class " . WinClass
+		sSearchWindow := WTitle " ahk_class " WClass
 
-	WinGet, nWindowArray, List, % sSearchWindow, % WinText
+	WinGet, nWindowArray, List, % sSearchWindow, % WText
 
 	;Loop for more windows - this looks for ParentWindow
 	if (nWindowArray > 1)	{
-			Loop, % nWindowArray
-			{
-					if prev := DllCall("GetWindow", "ptr", hwnd, "uint", GW_HWNDPREV:=3, "ptr")			;GetParentWindowID
-					{
-                            DetectHiddenWindows On
-                            WinGetTitle	, ltitle	, % "ahk_id " prev
-                            WinGetClass	, lclass	, % "ahk_id " prev
-                            If (ltitel == ParentTitle) && (lclass == ParentClass)
-                            {
-                                	sSelectedWinID := % nWindowArray%A_Index%
-                                	break
-                            }
-					}
+		Loop % nWindowArray
+			if prev := DllCall("GetWindow", "ptr", hwnd, "uint", GW_HWNDPREV:=3, "ptr")	{		;GetParentWindowID
+				WinGetTitle	, ltitle	, % "ahk_id " prev
+				WinGetClass	, lclass	, % "ahk_id " prev
+				If (ltitel == PTitle) && (lclass == PClass)  {
+					sSelectedWinID := % nWindowArray%A_Index%
+					break
+				}
 			}
 	}
-	else if nWindowArray == 1
+	else if (nWindowArray = 1)
 		sSelectedWinID := nWindowArray1
-	else if nWindowArray == 0
+	else if (nWindowArray = 0)
 		sSelectedWinID := 0
 
 	DetectHiddenWindows	, % HWins
@@ -358,7 +366,7 @@ IsWindow(hWnd) {                                                                
     Return DllCall("IsWindow", "Ptr", hWnd)
 }
 
-IsWindowVisible(hWnd) {
+IsWindowVisible(hWnd) {                                                                                                            	;-- ist Fenster sichtbar
 	return DllCall("IsWindowVisible","Ptr", hWnd)
 }
 
@@ -379,7 +387,7 @@ WinGetMinMaxState(hwnd) {                                                       
 return (zoomed>iconic) ? "z":"i"
 }
 
-WinGetTitle( hwnd ) {                                                                                                                	;-- schnellere Fensterfunktion
+WinGetTitle(hwnd) {                                                                                                                   	;-- schnellere Fensterfunktion
 	;if (hwnd is not Integer)
 	;		hwnd :=GetDec(hwnd)
 	vChars := DllCall("user32\GetWindowTextLengthW", "Ptr", hWnd) + 1
@@ -389,7 +397,7 @@ WinGetTitle( hwnd ) {                                                           
 Return wtitle
 }
 
-WinGetClass( hwnd ) {                                                                                                                	;-- schnellere Fensterfunktion
+WinGetClass(hwnd) {                                                                                                                	;-- schnellere Fensterfunktion
 	;if (hwnd is not Integer)
 	;		hwnd :=GetDec(hwnd)
 	VarSetCapacity(sClass, 80, 0)
@@ -399,16 +407,21 @@ WinGetClass( hwnd ) {                                                           
 Return wclass
 }
 
-WinGetText( hwnd ) {                                                                                                                  	;-- Wrapper
+WinGetText(hwnd) {                                                                                                                  	;-- Wrapper
 	WinGetText, wtext, % "ahk_id " hwnd
 Return wtext
 }
 
-WinGet( hwnd, cmd) {                                                                                                                	;-- Wrapper
+WinGet(hwnd, cmd) {                                                                                                                	;-- Wrapper
 	WinGet, res, % cmd, % "ahk_id " hwnd
 return res
 }
 
+WinIsBlocked(hwnd) {                                                                                                                 	;-- Fenster ist blockiert
+ ; WS_DISABLED:= 0x8000000
+	WinGet, Style, Style, % "ahk_id " hwnd
+return (Style & 0x8000000) ? true : false
+}
 
 ; set
 AnimateWindow(hWnd, Duration, Flag) {                                                                                     	;-- DllCall Wrapper für Windows interne Fensteranimation
@@ -663,9 +676,9 @@ GetProcessProperties(hwnd) {
 	WinGet PID, PID, % "ahk_id " hWnd
     StrQuery := "SELECT * FROM Win32_Process WHERE ProcessId=" . PID
     Enum := ComObjGet("winmgmts:").ExecQuery(StrQuery)._NewEnum
-    If (Enum[Process]) {
+    If (Enum[Process])
         ExePath := Process.ExecutablePath
-	}
+
 
 Return Process
 }

@@ -781,11 +781,6 @@ VerifiedClick(CName, WTitle="", WText="", WinID="", WaitClose=0) {              
 		else if RegExMatch(WTitle, "i)^(0x[A-F\d]+|[\d]+)$")
 			WText := "", WTitle := "ahk_id " WTitle
 
-		;~ If !WinActive(WTitle, WText) {
-			;~ WinActivate	 , % WTitle, % WText
-			;~ WinWaitActive, % WTitle, % WText, 1
-		;~ }
-
 	; 3 verschiedene Wege einen Buttonklick auszulösen
 		ControlClick, % CName, % WTitle, % WText,,, NA
 		If (EL := ErrorLevel) {                                                                            ; Misserfolg = 1 , Erfolg = 0
@@ -797,7 +792,6 @@ VerifiedClick(CName, WTitle="", WText="", WinID="", WaitClose=0) {              
 					BlockInput, On
 					WinGetPos    	, wx, wy,,, % WTitle, % WText
                    	ControlGetPos	, cx, cy, cw, ch, % CName, % WTitle, % WText
-					;SciTEOutput(A_ThisFunc ": -MouseClick at coord:: " (cx +cy > 0 ? (cx ", " cy) : (WTtile "(" CName ")")))
                    	MouseGetPos	, mx, my
                    	MouseClick   	, Left, % wx + cx + Floor(cw/2), % wy + cy + Floor(ch/2), 1, 0
                    	MouseMove  	, % mx, % my, 0

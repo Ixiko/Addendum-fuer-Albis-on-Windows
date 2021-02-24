@@ -14,7 +14,7 @@
 ;
 ;
 ;	                    	Addendum für Albis on Windows
-;                        	by Ixiko started in September 2017 - letzte Änderung 16.02.2021 - this file runs under Lexiko's GNU Licence
+;                        	by Ixiko started in September 2017 - letzte Änderung 20.02.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
 
@@ -96,8 +96,8 @@ AddendumGui(admShow="") {
 				func_admRename	:= Func("admGui_CM").Bind("JRename")
 				func_admSplit   	:= Func("admGui_CM").Bind("JSplit")
 				func_admDelete	:= Func("admGui_CM").Bind("JDelete")
-				func_admView1	:= Func("admGui_CM").Bind("JView1")
-				func_admView2	:= Func("admGui_CM").Bind("JView2")
+				func_admView1 	:= Func("admGui_CM").Bind("JView1")
+				func_admView2 	:= Func("admGui_CM").Bind("JView2")
 				func_admRefresh	:= Func("admGui_CM").Bind("JRefresh")
 				func_admRecog1	:= Func("admGui_CM").Bind("JRecog1")
 				func_admRecog2	:= Func("admGui_CM").Bind("JRecog2")
@@ -175,7 +175,7 @@ AddendumGui(admShow="") {
 	; Position innerhalb des Albisfenster für die Integration finden
 		Aktiv         	:= Addendum.AktiveAnzeige := AlbisGetActiveWindowType()
 		res                := Controls("", "Reset", "")
-		hMDIFrame	:= Controls("AfxMDIFrame1401"	, "ID", AlbisGetActiveMDIChild())
+		hMDIFrame	:= Controls("AfxMDIFrame1401"	, "ID", AlbisMDIChildGetActive())
 		hStamm		:= Controls("#327701"             	, "ID", hMDIFrame)
 		If !RegExMatch(Aktiv, "i)Karteikarte|Laborblatt|Biometriedaten|Rechnungsliste") || (GetDec(hMDIFrame) = 0) || (GetDec(hStamm) = 0) {
 			SetTimer, % func_admGui, -1000
@@ -314,26 +314,23 @@ AddendumGui(admShow="") {
 		Gui, adm: Tab  	, 3
 
 		Gui, adm: Font  	, s7 q5 Normal cBlack, Arial
-		ProtText := "[" compname "] [" TProtokoll.MaxIndex() " Patienten]"
-		Gui, adm: Add  	, Text      	, % "x10 y25  w120 BackgroundTrans 	vadmTProtokollTitel"                                          	, % ProtText
+		ProtText := "[" compname "] [" (TProtokoll.Count()-1 < 0 ? 0 : TProtokoll.Count()-1) " Pat.]"
+		Gui, adm: Add  	, Text      	, % "x5 y25  w130 BackgroundTrans 	vadmTProtokollTitel"                                              	, % ProtText
 
-		Gui, adm: Font  	, s8 q5 Normal cBlack, Arial
-
+		Gui, adm: Font  	, s8 q5 Normal cBlack
 		Gui, adm: Add  	, Text      	, % "x+10 "                                                                                                                   	, % "Pat:"
 		Gui, adm: Add  	, Edit     	, % "x+0 y22 w100 r1  vadmTPSuche"                                                                               	, % ""
 
-		Gui, adm: Add  	, Text      	, % "x" admWidth - 100 - 5 " y25 w100 BackgroundTrans 	vadmTPTag"                          	, % Addendum.iWin.TProtDate
+		admTPRightX := admWidth - 80 - 5
+		Gui, adm: Add  	, Text      	, % "x" admTPRightX " y25 w80 BackgroundTrans 	vadmTPTag"                                       	, % Addendum.iWin.TProtDate
 		Gui, adm: Add  	, Button    	, % "x+10 y23 h16                             	vadmTPZurueck	 	gadm_TP"                              	, % "<"
-		Gui, adm: Add  	, Button    	, % "x+2 	y23 h16						    	vadmTPVor   		gadm_TP"                              	, % ">"
-		GuiControlGet	, cpos, adm: Pos, admTPVor
+		Gui, adm: Add  	, Button    	, % "x+0 	y23 h16						    	vadmTPVor   		gadm_TP"                              	, % ">"
 		GuiControlGet	, dpos, adm: Pos, admTPZurueck
-		GuiControl    	, adm: Move, admTPVor    	, % "x" admWidth - 100 - 5 - cposW - 5
-		GuiControl    	, adm: Move, admTPZurueck	, % "x" admWidth - 100 - 5 - cposW - dposW - 10
+		GuiControlGet	, cpos, adm: Pos, admTPVor
+		GuiControl    	, adm: Move, admTPVor    	, % "x" admTPRightX - cposW - 2
+		GuiControl    	, adm: Move, admTPZurueck	, % "x" admTPRightX - cposW - dposW - 2
 
-		;Gui, adm: Add  	, Text      	, % "x+5 y25 w30 BackgroundTrans	 Right vAdmTPTag          	"                                     	, % "Heute"
-		;Gui, adm: Add  	, Text      	, % "x+5 y25 w70 BackgroundTrans	vAdmTPDatum                 	"                                      	, % A_DD "." A_MM "." A_YYYY
-
-		Gui, adm: Font  	, s8 q5 Normal cBlack, Arial
+		Gui, adm: Font  	, s8 q5 Normal cBlack
 		Gui, adm: Add  	, ListView	, % "x2 y+5 w" admWidth-6 " h" admHeight-47 " " admLVTProtokoll                                    	, % "RF|Nachname, Vorname|Geburtstag|PatID"
 
 		admcol1W := 30, admcol2W := 160, admcol3W := 70, amdcol4W := 70
@@ -530,7 +527,7 @@ AddendumGui(admShow="") {
 		; Fensterstyles anpassen
 			If !hMDIFrame {
 				res                := Controls("", "Reset", "")
-				hMDIFrame	:= Controls("AfxMDIFrame1401"	, "ID", AlbisGetActiveMDIChild())
+				hMDIFrame	:= Controls("AfxMDIFrame1401"	, "ID", AlbisMDIChildGetActive())
 			}
 			SetParentByID(hMDIFrame, hadm)
 
@@ -1119,7 +1116,7 @@ admGui_Watcher()                                                         	{     
 
 	Addendum.AktiveAnzeige := AlbisGetActiveWindowType()
 	If RegExMatch(Addendum.AktiveAnzeige, "i)Karteikarte|Laborblatt|Biometriedaten") {
-		WinGet, winList, ControlList, % "ahk_id" AlbisGetActiveMDIChild()
+		WinGet, winList, ControlList, % "ahk_id" AlbisMDIChildGetActive()
 		If InStr(winlist, "AutohotkeyGui1")
 			return
 		else
@@ -1475,7 +1472,7 @@ admGui_TProtokoll(datestring, addDays, client)              	{                	;
 	If (LV_GetColWidth(admHTProtokoll, 2) < 115)
 		LV_ModifyCol(2, 115)
 
-	GuiControl, adm: , AdmTProtokollTitel	, % "[" compname "] [" TProto.MaxIndex() " Patienten]"
+	GuiControl, adm: , AdmTProtokollTitel	, % "[" compname "] [" (TProto.Count()-1 < 0 ? 0 : TProto.Count()-1) " Pat.]"
 	If (SubStr(lDate, 1, 8) = SubStr(A_Now, 1, 8))
 		GuiControl, adm: , AdmTPTag           	, % "Heute"
 	else
@@ -1925,7 +1922,7 @@ admCM_JRnProgress(ProgressText)                                 	{              
 		static outmsgTitle := "Automatische Dateinamengenerierung`n`n"
 
 	; nur eine Zahl übergeben dann wird die Progressbar verändert
-		If !RegExMatch(ProgrressText, "^\d+$") {
+		If !RegExMatch(ProgressText, "^\d+$") {
 
 			outmsg :="Zähler:   `t"		ProgressText.1      	"`n"
 						.	"Name:   `t"  	ProgressText.2      	"`n"
@@ -2001,9 +1998,10 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 				return
 		} else {
 			If (oPV.Previewer = "Sumatra") {
-				SumatraDDE(oPV.ID, "OpenFile"	, Addendum.BefundOrdner "\" filename, 0, 1, 0)
+				SumatraDDE(oPV.ID, "OpenFile"	, Addendum.BefundOrdner "\" filename, 0, 0, 0)
 				Sleep 400
-				SumatraDDE(oPV.ID, "SetView"	, Addendum.BefundOrdner "\" filename, "single page", "fit page")
+				;SumatraDDE(oPV.ID, "SetView"	, Addendum.BefundOrdner "\" filename, "single page", "fit page")
+				SumatraDDE(oPV.ID, "SetView"	, Addendum.BefundOrdner "\" filename, "single page")
 			}
 			else
 				return
@@ -2206,8 +2204,10 @@ RNProceed:                                       	;{   Datei wird umbenannt, PDF
 		If (A_GuiControl = "RNCancel") {
 			gosub RNGuiClose
 			return
-		}	else if (A_GuiControl <> "RNOK") && (A_ThisHotkey <> "Enter")
+		}	else if (A_GuiControl <> "RNOK") && (A_ThisHotkey <> "Enter") {
+			gosub RNGuiClose
 			return
+		}
 
 		Gui, RN: Submit, NoHide
 		newadmFile := admGui_FileName(RNE1, RNE2, RNE3)
@@ -2291,7 +2291,6 @@ RNGuiBeenden:                                   	;{   weitere Dateien umbenennen
 		rows := LV_GetCount()
 		LV_GetNext(row)
 		startrow := row := row = 0 ? 1 : row
-		 ToolTip, Suche nächstes Dokument
 		Loop {
 
 			row := row = rows ? 1 : row + 1
@@ -2310,7 +2309,6 @@ RNGuiBeenden:                                   	;{   weitere Dateien umbenennen
 				break
 
 		}
-		ToolTip
 
 	; weiteres Dokument umbenennen?
 		If (row <> startrow) && (filename <> oldfilename) {
@@ -2612,11 +2610,11 @@ admGui_ImportGui(Show=true, msg="", gctrl="")              	{                 	;
 			GuiControlGet, rpos, adm: Pos, % gCtrl
 
 			Gui, adm2: New	, +HWNDhadm2 +ToolWindow -Caption +Parent%hadm%
-			Gui, adm2: Color	, cAA0000
+			Gui, adm2: Color	, c3170A0
 			Gui, adm2: Font	, s10 q5 cFFFFFF Bold, % Addendum.Default.Font
 
 			MsgOpt := InStr(msg, "Dateinamen") ? "" : "Center", PrgOpt := ""
-			Gui, adm2: Add	, Text    	, % "x30 y1 w" (rposW-30) " " MsgOpt " vadmImporter"  	, % msg
+			Gui, adm2: Add	, Text    	, % "x60 y1 w" (rposW-60) " " MsgOpt " vadmImporter"  	, % msg
 
 			PrgOpt := ""
 			;Gui, adm2: Add	, Progress	, % "x30 y" rposH-30 " w" rposW-30 " vAdmImporterPrg"
@@ -2629,7 +2627,7 @@ admGui_ImportGui(Show=true, msg="", gctrl="")              	{                 	;
 
 			WinSet, Style         	, 0x50020000	, % "ahk_id " hadm2
 			WinSet, ExStyle	    	, 0x0802009C	, % "ahk_id " hadm2
-			WinSet, Transparent	, 180             	, % "ahk_id " hadm2
+			WinSet, Transparent	, 210             	, % "ahk_id " hadm2
 
 	} else {
 
@@ -2762,8 +2760,8 @@ admGui_ImportFromPatient()                                            	{        
 		For key, file in PatDocs		{
 
 			Addendum.FuncCallback := ""
-			If !FileExist(Addendum.BefundOrdner "\Backup\" file.name)
-				continue
+			If !FileExist(Addendum.BefundOrdner "\Backup\" file.name) && FileExist(Addendum.BefundOrdner "\" file.name)
+				FileCopy, Addendum.BefundOrdner "\" file.name, Addendum.BefundOrdner "\Backup\" file.name
 
 			DocDate 	:= string.Get.DocDate(file.name)
 			KKText    	:= string.Karteikartentext(file.name)
@@ -2931,10 +2929,10 @@ admGui_CheckJournal(pdffile, ThreadID)                          	{              
 
 		global admHJournal
 
-		admGui_Default("admJournal")
 
 	; Farb-Markierung entfernen
 		If (rowNr := LV_FindRow("admJournal",1, pdffile)) {
+			admGui_Default("admJournal")
 			LV_Modify(rowNr, "ICON3")                                        	; ICON für durchsuchbare PDF hinzufügen
 			;admGui_ColorRow(admHJournal, rowNr, false)          	; Hintergrundfarbe der Zeile wird entfernt
 		}
@@ -3031,6 +3029,7 @@ admGui_FolderWatch(path, changes)                             	{                
 class pdfpool                                                                 	{               	; verwaltet das ScanPool Objekt
 
 	; Abhängigkeiten - Addendum_PdfHelper.ahk
+	; Funktion: Refresh ist ineffektiv!
 
 	; sucht nach Dateinamen im Pool
 		inPool(filename) {
@@ -3042,28 +3041,22 @@ class pdfpool                                                                 	{
 		return 0
 		}
 
-	; fügt Datei mit allen notwendigen Informationen dem Scanpool hinzu
+	; fügt die PDF-Datei mit allen notwendigen Informationen dem Scanpool hinzu
+	; oder frischt die Metadaten der Datei auf
 		Add(path, filename) {
 
-			If !this.inPool(filename) {
+			If !FileExist(path "\" filename)
+				return
 
-				FileGetSize	, FSize       	, % (pdfPath := path "\" filename), K
-				FileGetTime	, timeStamp 	, % pdfPath, C
-				FormatTime	, FTime     	, % timeStamp, dd.MM.yyyy
+			docID	:= this.inPool(filename)
+			oPDF	:= this.FileMeta(path, filename)
 
-				oPDF := {"name"          	: filename
-							, 	"filesize"        	: FSize
-							, 	"timestamp"    	: timeStamp
-							, 	"filetime"        	: FTime
-							, 	"pages"         	: PDFGetPages(pdfPath, Addendum.PDF.qpdfPath)
-							, 	"isSearchable"	: (PDFisSearchable(pdfPath)?1:0)}
-
+			If !docID
 				ScanPool.Push(oPDF)
+			else
+				ScanPool[docID] := oPDF
 
-			return oPDF
-			}
-
-		return
+		return oPDF
 		}
 
 	; Datei entfernen
@@ -3089,6 +3082,28 @@ class pdfpool                                                                 	{
 
 		Save(path) {
 			return JSONData.Save(path "\PdfDaten.json", ScanPool, true,, 1, "UTF-8")
+		}
+
+	; + + + + + + + INTERN + + + + + + +
+		FileSize(fullfilepath) {
+			FileGetSize	, FSize, % fullfilepath, K
+		return FSize
+		}
+
+		FileTime(fullfilepath) {
+			FileGetTime	, timeStamp 	, % fullfilepath, C
+			FormatTime	, FileTime     	, % timeStamp, dd.MM.yyyy
+		return {"FileTime" : FileTime, "timeStamp":timeStamp}
+		}
+
+		FileMeta(path, filename ) {
+			file := this.FileTime(path "\" filename)
+			return {	"name"          	: filename
+					, 	"filesize"        	: this.FSize(path "\" filename)
+					, 	"timestamp"    	: file.timeStamp
+					, 	"filetime"        	: file.FileTime
+					, 	"pages"         	: PDFGetPages(path "\" filename, Addendum.PDF.qpdfPath)
+					, 	"isSearchable"	: (PDFisSearchable(path "\" filename) ? 1 : 0 )}
 		}
 
 }
@@ -3417,7 +3432,7 @@ ClientsOnline()                                                              	{ 
 return clients
 }
 
-GetLastGVU(PatID) {
+GetLastGVU(PatID)                                                        	{
 
 	static GVFile
 	static LGVULenDataset := 6+8
@@ -3544,7 +3559,7 @@ return dllcall("RedrawWindow", "Ptr", (hwnd = 0 ? hadm : hwnd), "Ptr", 0, "Ptr",
 }
 
 
-GetFilesInDir(path, filepattern:="*.*", options:="")               	{
+GetFilesInDir(path, filepattern:="*.*", options:="")              	{
 
 	files := Array()
 	Loop, Files, % path "\" filepattern, % (options ? options : "")
@@ -3644,10 +3659,10 @@ SumatraDDE(hSumatra, cmd, params*) 								{         			;-- Befehle an Sumatra p
 
 		;SciTEOutput(" " lpData[cmd])
 
-return SendEx_WM_COPYDATA(hSumatra, dwData, lpData[cmd])
+return Send_WM_COPYDATA_EX(hSumatra, dwData, lpData[cmd])
 }
 
-SendEx_WM_COPYDATA(hWin, dwData, lpData) 				{              	;-- für die Kommunikation mit Sumatra und SumatraDDE()
+Send_WM_COPYDATA_EX(hWin, dwData, lpData) 				{              	;-- für die Kommunikation mit Sumatra und SumatraDDE()
 
 	VarSetCapacity(COPYDATASTRUCT, 3*A_PtrSize, 0)
     cbData := (StrLen(lpData) + 1) * (A_IsUnicode ? 2 : 1)

@@ -682,7 +682,7 @@ KarteikartenExport() {
 			res := AlbisErstelleTagesprotokoll(options,, false)
 
 		; Tagesprotokoll aktivieren
-			AlbisActivateMDIChild("Tagesprotokoll")
+			AlbisMDIChildActivate("Tagesprotokoll")
 
 		; Protokoll über Drucken speichen
 			If FileExist(KKFilepath ".pdf")
@@ -690,7 +690,7 @@ KarteikartenExport() {
 			AlbisSaveAsPDF(KKFilePath)
 
 		; erstelltes Tagesprotokoll schliessen
-			AlbisCloseMDITab("Tagesprotokoll")
+			AlbisMDIChildWindowClose("Tagesprotokoll")
 
 			PraxTT("", "Off")
 

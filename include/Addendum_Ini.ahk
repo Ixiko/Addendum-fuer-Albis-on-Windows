@@ -2,40 +2,39 @@
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                 liest Informationen aus der Addendum.ini ein für das globale Objekt Addendum
 ;                                                                              	!diese Bibliothek enthält Funktionen für Einstellungen des Addendum Hauptskriptes!
-;                                                            	by Ixiko started in September 2017 - last change 16.02.2021 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 20.02.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 return
 admObjekte() {                                                                                       	;-- Addendum-Objekt erweitern
 
+		Addendum.AktuellerTag	    	:= A_DD            	; der aktuelle Tag
  		Addendum.Chroniker            	:= Array()          	; Patient ID's der Chroniker
-		Addendum.Geriatrisch           	:= Array()         	; Patient ID's für geriatrisches Basisassement
 		Addendum.Default                  	:= Object()       	; Addendum Font/Farbeinstellungen
+		Addendum.Drucker               	:= Object()          	; verschiedene Druckereinstellungen
+		Addendum.Geriatrisch           	:= Array()         	; Patient ID's für geriatrisches Basisassement
 		Addendum.Hooks                  	:= Object()       	; enthält Adressen der Callbacks der Hookprozeduren und anderes
+		Addendum.Kosten                  	:= Object()        	; hinterlegte Preise für Hotstringausgaben bei Privatabrechnungen
 		Addendum.Labor	    	        	:= Object()			; Laborabruf und andere Daten für Laborprozesse
 		Addendum.Laborabruf            	:= Object()         	; Statusinformationen zum Laborabruf
-		Addendum.OCR                     	:= Object()          	; Einstellungen für Texterkennung und Autonaming
-		Addendum.PDF                      	:= Object()          	; Einstellungen/Pfade für die Bearbeitung von PDF Dateien
 		Addendum.LAN	                    	:= Object()			; LAN Kommunikationseinstellungen
 		Addendum.LAN.Clients          	:= Object()          	; LAN Netzwerkgeräte Einstellungen
+		Addendum.Module                  	:= Object()        	; Addendum Skriptmodule
+		Addendum.MsgGui               	:= Object()        	; Gui für Interskript Kommunikation und den Shellhook
+		Addendum.OCR                     	:= Object()          	; Einstellungen für Texterkennung und Autonaming
+		Addendum.PatExtra                	:= Object()          	; zusätzliche Informationen über Patienten
+		Addendum.PDF                      	:= Object()          	; Einstellungen/Pfade für die Bearbeitung von PDF Dateien
 		Addendum.Praxis                     	:= Object()        	; Praxisadressdaten
 		Addendum.Praxis.Sprechstunde	:= Object()       	; Daten zu Öffnungszeiten, Urlaubstagen
 		Addendum.Praxis.Email          	:= Array()         	; Praxis Email Adressen
 		Addendum.Praxis.Urlaub         	:= Array()          	; Praxis Urlaubsdaten
 		Addendum.Telegram             	:= Object()        	; Datenobject für einen oder mehrere Telegram-Bots
-		Addendum.MsgGui               	:= Object()        	; Gui für Interskript Kommunikation und den Shellhook
-		Addendum.Drucker               	:= Object()          	; verschiedene Druckereinstellungen
-		Addendum.AktuellerTag	    	:= A_DD            	; der aktuelle Tag
-		Addendum.Kosten                  	:= Object()        	; hinterlegte Preise für Hotstringausgaben bei Privatabrechnungen
 		Addendum.Thread                  	:= Object()          	; enthält die PID's gestarteter Threads (z.B. AddendumToolbar, Addendum_OCR.ahk)
 		Addendum.Threads                 	:= Object()         	; Skriptcode für Prozess-Threads
-		Addendum.Windows                	:= Object()        	; Fenstereinstellungen für andere Programme
+		Addendum.Tools                     	:= Object()			; externe Programme die z.B. über das Infofenster gestartet werden können
 		Addendum.UndoRedo             	:= Object()          	; Undo/Redo Textbuffer
 		Addendum.UndoRedo.List        	:= Array()           	; Undo/Redo Textbuffer
-		Addendum.Module                  	:= Object()        	; Addendum Skriptmodule
-		Addendum.Tools                     	:= Object()			; externe Programme die z.B. über das Infofenster gestartet werden können
-		Addendum.PatExtra                	:= Object()          	; zusätzliche Informationen über Patienten
-
+		Addendum.Windows                	:= Object()        	; Fenstereinstellungen für andere Programme
 
 		Addendum.PraxTTDebug := false
 
@@ -128,11 +127,16 @@ GeriatrischListe() {                                                            
 
 admDruckerStandards() {                                                                       	;-- Standarddrucker A4/PDF/FAX
 
-		Addendum.Drucker.Standard          	:= IniReadExt(compname, "Drucker_Standard")
-		Addendum.Drucker.StandardA4     	:= IniReadExt(compname, "Drucker_Standard_A4")
-		Addendum.Drucker.StandardA4Tray 	:= IniReadExt(compname, "Drucker_Standard_A4_Tray")
-		Addendum.Drucker.PDF                   	:= IniReadExt(compname, "Drucker_PDF")
-		Addendum.Drucker.FAX                   	:= IniReadExt(compname, "Drucker_FAX")
+		Addendum.Drucker.Standard          	:= IniReadExt(compname, "Drucker_Standard"             	, "")
+		Addendum.Drucker.StandardA4     	:= IniReadExt(compname, "Drucker_Standard_A4"       	, "")
+		Addendum.Drucker.StandardA4Tray 	:= IniReadExt(compname, "Drucker_Standard_A4_Tray"	, "")
+		Addendum.Drucker.PDF                   	:= IniReadExt(compname, "Drucker_PDF"                   	, "")
+		Addendum.Drucker.FAX                   	:= IniReadExt(compname, "Drucker_FAX"                    	, "")
+
+	; ERROR löschen wenn die Einstellung für den Standarddrucker nicht vorhanden ist
+		For standard, printer in Addendum.Drucker
+			If InStr(printer, "ERROR")
+				Addendum.Drucker[standard] := ""
 
 }
 

@@ -812,6 +812,50 @@ AutoSkriptReload() {                                                            
 		SkriptReload()
 }
 
+WinEventHook_Helper_Thread:                                                                                      	;{ Labordaten - Fenster abfangen
+
+	hpop:= GetLastActivePopup(AlbisWinID())
+	If (hpop != AlbisWinID()) && (hpop != hpop_old)	{
+
+		EHWT		:= WinGetTitle(hpop)
+		EHWText	:= WinGetText(hpop)
+		hpop_old	:= hpop
+
+		If InStr(EHWT, "Labordaten")		{
+
+			SetTimer, WinEventHook_Helper_Thread, Off
+			VerifiedCheck("Button5"	, hpop,,, 1)
+			VerifiedClick("Button1" 	, hpop)
+			AlbisLaborbuchOeffnen()
+
+		}
+
+	}
+
+return
+;}
+
+WinEvent_HMV(hHook, event, hwnd, idObject, idChild, eventThread, eventTime) {           	; Hookprocedure welche nur bei geöffneten Heilmittelverordnungsformularen aktiv ist
+	Critical
+	HmvHookHwnd:= GetHex(hwnd)
+	HmvEvent:= GetHex(event)
+	SetTimer, Heilmittelverordnung_WinHandler,  -0
+return 0
+
+Heilmittelverordnung_WinHandler:                                                                                 	;{ Eventhookhandler - kümmert sich nur um Heilmittelverordnungsfenster
+
+return ;}
+}
+
+; ----------------------- zugehörige Funktionen für die WinEventHandler Labels
+SplashAus: ;{
+	SplashTextOff
+return ;}
+			else if InStr(EHWT   	, "CGM LIFE")	                                                                                    	 {  	; Verbindungsfehler (gesperrt durch Windows Firewall)
+				WinClose, % "CGM LIFE ahk_class Afx:00400000:0:00010005:86101803"
+			}
+
+
 ; Addendum_Controls
 ;\/\/ RICHEDIT \/\/
 Rich_FindText(hEdit, Text, Mode:="WHOLEWORD") {
@@ -2035,5 +2079,61 @@ admAlbisMenuAufrufe() {                                                         
 }
 
 
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; Addendum_Protocoll.ahk
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+HashThisString(str) {
+return CryptHash(&str, StrLen(str), "MD5")
+}
+;intern
+CryptHash(pData, nSize, SID = "CRC32", nInitial = 0) {
+	CALG_SHA := CALG_SHA1 := 1 + CALG_MD5 := 0x8003
+	If Not CALG_%SID%
+	{
+		FormatI := A_FormatInteger
+		SetFormat, Integer, H
+		sHash := DllCall("ntdll\RtlComputeCrc32", "Uint", nInitial, "Uint", pData, "Uint", nSize, "Uint")
+		SetFormat, Integer, %FormatI%
+		StringUpper,	sHash, sHash
+		StringReplace,	sHash, sHash, X, 000000
+		Return	SubStr(sHash,-7)
+	}
+
+	DllCall("advapi32\CryptAcquireContextA", "UintP", hProv, "Uint", 0, "Uint", 0, "Uint", 1, "Uint", 0xF0000000)
+	DllCall("advapi32\CryptCreateHash", "Uint", hProv, "Uint", CALG_%SID%, "Uint", 0, "Uint", 0, "UintP", hHash)
+	DllCall("advapi32\CryptHashData", "Uint", hHash, "Uint", pData, "Uint", nSize, "Uint", 0)
+	DllCall("advapi32\CryptGetHashParam", "Uint", hHash, "Uint", 2, "Uint", 0, "UintP", nSize, "Uint", 0)
+	VarSetCapacity(HashVal, nSize, 0)
+	DllCall("advapi32\CryptGetHashParam", "Uint", hHash, "Uint", 2, "Uint", &HashVal, "UintP", nSize, "Uint", 0)
+	DllCall("advapi32\CryptDestroyHash", "Uint", hHash)
+	DllCall("advapi32\CryptReleaseContext", "Uint", hProv, "Uint", 0)
+
+	FormatI := A_FormatInteger
+	SetFormat, Integer, H
+	Loop,	%nSize%
+		sHash .= SubStr(*(&HashVal + A_Index - 1), -1)
+	SetFormat, Integer, %FormatI%
+	StringReplace,	sHash, sHash, x, 0, All
+	StringUpper,	sHash, sHash
+	Return	sHash
+}
 
 
+; Addendum_Internal.ahk
+ProcessExist(ProcName, cmd:="") {                                                                                            	;-- sucht nur nach Autohotkeyprozessen
+
+	; use cmd = "PID" to receive the PID of an Autohotkey process
+	q := Chr(0x22)
+
+	StrQuery := "Select * from Win32_Process Where Name Like 'AutoHotkey%'"
+	For Process in winmgmts.ExecQuery(StrQuery)	{
+		RegExMatch(Process.CommandLine, "\w+\.ahk(?=\" q ")", name)
+		If InStr(name, ProcName)
+			If StrLen(cmd) = 0
+				return true
+			else
+				return Process[cmd]
+	}
+
+return false
+}

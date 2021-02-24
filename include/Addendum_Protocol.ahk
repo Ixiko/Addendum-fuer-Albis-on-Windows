@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 27.04.2020 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 23.02.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -89,35 +89,35 @@ ExceptionHelper(libPath, SearchCode, ErrorMessage, codeline) {													;-- s
 
 	If !A_IsCompiled {
 
-		;Fehlerfunktion bei Eingabe eines falschen Parameter
-			FileRead, Pfunc, %AddendumDir%\libPath
-			Loop, Parse, Pfunc, `n
-			{
-					If Instr(A_LoopField, SearchCode) {
-						scriptline:= A_Index
-						ScriptText:= A_LoopField
-						break
-					}
+	;Fehlerfunktion bei Eingabe eines falschen Parameter
+		FileRead, Pfunc, %AddendumDir%\libPath
+		Loop, Parse, Pfunc, `n
+		{
+			If Instr(A_LoopField, SearchCode) {
+				scriptline	:= A_Index
+				ScriptText	:= A_LoopField
+				break
 			}
+		}
 
-			Exception(ErrorMessage)
+		Exception(ErrorMessage)
 
 	} else {
 
-			msg=
-					(Ltrim
-					This message is shown, because the script wanted
-					to call a function that works only in uncompiled scripts.
+		msg=
+		(Ltrim
+		This message is shown, because the script wanted
+		to call a function that works only in uncompiled scripts.
 
-					A function was called to show a runtime error.
-					This function was called from %A_ScriptName%
-					at line: %codeline%. The code to show ist:
-					%SearchCode%
-					with the following error-message:
-					%ErrorMessage%
-					)
+		A function was called to show a runtime error.
+		This function was called from %A_ScriptName%
+		at line: %codeline%. The code to show ist:
+		%SearchCode%
+		with the following error-message:
+		%ErrorMessage%
+		)
 
-			MsgBox, % "Addendum für AlbisOnWindows - " A_ScriptName,  %msg%
+		MsgBox, % "Addendum für AlbisOnWindows - " A_ScriptName,  %msg%
 
 	}
 
@@ -139,42 +139,6 @@ TrayTip(Title, Msg, Seconds:=2) {
 
 	If !InStr(compname, "SP1")
 		return
-
 	TrayTip, % Title, % Msg, % Seconds
 }
 ;5
-HashThisString(str) {
-return CryptHash(&str, StrLen(str), "MD5")
-}
-;intern
-CryptHash(pData, nSize, SID = "CRC32", nInitial = 0) {
-	CALG_SHA := CALG_SHA1 := 1 + CALG_MD5 := 0x8003
-	If Not	CALG_%SID%
-	{
-		FormatI := A_FormatInteger
-		SetFormat, Integer, H
-		sHash := DllCall("ntdll\RtlComputeCrc32", "Uint", nInitial, "Uint", pData, "Uint", nSize, "Uint")
-		SetFormat, Integer, %FormatI%
-		StringUpper,	sHash, sHash
-		StringReplace,	sHash, sHash, X, 000000
-		Return	SubStr(sHash,-7)
-	}
-
-	DllCall("advapi32\CryptAcquireContextA", "UintP", hProv, "Uint", 0, "Uint", 0, "Uint", 1, "Uint", 0xF0000000)
-	DllCall("advapi32\CryptCreateHash", "Uint", hProv, "Uint", CALG_%SID%, "Uint", 0, "Uint", 0, "UintP", hHash)
-	DllCall("advapi32\CryptHashData", "Uint", hHash, "Uint", pData, "Uint", nSize, "Uint", 0)
-	DllCall("advapi32\CryptGetHashParam", "Uint", hHash, "Uint", 2, "Uint", 0, "UintP", nSize, "Uint", 0)
-	VarSetCapacity(HashVal, nSize, 0)
-	DllCall("advapi32\CryptGetHashParam", "Uint", hHash, "Uint", 2, "Uint", &HashVal, "UintP", nSize, "Uint", 0)
-	DllCall("advapi32\CryptDestroyHash", "Uint", hHash)
-	DllCall("advapi32\CryptReleaseContext", "Uint", hProv, "Uint", 0)
-
-	FormatI := A_FormatInteger
-	SetFormat, Integer, H
-	Loop,	%nSize%
-		sHash .= SubStr(*(&HashVal + A_Index - 1), -1)
-	SetFormat, Integer, %FormatI%
-	StringReplace,	sHash, sHash, x, 0, All
-	StringUpper,	sHash, sHash
-	Return	sHash
-}

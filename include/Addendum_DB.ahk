@@ -13,7 +13,7 @@
 
 ; ▹ReadGVUListe                   	IstChronischKrank           	    	InChronicList                  	    	IstGeriatrischerPatient
 
-; ▹class AlbisDatenbanken		Leistungskomplexe        	    		DBASEStructs                       		GetDBFData
+; ▹class AlbisDatenbanken		Leistungskomplexe            		DBASEStructs                       		GetDBFData
 ; 	 ReadPatientDBF					ReadDBASEIndex
 
 ; ▹StrDiff                                	DLD                                      	FuzzyFind
@@ -29,7 +29,7 @@
 ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; PATIENTEN DATENBANK INKL. SUCHFUNKTIONEN (Textdatei im Addendum Ordner)
 ;--------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-PatDb(Pat, cmd:="")                                                       	{             	       	;-- überprüft die Addendum Patientendatenbank und führt auch das alternative Tagesprotokoll
+PatDb(Pat, cmd:="")                                                       	{                 	;-- überprüft die Addendum Patientendatenbank und führt auch das alternative Tagesprotokoll
 
 	; letzte Änderung: 13.02.2021
 
@@ -448,7 +448,7 @@ return false
 ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; ALBIS DBASE DATENBANKEN - benötigt Addendum-DBASE.ahk
 ;--------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-class AlbisDatenbanken { 			 					         								;-- erweitert Addendum_DBASE um zusätzliche Funktionen
+class AlbisDb { 		                             	 					         								;-- erweitert Addendum_DBASE um zusätzliche Funktionen
 
 		; diese Klasse benötigt Addendum_DBASE, Addendum_Internal
 
@@ -672,18 +672,12 @@ GetDBFData(DBpath,p="",out="",s=0,opts="",dbg=0,dbgOpts="") {     	;-- holt Date
 		return matches
 
 	data := Array()
-
-	;SciTEOutput("verkleinere Datenmenge....")
 	For midx, m in matches {
-
 		strObj:= Object()
 		For cidx, ckey in outpattern
 			strObj[ckey] := m[ckey]
-
 		data.Push(strObj)
-
 	}
-
 
 return data
 }
@@ -828,7 +822,7 @@ ReadPatientDBF(basedir="", infilter="", outfilter="", debug=0) {           	;-- 
 
 			strObj	:= Object()
 			For key, val in m
-				If (key <> "NR")
+				If (key <> "NR") && (StrLen(val) > 0)
 					strObj[key] := val
 
 			PatDBF[m.NR] := strObj
@@ -1182,10 +1176,7 @@ class string                                                               	{   
 
 }
 
-
-
-
-GetAlbisPath()                                                          	{                         	;-- liest das Albisinstallationsverzeichnis aus der Registry
+GetAlbisPath()                                                        	{                         	;-- liest das Albisinstallationsverzeichnis aus der Registry
 
 		If (A_PtrSize = 8)
 			SetRegView	, 64

@@ -7,7 +7,7 @@
 ;       Abhängigkeiten:		Addendum_Gui.ahk, Addendum.ahk
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_Calc started:    	14.02.2021
+;       Addendum_Calc started:    	19.02.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -18,17 +18,17 @@ FindDoc(Text) {
 
 FindDocNames(Text, debug:=false)                                  	{               	;-- sucht Namen von Patienten im Dokument
 
-	; letzte Änderung: 10.02.2021
+	; letzte Änderung: 19.02.2021
+
+		debug := true
+		PatBuf	:= Object()
+
 	; ‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿
 	;
 	;                  REGEX-STRINGS FÜR DAS FINDEN VON PERSONENNAMEN UND DATUMSZAHLEN IN EPIKRISEN, UNTERSUCHUNGSBEFUNDEN, BRIEFEN
 	;
-	;{⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀
-
-	;debug := true
-
-	; REGEXSTRINGS
-
+	;⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀
+	; REGEXSTRINGS ;{
 	; 	(geboren\sam|geb\.\sam|geb\.|geboren|Geburtsdatum)[;,:.\s]+
 	;	. (?<WDay>Mon*t*a*g*|Die*n*s*t*a*g*|Mi*t*t*w*o*c*h*|Do*n*n*e*r*s*t*a*g*|Fr*e*i*t*a*g*|Son*n*a*b*e*n*d*|Sa*m*s*t*a*g*|So*n*n*t*a*g*)[;,:.\s]+
 	;	. (?<D>[\s12]*[0-9])[;,:.\s]+(?<M>Jan*u*a*r*|Feb*r*u*a*r*|Mä*a*rz|Apr*i*l*|Mai|Jun*i*|Jul*i*|Augu*s*t*|Septe*m*b*e*r*|Okto*b*e*r*|Nove*m*b*e*r*|Deze*m*b*e*r*)
@@ -56,49 +56,63 @@ FindDocNames(Text, debug:=false)                                  	{            
 		static rxMonths2   	:=	"(?<Monat>Janu*a*r*|Febr*u*a*r*|Mä*a*rz\.*|Apri*l*|Mai|Juni*|Juli*|Augu*s*t*|Septe*m*b*e*r*|Okto*b*e*r*|Nove*m*b*e*r*|Deze*m*b*e*r*)"
 		static rxYears			:=	"(?<Jahr>([12][0-9])*[0-9]{2})"
 
-		static rxPerson      	:= 	"[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*"
-		static rxPerson2   	:= 	"[A-ZÄÖÜ][\pL]+([\-\s][A-ZÄÖÜ][\pL]+)*"
+		static rxPerson    	:= 	"[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*"
+		static rxPerson1    	:= 	"(?<Name1>[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*)"
+		static rxPerson2    	:= 	"(?<Name2>[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*)"
+		static rxPerson3   	:= 	"[A-ZÄÖÜ][\pL]+([\-\s][A-ZÄÖÜ][\pL]+)*"
 
-		static rxName1	:= 	"(?<Name2>" rxPerson 	")\s*[.,;]+\s*(?<Name1>"	rxPerson	")"
-		static rxName2	:= 	"(?<Name2>" rxPerson 	")" . rx . "(?<Name1>"    	rxPerson 	")"
-		static rxName3	:= 	"(?<Name2>" rxPerson2 	")" . rx . "(?<Name1>"    	rxPerson2	")"
+		static rxName1  	:= 	"(?<Name2>" rxPerson 	")\s*[.,;]+\s*(?<Name1>"	rxPerson	")"
+		static rxName2   	:= 	"(?<Name2>" rxPerson 	")" . rx . "(?<Name1>"    	rxPerson 	")"
+		static rxName3  	:= 	"(?<Name2>" rxPerson2 	")" . rx . "(?<Name1>"    	rxPerson2	")"
 
 		static rxDatum		:= 	"\d{1,2}[.,;\s]+\w+[.,\s]+\d{2,4}"
-		static rxGebAm		:= 	"geboren\sam|geb\.\sam|geb\.|geboren|Geburtsdatum|Geb[.,\-\s]+Dat[,.]+"
+		static rxGebAm		:= 	"(geboren\sam|geb\.\sam|geb\.|geboren|Geburtsdatum|Geb[.,\-\s]+Dat[,.]+)"
 		static rxGebAm2	:= 	"(geboren\sam|geb\.\sam|geb\.|geboren|Geburtsdatum)"
+
 		static GName    	:= 	"Geb\.\sName|Geburtsname"
-		static rxAnrede   	:= 	"Betrifft"
-		static rxAnredeM   	:= 	"Herrn*|Patient|Patienten"
-		static rxAnredeF  	:= 	"Frau|Patientin"
+		static rxAnrede   	:= 	"(Betrifft)"
+		static rxAnredeM   	:= 	"(Herrn*|Patient|Patienten)"
+		static rxAnredeF  	:= 	"(Frau|Patientin)"
+		static rxVorname	:= 	"Vo(rn|m)ar*me"
+		static rxNachname	:= 	"([Nn]ach)*[Nn]ame"
+		static rxNameW    	:= 	"[Nn]ame[\w]*"
 
-		static RxNames     	:= [	"(" rxAnrede ")" 	rx   .  	rxName1  .		rx  	"(" rxGebAm ")"   . 	ry  .  rxDatum                                	; 01
-										,	"(" rxAnrede ")"	rx   .   	rxName2	.		rx  	"("	rxGebAm ")"   . 	ry                                                 	; 02
-										,	"(" rxAnrede ")"	rx   .   	rxName3	.		rx  	"("	rxGebAm ")"   . 	ry                                                 	; 03
-										,	  	rxName1 	.	rx   	"("	rxGebAm	")"		rs  	.   rxDatum                                                                  	; 04
-										,		rxName2 	.	rx   	"("	rxGebAm 	")"		rs  	.   rxDatum                                                                 	; 05
-										,		rxName1 	.	rx   	"("	rxGName	")"		rp2	"(" rxGebAm ")"	.	rx	.	rxDatum                                	; 06
-										,		rxName3 	.	rx   	"(" rxGName 	")"		rz  	"("	rxGebAm ")"	.	rx	.	rxDatum         	                      	; 07
+		static RxNames     	:= [	rxAnrede    	. 	rx	. 	rxName1  .	rx  	.	rxGebAm   . 	ry  .  rxDatum                                            	; 01
+										,	rxAnrede   	.	rx	. 	rxName2	.	rx  	.	rxGebAm   . 	ry                                                             	; 02
+										,	rxAnrede   	.	rx	. 	rxName3	.	rx  	.	rxGebAm   . 	ry                                                             	; 03
+										,	rxName1     	.	rx	.	rxGebAm	.	rs  	.   rxDatum                                                                          	; 04
+										,	rxName2     	.	rx	.	rxGebAm 	.	rs  	.   rxDatum                                                                         	; 05
+										,	rxName1     	.	rx	.	rxGName	.	rp2	.	rxGebAm 	.	rx	.	rxDatum                                           	; 06
+										,	rxName3     	.	rx	.	rxGName	.	rz  	.	rxGebAm 	.	rx	.	rxDatum         	                                 	; 07
 
-								       	,	"[Nn]ame[\s\w]*[;:\s]+"	rxName1                                                                                                   	; 08
-								       	,	"(" rxAnrede   	")[;,:.\s]+" 	rxName2                                                                                             	; 09
-								       	,	"(" rxAnredeM 	")[;,:.\s]+" 	rxName2                                                                                             	; 10
-								       	,	"(" rxAnredeF 	")[;,:.\s]+" 	rxName2                                                                                             	; 11
+								       	,	rxAnrede   	. 	rx  .  rxName2                                                                                                         	; 08
+								       	,	rxAnredeM 	. 	rx  .  rxName2                                                                                                         	; 09
+								       	,	rxAnredeF 	. 	rx  .  rxName2                                                                                                         	; 10
 
-								       	,	"(Nach)*name[:,;.\s]+(?<Name2>" rxPerson ").*Vo(rn|m)ar*me[:,;.\s]+(?<Name1>" rxPerson ")"		; 12
-						        		,	"Vo(rn|m)ar*me[:,;.\s]+(?<Name1>" rxPerson ").*(Nach)*name[:,;.\s]+(?<Name2>" rxPerson ")"		; 13
+								       	,	rxNameW		.	rx	.	rxName1                                                                                                       	; 11
+								       	,	rxNachname	. 	rx	. 	rxPerson2	.	".*?" 	.	rxVorname	. rx . rxPerson1                                    	      	; 12
+								       	,	rxVorname	. 	rx	. 	rxPerson2	.	".*?"	.	rxNachname	. rx . rxPerson2                                    	      	; 13
 
 						        		,	"^\s*" rxName2 "\s"]	                                                                                                                    	; 14	^ Muster, Max  ....
+
+		static RxNames2	:= [	rxNachname	. 	rx	. 	rxPerson2                            																				; 01
+										,	rxVorname	. 	rx	.	rxPerson1]                          																				; 02]
 
 		static	rxDates       	:= [	"(?<Tag>\d{1,2})[.,;](?<Monat>\d{1,2})[.,;](?<Jahr>(\d{4}|\d{2}))[^\d]"                                 	; 01	12.11.64 oder 12.11.1964
 						               	,	"i)(?<Tag>\d{1,2})[.,;\s]+(?<Monat>" rxMonths ")[.,;\s]+(?<Jahr>(\d{4}|\d{2}[^\d]))[^\d]"        	; 02
 										,	"(" rxGebAm ")"	rx  ".{0,20}?" . rxDay . rx . rxMonths2 . rx . rxYears]                                                   	; 03   Geburtsdatum: 12. Nov. 1964
 
 
-		static rxContinue := "(Nachname|Vorname|Geburtsdatum)"
+		static rxContinue := "(Nachname|Vor[nm]ame|Geburtsdatum)"
+
+				;~ ,	rxNachname	. 	rx	. "(?<Name2>" rxPerson ").*?" rxVorname		. rx . "(?<Name1>" rxPerson ")"	      	; 12
+		;~ ,	rxVorname	. 	rx	. "(?<Name1>" rxPerson ").*?" rxNachname	. rx . "(?<Name2>" rxPerson ")"	      	; 13
+		;~ ,	rxNachname	. 	rx	. "(?<Name2>" rxPerson ")"   																				; 15
+		;~ ,	rxVorname	. 	rx	. "(?<Name1>" rxPerson ")"   																				; 16
+
 
 		;}
 
-		PatBuf	:= Object()
 
 		If debug
 		  SciTEOutput("`n  --------------------------------------`n {Methode 1}")
@@ -131,7 +145,7 @@ FindDocNames(Text, debug:=false)                                  	{            
 					else if (debug = 1)
 						SciTEOutput("    [" RxStrIndex "]  " PatName2 ", " PatName1  " / " spos " (" Pat ")")
 
-			  ; Unpassendes entfernen
+				; Unpassendes entfernen
 					PatName1 := StrReplace(PatName1, " "), PatName2 := StrReplace(PatName2, " ")
 					If RegExMatch(PatName1, rxContinue) || RegExMatch(PatName2, rxContinue)
 						continue
@@ -262,7 +276,7 @@ FindDocNames(Text, debug:=false)                                  	{            
 	;}
 
 	; ---------------------------------------------------------------------------------------------------------------------------------------------------
-	; Methode 3:	kommt nur zum Einsatz wenn die Methoden 1 und 2 nichts gefunden haben.
+	; Methode 3a:	kommt nur zum Einsatz wenn die Methoden 1 und 2 nichts gefunden haben.
 	;                  	Findet zwei aufeinander folgende Worte mit Großbuchstaben am Anfang (Personennamen, Eigennamen ...)
 	;               	und vergleicht diese per StringSimiliarity-Algorithmus mit den Namen in der Addendum-Patientendatenbank
 	; ---------------------------------------------------------------------------------------------------------------------------------------------------;{
@@ -317,6 +331,34 @@ FindDocNames(Text, debug:=false)                                  	{            
 	}
 
 	;}
+
+	; ---------------------------------------------------------------------------------------------------------------------------------------------------
+	; Methode 3b: Es wurden Patienten gefunden. Sieht nach welche Namen tatsächlich im Text vorkommen (untersucht Wort für Wort)
+	; ---------------------------------------------------------------------------------------------------------------------------------------------------;{
+
+		If (PatBuf.Count() > 9999) {
+
+		; sammelt alle Wort entsprechend rxPerson in ein Object()
+			propernames := Object()
+			spos	:= 1
+			while (spos := RegExMatch(text, rxPerson, pname, spos)) {
+
+				spos += StrLen(pname)
+				If !propernames.HasKey(pname)
+					propernames[pname] := 1
+				else
+					propernames[pname] += 1
+
+			}
+
+		;
+			For PatID, Pat in PatBuf {
+
+				;n1 := StrDiff(Text)
+
+			}
+
+	}
 
 	; höchste Trefferzahl ermitteln ;{
 		maxHits := 0, BestHits := Object()
@@ -623,4 +665,57 @@ GetTextDates(txt) 																{
 return dates
 }
 
+/*
+ExclBuf := ""
+		If (PatBuf.Count() = 0) {
 
+			spos := 1
+			while (spos := RegExMatch(text, "([A-ZÄÖÜ][\pL-]+)[\s,.;:]+([A-ZÄÖÜ][\pL-]+)", name, spos)) {
+
+				; überflüssige Zeichen entfernen
+					name1 := RegExReplace(name1, "[\s\n\r\f]")
+					name2 := RegExReplace(name2, "[\s\n\r\f]")
+
+				; Bindestrichworte ignorieren
+					If RegExMatch(name1, "\-$") {
+						spos += StrLen(name1)                    ; ein Wort weiter
+						continue
+					} else if RegExMatch(name2, "\-$") {
+						spos += StrLen(name)                     ; beide Wörter weiter
+						continue
+					} else if (StrLen(name1) = 0) || (StrLen(name2) = 0) {
+						spos += StrLen(name)
+						continue
+					}
+
+					matches := admDB.StringSimilarityEx(name1, name2)
+					If IsObject(matches) {
+
+						spos += StrLen(name)
+
+						For PatID, Pat in matches {
+
+							If PatID in %excludeIDs%
+								continue
+
+							If PatBuf.haskey(PatID)
+								PatBuf[PatID].hits += 1
+							else
+								PatBuf[PatID]	:= {"Nn":Pat.Nn, "Vn":Pat.Vn, "Gd":Pat.Gd, "hits":1, "method":1}
+
+							If debug
+								SciTEOutput("   " PatID " , hits: " PatBuf[PatID].hits)
+						}
+
+					}
+					else
+						spos += StrLen(name1)
+
+			}
+
+			ToolTip,,,, 15
+	}
+
+
+
+ */

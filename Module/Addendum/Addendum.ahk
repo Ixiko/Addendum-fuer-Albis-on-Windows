@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                                                                       	ADDENDUM HAUPTSKRIPT
-global                                                                               AddendumVersion:= "1.51" , DatumVom:= "17.02.2021"
+global                                                                               AddendumVersion:= "1.51" , DatumVom:= "24.02.2021"
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                    ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . . . . . . .                                           BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -14,32 +14,13 @@ global                                                                          
 ; . . . . . . . . . .                                                                    THIS SCRIPT ONLY WORKS WITH AUTOHOTKEY_H V1.1.32.00+
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-; . . . . . . . . . .
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 /*               	A DIARY OF CHANGES
-| **17.02.2021**	| 	**F~**	| **Addendum_Albis**       	-	**AlbisImportierePdf()** und  **AlbisImportiereBild()** - den Funktionen kann optional ein Karteikartendatum
-																							übergeben werden. <br>
-																							|
-| **16.02.2021**	|	**F+**	| **Addendum_Exporter**     	-	Kommunikation zwischen dem Infofenster und dem Dokumentexporter steht. Bei Aufruf des Skriptes übergibt Addendum
-																							die aktuelle Patienten ID so daß dieser Patient im DokExporter angezeigt wird.
-																						-	Für das Exportieren der Karteikarteneinträge durch Erstellung eines Tagesprotokolls werden die in Albis angelegten
-																							Karteikartenfilter zur individuellen Auswahl	angeboten. Damit kann man seine gewohnten Filter für den Export nutzen. V1.51 |
-| **13.02.2021**	|	**F+**	| **Addendum**                	-	**ListviewClipboard()** eine kleine Funktion welche den Inhalt von Tabellensteuerlementen (Listview) ins Clipboard kopiert. Und
-																							wenn hinterlegt, dann entfernt die Funktionen überflüssige Informationen und formatiert die Daten so daß man diese z.B. direkt
-																							in einem Textprogramm ausgeben kann. Voreingestellt ist die Formatierung für das Dauermedikamenten und Dauerdiagnosenfenster. |
-|                          | 				| **Addendum_Albis**       	-	**AlbisRestrainLabWindow()** - verbessert<br>
-																							**AlbisAkteOeffnen()** - Zuverlässigkeit erhöht |
+| **23.02.2021**	|	**F+**	| **AddendumMonitor**      	-	hat eine Funktion zur Überwachung der CPU Auslastung erhalten. Eigene Programmierfehler und/oder das Einbinden von
 
 
 
-
-
- ** Registry Pfade für Albis
-	Computer\HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\
-	Computer\HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows
-		Installationspfad
-		LocalPath-1
 
 	CGM_ALBIS DIENST Service SID:                    	S-1-5-80-845206254-3503829181-3941749774-3351807599-4094003504
 	CGM_ALBIS_BACKGROUND_SERVICE_(6002) 	S-1-5-80-4257249827-193045864-994999254-1414716813-2431842843
@@ -52,7 +33,7 @@ global                                                                          
 
 ** Ideen
 	OrderEntry Labor - automatische Eintragung der richtigen Ausnahmekennziffer
-	Laborabruf - weitermachen , wichtig bei Timergesteuertem Abruf ein Protokoll schreiben
+
 
 */
 
@@ -66,14 +47,14 @@ global                                                                          
 		#MaxHotkeysPerInterval	, 99000000
 		#HotkeyInterval              	, 99000000
 		#MaxThreadsPerHotkey 	, 12
-		#KeyHistory                  	, 1
-		#MaxMem                    	, 256
+		#KeyHistory                  	, 0
+		#MaxMem                    	, 512
 		#WarnContinuableException, Off
 
 		;#Warn ;, All
 
 		;ListLines                        	, % (ListLinesFlag := false)
-		;ListLines                        	, Off
+		ListLines                        	, Off
 
 		DetectHiddenWindows   	, On
 		SetTitleMatchMode        	, 2	              	;Fast is default
@@ -339,6 +320,8 @@ global                                                                          
 					break
 		}
 
+		Menu, SubMenu2, Add	, % "Albis reanimieren"                 	, ToolStarter
+		Menu, SubMenu2, Icon	, % "Albis reanimieren"                 	, % Addendum.Dir "\assets\ico\Windows.ico"
 		Menu, SubMenu2, Add	, % "Windows komplett neu starten", ToolStarter
 		Menu, SubMenu2, Icon	, % "Windows komplett neu starten", % Addendum.Dir "\assets\ico\Windows.ico"
 	;}
@@ -556,7 +539,8 @@ global                                                                          
 			}
 		}
 
-
+	; WorkingSet freigeben nach dem ersten Start
+		ScriptMem()
 
 ;}
 
@@ -1715,7 +1699,7 @@ AlbisKopieren:               	;{ 	Strg	+	c                                      
 		return
 	}
 	else if RegExMatch(WinGetClass(DLLCall("GetLastActivePopup", "uint", AlbisWinID())), "#32770") {
-		ListviewClipboard("Wartezimmer")
+		ListviewClipboard("")
 		return
 	}
 
@@ -1759,7 +1743,7 @@ AlbisKarteikarteSchliessen:	;{ 	Shift	+	Pfeil nach unten
 return
 ;}
 AlbisNaechsteKarteikarte:	;{ 	Shift	+	Pfeil nach rechts
-	SendMessage, 0x224,,,, % "ahk_id " AlbisGetMDIClientHandle()	; WM_MDINEXT
+	SendMessage, 0x224,,,, % "ahk_id " AlbisMDIClientHandle()	; WM_MDINEXT
 return
 ;}
 Abrechnungshelfer:       	;{ 	Strg	+	F9
@@ -1892,13 +1876,13 @@ Kalender:                      	;{ 	Shift	+ F3
 return
 ;}
 DruckeLabor:                	;{ 	Alt 	+ F8
-	AlbisDruckeLaborblatt(1, "Standard", "")
+	AlbisLaborblattDrucken(1, "Standard", "")
 return
 ;}
 Laborblatt:                    	;{ 	Alt 	+ Rechts
 	If !InStr(AlbisGetActiveWindowType(), "Patientenakte") or InStr(AlbisGetActiveWindowType(), "Laborblatt")
 			return
-	AlbisZeigeLaborBlatt()
+	AlbisLaborBlattZeigen()
 return
 ;}
 Karteikarte:                   	;{ 	Alt 	+ Links
@@ -2775,49 +2759,61 @@ return ModulPID
 }
 ListviewClipboard(WinTitle:="") {                                                                                	;-- kopiert den Inhalt einer Listview,Listbox,DDL ins Clipboard
 
-	; letzte Änderung: 13.02.2021
+	; letzte Änderung: 22.02.2021
 
 	; Parser Einstellungen für Albis Listviewsteuerelemente
 		static CopyOpt :=
 		( Join
 			{
-			 "Dauerdiagnosen": {
-			  "SysListView321": {
+			"Dauerdiagnosen":    	{
+				"SysListView321": {
 					   "num"         	: 1,
 					   "numFormat"	: ".`t",
 					   "Rxrpl"           	: "^\w+\s+\w+\s+[\d.]+\s+(?=\w)",
 					   "rxrplWith"  	: ""
-			  },
-			  "SysListView322": {
-				"num"         	: 1,
-				"numFormat"	: ".`t",
-				"Rxrpl"       	: {
-						"(\d+)mg"                 	: "$1 mg",
-						"\d+\s+St\**"            	: " ",
-						"\sN\d\s"                    	: " ",
-						"^\s*(.*)\s+\d+\s*$"	: "$1",
-						"Pharma"                    	: "",
-						"\s{2,}"                       	: " "
-			   },
-			   "rxrplWith": "$1"
-			  }
+				  },
+				"SysListView322": {
+						"num"         	: 1,
+						"numFormat"	: ".`t",
+						"Rxrpl"       	: {
+							"(\d+)mg"                 	: "$1 mg",
+							"\d+\s+St\**"            	: " ",
+							"\sN\d\s"                    	: " ",
+							"^\s*(.*)\s+\d+\s*$"	: "$1",
+							"Pharma"                    	: "",
+							"\s{2,}"                       	: " "
+					   },
+				   "rxrplWith": "$1"
+				  }
 			 },
-			 "Dauermedikamente": {
-			  "SysListView321": {
-			   "num"         	: 1,
-			   "numFormat"	: ".`t",
-			   "Rxrpl"        	: {
-				"(\d+)mg"                    	: "$1 mg",
-				"\d+\s+St\**"               	: " ",
-				"\s+[\d.]+\s+\d+\s*$"	: "",
-				"\sN\d\s"                     	: " ",
-				"Pharma"                   	: "",
-				"\s{2,}"                     	: " "
-			   },
-			   "rxrplWith"   	: "$1"
-			  }
+			"Dauermedikamente":	{
+				"SysListView321": {
+					   "num"         	: 1,
+					   "numFormat"	: ".`t",
+					   "Rxrpl"        	: {
+							"(\d+)mg"                  	: "$1 mg",
+							"\d+\s+St\**"            	: " ",
+							"\s+[\d.]+\s+\d+\s*$"	: "",
+							"\sN\d\s"                   	: " ",
+							"Pharma"                   	: "",
+							"\s{2,}"                     	: " "
+					   },
+				   "rxrplWith"   	: "$1"
+				  }
+			 },
+			 "Zusatzdaten":     	{
+				"SysListView322": {
+					"num"         	: 0,
+					"numFormat"	: ".`t",
+					"Rxrpl"        	: {
+						"([\w\s]+)\s\.\.\.+\s+([\>\,\.\w\s\/]+)" : "`t$1  $2",
+						"([\w\(\),.+\s]+)\s(\.+|\s)\s*([ISR])" : "`t$3`t$1",
+						"([\w\(\).\s]+)\s\.+\s+([#,.\w\s\/]+)" : "`t$2`t$1"
+					}
+				  },
+				"rxrplWith": "$1"
+				}
 			 }
-			}
 		)
 
 	; Dauermedikamente
@@ -2906,13 +2902,13 @@ ListviewClipboard(WinTitle:="") {                                               
 
 	; beim Wartezimmer muss das Listviewhandle anders ermittelt werden
 		If (WinTitle = "Wartezimmer") {
-			hWZ := AlbisGetWartezimmerID()
-			ControlGet, hChild    	, HWND,,, % "ahk_id " hWZ
-			ControlGet, outcontrol	, HWND,, SysListView321, % "ahk_id " hChild
+			hWZ := AlbisMDIWartezimmerID()
+			ControlGet, hChild    	, HWND,,                      	, % "ahk_id " hWZ
+			ControlGet, outcontrol	, HWND,, SysListView321	, % "ahk_id " hChild
 		}	else {
-			MouseGetPos,,, outwin, hControl, 2
-			MouseGetPos,,, outwin, classnn, 1
-			WinGetTitle, wintitle, % "ahk_id " outwin
+			MouseGetPos,,, outwin, hControl	, 2
+			MouseGetPos,,, outwin, classnn 	, 1
+			WinGetTitle, Wintitle, % "ahk_id " outwin
 		}
 
 		;SciTEOutput("copy hwnd: " hcontrol "`nclassnn: " classnn "`noutwin: " outwin  "`nWinTilte: " WinTitle)
@@ -2938,7 +2934,8 @@ ListviewClipboard(WinTitle:="") {                                               
 					}
 
 				; ---
-					cLines := StrSplit(RegExReplace(content, "[\s\n\r]+$"), "`n", "`r")
+					;cLines := StrSplit(RegExReplace(content, "[\s\n\r]+$"), "`n", "`r")
+					cLines := StrSplit(RegExReplace(content, "[\n\r]+", "`n"), "`n", "`r")
 					newcontent := ""
 					For cIdx, cLine in cLines {
 
@@ -2968,12 +2965,15 @@ ListviewClipboard(WinTitle:="") {                                               
 			}
 
 			If nopts {
-				ClipBoard := content
-				PraxTT("Inhalt des Steuerelementes kopiert.`n[" cLinesCount " Zeilen]", "2 1")
+				SciTEOutput("`ncontent:`n" content " ---------")
+				ClipBoard := content ? RegExReplace(content, "[\n\r]+", "`n") : newcontent ? RegExReplace(newcontent, "[\n\r]+", "`n") : ""
+				ClipWait, 1
+				PraxTT("Inhalt des Steuerelementes kopiert.`n[" cLinesCount " Zeilen]`n[" StrLen(content) " Zeichen]", "2 1")
 			} else {
-				ClipBoard := newcontent
-				SciTEOutput("`n" newcontent "---------")
-				PraxTT("Inhalt des Steuerelementes kopiert.`n[" cLinesCount " Zeilen]`nInhalt wurde nach Vorgabe formatiert!", "6 1")
+				SciTEOutput("`nnewcontent:`n" RegExReplace(newcontent, "[\n\r]+", "`n")  "`n---------")
+				ClipBoard := newcontent ? RegExReplace(newcontent, "[\n\r]+", "`n") : content ? RegExReplace(content, "[\n\r]+", "`n") : ""
+				ClipWait, 1
+				PraxTT("Inhalt des Steuerelementes kopiert.`n[" cLinesCount " Zeilen]`n[" StrLen(newcontent) " Zeichen]`nInhalt wurde nach Vorgabe formatiert!", "6 1")
 			}
 
 		}
@@ -3064,7 +3064,6 @@ LaborAbruf() {                                                                  
 	; LaborabrufTimer erneut starten
 		LaborAbrufTimerStarten()
 }
-
 
 ;}
 
@@ -3746,134 +3745,121 @@ EventHook_WinHandler:                                                           
 	EHWT	:= thisWin.title, EHWText := StrReplace(thisWin.Text, "`n", " "), EHWClass := thisWin.Class
 	Addendum.LastHookHwnd := hHookedWin := GetHex(thisWin.Hwnd)
 
-	If ( (StrLen(EHWT . EHWText) = 0) || InStr(EHWText, "SkinLoader") )
-		If (EHStack.Count() = 0) {
-			EHWHStatus := false, Addendum.LastHookHwnd := 0
+	If (StrLen(EHWT . EHWText) = 0) || InStr(EHWText, "SkinLoader")
+		If !EHStack.Count() {
+			EHWHStatus := Addendum.LastHookHwnd := false
 			return
-		}
-		else
+		} else
 			goto StackEntry
 
 	WinGet, EHproc1, ProcessName, % "ahk_id " hHookedWin
 	If (EHWT && !EHproc1) {
-		WinGet, EHproc1, ProcessName, % "ahk_id " (GetParent(hHookedWin))
-		If !EHproc1 && (EHStack.Count() = 0) {
-			EHWHStatus := false, Addendum.LastHookHwnd := 0
+		WinGet, EHproc1, ProcessName, % "ahk_id " GetParent(hHookedWin)
+		If !EHproc1 && !EHStack.Count() {
+			EHWHStatus := Addendum.LastHookHwnd := false
 			return
-		} else
+		} else if !EHproc1 && EHStack.Count()
 			goto StackEntry
 	}
-
 
 
 	If        InStr(EHproc1, "albis")                                                                      	{        	; ALBIS
 
 			If   	  InStr(EHWText	, "ist keine Ausnahmeindikation")                                                              	 {  	; Fenster wird geschlossen
-					VerifiedClick("Button2", hHookedWin)
-					GNRChanged 	:= true
+				VerifiedClick("Button2", hHookedWin)
+				GNRChanged 	:= true
 			}
 			else If InStr(EHWT  	, "Daten von") && GNRChanged                                                              	 {  	; schließt nach Änderung der GNR das Fenster "Daten von " für schnelleres Handling
-					while (A_Index < 30)
-						Sleep 10
-					If !WinExist("", "ist keine Ausnahmeindikation")  {
-						VerifiedClick("Button30", "Daten von ahk_class #32770")
-						GNRChanged 	:= false
-					}
+				while (A_Index < 30)
+					Sleep 10
+				If !WinExist("", "ist keine Ausnahmeindikation")  {
+					VerifiedClick("Button30", "Daten von ahk_class #32770")
+					GNRChanged 	:= false
+				}
 			}
 			else If InStr(EHWText	, "ALBIS wartet auf Rückgabedatei")                                                          	 {  	; Laborhinweis schliessen
-					BlockInput, On
-					VerifiedClick("Button1", hHookedWin)
-					AlbisActivate(1)
-					SendInput, {Tab}
-					WinActivate, % "ahk_class #32770", % "ALBIS wartet auf Rückgabedatei"
-					BlockInput, Off
+				BlockInput, On
+				VerifiedClick("Button1", hHookedWin)
+				AlbisActivate(1)
+				SendInput, {Tab}
+				WinActivate, % "ahk_class #32770", % "ALBIS wartet auf Rückgabedatei"
+				BlockInput, Off
 			}
 			else If InStr(EHWText	, "Chipkarte")                                                                                          	 {  	; in Abhängigkeit des Client wird das Fenster sofort oder verzögert geschlossen
-					If !InStr(compname, "SP1")
-						Sleep, 5000
-					VerifiedClick("Button1", hHookedWin)
+				Sleep, 3000
+				VerifiedClick("Button1", hHookedWin)
 			}
 			else if Instr(EHWText	, "Der Parameter ist bereits in dieser Gruppe")                                         	 {  	; Fenster wird geschlossen
-					VerifiedClick("Button1", hHookedWin)
+				VerifiedClick("Button1", hHookedWin)
 			}
 			else if Instr(EHWText	, "Behandlungszeitraum")                                                                         	 {  	; Behandlungszeitraum überschritten, neue Rechnung erstellen
-					VerifiedClick("Button2", "ALBIS", "Behandlungszeitraum")
+				VerifiedClick("Button2", "ALBIS", "Behandlungszeitraum")
 			}
 			else if Instr(EHWT   	, "Patientenausweis")                                                                                 	 {  	; automatisch drucken
-					VerifiedClick("Button23", hHookedWin)
+				VerifiedClick("Button23", hHookedWin)
 			}
 			else if InStr(EHWText	, "folgende Diagnosen übernommen")                                                       	 {  	; Fenster wird geschlossen
-					VerifiedClick("Button1", hHookedWin)
+				VerifiedClick("Button1", hHookedWin)
 			}
 			else if InStr(EHWT   	, "ALBIS - Login") && AutoLogin                                                               	 {  	; Client spezifisches automatisches Einloggen in Albis
-					AlbisAutoLogin(10)
+				AlbisAutoLogin(10)
 			}
 			else If InStr(EHWText	, "Sie haben eine Besuchsziffer ohne Wege")                                             	 {  	; Fenster wird geschlossen
-					VerifiedClick("Button2", "Sie haben eine Besuchsziffer ohne Wege")
+				VerifiedClick("Button2", "Sie haben eine Besuchsziffer ohne Wege")
 			}
 			else If InStr(EHWText	, "Datum darf nicht vordatiert werden")                                                     	 {  	; Datum wird verändert, Daten werden eingetragen, Datum wird zurückgesetzt
-					VerifiedClick("Button1", "ALBIS ahk_class #32770", "Datum darf nicht")
-					fControlHwnd:= GetFocusedControlHwnd()
-					ControlGetText, VorDatierDatum, Edit2, ahk_class OptoAppClass
-					AlbisSetzeProgrammDatum(VorDatierDatum)
-					VerifiedSetFocus("", "", "", fControlHwnd)
-					SendInput, {Tab}
+				VerifiedClick("Button1", "ALBIS ahk_class #32770", "Datum darf nicht")
+				fControlHwnd:= GetFocusedControlHwnd()
+				ControlGetText, VorDatierDatum, Edit2, ahk_class OptoAppClass
+				AlbisSetzeProgrammDatum(VorDatierDatum)
+				VerifiedSetFocus("", "", "", fControlHwnd)
+				SendInput, {Tab}
 			}
 			else If InStr(EHWText	, "Wollen Sie wirklich die GNR ändern")                                              		 {  	; es wird automatisch mit "Ja" bestätigt
-					VerifiedClick("Button1", "ALBIS ahk_class #32770", "Wollen Sie wirklich")
+				VerifiedClick("Button1", "ALBIS ahk_class #32770", "Wollen Sie wirklich")
 			}
 			else If InStr(EHWText	, "Der Patient wurde bereits als verstorben")                                               	 {  	; es wird automatisch mit "Ja" bestätigt
-					VerifiedClick("Button1", hHookedWin)
+				VerifiedClick("Button1", hHookedWin)
 			}
 			else If InStr(EHWText	, "Fehler beim Aufruf dppivassist")                                                             	 { 	; Fenster wird geschlossen
-					VerifiedClick("Button1", hHookedWin)
+				VerifiedClick("Button1", hHookedWin)
 			}
 			else If InStr(EHWText	, "Folgender Pfad existiert nicht")                                                               	 { 	; Fenster wird geschlossen
-					VerifiedClick("Button1", hHookedWin)
+				VerifiedClick("Button1", hHookedWin)
 			}
 			else if Instr(EHWT   	, "Herzlichen Glückwunsch") && WinExist("Gesundheitsvorsorgeliste")        	 { 	; Fenster "Herzlichen Glückwunsch" schliessen
-					VerifiedClick("Button1", hHookedWin)
+				VerifiedClick("Button1", hHookedWin)
 			}
 			else if InStr(EHWText	, "Der Druckauftrag konnte nicht gestartet werden")                                    	 { 	; Fenster wird geschlossen
-					VerifiedClick("Button1", hHookedWin)
-			}
-			else if InStr(EHWT   	, "CGM LIFE")	                                                                                    	 {  	; Verbindungsfehler (gesperrt durch Windows Firewall)
-					WinClose, % "CGM LIFE ahk_class Afx:00400000:0:00010005:86101803"
+				VerifiedClick("Button1", hHookedWin)
 			}
 			else if InStr(EHWT  	, "CGM HEILMITTELKATALOG")                                                              	 { 	; Fensterposition wird innerhalb des Albisfenster zentriert
-						AlbisHeilmittelKatologPosition()
+				AlbisHeilmittelKatologPosition()
 			}
 			else if InStr(EHWT  	, "Dauerdiagnosen von")                                                                        	 { 	; automatisches Sortieren von anamnestischen und Behandlungsdiagnosen
-					res:= AlbisResizeDauerdiagnosen()
+				res:= AlbisResizeDauerdiagnosen()
 			}
 			else if InStr(EHWT  	, "ICD-10 Thesaurus")                                                                            	 { 	; vergrößert den Diagnosenauswahlbereich
-					UpSizeControl("ICD-10 Thesaurus", "#32770", "Listbox1", 200, 150, AlbisWinID())
+				UpSizeControl("ICD-10 Thesaurus", "#32770", "Listbox1", 200, 150, AlbisWinID())
 			}
 			else if InStr(EHWT  	, "Muster 1a") || InStr(EHWText, "Der Patient ist noch AU")                       	 { 	; Arbeitsunfähigkeitsbescheinigung - Einblendung von zusätzlichen Informationen
-					AlbisFristenGui()
+				AlbisFristenGui()
 			}
 			else If InStr(EHWText	, "Fehler im ifap praxisCENTER")	                                                            	 {    	; Fehlerbenachrichtungen Java Runtime des ifap praxisCENTER
-
-					VerifiedClick("Button1", hHookedWin)
-					If !ifaptimer
-						SetTimer, ifapActive, 30
-					ifaptimer:= A_TickCount
-
+				VerifiedClick("Button1", hHookedWin)
+				If !ifaptimer
+					SetTimer, ifapActive, 30
+				ifaptimer:= A_TickCount
 			}
 			else If InStr(EHWText	, "Bitte die Straße")                                                                                  	 {  	; weitere Information Dialog (Patientendaten) und Adressproblematik
-
-					; bei Adressen mit Postleitzahlen, kann das Fenster 'weitere Informationen' nicht einfach geschlossen werden
-					MsgBox, 0x1024, Addendum für Albis on Windows, Rechnungsempfänger löschen?
-					IfMsgBox, Yes
-					{
-						Loop 8
-							VerifiedSetText("Edit" A_Index, "", "ahk_class #32770", 200, "Adresse des Rechnungs")
-					}
-					else
-						VerifiedSetText("Edit5", " ", "ahk_class #32770", 200, "Adresse des Rechnungs")
-
-					VerifiedClick("Button2", "ahk_class #32770", "Adresse des Rechnungs")
-
+				; bei Adressen ohne Straßenangabe, kann das Fenster 'weitere Informationen' nicht ohne weiteres geschlossen werden
+				MsgBox, 0x1024, Addendum für Albis on Windows, Rechnungsempfänger löschen?
+				IfMsgBox, Yes
+				{
+					Loop 8
+						VerifiedSetText("Edit" A_Index, "", "ahk_class #32770", 200, "Adresse des Rechnungs")
+				}
+				VerifiedClick("OK", "ahk_class #32770", "Adresse des Rechnungs")
 			}
 			else if Addendum.Schnellrezept && InStr(EHWT, "Muster 16")                                                     	 {  	; Kassenrezept - Schnellrezept + Auto autIdem Kreuz
 					AlbisRezeptHelferGui(Addendum.AdditionalData_Path "\RezepthelferDB.json")
@@ -3885,21 +3871,21 @@ EventHook_WinHandler:                                                           
 			}
 			else If Addendum.Labor.AutoAbruf && InStr(EHWText	, "alle markierten Laboranforderungen")    	 {
 				If !InStr(Addendum.LaborAbruf.Status, "Failure")
-					VerifiedClick("Button1", hHookedWin)   ; bestätigt mit ja
+					VerifiedClick("Button1", hHookedWin)                          ; mit ja bestätigen
 			}
 			else If Addendum.Labor.AutoAbruf && InStr(EHWText	, "Keine Datei(en) im Pfad") 	                   	 { 	; Laborabrufvorgang wird beendet
-					ResetLaborAbrufStatus()
-					VerifiedClick("Button1", hHookedWin)
+				ResetLaborAbrufStatus()
+				VerifiedClick("Button1", hHookedWin)
 			}
 			else if Addendum.Labor.AutoAbruf && Instr(EHWT  	, "Labor auswählen")                                 	 {    	; wählt das eingetragene Labor und bestätigt mit 'Ok'
-					AlbisLaborAuswählen(Addendum.Labor.LaborName)
+				AlbisLaborAuswählen(Addendum.Labor.LaborName)
 			}
 			else If Addendum.Labor.AutoAbruf && InStr(EHWT  	, "Labordaten")                                        	 {
-					AlbisLaborDaten()
+				AlbisLaborDaten()
 			}
-			else If Addendum.Labor.AutoAbruf && InStr(EHWT  	, "GNR der Anford")             	                 	 {
-				If !InStr(Addendum.LaborAbruf.Status, "Failure")
-					AlbisRestrainLabWindow(1, hHookedWin)       	;Listbox1 enthält Rechnungsdaten
+			else If Addendum.Labor.AutoAbruf && InStr(EHWT  	, "GNR der Anford")             	                 	 {		;
+				If !Addendum.LaborAbruf.Status
+					AlbisRestrainLabWindow(1, hHookedWin)       	         	; Listbox1 enthält Rechnungsdaten
 			}
 
 	}
@@ -3938,12 +3924,10 @@ EventHook_WinHandler:                                                           
 
 	}
 	else if Instr(EHproc1, "Autohotkey")                                                             	{         	; WinSpy (Autohotkey Tool) und Debuggerfenster
-
-			If InStr(EHWT, "WinSpy")
-				MoveWinToCenterScreen(hHookedWin)
-			else if InStr(EHWT, "Variable list")
-				WinMoveZ(hHookedWin, 0, Floor(A_ScreenWidth/2), 300, 600, 1200)
-
+		If InStr(EHWT, "WinSpy")
+			MoveWinToCenterScreen(hHookedWin)
+		else if InStr(EHWT, "Variable list")
+			WinMoveZ(hHookedWin, 0, Floor(A_ScreenWidth/2), 300, 600, 1200)
 	}
 	else if Instr(EHproc1, "InternalAHK")                                                            	{       	; SciTE Editor - Variablenfenster verschieben
     	if InStr(EHWT, "Variable list")
@@ -4013,40 +3997,6 @@ return ;}
 
 ;}
 
-WinEventHook_Helper_Thread:                                                                                      	;{ Labordaten - Fenster abfangen
-
-	hpop:= GetLastActivePopup(AlbisWinID())
-	If (hpop != AlbisWinID()) && (hpop != hpop_old)	{
-
-		EHWT	 := WinGetTitle(hpop)
-		EHWText:= WinGetText(hpop)
-		hpop_old:= hpop
-
-		If InStr(EHWT, "Labordaten")		{
-
-			SetTimer, WinEventHook_Helper_Thread, Off
-			VerifiedCheck("Button5"	, hpop,,, 1)
-			VerifiedClick("Button1" , hpop)
-			AlbisOeffneLaborbuch()
-
-		}
-
-	}
-
-return
-;}
-
-WinEvent_HMV(hHook, event, hwnd, idObject, idChild, eventThread, eventTime) {           	; Hookprocedure welche nur bei geöffneten Heilmittelverordnungsformularen aktiv ist
-	Critical
-	HmvHookHwnd:= GetHex(hwnd)
-	HmvEvent:= GetHex(event)
-	SetTimer, Heilmittelverordnung_WinHandler,  -0
-return 0
-
-Heilmittelverordnung_WinHandler:                                                                                 	;{ Eventhookhandler - kümmert sich nur um Heilmittelverordnungsfenster
-
-return ;}
-}
 
 FEGui() {                                                                                                                       	; Fokushook Testgui
 
@@ -4160,7 +4110,7 @@ CurrPatientChange(AlbisTitle) {                                                 
 			MsgBox, 4, Addendum für Albis on Windows, Hinweisdialog zur Prüfung EBM/KRW weiter ansehen?, 12
 			IfMsgBox, Yes
 				return
-			AlbisCloseMDITab("Prüfung EBM/KRW")
+			AlbisMDIChildWindowClose("Prüfung EBM/KRW")
 		}
 		else if 	InStr(AktiveAnzeige, "Laborbuch") && (Addendum.Laborabruf_Voll)
 			Albismenu(34157, "", 6, 1)			;34157 - alle übertragen
@@ -4169,10 +4119,6 @@ Return
 }
 
 
-; ----------------------- zugehörige Funktionen für die WinEventHandler Labels
-SplashAus: ;{
-	SplashTextOff
-return ;}
 
 ;}
 
@@ -4223,6 +4169,9 @@ MessageWorker(InComing) {                                                       
 
 		}
 	; Laborabruf_iBWC.ahk
+		else if InStr(recv.txtmsg, "AutoLaborAbruf") && InStr(recv.opt, "Status")	{
+			Send_WM_COPYDATA("AutoLaborAbruf Status|" Addendum.Labor.AutoAbruf  "|" GetAddendumID(), recv.fromID)
+		}
 		else if InStr(recv.txtmsg, "AutoLaborAbruf") && InStr(recv.opt, "aus")	{
 			If Addendum.Labor.AutoAbruf {
 				Addendum.Labor.AutoAbruf_Last := true
@@ -4912,14 +4861,8 @@ DasEnde(ExitReason, ExitCode) {
 	For i, hook in Addendum.Hooks
 		UnhookWinEvent(hook.hEvH, hook.HPA)
 
-	gosub istda
-
-}
-
-istda: ;{
-
 	Progress	, % "B2 B2 cW202842 cBFFFFFF cTFFFFFF zH25 w400 WM400 WS500"
-					, % (onlyReload ? "Addendum wird neu gestartet...." : "Addendum wird beendet.")
+					, % "Addendum wird beendet."
 					, % "Addendum für AlbisOnWindows"
 					, % "by Ixiko vom " DatumVom
 					, % "Futura Bk Bt"
@@ -4930,11 +4873,26 @@ istda: ;{
 	}
 
 	Progress, Off
-
 	Gdip_Shutdown(pToken)
 
-	If onlyReload
-		Reload
+ExitApp
+}
+
+istda: ;{
+
+	Progress	, % "B2 B2 cW202842 cBFFFFFF cTFFFFFF zH25 w400 WM400 WS500"
+					, % "Addendum wird beendet."
+					, % "Addendum für AlbisOnWindows"
+					, % "by Ixiko vom " DatumVom
+					, % "Futura Bk Bt"
+
+	Loop 50 {
+		Progress % (100 - (A_Index * 2))
+		Sleep 1
+	}
+
+	Progress, Off
+	Gdip_Shutdown(pToken)
 
 ExitApp
 ;}

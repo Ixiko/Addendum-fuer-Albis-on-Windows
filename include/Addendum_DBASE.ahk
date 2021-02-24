@@ -17,7 +17,7 @@
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
 ;       Addendum_DBASE begonnen am:          	12.11.2020
-;       Addendum_DBASE letzte Änderung am: 	06.02.2021
+;       Addendum_DBASE letzte Änderung am: 	18.02.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -152,7 +152,7 @@ class DBASE {                                     ; native DBASE Klasse nur für
 				}
 
 			; calculations for viewing of progress
-				this.ShowAt	:= Round(this.records/30)
+				this.ShowAt	:= Round(this.records/50)
 				this.slen     	:= -1 * (StrLen(this.records) - 1)
 				this.maxRecs	:= SubStr("00000000" this.records, this.slen)
 
@@ -236,7 +236,7 @@ class DBASE {                                     ; native DBASE Klasse nur für
 	  ; -------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	  ; REGEX BASED SEARCH, RETURNS ANY MATCHING RECORD
 	  ; -------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		Search(pattern, startrecord=0, options="") {
+		Search(pattern, startrecord=0, callbackFunc="") {
 
 		/* main description
 
@@ -266,32 +266,15 @@ class DBASE {                                     ; native DBASE Klasse nur für
 			VarSetCapacity(matches	, this.maxBytes)
 
 			this.uselastRxStr := false
+			;this.search.callbackFunc := Func("callbackFunc")
 
 			matches        	:= Object()                                 	; collects the findings
 			this.breakrec 	:= "#"                                       	; this variable is used to help external processing of data
-
-			RegExMatch(options, "i)collect\s+(?<collector>[A-Z]+)", f)
-
-			If RegExMatch(options, "i)use\s+last\s+RegEx")
-				this.uselastRxStr := true
 
 		; Establish read access if not already done
 			If !IsObject(this.dbf) {
 				this.nofileaccess := true
 				this.filepos := this.OpenDBF()
-			}
-
-		; for debugging or to show progress
-			if (this.debug=2) && IsObject(this.debugGui) {
-				Gui, % this.debugGui.name ": " Default
-			}
-			else if (this.debug=3)  {
-				Progress	, % "B2 B2 cW202842 cBFFFFFF cTFFFFFF zH25 w400 WM400 WS500"
-								, % this.debugGui.Msg2
-								, % this.debugGui.Msg1
-								, % ""
-								, % "Futura Bk Bt"
-				this.ShowAt := Round(this.ShowAt/5)
 			}
 
 		; builds a regex string, regex string can be re used by command
@@ -362,19 +345,12 @@ class DBASE {                                     ; native DBASE Klasse nur für
 				bytes	:= this.dbf.RawRead(recordbuf, this.lendataset)
 				set 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
 
-			; Multi-debugging for output to a SciteWindow console or an external gui
-				If (this.debug > 0) && (Mod(A_Index, this.ShowAt) = 0) {
+			; debugging and callback function to show progress
+				If (Mod(A_Index, this.ShowAt) = 0) {
 					If (this.debug = 1)
-						ToolTip, % "Search rx: " rxStr "`n" SubStr("00000000" A_Index, this.slen) "/" SubStr("00000000" this.records, this.slen) ;"`n" lfound
-					else if (this.debug = 3) {
-						Progress % Round((A_Index/this.records)*100)
-					}
-					else if (this.debugGui.Control = "Statusbar") {
-						If (this.debugGui.sbNR > 0)
-							SB_SetText("`t`t" Round((A_Index/this.records)*100), this.debugGui.sbNR)
-						else if StrLen(this.debugGui.sbNR = 0)
-							SB_SetText(" " SubStr("00000000" A_Index, this.slen) "/" SubStr("00000000" this.records, this.slen) )
-					}
+						ToolTip, % "Search rx: " rxStr "`n" SubStr("00000000" A_Index, this.slen) "/" SubStr("00000000" this.records, this.slen)
+					If (StrLen(callbackFunc) > 0)
+						%callbackFunc%(A_Index, this.records, this.len)
 				}
 
 			; no match - continue
@@ -416,9 +392,6 @@ class DBASE {                                     ; native DBASE Klasse nur für
 			this.breakrec	:= "!"
 
 			ToolTip
-
-			if (this.debug=3)
-				Progress, Off
 
 		return matches
 		}
@@ -626,8 +599,8 @@ class DBASE {                                     ; native DBASE Klasse nur für
 
 		; creates an array with data for substring function retreave only fields that should be returned
 			subs := this.BuildSubstringData(getfields)
-			If (subs.MaxIndex() = 0)                            ; returns here if all field names passed are unknown
-				return "field label(s) unknown"
+			If (subs.MaxIndex() = 0)                            	; returns here if all field names passed are unknown
+				return 2                                            	; "field label(s) unknown"
 
 		; establish read access if not already done
 			If !IsObject(this.dbf) {
@@ -638,19 +611,17 @@ class DBASE {                                     ; native DBASE Klasse nur für
 		; compile field data as an object
 			while (!this.dbf.AtEOF) {
 
-			; Tooltip progress view
-				If (this.debug > 0) && (Mod(A_Index, this.ShowAt) = 0)
-					If (this.debug > 0)
-						ToolTip, % "GetFields:`t" SubStr("00000000" A_Index, this.slen) "/" this.maxRecs "`ndatasets: " data.Count()
+				; Tooltip progress view
+					If (this.debug > 0) && (Mod(A_Index, this.ShowAt) = 0)
+						If (this.debug > 0)
+							ToolTip, % "GetFields:`t" SubStr("00000000" A_Index, this.slen) "/" this.maxRecs "`ndatasets: " data.Count()
 
-			; reads a data set raw mode and converts it to a readable text format
-				bytes	:= this.dbf.RawRead(recordbuf, this.lendataset)
-				set 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
+				; reads a data set raw mode and converts it to a readable text format
+					bytes	:= this.dbf.RawRead(recordbuf, this.lendataset)
+					set 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
 
-			; push object to data array (object contains the requested field names, values and its specific recordnr)
-				data.Push(this.GetSubData(set, subs))
-
-				;Sleep 30
+				; push object to data array (object contains the requested field names, values and its specific recordnr)
+					data.Push(this.GetSubData(set, subs))
 
 			}
 
