@@ -209,7 +209,7 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
 
 ## ![](Docs/Icons/Addendum.png) <u>Dauermedikamentenfenster</u>
 
-![](Docs/Screenshot - Dauermedikamente.png) 
+![](Docs/Screenshot-Dauermedikamente.png) 
 
 Auswahlmöglichkeit aus voreingestellten Kategorien (in Patienten verständlichem Deutsch). Erreichbar nach Drücken (#) der ![](Docs/Icons/Raute.png) Taste in einer geöffneten Zeile. Die Kategorien lassen sich im Quelltext des Addendum.ahk-Skriptes jederzeit ändern. (an einer komfortableren Lösung wird gearbeitet). Mit der Tastenkombination (![](Docs\Icons\Key-White_Strg-Links.png)+ ![](Docs\Icons\hoch.png)oder![](Docs\Icons\runter.png)) lassen sich alle Einträge innerhalb der Ansicht verschieben.
 
@@ -217,7 +217,7 @@ Auswahlmöglichkeit aus voreingestellten Kategorien (in Patienten verständliche
 
 ## ![Addendum](Docs/Icons/Addendum.png) <u>neuer Shift+F3 Kalender</u>
 
-![Menu-Suche](Docs/Screenshot - ShiftF3Kalender.png)
+![Menu-Suche](Docs/Screenshot-ShiftF3Kalender.png)
 
 
 
@@ -225,7 +225,7 @@ Auswahlmöglichkeit aus voreingestellten Kategorien (in Patienten verständliche
 
 ## ![Addendum](Docs/Icons/Addendum.png) <u>Menu-Suche</u>
 
-![Menu-Suche](Docs/Screenshot - Menu_Suche.png)
+![Menu-Suche](Docs/Screenshot-Menu_Suche.png)
 
 Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu finden dauert meist ziemlich lange. Drücke ![](Docs/Icons/Alt.png) + ![](Docs/Icons/Key-White-M.png) für einen Suchdialog und öffne den Menupunkt von hier aus - Danke an *Lexikos* dem Author von Autohotkey für dieses wunderbare Skript. 
 
@@ -253,7 +253,7 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
 
 **Ausdrucken von Rezepten/Über- und Einweisungen ohne gedrucktes Datum**
 
-![Formularhelfer](Docs/Screenshot - Formularhelfer.png)
+![Formularhelfer](Docs/Screenshot-Formularhelfer.png)
 
 * ein Fenster mit 5 Formularen (Kassenrezept, Privatrezept, Krankenhauseinweisung, Krankenbeförderung, Überweisung)
 * Auswahl der Formularanzahl 0 für keine und maximal 9 (auch über die Zifferntastatur), nach Eingabe einer Ziffer rückt der Eingabefocus zum nächsten Feld weiter. Ist alles eingegeben, dann nur noch Enter drücken. Den Rest übernimmt das Skript. Es ruft die jeweiligen Formulare auf, entfernt wenn notwendig den Haken am Datumsfeld, setzt automatisch die Anzahl und drückt den Knopf für Drucken. 
@@ -276,7 +276,7 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
 
 **mehr Funktionen im Rechtsklick Menu in der Karteikarte**
 
-![erweitertes Kontextmenu](Docs/Screenshot - erweitertes_Kontextmenu.png)
+![erweitertes Kontextmenu](Docs/Screenshot-erweitertes_Kontextmenu.png)
 
 Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter anderem Öffnen eines Formulares zum Bearbeiten oder direkter Druck. Wenn Sie PDF-Dateien oder Bild-Dateien direkt in die Karteikarte ablegen, können Sie diese Dateien ebenso Anzeigen oder Ausdrucken lassen. Und man kann diese in einen nach dem Patienten benannten Dateiordner exportieren (z.B. zur Erleichterung beim Arztwechsel). Versehentlich importierte Befunde lassen sich wieder in den Befundordner unter anderem Namen exportieren. Und da der Faxversand eigentlich auch nur ein Druckvorgang ist, geht auch das inklusive Abfrage der Faxnummer (wenn gewünscht)
 
@@ -298,7 +298,7 @@ Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter ande
 
 <b>mehr Statistiken, mehr Möglichkeiten der Automatisierung</b>
 
-<img src="Docs/Screenshot - Abrechnungshelfer.png" alt="Screenshot Abrechnungshelfer" style="zoom: 100%;" />
+<img src="Docs/Screenshot-Abrechnungshelfer.png" alt="Screenshot Abrechnungshelfer" style="zoom: 100%;" />
 
 Erstellen Sie ein Tagesprotokoll und nutzen Sie diese Modul um von der Compugroup nicht abgedeckte Regeln zu möglichen Abrechnungsziffern zu entwerfen oder nutzen Sie das Skript um Patienten bestimmten Gruppen zuzuordnen oder um eine erweiterte Statistik durchführen zu können
 <br>fertige Statistiken:
