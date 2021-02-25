@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------------------------------------------------------------------
 ;------------------------------------------------ ADDENDUM MONITOR ----------------------------------------------------
 ;-----------------------------------------------------------------------------------------------------------------------------------
-													Version:= "1.0" , vom:= "23.02.2021"
+													Version:= "1.0" , vom:= "25.02.2021"
 ;------------------------------------------------------ Runtime-Skript ----------------------------------------------------------
 ;------------------- startet Addendum bei einem Absturz oder (un-))absichtlichen Schliessen neu --------------------
 ;-------------------------------------------- Addendum für AlbisOnWindows -----------------------------------------------
@@ -23,7 +23,7 @@ GNU Lizenz can be found in Docs directory  - 2017
 
 		#NoEnv
 		#Persistent
-		#SingleInstance, Force
+		#SingleInstance			, Force
 		#MaxThreadsPerHotkey , 2
 		SetTitleMatchMode    	, 2        	; Fast is default
 		SetTitleMatchMode    	, Fast    	; Fast is default
@@ -35,7 +35,6 @@ GNU Lizenz can be found in Docs directory  - 2017
 		SendMode                	, Input
 		AutoTrim                   	, On
 		FileEncoding             	, UTF-8
-
 
 		OnError("FehlerProtokoll")
 
@@ -67,10 +66,18 @@ GNU Lizenz can be found in Docs directory  - 2017
 			throw A_ScriptName ": AutohotkeyH_U64.exe ist nicht vorhanden.`nDas Skript kann nicht ausgeführt werden!"
 
 	; Scripticon
+		Menu, Tray, NoStandard
 		If (StrLen(hIcon := Base64toHICON()) > 0)
 			Menu, Tray, Icon, % "HICON: " hIcon
 		else If FileExist(IconDir := Addemdum.Dir "\assets\ModulIcons\AddendumMonitor.ico")
 			Menu, Tray, Icon, % IconDir
+
+		Menu, Tray, Add, % StrReplace(A_ScriptName, ".ahk")	, % "admMonInfo"
+		Menu, Tray, Add
+		Menu, Tray, Add, % "Reload"		                            	, % "admMonReload"
+		Menu, Tray, Add, % "Exit"			                             	, % "admMonExitApp"
+		Menu, Tray, Add
+		Menu, Tray, Add, % "nächster Check in "                   	, % "admMonTimerInfo"
 
 	; get data from Addendum.ini
 		IniReadExt(Addendum.Ini)
@@ -95,6 +102,24 @@ GNU Lizenz can be found in Docs directory  - 2017
 		Addendum.MaxAverageCPU 	:= IniReadExt("Addendum", "HighCPU_MaxAvarageCPU"	, 5)
 		Addendum.RestartAfter       	:= IniReadExt("Addendum", "HighCPU_RestartAfter"         	, 360) 	; seconds
 		Addendum.MinIdleTime     	:= IniReadExt("Addendum", "HighCPU_MinIdleTime"       	, 180)	; seconds
+		Addendum.TimedCheck     	:= IniReadExt("Addendum", "HighCPU_Timer"                    	, 180)	; seconds
+		TrTip1 := 	"CPU Last Grenze:   "    	Addendum.MaxAverageCPU 	"%`n"
+				  .		"Neustart nach:      " 		Addendum.RestartAfter        	"s`n"
+				  .		"Überprüfung alle: "   	Addendum.TimedCheck      	"s"
+		TrTip2 := 	"CPU Überlastung:                     `n"
+				 . 	  	"nächster Check in:                      "
+		Menu, Tray, Tip, % TrTip1 "`n" TrTip2
+
+	; Interskript communication gui
+		Gui, AMsg: New	, +HWNDhMsgGui +ToolWindow
+		Gui, AMsg: Add	, Edit, xm ym w100 h100 HWNDhEditMsgGui
+		Gui, AMsg: Show	, AutoSize NA Hide, % "Addendum Monitor Gui"
+		Addendum.hMsgGui     	:= hMsgGui
+		Addendum.hEditMsgGui	:= hEditMsgGui
+
+	; starts receiving messages
+		OnMessage(0x4A	, "Receive_WM_COPYDATA")
+		OnMessage(0x404, "AHK_NOTIFYICON")
 
 	;}
 
@@ -113,29 +138,55 @@ GNU Lizenz can be found in Docs directory  - 2017
 
 	; Timerfunktion für 15 minütige Skriptausführungskontrolle (Skript hängt oder ist abgestürzt)
 		fnADM      	:= Func("RestartAddendum").Bind(true)
-		fnADMTime 	:= 15*60*1000
+		fnADMTime 	:= Addendum.TimedCheck*1000
 		SetTimer, % fnADM, % fnADMTime
+		Addendum.TimerCall := A_TickCount
 
 ;}
 
 
 return
 
+^+!ö::ExitApp
 ^!ö::    	;{ Skriptneustart
-
-	TrayTip, AddendumMonitor, Skript wird neu gestartet, 4
-	Sleep 4000
+	TrayTip, AddendumMonitor, Skript wird neu gestartet, 1
+	Sleep 1000
 	Reload
-
 return ;}
+#IfWinExist ahk_class AutoHotkey2, Neustart
 ~Esc::  	;{ Tastenkombination um Skriptneustart während der Anzeige des Countdownfenster abzubrechen
 	If DoRestart {
 		DoRestart := false
 		FileAppend, % "Abbruch des Addendumneustart durch Nutzer, Zeit: " TimeStamp() ", Client: " A_ComputerName "`n", % Addendum.Dir "\logs'n'data\OnExit-Protokoll.txt"
 	}
-return ;}
-^+!ö::ExitApp
+return
+#IfWinExist
+;}
 
+;{ TrayLabels
+
+AHK_NOTIFYICON(wParam, lParam) {
+	if (lParam = 0x200) { ; WM_LBUTTONUP
+	SetTimer, admMonTimerInfo, -1
+        return 0
+    }
+}
+admMonReload:
+Reload
+admMonExitApp:
+ExitApp
+admMonTimerInfo:
+	nextcall 		:= Addendum.TimedCheck-((A_TickCount - Addendum.TimerCall)/1000)
+	nextcall_min	:= Floor(nextcall/60)
+	nextcall_sec	:= Floor(nextcall - (nextcall_min*60))
+	TrTip2   		:= "CPU Überlastung:  " 	(ObservationRuns ? "ja":"nein") "`n"
+						. 	 "nächster Check in: " 	nextcall_min "m " SubStr("00" nextcall_sec, -1) "s"
+	;TrayTip, Addendum Monitor, % TTipMsg, 1, 16
+	Menu, Tray, Tip, % TrTip1 "`n" TrTip2
+return
+admMonInfo:
+return
+;}
 
 ProcessDelete_OnObjectReady(obj) {                                             	;-- Called when a process terminates
 
@@ -153,25 +204,20 @@ ProcessDelete_OnObjectReady(obj) {                                             	
 	; prüft ob Addendum neu gestartet werden muss
 		Restartscript := Script
 		If InStr(Restartscript, "Addendum.ahk") 	{
-
-				If WinExist("Addendum.ahk ahk_class #32770") 	{
-
-					; falls eine Autohotkey Fehlermeldung angezeigt wird, wird Addendum.ahk nicht sofort neu gestartet
-						WinGetText, wText, % "Addendum.ahk ahk_class #32770"
-						If RegExMatch(wText, "Error:\s.*Line#.*--->") {
-								RegExMatch(Process.CommandLine, "[A-Z]:[\w\\_\säöüÄÖÜ.]+\.ahk", SkriptPath)
-								fehler := Object()
-								fehler.Message	:= wText
-								fehler.File      	:= SkriptPath
-								FehlerProtokoll(fehler, 1)
-						}
-
-				}
-
-				If !AHKProcessExist("Addendum.ahk")
-					If ShowRestartProgress("Addendum.ahk", 5)
-						RestartAddendum()
-
+			If WinExist("Addendum.ahk ahk_class #32770") 	{
+				; falls eine Autohotkey Fehlermeldung angezeigt wird, wird Addendum.ahk nicht sofort neu gestartet
+					WinGetText, wText, % "Addendum.ahk ahk_class #32770"
+					If RegExMatch(wText, "Error:\s.*Line#.*--->") {
+							RegExMatch(Process.CommandLine, "[A-Z]:[\w\\_\säöüÄÖÜ.]+\.ahk", SkriptPath)
+							fehler := Object()
+							fehler.Message	:= wText
+							fehler.File      	:= SkriptPath
+							FehlerProtokoll(fehler, 1)
+					}
+			}
+			If !AHKProcessExist("Addendum.ahk")
+				If ShowRestartProgress("Addendum.ahk", 5)
+					RestartAddendum()
 		}
 
 		DoRestart := true
@@ -215,7 +261,7 @@ ProcessDelete_OnHighCPULoad(ProcName, PID, WTime                   	;-- monitors
 		ObservationRuns    	:= true
 		InactiveObservation	:= false
 		InactiveWait          	:= false
-		ObservationLoops  	:= WTime * WSleep
+		ObservationLoops  	:= Floor(WTime*1000/WSleep)              	; WTime[s] * 1000 = WTime[ms]/WSleep[ms]
 		InfoAfterLoop    		:= Round(ObservationLoops/10)
 		CountLoadDrops   	:= false
 		DropObservation		:= 0
@@ -265,19 +311,19 @@ ProcessDelete_OnHighCPULoad(ProcName, PID, WTime                   	;-- monitors
 					Sleep % WSleep
 
 			; Information is only displayed if the client is physically inactive for 30 seconds
-				If (A_Index >= InfoAfterLooop) && (IdleTime >= MinIdleTime) {
-				msg :=	"Name:                  " 	ProcName 	     		                                  	"`n"
-					.    	"PID:                      " 	PID     			                                            	"`n"
-					. 		"IdleTime:               " 	IdleTime "s"	                                               	"`n"
-					.		"Round:                  " 	SubStr("000" A_Index, -2) "/" ObservationLoops	"`n"
-					.		"Process state:         "	ProcessState	                                            	"`n"
-					.		"Time:                    "	WTimeSec "s"                                                	"`n"
-					.		"CPU total:             "	SubStr("0" Round(SystemTime), -1)                 	"`n"
-					. 		"CPU usage:          " 	SubStr("0" Round(ProcessTime), -1)	          		"`n"
-					.		"av. CPU usage:     " 	Round(AvPT, 1)                                          	"`n"
-					.		"drop observations: " 	DropObservation                                         	"`n"
-					.		"Inactive times:        "	InactiveObservation
-					BTT(msg,,,, "Style4")
+				If (A_Index >= InfoAfterLoop) && (IdleTime >= MinIdleTime) {
+				msg :=	"Name:                    " 	ProcName 	     		                                  	"`n"
+					.    	"PID:                        " 	PID     			                                            	"`n"
+					. 		"IdleTime:                " 	IdleTime "s"	                                               	"`n"
+					.		"Round:                   " 	SubStr("0000" A_Index, -3) "/" ObservationLoops	"`n"
+					.		"Process state:          " 	ProcessState	                                            	"`n"
+					.		"Time:                      "	WTimeSec "s"                                                	"`n"
+					.		"CPU total:              " 	SubStr("0" Round(SystemTime), -1)                 	"`n"
+					. 		"CPU usage:            " 	SubStr("0" Round(ProcessTime), -1)	          		"`n"
+					.		"av. CPU usage:       " 	Round(AvPT, 1)                                          	"`n"
+					.		"drop observations: "  	DropObservation                                         	"`n"
+					.		"Inactive times:        " 	InactiveObservation
+					BTT(msg, A_ScreenWidth-400, A_ScreenHeight-400,, "Style4")
 				}
 
 			; process is 5 times in advance not responding this loop breaks to close this process
@@ -291,9 +337,11 @@ ProcessDelete_OnHighCPULoad(ProcName, PID, WTime                   	;-- monitors
 
 		If (InactiveObservation >= 5) || (AvPT >= AvCPU && IdleTime >= MinIdleTime) {
 			Process, Close, % PID
+			ObservationRuns := false
 			return msg
 		}
 
+		ObservationRuns := false
 
 return false
 
@@ -353,8 +401,10 @@ return DoRestart  	; Abbruch per Hotkey-Methode gibt ein false zurück
 
 RestartAddendum(TimedCheck:=false) {                                           	;-- startet(prüft) Addendum.ahk
 
-		static ProcName := "Addendum.ahk"
+		global 	MsgRec
+		static 	ProcName := "Addendum.ahk"
 
+		Addendum.TimerCall := A_TickCount
 		PTSum 				:= 0
 		AddendumPID	:= AHKProcessExist("Addendum.ahk")
 
@@ -365,32 +415,51 @@ RestartAddendum(TimedCheck:=false) {                                           	
 	; Addendum.ahk Prozeß ist nicht vorhanden
 		If !AddendumPID {
 
-			If (A_TimeIdle > 0)
-				FormatTime, idleTime, % A_TimeIdle, HH:mm:ss
+			If (A_TimeIdlePhysical > 0)
+				FormatTime, idleTime, % A_TimeIdlePhysical, HH:mm:ss
 
 			FileAppend	, %   	TimeStamp()                                                  	","
 								.     	RegExReplace(A_ScriptName, "\.ahk$")            	","
 								.     	A_ComputerName                                           	","
 								.     	(TimedCheck ? "TIMER" : "EVENT")
-								.    	(StrLen(A_TimeIdle) > 0 ? ",idle: " idleTime : "")  	"`n"
+								.    	(StrLen(idleTime) > 0 ? ",idle: " idleTime : "")  	"`n"
 								, % 	Addendum.Dir "\logs'n'data\OnExit-Protokoll.txt"
 
 			Run   	    	, % Addendum.AHKH_exe " /f " q Addendum.Dir "\Module\Addendum\Addendum.ahk" q
 
 		}
-	; über 4 Sekunden die CPU-Last von Addendum überprüfen
+	; über 4 Sekunden die CPU-Auslastung von Addendum messen
 		else {
 
-		; liegt die CPU-Last über dem maximal Wert oder Addendum.ahk ist inaktiv
-		; wird eine längere Überwachung gestartet
-			Loop 20 {
-				PTSum += GetProcessTimes(AddendumPID)
-				Sleep 200
-			}
-			If (PTSum/20 >= Addendum.MaxAverageCPU) || !GetState(AddendumPID, 200)
-				If (msg := ProcessDelete_OnHighCPULoad(ProcName, AddendumPID, Addendum.RestartAfter, Addendum.IdleTime, Addendum.MaxAverageCPU))
-					If Addendum.DBPath		; schreibt ein Protokoll
-						FileAppend, % msg "`n----------------------------------------------------------------------------------`n", % Addendum.DBPath "\sonstiges\AddendumMonitorLog.txt", UTF-8
+			; eine Überwachung läuft noch dann nichts machen
+				If ObservationRuns
+					return
+
+			; liegt die CPU-Last über dem maximal Wert oder Addendum.ahk ist inaktiv
+			; wird eine längere Überwachung gestartet
+				Loop 20 {
+					PTSum += GetProcessTimes(AddendumPID)
+					Sleep 200
+				}
+
+			; versucht Addendum zur einer Antwort zu überreden (wartet 6s auf Antwort)
+				Send_WM_COPYDATA("Status||" Addendum.hMsgGui, GetAddendumID())
+				starttime := A_TickCount
+				while (MsgRec <> "okay") && ((recTime:=(A_TickCount-starttime)) < 4000)
+					Sleep 1
+				SciTEOutput(" " A_Hour ":" A_Min "| Addendumstatus: " MsgRec " - received after " recTime " ms (CPU Load: " Round(PTSum/20, 1) ")")
+				If (StrLen(MsgRec) = 0)
+					FileAppend, % TimeStamp() "| Addendum hat nicht geantwortet (CPU Load: " Round(PTSum/20, 1) ")", % Addendum.DBPath "\sonstiges\AddendumMonitorLog.txt", UTF-8
+				MsgRec := ""
+
+			; Antwort ja, aber dennoch Überwachungstarten
+				If (PTSum/20 >= Addendum.MaxAverageCPU) || !GetState(AddendumPID, 200) {
+					If Addendum.DBPath
+						FileAppend, % TimeStamp() "| hohe CPU Auslastung registriert (" Round(PTSum/20, 1) ")", % Addendum.DBPath "\sonstiges\AddendumMonitorLog.txt", UTF-8
+					If (msg := ProcessDelete_OnHighCPULoad(ProcName, AddendumPID, Addendum.RestartAfter, Addendum.IdleTime, Addendum.MaxAverageCPU))
+						If Addendum.DBPath		; schreibt ein Protokoll
+							FileAppend, % TimeStamp() "`n" msg "`n---------------------------------------------------------------`n", % Addendum.DBPath "\sonstiges\AddendumMonitorLog.txt", UTF-8
+				}
 
 		}
 
@@ -493,6 +562,19 @@ ScriptMem() {                                                                   
 return result
 }
 
+MessageWorker(InComing) {
+
+	global MsgRec
+
+	recv := {	"txtmsg"		: (StrSplit(InComing, "|").1)
+				, 	"opt"     	: (StrSplit(InComing, "|").2)
+				, 	"fromID"	: (StrSplit(InComing, "|").3)}
+
+	If (recv.txtmsg = "Status")
+		MsgRec := recv.opt
+
+}
+
 
 IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="") {            	;-- eigene IniRead funktion für Addendum
 
@@ -544,6 +626,49 @@ Return hICON
 TimeStamp() {
 	FormatTime, time, % A_Now, dd.MM.yyyy HH:mm:ss
 return time
+}
+
+Receive_WM_COPYDATA(wParam, lParam) {                                   	;-- empfängt Nachrichten von anderen Skripten
+
+    StringAddress	:= NumGet(lParam + 2*A_PtrSize)
+	fn_MsgWorker	:= Func("MessageWorker").Bind(StrGet(StringAddress))
+	SetTimer, % fn_MsgWorker, -10
+
+return
+}
+
+Send_WM_COPYDATA(ByRef StringToSend, ScriptID) {                       	;-- für die Interskriptkommunikation - keine Netzwerkkommunikation!
+
+    static TimeOutTime            	:= 4000
+
+    Prev_DetectHiddenWindows	:= A_DetectHiddenWindows
+    Prev_TitleMatchMode         	:= A_TitleMatchMode
+    DetectHiddenWindows On
+    SetTitleMatchMode 2
+
+    VarSetCapacity(CopyDataStruct, 3*A_PtrSize, 0)
+    SizeInBytes := (StrLen(StringToSend) + 1) * (A_IsUnicode ? 2 : 1)
+    NumPut(SizeInBytes, CopyDataStruct, A_PtrSize)
+    NumPut(&StringToSend, CopyDataStruct, 2*A_PtrSize)
+
+    SendMessage, 0x4a, 0, &CopyDataStruct,, % "ahk_id " ScriptID,,,, % TimeOutTime ; 0x4a is WM_COPYDATA.
+	eL := ErrorLevel
+
+    DetectHiddenWindows, % Prev_DetectHiddenWindows 	; Restore original setting for the caller.
+    SetTitleMatchMode	 ,  % Prev_TitleMatchMode         	; Same.
+
+return eL  ; Return SendMessage's reply back to our caller.
+}
+
+GetAddendumID() {                                                                        	;-- für Interskriptkommunikation
+	Prev_DetectHiddenWindows := A_DetectHiddenWindows
+    Prev_TitleMatchMode := A_TitleMatchMode
+    DetectHiddenWindows On
+    SetTitleMatchMode 2
+	AddendumID := WinExist("Addendum Message Gui ahk_class AutoHotkeyGUI")
+	DetectHiddenWindows 	, % Prev_DetectHiddenWindows  	; Restore original setting for the caller.
+    SetTitleMatchMode     	, % Prev_TitleMatchMode           	; Same.
+return AddendumID
 }
 
 

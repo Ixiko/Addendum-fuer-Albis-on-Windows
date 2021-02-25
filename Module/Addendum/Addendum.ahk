@@ -422,6 +422,7 @@ global                                                                          
 		}
 	;}
 
+	;}
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	; weitere Menupunkte
@@ -4185,6 +4186,10 @@ MessageWorker(InComing) {                                                       
 				gosub Menu_LaborAbrufManuell                    ; Traymenueinstellung ändern
 			}
 			Send_WM_COPYDATA("AutoLaborAbruf fortgesetzt||" GetAddendumID(), recv.fromID)
+		}
+	; Addendum Statusabfragen
+		else if InStr(recv.txtmsg, "Status")                                                 	{
+			Send_WM_COPYDATA("Status|okay|" GetAddendumID(), recv.fromID)
 		}
 
 return

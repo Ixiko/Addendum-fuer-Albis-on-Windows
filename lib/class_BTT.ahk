@@ -39,12 +39,15 @@ btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInO
                    , BackgroundColor:0xffFCEDE6
                    , FontSize:14}
 
-       , Style4  := {Border:10
-                   , Rounded:20
-                   , BorderColor:0xff604a78
+       , Style4  := {Border:5
+                   , Rounded:15
+                   , BorderColor:0xff503a68
                    , TextColor:0xffF3AE00
-                   , BackgroundColor:0xff6A537F
-                   , FontSize:20
+                   , BackgroundColorLinearGradientStart:0xff9A83AF
+                   , BackgroundColorLinearGradientEnd:0xff7A638F
+                   , BackgroundColorLinearGradientDirection:1
+                   ;, BackgroundColor:0xff7A638F
+                   , FontSize:16
 				   , FontRender:5
                    , FontStyle:"Bold Italic"}
 
@@ -511,7 +514,6 @@ Range(Value, MinValue, MaxValue){
   return, Max(Min(Value, MaxValue), MinValue)
 }
 
-; In order to unify the transmission of parameters and the setting of special modes, the Gdip_TextToGraphics() function of the gdip library is modified.
 Gdip_TextToGraphics2(pGraphics, Text, Options, Measure:=0){
 	static Styles := "Regular|Bold|Italic|BoldItalic|Underline|Strikeout"
 
@@ -569,8 +571,6 @@ Gdip_TextToGraphics2(pGraphics, Text, Options, Measure:=0){
 	return _E ? _E : returnRC
 }
 
-; https://autohotkey.com/boards/viewtopic.php?f=6&t=4379
-; jballi's Fnt Library
 Fnt_GetTooltipFontName(){
 	static LF_FACESIZE:=32  ;-- In TCHARS
 	return StrGet(Fnt_GetNonClientMetrics()+(A_IsUnicode ? 316:220)+28,LF_FACESIZE)

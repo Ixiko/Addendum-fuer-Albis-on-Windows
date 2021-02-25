@@ -26,12 +26,13 @@
 ;		Abhängigkeiten: 	 	siehe #includes
 ;
 ;	                    				Addendum für Albis on Windows
-;                        				by Ixiko started in September 2017 - last change 21.02.2021 - this file runs under Lexiko's GNU Licence
+;                        				by Ixiko started in September 2017 - last change 25.02.2021 - this file runs under Lexiko's GNU Licence
 ;										proof-of-concept version
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+RegExMatch(A_ScriptDir, ".*(?=\\Module)", AddendumDir)
+Menu, Tray, Icon, % AddendumDir "\assets\ModulIcons\AlbisReanimator.ico"
 AlbisReanimator()
-return
+ExitApp
 
 AlbisReanimator(AlbisMainPath:="", AlbisLocalPath:="", AlbisExe:="") {
 

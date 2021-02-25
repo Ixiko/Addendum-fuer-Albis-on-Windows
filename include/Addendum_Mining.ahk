@@ -7,7 +7,7 @@
 ;       Abhängigkeiten:		Addendum_Gui.ahk, Addendum.ahk
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_Calc started:    	19.02.2021
+;       Addendum_Calc started:    	25.02.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -18,7 +18,7 @@ FindDoc(Text) {
 
 FindDocNames(Text, debug:=false)                                  	{               	;-- sucht Namen von Patienten im Dokument
 
-	; letzte Änderung: 19.02.2021
+	; letzte Änderung: 25.02.2021
 
 		debug := true
 		PatBuf	:= Object()
@@ -57,13 +57,13 @@ FindDocNames(Text, debug:=false)                                  	{            
 		static rxYears			:=	"(?<Jahr>([12][0-9])*[0-9]{2})"
 
 		static rxPerson    	:= 	"[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*"
-		static rxPerson1    	:= 	"(?<Name1>[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*)"
-		static rxPerson2    	:= 	"(?<Name2>[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*)"
-		static rxPerson3   	:= 	"[A-ZÄÖÜ][\pL]+([\-\s][A-ZÄÖÜ][\pL]+)*"
+		static rxPerson1    	:= 	"(?<Name1>[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*)"                                             	; ?<Name1>Müller(-Wachtendónk)*
+		static rxPerson2    	:= 	"(?<Name2>[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*)"                                            	; ?<Name2>Müller(-Wachtendónk)*
+		static rxPerson3   	:= 	"[A-ZÄÖÜ][\pL]+([\-\s][A-ZÄÖÜ][\pL]+)*"                                                            	; Müller( Wachtendonk)*
+		static rxPerson4    	:= 	"(?<Name>[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*)"		                                         	; ?<Name>Müller(-Wachtendónk)*
 
-		static rxName1  	:= 	"(?<Name2>" rxPerson 	")\s*[.,;]+\s*(?<Name1>"	rxPerson	")"
-		static rxName2   	:= 	"(?<Name2>" rxPerson 	")" . rx . "(?<Name1>"    	rxPerson 	")"
-		static rxName3  	:= 	"(?<Name2>" rxPerson2 	")" . rx . "(?<Name1>"    	rxPerson2	")"
+		static rxName1   	:= 	"(?<Name2>" rxPerson	  ")" . rx . "(?<Name1>" 	rxPerson 	")"
+		static rxName2  	:= 	"(?<Name2>" rxPerson2 ")" . rx . "(?<Name1>" 	rxPerson2	")"
 
 		static rxDatum		:= 	"\d{1,2}[.,;\s]+\w+[.,\s]+\d{2,4}"
 		static rxGebAm		:= 	"(geboren\sam|geb\.\sam|geb\.|geboren|Geburtsdatum|Geb[.,\-\s]+Dat[,.]+)"
@@ -77,26 +77,25 @@ FindDocNames(Text, debug:=false)                                  	{            
 		static rxNachname	:= 	"([Nn]ach)*[Nn]ame"
 		static rxNameW    	:= 	"[Nn]ame[\w]*"
 
-		static RxNames     	:= [	rxAnrede    	. 	rx	. 	rxName1  .	rx  	.	rxGebAm   . 	ry  .  rxDatum                                            	; 01
-										,	rxAnrede   	.	rx	. 	rxName2	.	rx  	.	rxGebAm   . 	ry                                                             	; 02
-										,	rxAnrede   	.	rx	. 	rxName3	.	rx  	.	rxGebAm   . 	ry                                                             	; 03
-										,	rxName1     	.	rx	.	rxGebAm	.	rs  	.   rxDatum                                                                          	; 04
-										,	rxName2     	.	rx	.	rxGebAm 	.	rs  	.   rxDatum                                                                         	; 05
-										,	rxName1     	.	rx	.	rxGName	.	rp2	.	rxGebAm 	.	rx	.	rxDatum                                           	; 06
-										,	rxName3     	.	rx	.	rxGName	.	rz  	.	rxGebAm 	.	rx	.	rxDatum         	                                 	; 07
+		static RxNames     	:= [	rxAnrede    	. 	rx	. 	rxName1  .	rx  	.	rxGebAm   . 	ry  .  rxDatum                  	; 01    Betrifft: Marx, Karl, geb. am: 14.03.1818
+										,	rxAnrede   	.	rx	. 	rxName2	.	rx  	.	rxGebAm   . 	ry                                  	; 02
+										,	rxName1     	.	rx	.	rxGebAm	.	rs  	.   rxDatum                                              	; 03
+										,	rxName2     	.	rx	.	rxGebAm 	.	rs  	.   rxDatum                                             	; 04
+										,	rxName1     	.	rx	.	rxGName	.	rp2	.	rxGebAm 	.	rx	.	rxDatum               	; 05
+										,	rxName3     	.	rx	.	rxGName	.	rz  	.	rxGebAm 	.	rx	.	rxDatum         	      	; 06
 
-								       	,	rxAnrede   	. 	rx  .  rxName2                                                                                                         	; 08
-								       	,	rxAnredeM 	. 	rx  .  rxName2                                                                                                         	; 09
-								       	,	rxAnredeF 	. 	rx  .  rxName2                                                                                                         	; 10
+								       	,	rxAnrede   	. 	rx  .  rxName2                                                                            	; 07
+								       	,	rxAnredeM 	. 	rx  .  rxName2                                                                            	; 08
+								       	,	rxAnredeF 	. 	rx  .  rxName2                                                                            	; 09
 
-								       	,	rxNameW		.	rx	.	rxName1                                                                                                       	; 11
-								       	,	rxNachname	. 	rx	. 	rxPerson2	.	".*?" 	.	rxVorname	. rx . rxPerson1                                    	      	; 12
-								       	,	rxVorname	. 	rx	. 	rxPerson2	.	".*?"	.	rxNachname	. rx . rxPerson2                                    	      	; 13
+								       	,	rxNameW		.	rx	.	rxName1                                                                            	; 10
+								       	,	rxNachname	. 	rx	. 	rxPerson2	.	".*?" 	.	rxVorname	. rx . rxPerson1               	; 11
+								       	,	rxVorname	. 	rx	. 	rxPerson2	.	".*?"	.	rxNachname	. rx . rxPerson2               	; 12
 
-						        		,	"^\s*" rxName2 "\s"]	                                                                                                                    	; 14	^ Muster, Max  ....
+						        		,	"^\s*" rxName2 "\s"]	                                                                                         	; 13	^ Muster, Max  ....
 
-		static RxNames2	:= [	rxNachname	. 	rx	. 	rxPerson2                            																				; 01
-										,	rxVorname	. 	rx	.	rxPerson1]                          																				; 02]
+		static RxNames2	:= [	rxNachname	. 	rx	. 	rxPerson2                            													; 01
+										,	rxVorname	. 	rx	.	rxPerson1]                          													; 02
 
 		static	rxDates       	:= [	"(?<Tag>\d{1,2})[.,;](?<Monat>\d{1,2})[.,;](?<Jahr>(\d{4}|\d{2}))[^\d]"                                 	; 01	12.11.64 oder 12.11.1964
 						               	,	"i)(?<Tag>\d{1,2})[.,;\s]+(?<Monat>" rxMonths ")[.,;\s]+(?<Jahr>(\d{4}|\d{2}[^\d]))[^\d]"        	; 02
@@ -112,7 +111,6 @@ FindDocNames(Text, debug:=false)                                  	{            
 
 
 		;}
-
 
 		If debug
 		  SciTEOutput("`n  --------------------------------------`n {Methode 1}")
@@ -197,10 +195,12 @@ FindDocNames(Text, debug:=false)                                  	{            
 			SciTEOutput(" {Methode 1a}")
 		}
 
+	  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	  ; Methode 1a: zähle die im Text vorhandenen Geburtstage der Patienten (PatBuf) und entferne diese
+	  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 		For PatID, Pat in PatBuf {
 
-			rxGeburtsdatum := StrReplace(Pat.Gd, ".", "\.")
+			rxGeburtsdatum := StrReplace(Pat.Gd, ".", "[.,;]")
 			text := RegExReplace(text, rxGeburtsdatum, "", GdCount)
 			PatBuf[PatID].hits += (GdCount * 2)
 
@@ -208,14 +208,26 @@ FindDocNames(Text, debug:=false)                                  	{            
 				SciTEOutput("   " PatID " , hits: " PatBuf[PatID].hits ", Datum: " Pat.Gd " +" GdCount " hits")
 		}
 
-		spos := 1
+	  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	  ; Methode 1b: mehrere Patienten gefunden. Welche Patientennamen findest Du im Text
+	  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+		spos := 1, PNames := Array()
 		If debug
-		  SciTEOutput(" {Methode 2}")
+		  SciTEOutput(" {Methode 1b}")
+		while (spos := RegExMatch(text, "\s" rxPerson4, P, spos)) {
+			PNames.Push(PName)
+			SciTEOutput(SubStr("000" PName.MaxIndex(), -2) "(" SubStr("0000" spos, -3) ") | " PName)
+			spos += StrLen(PName)
+		}
+
 	;}
 
 	; ---------------------------------------------------------------------------------------------------------------------------------------------------
 	; Methode 2:	Suche nach Patientennamen über gefundene Geburtstage
 	; ---------------------------------------------------------------------------------------------------------------------------------------------------;{
+		spos := 1
+		If debug
+		  SciTEOutput(" {Methode 2}")
 		For rxDateIdx, rxDateString in rxDates {
 
 			spos := 1

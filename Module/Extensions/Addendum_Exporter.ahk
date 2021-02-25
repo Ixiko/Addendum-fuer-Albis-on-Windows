@@ -3,15 +3,16 @@
 ;
 ;      Funktion:  		 	    -	Dokumente (PDF, Bilder, Briefe) finden, wählen und mit Karteikartentext als Dateinamen exportieren
 ;                       		    -	Laborblatt und Karteikarte können mit einem Klick zusammen mit den Dokumenten exportiert werden
+;									-	bei Aufruf des Skriptes über das Infofenster wird der aktuelle Patient vorausgewählt
 ;									-	gut nutzbar auch für die Patientensuche z.B. alle aus einer Straße oder Ort oder Arbeit oder Jahrgang
 ;
 ;      	Basisskript:    		-	keines
 ;		Abhängigkeiten: 	-	siehe #includes
 ;
 ;	                    				Addendum für Albis on Windows
-;                        				by Ixiko started in September 2017 - last change 16.02.2021 - this file runs under Lexiko's GNU Licence
+;                        				by Ixiko started in September 2017 - last change 24.02.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;	Version 0.8 beta
+;	Version 0.85
 
 
 	; Skripteinstellungen                                        	;{
@@ -41,13 +42,13 @@
 
 		RegExMatch(A_ScriptDir, ".*(?=\\Module)", AddendumDir)
 		qpdfPath := AddendumDir "\include\OCR\qpdf"
-		Addendum.PraxTTDebug 	:= true
+		;Addendum.PraxTTDebug 	:= true
 		Addendum.AlbisDBPath		:= GetAlbisPath() "\db"
 
 		Menu, Tray,  Icon, % AddendumDir "\assets\ModulIcons\DokExport.ico"
 	;}
 
-	; Albis Basispfad aus der Registry besorgen     	;{
+	; Albis Basispfad                                            	;{
 		SetRegView, % (A_PtrSize = 8 ? 64 : 32)
 		RegRead, AlbisPath, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, Installationspfad
 		AlbisDBPath := AlbisPath "\DB"
@@ -105,15 +106,11 @@
 
 	;}
 
-	debug := 0
-	gosub AuswahlGui
-
-return
-
-	; DIE GUI
-AuswahlGui: ;{
+	; DIE GUI 	                                                       	;{
+	AuswahlGui:
 
 	; VARIABLEN/GUIGRÖSSE           	;{
+		debug   	:= 0
 		FSize     	:= (A_ScreenHeight > 1080 ? 10 : 9)
 		tcolor    	:= "DDDDBB"
 
@@ -124,8 +121,8 @@ AuswahlGui: ;{
 		otWidth 	:= edWidth + sbWidth + 5
 	;}
 
-	;-: Gui  Anfang
-		Gui, DXP: new, HWNDhDXP ;-DPIScale
+	;-: Gui  Anfang 0x00180000
+		Gui, DXP: new, HWNDhDXP +E0x100000 ;-DPIScale
 		Gui, DXP: Color, cCCCCAA, cDDDDBB
 
 	;-: PATIENTENSUCHE                	;{
@@ -297,8 +294,7 @@ AuswahlGui: ;{
 	; zum Steuern des Skriptes durch ein anderes Skript
 		OnMessage(0x4A	, "Receive_WM_COPYDATA")
 
-
-return  ;}
+return
 
 DXP_Handler: ;{
 
@@ -326,6 +322,7 @@ DXP_Handler: ;{
 		Case "DXP_EP":
 			LVExport()
 			KarteikartenExport()
+			; MsgBox, Hinweis was exportiert wurde
 
 		Case "DXP_FB":
 			LVShowExplorer()
@@ -376,6 +373,8 @@ DimmerGui(show) {
 
 	global
 
+	DPGS_init := 1
+
 	If (show = "off") {
 		Gui, DMR: Destroy
 		return
@@ -383,43 +382,79 @@ DimmerGui(show) {
 
 	DXPPos := GetWindowSpot(hDXP)
 	ControlGetPos,,,,SBh, msctls_statusbar321, % "ahk_id " hDXP
-	Gui, DMR: -Caption +LastFound +hwndhDimmer
-	Gui, DMR: Color	, Gray
-	Gui, DMR: Font		, s100 q5 bold italic cBlue, Calibri
-	Gui, DMR: Add		, Text, % "x0 y" Floor(DXPPos.CH/4) " w" DXPPos.CW " Backgroundtrans Center", % "...Suche läuft"
-	Gui, DMR: Show	, % "NA x" DXPPos.CX " y" DXPPos.CY " w" DXPPos.CW " h" DXPPos.CH-SBh, Dimmer 100
-	WinSet, Transparent, 180, % "ahk_id " hDimmer
-	;SetParentByID(hDXP, hDimmer)
+
+	Gui, DMR: New    	, -Caption +LastFound + ToolWindow +hwndhDimmer +E0x4 +Parent%hDXP%
+	Gui, DMR: Color   	, Gray
+	Gui, DMR: Font	   	, s100 q5 bold italic cBlue, Calibri
+	Gui, DMR: Add    	, Text    	, % "x0   	y" Floor(DXPPos.CH/4) " w" DXPPos.CW " vDMR_SL1 Backgroundtrans Center", % "...Suche läuft"
+	Gui, DMR: Font	   	, s28 q5 bold cDarkBlue, Calibri
+	Gui, DMR: Add    	, Text    	, % "x0 y+0"  " Right vDMR_SL2 Backgroundtrans", % "0000000"
+	Gui, DMR: Add    	, Text    	, % "x+0 Left vDMR_SL3 Backgroundtrans", % "/0000000"
+
+	GuiControlGet, cp	, DMR: Pos	, DMR_SL1
+	Gui, DMR: Add    	, Progress	, % "x10 	y" cpY+cpH+20 " w" DXPPos.CW-20 " h40 vDMR_PGS1" , 0
+	Gui, DMR: Show   	, % "Hide NA x" 0 " y" 0 " w" DXPPos.CW " h" DXPPos.CH-SBh, Dimmer 100
+	WinSet, Redraw,, % "ahk_id " hDXP
+
+	DMRPos := GetWindowSpot(hDimmer)
+	GuiControlGet, dp, DMR: Pos	, DMR_SL2
+	GuiControlGet, ep, DMR: Pos	, DMR_SL3
+	bW := dpW+epW
+	GuiControl, DMR: Move, DMR_SL2, % "x" Floor(DMRPos.CW/2 - bw/2) " y" dpY-25
+	GuiControlGet, dp, DMR: Pos	, DMR_SL2
+	GuiControl, DMR: Move, DMR_SL3, % "x" dpX + dpW + 5 " y" dpY
+
+	GuiControl, DMR: , DMR_SL2, % ""
+	GuiControl, DMR: , DMR_SL3, % "/"
+
+	WinSet, Redraw,, % "ahk_id " hDXP
+	WinSet, Transparent, 200, % "ahk_id " hDimmer
 	WinSet, Top,,  % "ahk_id " hDimmer
-	WinSet, AlwaysOnTop,,  % "ahk_id " hDimmer
+	WinSet, AlwaysOnTop, On,  % "ahk_id " hDimmer
+
+	Gui, DMR: Show
+	WinSet, Redraw,, % "ahk_id " hDXP
+
 
 return
 }
-;}
 
+DimmerPGS(recordNr, RecordsMax, len) {
 
-^!#::Reload
+	global DPGS_init
 
+	If DPGS_init {
+		DPGS_init := 0
+		GuiControl, DMR: , DMR_SL3, % "/" RecordsMax
+	}
+
+	GuiControl, DMR: , DMR_SL2, % recordNr
+
+	pgs := recordNr*100/RecordsMax
+	Gui, DMR: Default
+	GuiControl, DMR:, DMR_PGS1, % Floor(pgs)
+
+	Gui, DXP: Default
+	SB_SetText("`t`t" Round(pgs), 2)
+
+}
 
 inFilter(ext, filter) {
-
 	For i, sfilt in StrSplit(filter, ",")
 		If (ext = sfilt)
 			return true
-
 return false
 }
 
 GetCheckedFilter() {
-
 	Gui, DXP: Default
-
 }
 
 LVShowExplorer() {                       	;-- öffnet den Exportpfad in einem Explorer-Fenster
 
 	Pat := LV_GetSelectedRow()
 	PatPath := exportordner "\(" Pat.NR ") " Pat.NAME ", " Pat.VORNAME "\"
+	Gui, DXP: Default
 
 	If InStr(FileExist(PatPath), "D") {
 		SB_SetText("exportordner: " PatPath " geöffnet.", 1)
@@ -429,29 +464,7 @@ LVShowExplorer() {                       	;-- öffnet den Exportpfad in einem Ex
 
 }
 
-LVExport() {                                    ;-- exportiert ausgewählte Dokumente
-
-	Pat := LV_GetSelectedRow()
-
-	Gui, DXP: ListView, DXP_DLV
-	row := 0, dokument := Array()
-	Loop {
-		If !(row := LV_GetNext(row, "C"))
-			break
-		LV_GetText(LFDNR, row, 5)
-		dokument[row] := PatDok[Pat.NR][LFDNR]
-
-	}
-
-	If !(dokument.Count() > 0) {
-		SB_SetText("KEINE EXPORTAUSWAHL GETROFFEN!", 1)
-		return
-	}
-
-	Dokumentexport(Pat.NR, Pat.NAME ", " Pat.VORNAME, dokument, exportordner)
-
-return
-}
+;}
 
 
 
@@ -482,6 +495,7 @@ ZeigeDokumente(row) {
 		}
 
 	; Dokument Listview aktivieren
+		Gui, DXP: Default
 		Gui, DXP: ListView, DXP_DLV
 		LV_Delete()
 
@@ -504,6 +518,7 @@ ZeigeDokumente(row) {
 			PatDok[Pat.NR] := Object()
 
 		PatDok[Pat.NR] := DBDokumente(Pat.NR, checkedext)
+		DimmerGui("off")
 
 	; Anhand der Filter anzeigen
 		PatPath := exportordner "\(" Pat.NR ") " Pat.NAME ", " Pat.VORNAME
@@ -541,6 +556,7 @@ ZeigeDokumente(row) {
 				}
 			}
 
+			Gui, DXP: Default
 			Gui, DXP: ListView, DXP_DLV
 			LV_Add("", datum, ext, file.Bezeichnung, filestatus, LFDNR)
 
@@ -558,11 +574,13 @@ ZeigeDokumente(row) {
 		SB_SetText("", 2)
 		SB_SetText("PatNR: " Pat.NR, 3)
 		SB_SetText("Anzahl Patienten in PatDOK: " PatDok.Count(), 4s)
-		DimmerGui("off")
+
 
 }
 
 DBDokumente(PATNR, dokumente="pdf,jpg,gif,png,wav,avi,mov,doc,docx") {
+
+		global DPGS_init
 
 		ftoex     	:= Array()
 
@@ -572,10 +590,11 @@ DBDokumente(PATNR, dokumente="pdf,jpg,gif,png,wav,avi,mov,doc,docx") {
 	; debug                	- Ausgabe von Werten zur Kontrolle des Ablaufes, Voreinstellung: keine Ausgabe
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 		SB_SetText("% der Datensätze der BEFTEXT.DBF durchsucht", 3)
+		DPGS_init	:= 1
 		beftexte   	:= new DBASE(AlbisDBPath "\BEFTEXTE.dbf", 2, {"name":"DXP", "control":"Statusbar", "sbNR":2})
+		pattern  	:= {"PATNR": PATNR, "TEXT": "rx:\w+\\\w+\.[a-z]{1,4}"}
 		res2        	:= beftexte.OpenDBF()
-		matches2 	:= beftexte.Search({"PATNR"	: PATNR
-													, "TEXT" 	: "rx:\w+\\\w+\.[a-z]{1,4}"})
+		matches2 	:= beftexte.Search(pattern, 0, "DimmerPGS")
 		res2         	:= beftexte.CloseDBF()
 
 		For i, m in matches2 {
@@ -589,10 +608,11 @@ DBDokumente(PATNR, dokumente="pdf,jpg,gif,png,wav,avi,mov,doc,docx") {
 		}
 
 		SB_SetText("% der Datensätze der BEFUND.DBF durchsucht", 3)
+		DPGS_init	:= 1
 		befund   	:= new DBASE(AlbisDBPath "\BEFUND.dbf", 2, {"name":"DXP", "control":"Statusbar", "sbNR":2})
+		pattern		:= {"PATNR": PATNR, 	"TEXTDB": ("rx:(" RTrim(lfds, "|") ")")}
 		res1        	:= befund.OpenDBF()
-		matches1 	:= befund.Search({	"PATNR"	: PATNR
-													, 	"TEXTDB"	: ("rx:(" RTrim(lfds, "|") ")")})
+		matches1 	:= befund.Search(pattern, 0, "DimmerPGS")
 		res1         	:= befund.CloseDBF()
 
 		Loop, 127
@@ -617,6 +637,31 @@ return ftoex
 ;}
 
 ;--- Dokumente exportieren    	;{
+LVExport() {                                                                                                           	;-- exportiert ausgewählte Dokumente
+
+	Pat := LV_GetSelectedRow()
+
+	Gui, DXP: Default
+	Gui, DXP: ListView, DXP_DLV
+	row := 0, dokument := Array()
+	Loop {
+		If !(row := LV_GetNext(row, "C"))
+			break
+		LV_GetText(LFDNR, row, 5)
+		dokument[row] := PatDok[Pat.NR][LFDNR]
+
+	}
+
+	If !(dokument.Count() > 0) {
+		SB_SetText("KEINE EXPORTAUSWAHL GETROFFEN!", 1)
+		return
+	}
+
+	Dokumentexport(Pat.NR, Pat.NAME ", " Pat.VORNAME, dokument, exportordner)
+
+return
+}
+
 Dokumentexport(PATNR, PATName, files, exportPath) {
 
 	PatPath := exportPath "\(" PATNR ") " PATName
@@ -624,6 +669,7 @@ Dokumentexport(PATNR, PATName, files, exportPath) {
 	If !InStr(FileExist(PatPath), "D")
 		FileCreateDir, % PatPath "\"
 
+	Gui, DXP: Default
 	Gui, DXP: ListView, DXP_DLV
 
 	For row, file in files {
@@ -644,10 +690,11 @@ Dokumentexport(PATNR, PATName, files, exportPath) {
 return files.Count() - copynr
 }
 
-KarteikartenExport() {
+KarteikartenExport() {                                                                                               	;-- Tagesprotokoll und Laborblatt werden exportiert
 
 		global DXP_VB
 
+		Gui, DXP: Default
 		Gui, DXP: ListView, DXP_PLV
 		Gui, DXP: Submit, NoHide
 
@@ -668,7 +715,7 @@ KarteikartenExport() {
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 		; Werte exportieren
 			PraxTT("Laborwerte werden exportiert.", "20 1")
-			res := LaborblattExport(Pat.NAME ", " Pat.VORNAME, PatPath)
+			LBlattRes := LaborblattExport(Pat.NAME ", " Pat.VORNAME, PatPath)
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	; TAGESPROTOKOLL EXPORTIEREN (Karteikarte!)
@@ -677,26 +724,36 @@ KarteikartenExport() {
 			PraxTT("Karteikarteneinträge werden exportiert.", "20 1")
 			options := {	"Periode"	: DXP_VB
 							, 	"Patienten"	: "aktiver_Patient"
-							, 	"Kürzel" 	: "*ohne*"
+							, 	"Kürzel" 	: DXP_KKF
 							, 	"Cave"   	: false}
-			res := AlbisErstelleTagesprotokoll(options,, false)
+			TProtRes := AlbisErstelleTagesprotokoll(options,, false)
+			If !RegExMatch(TProtRes, "i)[A-Z]\:\\")
+				TProtRes := 1
+			else
+				TProtRes := 0
 
-		; Tagesprotokoll aktivieren
-			AlbisMDIChildActivate("Tagesprotokoll")
+			If TProtRes {
 
-		; Protokoll über Drucken speichen
-			If FileExist(KKFilepath ".pdf")
-				FileDelete, % KKFilepath ".pdf"
-			AlbisSaveAsPDF(KKFilePath)
+				; Tagesprotokoll aktivieren
+					AlbisMDIChildActivate("Tagesprotokoll")
 
-		; erstelltes Tagesprotokoll schliessen
-			AlbisMDIChildWindowClose("Tagesprotokoll")
+				; Protokoll über Drucken speichen
+					If FileExist(KKFilepath ".pdf")
+						FileDelete, % KKFilepath ".pdf"
+					TProtRes := AlbisSaveAsPDF(KKFilePath)
+					If (TProtRes <> 1)
+						return 0
 
-			PraxTT("", "Off")
+				; erstelltes Tagesprotokoll schliessen
+					AlbisMDIChildWindowClose("Tagesprotokoll")
+					PraxTT("", "Off")
 
+			}
+
+return  {"Patient":Pat.NAME ", " Pat.VORNAME " (" Pat.NR ")", "TP": TProtRes, "LB": LBlattRes}
 }
 
-LaborblattExport(name, PatPath, Printer="", Spalten="Alles")                 	{                	; automatisiert den Laborblattexport
+LaborblattExport(name, PatPath, Printer="", Spalten="Alles")                 	{                	;-- automatisiert den Laborblattexport
 
 		static AlbisViewType
 
@@ -723,11 +780,11 @@ LaborblattExport(name, PatPath, Printer="", Spalten="Alles")                 	{ 
 
 }
 
-Karteikartenfilter(DBPath) {
+Karteikartenfilter(DBPath) {                                                                                    	;-- Albis Karteikartenfilter aus der Datenbank lesen
 
 	KKFilter := Object()
 
-	dbf := new DBase(DBPath "\BEFTAG.dbf", false)
+	dbf     	:= new DBase(DBPath "\BEFTAG.dbf", false)
 	res      	:= dbf.OpenDBF()
 	beftag	:= dbf.GetFields("alle")
 	res       	:= dbf.CloseDBF()
@@ -777,6 +834,7 @@ DXPSearch(callfrom) {                                                 	;-- für 
 	; passenden Patienten suchen
 		SB_SetText("...Suche nach Patienten")
 		PatMatches := DBASEGetPatID(DXP_Pat, 3)
+		Gui, DXP: Default
 		SB_SetText( (PatMatches.Count() > 0 ? PatMatches.Count() " Patienten gefunden" : "nichts gefunden") )
 
 	; Patienten auflisten
@@ -932,7 +990,7 @@ DBASEGetPatID(searchstr, debug=false) {                     	;-- sucht in der PA
 
 	; Suche starten
 		filepos1  	:= DBFPatient.OpenDBF()
-		matches 	:= DBFPatient.Search(spattern)
+		matches 	:= DBFPatient.Search(spattern,, "DimmerPGS")
 		filepos2  	:= DBFPatient.CloseDBF()
 
 		DBFPatient := ""
@@ -959,32 +1017,39 @@ AddNewComboxItem(newItem, cbhwnd, maxItems=50) {
 
 		global DXP, DXP_Pat
 
+		Gui, DXP: Default
 		ControlGet, cbList, List,,, % "ahk_id " cbhwnd
 		cbitems := StrSplit(cbList, "`n")
 
 	; removes same item
+		itemfound := false
 		For itempos, item in cbitems
-			If (newitem = item) {
+			If RegExMatch(item, "^" newitem) {
 				cbitems.RemoveAt(itempos)
+				itemfound := true
 				break
 			}
 
-	; add item at beginning
-		cbitems.InsertAt(1, newitem)
+		If !itemfound {
 
-	; remove items from list
-		If (cbitems.Count() > maxItems)
-			cbitems.Delete(maxItems+1, cbitems.Count())
+			; add item at beginning
+				cbitems.InsertAt(1, newitem)
 
-	; new cb list
-		cbList := ""
-		For itempos, item in cbitems {
-			If (StrLen(item) > 0)
-				cbList .= (itempos=1 ? "":"|") . item
+			; remove items from list
+				If (cbitems.Count() > maxItems)
+					cbitems.Delete(maxItems+1, cbitems.Count())
+
 		}
 
-		SendMessage, 0x14B,,,, % "ahk_id " cbhwnd     	; CB_RESETCONTENT
+		; new cb list
+			cbList := ""
+			For itempos, item in cbitems {
+				If (StrLen(item) > 0)
+					cbList .= (itempos=1 ? "":"|") . item
+			}
 
+		Gui, DXP: Default
+		SendMessage, 0x14B,,,, % "ahk_id " cbhwnd     	; CB_RESETCONTENT
 		GuiControl, DXP:, DXP_Pat, % cbList
 		GuiControl, DXP: ChooseString , DXP_Pat, % newitem
 
@@ -1172,7 +1237,7 @@ return
 }
 ;}
 
-;----Dateidialog Funktionen    	;{
+;--- Dateidialog Funktionen    	;{
 IFileDialogEvents_new(){
 	vtbl := IFileDialogEvents_Vtbl()
 	fde := DllCall("GlobalAlloc", "UInt", 0x0000, "Ptr", A_PtrSize + 4, "Ptr")
@@ -1398,3 +1463,4 @@ SciTEOutput(Text:="", Clear=false, LineBreak=true, Exit=false) {                
 
 ;}
 
+^!#::Reload
