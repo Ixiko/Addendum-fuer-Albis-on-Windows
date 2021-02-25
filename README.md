@@ -1,22 +1,18 @@
-
-
 ![Addendum.png](assets/AddendumLogo2021.png)
-
 #### Extends the possibilities through surface analysis and manipulation
 
 ### preRelease Version 1.51 vom 24.02.2021
-lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32+ Unicode 64bit* , geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
+lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32+ Unicode 64bit* 
+
+geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ![Trenner](Docs/TrennerExtraBreit.png)
-
 ### DIES IST KEINE OFFIZIELLE ERWEITERUNG FÜR ALBIS!
 ##### Der Hersteller der Praxissoftware Albis*, die Compugroup AG, hat mit dieser Software nichts zu tun, geschweige denn, wurde diese offiziell durch die CompuGroup AG legitimiert!
 ###### * Arztinformationssystem (AIS), Arztsoftware, Praxissoftware, Praxisverwaltungssoftware, Praxisverwaltungssystem (PVS), Praxismanagementsoftware oder Ordinationsmanagementsoftware
 
-![Trenner](Docs/TrennerExtraBreit.png)
-
-<h2> &#9733 NEUE FUNKTIONEN SEIT DEM LETZTEM RELEASE </h1>
-
+![Trenner](Docs/TrennerExtraBreit.png)    
+<h2> &#9733 NEUE FUNKTIONEN SEIT DEM LETZTEM RELEASE </h2>
 ![Trenner](Docs/TrennerExtraBreit.png)
 
 <h3>&#10042; wichtigste Neuerung: Addendum hat Zugriff auf die Albis Datenbanken (DBASE)</h3>
