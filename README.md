@@ -2,7 +2,8 @@
 #### Extends the possibilities through surface analysis and manipulation
 
 ### preRelease Version 1.51 vom 24.02.2021
-lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32+ Unicode 64bit*, geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
+lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32+ Unicode 64bit*,
+geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ![Trenner](Docs/TrennerExtraBreit.png)
 ### DIES IST KEINE OFFIZIELLE ERWEITERUNG FÜR ALBIS!
@@ -10,30 +11,36 @@ lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32+ Unicode 64bit*, ges
 ###### * Arztinformationssystem (AIS), Arztsoftware, Praxissoftware, Praxisverwaltungssoftware, Praxisverwaltungssystem (PVS), Praxismanagementsoftware oder Ordinationsmanagementsoftware
 
 ![Trenner](Docs/TrennerExtraBreit.png)    
-<h2> &#9733 NEUE FUNKTIONEN SEIT DEM LETZTEM RELEASE </h2>
-![Trenner](Docs/TrennerExtraBreit.png)  
 
-### &#10042; wichtigste Neuerung: Addendum hat Zugriff auf Albis Datenbanken
+<h2>&#9733 NEUE FUNKTIONEN SEIT DEM LETZTEM RELEASE</h2>
 
-​		<u>die folgenden Module sind deshalb möglich geworden:</u>
--  Laborjournal
+![Trenner](Docs/TrennerExtraBreit.png)    
 
+<h3>&#10042; wichtigste Neuerung: Addendum hat Zugriff auf die Albis Datenbanken (DBASE)</h3>
 
-- Export von Patientendaten in einem Durchgang (Dokumente, Laborblatt, Karteikarte)
+​		die folgenden Module sind deshalb möglich geworden:<br>
 
-- Abrechnungshelfer (ähnlich der Albis internen Funktionen) im Infofenster
+- <h5>Laborjournal</h5>
 
-### &#10042; neue Erweiterungen für das Infofenster
+- <h5>Export von Patientendaten in einem Durchgang (Dokumente, Laborblatt, Karteikarte)</h5>
 
-- automatische Texterkennung mit Tesseract (Hotfolder)     
+- <h5>Abrechnungshelfer (ähnlich der Albis internen Funktionen) im Infofenster</h5>
 
-- automatische Kategorisierung von PDF-Dateien
+  <br>
 
-- Vereinfachung des manuellen Umbennens einer Datei mit Dateivorschau
+<h3> &#10042; neue Erweiterungen für das Infofenster</h3>
 
-### &#10042; weitere Funktionen
+- <h5>automatische Texterkennung mit Tesseract (Hotfolder)</h5>      
 
-- medizinische Berechnungen, Karteikartenexport (besser als das was die Compugroup anbietet!), automatischer Laborabruf, ein übersichtlicheres Laborjournal, Faxanhänge aus Albis extrahieren, Albis reanimieren und ein bißchen mehr
+- <h5>automatische Kategorisierung von PDF-Dateien</h5>
+
+- <h5>Vereinfachung des manuellen Umbennens einer Datei mit Dateivorschau</h5>
+
+  
+
+<h3> &#10042; weitere Funktionen</h3>
+
+- <h5>medizinische Berechnungen, Karteikartenexport (besser als das was die Compugroup anbietet!), automatischer Laborabruf, ein übersichtlicheres Laborjournal, Faxanhänge aus Albis extrahieren, Albis reanimieren und ein bißchen mehr</h5>
 
   
 
