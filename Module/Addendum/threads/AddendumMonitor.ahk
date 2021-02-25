@@ -402,7 +402,9 @@ return DoRestart  	; Abbruch per Hotkey-Methode gibt ein false zurück
 RestartAddendum(TimedCheck:=false) {                                           	;-- startet(prüft) Addendum.ahk
 
 		global 	MsgRec
-		static 	ProcName := "Addendum.ahk"
+		static 	ProcName	:= "Addendum.ahk"
+		static		msgEnd 	:= "`n---------------------------------------------------------------`n"
+		static		logPath		:= Addendum.DBPath "\sonstiges\AddendumMonitorLog.txt"
 
 		Addendum.TimerCall := A_TickCount
 		PTSum 				:= 0
@@ -442,23 +444,28 @@ RestartAddendum(TimedCheck:=false) {                                           	
 					Sleep 200
 				}
 
-			; versucht Addendum zur einer Antwort zu überreden (wartet 6s auf Antwort)
-				Send_WM_COPYDATA("Status||" Addendum.hMsgGui, GetAddendumID())
-				starttime := A_TickCount
-				while (MsgRec <> "okay") && ((recTime:=(A_TickCount-starttime)) < 4000)
-					Sleep 1
-				SciTEOutput(" " A_Hour ":" A_Min "| Addendumstatus: " MsgRec " - received after " recTime " ms (CPU Load: " Round(PTSum/20, 1) ")")
-				If (StrLen(MsgRec) = 0)
-					FileAppend, % TimeStamp() "| Addendum hat nicht geantwortet (CPU Load: " Round(PTSum/20, 1) ")", % Addendum.DBPath "\sonstiges\AddendumMonitorLog.txt", UTF-8
-				MsgRec := ""
-
 			; Antwort ja, aber dennoch Überwachungstarten
 				If (PTSum/20 >= Addendum.MaxAverageCPU) || !GetState(AddendumPID, 200) {
-					If Addendum.DBPath
-						FileAppend, % TimeStamp() "| hohe CPU Auslastung registriert (" Round(PTSum/20, 1) ")", % Addendum.DBPath "\sonstiges\AddendumMonitorLog.txt", UTF-8
+
+					; versucht Addendum zur einer Antwort zu überreden (wartet 6s auf Antwort)
+						Send_WM_COPYDATA("Status||" Addendum.hMsgGui, GetAddendumID())
+						starttime := A_TickCount
+						while (MsgRec <> "okay") && ((recTime:=(A_TickCount-starttime)) < 4000)
+							Sleep 1
+						If Addendum.DBPath {
+							msg :=	"`thohe CPU Auslastung registriert (" Round(PTSum/20, 1) ")`n"
+									.	"                   "
+									. 	"`tAddendumstatus: " (StrLen(MsgRec) = 0 ? "keine Antwort erhalten" : " Antwort erhalten in " recTime " ms") "`n"
+							FileAppend, % TimeStamp() "|" msg , % logpath, UTF-8
+						}
+						MsgRec := ""
+
 					If (msg := ProcessDelete_OnHighCPULoad(ProcName, AddendumPID, Addendum.RestartAfter, Addendum.IdleTime, Addendum.MaxAverageCPU))
 						If Addendum.DBPath		; schreibt ein Protokoll
-							FileAppend, % TimeStamp() "`n" msg "`n---------------------------------------------------------------`n", % Addendum.DBPath "\sonstiges\AddendumMonitorLog.txt", UTF-8
+							FileAppend, % TimeStamp() "|`t" msg . msgEnd, % logpath, UTF-8
+					else
+						If Addendum.DBPath		; schreibt ein Protokoll
+							FileAppend, % TimeStamp() "|`tAddendum scheint zu funktionieren" msgEnd, % logpath, UTF-8
 				}
 
 		}
