@@ -2,8 +2,7 @@
 #### Extends the possibilities through surface analysis and manipulation
 
 ### preRelease Version 1.51 vom 24.02.2021
-lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32+ Unicode 64bit* 
-
+lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32+ Unicode 64bit*,
 geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ![Trenner](Docs/TrennerExtraBreit.png)
