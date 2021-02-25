@@ -2,8 +2,7 @@
 #### Extends the possibilities through surface analysis and manipulation
 
 ### preRelease Version 1.51 vom 24.02.2021
-lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32+ Unicode 64bit*, 
-geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
+lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32+ Unicode 64bit*, geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ![Trenner](Docs/TrennerExtraBreit.png)
 ### DIES IST KEINE OFFIZIELLE ERWEITERUNG FÜR ALBIS!
@@ -14,7 +13,7 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 <h2> &#9733 NEUE FUNKTIONEN SEIT DEM LETZTEM RELEASE </h2>
 ![Trenner](Docs/TrennerExtraBreit.png)  
 
-### &#10042; wichtigste Neuerung: Addendum hat Zugriff auf die Albis Datenbanken (DBASE)
+### &#10042; wichtigste Neuerung: Addendum hat Zugriff auf Albis Datenbanken
 
 ​		<u>die folgenden Module sind deshalb möglich geworden:</u>
 -  Laborjournal
