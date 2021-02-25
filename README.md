@@ -12,31 +12,31 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ![Trenner](Docs/TrennerExtraBreit.png)    
 
-<h2>&#9733 NEUE FUNKTIONEN SEIT DEM LETZTEM RELEASE</h2>
+## &#9733; NEUE FUNKTIONEN SEIT DEM LETZTEM RELEASE
 
 ![Trenner](Docs/TrennerExtraBreit.png)    
 
-<h3>&#10042; wichtigste Neuerung: Addendum hat Zugriff auf Albis Datenbanken (DBASE)</h3>
+### &#10042; wichtigste Neuerung: Addendum hat Zugriff auf Albis Datenbanken
 
 ​		<u>die folgenden Module sind deshalb möglich geworden</u>:<br>
 
-- <h5>Laborjournal</h5>
+- Laborjournal
 
-- <h5>Export von Patientendaten in einem Durchgang (Dokumente, Laborblatt, Karteikarte)</h5>
+- Export von Patientendaten in einem Durchgang (Dokumente, Laborblatt, Karteikarte)
 
-- <h5>Abrechnungshelfer (ähnlich der Albis internen Funktionen) im Infofenster</h5>
+- Abrechnungshelfer (ähnlich der Albis internen Funktionen) im Infofenster
 
-<h3> &#10042; neue Erweiterungen für das Infofenster</h3>
+### &#10042; neue Erweiterungen für das Infofenster
 
-- <h5>automatische Texterkennung mit Tesseract (Hotfolder)</h5>      
+- automatische Texterkennung mit Tesseract (Hotfolder)      
 
-- <h5>automatische Kategorisierung von PDF-Dateien</h5>
+- automatische Kategorisierung von PDF-Dateien
 
-- <h5>Vereinfachung des manuellen Umbennens einer Datei mit Dateivorschau</h5>
+- Vereinfachung des manuellen Umbennens einer Datei mit Dateivorschau
 
-<h3> &#10042; weitere Funktionen</h3>
+### &#10042; weitere Funktionen
 
-- <h5>medizinische Berechnungen, Karteikartenexport (besser als das was die Compugroup anbietet!), automatischer Laborabruf, ein übersichtlicheres Laborjournal, Faxanhänge aus Albis extrahieren, Albis reanimieren und ein bißchen mehr</h5>
+- medizinische Berechnungen, Karteikartenexport (besser als das was die Compugroup anbietet!), automatischer Laborabruf, ein übersichtlicheres Laborjournal, Faxanhänge aus Albis extrahieren, Albis reanimieren und ein bißchen mehr
 
 
 
@@ -45,12 +45,11 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 ## ![Addendum.png](Docs/Icons/Addendum48x48.png) Addendum
 
 
-
-<h3> &#9733 PopupBlocker</h3>
+### &#9733; PopupBlocker
 
 - Schließt automatisch diverse störende Albisdialoge und zugehörigen Programmen
 
-<h3> &#9733 Fensterhandler</h3>
+### &#9733; Fensterhandler
 
 - positioniert, erweitert Albisdialoge zur besseren Übersicht innerhalb des Albisfenster damit die Patientenstammdaten immer sichtbar bleiben
 - sie können Albis-Dialognachfragen, welche sie seit Jahren immer gleich beantworten, automatische Bestätigen lassen
@@ -58,17 +57,17 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 - die im Rezept angezeigte Werbung wird automatisch ausgeblendet
 - Albis *kann* individuell an jedem Arbeitsplatz in Größe und/oder Position fixiert werden 
 
-<h3> &#9733 Auto-Login </h3>
+### &#9733; Auto-Login 
 
 - kann auf Wunsch das Login in ihr Albisprogramm vornehmen
 
-<h3> &#9733 eigene Patientendatenbank </h3>
+### &#9733; eigene Patientendatenbank 
 
 - für eine schnelle und fehlertolerante Suche nach Patienten
 
-<h3> &#9733 Infofenster </h3>
+### &#9733; Infofenster 
 
-zentral in Albis integriertes Tool für Dokument-Eingänge und Verwaltung des Praxisnetzwerk
+​        zentral in Albis integriertes Tool für Dokument-Eingänge und Verwaltung des Praxisnetzwerk
 
 - **Patient**: zeigt den Posteingang des aktuellen Patienten und Informationen und Tipps zur Abrechnung an.
 - **Journal**: zeigt Dateien des Befundordners an. Hat Funktionen für Texterkennung und automatische Namenserkennung. Befund-/Bilddateien können von dort ohne Umweg in die Patientenakte importiert, angezeigt und umbenannt werden
@@ -76,24 +75,24 @@ zentral in Albis integriertes Tool für Dokument-Eingänge und Verwaltung des Pr
 - **Netzwerk:** direkter Start einer Remotedesktopsitzung per Klick 
 - **Extras**: häufiger benötigte Programme/Skripte lassen sich im Infofenster anzeigen und von dort aus auch starten
 
-<h3>&#9733 automatische Texterkennung für PDF Dateien</h3>
+### &#9733; automatische Texterkennung für PDF Dateien
 
 - mit Tesseract erreiche ich eine bessere Erkennungsrate als mit meinem bisherigen Texterkennungsprogramm
 - neu hinzugefügte PDF Dateien werden automatisch in PDF-Text Dateien umgewandelt
 
-<h3>&#9733 automatische Kategorisierung von PDF Dateien</h3>
+### &#9733; automatische Kategorisierung von PDF Dateien
 
 - findet im Text der PDF den Patientennamen, das Erstellungsdatum des Dokumentes oder den Zeitraum eines Krankenhausaufenthaltes. Aus diesen Informationen wird ein neuer Dateiname generiert.
 
-<h3> &#9733 Unterstützung der PDF-Signierung </h3>
+###  &#9733; Unterstützung der PDF-Signierung 
 
 - per Hotkey wird die aktuell im FoxitReader geöffnete PDF Datei signiert. (eine Signatur müssen Sie vorher im FoxitReader erstellt haben).<br>**Achtung:** es gibt keine kostenlose Software zur digitalen Signierung. Den [FoxitReader](https://www.foxitsoftware.com/de/pdf-reader/) müssen Sie bei professioneller Nutzung liszensieren lassen! Ebenso die genutzten Command-Line-Tools - [xpdf-Tools](http://www.xpdfreader.com/) und pdftk.
 
-<h3> &#9733 Menusuche </h3>
+###  &#9733; Menusuche 
 
 - Finden und Aufrufen von Menupunkten im Albismenu
 
-<h3> &#9733 Vereinfachung der Albisbedienung </h3>
+###  &#9733; Vereinfachung der Albisbedienung 
 
 - erweiterte Tastenkombinationen (Hotkeys) für zusätzliche Funktionalität
   - **Verschieben von Einträgen** im Dauermedikamenten- und Dauerdiagnosenfenster und im cave! Dialog 
@@ -104,66 +103,66 @@ zentral in Albis integriertes Tool für Dokument-Eingänge und Verwaltung des Pr
   - **neuer Shift + F3 Kalender** zeigt mehrere Monate an 
   - **Hotstrings** für die schnelle Eingabe von Abrechnungsziffern (EBM und GOÄ)
 
-<h3> &#9733 erweitertes Kontextmenu </h3>
+###  &#9733; erweitertes Kontextmenu 
 
 - mehr Funktionen im Rechtsklick Menu in der Karteikarte. Bearbeiten (Anzeigen), Drucken, Exportieren, Versand als Fax, per Mail oder per Telegram (Automatisierung für FoxitReader und Sumatra PDF sind integriert)
 
-<h3> &#9733 Rezepthelfer </h3>
+###  &#9733; Rezepthelfer 
 
 - Rezeptvorlagen, z.B. mehrzeilige Hilfsmittelrezepte oder Verschreibung mehrerer Medikamente nach Auswahl einer Vorlage 
 
-<h3> &#9733 schönerer Verordnungsplan und besserer BMP </h3>
+###  &#9733; schönerer Verordnungsplan und besserer BMP 
 
 * letzteres mag übertrieben sein. Den Bundeseinheitlichen Medikationsplan finde ich furchtbar. Ich habe ein Skript geschrieben das die Vorgaben des BMP imitiert, dabei doch mehr Möglichkeiten und um einiges bessere Darstellungen von Informationen bietet
 
-<h3> &#9733 Anzeige von Beginn und Ende der Lohnfortzahlung  </h3>
+###  &#9733; Anzeige von Beginn und Ende der Lohnfortzahlung  
 
 - die berechneten Stichtage werden im oberen Teil der Arbeitsunfähigkeitsbescheinigung eingeblendet 
 
 ![](Docs/AUFristen.png)
 
-<h3> &#9733 Kontextsensitive Texterweiterungen </h3>
+###  &#9733; Kontextsensitive Texterweiterungen 
 
 - Erkennung des Eingabekontext in der Karteikarte anhand des Albiskürzel (z.B. lko, dia, bef, info, lp, lbg) 
 - Anlegen eigener Textkürzel die sich automatisch zur Leistungskomplexen, Diagnosen, Befundtexten oder anderem erweitern lassen 
 
-<h3> &#9733 Automatisierung DICOM-Daten Umwandlung </h3>
+###  &#9733; Automatisierung DICOM-Daten Umwandlung 
 
 - [MicroDicom](https://www.microdicom.com), der freie DICOM-Viewer für Windows, wird automatisiert für eine schnelle Umwandlung der Daten in Bild- oder Videodateien (im Moment MRT/CT Aufnahmenumwandlung ins wmi Format (video)
 
-<h3> &#9733 RPA-Funktionsbibliothek</h3>
+###  &#9733; RPA-Funktionsbibliothek
 
 - **118 Funktionen** zur Steuerung von Albis für die Entwicklung eigener Skripte  
 
-<h3> &#9733 native DBASE-Klasse	</h3>	
+###  &#9733; native DBASE-Klasse		
 
 - für die Analyse der von Albis verwendeten DBASE-Datei Strukturen, Portierung von oder Suche nach Daten
 
-<h3> &#9733 medizinische Berechnungen</h3>	
+###  &#9733; medizinische Berechnungen	
 
 - Funktionsbibliothek für Berechnungen von BMI, eGFR nach der CKD-EPI Formel, KOF und mehr
 
-<h3> &#9733 Karteikarten exportieren	</h3>	
+###  &#9733; Karteikarten exportieren		
 
 - Export von Karteikarte, Laborblatt und aller Befunde (Bilder-, Worddokumente und PDF-Dateien) ohne größeren Umweg.
 
-<h3> &#9733 Laborjournal</h3>
+###  &#9733; Laborjournal
 
 - schnelle Übersicht auffälliger Laborwerte der letzten Tage
 
-<h3> &#9733 Laborabruf</h3>
+###  &#9733; Laborabruf
 
 - zeitgesteuerter Abruf von Labordaten mit anschliessendem Import in das Laborblatt der Patienten. Die Uhrzeiten des Abrufs können selbst festgelegt werden.
 
-<h3> &#9733 Outlook Anhänge extrahieren</h3>
+###  &#9733; Outlook Anhänge extrahieren
 
 - Faxbefunde erreichen mich von der Fritzbox per EMail. Ein neues Skript extrahiert die als PDF angehängten Fax in den Befundordner. Durch die neue Hotfolder-Funktionalität wird dann sofort eine Texterkennung durchgeführt und anschliessend werden die Dateien kategorisiert.
 
-<h3> &#9733 Albis Reanimator</h3>
+###  &#9733; Albis Reanimator
 
 - Albis hängt sich häufig auf? Mehrmals am Tag sämtliche geladene von Albis geladene Prozesse mit dem Taskmanager löschen damit dann endlich Albis wieder startet. Das macht der Albis Reanimator für Sie und sind sämtliche Prozesse entfernt wird Albis gestartet.
 
-<h3> &#9733 Listview-Inhalte kopieren</h3>
+###  &#9733; Listview-Inhalte kopieren
 
 - Sie brauchen den Inhalt des Wartezimmers, die Dauerdiagnosen, die Dauermedikamenten oder die Liste der Resistenztestung aus dem Laborblatt. Steuern Sie ihre Maus über das entsprechende Element und drücken Sie ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![c](Docs/Icons/shift_Left.png)+![c](Docs/Icons/Key-White-c.png) und Addendum kopiert nicht nur den Inhalt des Elementes sondern bereitet ihn auf damit sie ihn z.B. in ein Dokument per Paste einfügen können. 
 
