@@ -12,7 +12,9 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 ###### * Arztinformationssystem (AIS), Arztsoftware, Praxissoftware, Praxisverwaltungssoftware, Praxisverwaltungssystem (PVS), Praxismanagementsoftware oder Ordinationsmanagementsoftware
 
 ![Trenner](Docs/TrennerExtraBreit.png)    
+
 <h2>&#9733 NEUE FUNKTIONEN SEIT DEM LETZTEM RELEASE</h2>
+
 ![Trenner](Docs/TrennerExtraBreit.png)    
 
 <h3>&#10042; wichtigste Neuerung: Addendum hat Zugriff auf die Albis Datenbanken (DBASE)</h3>
