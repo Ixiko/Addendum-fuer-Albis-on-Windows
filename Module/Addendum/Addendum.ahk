@@ -17,6 +17,10 @@ global                                                                          
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 /*               	A DIARY OF CHANGES
+| **27.02.2021**	|	**F~**	| **AlbisReanimator**         	- 	weitere Albisprozesse der Erkennungsroutine hinzugefügt
+																						- 	zweiten Befehl für das Beenden von Prozessen hinzugefügt
+																						-	das Skript führt auf Wunsch zu Dokumentationszwecken eine Logdatei mit den Namen und der Anzahl der
+																							geschlossenen Prozesse |
 | **27.02.2021**	|	**F+**	| **Addendum_Exporter**     	- 	Fortschrittsanzeige verbessert |
 | **27.02.2021**	|	**F~**	| **AddendumMonitor**      	- 	Lösung erstmal: **IPC - Interprocess communication**, Skript sendet einen String an Addendum, kommt
 																							keine Antwort innerhalb der nächsten 4 Sekunden hat sich Addendum aufgehängt und wird neu gestartet.<br>
@@ -889,7 +893,7 @@ return
 	SendInput, {Tab}
 
 return ;}
-:*b0:AISC:: ;{
+:*b0:AISC::                                                                                   	;{ AISC - Laborwebinterface
 	SendInput, {Tab}
 	Sleep 50
 	SendInput, {Tab}
@@ -985,7 +989,7 @@ return ;}
 return
 ;}
 ; --- Ausnahmeindikationen                                                              	;{
-#If IsFocusedAusnahmeIndikation()
+#If IsFocusedAusnahmeIndikation()                                                  	;
 :*:#::
 	AutoFillAusnahmeindikation()
 return
@@ -1083,8 +1087,8 @@ return false
 }
 
 ;}
-; --- Privatabrechnung                                                                    	;{
-#If WinActive("ahk_class OptoAppClass") && (RegExMatch(AlbisGetActiveControl("contraction"), "lp|lbg") || InStr(AlbisGetActiveWindowType(), "Privatabrechnung"))
+; --- Privatabrechnung                                                                   	;{
+#If WinActive("ahk_class OptoAppClass") && (RegExMatch(AlbisGetActiveControl("contraction"), "lp|lbg") || InStr(AlbisGetActiveWindowType(), "Privatabrechnung"))  ; GOÄ [lp, lpg oder Privatabrechnung]
 :*R:Abstrich1::298-                                                                              	; Entnahme und gegebenenfalls Aufbereitung von Abstrichmaterial zur mikrobiologischen Untersuchung
 :*R:AbstrichRa::298(ltext:Abstrich Rachenraum)-                                     	; Entnahme und gegebenenfalls Aufbereitung von Abstrichmaterial zur mikrobiologischen Untersuchung
 :*R:AbstrichNa::298(ltext:Abstrich Nase)-                                              	; Entnahme und gegebenenfalls Aufbereitung von Abstrichmaterial zur mikrobiologischen Untersuchung
@@ -1095,25 +1099,25 @@ return false
 :*R:BA::250-                                                                                       	; Blutabnahme
 :*R:BSG::3501-                                                                                    	; BSG
 :*R:BZ::3560-                                                                                    	; Blutzucker
-:*R:Blutzuc::3560-
-:*R:glucose::3560-
-:*R:glukose::3560-                                                                                ;
+:*R:Blutzuc::3560-                                                                                	; Blutzucker
+:*R:glucose::3560-                                                                            	; Blutzucker
+:*R:glukose::3560-                                                                                ; Blutzucker
 :*R:gleichg::826-                                                                               	; neurologische Gleichgewichtsprüfung
 :*R:hb::50(dkm:4)-                                                                               	; Hausbesuch
-:*R:impf::375-                                                                                    	; Impfung
-:*R:influvac::(sach:Influenzaimpfstoff Influvac: 10.94)                            	; Influvac Preis
-:*R:grlp::1-5-375-(sach:Influenzaimpfstoff Influvac: 10.94)
-:*R:infusion k::271-                                                                              	; Infusion < 30 min
-:*R:infu1::271-
-:*R:infusion l::                                                                                     	; Infusion > 30 min
-:*R:infu2::
 :*R:infil1::267-                                                                                     	; Medikamentöse Infiltrationsbehandlung, je Sitzung
 :*R:infil2::268-                                                                                     	; Medikamentöse Infiltrationsbehandlung im Bereich mehrerer Körperregionen
+:*R:infusion k::271-                                                                              	; Infusion < 30 min
+:*R:infu1::271-                                                                                    	; Infusion < 30 min
+:*R:infusion l::                                                                                     	; Infusion > 30 min
+:*R:infu2::                                                                                           	; Infusion > 30 min
 :*R:inj sc::252-                                                                                     	; Injection s.c., i.m., i.c.
-:*R:inj ic::252-
-:*R:inj im::252-
+:*R:inj ic::252-                                                                                     	; Injection s.c., i.m., i.c.
+:*R:inj im::252-                                                                                    	; Injection s.c., i.m., i.c.
 :*R:inj iv::253-                                                                                    	; Injection i.v.
 :*R:inr::3530-                                                                                  		; INR mit Gerät
+:*R:impf::375-                                                                                    	; Impfung GOÄ Ziffer
+:*R:influvac::(sach:Influenzaimpfstoff Influvac: 10.94)                            	; Impfung gegen Grippe Ziffern + Preis für Influvac
+:*R:grlp::1-5-375-(sach:Influenzaimpfstoff Influvac: 10.94)                    	; Impfung gegen Grippe Ziffern + Preis für Influvac
 :*R:lzRR::654                                                                                    		; Langzeitblutdruckmessung
 :*R:lufu::605                                                                                    		; Lungenfunktion
 :*R:Lungenf::605                                                                              		; Lungenfunktion
@@ -1124,42 +1128,42 @@ return false
 :*R:Pulsoxy::602-                                                                                  	; Pulsoxymetrie
 :*R:rekt::11-                                                                                      	; rektale Untersuchung
 :*:sang::3500-                                                                                    	;{ Ausgabe iFOPT Test (Stuhl auf Sanguis)
-:*:Stuhl::3500-
-:*:iFop::3500-
-:*:haemof::3500-                                                                                 ;}
+:*:Stuhl::3500-                                                                                   	;  Ausgabe iFOPT Test (Stuhl auf Sanguis)
+:*:iFop::3500-                                                                                   	;  Ausgabe iFOPT Test (Stuhl auf Sanguis)
+:*:haemof::3500-                                                                                 ;} Ausgabe iFOPT Test (Stuhl auf Sanguis)
 :*R:sono1::410-420                                                                             	; Ultraschall (Ultraschalluntersuchung von bis zu drei weiteren Organen im Anschluss an Nummern 410 bis 418, je Organ. Organe sind anzugeben.)
-:*R:sono2::410(organ:Leber)-420(organ:Gb)-420(organ:Niere bds.)
-:*R:sonoknie::410(organ:Kniegelenk li.)
-:*R:sono knie::410(organ:Kniegelenk li.)
+:*R:sono2::410(organ:Leber)-420(organ:Gb)-420(organ:Niere bds.)     	; Ultraschall mehrere Untersuchungen
+:*R:sonoknie::410(organ:Kniegelenk li.)                                                	; Utraschall Knie
+:*R:sono knie::410(organ:Kniegelenk li.)                                               	; Utraschall Knie
 :*R:Unters1::7(fakt:2,3)-                                                                    	; Vollständige Untersuchung – ein Organsystem
 :*R:Unters2::7(fakt:3,5)-                                                                    	; Vollständige Untersuchung – mehrere Organsysteme
 :*R:verbale::849-                                                                                 	; verbale Intervention - psychosomatik
 :*R:verband::200-                                                                                	; Verband
 :*R:verweil::56-                                                                                  	; Verweilen außerhalb der Praxis
 :*R:zuschl::A-B-C-D-K1                                                                         	; Zuschläge
-:*R:JVEG::(sach:Anfrage Sozialgericht gem. JVEG:21.00)
-:*R:sozialgericht::(sach:Anfrage Sozialgericht gem. JVEG:21.00)
-:*R:lageso::(sach:Landesamt für Gesundheit und Soziales:21.00)
-:*R:lagesokurz::(sach:Landesamt für Gesundheit und Soziales:5.00)
-:*R:Rentenversich::(sach:Anfrage Rentenversicherung:28.20)
-:*R:RLV::(sach:Anfrage Rentenversicherung:28.20)
-:*R:DRV::(sach:Anfrage Rentenversicherung:28.20)
-:*R:Bundesa::(sach:Anfrage Bundesagentur für Arbeit gem. JVEG:32.50)
-:*R:Agentur::(sach:Anfrage Bundesagentur für Arbeit gem. JVEG:32.50)
-:*R:porto1::(sach:Porto Standard:0.80)	; bis 20g
-:*R:porto2::(sach:Porto Kompakt:0.95) 	; bis 50g
-:*R:porto3::(sach:Porto Groß:1.55)      	; bis 500g
-:*R:porto4::(sach:Porto Maxi:2.70)       	; bis 1000g
-:*:kopie::                                                                                       	;{
+:*R:JVEG::(sach:Anfrage Sozialgericht gem. JVEG:21.00)                     	; Anfrage Sozialgericht
+:*R:sozialgericht::(sach:Anfrage Sozialgericht gem. JVEG:21.00)          	; Anfrage Sozialgericht
+:*R:lageso::(sach:Landesamt für Gesundheit und Soziales:21.00)          	; Anfrage LaGeSo
+:*R:lagesokurz::(sach:Landesamt für Gesundheit und Soziales:5.00)      	; Anfrage LaGeSo
+:*R:Rentenversich::(sach:Anfrage Rentenversicherung:28.20)                 	; Anfrage Rentenversicherung
+:*R:RLV::(sach:Anfrage Rentenversicherung:28.20)                              	; Anfrage Rentenversicherung
+:*R:DRV::(sach:Anfrage Rentenversicherung:28.20)                              	; Anfrage Rentenversicherung
+:*R:Bundesa::(sach:Anfrage Bundesagentur für Arbeit gem. JVEG:32.50)	; Anfrage Rentenversicherung
+:*R:Agentur::(sach:Anfrage Bundesagentur für Arbeit gem. JVEG:32.50) 	; Anfrage Rentenversicherung
+:*R:porto1::(sach:Porto Standard:0.80)                                                	; Porto bis 20g
+:*R:porto2::(sach:Porto Kompakt:0.95)                                                 	; Porto bis 50g
+:*R:porto3::(sach:Porto Groß:1.55)                                                      	; Porto bis 500g
+:*R:porto4::(sach:Porto Maxi:2.70)                                                       	; Porto bis 1000g
+:*:kopie::                                                                                           	;{ Berechnung Kopiekosten
 	AlbisKopiekosten(0.5)
 return ;}
-:*:reiseunf::(sach:Reiseunfähigkeitsbescheinigung:20.00)                                                                                     	;{
-:*:reiserüc::(sach:Reiseunfähigkeitsbescheinigung:20.00) ;}
-:*R:stix::3652-                                                                                          	;{ Urinstix
-:*R:streifen::3652-
-:*R:urin::3652-
-:*R:ustix::3652-
-:*R:urinstix::3652-					        ;}
+:*:reiseunf::(sach:Reiseunfähigkeitsbescheinigung:20.00)                     	;{ Reiseunfähigkeitsbescheinigung
+:*:reiserüc::(sach:Reiseunfähigkeitsbescheinigung:20.00)                    	;} Reiseunfähigkeitsbescheinigung
+:*R:stix::3652-                                                                                     	;{ Urinstix
+:*R:streifen::3652-                                                                               	; Urinstix
+:*R:urin::3652-                                                                                   	; Urinstix
+:*R:ustix::3652-                                                                                   	; Urinstix
+:*R:urinstix::3652-					                                                             	;} Urinstix
 #If
 ;}
 ; --- Blockeingaben                                                                         	;{
@@ -1179,8 +1183,8 @@ return ;}
 
 ;}
 ; --- manuelle Eingabe der Versichertendaten                                   	;{
-#If WinActive("Ersatzverfahren ahk_class #32770")
-:*:AOKN::                                                                                 	;{ AOK Nordost
+#If WinActive("Ersatzverfahren ahk_class #32770")                            	; Hilfen im Fenster Ersatzverfahren
+:*:AOKN::                                                                                      	;{ Ersatzverfahren Hilfe beim eintragen von AOK Nordost Daten
 	ControlSetText, Edit1, % "72101"        	, % "Ersatzverfahren ahk_class #32770"
 	ControlSetText, Edit3, % "109519005"	, % "Ersatzverfahren ahk_class #32770"
 	ControlSetText, Edit5, % "AOK Nordost"	, % "Ersatzverfahren ahk_class #32770"
@@ -2920,7 +2924,7 @@ ListviewClipboard(WinTitle:="") {                                               
 			WinGetTitle, Wintitle, % "ahk_id " outwin
 		}
 
-		;SciTEOutput("copy hwnd: " hcontrol "`nclassnn: " classnn "`noutwin: " outwin  "`nWinTilte: " WinTitle)
+		SciTEOutput("copy hwnd: " hcontrol "`nclassnn: " classnn "`noutwin: " outwin  "`nWinTilte: " WinTitle)
 
 	; Steuerelement ist eines der unteren dann wird der Inhalt ausgelesen und eventuell geparsed (CopyOpt)
 		If RegExMatch(classnn, "(SysListView32|Listbox|ComboBox|DDL)") {

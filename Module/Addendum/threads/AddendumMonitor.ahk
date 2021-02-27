@@ -577,7 +577,7 @@ GetProcessTimes(PID=0)    {                                                     
 
    oldKrnlTime := newKrnlTime, oldUserTime := newUserTime
 
-   hProc := DllCall("OpenProcess", "Uint", 0x400, "Uint", 0, "Uint", pid, "Ptr"))
+   hProc := DllCall("OpenProcess", "Uint", 0x400, "Uint", 0, "Uint", pid, "Ptr")
    DllCall("GetProcessTimes", "Ptr", hProc, "int64*", CreationTime, "int64*", ExitTime, "int64*", newKrnlTime, "int64*", newUserTime)
    DllCall("CloseHandle", "Ptr", hProc)
 

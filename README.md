@@ -1,7 +1,7 @@
 ![Addendum.png](assets/AddendumLogo2021.png)
 #### Extends the possibilities through surface analysis and manipulation
 
-### preRelease Version 1.51 vom 27.02.2021
+### preRelease Version 1.52 vom 27.02.2021
 lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32+ Unicode 64bit*,
 geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
@@ -160,7 +160,7 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ###  &#9733; Albis Reanimator
 
-- Albis hängt sich häufig auf? Mehrmals am Tag sämtliche geladene von Albis geladene Prozesse mit dem Taskmanager löschen damit dann endlich Albis wieder startet. Das macht der Albis Reanimator für Sie und sind sämtliche Prozesse entfernt wird Albis gestartet.
+- Albis hängt sich häufig auf? Mehrmals am Tag sämtliche geladene von Albis geladene Prozesse mit dem Taskmanager löschen? Damit dann endlich Albis wieder startet. Das übernimmt der Albis Reanimator absofort für Sie! 
 
 ###  &#9733; Listview-Inhalte kopieren
 
