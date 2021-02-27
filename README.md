@@ -230,13 +230,32 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
     - **Kopieren:**                                      ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![c](Docs/Icons/Key-White-c.png)
     - **Ausschneiden:**                            ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![x](Docs/Icons/X.png)
     - **Einfügen:**                                       ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![v](Docs/Icons/Key-White-v.png)
-  - **Schließen einer Karteikarte:**   ![Alt](Docs/Icons/Alt.png)+![Runter](Docs/Icons/runter.png) 
-  - **zur nächsten Karteikarte:**        ![Alt](Docs/Icons/Alt.png)+![Hoch](Docs/Icons/hoch.png) 
-  - **Laborblatt zeigen:**                      ![Alt](Docs/Icons/Alt.png)+![Rechts](Docs/Icons/Rechts.png) 
-  - **Karteikarte zeigen:**                    ![Alt](Docs/Icons/Alt.png)+![Links](Docs/Icons/Links.png) 
-  - **Einstellen des aktuellen Tagesdatums:**   ![Alt](Docs/Icons/Alt.png)+![F5](Docs/Icons/F5.png) 
   
-  
+- **weitere Hotkey-Aktionen**
+
+    - **Schließen einer Karteikarte:**   ![Alt](Docs/Icons/Alt.png)+![Runter](Docs/Icons/runter.png) 
+    - **zur nächsten Karteikarte:**        ![Alt](Docs/Icons/Alt.png)+![Hoch](Docs/Icons/hoch.png) 
+    - **Laborblatt zeigen:**                      ![Alt](Docs/Icons/Alt.png)+![Rechts](Docs/Icons/Rechts.png) 
+    - **Karteikarte zeigen:**                    ![Alt](Docs/Icons/Alt.png)+![Links](Docs/Icons/Links.png) 
+    - **Einstellen des aktuellen Tagesdatums:**   ![Alt](Docs/Icons/Alt.png)+![F5](Docs/Icons/F5.png) 
+
+- **Hotstrings** (nur Beispiele)
+
+    - **Kopie** bei ***lp*** als aktivem Kürzel oder in der Privatabrechnung eingeben. Es öffnet sich ein Fenster das sie nach der Anzahl der Kopien fragt. Nach Eingabe von z.B. 38 Seiten wird der Text so erweitert: ***(sach:Kopien 38x a 50 cent:19.00)***
+
+        | Hotstring                               | Erweiterung                                             |
+        | --------------------------------------- | ------------------------------------------------------- |
+        | **JVEG**, **sozialgericht**             | (sach:Anfrage Sozialgericht gem. JVEG:21.00)            |
+        | **lageso**                              | (sach:Landesamt für Gesundheit und Soziales:21.00)      |
+        | **lagesokurz**                          | (sach:Landesamt für Gesundheit und Soziales:5.00)       |
+        | **Rentenversich**, **RLV** oder **DRV** | (sach:Anfrage Rentenversicherung:28.20)                 |
+        | **Bundesa** oder **Agentur**            | (sach:Anfrage Bundesagentur für Arbeit gem. JVEG:32.50) |
+        | **porto1**                              | (sach:Porto Standard:0.80)	; bis 20g                 |
+        | **porto2**                              | (sach:Porto Kompakt:0.95) 	; bis 50g                 |
+        | **porto4**                              | (sach:Porto Groß:1.55)      	; bis 500g              |
+        | **porto4**                              | (sach:Porto Maxi:2.70)       	; bis 1000g            |
+
+    
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
