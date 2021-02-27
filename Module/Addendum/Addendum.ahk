@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                                                                       	ADDENDUM HAUPTSKRIPT
-global                                                                               AddendumVersion:= "1.51" , DatumVom:= "24.02.2021"
+global                                                                               AddendumVersion:= "1.51" , DatumVom:= "27.02.2021"
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                    ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . . . . . . .                                           BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -17,7 +17,12 @@ global                                                                          
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 /*               	A DIARY OF CHANGES
-| **23.02.2021**	|	**F+**	| **AddendumMonitor**      	-	hat eine Funktion zur Überwachung der CPU Auslastung erhalten. Eigene Programmierfehler und/oder das Einbinden von
+| **27.02.2021**	|	**F+**	| **Addendum_Exporter**     	- 	Fortschrittsanzeige verbessert |
+| **27.02.2021**	|	**F~**	| **AddendumMonitor**      	- 	Lösung erstmal: **IPC - Interprocess communication**, Skript sendet einen String an Addendum, kommt
+																							keine Antwort innerhalb der nächsten 4 Sekunden hat sich Addendum aufgehängt und wird neu gestartet.<br>
+																						-	Logfile wurde nicht geschrieben<br>
+																						-	manuellen Prüfsstart über das Traymenu hinzugefügt |
+| **26.02.2021**	|	**F+**	| **Addendum_Mining**      	- 	Erkennung von nicht Patientenbriefen angefangen, Verbesserung der Erkennung von Patientennamen erreicht |
 
 
 
@@ -435,27 +440,30 @@ global                                                                          
 		Menu, SubMenu4, Add, % "Addendum Objekt"                	, % func_AddendumObjekt
 
 	; Protokolle/Datenbanken anzeigen
-		If FileExist(protokoll := Addendum.DBPath           	"\Labordaten\LaborabrufLog.txt")	{
+		If FileExist(protokoll := Addendum.DBPath           	"\Labordaten\LaborabrufLog.txt")            	{
 			func_LaborAbrufLog  	:= Func("ShowTextProtocol").Bind(protokoll)
 			Menu, SubMenu4, Add, % "Laborabruf Protokoll"           	, % func_LaborAbrufLog
 		}
-		If FileExist(protokoll := Addendum.DBPath          	"\Labordaten\LaborimportLog.txt")	{
+		If FileExist(protokoll := Addendum.DBPath          	"\Labordaten\LaborimportLog.txt")          	{
 			func_LaborImportLog  	:= Func("ShowTextProtocol").Bind(protokoll)
 			Menu, SubMenu4, Add, % "Laborimport Protokoll"           	, % func_LaborImportLog
 		}
-		If FileExist(protokoll := Addendum.Dir                 	"\logs'n'data\OnExit-Protokoll.txt")	{
+		If FileExist(protokoll := Addendum.Dir                 	"\logs'n'data\OnExit-Protokoll.txt")           	{
 			func_ZeigeOnExitProtokoll := Func("ShowTextProtocol").Bind(protokoll)
 			Menu, SubMenu4, Add, % "OnExit Protokoll"                	, % func_ZeigeOnExitProtokoll
 		}
-		If FileExist(protokoll := Addendum.BefundOrdner	"\PDfImportLog.txt")                   	{
+		If FileExist(protokoll := Addendum.BefundOrdner	"\PDfImportLog.txt")                               	{
 			func_PDFImportLog  	:= Func("ShowTextProtocol").Bind(protokoll)
 			Menu, SubMenu4, Add, % "PDF Importprotokoll"            	, % func_PDFImportLog
 		}
-		If FileExist(protokoll := Addendum.DBPath          	"\OCRTime_Log.txt")                  	{
+		If FileExist(protokoll := Addendum.DBPath          	"\OCRTime_Log.txt")                              	{
 			func_tessOCRLog  	:= Func("ShowTextProtocol").Bind(protokoll)
 			Menu, SubMenu4, Add, % "PDF OCR Protokoll"            	, % func_tessOCRLog
 		}
-
+		If FileExist(protokoll := Addendum.DBPath          	"\sonstiges\AddendumMonitorLog.txt")     	{
+			func_tessMonLog   	:= Func("ShowTextProtocol").Bind(protokoll)
+			Menu, SubMenu4, Add, % "Addendum Monitor"            	, % func_tessMonLog
+		}
 
 	; FARBEN festlegen
 		Menu, SubMenu1, Color                            	, % "c" Addendum.Default.BGColor3
@@ -469,16 +477,16 @@ global                                                                          
 		Menu, Tray, Add, andere Tools                   	, :SubMenu2
 		Menu, Tray, Add, Einstellungen                     	, :SubMenu3
 
-		Menu, Tray, Icon, Module starten/beenden 	, % Addendum.Dir "\assets\ModulIcons\Module.ico"
-		Menu, Tray, Icon, Einstellungen                   	, imageres.dll, 52
+		Menu, Tray, Icon, Module starten/beenden 	, % Addendum.Dir "\assets\ModulIcons\Tools2.ico"
+		Menu, Tray, Icon, Daten / Protokolle             	, % Addendum.Dir "\assets\ModulIcons\Daten.ico"
+		Menu, Tray, Icon, andere Tools                   	, % Addendum.Dir "\assets\ModulIcons\Tools1.ico"
+		Menu, Tray, Icon, Einstellungen                   	, % Addendum.Dir "\assets\ModulIcons\Einstellungen.ico"
 
 		Menu, Tray, Add,
 		Menu, Tray, Add, ListLines On/Off                	, scriptLine
 		Menu, Tray, Add, Zeige Skript Variablen       	, scriptVars
 		Menu, Tray, Add, Skript Neu Starten             	, SkriptReload
 		Menu, Tray, Add, Beenden                            	, DasEnde
-
-	;}
 
 	;}
 

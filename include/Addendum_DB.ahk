@@ -243,7 +243,6 @@ class admDB                                                                 	{  
 	return idx = 0 ? 0 : found
 	}
 
-
 }
 
 ;}

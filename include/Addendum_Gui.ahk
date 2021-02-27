@@ -14,7 +14,7 @@
 ;
 ;
 ;	                    	Addendum für Albis on Windows
-;                        	by Ixiko started in September 2017 - letzte Änderung 20.02.2021 - this file runs under Lexiko's GNU Licence
+;                        	by Ixiko started in September 2017 - letzte Änderung 27.02.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
 
@@ -681,25 +681,29 @@ adm_Extras:		                                                                   
 	Switch MObj 	{
 
 		case "MX":
+
 			EModulExe    	:= Addendum.Module[MNr].command
 			EModulName	:= Addendum.Module[MNr].name
 			If FileExist(EModulExe) {
 				PraxTT("starte Modul : " EModulName, "1 1")
 				SplitPath, EModulExe, WorkPath
 				Run, % EModulExe, % WorkPath,, EModulPID
-
 				If Instr(EModulExe, "Addendum_Exporter") {
-					Sleep 1000
-					WinWaitActive, % "Dokumentexport ahk_class AutoHotkeyGUI",, 7
-					If (EModulHwnd := WinExist("Dokumentexport ahk_class AutoHotkeyGUI"))
+					Sleep 3000
+					WinActivate   	, % (DokExClass := "Dokumentexport ahk_class AutoHotkeyGUI1")
+					WinWaitActive	, % DokExClass,, 7
+					while !(EModulHwnd := WinExist(DokExClass)) && (A_Index < 20)
+						Sleep 100
+					SciTEOutput("EModulHwnd: " EModulHwnd)
+					If EModulHwnd
 						Send_WM_CopyData("search|" AlbisAktuellePatID() "|" GetAddendumID() "|admGui_Callback", EModulHwnd)
 				}
-
 			}
 
 		case "TX":
-			EToolExe    	:= Addendum.Tools[MNr].command
-			EToolName	:= Addendum.Tools[MNr].name
+
+			EToolExe       	:= Addendum.Tools[MNr].command
+			EToolName   	:= Addendum.Tools[MNr].name
 			If FileExist(EToolExe) {
 				PraxTT("starte Tool: " EToolName, "1 1")
 				SplitPath, EToolExe, WorkPath
@@ -708,7 +712,6 @@ adm_Extras:		                                                                   
 			else {
 				SplitPath, EToolExe,, EToolPath
 				PraxTT(EToolName " ist nicht vorhanden`n[" EToolPath "\]", "1 1")
-
 			}
 
 	}

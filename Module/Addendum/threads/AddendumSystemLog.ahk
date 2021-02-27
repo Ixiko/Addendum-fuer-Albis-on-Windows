@@ -47,9 +47,9 @@ ProcessPath(ProcessName) {
     return ModuleFileName, DllCall("Kernel32.dll\CloseHandle", "Ptr", hProcess)
 }
 ProcessCreationTime( PID ) {
-    hPr := DllCall( "OpenProcess", UInt,1040, Int,0, Int,PID )
-    DllCall( "GetProcessTimes", UInt,hPr, Int64P,UTC, Int,0, Int,0, Int,0 )
-    DllCall( "CloseHandle", Int,hPr)
+    hPr := DllCall( "OpenProcess", "UInt",1040, "Int",0, "Int",PID )
+    DllCall( "GetProcessTimes", "UInt",hPr, "Int64P",UTC, "Int",0, "Int",0, "Int",0 )
+    DllCall( "CloseHandle", "UInt",hPr)
     DllCall( "FileTimeToLocalFileTime", Int64P,UTC, Int64P,Local ), AT := 1601
     AT += % Local//10000000, S
     FormatTime, AT, % AT, hh:mm:ss yy-MM-dd

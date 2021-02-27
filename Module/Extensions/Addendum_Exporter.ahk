@@ -10,7 +10,7 @@
 ;		Abhängigkeiten: 	-	siehe #includes
 ;
 ;	                    				Addendum für Albis on Windows
-;                        				by Ixiko started in September 2017 - last change 24.02.2021 - this file runs under Lexiko's GNU Licence
+;                        				by Ixiko started in September 2017 - last change 27.02.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;	Version 0.85
 
@@ -369,30 +369,46 @@ DXPGuiEscape: ;{
 
 ExitApp ;}
 
-DimmerGui(show) {
+DimmerGui(show, DBASEFileName:="") {
 
 	global
 
-	DPGS_init := 1
+	DPGS_init := true
 
 	If (show = "off") {
 		Gui, DMR: Destroy
+		hDimmer 	:= 0
+		DPGS_init	:= false
+		return
+	} else if (show = "on") && hDimmer {
+		Gui, DMR: Default
+		GuiControl, DMR: , DMR_DBFN	, % DBASEFileName
 		return
 	}
+
+	If !DBASEFileName
+		DBASEFileName := "                            "
 
 	DXPPos := GetWindowSpot(hDXP)
 	ControlGetPos,,,,SBh, msctls_statusbar321, % "ahk_id " hDXP
 
 	Gui, DMR: New    	, -Caption +LastFound + ToolWindow +hwndhDimmer +E0x4 +Parent%hDXP%
 	Gui, DMR: Color   	, Gray
+
 	Gui, DMR: Font	   	, s100 q5 bold italic cBlue, Calibri
-	Gui, DMR: Add    	, Text    	, % "x0   	y" Floor(DXPPos.CH/4) " w" DXPPos.CW " vDMR_SL1 Backgroundtrans Center", % "...Suche läuft"
-	Gui, DMR: Font	   	, s28 q5 bold cDarkBlue, Calibri
-	Gui, DMR: Add    	, Text    	, % "x0 y+0"  " Right vDMR_SL2 Backgroundtrans", % "0000000"
-	Gui, DMR: Add    	, Text    	, % "x+0 Left vDMR_SL3 Backgroundtrans", % "/0000000"
+	Gui, DMR: Add    	, Text    	, % "x0   	y" Floor(DXPPos.CH/4) " w" DXPPos.CW " vDMR_SL1 Backgroundtrans Center"	, % "...Suche läuft"
 
 	GuiControlGet, cp	, DMR: Pos	, DMR_SL1
-	Gui, DMR: Add    	, Progress	, % "x10 	y" cpY+cpH+20 " w" DXPPos.CW-20 " h40 vDMR_PGS1" , 0
+	Gui, DMR: Font	   	, s24 q5 bold cBlue
+	Gui, DMR: Add    	, Text    	, % "x0 y" cpY+cpH-35 " w" DXPPos.CW " vDMR_DBFN Center Backgroundtrans"            	, % DBASEFileName
+
+	Gui, DMR: Font	   	, s28 q5 bold cDarkBlue
+	Gui, DMR: Add    	, Text    	, % "x0 y+15 Right vDMR_SL2 Backgroundtrans"                                                           	, % "0000000"
+	Gui, DMR: Add    	, Text    	, % "x+0 Left vDMR_SL3 Backgroundtrans"                                                                  	, % "/0000000"
+
+	GuiControlGet, cp	, DMR: Pos	, DMR_SL2
+	Gui, DMR: Add    	, Progress	, % "x10 	y" cpY+cpH " w" DXPPos.CW-20 " h40 vDMR_PGS1 HWNDDMR_hPGS1 ", 0
+
 	Gui, DMR: Show   	, % "Hide NA x" 0 " y" 0 " w" DXPPos.CW " h" DXPPos.CH-SBh, Dimmer 100
 	WinSet, Redraw,, % "ahk_id " hDXP
 
@@ -415,24 +431,29 @@ DimmerGui(show) {
 	Gui, DMR: Show
 	WinSet, Redraw,, % "ahk_id " hDXP
 
-
 return
 }
 
 DimmerPGS(recordNr, RecordsMax, len) {
 
-	global DPGS_init
+	global DPGS_init, DBASEFileName, DBASEFileName_old
+
+	Gui, DMR: Default
 
 	If DPGS_init {
 		DPGS_init := 0
-		GuiControl, DMR: , DMR_SL3, % "/" RecordsMax
+		GuiControl, DMR: , DMR_SL3	, % "/" RecordsMax
+		GuiControl, DMR: , DMR_DBFN	, % DBASEFileName
+		DBASEFileName_old := DBASEFileName
+	}
+
+	If (DBASEFileName_old <> DBASEFileName) {
+		GuiControl, DMR: , DMR_DBFN	, % DBASEFileName
+		DBASEFileName_old := DBASEFileName
 	}
 
 	GuiControl, DMR: , DMR_SL2, % recordNr
-
-	pgs := recordNr*100/RecordsMax
-	Gui, DMR: Default
-	GuiControl, DMR:, DMR_PGS1, % Floor(pgs)
+	GuiControl, DMR:, DMR_PGS1, % Floor(pgs := recordNr*100/RecordsMax)
 
 	Gui, DXP: Default
 	SB_SetText("`t`t" Round(pgs), 2)
@@ -472,6 +493,7 @@ LVShowExplorer() {                       	;-- öffnet den Exportpfad in einem Ex
 ZeigeDokumente(row) {
 
 	;global DXP_FxF, DXP_PLV
+	global DPGS_init
 	static outBezeichner
 
 	Gui, DXP: Default
@@ -481,6 +503,7 @@ ZeigeDokumente(row) {
 		If !RegExMatch(Pat.NR, "\d+")
 			return
 
+		DPGS_init := true
 		DimmerGui("on")
 
 	; Patientendaten anzeigen
@@ -580,7 +603,7 @@ ZeigeDokumente(row) {
 
 DBDokumente(PATNR, dokumente="pdf,jpg,gif,png,wav,avi,mov,doc,docx") {
 
-		global DPGS_init
+		global DPGS_init, DBASEFileName
 
 		ftoex     	:= Array()
 
@@ -591,7 +614,9 @@ DBDokumente(PATNR, dokumente="pdf,jpg,gif,png,wav,avi,mov,doc,docx") {
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 		SB_SetText("% der Datensätze der BEFTEXT.DBF durchsucht", 3)
 		DPGS_init	:= 1
-		beftexte   	:= new DBASE(AlbisDBPath "\BEFTEXTE.dbf", 2, {"name":"DXP", "control":"Statusbar", "sbNR":2})
+		DBASEFileName := "BEFTEXTE.dbf"
+		DimmerGui("on", DBASEFileName)
+		beftexte   	:= new DBASE(AlbisDBPath "\" DBASEFileName, 2, {"name":"DXP", "control":"Statusbar", "sbNR":2})
 		pattern  	:= {"PATNR": PATNR, "TEXT": "rx:\w+\\\w+\.[a-z]{1,4}"}
 		res2        	:= beftexte.OpenDBF()
 		matches2 	:= beftexte.Search(pattern, 0, "DimmerPGS")
@@ -609,7 +634,9 @@ DBDokumente(PATNR, dokumente="pdf,jpg,gif,png,wav,avi,mov,doc,docx") {
 
 		SB_SetText("% der Datensätze der BEFUND.DBF durchsucht", 3)
 		DPGS_init	:= 1
-		befund   	:= new DBASE(AlbisDBPath "\BEFUND.dbf", 2, {"name":"DXP", "control":"Statusbar", "sbNR":2})
+		DBASEFileName := "BEFUND.dbf"
+		DimmerGui("on", DBASEFileName)
+		befund   	:= new DBASE(AlbisDBPath "\" DBASEFileName, 2, {"name":"DXP", "control":"Statusbar", "sbNR":2})
 		pattern		:= {"PATNR": PATNR, 	"TEXTDB": ("rx:(" RTrim(lfds, "|") ")")}
 		res1        	:= befund.OpenDBF()
 		matches1 	:= befund.Search(pattern, 0, "DimmerPGS")
@@ -815,7 +842,7 @@ DXPSearch(callfrom) {                                                 	;-- für 
 		If (StrLen(DXP_Pat) = 0)
 			return
 
-		DimmerGui("on")
+		DimmerGui("on", "PATIENT.dbf")
 
 	; bis Combobox erweitern
 		If !(callfrom = "MessageWorker")

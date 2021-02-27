@@ -4,7 +4,7 @@
 ;                                                            	by Ixiko started in September 2017 - last change 17.02.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-; Datumberechnung
+; Datum berechnen
 AddToDate(Feld, val, timeunits) {                                                                           	;-- addiert Tage bzw. eine Anzahl von Monaten zu einem Datum hinzu
 
 	calcdate:= SubStr(Feld.Datum, 7, 4) . SubStr(Feld.Datum, 4, 2) . SubStr(Feld.Datum, 1, 2)
@@ -331,7 +331,7 @@ return retStr
 }
 
 
-; Zeitberechungen
+; Zeit berechnen
 FormatSeconds(timestr, formatstring:="hh:mm:ss")  {                                              	;-- Sekunden in Stunden:Minuten:Sekunden umrechnungen
     atime := A_YYYY A_MM A_DD "000000"
     atime += timestr, seconds

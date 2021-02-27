@@ -610,10 +610,10 @@ StdoutToVar(sCmd, sEncoding="UTF-8", sDir="", ByRef nExitCode=0) {              
 
     If (!DllCall( "CreateProcess", "Ptr",0, "Ptr",&sCmd, "Ptr",0, "Ptr",0, "Int",True, "UInt",0x08000000, "Ptr",0, "Ptr",sDir?&sDir:0, "Ptr",&si, "Ptr",&pi ))
         Return ""
-      , DllCall( "CloseHandle", Ptr,hStdOutWr )
-      , DllCall( "CloseHandle", Ptr,hStdOutRd )
+      , DllCall( "CloseHandle", "Ptr",hStdOutWr )
+      , DllCall( "CloseHandle", "Ptr",hStdOutRd )
 
-    DllCall( "CloseHandle", Ptr,hStdOutWr ) ; The write pipe must be closed before reading the stdout.
+    DllCall( "CloseHandle", "Ptr",hStdOutWr ) ; The write pipe must be closed before reading the stdout.
     While ( 1 )  { ; Before reading, we check if the pipe has been written to, so we avoid freezings.
 
         If (!DllCall( "PeekNamedPipe", Ptr,hStdOutRd, Ptr,0, UInt,0, Ptr,0, UIntP,nTot, Ptr,0 ))

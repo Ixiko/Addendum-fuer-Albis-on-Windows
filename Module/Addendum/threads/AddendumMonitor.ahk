@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------------------------------------------------------------------
 ;------------------------------------------------ ADDENDUM MONITOR ----------------------------------------------------
 ;-----------------------------------------------------------------------------------------------------------------------------------
-													Version:= "1.0" , vom:= "25.02.2021"
+													Version:= "1.0" , vom:= "27.02.2021"
 ;------------------------------------------------------ Runtime-Skript ----------------------------------------------------------
 ;------------------- startet Addendum bei einem Absturz oder (un-))absichtlichen Schliessen neu --------------------
 ;-------------------------------------------- Addendum für AlbisOnWindows -----------------------------------------------
@@ -17,7 +17,6 @@ please report errors and suggestions to me: Ixiko@mailbox.org
 use subject: 'Addendum' so that you don't end up in the spam folder
 GNU Lizenz can be found in Docs directory  - 2017
 )
-
 
 ;{ Skriptablaufeinstellungen
 
@@ -72,19 +71,20 @@ GNU Lizenz can be found in Docs directory  - 2017
 		else If FileExist(IconDir := Addemdum.Dir "\assets\ModulIcons\AddendumMonitor.ico")
 			Menu, Tray, Icon, % IconDir
 
+		;func_AddendumCheck := Func("RestartAddendum").Bind("override")
 		Menu, Tray, Add, % StrReplace(A_ScriptName, ".ahk")	, % "admMonInfo"
+		Menu, Tray, Add
+		Menu, Tray, Add, % "Addendum jetzt prüfen"            	, % "admMonCheck"
 		Menu, Tray, Add
 		Menu, Tray, Add, % "Reload"		                            	, % "admMonReload"
 		Menu, Tray, Add, % "Exit"			                             	, % "admMonExitApp"
-		Menu, Tray, Add
-		Menu, Tray, Add, % "nächster Check in "                   	, % "admMonTimerInfo"
 
 	; get data from Addendum.ini
 		IniReadExt(Addendum.Ini)
 
 	; Addendum DBPath
 		Addendum.DBPath := IniReadExt("Addendum", "AddendumDBPath")
-		If InStr(Addendum.DBPath, "Error") || !RegExMatch(Addendum.DBPath, "i)[a-z]\:\") || !InStr(FileExist(Addendum.DBPath), "D")
+		If InStr(Addendum.DBPath, "Error") || !RegExMatch(Addendum.DBPath, "i)[a-z]\:\\") || !InStr(FileExist(Addendum.DBPath), "D")
 			Addendum.DBPath := ""
 		If !InStr(FileExist(Addendum.DBPath "\sonstiges"), "D")
 			FileCreateDir, % Addendum.DBPath "\sonstiges"
@@ -106,9 +106,10 @@ GNU Lizenz can be found in Docs directory  - 2017
 		TrTip1 := 	"CPU Last Grenze:   "    	Addendum.MaxAverageCPU 	"%`n"
 				  .		"Neustart nach:      " 		Addendum.RestartAfter        	"s`n"
 				  .		"Überprüfung alle: "   	Addendum.TimedCheck      	"s"
-		TrTip2 := 	"CPU Überlastung:                     `n"
-				 . 	  	"nächster Check in:                      "
+		TrTip2 := 	"CPU Überlastung:  nicht geprüft`n"
+				 . 	  	"nächster Check in: "  	Addendum.TimedCheck      	"s"
 		Menu, Tray, Tip, % TrTip1 "`n" TrTip2
+		Addendum.TimerCall := A_TickCount
 
 	; Interskript communication gui
 		Gui, AMsg: New	, +HWNDhMsgGui +ToolWindow
@@ -142,11 +143,13 @@ GNU Lizenz can be found in Docs directory  - 2017
 		SetTimer, % fnADM, % fnADMTime
 		Addendum.TimerCall := A_TickCount
 
+	; erster Check von Addendum.ahk
+		RestartAddendum()
 ;}
-
 
 return
 
+;{ Hotkeys
 ^+!ö::ExitApp
 ^!ö::    	;{ Skriptneustart
 	TrayTip, AddendumMonitor, Skript wird neu gestartet, 1
@@ -161,6 +164,7 @@ return ;}
 	}
 return
 #IfWinExist
+;}
 ;}
 
 ;{ TrayLabels
@@ -186,8 +190,12 @@ admMonTimerInfo:
 return
 admMonInfo:
 return
+admMonCheck:
+RestartAddendum("override")
+return
 ;}
 
+;{ Funktionen
 ProcessDelete_OnObjectReady(obj) {                                             	;-- Called when a process terminates
 
 	; this is prepared for multi restart purposes, but I did'nt finished it yet
@@ -311,7 +319,7 @@ ProcessDelete_OnHighCPULoad(ProcName, PID, WTime                   	;-- monitors
 					Sleep % WSleep
 
 			; Information is only displayed if the client is physically inactive for 30 seconds
-				If (A_Index >= InfoAfterLoop) && (IdleTime >= MinIdleTime) {
+				If (A_Index >= 10)  {																										;&& (IdleTime >= MinIdleTime) (A_Index >= InfoAfterLoop)
 				msg :=	"Name:                    " 	ProcName 	     		                                  	"`n"
 					.    	"PID:                        " 	PID     			                                            	"`n"
 					. 		"IdleTime:                " 	IdleTime "s"	                                               	"`n"
@@ -401,18 +409,22 @@ return DoRestart  	; Abbruch per Hotkey-Methode gibt ein false zurück
 
 RestartAddendum(TimedCheck:=false) {                                           	;-- startet(prüft) Addendum.ahk
 
-		global 	MsgRec
-		static 	ProcName	:= "Addendum.ahk"
-		static		msgEnd 	:= "`n---------------------------------------------------------------`n"
-		static		logPath		:= Addendum.DBPath "\sonstiges\AddendumMonitorLog.txt"
+	; Variablen ;{
+		static 	RA_init := true
+		static 	ProcName	, msgEnd, logPath
+
+		If RA_init {
+			RA_init  	:= false
+			ProcName	:= "Addendum.ahk"
+			msgEnd 	:= "`n---------------------------------------------------------------`n"
+			logPath		:= Addendum.DBPath "\sonstiges\AddendumMonitorLog.txt"
+		}
 
 		Addendum.TimerCall := A_TickCount
 		PTSum 				:= 0
 		AddendumPID	:= AHKProcessExist("Addendum.ahk")
+	;}
 
-	; Speicherverbrauch reduzieren
-		If TimedCheck
-			ScriptMem()
 
 	; Addendum.ahk Prozeß ist nicht vorhanden
 		If !AddendumPID {
@@ -420,11 +432,11 @@ RestartAddendum(TimedCheck:=false) {                                           	
 			If (A_TimeIdlePhysical > 0)
 				FormatTime, idleTime, % A_TimeIdlePhysical, HH:mm:ss
 
-			FileAppend	, %   	TimeStamp()                                                  	","
-								.     	RegExReplace(A_ScriptName, "\.ahk$")            	","
-								.     	A_ComputerName                                           	","
+			FileAppend	, %   	TimeStamp()                                                  	", "
+								.     	RegExReplace(A_ScriptName, "\.ahk$")            	", "
+								.     	A_ComputerName                                           	", "
 								.     	(TimedCheck ? "TIMER" : "EVENT")
-								.    	(StrLen(idleTime) > 0 ? ",idle: " idleTime : "")  	"`n"
+								.    	(StrLen(idleTime) > 0 ? ", idle: " idleTime : "")  	"`n"
 								, % 	Addendum.Dir "\logs'n'data\OnExit-Protokoll.txt"
 
 			Run   	    	, % Addendum.AHKH_exe " /f " q Addendum.Dir "\Module\Addendum\Addendum.ahk" q
@@ -434,31 +446,35 @@ RestartAddendum(TimedCheck:=false) {                                           	
 		else {
 
 			; eine Überwachung läuft noch dann nichts machen
-				If ObservationRuns
-					return
+				If (TimedCheck <> "override")
+					If ObservationRuns
+						return
 
-			; liegt die CPU-Last über dem maximal Wert oder Addendum.ahk ist inaktiv
-			; wird eine längere Überwachung gestartet
-				Loop 20 {
-					PTSum += GetProcessTimes(AddendumPID)
-					Sleep 200
-				}
+			; CPU Status (CPU Auslastung überschritten) oder Addendum.ahk antwortet nicht
+				cpuStatus		:= GetCPUStatus(AddendumPID, 4, Addendum.MaxAverageCPU)
+				admStatus 	:= GetAddendumStatus()
 
-			; Antwort ja, aber dennoch Überwachungstarten
-				If (PTSum/20 >= Addendum.MaxAverageCPU) || !GetState(AddendumPID, 200) {
+				If (TimedCheck = "override")
+					SciTEOutput("  " TimeStamp() " | CPU: " cpuStatus.Average " | Addendum: " (admStatus ? admStatus " ms" : "no answer"))
 
-					; versucht Addendum zur einer Antwort zu überreden (wartet 6s auf Antwort)
-						Send_WM_COPYDATA("Status||" Addendum.hMsgGui, GetAddendumID())
-						starttime := A_TickCount
-						while (MsgRec <> "okay") && ((recTime:=(A_TickCount-starttime)) < 4000)
-							Sleep 1
-						If Addendum.DBPath {
-							msg :=	"`thohe CPU Auslastung registriert (" Round(PTSum/20, 1) ")`n"
-									.	"                   "
-									. 	"`tAddendumstatus: " (StrLen(MsgRec) = 0 ? "keine Antwort erhalten" : " Antwort erhalten in " recTime " ms") "`n"
-							FileAppend, % TimeStamp() "|" msg , % logpath, UTF-8
+			; cpuStatus > 0 - Kontrollwert überschritten, admStatus = false - Addendum.ahk kann nicht antworten
+				If cpuStatus.HighLoad || !admStatus {
+
+					; Protokoll schreiben
+						If (StrLen(Addendum.DBPath) > 0) {
+							msg :=	(cpuStatus.HighLoad ? "`thohe CPU Auslastung registriert (" cpuStatus.Average ")`n" : "")
+							msg .=	(cpuStatus.HighLoad ? "                                " : "")
+							msg .=	"`tAddendum: " (!admStatus ? "keine Antwort" : " Antwort brauchte " admStatus " ms") "`n"
+							SciTEOutput("  " TimeStamp() " |" msg)
+							FileAppend, % TimeStamp() " |" msg , % logpath, UTF-8
+							VarSetCapacity(msg, 0)
 						}
-						MsgRec := ""
+
+					; Addendum sendet keinen Status zurück => Neustart!
+						If !admStatus {
+							Process, WaitClose, % AddendumPID, 5
+							return
+						}
 
 					If (msg := ProcessDelete_OnHighCPULoad(ProcName, AddendumPID, Addendum.RestartAfter, Addendum.IdleTime, Addendum.MaxAverageCPU))
 						If Addendum.DBPath		; schreibt ein Protokoll
@@ -470,6 +486,42 @@ RestartAddendum(TimedCheck:=false) {                                           	
 
 		}
 
+}
+
+GetCPUStatus(PID, WatchTime:=4, MaxLoad:=5) {                              	;-- Messung der CPU Auslastung
+
+	; Rückgabeparameter ist 0 wenn der Grenzwert nicht überschritten wurden
+	; andernfalls wird die ermittelte CPU Last zurückgegeben
+
+	PTStum := 0
+
+	Loop % (loops := Floor(WatchTime*1000/200)) {
+		PTSum += GetProcessCpu(PID)
+		Sleep 200
+	}
+
+	PTAverage := PTSum/loops
+	Average := StrSplit(PTAverage, ".").1 "." SubStr(StrSplit(PTAverage, ".").2, 1, 3)
+
+return {"Average": Average, "HighLoad": (PTAverage>=MaxLoad?1:0)}
+}
+
+GetAddendumStatus() {                                                                 	;-- testet ob Addendum.ahk antwortet
+
+		global MsgRec
+
+	; die ID des Addendum Fensters läßt sich nicht ermitteln
+		If !(AddendumID := GetAddendumID())
+			return 0
+
+	; versucht Addendum zur einer Antwort zu überreden (wartet 4s auf Antwort)
+		MsgRec := ""
+		Send_WM_COPYDATA("Status||" Addendum.hMsgGui, GetAddendumID())
+		starttime := A_TickCount
+		while (MsgRec <> "okay") && ((recTime:=(A_TickCount-starttime)) < 4000)
+			Sleep 1
+
+return (MsgRec = "okay" ? recTime : 0)
 }
 
 AHKProcessExist(ProcName, cmd="") {                                              	;-- is only searching for Autohotkey processes
@@ -489,6 +541,35 @@ AHKProcessExist(ProcName, cmd="") {                                             
 return false
 }
 
+GetProcessCpu(PID) {
+
+	; https://www.autohotkey.com/boards/viewtopic.php?t=71922
+	static time, coreNumber, prevProcTime, prevTickCount
+
+	if !coreNumber {
+		VarSetCapacity(time, 32)
+		VarSetCapacity(SYSTEM_INFO, 24 + A_PtrSize*3)
+		DllCall("GetSystemInfo", "Ptr", &SYSTEM_INFO)
+		coreNumber := NumGet(SYSTEM_INFO, 8 + A_PtrSize*3, "UInt")
+	}
+	GetProcessTime(PID, time)
+	kernelTime	:= NumGet(time, 16, "UInt64") / 10000
+	userTime   	:= NumGet(time, 24, "UInt64") / 10000
+	procTime  	:= kernelTime + userTime
+	if prevProcTime
+	  cpu := Round((procTime - prevProcTime)/coreNumber/(A_TickCount - prevTickCount) * 100, 2)+0
+	prevProcTime := procTime
+	prevTickCount := A_TickCount
+
+return cpu
+}
+
+GetProcessTime(PID, ByRef time) {
+   hProc := DllCall("OpenProcess", "UInt", PROCESS_QUERY_INFORMATION := 0x400, "UInt", false, "UInt", PID, "Ptr")
+   DllCall("GetProcessTimes", "Ptr", hProc, "Ptr", &time, "Ptr", &time + 8, "Ptr", &time + 16, "Ptr", &time + 24)
+   DllCall("CloseHandle", "Ptr", hProc)
+}
+
 GetProcessTimes(PID=0)    {                                                            	;-- ProcessTime = CPU Usage?
 
    Static oldKrnlTime, oldUserTime
@@ -496,9 +577,9 @@ GetProcessTimes(PID=0)    {                                                     
 
    oldKrnlTime := newKrnlTime, oldUserTime := newUserTime
 
-   hProc := DllCall("OpenProcess", "Uint", 0x400, "Uint", 0, "Uint", pid)
-   DllCall("GetProcessTimes", "Uint", hProc, "int64*", CreationTime, "int64*", ExitTime, "int64*", newKrnlTime, "int64*", newUserTime)
-   DllCall("CloseHandle", "Uint", hProc)
+   hProc := DllCall("OpenProcess", "Uint", 0x400, "Uint", 0, "Uint", pid, "Ptr"))
+   DllCall("GetProcessTimes", "Ptr", hProc, "int64*", CreationTime, "int64*", ExitTime, "int64*", newKrnlTime, "int64*", newUserTime)
+   DllCall("CloseHandle", "Ptr", hProc)
 
 Return (newKrnlTime-oldKrnlTime + newUserTime-oldUserTime)/10000000 * 100
 }
@@ -508,12 +589,10 @@ GetSystemTimes() {                                                              
    Static oldIdleTime, oldKrnlTime, oldUserTime
    Static newIdleTime, newKrnlTime, newUserTime
 
-   oldIdleTime := newIdleTime
-   oldKrnlTime := newKrnlTime
-   oldUserTime := newUserTime
+   oldIdleTime := newIdleTime, oldKrnlTime := newKrnlTime, oldUserTime := newUserTime
+   DllCall("GetSystemTimes", "int64*", newIdleTime, "int64*", newKrnlTime, "int64*", newUserTime)
 
-   DllCall("GetSystemTimes", "int64P", newIdleTime, "int64P", newKrnlTime, "int64P", newUserTime)
-   Return (1 - (newIdleTime-oldIdleTime)/(newKrnlTime-oldKrnlTime + newUserTime-oldUserTime)) * 100
+Return (1 - (newIdleTime-oldIdleTime)/(newKrnlTime-oldKrnlTime + newUserTime-oldUserTime)) * 100
 }
 
 GetState(PID,TimeOut := 200) {                                                       	;-- Prozessstatus
@@ -564,7 +643,7 @@ ScriptMem() {                                                                   
 	}
 	hProc	:= DllCall("OpenProcess", "UInt", 0x001F0FFF, "Int", 0, "Int", PID)
 	result	:= DllCall("SetProcessWorkingSetSize", "UInt", hProc, "Int", -1, "Int", -1)
-	DllCall("CloseHandle", "Int", hProc)
+	DllCall("CloseHandle", "UInt", hProc)
 
 return result
 }
@@ -668,18 +747,22 @@ return eL  ; Return SendMessage's reply back to our caller.
 }
 
 GetAddendumID() {                                                                        	;-- für Interskriptkommunikation
-	Prev_DetectHiddenWindows := A_DetectHiddenWindows
-    Prev_TitleMatchMode := A_TitleMatchMode
+	PDetectHiddenWindows	:= A_DetectHiddenWindows
+    PTitleMatchMode         	:= A_TitleMatchMode
     DetectHiddenWindows On
     SetTitleMatchMode 2
 	AddendumID := WinExist("Addendum Message Gui ahk_class AutoHotkeyGUI")
-	DetectHiddenWindows 	, % Prev_DetectHiddenWindows  	; Restore original setting for the caller.
-    SetTitleMatchMode     	, % Prev_TitleMatchMode           	; Same.
+	DetectHiddenWindows 	, % PDetectHiddenWindows  	; Restore original setting for the caller.
+    SetTitleMatchMode     	, % PTitleMatchMode           	; Same.
 return AddendumID
 }
 
+;}
 
+;{ Includes
 #Include %A_ScriptDir%\..\..\..\include\Addendum_Protocol.ahk
 #Include %A_ScriptDir%\..\..\..\lib\class_Btt.ahk
 #Include %A_ScriptDir%\..\..\..\lib\GDIP_All.ahk
 #Include %A_ScriptDir%\..\..\..\lib\SciTEOutput.ahk
+;}
+
