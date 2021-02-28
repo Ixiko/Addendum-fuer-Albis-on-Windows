@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                                                                       	ADDENDUM HAUPTSKRIPT
-global                                                                               AddendumVersion:= "1.51" , DatumVom:= "27.02.2021"
+global                                                                               AddendumVersion:= "1.52" , DatumVom:= "28.02.2021"
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                    ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . . . . . . .                                           BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -17,7 +17,7 @@ global                                                                          
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 /*               	A DIARY OF CHANGES
-| **27.02.2021**	|	**F~**	| **AlbisReanimator**         	- 	weitere Albisprozesse der Erkennungsroutine hinzugefügt
+| **28.02.2021**	|	**F~**	| **AlbisReanimator**         	- 	weitere Albisprozesse der Erkennungsroutine hinzugefügt
 																						- 	zweiten Befehl für das Beenden von Prozessen hinzugefügt
 																						-	das Skript führt auf Wunsch zu Dokumentationszwecken eine Logdatei mit den Namen und der Anzahl der
 																							geschlossenen Prozesse |

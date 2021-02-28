@@ -31,18 +31,11 @@
 ;		Abhängigkeiten: 	 	siehe #includes
 ;
 ;	                    				Addendum für Albis on Windows
-;                        				by Ixiko started in September 2017 - last change 27.02.2021 - this file runs under Lexiko's GNU Licence
+;                        				by Ixiko started in September 2017 - last change 28.02.2021 - this file runs under Lexiko's GNU Licence
 ;										proof-of-concept version
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	#NoEnv
 	SetBatchLines, -1
-
-	;~ if (!A_IsAdmin) {
-		;~ MsgBox "You must run the script as Administrator."
-		;~ ExitApp
-	;~ }
-	;~ I := 0
-	;~ DllCall("Ntdll.dll\RtlAdjustPrivilege", "UInt", 20, "UChar", TRUE, "UChar", FALSE, "UPtrP", I)
 
 	global adm
 
@@ -76,9 +69,12 @@ AlbisReanimator(AlbisMainPath:="", AlbisLocalPath:="", AlbisExe:="") {          
 
 			; Versuch per cmd.exe
 				If ProcExist {
-					run, % comspec " /k taskkill /F /IM " proc.Name " && exit ", Hide
-					Process, Exist, % proc.PID
-					ProcExist	:= ErrorLevel
+					Run, % comspec " /k taskkill /F /IM " proc.Name " && exit ", Hide
+					while ProcExist && (A_Index <= 50) { ; max 10 Sekunden
+						Sleep 200
+						Process, Exist, % proc.PID
+						ProcExist	:= ErrorLevel
+					}
 				}
 
 			; Auflisten
@@ -183,13 +179,13 @@ AddendumBaseProperties(AddendumDir) {                                           
 
 	; Log Dateipfad prüfen und evtl. anlegen
 		If !RegExMatch(props.LogPath, "i)[A-Z]\:\\")
-			props.LogPath := Addendum.Dir "\logs'n'data"
+			props.LogPath := props.Dir "\logs'n'data"
 		If !InStr(FileExist(props.LogPath), "D")
 			FileCreateDir, % props.LogPath
 
 	; Datenbankverzeichnis prüfen und evtl. anlegen
-		If !RegExMatch(adm.DBPath	, "i)[A-Z]\:\\")
-			props.DBPath := Addendum.Dir "\logs'n'data\_DB"
+		If !RegExMatch(props.DBPath	, "i)[A-Z]\:\\")
+			props.DBPath := props.Dir "\logs'n'data\_DB"
 		If !InStr(FileExist(props.DBPath), "D")
 			FileCreateDir, % props.DBPath
 

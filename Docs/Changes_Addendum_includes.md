@@ -6,7 +6,7 @@
 
 |     Datum      |  Teil   | Beschreibung                                                 |
 | :------------: | :-----: | :----------------------------------------------------------- |
-| **27.02.2021**	|	**F~**	| <u>**AlbisReanimator**</u><br>- weitere Albisprozesse der Erkennungsroutine hinzugefügt<br>- zweiten Befehl für das Beenden von Prozessen hinzugefügt<br>- das Skript führt auf Wunsch zu Dokumentationszwecken eine Logdatei mit den Namen und der Anzahl dergeschlossenen Prozesse **Addendum V1.52** |
+| **28.02.2021**	|	**F~**	| <u>**AlbisReanimator**</u><br>- weitere Albisprozesse der Erkennungsroutine hinzugefügt<br>- zweiten Befehl für das Beenden von Prozessen hinzugefügt<br>- das Skript führt auf Wunsch zu Dokumentationszwecken eine Logdatei mit den Namen und der Anzahl dergeschlossenen Prozesse **Addendum V1.52** |
 | **27.02.2021**	|	**F+**	| **<u>Addendum_Exporter</u>**<br>- Fortschrittsanzeige verbessert |
 | **27.02.2021**	|	**F~**	| <u>**AddendumMonitor**</u><br> - Lösung erstmal: **IPC - Interprocess communication**, Skript sendet einen String an Addendum,  kommt keine Antwort innerhalb der nächsten 4 Sekunden hat sich Addendum aufgehängt und wird neu gestartet.<br>- Logfile wurde nicht geschrieben<br>- manuellen Prüfsstart über das Traymenu hinzugefügt |
 | **26.02.2021**	|	**F+**	| <u>**Addendum_Mining**</u> <br>- Erkennung von nicht Patientenbriefen angefangen, Verbesserung der Erkennung von Patientennamen erreicht |
