@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                            	Funktionen für die Berechnung/Umwandlung von Tagesdaten, Quartalsdaten
-;                                                            	by Ixiko started in September 2017 - last change 17.02.2021 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 02.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; Datum berechnen
@@ -330,6 +330,29 @@ Vorquartal(Datum, retFormat:="YYYYQ") {                                         
 return retStr
 }
 
+DateValidator(dateString) {                                                                                   		;-- prüft ob
+
+	; RegEx Strings
+		static global rxMonths:=	"Jan*u*a*r*|Feb*r*u*a*r*|Mä*a*rz|Apr*i*l*|Mai|Jun*i*|Jul*i*|Aug*u*s*t*|Sept*e*m*b*e*r*|Okt*o*b*e*r*|Nov*e*m*b*e*r*|Deze*m*b*e*r*"
+		static rxDateOCRrpl	:= "[,;:]"
+		static rxDateValidator	:= [ 	"^(?<D>[0]?[1-9]|[1|2][0-9]|[3][0|1]).(?<M>[0]?[1-9]|[1][0-2]).(?<Y>[0-9]{4}|[0-9]{2})$"
+											,	"^(?<D>[0]?[1-9]|[1|2][0-9]|[3][0|1])[.;,\s]+(?<M>" rxMonths ")[.;,\s]+(?<Y>[0-9]{4}|[0-9]{2})$"]
+
+	; OCR Korrektur ausführen und erste Evaluierung (Format ist korrekt) durchführen
+		dateString := RegExReplace(Trim(dateString), rxDateOCRrpl, ".")
+		If !RegExMatch(dateString, rxDateValidator[1], d) && !RegExMatch(dateString, rxDateValidator[2], d)
+			return
+
+	; geschriebenen Monat in Zahl umwandeln
+		If RegExMatch(dM, "(" rxMonths ")") {
+			For nrMonth, rxMonth in StrSplit(rxMonths, "|")
+				If RegExMatch(dM, rxMonth)
+					break
+			dM := nrMonth
+		}
+
+return SubStr("0" dD, -1) "." SubStr("0" dM, -1) "." dY	; Rückgabe immer im Format dd.mm.yy oder dd.mm.yyyy
+}
 
 ; Zeit berechnen
 FormatSeconds(timestr, formatstring:="hh:mm:ss")  {                                              	;-- Sekunden in Stunden:Minuten:Sekunden umrechnungen

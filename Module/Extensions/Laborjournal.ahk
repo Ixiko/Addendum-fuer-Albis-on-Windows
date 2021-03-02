@@ -43,7 +43,7 @@
 												  .	"TROPOIHS,DDIM-CP"}
 
   ; Laborjournal anzeigen
-	LabPat      	:= AlbisLaborJournal("", "", Warnen, 105, true)
+	LabPat      	:= AlbisLaborJournal("", "", Warnen, 110, true)
 	LaborJournal(LabPat, false)
 
 return
@@ -55,7 +55,172 @@ ESC::
 	}
 return
 
-AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {               	;-- Laborwerte mit gewisser Überschreitung der Normgrenzen werden erfasst
+AlbisLaborJournal(Von="", Bis="", Warnen="", GW=100, Anzeige=true) {                 	;--  sehr abweichender Laborwerte
+
+		static Lab
+
+		LabPat := Object()
+		nieWarnen    	:= "(" StrReplace(Warnen.nie      	, ","	, "|") ")$"
+		immerWarnen 	:= "(" StrReplace(Warnen.immer 	, ","	, "|") ")$"
+		exklusivWarnen	:= "(" StrReplace(Warnen.exklusiv	, ","	, "|") ")$"
+
+	; Albis und Addendum Datenbankpfad ;{
+		RegRead, AlbisPath, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, Installationspfad
+		RegExMatch(A_ScriptDir, "[A-Z]\:.*?AlbisOnWindows", AddendumDir)
+		AddendumDBPath := AddendumDir "\logs'n'data\_DB"
+		AlbisDBPath      	:= AlbisPath "\DB"
+		;}
+
+	; vorberechnete Laborwertgrenzen laden bei Bedarf ;{
+		If !IsObject(Lab) {
+			If !FileExist(AddendumDBpath "\sonstiges\Laborwertgrenzen.json")
+				Lab := AlbisLaborwertGrenzen(adm.DBPath "\sonstiges\Laborwertgrenzen.json", Anzeige)
+			else
+				Lab := JSON.Load(FileOpen(adm.DBPath "\sonstiges\Laborwertgrenzen.json", "r", "UTF-8").Read())
+		}
+	;}
+
+	; Suchzeitraum ;{
+		If !Von && !Bis {
+
+			Von 	:= A_YYYY A_MM A_DD
+			If (A_DDD = "Fr")
+				Von += -30, Days
+			else
+				Von += -30, Days
+
+			FormatTime, Von, % Von, yyyyMMdd
+			QJ 	:= A_YYYY . Ceil(A_MM/3)
+			VB := "Von"
+			SciTEOutput("von: " Von)
+		}
+		else
+			VB := (Von && !Bis) ? "Von" : (!Von && Bis) ? "Bis" : "VonBis"
+	;}
+
+	; Albis: Datenbank laden und entsprechend des Datums die Leseposition vorrücken ;{
+		labDB := new DBASE(AlbisDBPath "\LABBLATT.dbf", Anzeige)
+		labDB.OpenDBF()
+	;}
+
+	; Datei: Startposition berechnen ;{
+		If (VB = "Von") || (VB = "VonBis") {
+			If !QJ
+				QJ := SubStr(Von, 1, 4) . Ceil(SubStr(Von, 5, 2)/3)
+			startrecord := Lab.seeks[QJ]
+			labDB._SeekToRecord(startrecord, 1)
+		}
+	;}
+
+	; filtert nach Datum und ab einer Überschreitung von der durchschnittlichen Abweichung von den Grenzwerten anhand
+	; der zuvor für jeden Laborwert berechneten durchschnittlichen prozentualen Überschreitung des Grenzwertes aus den
+	; Daten der LABBLATT.dbf [AlbisLaborwertGrenzen()]
+		while !(labDB.dbf.AtEOF) {
+
+				data := labDB.ReadRecord(["DATUM", "PARAM", "ERGEBNIS", "EINHEIT", "GI", "NORMWERT", "PATNR"])
+				UDatum := data.Datum
+
+			; Fortschritt
+				If Anzeige && (Mod(A_Index, 3000) = 0)
+					ToolTip, % ConvertDBASEDate(UDatum) ": " PSU "," PSO "`n" SubStr("00000000" labDB.recordnr, -5) "/" SubStr("00000000" labDB.records, -5) ;"`n" lfound
+
+			; Datum passt nicht, weiter
+				Switch VB {
+
+					Case "Von":
+						If (UDatum <= Von)
+							continue
+					Case "Bis":
+						If (UDatum => Bis)
+							continue
+					Case "VonBis":
+						If (UDatum < Von) || (UDatum > Bis)
+							continue
+
+				}
+
+			; kein pathologischer Wert dann weiter
+				PNImmer := PNExklusiv := false
+				PN := data.PARAM                                       	; Parameterbezeichnung
+
+				If RegExMatch(PN, nieWarnen)
+					continue
+				If RegExMatch(PN, immerWarnen)
+					PNImmer := true
+				If RegExMatch(PN, exklusivWarnen)
+					PNExklusiv := true
+
+				If !PNExklusiv && !PNImmer {
+					If !InStr(data["GI"], "+")
+						continue
+				}
+
+			; Strings lesbarer machen (oder auch nicht)
+				P	    	:= ""
+				PW   	:= StrReplace(data["ERGEBNIS"]	, ",", ".") 	; Wert
+				PE	    	:= data.EINHEIT				                    	; Einheit
+				ONG	:= UNG := 0
+
+			; Grenzwertüberschreitungen berechnen
+				If !PNExklusiv {
+
+					RegExMatch(data["NORMWERT"], "(?<V>[\<\>])*(?<SU>[\d,]+)\-*(?<SO>[\d,]+)*", P)
+					PSU  	:= StrReplace(PSU	, ",", ".")                      	; unterer Grenzwert
+					PSO  	:= StrReplace(PSO, ",", ".")                      	; oberer Grenzwert
+					PSO  	:= PSO ? PSO : PSU
+
+					If (PW >= PSO)
+						ONG := Floor(Round((PW * 100)/PSO, 3))
+					else If (PW <= PSU)
+						UNG := Floor(Round((PSU * 100)/PW, 3))
+
+					If !ONG && !UNG
+						continue
+
+					If (ONG > 0)
+						plus := Round((ONG*100)/(lab.params[PN].OD))
+					else if (UNG > 0 )
+						plus := Round(((lab.params[PN].UD)*100)/UNG)
+
+				}
+
+				If (plus > GW || PNImmer || PNExklusiv) {
+
+						PatID 	:= data.PATNR
+						Datum 	:= data.Datum
+						If !IsObject(LabPat[Datum])
+							LabPat[Datum] := Object()
+
+						If !IsObject(LabPat[Datum][PatID])
+							LabPat[Datum][PatID] := Object()
+
+						If !IsObject(LabPat[Datum][PatID][PN])
+							LabPat[Datum][PatID][PN] := Object()
+
+						PW := RegExReplace(PW, "(\.[0-9]+[1-9])0+$", "$1")
+						LabPat[Datum][PatID][PN].PatID	:= PatID
+						LabPat[Datum][PatID][PN].CV  	:= PNImmer ? 1 : PNExklusiv ? 2 : 0                                                                                                	; CAVE-Wert für andere Textfarbe im Journal
+						LabPat[Datum][PatID][PN].PN  	:= PN                                                                                                                                           	; Parameter Name
+						LabPat[Datum][PatID][PN].PW  	:= RegExReplace(PW, "\.0+$")                                                                                                        	; IST-Wert
+						LabPat[Datum][PatID][PN].PV		:= P ? StrReplace(P, ",", ".") : data.NORMWERT                                                                                  	; Normwert
+						LabPat[Datum][PatID][PN].PL 		:= (ONG > 0 ? "+" ONG	: (UNG > 0 ? "-" UNG : ""))                                                                      	;
+						LabPat[Datum][PatID][PN].PA		:= (ONG > 0 ? lab.params[PN].OD : (UNG > 0 ? lab.params[PN].UD : "" ))                                     	; Abweichung +/-
+						LabPat[Datum][PatID][PN].PD		:= (ONG > 0 ? "+" ONG - lab.params[PN].OD : (UNG > 0 ? "-" UNG - lab.params[PN].UD : ""))  	;
+						LabPat[Datum][PatID][PN].PE		:= PE                                                                                                                                           		; Einheit
+
+					}
+
+		}
+
+	; Lesezugriff beenden
+		labDB.CloseDBF()
+		LabDB := ""
+		ToolTip
+
+return LabPat
+}
+
+AlbisLaborJournal_new(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {       	;-- Laborwerte mit gewisser Überschreitung der Normgrenzen werden erfasst
 
 		static Lab
 
@@ -677,7 +842,6 @@ LaborJournal(LabPat, Anzeige=true) {
 		neutron := new NeutronWindow("","","","Laborjournal" LabJ.maxrecords ")", "+AlwaysOnTop minSize900x400")
 		neutron.Load(A_Temp "\Laborjournal.html")
 		neutron.Gui("+LabelNeutron")
-		;neutron.Show("w950 h600")
 		neutron.Show(winpos)
 		hLJ := WinExist("A")
 		WinSet, AlwaysOnTop,, % "ahk_id " hLJ
@@ -790,7 +954,7 @@ SaveGuiPos(hwnd) {
 	win 			:= GetWindowSpot(hwnd)
 	winPos	 	:= "x" win.X " y" win.Y " w" win.CW " h" win.CH
 	IniWrite, % winpos	, % adm.Ini, % adm.compname, LaborJournal_Position
-	SciTEOutput(winpos "," adm.Ini ", " adm.compname )
+
 }
 
 MessageWorker(InComing) {                                                                                    	;-- verarbeitet die eingegangen Nachrichten

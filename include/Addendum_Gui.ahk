@@ -14,7 +14,7 @@
 ;
 ;
 ;	                    	Addendum für Albis on Windows
-;                        	by Ixiko started in September 2017 - letzte Änderung 27.02.2021 - this file runs under Lexiko's GNU Licence
+;                        	by Ixiko started in September 2017 - letzte Änderung 02.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
 
@@ -39,7 +39,9 @@ AddendumGui(admShow="") {
 				Addendum.iWin.RowColors	:= false
 				Addendum.iWin.Imports     	:= 0
 				Addendum.iWin.ReCheck   	:= 0
-				Addendum.Importing                     	:= 0
+				Addendum.Importing           	:= false           	; Import aus Patient Tab läuft
+				Addendum.ImportRunning    	:= false           	; Import aus dem Journal Tab läuft
+				Addendum.tessOCRRunning	:= false        	; OCR Vorgang läuft
 
 				func_admGui       	:= Func("AddendumGui")
 				factor                	:= A_ScreenDPI / 96
@@ -296,11 +298,10 @@ AddendumGui(admShow="") {
 		Gui, adm: Font  	, s7 q5 Normal cBlack, Arial
 		Gui, adm: Add  	, ListView	, % "x2 y+5 		w" admWidth - 6 " h" admHeight - 47 " " admLVJournalOpt                        	, % "Befund|S|Eingang|TimeStamp"
 
-		admCol4W := 0
-		admCol3W := 58
-		admCol2W := 25
+		admCol4W := 0, admCol3W := 58, admCol2W := 25
 		admCol1W := admWidth - admCol2W - admCol3W - 25
 
+		Gui, adm: ListView, % "admJournal"
 		LV_ModifyCol(1, admCol1W " Left NoSort")
 		LV_ModifyCol(2, admCol2W " Left Integer")
 		LV_ModifyCol(3, admCol3W " Right NoSort")    	; versteckte Spalte enthält Integerzeitwerte für die Sortierung nach dem Datum
@@ -531,8 +532,8 @@ AddendumGui(admShow="") {
 			}
 			SetParentByID(hMDIFrame, hadm)
 
-			WinSet, Style              	, 0x50000000	, % "ahk_id " hadm
-			WinSet, ExStyle          	, 0x0802009C	, % "ahk_id " hadm
+			WinSet, Style   	, 0x50000000	, % "ahk_id " hadm
+			WinSet, ExStyle 	, 0x0802009C	, % "ahk_id " hadm
 
 		; Fenster anzeigen
 			Gui, adm: Show, % "x" Addendum.iWin.X " y" Addendum.iWin.Y " w" Addendum.iWin.W  " h" Addendum.iWin.H " HIDE NA " admShow, AddendumGui
@@ -541,7 +542,6 @@ AddendumGui(admShow="") {
 				admGui_Destroy()
 				AddendumGui()
 			}
-
 
 	;}
 
@@ -689,12 +689,12 @@ adm_Extras:		                                                                   
 				SplitPath, EModulExe, WorkPath
 				Run, % EModulExe, % WorkPath,, EModulPID
 				If Instr(EModulExe, "Addendum_Exporter") {
-					Sleep 3000
-					WinActivate   	, % (DokExClass := "Dokumentexport ahk_class AutoHotkeyGUI1")
+					WinWait         	, % (DokExClass := "Dokumentexport ahk_class AutoHotkeyGUI"),, 2
+					Sleep 1000
+					WinActivate   	, % DokExClass
 					WinWaitActive	, % DokExClass,, 7
 					while !(EModulHwnd := WinExist(DokExClass)) && (A_Index < 20)
 						Sleep 100
-					SciTEOutput("EModulHwnd: " EModulHwnd)
 					If EModulHwnd
 						Send_WM_CopyData("search|" AlbisAktuellePatID() "|" GetAddendumID() "|admGui_Callback", EModulHwnd)
 				}
@@ -1736,7 +1736,7 @@ admCM_JRecog(admFile)                                              	{           
 
 	; RegEx Auswertungen
 		fNames	:= FindDocNames(PdfText)
-		fDates 	:= FindDocDate(PdfText)
+		fDates 	:= FindDocDate(PdfText, fNames)
 		admGui_ImportGui(false, "Autonaming Dokument`n" admFile "`nläuft", "admJournal")
 		If IsObject(fNames)  {
 
@@ -1983,31 +1983,44 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 
 		global
 
-		local fSize, edW	, txtfile, row, rowFilename
+		local fSize, edW	, txtfile, row, rows, rowFilename
 		local cp, dp, gs, admPos, title, fileout, vctrl, ENr
 		local key, pdf, TLines, found, monIndex, admScreen, RNx, RNWidth
 
 		static RNminWidth := 350
 		static BEZPath, Beschreibung
-		static wT, Patname, Inhalt, Datum, Bezeichner, oPV
+		static wT, Patname, Inhalt, Datum, bezeichner, oPV
 		static oldadmFile, newadmFile, FileExt, FileOutExt, oldfilename
-		static rxMonths := "\(Jan*u*a*r*|Febr*u*a*r*|Mä*a*rz|Apr*i*l*|Mai|Jun*i*|Jul*i*|Aug*u*s*t*|Sept*e*m*b*e*r*|Okt*o*b*e*r*|Nov*e*m*b*e*r*|Dez*e*m*b*e*r*)"
-
 
 	; PDF Vorschau anzeigen in neuem Sumatrafenster oder wenn geöffnet in diesem Fenster
+		If IsObject(oPV) {
+			If (oPV.Previewer = "Sumatra") {
+				If (StrLen(WinGetTitle(oPV.ID)) > 0) {
+					SumatraDDE(oPV.ID, "OpenFile"	, Addendum.BefundOrdner "\" filename, 0, 0, 0)
+					Sleep 400
+					SumatraDDE(oPV.ID, "SetView"	, Addendum.BefundOrdner "\" filename, "single page")
+					SumatraDDE(oPV.ID, "SetView"	, Addendum.BefundOrdner "\" filename, "fit page")
+					Gui, RN: Default
+				}
+				else
+					oPV := ""
+			}
+		}
+
 		If !IsObject(oPV) {
 			oPV := admGui_PDFPreview(fileName)
 			If !IsObject(oPV)
 				return
-		} else {
-			If (oPV.Previewer = "Sumatra") {
-				SumatraDDE(oPV.ID, "OpenFile"	, Addendum.BefundOrdner "\" filename, 0, 0, 0)
-				Sleep 400
-				;SumatraDDE(oPV.ID, "SetView"	, Addendum.BefundOrdner "\" filename, "single page", "fit page")
-				SumatraDDE(oPV.ID, "SetView"	, Addendum.BefundOrdner "\" filename, "single page")
+		}
+
+	; Datei mit Inhaltsbezeichnungen laden
+		If !IsObject(bezeichner) {
+			If !FileExist(BEZPath := Addendum.DBPath "\Dictionary\Befundbezeichner.txt") {
+				FilePathCreate(Addendum.DBPath "\Dictionary")
+			} else {
+				bezeichner := FileOpen(BEZPath, "r", "UTF-8").Read()
+				bezeichner := StrSplit(bezeichner, "`n", "`r")
 			}
-			else
-				return
 		}
 
 	; Vorbereitung: Dokument zerlegen
@@ -2042,14 +2055,6 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 
 		}
 
-	; Datei mit Inhaltsbezeichnungen laden
-		If !FileExist(BEZPath := Addendum.DBPath "\Dictionary\Befundbezeichner.txt") {
-			FilePathCreate(Addendum.DBPath "\Dictionary")
-		} else {
-			Bezeichner := FileOpen(BEZPath, "r", "UTF-8").Read()
-			Bezeichner := StrSplit(Bezeichner, "`n", "`r")
-		}
-
 	; Gui wird bei erneutem Aufruf nicht erneut erstellt
 		If WinExist("Addendum (Datei umbenennen) ahk_class AutoHotkeyGUI") {
 			gosub RNEFill
@@ -2074,12 +2079,12 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 
 		;-: Eingabefelder
 		Gui, RN: Font, % "s" fSize
-		Gui, RN: Add, Text, % "xm y+8 Right vRNT1 "                                             	, % "Name"
-		Gui, RN: Add, Edit, % "x+5 w" edW " r1 vRNE1 HWNDRNhE1 gRNEHandler"	, % Patname
-		Gui, RN: Add, Text, % "xm y+5 Right vRNT2 " 	                                         	, % "Inhalt"
-		Gui, RN: Add, Edit, % "x+5 w" edW " r1 vRNE2 HWNDRNhE2 gRNEHandler"	, % Inhalt
-		Gui, RN: Add, Text, % "xm y+5 Right vRNT3 "                                             	, % "Datum"
-		Gui, RN: Add, Edit, % "x+5 w" edW " r1 vRNE3 HWNDRNhE3 gRNEHandler"	, % Datum
+		Gui, RN: Add, Text        	, % "xm y+8 Right vRNT1 "                                             	, % "Name"
+		Gui, RN: Add, Edit         	, % "x+5 w" edW " r1 vRNE1 HWNDRNhE1 gRNEHandler"	, % Patname
+		Gui, RN: Add, Text        	, % "xm y+5 Right vRNT2 " 	                                         	, % "Inhalt"
+		Gui, RN: Add, Edit            	, % "x+5 w" edW " r1 vRNE2 HWNDRNhE2 gRNEHandler"	, % Inhalt
+		Gui, RN: Add, Text        	, % "xm y+5 Right vRNT3 "                                             	, % "Datum"
+		Gui, RN: Add, Edit         	, % "x+5 w" edW " r1 vRNE3 HWNDRNhE3 gRNEHandler"	, % Datum
 
 		;-: Name, Inhalt, Datum - Steuerelemente auf gleiche Breite bringen, Edit-Felder maximieren
 		Loop, 3 {
@@ -2094,20 +2099,21 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 
 		;-: maximale Zeichenzahl
 		cp := GuiControlGet("RN", "Pos", "RNE3")
-		Gui, RN: Font, % "s" fSize - 1 " cWhite", Calibri
-		Gui, RN: Add, Progress	, % "x0      	y" cp.Y+cp.H+5 " w10 h20 c7B89BB vRNPG1 HWNDRNhPG1"     	, 100
-		Gui, RN: Add, Text    	, % "x" cp.X "	y" cp.Y+cp.H+7 "  Left Backgroundtrans vRNHW1"                     	, % "verbrauchte Zeichen (Inhalt+Datum):"
-		dp := GuiControlGet("RN", "Pos", "RNHW1")
-		Gui, RN: Font, % "s" fSize - 1 " cWhite Bold", Consolas
-		chars := (StrLen(Inhalt) + StrLen(Datum))
-		chars := SubStr("00" chars, -1) . " / 70"
-		Gui, RN: Add, Text, % "x+5                                          	Left Backgroundtrans vRNLen "                        	, % chars
+		Gui, RN: Font             	, % "s" fSize - 1 " cWhite", Calibri
+		Gui, RN: Add, Progress	, % "x0      	y" cp.Y+cp.H+5 	" w10 h20 c7B89BB vRNPG1 HWNDRNhPG1"          	, 100
+		Gui, RN: Add, Text    	, % "x" cp.X "	y" cp.Y+cp.H+7   	"  Left Backgroundtrans vRNHW1"                          	, % "verbrauchte Zeichen (Inhalt+Datum):"
+		dp    	:= GuiControlGet("RN", "Pos", "RNHW1")
 		GuiControl, RN: Move, % "RNPG1", % "h" dp.H + 5
 
+		Gui, RN: Font            	, % "s" fSize - 1 " cWhite Bold", Consolas
+		Gui, RN: Add, Text    	, % "x+5                                    	Left Backgroundtrans vRNLen "                           	, % SubStr("00" (StrLen(Inhalt) + StrLen(Datum)), -1) . " / 70"
+
 		;-: Dateinamenvorschau
-		Gui, RN: Font, % "s" fSize - 1 " cBlack Normal", Arial
-		Gui, RN: Add, Progress	, % "x0 y" dp.Y+dp.H+5 " w10 h20 cAfC2ff vRNPG2 HWNDRNhPG2"             	, 100
-		Gui, RN: Add, Text, % "x5 y" dp.Y+dp.H+7 " w" edW " h" dp.H*2 " Center	Backgroundtrans vRNPV "     	, % admGui_FileName(Patname, Inhalt, Datum)
+		cp := GuiControlGet("RN", "Pos", "RNPG1")
+		dp := GuiControlGet("RN", "Pos", "RNHW1")
+		Gui, RN: Font            	, % "s" fSize - 1 " cBlack Normal", Arial
+		Gui, RN: Add, Progress	, % "x0 y" dp.Y+dp.H+5 " w10 h" cp.H*2 " cAfC2ff vRNPG2 HWNDRNhPG2"             	, 100
+		Gui, RN: Add, Text    	, % "x5 y" dp.Y+dp.H+7 " w" edW " h" dp.H*2 " Center	Backgroundtrans vRNPV "   	, % admGui_FileName(Patname, Inhalt, Datum)
 		cp := GuiControlGet("RN", "Pos", "RNPV")
 		GuiControl, RN: Move, % "RNCancel", % "h" cp.H + dp.H + 10
 
@@ -2168,6 +2174,9 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 
 RNEFill:                                               	;{   Inhalte einfügen
 
+	; Rename-Gui Default machen
+		Gui, RN: Default
+
 	; Editfelder befüllen und Vorschau anzeigen
 		GuiControl, RN:, RNPV	, % admGui_FileName(Patname, Inhalt, Datum)
 		GuiControl, RN:, RNE1	, % PatName
@@ -2175,29 +2184,35 @@ RNEFill:                                               	;{   Inhalte einfügen
 		GuiControl, RN:, RNE3	, % Datum
 
 	; Focus je nach Inhalt der Eingabefelder setzen
-		If !PatName
+		If (StrLen(PatName) = 0)
 			GuiControl, RN: Focus, RNE1
 		else
 			GuiControl, RN: Focus, RNE2
 
 return ;}
 
-RNEHandler:                                      	;{   Dateinamenvorschau
+RNEHandler:                                      	;{   Dateinamenvorschau und Vorschläge
 
-	Gui, RN: Submit, NoHide
+		Gui, RN: Submit, NoHide
+		RegExMatch(A_GuiControl, "\d", nr)
 
-	RegExMatch(A_GuiControl, "\d", nr)
+		GuiControl, RN:, RNLen, % SubStr("00" (charsNow := StrLen(RNE2) + StrLen(RNE3)), -1) " / 70 "
+		If (charsNow > 70) {
+			BlockInput, Send
+			Send, % "{BackSpace " (charsNow - 70) "}"
+			BlockInput, Off
+		}
 
-	GuiControl, RN:, % "RNLen", % SubStr("00" (charsNow := StrLen(RNE2) + StrLen(RNE3)), -1) " / 70 "
-	If (charsNow > 70) {
-		BlockInput, Send
-		xc := charsNow - 70
-		Send, % "{BackSpace " xc "}"
-		BlockInput, Off
-	}
+		Gui, RN: Submit, NoHide
 
-	Gui, RN: Submit, NoHide
-	GuiControl, RN:, RNPV, % admGui_FileName(RNE1, RNE2, RNE3)
+	; Autocomplete Listview anzeigen
+		;~ If (nr = 2)
+			;~ admGui_RenameAC(RNhE2	, RNE2, bezeichner, 5)
+		;~ else
+			;~ admGui_RenameAC("hide"	, RNE2, bezeichner, 5)
+
+	; Dateinamenvorschau auffrischen
+		GuiControl, RN:, RNPV, % admGui_FileName(RNE1, RNE2, RNE3)
 
 return ;}
 
@@ -2231,9 +2246,9 @@ RNProceed:                                       	;{   Datei wird umbenannt, PDF
 
 	; neue Inhaltsbeschreibung speichern
 		found := false, TLines := ""
-		For idx, Beschreibung in Bezeichner {
-			TLines .= Beschreibung "`n"
-			If (Beschreibung = RNE2) {
+		For idx, beschreibung in bezeichner {
+			TLines .= beschreibung "`n"
+			If (beschreibung = RNE2) {
 				found := true
 				break
 			}
@@ -2244,6 +2259,7 @@ RNProceed:                                       	;{   Datei wird umbenannt, PDF
 			FileOpen(BEZPath, "w", "UTF-8").Write(TLines)
 		}
 
+	; DATEIEN UMBENENNEN
 	; Originaldatei umbennen
 		newadmFile := newadmFile "." FileExt
 		FileMove, % Addendum.BefundOrdner "\" oldadmFile, % Addendum.BefundOrdner "\" newadmFile, 1
@@ -2278,7 +2294,9 @@ RNProceed:                                       	;{   Datei wird umbenannt, PDF
 		Loop % LV_GetCount() {
 			LV_GetText(rowFilename, row := A_Index, 1)
 			If Instr(rowFilename, oldadmFile) {
+				admGui_Default("admJournal")
 				LV_Modify(row,, newadmFile)
+				GuiControl, adm: +Redraw, % "admJournal"
 				break
 			}
 		}
@@ -2288,16 +2306,15 @@ RNProceed:                                       	;{   Datei wird umbenannt, PDF
 RNGuiBeenden:                                   	;{   weitere Dateien umbenennen
 
 	; nachschauen ob eine weitere Datei zum Umbenennen zur Verfügung steht
+		oldfilename := newadmFile
 		admGui_Default("admJournal")
-
-	; nächste Datei finden
 		rows := LV_GetCount()
 		LV_GetNext(row)
-		startrow := row := row = 0 ? 1 : row
+		startrow := row := (row = 0 ? 1 : row)
 		Loop {
 
-			row := row = rows ? 1 : row + 1
-			LV_Modify(row = 1 ? rows : row-1, "-Select")
+			row := (row=rows?1:row+1)
+			LV_Modify((row=1?rows:row-1), "-Select")
 			LV_Modify(row, "Select")
 			Sleep 200
 			If (row = startrow)
@@ -2307,14 +2324,15 @@ RNGuiBeenden:                                   	;{   weitere Dateien umbenennen
 				break
 			}
 
+			admGui_Default("admJournal")
 			LV_GetText(filename, row, 1)
-			If !string.isFullNamed(FileName)
+			If !string.isFullNamed(filename)
 				break
 
 		}
 
 	; weiteres Dokument umbenennen?
-		If (row <> startrow) && (filename <> oldfilename) {
+		If !string.isFullNamed(filename) && (filename <> oldfilename) {
 			oldfilename := filename
 			MsgBox, 0x4, Addendum für Albis on Windows, % "Möchten Sie mit der nächsten`n[" filename "]`nDatei fortfahren ?", 30
 			IfMsgBox, Yes
@@ -2330,6 +2348,7 @@ RNGuiEscape:                                    	;{   Fenster definitiv schliess
 
 	; Gui beenden
 		Gui, RN: Destroy
+		Gui, admAC: Destroy
 
 	; PDF Previewer beenden
 		If (oPV.Previewer = "Sumatra")
@@ -2368,6 +2387,89 @@ RNGuiUpDown:                                   	;{   mit den Pfeiltasten zwische
 			Send, {Tab}
 
 return ;}
+}
+
+admGui_RenameAC(hCtrl, inhalt, bezeichner, LBRows=10)	{
+
+	static admAC, admACh, admACLB
+
+		If !IsObject(Bezeichner) || (StrLen(inhalt) = 0)
+			Return
+		If (hCtrl = "hide") {
+			Gui, admAC: Show, Hide NA
+			Gui, RN: Default
+			return
+		}
+
+	; Autocomplete Inhalt zusammenstellen
+		cboxShow := cboxInhalt := ""
+		inhalte := StrSplit(Trim(inhalt), " ")
+
+		For bzPos, bezeichnung in bezeichner {
+			matching	:= 0
+			bez := " " RegExReplace(bezeichnung, "[\.,\-\_\\\/\(\)]", " ")
+			For iPos, inh in inhalte {
+				If (StrLen(inh) >= 3) && RegExMatch(bez, "i)\s" inh) {
+					;SciTEOutput(bez ": " inh)
+					matching ++
+				}
+			}
+			If matching
+				cboxInhalt .= matching " " bezeichnung "`n"
+		}
+
+	; numerische Sortierung (N) in umgekehrter Reihenfolge (R)
+	; doppelte Elemente werden aussortiert (U)
+		Sort, cboxInhalt, N U R
+		cboxShow := ""
+		For cbPos, cbline in StrSplit(cboxInhalt, "`n")
+			cboxShow .= RegExReplace(cbline, "^\d+\s+") "|"
+		cboxShow := RTrim(cboxShow, "|")
+
+	; Inhalt auffrischen oder neue Gui erstellen
+		If WinExist("Infofenster AutoComplete ahk_class AutoHotkeyGUI") {
+			Gui, admAC: Default
+			Gui, admAC: Show, NA
+			GuiControl, admAC:, admACLB, % ""
+			GuiControl, admAC:, admACLB, % cboxShow
+			Gui, RN: Default
+		} else
+			gosub admACGui
+
+return
+
+admACGui:
+
+		fSize := (A_ScreenWidth > 1920 ? 10 : 9)
+		cp := GetWindowSpot(hCtrl)
+		cp.Y := cp.Y + cp.H + 2
+
+		Gui, admAC: Font, % "s" fSize " q5 Normal", Arial
+		Gui, admAC: new		, % "-Caption -DpiScale +ToolWindow +AlwaysOnTop HWNDadmACh"
+		Gui, admAC: Margin	, 0, 0
+		Gui, admAC: Add		, Listbox, % "x0 y0 r" LBRows " w" cp.W " vadmACLB" , % cboxShow
+		Gui, admAC: Show	, % "x" cp.X " y" cp.Y " NA", Infofenster AutoComplete
+
+		Hotkey, IfWinExist, Infofenster AutoComplete
+		Hotkey, TAB	, admACLBChoose
+		Hotkey, Esc	, admACGuiEscape
+
+		Gui, RN: Default
+
+return
+
+admACLBChoose:
+
+	Gui, admAC: Submit, NoHide
+	Gui, admAC: Destroy
+
+return admACLB
+
+admACGuiClose:
+admACGuiEscape:
+	Gui, admAC: Destroy
+return
+
 }
 
 admGui_SumatraClose(PID, ID="")                                 	{                	; Hilfsfunktion: admGui_Rename
@@ -2606,7 +2708,7 @@ admGui_ImportGui(Show=true, msg="", gctrl="")              	{                 	;
 			else if !Addendum.Importing {
 				last_msg := msg, last_ctrl 	:= gctrl
 				Addendum.Importing := true
-				If StrLen(msg) = 0
+				If (StrLen(msg) = 0)
 					msg := "Importvorgang läuft...`nbitte nicht unterbrechen!"
 			}
 
@@ -2646,15 +2748,17 @@ admGui_ImportJournalAll(files="")                                    	{         
 
 		global admHTab
 
-		admGui_Default("admJournal")
 		GuiControl, % "adm: Enable0"	, AdmButton2
 		GuiControl, % "adm:"            	, AdmButton2, % "...importiere"
 
 		Addendum.ImportRunning := true
 		waituser := 10
+
+		admGui_Default("admJournal")
 		Loop % LV_GetCount() {                                                ; Dokumente ohne Personennamen werden ignoriert
 
 			 ; enthält keinen Personennamen dann weiter
+				admGui_Default("admJournal")
 				LV_GetText(rowFile, A_Index, 1)
 				If !string.isFullNamed(rowFile)
 					continue
@@ -2672,7 +2776,6 @@ admGui_ImportJournalAll(files="")                                    	{         
 			; Importieren jetzt
 				filePath := Addendum.BefundOrdner "\" rowFile
 				If RegExMatch(filePath, "\.pdf$") && FileExist(filePath) && !FileIsLocked(filePath) && PDFisSearchable(filepath) {
-
 					If FuzzyKarteikarte(rowFile) {
 						If admGui_ImportFromJournal(rowFile) {
 							Addendum.iWin.Imports ++
@@ -2684,7 +2787,6 @@ admGui_ImportJournalAll(files="")                                    	{         
 						break
 					}
 				}
-
 		}
 
 		Addendum.iWin.Imports	:= 0
@@ -2722,26 +2824,20 @@ admGui_ImportFromJournal(filename)                              	{              
 
 	; Befund importieren
 		If      	RegExMatch(filename, "\.pdf")                                             	{
-				Addendum.FuncCallback := "GetPDFViewerArg"
-				If !AlbisImportierePdf(filename, DocDate)
-					return 0
-				admGui_MoveFile(filename)             	; PDF in einen anderen Ordner verschieben
-				docID := pdfpool.Remove(filename)	; aus ScanPool entfernen
+			If !AlbisImportierePdf(filename, DocDate)
+				return 0
+			admGui_MoveFile(filename)             	; PDF in einen anderen Ordner verschieben
+			docID := pdfpool.Remove(filename)	; aus ScanPool entfernen
 		}
 		else If	RegExMatch(filename, "\.(jpg|png|tiff|bmp|wav|mov|avi)$")	{
-				If !AlbisImportiereBild(filename, string.Replace.Names(filename), DocDate)
-					return 0
+			If !AlbisImportiereBild(filename, string.Replace.Names(filename), DocDate)
+				return 0
 		}
 		else
 			return 0
 
 	; Re-Indizieren, Gui auffrischen, Importprotokoll
 		FileAppend, % datestamp() "| " filename "`n", % Addendum.Befundordner "\PdfImportLog.txt"
-		while, % (StrLen(Addendum.FuncCallback) > 0) {
-			Sleep, 50
-			If (A_Index > 60)  ; 3 Sekunden
-				break
-		}
 
 		admGui_Journal(false)
 		PatDocs := admGui_Reports()
@@ -3111,22 +3207,6 @@ class pdfpool                                                                 	{
 
 }
 
-GetPDFViewerArg(class, hwnd)                                       	{               	; commandline des PDF Anzeigeprogramms auslesen
-
-	WinGet PID, PID, % "ahk_id " hwnd
-
-    StrQuery := "SELECT * FROM Win32_Process WHERE ProcessId=" . PID
-    Enum := ComObjGet("winmgmts:").ExecQuery(StrQuery)._NewEnum
-    If (Enum[Process]) {
-		Viewercmdline := Process.CommandLine
-		;SciTEOutput("Foxit: " Viewercmdline)
-	}
-	Addendum.FuncCallback := ""
-
-	;SciTEOutput("Foxit: " Viewercmdline)
-	; FileAppend, % datestamp() " - " report "`n", % Addendum.Befundordner "\PdfImportLog.txt"
-}
-
 
 ; ------------------------ Texterkennung
 TesseractOCR(files)                                                         	{               	; erstellt einen zusätzlichen echten Thread
@@ -3262,9 +3342,8 @@ TesseractOCR(files)                                                         	{  
 
 	; stellt die Einstellungen zusammen
 		repset := "settings := {"
-		For key, val in Settings {
+		For key, val in Settings
 			repset .= q key q ":" . ((val = "true") || (val = "false") || RegExMatch(val, "^(\d+|0x\w+)$") ? val : q val q) ", "
-		}
 		repset := RTrim(Trim(repset), ",") "}`n"
 
 	; Skript zusammensetzen

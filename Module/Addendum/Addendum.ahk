@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                                                                       	ADDENDUM HAUPTSKRIPT
-global                                                                               AddendumVersion:= "1.52" , DatumVom:= "28.02.2021"
+global                                                                               AddendumVersion:= "1.52" , DatumVom:= "02.03.2021"
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                    ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . . . . . . .                                           BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -17,16 +17,8 @@ global                                                                          
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 /*               	A DIARY OF CHANGES
-| **28.02.2021**	|	**F~**	| **AlbisReanimator**         	- 	weitere Albisprozesse der Erkennungsroutine hinzugefügt
-																						- 	zweiten Befehl für das Beenden von Prozessen hinzugefügt
-																						-	das Skript führt auf Wunsch zu Dokumentationszwecken eine Logdatei mit den Namen und der Anzahl der
-																							geschlossenen Prozesse |
-| **27.02.2021**	|	**F+**	| **Addendum_Exporter**     	- 	Fortschrittsanzeige verbessert |
-| **27.02.2021**	|	**F~**	| **AddendumMonitor**      	- 	Lösung erstmal: **IPC - Interprocess communication**, Skript sendet einen String an Addendum, kommt
-																							keine Antwort innerhalb der nächsten 4 Sekunden hat sich Addendum aufgehängt und wird neu gestartet.<br>
-																						-	Logfile wurde nicht geschrieben<br>
-																						-	manuellen Prüfsstart über das Traymenu hinzugefügt |
-| **26.02.2021**	|	**F+**	| **Addendum_Mining**      	- 	Erkennung von nicht Patientenbriefen angefangen, Verbesserung der Erkennung von Patientennamen erreicht |
+
+
 
 
 
@@ -547,7 +539,7 @@ global                                                                          
 			If Addendum.AddendumGui {
 				If Addendum.WatchFolder
 					WatchFolder(Addendum.BefundOrdner, "admGui_FolderWatch", False, (1+2+8+64))
-				If WinActive("ahk_class OptoAppClass") && RegExMatch(Addendum.AktiveAnzeige, "i)Karteikarte|Laborblatt|Biometriedaten")
+				If RegExMatch(Addendum.AktiveAnzeige, "i)Karteikarte|Laborblatt|Biometriedaten")				; WinActive("ahk_class OptoAppClass") &&
 					AddendumGui()
 			}
 		}
@@ -1131,7 +1123,7 @@ return false
 :*:Stuhl::3500-                                                                                   	;  Ausgabe iFOPT Test (Stuhl auf Sanguis)
 :*:iFop::3500-                                                                                   	;  Ausgabe iFOPT Test (Stuhl auf Sanguis)
 :*:haemof::3500-                                                                                 ;} Ausgabe iFOPT Test (Stuhl auf Sanguis)
-:*R:sono1::410-420                                                                             	; Ultraschall (Ultraschalluntersuchung von bis zu drei weiteren Organen im Anschluss an Nummern 410 bis 418, je Organ. Organe sind anzugeben.)
+:*R:sono1::410-420                                                                             	; Ultraschall von bis zu drei weiteren Organen im Anschluss an Nummern 410 bis 418, je Organ. Organe sind anzugeben.
 :*R:sono2::410(organ:Leber)-420(organ:Gb)-420(organ:Niere bds.)     	; Ultraschall mehrere Untersuchungen
 :*R:sonoknie::410(organ:Kniegelenk li.)                                                	; Utraschall Knie
 :*R:sono knie::410(organ:Kniegelenk li.)                                               	; Utraschall Knie
@@ -1143,8 +1135,10 @@ return false
 :*R:zuschl::A-B-C-D-K1                                                                         	; Zuschläge
 :*R:JVEG::(sach:Anfrage Sozialgericht gem. JVEG:21.00)                     	; Anfrage Sozialgericht
 :*R:sozialgericht::(sach:Anfrage Sozialgericht gem. JVEG:21.00)          	; Anfrage Sozialgericht
-:*R:lageso::(sach:Landesamt für Gesundheit und Soziales:21.00)          	; Anfrage LaGeSo
-:*R:lagesokurz::(sach:Landesamt für Gesundheit und Soziales:5.00)      	; Anfrage LaGeSo
+::lageso::(sach:Landesamt für Soziales u. Versorgung:21.00)               	; Anfrage LaGeSo
+:*R:lageso1::(sach:Landesamt für Soziales u. Versorgung:21.00)         	; Anfrage LaGeSo
+:*R:lageso2::(sach:Kurzauskunft LA für Soziales u. Versorgung:5.00)      	; Anfrage LaGeSo
+:*R:lagesokurz::(sach:Kurzauskunft LA für Soziales u. Versorgung:5.00)  	; Anfrage LaGeSo
 :*R:Rentenversich::(sach:Anfrage Rentenversicherung:28.20)                 	; Anfrage Rentenversicherung
 :*R:RLV::(sach:Anfrage Rentenversicherung:28.20)                              	; Anfrage Rentenversicherung
 :*R:DRV::(sach:Anfrage Rentenversicherung:28.20)                              	; Anfrage Rentenversicherung
@@ -2175,16 +2169,33 @@ SkriptReload(msg:="") {                                                         
   ; dies verhindert einige Probleme mit datumsabhängigen Handles bestimmter Prozesse im System, die Hook und Hotkey Routinen sind zuverlässiger dadurch geworden
   ; +Albisprogrammdatum wird auf den nächsten Tag gesetzt
 
-	If (msg = "AutoReload") && WinExist("ahk_class OptoAppClass")
-		AlbisSetzeProgrammDatum()
 
-	admScript	:= Addendum.Dir "\Module\Addendum\Addendum.ahk"
-	scriptPID 	:= DllCall("GetCurrentProcessId")
-	__          	:= q " " q                                             	; für bessere Lesbarkeit des Codes
+	; Abbruch des Neustart falls Addendum gerade Befunde importiert oder ein OCR Vorgang läuft
+		If (adm.Importing || adm.ImportRunning || Addendum.tessOCRRunning || Addendum.Thread["tessOCR"].ahkReady()) {
+			MsgBox, 4	, % RegExReplace(A_ScriptName, "\.[a-z]+$")
+							, % 	"Addendum ist gerade beschäftigt.`n"
+								. 	"Ein Abbruch könnte zu fehlerhaften Daten führen.`n"
+								.  	"Möchten Sie dennoch einen Neustart durchführen?"
+							, 10
+			IfMsgBox, No
+				Return
+			IfMsgBox, Timeout
+				Return
+		}
 
-	cmdline := "Autohotkey.exe /f " q Addendum.Dir "\include\Addendum_Reload.ahk" __ admScript __ "1" __ A_ScriptHwnd __ scriptPID __ " 1" q
-	Run, % cmdline
-	ExitApp
+
+	; Programmdatum auf aktuelles Datum setzen
+		If (msg = "AutoReload") && WinExist("ahk_class OptoAppClass")
+			AlbisSetzeProgrammDatum()
+
+		admScript	:= Addendum.Dir "\Module\Addendum\Addendum.ahk"
+		scriptPID 	:= DllCall("GetCurrentProcessId")
+		__          	:= q " " q                                             	; für bessere Lesbarkeit des Codes - ergibt > " " <
+
+	; Autohotkey.exe /f "Z:\Addendum für AlbisOnWindows\Addendum_Reload.ahk" "Z:\Addendum für AlbisOnWindows\Module\Addendum\Addendum.ahk" "1" "0x34A567" "9876" " 1"
+		cmdline := "Autohotkey.exe /f " q Addendum.Dir "\include\Addendum_Reload.ahk" __ admScript __ "1" __ A_ScriptHwnd __ scriptPID __ " 1" q
+		Run, % cmdline
+		ExitApp
 
 return
 }
@@ -2924,8 +2935,6 @@ ListviewClipboard(WinTitle:="") {                                               
 			WinGetTitle, Wintitle, % "ahk_id " outwin
 		}
 
-		SciTEOutput("copy hwnd: " hcontrol "`nclassnn: " classnn "`noutwin: " outwin  "`nWinTilte: " WinTitle)
-
 	; Steuerelement ist eines der unteren dann wird der Inhalt ausgelesen und eventuell geparsed (CopyOpt)
 		If RegExMatch(classnn, "(SysListView32|Listbox|ComboBox|DDL)") {
 
@@ -2947,7 +2956,6 @@ ListviewClipboard(WinTitle:="") {                                               
 					}
 
 				; ---
-					;cLines := StrSplit(RegExReplace(content, "[\s\n\r]+$"), "`n", "`r")
 					cLines := StrSplit(RegExReplace(content, "[\n\r]+", "`n"), "`n", "`r")
 					newcontent := ""
 					For cIdx, cLine in cLines {
@@ -2978,12 +2986,10 @@ ListviewClipboard(WinTitle:="") {                                               
 			}
 
 			If nopts {
-				SciTEOutput("`ncontent:`n" content " ---------")
 				ClipBoard := content ? RegExReplace(content, "[\n\r]+", "`n") : newcontent ? RegExReplace(newcontent, "[\n\r]+", "`n") : ""
 				ClipWait, 1
 				PraxTT("Inhalt des Steuerelementes kopiert.`n[" cLinesCount " Zeilen]`n[" StrLen(content) " Zeichen]", "2 1")
 			} else {
-				SciTEOutput("`nnewcontent:`n" RegExReplace(newcontent, "[\n\r]+", "`n")  "`n---------")
 				ClipBoard := newcontent ? RegExReplace(newcontent, "[\n\r]+", "`n") : content ? RegExReplace(content, "[\n\r]+", "`n") : ""
 				ClipWait, 1
 				PraxTT("Inhalt des Steuerelementes kopiert.`n[" cLinesCount " Zeilen]`n[" StrLen(newcontent) " Zeichen]`nInhalt wurde nach Vorgabe formatiert!", "6 1")
@@ -4259,22 +4265,22 @@ WM_DISPLAYCHANGE(wParam, lParam) {                                              
 
 ;Funktion AutoDiagnose findet sich in include\AutoDiagnosen.ahk
 
-AddAutoComplete(lCHwnd, ControlName, TextList, TWidth:= 350) {
+AddAutoComplete(hWin, ControlName, TextList, TWidth:= 350) {
 
-	If (TextList="")
-			Return
+	If (TextList = "")
+		Return
 
-	ControlGetPos, CpX, CpY,,, % ControlName, ahk_id %lCHwnd%
+	ControlGetPos, cpX, cpY, cpW,, % ControlName, % "ahk_id " hWin
 	CpY += 20
 
-	Gui, AutoC: new		, -Caption +ToolWindow +AlwaysOnTop
+	Gui, AutoC: new		, -Caption +ToolWindow +AlwaysOnTop HWNDhAutoC
 	Gui, AutoC: Margin	, 0, 0
 	Gui, AutoC: Add		, Listbox, % "r" 10 " w" TWidth " vLBAutoC" , % TextList
 	Gui, AutoC: Show		, % "x" CpX " y" CpY, Addendum AutoComplete
 
-	HotKey, IfWinExist, Addendum AutoComplete
-	HotKey, Enter, MedTLB
-	HotKey, Esc, AutoCGuiEscape
+	Hotkey, IfWinExist, Addendum AutoComplete
+	Hotkey, Enter, MedTLB
+	Hotkey, Esc, AutoCGuiEscape
 
 return
 
@@ -4390,11 +4396,11 @@ return tempObj
 
 MedTrenner(f) {
 
-		static MedTrenner, MedTTrenner, x, y
-		global MedT
+		global 	MedT
+		static 	MedTrenner, MedTTrenner, x, y
 
 	; Standardschrift im Albisprogramm zur Anzeige der Dauermedikamente ist Arial Standard 11 - am besten mit dieser Schriftart editieren und hier einfügen
-		If (MedTrenner="") {
+		If (MedTrenner = "") {
 			MedTrenner =
 					(LTrim Join|
 					#####################
@@ -4425,7 +4431,7 @@ MedTrenner(f) {
 					)
 		}
 
-		x:= A_CaretX, y:= A_CaretY + 15
+		x := A_CaretX, y := A_CaretY + 15
 
 		Gui, MedT: new		, -Caption +ToolWindow +AlwaysOnTop
 		Gui, MedT: Margin	, 0, 0
@@ -4433,27 +4439,25 @@ MedTrenner(f) {
 		Gui, MedT: Show		, % "x" x " y" y, Dauermedikamten-Trenner
 
 		HotKey, IfWinExist, Dauermedikamten-Trenner
-			HotKey, Enter, MedTLB
-			HotKey, Esc	, MedTGuiEscape
+		HotKey, Enter, MedTLB
+		HotKey, Esc	, MedTGuiEscape
 
 Return
 
 MedTLB:
 
 		Gui, MedT: Submit, NoHide
-		WinActivate, Dauermedikamente ahk_class #32770
-			WinWaitActive, Dauermedikamente ahk_class #32770,, 2
-		y-= 15
+		WinActivate   	, Dauermedikamente ahk_class #32770
+		WinWaitActive	, Dauermedikamente ahk_class #32770,, 2
+		y -= 15
 		Click, %x%, %y%, 2
-				Sleep, 200
-		SendRaw, %MedTTrenner%
+		Sleep, 200
+		SendRaw, % MedTTrenner
 		SendInput, {Enter}
 
 MedTGuiClose:
 MedTGuiEscape:
-
 		Gui, MedT: Destroy
-
 return
 }
 

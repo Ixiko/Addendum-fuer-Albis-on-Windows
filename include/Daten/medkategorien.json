@@ -155,6 +155,10 @@
         "ingredient": "Candesartan und Hydrochlorothiazid",
         "use": "Blutdruck"
     },
+    "Carmen Ace": {
+        "ingredient": "Enalapril und Lercanidipin",
+        "use": "Blutdruck"
+    },
     "Carvedilol": {
         "ingredient": "Carvedilol",
         "use": "Herzrhythmus"
@@ -298,6 +302,10 @@
     "Fexofenaderm": {
         "ingredient": "Fexofenadin",
         "use": "Allergie/Juckreiz"
+    },
+    "Finasterid-HEXAL": {
+        "ingredient": "Finasterid",
+        "use": "Prostata"
     },
     "Fluoxetin": {
         "ingredient": "Fluoxetin",
@@ -919,6 +927,10 @@
     "Vocado HCT": {
         "ingredient": "Olmesartan und Amlodipin und Hydrochlorothiazid",
         "use": "Blutdruck"
+    },
+    "Xadago": {
+        "ingredient": "Safinamid",
+        "use": "Parkinson"
     },
     "Xarelto": {
         "ingredient": "Rivaroxaban",

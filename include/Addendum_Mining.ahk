@@ -7,7 +7,7 @@
 ;       Abhängigkeiten:		Addendum_Gui.ahk, Addendum.ahk
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_Calc started:    	27.02.2021
+;       Addendum_Calc started:    	02.03.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -47,22 +47,22 @@ FindDocStrings() {
 	global rxWDay2     	:= 	"(?<WD>" rxWDay ")"
 	global rxMonths     	:=	"Jan*u*a*r*|Feb*r*u*a*r*|Mä*a*rz|Apr*i*l*|Mai|Jun*i*|Jul*i*|Aug*u*s*t*|Sept*e*m*b*e*r*|Okt*o*b*e*r*|Nov*e*m*b*e*r*|Deze*m*b*e*r*"
 	global rxMonths2   	:=	"(?<Monat>" rxMonths ")"
-	global rxYear			:=	"(?<Jahr>([12][0-9])*[0-9]{2})"                                                                          	; Jahr=(19)*85
-	global rxYear2			:=	"(?<JH>[12][0-9])*(?<JZ>[0-9]{2})"                                                                    	; JH=19*,  JZ=85
-	global rxYear3			:=	"(?<Jahr>(\d{4}|\d{2}))"                                                                                 	; Jahr= 1985 o. 85
+	global rxYear			:=	"(?<Jahr>([12][0-9])*[0-9]{2})"                                                                  	; Jahr=(19)*85
+	global rxYear2			:=	"(?<JH>[12][0-9])*(?<JZ>[0-9]{2})"                                                            	; JH=19*,  JZ=85
+	global rxYear3			:=	"(?<Jahr>(\d{4}|\d{2}))"                                                                         	; Jahr= 1985 o. 85
 
 	global rxPerson     	:= 	"[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*"
-	global rxPerson1    	:= 	"(?<Name1>" rxPerson                                                                                     	; ?<Name1>Müller-Wachtendónk*
-	global rxPerson2    	:= 	"(?<Name2>" rxPerson                                                                                      	; ?<Name2>Müller-Wachtendónk*
-	global rxPerson3   	:= 	"[A-ZÄÖÜ][\pL]+([\-\s][A-ZÄÖÜ][\pL]+)*"                                                            	; Müller Wachtendonk*
-	global rxPerson4    	:= 	"(?<Name>[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*)"		                                         	; ?<Name>Müller Wachtendonk*
+	global rxPerson1    	:= 	"(?<Name1>" rxPerson                                                                             	; ?<Name1>Müller-Wachtendónk*
+	global rxPerson2    	:= 	"(?<Name2>" rxPerson                                                                              	; ?<Name2>Müller-Wachtendónk*
+	global rxPerson3   	:= 	"[A-ZÄÖÜ][\pL]+([\-\s][A-ZÄÖÜ][\pL]+)*"                                                    	; Müller Wachtendonk*
+	global rxPerson4    	:= 	"(?<Name>[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*)"		                                 	; ?<Name>Müller Wachtendonk*
 
 	global rxName1    	:= 	"(?<Name2>" rxPerson	  ")" . rx . "(?<Name1>" 	rxPerson 	")"
 	global rxName2    	:= 	"(?<Name2>" rxPerson2 ")" . rx . "(?<Name1>" 	rxPerson2	")"
 
-	global rxDatum	    	:= 	"\d{1,2}" rx "\w+" rx "\d{2,4}"                                                                             	; 12. July 1981
-	global rxDatumLang 	:= 	"\d{1,2}" rx "(" rxMonths ")" rx "\d{2,4}"                                                                	; 12. Jul. 81
-	global rxGebAm		:= 	"(geb\.*o*r*e*n*\s*a*m*|Geb(urts)*" rx "Datu*m*" rx ")"                                        	; geb. am o. Geb. Dat. usw
+	global rxDatum	    	:= 	"\d{1,2}" rx "\w+" rx "\d{2,4}"                                                                     	; 12. July 1981 oder 12.7.1981
+	global rxDatumLang 	:= 	"\d{1,2}" rx "(" rxMonths ")" rx "\d{2,4}"                                                        	; 12. Jul. 81
+	global rxGebAm		:= 	"(geb\.*o*r*e*n*\s*a*m*|Geb(urts)*" rx "Datu*m*" rx ")"                                	; geb. am o. Geb. Dat. usw
 	global rxGebAm2  	:= 	"(geboren\sam|geb\.\sam|geb\.*o*r*e*n*|Geburtsdatum)"
 
 	global GName      	:= 	"Geb\.\sName|Geburtsname"
@@ -73,29 +73,29 @@ FindDocStrings() {
 	global rxNachname	:= 	"([Nn]ach)*[Nn]ame"
 	global rxNameW    	:= 	"[Nn]ame[\w]*"
 
-	global RxNames     	:= [	rxAnrede    	. 	rx	. 	rxName1  .	rx  	.	rxGebAm   . 	ry  .  rxDatum                  	; 01    Betrifft: Marx, Karl, geb. am: 14.03.1818
-							    		,	rxAnrede   	.	rx	. 	rxName2	.	rx  	.	rxGebAm   . 	ry                                  	; 02
-							    		,	rxName1     	.	rx	.	rxGebAm	.	rs  	.   rxDatum                                              	; 03
-							    		,	rxName2     	.	rx	.	rxGebAm 	.	rs  	.   rxDatum                                             	; 04
-							    		,	rxName1     	.	rx	.	rxGName	.	rp2	.	rxGebAm 	.	rx	.	rxDatum               	; 05
-							    		,	rxName2     	.	rx	.	rxGName	.	rz  	.	rxGebAm 	.	rx	.	rxDatum         	      	; 06	Müller-Wachtendonk, Marie-Luise, Geburtsname: Müller, geb. am 12.11.1964
+	global RxNames     	:= [	rxAnrede    	. 	rx	. 	rxName1  .	rx  	.	rxGebAm   . 	ry  .  rxDatum       	; 01    Betrifft: Marx, Karl, geb. am: 14.03.1818
+							    		,	rxAnrede   	.	rx	. 	rxName2	.	rx  	.	rxGebAm   . 	ry                        	; 02
+							    		,	rxName1     	.	rx	.	rxGebAm	.	rs  	.   rxDatum                                  	; 03
+							    		,	rxName2     	.	rx	.	rxGebAm 	.	rs  	.   rxDatum                                  	; 04
+							    		,	rxName1     	.	rx	.	rxGName	.	rp2	.	rxGebAm 	.	rx	.	rxDatum     	; 05
+							    		,	rxName2     	.	rx	.	rxGName	.	rz  	.	rxGebAm 	.	rx	.	rxDatum      	; 06	Müller-Wachtendonk, Marie-Luise, Geburtsname: Müller, geb. am 12.11.1964
 
-							    		,	rxAnrede   	. 	rx  .  rxName2                                                                            	; 07	Betrifft: Müller-Wachtendonk, Marie-Luise
-							    		,	rxAnredeM 	. 	rx  .  rxName2                                                                            	; 08	Herr Karl Marx o. Patient Marx, Karl
-							    		,	rxAnredeF 	. 	rx  .  rxName2                                                                            	; 09	Frau Marie-Luise Müller-Wachtendonk
+							    		,	rxAnrede   	. 	rx  .  rxName2                                                                 	; 07	Betrifft: Müller-Wachtendonk, Marie-Luise
+							    		,	rxAnredeM 	. 	rx  .  rxName2                                                                 	; 08	Herr Karl Marx o. Patient Marx, Karl
+							    		,	rxAnredeF 	. 	rx  .  rxName2                                                                 	; 09	Frau Marie-Luise Müller-Wachtendonk
 
-							    		,	rxNameW		.	rx	.	rxName1                                                                            	; 10
-							    		,	rxNachname	. 	rx	. 	rxPerson2	.	".*?" 	.	rxVorname	. rx . rxPerson1               	; 11	Nachname: Karl, Versichtennummer: 12345678, Vorname: Marx
-							    		,	rxVorname	. 	rx	. 	rxPerson2	.	".*?"	.	rxNachname	. rx . rxPerson2               	; 12	Vorname: Marx, Versichtennummer: 12345678, Nachname: Karl
+							    		,	rxNameW		.	rx	.	rxName1                                                                 	; 10
+							    		,	rxNachname	. 	rx	. 	rxPerson2	.	".*?" 	.	rxVorname	. rx . rxPerson1     	; 11	Nachname: Karl, Versichtennummer: 12345678, Vorname: Marx
+							    		,	rxVorname	. 	rx	. 	rxPerson2	.	".*?"	.	rxNachname	. rx . rxPerson2     	; 12	Vorname: Marx, Versichtennummer: 12345678, Nachname: Karl
 
-							    		,	"^\s*" rxName2 "\s"]	                                                                                         	; 13	^ Muster, Max  ....
+							    		,	"^\s*" rxName2 "\s"]	                                                                              	; 13	^ Muster, Max  ....
 
-	global RxNames2  	:= [	rxNachname	. 	rx	. 	rxPerson2                            													; 01 	Nachname: Müller(-Wachtendonk)*
-								    	,	rxVorname	. 	rx	.	rxPerson1]                          													; 02	Vorname: Marie(-Luise)*
+	global RxNames2  	:= [	rxNachname	. 	rx	. 	rxPerson2                            										; 01 	Nachname: Müller(-Wachtendonk)*
+								    	,	rxVorname	. 	rx	.	rxPerson1]                          										; 02	Vorname: Marie(-Luise)*
 
-	global	rxDates       	:= [	"(?<Tag>\d{1,2})[.,;](?<Monat>\d{1,2})[.,;]" rxYear3 "([^\d]|$)"                      	; 01	12.11.64 o. 12.11.1964 o. 2.1.(19)*64
-								    	,	"i)(?<Tag>\d{1,2})" rx . rxMonths2 . rx . rxYear3 "([^\d]|$)"                              	; 02	12. November (19)64
-								    	,	"(" rxGebAm ")"	rx  ".{0,20}?" . rxDay . rx . rxMonths2 . rx . rxYear]                       	; 03   Geburtsdatum: .*(20 beliebige Zeichen) 12. Nov. 1964
+	global	rxDates       	:= [	"(?<Tag>\d{1,2})[.,;](?<Monat>\d{1,2})[.,;]" rxYear3 "([^\d]|$)"           	; 01	12.11.64 o. 12.11.1964 o. 2.1.(19)*64
+								    	,	"i)(?<Tag>\d{1,2})" rx . rxMonths2 . rx . rxYear3 "([^\d]|$)"                  	; 02	12. November (19)64
+								    	,	"(" rxGebAm ")"	rx  ".{0,20}?" . rxDay . rx . rxMonths2 . rx . rxYear]            	; 03   Geburtsdatum: .*(20 beliebige Zeichen) 12. Nov. 1964
 
 
 	global rxContinue  	:= "(Nachname|Vor[nm]ame|Geburtsdatum)"
@@ -105,7 +105,7 @@ FindDocStrings() {
 	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	global rxTags	       	:= {	1:	"Druckdatum|Erstellungszeitpunkt|Dokumentdatum|D[ae]tum|Beginn|ausgedruckt|"
 											. 	"Probenentnahmedatu*m*|Abnahmedatum|Berichtsdatum|Eingangsdatum|"
-											. 	"Eingang\s+am|gedruckt am|"
+											. 	"Eingang\s+am|gedruckt\s+am|angelegt|angelegt\s+am|"
 											.	"Anfrage\s+vom|Arztbrief\s+vom||Befund\s+vom|Befundbericht\s+vom|"
 											. 	"Behandlung\s+vom|Ebenen\s+vom|Ebenen\/axial\s+vom|"
 											.	"Echokardiografie vom|Konsil\s+vom|Labor\s+vom|Laborblatt\s+vom|Nachricht\s+vom||"
@@ -115,15 +115,23 @@ FindDocStrings() {
 	global rxBehandlung	:= [	"i)(" rxTags[2] ")\svom\s(?<Datum1>[\d.]+)\s*(bis\s*z*u*m*)\s*(?<Datum2>[\d.]+)"                	; 	1| (haben wir ...| sich) vom .... bis (zum) .....
 										, 	"i)(" rxTags[2] ")\svom\s(?<Datum1>[\d.]+)\s*(\-)\s*(?<Datum2>[\d.]+)"]                                 	; 	2| (haben wir ...| sich) vom ..... - .......
 
-	global rxDokDatum	:=[	"i)(gedruckt|sich)\s*am\s*[;:]*\s*(?<Datum1>\d+\.\d+\.\d+)"                                               	;   1| gedruckt am: 02.01.2020
-							    		,	"i)^[\pL\-]+\s[\pL\-]+\s*[;,.]\s*den\s+(?<Datum1>\d+\.\d+\.\d+)"                                       	;   2| Hamburg, den 02.01.2020
-							    		,	"i)^[\pL\-]+\s[\pL\-]+\s*[;,.]\s*den\s+(?<Datum1>" rxDatumLang ")"                                       	;   3| Hamburg, den 2. Januar 2020
-							    		,	"i)\s*(" rxTags[1] ")[;:\s]*(" rxWDay ")*[.,\s]+(?<Datum1>\d+\.\d+\.\d+)"                               	;   4| Erstellungszeitpunkt: Do, 02.01.2020
-							    		,	"i)\s*(" rxTags[1] ")[;:\s]*(" rxWday ")*[.,\s]+(?<Datum1>" rxDatumLang ")"                                  	;   5| Erstellungszeitpunkt: Do. 02. Januar 2020
-							    		,	"^s*[\pL\s\(\)]+\s*[,;.]\s*(den\s)*(?<Datum1>\d{1,2}\.\d{1,2}\.\d{2,4})"                            	;   6| Hamburg, (den) 02.01.2020
-							    		,	"^s*[\pL\s\(\)]+\s*[,;.]\s*(den\s)*(?<Datum1>" rxDatumLang ")\s*"                                           	;   7| Hamburg, (den) 2. Januar 2020
-							    		,	"^\s*(?<Datum1>\d{2}\.\d{2}\.(\d{2}|\d{4}))\s*$"                                                            	;   8| 02.01.2020 (alleinstehend in Zeile)
-							    		,	"^\s*(?<Datum1>" rxDatumLang ")\s*$"]                                                                                 	;   9| 02. Jan(.|uar) 2020 (alleinstehend in Zeile)
+	global rxDokDatum	:=[	"i)\s*(" rxTags[1] ")" rx "*(" rxWDay ")*[.,\s]+(?<Datum1>\d+\.\d+\.\d+)"                               	;   1| Erstellungszeitpunkt: Do, 02.01.2020
+							    		,	"i)\s*(" rxTags[1] ")" rx "*(" rxWday ")*[.,\s]+(?<Datum1>" rxDatumLang ")"                                  	;   2| Erstellungszeitpunkt: Do. 02. Januar 2020
+										, 	"i)(gedruckt|angelegt|sich)\s*am\s*[;:]*\s*(?<Datum1>\d+\.\d+\.\d+)"                                   	;   3| gedruckt am: 02.01.2020
+										,	"i)(gedruckt|angelegt)\s*[;:]*\s*(?<Datum1>\d+\.\d+\.\d+)"                                                	;	4| angelegt: 02.01.2020
+							    		,	"i)^[\pL\-]+\s[\pL\-]+\s*[;,.]\s*(den)*\s+(?<Datum1>\d+\.\d+\.\d+)\s*$"                              	;   5| Hamburg-Hochburg, 02.01.2020 (nur Leerzeichen folgen)
+							    		,	"i)^[\pL\-]+\s[\pL\-]+\s*[;,.]\s*(den)*\s+(?<Datum1>" rxDatumLang ")\s*$"                             	;   6| Hamburg-Hochburg, 02. Januar 2020 (nur Leerzeichen folgen)
+							    		,	"^s*[\pL\s\(\)]+\s*[,;.]\s*(den\s)*(?<Datum1>\d{1,2}\.\d{1,2}\.\d{2,4})"                            	;   7| Hamburg, (den) 02.01.2020
+							    		,	"^s*[\pL\s\(\)]+\s*[,;.]\s*(den\s)*(?<Datum1>" rxDatumLang ")\s*"                                           	;   8| Hamburg, (den) 2. Januar 2020
+							    		,	"^\s*(?<Datum1>\d{2}\.\d{2}\.(\d{2}|\d{4}))\s*$"                                                            	;   9| 02.01.2020 (alleinstehend in Zeile)
+							    		,	"^\s*(?<Datum1>" rxDatumLang ")\s*$"]                                                                                 	; 10| 02. Jan(.|uar) 2020 (alleinstehend in Zeile)
+
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	; ZUM VALIDIEREN EINES DATUMS
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	global rxDateOCRrpl		:= "[,;:]"
+	global rxDateValidator	:= [ 	"^(?<D>[0]?[1-9]|[1|2][0-9]|[3][0|1]).(?<M>[0]?[1-9]|[1][0-2]).(?<Y>[0-9]{4}|[0-9]{2})$"
+											,	"^(?<D>[0]?[1-9]|[1|2][0-9]|[3][0|1])[.;,\s]+(?<M>" rxMonths ")[.;,\s]+(?<Y>[0-9]{4}|[0-9]{2})$"]
 
 }
 
@@ -500,7 +508,7 @@ FindDocNames(Text, debug:=false)                                  	{            
 return BestHits
 }
 
-FindDocDate(Text, debug=false) 										{                	;-- Behandlungstage und/oder Erstellungsdatum des Dokuments
+FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungstage und/oder Erstellungsdatum des Dokuments
 
 	; ---------------------------------------------------------------------------------------------------------------------------------------------------
 	; RegEx-Strings zusammenstellen
@@ -513,12 +521,13 @@ FindDocDate(Text, debug=false) 										{                	;-- Behandlungstage u
 		global excludeIDs								; Ausschluß von bestimmten Patientennummern (PatID)
 		global rxBehandlung, rxDokDatum  	; Datum
 
-	;}
 
+	;}
 
 		DocDates := Object()
 		DocDates.Behandlung 	:= Object()
 		DocDates.Dokument  	:= Object()
+
 		retDates := Object()
 		retDates.Behandlung := Array()
 		retDates.Dokument  	:= Array()
@@ -531,12 +540,11 @@ FindDocDate(Text, debug=false) 										{                	;-- Behandlungstage u
 			For LNr, line in TLines {
 				If !RegExMatch(line, rxDateStr, D)
 					continue
-				DDatum1 := Trim(StrReplace(DDatum1, ",", "."))
-				DDatum2 := Trim(StrReplace(DDatum2, ",", "."))
+				DDatum1 := DateValidator(DDatum1)
+				DDatum2 := DateValidator(DDatum2)
 				saveDate := DDatum1 (DDatum2 ? "-" DDatum2 : "")
-				If !DocDates.Behandlung.HasKey(saveDate) {
+				If !DocDates.Behandlung.HasKey(saveDate)
 					DocDates.Behandlung[saveDate] := {"fLine":[LNr], "dcount":1}
-				}
 				else {
 					For DDIdx, fLineNr in DocDates.Behandlung[saveDate].fline
 						If (fLineNr = LNr)
@@ -553,8 +561,8 @@ FindDocDate(Text, debug=false) 										{                	;-- Behandlungstage u
 			For LNr, line in TLines {
 				If !RegExMatch(line, rxDateStr, D)
 					continue
-				DDatum1 := Trim(StrReplace(DDatum1, ",", "."))
-				DDatum2 := Trim(StrReplace(DDatum2, ",", "."))
+				DDatum1 := DateValidator(DDatum1)
+				DDatum2 := DateValidator(DDatum2)
 				saveDate := DDatum1 (DDatum2 ? "-" DDatum2 : "")
 				If !DocDates.Dokument.HasKey(saveDate) {
 					DocDates.Dokument[saveDate] := {"fLine":[LNr], "dcount":1}
@@ -637,8 +645,14 @@ FindDocDate(Text, debug=false) 										{                	;-- Behandlungstage u
 
 	;}
 
-	; Rückgabe Objekt erstellen
-
+	; Rückgabe Objekt auf Geburtsdaten prüfen und diese entfernen
+		;~ If IsObject(names) {
+			;~ tmp := Array()
+			;~ For PatID, Pat in names {
+				;~ For DateIdx, date in retDates.Behandlung
+					;~ If (PatID <> admDB.MatchID("gd", date))
+			;~ }
+		;~ }
 
 return retDates
 }

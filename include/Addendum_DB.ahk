@@ -1078,7 +1078,9 @@ RegExStrings()                                                         	{       
 			, 	"Names1"  	: "^\s*(?<NN>" rxb.Person1 ")" rxb.S "(?<VN>" rxb.Person1 ")" rxb.S
 			, 	"Names2"  	: "^\s*(?<NN>" rxb.Person2 ")" rxb.S "(?<VN>" rxb.Person2 ")" rxb.S
 			; Addendums Dateibezeichnungsregel für Befunde: z.B. "Muster-Mann, Max-Ali, Entlassungsbrief Kardiologie v. 10.10.2020-18.10.2020"
-			, 	"CaseName"	: "^\s*(?<N>.*)?,\s*(?<I>.*)?\s+v\.\s*(?<D>\d+\.\d+\.\d+)(?<E>\s*\.[a-z]+)*"
+			, 	"CaseName"	: "^\s*(?<N>.*)?,\s*(?<I>.*)?\s+v\.\s*"
+									. "(?<D1>\d+.\d+.\d*)(?<D2>\-\d+.\d+.\d+)*"
+									. "(?<E>\s*\.[a-z]+)*"
 			; letztes Datum im Dateinamen (der letzte Datumsstring auf den weder ein Whitespace, Zahl, Punkt oder ein Minus folgt, oder am Ende des String steht
 			,	"LastDate" 	: "(?<Date>\" rxb.Date1 ").?([^\d.\s\-]|$)"}
 
@@ -1132,9 +1134,9 @@ class string                                                               	{   
 
 			;str := RegExReplace(str, this.rx.fileExt) ; neuer RegExString 'CaseName' kann mit Dateiendungen umgehen
 			If RegExMatch(str, this.rx.CaseName, F) {
-				Part1	:= RegExReplace(FN	, "[\s,]+$")
-				Part2	:= RegExReplace(FI 	, "[\s,]+$")
-				Part3	:= RegExReplace(FD	, "^[\s,v\.]+")
+				Part1	:= RegExReplace(FN      	, "[\s,]+$")
+				Part2	:= RegExReplace(FI       	, "[\s,]+$")
+				Part3	:= RegExReplace(FD1 FD2, "^[\s,v\.]+")
 				If (StrLen(Part1) > 0) && (StrLen(Part2) > 0) && (StrLen(Part3) > 0)
 					return true
 			}
