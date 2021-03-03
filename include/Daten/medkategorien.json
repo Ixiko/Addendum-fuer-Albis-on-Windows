@@ -43,10 +43,6 @@
         "ingredient": "Amlodipin",
         "use": "Blutdruck"
     },
-    "Amlodipin AWD": {
-        "ingredient": "Amlodipin",
-        "use": "Bluthochdruck"
-    },
     "Ampho Moronal": {
         "ingredient": "Amphotericin B",
         "use": "Candida/Soor"
@@ -122,10 +118,6 @@
     "Bisoprolol": {
         "ingredient": "Bisoprolol",
         "use": "Blutdruck/Herzrhythmus"
-    },
-    "Bisoprolol Rat": {
-        "ingredient": "Bisoprolol",
-        "use": "Bluthochdruck"
     },
     "Blopress": {
         "ingredient": "Candesartan",
@@ -303,7 +295,7 @@
         "ingredient": "Fexofenadin",
         "use": "Allergie/Juckreiz"
     },
-    "Finasterid-HEXAL": {
+    "Finasterid": {
         "ingredient": "Finasterid",
         "use": "Prostata"
     },
@@ -326,10 +318,6 @@
     "Formoterol Easyhaler": {
         "ingredient": "Formoterol",
         "use": "Asthma/COPD"
-    },
-    "Formoterol-CT": {
-        "ingredient": "Formoterol",
-        "use": "Asthma/chron.Bronchitis"
     },
     "Forxiga": {
         "ingredient": "Dapagliflozin",
@@ -355,15 +343,11 @@
         "ingredient": "Gingkoblätter Trockenextrakt",
         "use": "Demenz"
     },
-    "Glibenclamid SANDOZ": {
+    "Glibenclamid": {
         "ingredient": "Glibenclamid",
         "use": "Diabetes"
     },
     "Glimepirid": {
-        "ingredient": "Glimepirid",
-        "use": "Diabetes"
-    },
-    "Glimepirid Winthrop": {
         "ingredient": "Glimepirid",
         "use": "Diabetes"
     },
@@ -503,7 +487,7 @@
         "ingredient": "Macrogol, Kombinationen",
         "use": "chronische Obstipation "
     },
-    "Macrogol TAD": {
+    "Macrogol": {
         "ingredient": "Macrogol",
         "use": "chron. Stuhlverhalt"
     },
@@ -747,6 +731,10 @@
         "ingredient": "Risperidon",
         "use": "Stimmung"
     },
+    "Risperidon Atid": {
+        "ingredient": "Risperidon",
+        "use": "Schlafstörung"
+    },
     "Rivotril": {
         "ingredient": "Clonazepam",
         "use": "Unruhezustände"
@@ -861,6 +849,10 @@
         "ingredient": "Tilidin/Naloxon",
         "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
         "use": "Schmerzen (Morphin)"
+    },
+    "Tilidin Comp": {
+        "ingredient": "Tilidin und Naloxon",
+        "use": "Schmerzen"
     },
     "Torasemid": {
         "ingredient": "Torasemid",

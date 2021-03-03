@@ -1998,8 +1998,7 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog fÃ
 				If (StrLen(WinGetTitle(oPV.ID)) > 0) {
 					SumatraDDE(oPV.ID, "OpenFile"	, Addendum.BefundOrdner "\" filename, 0, 0, 0)
 					Sleep 400
-					SumatraDDE(oPV.ID, "SetView"	, Addendum.BefundOrdner "\" filename, "single page")
-					SumatraDDE(oPV.ID, "SetView"	, Addendum.BefundOrdner "\" filename, "fit page")
+					SumatraDDE(oPV.ID, "SetView"	, Addendum.BefundOrdner "\" filename, "single page", "fit page")
 					Gui, RN: Default
 				}
 				else

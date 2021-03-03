@@ -7,11 +7,12 @@
 ;		Hinweis:				Nichts ist ohne Fehler. Auch das hier sicher nicht. Nicht drauf verlassen! Skript soll nur eine Unterstützung sein!
 ;									Das Skript filtert noch keine Werte heraus die nur positiv oder negativ sein können (z.B. SARS-CoV-2 PCR)
 ;									INR Werte werden angezeigt, wenn ein Pat. Falithrom/Marcumar nimmt, der Wert aber nicht als therapeutischer INR gespeichert wurde.
+;									Im Moment müssen Einstellungen für die Anzeige noch direkt im Skript vorgenommen werden, wie z.B. die gesondert zu behandelnden Laborparameter
 ;
 ;		Abhängigkeiten:	siehe includes
 ;
 ;	                    			Addendum für Albis on Windows
-;                        			by Ixiko started in September 2017 - last change 11.02.2021 - this file runs under Lexiko's GNU Licence
+;                        			by Ixiko started in September 2017 - last change 03.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; Einstellungen
@@ -25,6 +26,12 @@
 	global LabJ := Object()
 	global adm := Object()
 
+  ; startet die Windows Gdip Funktion
+   	If !(pToken:=Gdip_Startup()) {
+		MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
+		ExitApp
+	}
+
   ; Albis Datenbankpfad / Addendum Verzeichnis
 	RegRead, AlbisPath, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, Installationspfad
 	RegExMatch(A_ScriptDir, "[A-Z]\:.*?AlbisOnWindows", AddendumDir)
@@ -35,15 +42,16 @@
 	adm.AlbisDBPath 	:= AlbisPath "\DB"
 	adm.compname	:= StrReplace(A_ComputerName, "-")                    	; der Name des Computer auf dem das Skript läuft
 
-  ; hier alle Parameter hineinschreiben bei denen Sie keine Warnung erhalten wollen
-	Warnen		:= {	"nie"      	: 	"CHOL,LDL,TRIG,HDL,LDL/HD,HBA1CIFC"                             	; nie      	= werden nie gezeigt
-							,	"immer" 	: 	"NTBNP,TROPI,TROPT,TROP,CKMB,K"                                       	; immer 	= wenn pathologisches Ergebnis
-							,	"exklusiv"	: 	"HBK-ST,COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,HIV,"  	; exklusiv 	= zeigen auch wenn kein ausgeprägtes path. Ergebnis
-												  .	"KERNS,ALYMPNEO,PROMY,DIFANISO,MYELOC,METAM,"
-												  .	"TROPOIHS,DDIM-CP"}
+  ; hier alle Parameter die gesondert verarbeitet werden sollen
+	Warnen	:= {	"nie"      	: 	"CHOL,LDL,TRIG,HDL,LDL/HD,HBA1CIFC"                             	; nie      	= werden nie gezeigt
+						,	"immer" 	: 	"NTBNP,TROPI,TROPT,TROP,CKMB,K"                                       	; immer 	= wenn pathologisch
+						,	"exklusiv"	: 	"HBK-ST,COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,HIV,"  	; exklusiv 	= zeigen auch wenn kein ausgeprägtes path. Ergebnis
+											.	"KERNS,ALYMPNEO,ALYMPREA,ALYMPRAM,MYELOC,PROMY,"	; 					und bei negativem Befund (z.B. COVIA, HIV)
+											. 	"DIFANISO,DIFPOLYC,DIFHYPOC,DIFMIKRO,METAM,"
+											. 	"TROPOIHS,DDIM-CP"}
 
   ; Laborjournal anzeigen
-	LabPat      	:= AlbisLaborJournal("", "", Warnen, 110, true)
+	LabPat     := AlbisLaborJournal("", "", Warnen, 110, true)
 	LaborJournal(LabPat, false)
 
 return
@@ -60,9 +68,10 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GW=100, Anzeige=true) {            
 		static Lab
 
 		LabPat := Object()
-		nieWarnen    	:= "(" StrReplace(Warnen.nie      	, ","	, "|") ")$"
-		immerWarnen 	:= "(" StrReplace(Warnen.immer 	, ","	, "|") ")$"
-		exklusivWarnen	:= "(" StrReplace(Warnen.exklusiv	, ","	, "|") ")$"
+		nieWarnen    	:= "\b(" StrReplace(Warnen.nie      	, ","	, "|") ")\b"
+		immerWarnen 	:= "\b(" StrReplace(Warnen.immer 	, ","	, "|") ")\b"
+		exklusivWarnen	:= "\b(" StrReplace(Warnen.exklusiv	, ","	, "|") ")\b"
+
 
 	; Albis und Addendum Datenbankpfad ;{
 		RegRead, AlbisPath, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, Installationspfad
@@ -146,9 +155,9 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GW=100, Anzeige=true) {            
 				If RegExMatch(PN, nieWarnen)
 					continue
 				If RegExMatch(PN, immerWarnen)
-					PNImmer := true
+					PNImmer  	:= true
 				If RegExMatch(PN, exklusivWarnen)
-					PNExklusiv := true
+					PNExklusiv	:= true
 
 				If !PNExklusiv && !PNImmer {
 					If !InStr(data["GI"], "+")
@@ -316,11 +325,11 @@ AlbisLaborJournal_new(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {       
 				PNImmer := PNExklusiv := false
 				PN := data.PARAM                                            	; Parameter (Name)
 
-				If RegExMatch(PN, "\b(" nieWarnen ")\b")
+				If RegExMatch(PN, "(" nieWarnen ")")
 					continue
-				If RegExMatch(PN, "\b(" immerWarnen ")\b")
+				If RegExMatch(PN, "(" immerWarnen ")")
 					PNImmer := true
-				If RegExMatch(PN, "\b(" exklusivWarnen ")\b")
+				If RegExMatch(PN, "(" exklusivWarnen ")")
 					PNExklusiv := true
 				If !PNExklusiv && !PNImmer
 					If !InStr(data["GI"], "+")
@@ -672,7 +681,7 @@ LaborJournal(LabPat, Anzeige=true) {
 				border: 1px solid #888888;
 				background-color:powderblue;
 				text-align: left;
-				padding: 8px;
+				padding: 4px;
 				font-size: 11;
 			}
 
@@ -726,7 +735,7 @@ LaborJournal(LabPat, Anzeige=true) {
 			.main {
 				display: flex;
 				flex-grow: 1;
-				padding: 0.5em;
+				padding: 1.5em;
 				 justify-content: space-between;
 			}
 
@@ -789,7 +798,7 @@ LaborJournal(LabPat, Anzeige=true) {
 
 					For key, PN in parameter {
 
-						TRPat    	:= "<TR" (UDatum	? (trIdf ? " id='td1a'" : " id='td2a'") : (trIdf ? " id='td1b'" : " id='td2b'") ) ">"
+						TRPat    	:= "<TR" (UDatum 	? (trIdf ? " id='td1a'" : " id='td2a'") : (trIdf ? " id='td1b'" : " id='td2b'") ) ">"
 						tdPat     	:= "<TD" (Patient  	? (trIdf ? " class='table-btn1'" : " class='table-btn2'") " onclick='ahk.LabJournal_KarteiKarte(event)'>" : ">")
 						tbDatum 	:= UDatum ? SubStr(UDatum, 1, 6) : ""
 						TDRDX		:= UDatum ? TDR2a : TDR2b
@@ -855,6 +864,11 @@ LaborJournal(LabPat, Anzeige=true) {
 		labJ.enrolled	    		:= true
 
 		neutron.Show(winpos)
+
+	; speichern als BMP zum Versenden als Bilddatei
+		;hBMP := hWnd_to_hBmp(labJ.hwnd)
+		;SavePicture(hBMP, A_Temp "\Laborjournal.jpg")
+		;Run % A_Temp "\Laborjournal.bmp"
 
 }
 
@@ -971,6 +985,51 @@ MessageWorker(InComing) {                                                       
 		}
 
 return
+}
+
+hWnd_to_hBmp( hWnd:=-1, Client:=0, A:="", C:="" ) {                                          	;-- Capture fullscreen, Window, Control or user defined area of these
+
+	; By SKAN C/M on D295|D299 @ bit.ly/2lyG0sN
+
+	A      := IsObject(A) ? A : StrLen(A) ? StrSplit( A, ",", A_Space ) : {},     A.tBM := 0
+	Client := ( ( A.FS := hWnd=-1 ) ? False : !!Client ), A.DrawCursor := "DrawCursor"
+	hWnd   := ( A.FS ? DllCall( "GetDesktopWindow", "UPtr" ) : WinExist( "ahk_id" . hWnd ) )
+
+	A.SetCapacity( "WINDOWINFO", 62 ),  A.Ptr := A.GetAddress( "WINDOWINFO" )
+	A.RECT := NumPut( 62, A.Ptr, "UInt" ) + ( Client*16 )
+
+	If (DllCall("GetWindowInfo",   "Ptr",hWnd, "Ptr",A.Ptr ) && DllCall("IsWindowVisible", "Ptr",hWnd ) && DllCall("IsIconic", "Ptr",hWnd )=0) {
+        A.L	:= NumGet( A.RECT+ 0, "Int" )	, A.X 	:= ( A.1 <> "" ? A.1 : (A.FS ? A.L : 0) )
+        A.T	:= NumGet( A.RECT+ 4, "Int" )	, A.Y 	:= ( A.2 <> "" ? A.2 : (A.FS ? A.T : 0 ))
+        A.R	:= NumGet( A.RECT+ 8, "Int" )	, A.W	:= ( A.3  >  0 ? A.3 : (A.R - A.L - Round(A.1)) )
+        A.B	:= NumGet( A.RECT+12, "Int" )	, A.H 	:= ( A.4  >  0 ? A.4 : (A.B - A.T - Round(A.2)) )
+
+        A.sDC	:= DllCall( Client ? "GetDC" : "GetWindowDC", "Ptr",hWnd, "UPtr" )
+        A.mDC	:= DllCall( "CreateCompatibleDC", "Ptr",A.sDC, "UPtr")
+        A.tBM 	:= DllCall( "CreateCompatibleBitmap", "Ptr",A.sDC, "Int",A.W, "Int",A.H, "UPtr" )
+
+        DllCall( "SaveDC", "Ptr",A.mDC )
+        DllCall( "SelectObject", "Ptr",A.mDC, "Ptr",A.tBM )
+        DllCall( "BitBlt",       "Ptr",A.mDC, "Int",0,   "Int",0, "Int",A.W, "Int",A.H, "Ptr",A.sDC, "Int",A.X, "Int",A.Y, "UInt",0x40CC0020 )
+
+        A.R := ( IsObject(C) || StrLen(C) ) && IsFunc( A.DrawCursor ) ? A.DrawCursor( A.mDC, C ) : 0
+        DllCall( "RestoreDC", "Ptr",A.mDC, "Int",-1 )
+        DllCall( "DeleteDC",  "Ptr",A.mDC )
+        DllCall( "ReleaseDC", "Ptr",hWnd, "Ptr",A.sDC )
+    }
+
+Return A.tBM
+}
+
+SavePicture(hBM, sFile) {                                            ; By SKAN on D293 @ bit.ly/2krOIc9
+Local V,  pBM := VarSetCapacity(V,16,0)>>8,  Ext := LTrim(SubStr(sFile,-3),"."),  E := [0,0,0,0]
+Local Enc := 0x557CF400 | Round({"bmp":0, "jpg":1,"jpeg":1,"gif":2,"tif":5,"tiff":5,"png":6}[Ext])
+  E[1] := DllCall("gdi32\GetObjectType", "Ptr",hBM ) <> 7
+  E[2] := E[1] ? 0 : DllCall("gdiplus\GdipCreateBitmapFromHBITMAP", "Ptr",hBM, "UInt",0, "PtrP",pBM)
+  NumPut(0x2EF31EF8,NumPut(0x0000739A,NumPut(0x11D31A04,NumPut(Enc+0,V,"UInt"),"UInt"),"UInt"),"UInt")
+  E[3] := pBM ? DllCall("gdiplus\GdipSaveImageToFile", "Ptr",pBM, "WStr",sFile, "Ptr",&V, "UInt",0) : 1
+  E[4] := pBM ? DllCall("gdiplus\GdipDisposeImage", "Ptr",pBM) : 1
+Return E[1] ? 0 : E[2] ? -1 : E[3] ? -2 : E[4] ? -3 : 1
 }
 
 

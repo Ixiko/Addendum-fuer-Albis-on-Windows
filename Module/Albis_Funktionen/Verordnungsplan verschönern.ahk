@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . .
 ; . . . . . .                                                                  	VERORDNUNGSPLAN VERSCHÖNERN
-global                                                         						DatumVom:= "29.01.2021"
+global                                                         						DatumVom:= "03.03.2021"
 ; . . . . . .
 ; . . . . . .                      ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . . .                             BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -73,7 +73,7 @@ global                                                         						DatumVom:= 
 								,	"Augentropfen"      	: ""
 								, 	"Aurobindo"           	: ""
 								, 	"Arzne"                  	: ""
-								, 	"AWD"                   	: ""
+								, 	"\bAWD\b"               	: ""
 								,	"Axico"                  	: ""
 								,	"Axicorp\s*P"          	: ""
 								, 	"BAYER|Bayer"       	: ""
@@ -98,7 +98,7 @@ global                                                         						DatumVom:= 
 								,	"Henning"              	: ""
 								,	"Hennig"                	: ""
 								,	"Heum*a*n*n*"         	: ""
-								,	"HEXAL"                 	: ""
+								,	"\-*HEXAL"               	: ""
 								,	"Hkp"                    	: ""
 								,	"Huebe"                	: ""
 								,	"Inject"                     	: ""
@@ -121,24 +121,24 @@ global                                                         						DatumVom:= 
 								,	"Penf*i*l*l*"               	: ""
 								,	"Phar*m*a*"          	: ""
 								,	"Protect(\d+)"        	: " $1"
-								,	"[Rr]atiop*h*a*r*m*"  	: ""
+								,	"[Rr]atio*p*h*a*r*m*"	: ""
 								,	"Retard"                 	: ""
 								,	"Retardtable*t*t*e*n*"	: ""
-								,	"SANDOZ"               	: ""
+								,	"\bSANDOZ\b"         	: ""
 								,	"Sta(\d)"                 	: " $1"
 								,	"STADA|Stada"      	: ""
 								,	"\ssto"                   	: ""
 								,	"Tabl\W"                  	: ""
 								,	"Tabletten"             	: ""
 								,	"T[Aa][Hh]"            	: ""
-								,	"TAD"                      	: ""
+								,	"\bTAD\b"                	: ""
 								,	"TEI"                      	: ""
 								,	"TEVA"                   	: ""
 								,	"TOP"                     	: ""
 								,	"Tro"                     	: ""
 								,	"Vital"                    	: ""
 								,	"Weichkaps*e*l*n*"	: ""
-								,	"Winthrop"	            	: ""
+								,	"\bWinthrop\b"        	: ""
 								,	"Zentiva"               	: ""
 								,	"4Wochen"            	: "" }
 

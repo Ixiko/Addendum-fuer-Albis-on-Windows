@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                                                                       	ADDENDUM HAUPTSKRIPT
-global                                                                               AddendumVersion:= "1.52" , DatumVom:= "02.03.2021"
+global                                                                               AddendumVersion:= "1.52" , DatumVom:= "03.03.2021"
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                    ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . . . . . . .                                           BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -17,7 +17,7 @@ global                                                                          
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 /*               	A DIARY OF CHANGES
-
+| **03.03.2020** | **F~** | **Laborjournal**	- es wurden mehr Parameter im Labor angezeigt als eingestellt, korrigiert |
 
 
 
@@ -4153,19 +4153,19 @@ MessageWorker(InComing) {                                                       
 
 		;SciTEOutput("Addendum Incoming: `nmsg: " recv.txtmsg "`nfrom: " recv.fromID)
 	; Kommunikation mit dem Abrechnungshelfer Skript
-		If RegExMatch(recv.txtmsg, "^AutoLogin\s+Off")                    		{
+		If 			RegExMatch(recv.txtmsg, "^AutoLogin\s+Off")                    	{
 			AutoLogin := false
 			result := Send_WM_COPYDATA("AutoLogin disabled", recv.opt)
 		}
-		else if RegExMatch(recv.txtmsg, "^AutoLogin\s+On")	                	{
+		else if 	RegExMatch(recv.txtmsg, "^AutoLogin\s+On")	                	{
 			AutoLogin := true
 			result := Send_WM_COPYDATA("AutoLogin enabled", recv.opt)
 		}
 	; Tesseract OCR Thread Kommunikation
-		else if InStr(recv.txtmsg, "OCR_processed")                                  	{
+		else if 	InStr(recv.txtmsg, "OCR_processed")                                      	{
 			admGui_CheckJournal(recv.opt, recv.fromID)
 		}
-		else if InStr(recv.txtmsg, "OCR_ready")                                           	{
+		else if 	InStr(recv.txtmsg, "OCR_ready")                                           	{
 
 			; Anzeige auffrischen
 				admGui_Journal()
@@ -4188,17 +4188,17 @@ MessageWorker(InComing) {                                                       
 
 		}
 	; Laborabruf_iBWC.ahk
-		else if InStr(recv.txtmsg, "AutoLaborAbruf") && InStr(recv.opt, "Status")	{
+		else if 	InStr(recv.txtmsg, "AutoLaborAbruf") && InStr(recv.opt, "Status"){
 			Send_WM_COPYDATA("AutoLaborAbruf Status|" Addendum.Labor.AutoAbruf  "|" GetAddendumID(), recv.fromID)
 		}
-		else if InStr(recv.txtmsg, "AutoLaborAbruf") && InStr(recv.opt, "aus")	{
+		else if 	InStr(recv.txtmsg, "AutoLaborAbruf") && InStr(recv.opt, "aus")	{
 			If Addendum.Labor.AutoAbruf {
 				Addendum.Labor.AutoAbruf_Last := true
 				gosub Menu_LaborAbrufManuell                    ; Traymenueinstellung ändern
 			}
 			Send_WM_COPYDATA("AutoLaborAbruf angehalten||" GetAddendumID(), recv.fromID)
 		}
-		else if InStr(recv.txtmsg, "AutoLaborAbruf") && InStr(recv.opt, "an") 	{
+		else if 	InStr(recv.txtmsg, "AutoLaborAbruf") && InStr(recv.opt, "an") 	{
 			If Addendum.Labor.AutoAbruf_Last {
 				Addendum.Labor.AutoAbruf_Last := false
 				gosub Menu_LaborAbrufManuell                    ; Traymenueinstellung ändern
@@ -4206,7 +4206,7 @@ MessageWorker(InComing) {                                                       
 			Send_WM_COPYDATA("AutoLaborAbruf fortgesetzt||" GetAddendumID(), recv.fromID)
 		}
 	; Addendum Statusabfragen
-		else if InStr(recv.txtmsg, "Status")                                                 	{
+		else if 	InStr(recv.txtmsg, "Status")                                                    	{
 			Send_WM_COPYDATA("Status|okay|" GetAddendumID(), recv.fromID)
 		}
 
