@@ -14,7 +14,7 @@
 ;
 ;
 ;	                    	Addendum für Albis on Windows
-;                        	by Ixiko started in September 2017 - letzte Änderung 02.03.2021 - this file runs under Lexiko's GNU Licence
+;                        	by Ixiko started in September 2017 - letzte Änderung 04.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
 
@@ -1329,7 +1329,7 @@ admGui_Reports()                                                         	{	    
 
 	; PatDocs erstellen - enthält nur die Dateien zum aktuellen Patienten
 		For key, pdf in ScanPool	{				;wenn keine PatID vorhanden ist, dann ist die if-Abfrage immer gültig (alle Dateien werden angezeigt)
-			If !RegExMatch(pdf.name, "\.pdf$") || !FileExist(Addendum.BefundOrdner "\" pdf.name) {
+			If !RegExMatch(pdf.name, "i)\.pdf$") || !FileExist(Addendum.BefundOrdner "\" pdf.name) {
 				pdfpool.remove(pdf.name)
 				continue
 			}
@@ -1342,7 +1342,7 @@ admGui_Reports()                                                         	{	    
 
 	; Pdf Befunde anzeigen
 		For key, pdf in PatDocs {
-			If !RegExMatch(pdf.name, "\.pdf$") || !FileExist(Addendum.BefundOrdner "\" pdf.name)
+			If !RegExMatch(pdf.name, "i)\.pdf$") || !FileExist(Addendum.BefundOrdner "\" pdf.name)
 				continue
 			displayname := string.Replace.Names(string.Replace.FileExt(pdf.name))
 			If pdf.isSearchable
@@ -1997,8 +1997,7 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 			If (oPV.Previewer = "Sumatra") {
 				If (StrLen(WinGetTitle(oPV.ID)) > 0) {
 					SumatraDDE(oPV.ID, "OpenFile"	, Addendum.BefundOrdner "\" filename, 0, 0, 0)
-					Sleep 400
-					SumatraDDE(oPV.ID, "SetView"	, Addendum.BefundOrdner "\" filename, "single page", "fit page")
+					SumatraDDE(oPV.ID, "SetView"	, Addendum.BefundOrdner "\" filename, "single page", "-1") 	; -1 = fit page
 					Gui, RN: Default
 				}
 				else
@@ -2018,6 +2017,7 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 				FilePathCreate(Addendum.DBPath "\Dictionary")
 			} else {
 				bezeichner := FileOpen(BEZPath, "r", "UTF-8").Read()
+				ACBez := RTrim(RegExReplace(bezeichner, "[\n\r]", "|"), "|")
 				bezeichner := StrSplit(bezeichner, "`n", "`r")
 			}
 		}
@@ -2101,7 +2101,7 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 		Gui, RN: Font             	, % "s" fSize - 1 " cWhite", Calibri
 		Gui, RN: Add, Progress	, % "x0      	y" cp.Y+cp.H+5 	" w10 h20 c7B89BB vRNPG1 HWNDRNhPG1"          	, 100
 		Gui, RN: Add, Text    	, % "x" cp.X "	y" cp.Y+cp.H+7   	"  Left Backgroundtrans vRNHW1"                          	, % "verbrauchte Zeichen (Inhalt+Datum):"
-		dp    	:= GuiControlGet("RN", "Pos", "RNHW1")
+		dp := GuiControlGet("RN", "Pos", "RNHW1")
 		GuiControl, RN: Move, % "RNPG1", % "h" dp.H + 5
 
 		Gui, RN: Font            	, % "s" fSize - 1 " cWhite Bold", Consolas
@@ -2203,12 +2203,6 @@ RNEHandler:                                      	;{   Dateinamenvorschau und Vo
 		}
 
 		Gui, RN: Submit, NoHide
-
-	; Autocomplete Listview anzeigen
-		;~ If (nr = 2)
-			;~ admGui_RenameAC(RNhE2	, RNE2, bezeichner, 5)
-		;~ else
-			;~ admGui_RenameAC("hide"	, RNE2, bezeichner, 5)
 
 	; Dateinamenvorschau auffrischen
 		GuiControl, RN:, RNPV, % admGui_FileName(RNE1, RNE2, RNE3)
@@ -3055,10 +3049,10 @@ admGui_FolderWatch(path, changes)                             	{                
 	; letzte Änderung: 13.02.2021
 
 		global hadm
-
-		static staticFileCount	:= 0
-		static filecount        	:= 0
 		static func_AutoOCR	:= func("admGui_OCRAllFiles")
+
+		Addendum.OCR.staticFileCount	:= 0
+		Addendum.OCR.filecount         	:= 0
 
 	; untersucht alle veränderten oder hinzugfügten Dateien
 		For Each, Change In Changes {
@@ -3066,7 +3060,7 @@ admGui_FolderWatch(path, changes)                             	{                
 			action   	:= change.action
 			name    	:= change.name
 
-			If RegExMatch(name, "\.pdf$")
+			If RegExMatch(name, "i)\.pdf$")
 				If RegExMatch(action, "1|3|4")	{
 
 					SplitPath, name, filename, filepath
@@ -3082,8 +3076,8 @@ admGui_FolderWatch(path, changes)                             	{                
 							}
 
 						; Dateizähler erhöhen
-							staticFileCount 	++
-							filecount        	++
+							Addendum.OCR.staticFileCount 	++
+							Addendum.OCR.filecount           	++
 
 						; Datei hat noch keine Texterkennung* erhalten, Timer mit Verzögerung wird gestartet
 						;                                  	*wird nur auf dem Client ausgeführt der in der Addendum.ini hinterlegt ist
@@ -3109,8 +3103,8 @@ admGui_FolderWatch(path, changes)                             	{                
 				}
 		}
 
-		If filecount {
-			msg := filecount " Befund" (filecount = 1 ? " wurde" : "e wurden" ) " hinzufügt!"
+		If Addendum.OCR.filecount {
+			msg := Addendum.OCR.filecount " Befund" (Addendum.OCR.filecount = 1 ? " wurde" : "e wurden" ) " hinzufügt!"
 			Controls("", "reset", "")
 			If Controls("", "ControlFind, AddendumGui, AutoHotkeyGUI, return hwnd", "ahk_class OptoAppClass") {
 				admPos := GetWindowSpot(hadm)
@@ -3120,7 +3114,7 @@ admGui_FolderWatch(path, changes)                             	{                
 				TrayTip("Befundordner", msg, 6)
 
 		}
-		filecount := 0
+		Addendum.OCR.filecount := 0
 
 }
 

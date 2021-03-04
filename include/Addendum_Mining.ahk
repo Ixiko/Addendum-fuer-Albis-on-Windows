@@ -62,8 +62,8 @@ FindDocStrings() {
 
 	global rxDatum	    	:= 	"\d{1,2}" rx "\w+" rx "\d{2,4}"                                                                     	; 12. July 1981 oder 12.7.1981
 	global rxDatumLang 	:= 	"\d{1,2}" rx "(" rxMonths ")" rx "\d{2,4}"                                                        	; 12. Jul. 81
-	global rxGebAm		:= 	"(geb\.*o*r*e*n*\s*a*m*|Geb(urts)*" rx "Datu*m*" rx ")"                                	; geb. am o. Geb. Dat. usw
-	global rxGebAm2  	:= 	"(geboren\sam|geb\.\sam|geb\.*o*r*e*n*|Geburtsdatum)"
+	global rxGb1	    	:= 	"(geb\.*o*r*e*n*\s*a*m*|Geb(urts)*" rx "Datu*m*|\*" rx ")"                              	; geb. am o. Geb. Dat. usw
+	global rxGb2        	:= 	"(geboren\sam|geb\.\sam|geb\.*o*r*e*n*|Geburtsdatum|\*)"
 
 	global GName      	:= 	"Geb\.\sName|Geburtsname"
 	global rxAnrede     	:= 	"(Betrifft)"
@@ -73,29 +73,31 @@ FindDocStrings() {
 	global rxNachname	:= 	"([Nn]ach)*[Nn]ame"
 	global rxNameW    	:= 	"[Nn]ame[\w]*"
 
-	global RxNames     	:= [	rxAnrede    	. 	rx	. 	rxName1  .	rx  	.	rxGebAm   . 	ry  .  rxDatum       	; 01    Betrifft: Marx, Karl, geb. am: 14.03.1818
-							    		,	rxAnrede   	.	rx	. 	rxName2	.	rx  	.	rxGebAm   . 	ry                        	; 02
-							    		,	rxName1     	.	rx	.	rxGebAm	.	rs  	.   rxDatum                                  	; 03
-							    		,	rxName2     	.	rx	.	rxGebAm 	.	rs  	.   rxDatum                                  	; 04
-							    		,	rxName1     	.	rx	.	rxGName	.	rp2	.	rxGebAm 	.	rx	.	rxDatum     	; 05
-							    		,	rxName2     	.	rx	.	rxGName	.	rz  	.	rxGebAm 	.	rx	.	rxDatum      	; 06	Müller-Wachtendonk, Marie-Luise, Geburtsname: Müller, geb. am 12.11.1964
+	global RxNames     	:= [	rxAnrede    	. 	rx	. 	rxName1  .	rx  	.	rxGb1   . 	ry  .  rxDatum        	; 01	Betrifft: Marx, Karl, geb. am: 14.03.1818
+							    		,	rxAnrede   	.	rx	. 	rxName2	.	rx  	.	rxGb1   . 	ry                         	; 02
+							    		,	rxName1     	.	rx	.	rxGb1   	.	rs                          	.   rxDatum          	; 03
+							    		,	rxName2     	.	rx	.	rxGb1     	.	rs                             	.   rxDatum          	; 04
+							    		,	rxName1     	.	rx	.	rxGName	.	rp2	.	rxGb1 	.	rx	.	rxDatum        	; 05
+							    		,	rxName2     	.	rx	.	rxGName	.	rz  	.	rxGb1 	.	rx	.	rxDatum        	; 06	Müller-Wachtendonk, Marie-Luise, Geburtsname: Müller, geb. am 12.11.1964
 
 							    		,	rxAnrede   	. 	rx  .  rxName2                                                                 	; 07	Betrifft: Müller-Wachtendonk, Marie-Luise
-							    		,	rxAnredeM 	. 	rx  .  rxName2                                                                 	; 08	Herr Karl Marx o. Patient Marx, Karl
+							    		,	rxAnredeM 	. 	rx  .  rxName2                                                               	; 08	Herr Karl Marx o. Patient Marx, Karl
 							    		,	rxAnredeF 	. 	rx  .  rxName2                                                                 	; 09	Frau Marie-Luise Müller-Wachtendonk
+							    		,	rxAnredeM 	. 	rx  .  rxName2  .	rx 	.	rxGb2  	.	rx	.	rxDatum       	; 10	Patient Marx, Karl, * 14.03.1818
+							    		,	rxAnredeF 	. 	rx  .  rxName2  .	rx 	.	rxGb2  	.	rx	.	rxDatum       	; 11	Patientin Luxemburg, Rosa, * 05.03.1871
 
-							    		,	rxNameW		.	rx	.	rxName1                                                                 	; 10
-							    		,	rxNachname	. 	rx	. 	rxPerson2	.	".*?" 	.	rxVorname	. rx . rxPerson1     	; 11	Nachname: Karl, Versichtennummer: 12345678, Vorname: Marx
-							    		,	rxVorname	. 	rx	. 	rxPerson2	.	".*?"	.	rxNachname	. rx . rxPerson2     	; 12	Vorname: Marx, Versichtennummer: 12345678, Nachname: Karl
+							    		,	rxNameW		.	rx	.	rxName1                                                                 	; 12
+							    		,	rxNachname	. 	rx	. 	rxPerson2	.	".*?" 	.	rxVorname	. rx . rxPerson1     	; 13	Nachname: Karl, Versichtennummer: 12345678, Vorname: Marx
+							    		,	rxVorname	. 	rx	. 	rxPerson2	.	".*?"	.	rxNachname	. rx . rxPerson2     	; 14	Vorname: Marx, Versichtennummer: 12345678, Nachname: Karl
 
-							    		,	"^\s*" rxName2 "\s"]	                                                                              	; 13	^ Muster, Max  ....
+							    		,	"^\s*" rxName2 "\s"]	                                                                              	; 15	^ Muster, Max  ....
 
 	global RxNames2  	:= [	rxNachname	. 	rx	. 	rxPerson2                            										; 01 	Nachname: Müller(-Wachtendonk)*
 								    	,	rxVorname	. 	rx	.	rxPerson1]                          										; 02	Vorname: Marie(-Luise)*
 
 	global	rxDates       	:= [	"(?<Tag>\d{1,2})[.,;](?<Monat>\d{1,2})[.,;]" rxYear3 "([^\d]|$)"           	; 01	12.11.64 o. 12.11.1964 o. 2.1.(19)*64
 								    	,	"i)(?<Tag>\d{1,2})" rx . rxMonths2 . rx . rxYear3 "([^\d]|$)"                  	; 02	12. November (19)64
-								    	,	"(" rxGebAm ")"	rx  ".{0,20}?" . rxDay . rx . rxMonths2 . rx . rxYear]            	; 03   Geburtsdatum: .*(20 beliebige Zeichen) 12. Nov. 1964
+								    	,	"(" rxGb1 ")"	rx  ".{0,20}?" . rxDay . rx . rxMonths2 . rx . rxYear]              	; 03   Geburtsdatum: .*(20 beliebige Zeichen) 12. Nov. 1964
 
 
 	global rxContinue  	:= "(Nachname|Vor[nm]ame|Geburtsdatum)"
@@ -155,7 +157,7 @@ FindDocNames(Text, debug:=false)                                  	{            
 		; ----------------------------- Datum
 			global ThousandYear, HundredYear, rxDay, rxWDay, rxWDay2, rxMonths, rxMonths2, rxYear 	; Teile des Datum
 			global rxDatum, rxDates                                                                                                         	; Komplett
-			global rxGebAm, rxGebAm2                                                                                                    	; Startstrings
+			global rxGb1, rxGb2                                                                                                    	; Startstrings
 		; ----------------------------- Eigen- oder Personennamen
 			global rxPerson, rxPerson1, rxPerson2, rxPerson3, rxPerson4, rxName1, rxName2                      	; Teile
 			global RxNames, RxNames2                                                                                                  	; Komplett

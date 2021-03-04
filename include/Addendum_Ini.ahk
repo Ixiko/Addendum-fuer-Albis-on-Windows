@@ -212,14 +212,14 @@ admFunktionen() {                                                               
 		Addendum.PopUpMenu              	:= IniReadExt(compname	, "PopUpMenu"                              	, "ja"                 	)
 	; die Addendum Toolbar starten
 		Addendum.ToolbarThread            	:= IniReadExt(compname	, "Toolbar_anzeigen"                         	, "nein"                 	)
-	; ermöglicht die sofortige Bearbeitung/Anzeige neuer Dateien
-		Addendum.WatchFolder            	:= IniReadExt(compname	, "BefundOrdner_ueberwachen"       	, "ja"                 	)
 	; Schnellrezept integrieren
 		Addendum.Schnellrezept           	:= IniReadExt("Addendum"	, "Schnellrezept"                              	, "ja"                 	)
 	; zeigt TrayTips
 		Addendum.ShowTrayTips           	:= IniReadExt("Addendum"	, "TrayTips_zeigen"                            	, "nein"                 	)
 	; AutoOCR - Eintrag wird nur auf dem dazu berechtigten Client angezeigt
 		Addendum.OCR.AutoOCR            	:= IniReadExt("OCR"      	, "AutoOCR"                                  	, "nein"                 	)
+	; ermöglicht die sofortige Bearbeitung/Anzeige neuer Dateien
+		Addendum.OCR.WatchFolder    	:= IniReadExt(compname	, "BefundOrdner_ueberwachen"       	, "ja"                 	)
 
 
 }
@@ -476,7 +476,7 @@ admOCRSettings() {                                                              
 
 	; welcher Client im Netzwerk die Texterkennung ausführen soll
 	; ist kein Client angegeben ist die Funktion ausgeschaltet, ein- und ausschalten läßt sich AutoOCR über das Traymenu
-		Addendum.OCR.Client                        	:= IniReadExt("OCR" , "OCRClient")
+		Addendum.OCR.Client                        	:= IniReadExt("OCR" , "AutoOCRClient")
 		If InStr(Addendum.OCR.Client, "Error")                                	; ## Abfrage integrieren
 			Addendum.OCR.Client := ""
 

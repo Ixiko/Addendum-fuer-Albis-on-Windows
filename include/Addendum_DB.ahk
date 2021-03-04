@@ -1080,7 +1080,7 @@ RegExStrings()                                                         	{       
 			; Addendums Dateibezeichnungsregel für Befunde: z.B. "Muster-Mann, Max-Ali, Entlassungsbrief Kardiologie v. 10.10.2020-18.10.2020"
 			, 	"CaseName"	: "^\s*(?<N>.*)?,\s*(?<I>.*)?\s+v\.\s*"
 									. "(?<D1>\d+.\d+.\d*)(?<D2>\-\d+.\d+.\d+)*"
-									. "(?<E>\s*\.[a-z]+)*"
+									. "(?<E>\s*\.[A-Za-z]+)*"
 			; letztes Datum im Dateinamen (der letzte Datumsstring auf den weder ein Whitespace, Zahl, Punkt oder ein Minus folgt, oder am Ende des String steht
 			,	"LastDate" 	: "(?<Date>\" rxb.Date1 ").?([^\d.\s\-]|$)"}
 

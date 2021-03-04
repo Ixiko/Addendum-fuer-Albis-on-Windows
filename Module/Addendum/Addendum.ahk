@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                                                                       	ADDENDUM HAUPTSKRIPT
-global                                                                               AddendumVersion:= "1.52" , DatumVom:= "03.03.2021"
+global                                                                               AddendumVersion:= "1.52" , DatumVom:= "04.03.2021"
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                    ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . . . . . . .                                           BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -18,6 +18,7 @@ global                                                                          
 
 /*               	A DIARY OF CHANGES
 | **03.03.2020** | **F~** | **Laborjournal**	- es wurden mehr Parameter im Labor angezeigt als eingestellt, korrigiert |
+| **04.03.2020** | **F~** | **Infofenster**   	- Darstellung von PDF Dateien im Sumatra Reader funktioniert jetzt fehlerlos |
 
 
 
@@ -489,7 +490,7 @@ global                                                                          
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	; Einlesen der Patientendaten aus der Patienten.txt Datei im Addendum Datenbankordner
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-		oPat := admDB.ReadPatDB() ; oPat - ist ein Objekt das die aktuell Daten zu registriertem Patientienten enthät
+		oPat := admDB.ReadPatDB() ; oPat - ist ein Objekt das die aktuell Daten zu registriertem Patientienten enthält
 	;}
 
 
@@ -537,8 +538,10 @@ global                                                                          
 		If InStr(Addendum.AktiveAnzeige, "Patientenakte")         	{
 			PatDb(AlbisTitle2Data(AlbisTitle), "exist")
 			If Addendum.AddendumGui {
-				If Addendum.WatchFolder
+				If Addendum.OCR.WatchFolder {
 					WatchFolder(Addendum.BefundOrdner, "admGui_FolderWatch", False, (1+2+8+64))
+					Addendum.OCR.WatchFolderStatus := "running"
+				}
 				If RegExMatch(Addendum.AktiveAnzeige, "i)Karteikarte|Laborblatt|Biometriedaten")				; WinActive("ahk_class OptoAppClass") &&
 					AddendumGui()
 			}
@@ -2479,15 +2482,17 @@ Menu_AutoOCR:                            	;{
 	IniWrite, % (Addendum.OCR.AutoOCR ? "ja":"nein"), % Addendum.Ini, % "OCR", % "AutoOCR"
 ;}
 Menu_WatchFolder:                        	;{
-	Addendum.WatchFolder := !Addendum.WatchFolder
+	Addendum.OCR.WatchFolder := !Addendum.OCR.WatchFolder
 	Menu, SubMenu3, ToggleCheck, % "Befundordner überwachen"
-	IniWrite, % (Addendum.WatchFolder ? "ja":"nein"), % Addendum.Ini, % compname, % "BefundOrdner_ueberwachen"
-	If !Addendum.WatchFolder {
+	IniWrite, % (Addendum.OCR.WatchFolder ? "ja":"nein"), % Addendum.Ini, % compname, % "BefundOrdner_ueberwachen"
+	If !Addendum.OCR.WatchFolder {
 		WatchFolder("**End", 0)
+		Addendum.OCR.WatchFolderStatus := "off"
 		PraxTT("Überwachung des Befundordner angehalten", "2 1")
 	}
 	else {
 		WatchFolder(Addendum.BefundOrdner, "admGui_FolderWatch", False, (1+2+8+64))
+		Addendum.OCR.WatchFolderStatus := "running"
 		PraxTT("Überwachung des Befundordner gestartet", "2 1")
 	}
 ;}

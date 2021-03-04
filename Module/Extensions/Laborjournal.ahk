@@ -1,7 +1,12 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                 	Addendum Laborjournal
 ;
-;      Funktion:           	zeigt nur die sehr auffälligen Laborwerte seiner Patienten in Form eines HTML Journals an. Das visuelle Durchforsten des Laborbuches soll damit entfallen.
+;      Funktion:           	- 	schnellerer Überblick über die Laborwerte der letzten Tage in Tabellenform mit farblicher Hervorhebung.
+;									- 	nur relevante Werte kommen zur Anzeige
+;									- 	gesondert zu behandelnde Laborparameter können angegeben werden
+;										Kategorien: 	immer	:	Parameter welche unabhängig der Höhe der Normwertüber- oder unterschreitung angezeigt werden z.B. Troponin
+;															exklusiv	:	werden immer angezeigt, ob auffällig oder nicht z.B. COVID-PCR o. HIV
+;															nie		:	Parameter die nicht in der Tabelle erscheinen sollen
 ;
 ;
 ;		Hinweis:				Nichts ist ohne Fehler. Auch das hier sicher nicht. Nicht drauf verlassen! Skript soll nur eine Unterstützung sein!
@@ -12,7 +17,7 @@
 ;		Abhängigkeiten:	siehe includes
 ;
 ;	                    			Addendum für Albis on Windows
-;                        			by Ixiko started in September 2017 - last change 03.03.2021 - this file runs under Lexiko's GNU Licence
+;                        			by Ixiko started in September 2017 - last change 04.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; Einstellungen
@@ -43,15 +48,14 @@
 	adm.compname	:= StrReplace(A_ComputerName, "-")                    	; der Name des Computer auf dem das Skript läuft
 
   ; hier alle Parameter die gesondert verarbeitet werden sollen
-	Warnen	:= {	"nie"      	: 	"CHOL,LDL,TRIG,HDL,LDL/HD,HBA1CIFC"                             	; nie      	= werden nie gezeigt
-						,	"immer" 	: 	"NTBNP,TROPI,TROPT,TROP,CKMB,K"                                       	; immer 	= wenn pathologisch
-						,	"exklusiv"	: 	"HBK-ST,COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,HIV,"  	; exklusiv 	= zeigen auch wenn kein ausgeprägtes path. Ergebnis
-											.	"KERNS,ALYMPNEO,ALYMPREA,ALYMPRAM,MYELOC,PROMY,"	; 					und bei negativem Befund (z.B. COVIA, HIV)
-											. 	"DIFANISO,DIFPOLYC,DIFHYPOC,DIFMIKRO,METAM,"
-											. 	"TROPOIHS,DDIM-CP"}
+	Warnen	:= {	"nie"      	: 	"CHOL,LDL,TRIG,HDL,LDL/HD,HBA1CIFC"                                  	; nie      	= werden nie gezeigt
+						,	"immer" 	: 	"NTBNP,TROPI,TROPT,TROP,CKMB,K"                                         	; immer 	= wenn pathologisch
+						,	"exklusiv"	: 	"HBK-ST,COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,HIV,"     	; exklusiv 	= zeigen auch wenn kein ausgeprägtes path. Ergebnis
+											.	"ALYMP,ALYMPDIFF,ALYMPH,ALYMPNEO,ALYMPREA,ALYMPRAM," 	;					und bei negativem Befund (z.B. COVIA, HIV)
+											. 	"KERNS,MYELOC,PROMY,DIFANISO,DIFPOLYC,DIFHYPOC,DIFMIKRO,METAM,TROPOIHS,DDIM-CP"}
 
   ; Laborjournal anzeigen
-	LabPat     := AlbisLaborJournal("", "", Warnen, 110, true)
+	LabPat     := AlbisLaborJournal("", "", Warnen, 110, false)
 	LaborJournal(LabPat, false)
 
 return
@@ -126,7 +130,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GW=100, Anzeige=true) {            
 	; Daten der LABBLATT.dbf [AlbisLaborwertGrenzen()]
 		while !(labDB.dbf.AtEOF) {
 
-				data := labDB.ReadRecord(["DATUM", "PARAM", "ERGEBNIS", "EINHEIT", "GI", "NORMWERT", "PATNR"])
+				data := labDB.ReadRecord(["PATNR", "ANFNR", "DATUM", "LABID", "PARAM", "ERGEBNIS", "EINHEIT", "GI", "NORMWERT"])
 				UDatum := data.Datum
 
 			; Fortschritt
@@ -150,7 +154,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GW=100, Anzeige=true) {            
 
 			; kein pathologischer Wert dann weiter
 				PNImmer := PNExklusiv := false
-				PN := data.PARAM                                       	; Parameterbezeichnung
+				PN := data.PARAM                                              	; Parameter-Name
 
 				If RegExMatch(PN, nieWarnen)
 					continue
@@ -166,9 +170,9 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GW=100, Anzeige=true) {            
 
 			; Strings lesbarer machen (oder auch nicht)
 				P	    	:= ""
-				PW   	:= StrReplace(data["ERGEBNIS"]	, ",", ".") 	; Wert
-				PE	    	:= data.EINHEIT				                    	; Einheit
-				ONG	:= UNG := 0
+				PW   	:= StrReplace(data["ERGEBNIS"]	, ",", ".") 	; Parameter-Wert
+				PE	    	:= data.EINHEIT				                    	; Parameter-Einheit
+				ONG	:= UNG := 0                                        	; Obere/Untere Norm-Grenze
 
 			; Grenzwertüberschreitungen berechnen
 				If !PNExklusiv {
@@ -197,25 +201,29 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GW=100, Anzeige=true) {            
 
 						PatID 	:= data.PATNR
 						Datum 	:= data.Datum
+						PW    	:= RegExReplace(PW, "(\.[0-9]+[1-9])0+$", "$1")
+						AN    	:= LabPat[Datum][PatID][PN].AN
+						AN    	:= !RegExMatch(AN, "\b" datum.ANFNR "\b") ? AN "," datum.AFNR : AN
+
+					; Subobjekte anlegen
 						If !IsObject(LabPat[Datum])
 							LabPat[Datum] := Object()
-
 						If !IsObject(LabPat[Datum][PatID])
 							LabPat[Datum][PatID] := Object()
-
 						If !IsObject(LabPat[Datum][PatID][PN])
 							LabPat[Datum][PatID][PN] := Object()
 
-						PW := RegExReplace(PW, "(\.[0-9]+[1-9])0+$", "$1")
+					; Daten übergeben
 						LabPat[Datum][PatID][PN].PatID	:= PatID
 						LabPat[Datum][PatID][PN].CV  	:= PNImmer ? 1 : PNExklusiv ? 2 : 0                                                                                                	; CAVE-Wert für andere Textfarbe im Journal
-						LabPat[Datum][PatID][PN].PN  	:= PN                                                                                                                                           	; Parameter Name
-						LabPat[Datum][PatID][PN].PW  	:= RegExReplace(PW, "\.0+$")                                                                                                        	; IST-Wert
-						LabPat[Datum][PatID][PN].PV		:= P ? StrReplace(P, ",", ".") : data.NORMWERT                                                                                  	; Normwert
+						LabPat[Datum][PatID][PN].PN  	:= PN                                                                                                                                           	; Parameter-Name
+						LabPat[Datum][PatID][PN].PW  	:= RegExReplace(PW, "\.0+$")                                                                                                        	; Parameter-Wert
+						LabPat[Datum][PatID][PN].PV		:= P ? StrReplace(P, ",", ".") : data.NORMWERT                                                                                  	; Parameter-Normwert
 						LabPat[Datum][PatID][PN].PL 		:= (ONG > 0 ? "+" ONG	: (UNG > 0 ? "-" UNG : ""))                                                                      	;
-						LabPat[Datum][PatID][PN].PA		:= (ONG > 0 ? lab.params[PN].OD : (UNG > 0 ? lab.params[PN].UD : "" ))                                     	; Abweichung +/-
+						LabPat[Datum][PatID][PN].PA		:= (ONG > 0 ? lab.params[PN].OD : (UNG > 0 ? lab.params[PN].UD : "" ))                                     	; Parameter-Abweichung +/-
 						LabPat[Datum][PatID][PN].PD		:= (ONG > 0 ? "+" ONG - lab.params[PN].OD : (UNG > 0 ? "-" UNG - lab.params[PN].UD : ""))  	;
 						LabPat[Datum][PatID][PN].PE		:= PE                                                                                                                                           		; Einheit
+						LabPat[Datum][PatID][PN].AN	:= LTrim(AN, ",")                                                                                                                           	; AnforderungsNummern
 
 					}
 
@@ -783,14 +791,12 @@ LaborJournal(LabPat, Anzeige=true) {
 
 		For idx, Datum in sortDatum {
 
-				If (UDatumLast <> Datum) {
+				If (DatumLast <> Datum)
 					UDatum := ConvertDBASEDate(Datum)
-					UDatumLast := Datum
-				}
 
 				For PatID, parameter  in LabPat[Datum] {
 
-					If (PatIDLast <> PatID) {
+					If (PatIDLast <> PatID) || (DatumLast <> Datum) {
 						Patient  	:= PatDB[PatID].NAME ", " PatDB[PatID].VORNAME " (" ConvertDBASEDate(PatDB[PatID].GEBURT) ") [" PatID "]"
 						PatIDLast	:= PatID
 						trIDf      	:= !trIDf	; flag für alternierenden Farbwechsel
@@ -841,6 +847,8 @@ LaborJournal(LabPat, Anzeige=true) {
 					}
 
 				}
+
+				DatumLast := Datum
 
 		}
 

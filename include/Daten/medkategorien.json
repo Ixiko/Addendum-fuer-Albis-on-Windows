@@ -71,6 +71,10 @@
         "ingredient": "Atorvastatin",
         "use": "Cholesterin"
     },
+    "Atorvastatin Basics": {
+        "ingredient": "Atorvastin",
+        "use": "Cholesterin"
+    },
     "Azithromycin": {
         "ingredient": "Azithromycin",
         "use": "mit Antibiotika therapierbarer Infekt"
@@ -131,6 +135,10 @@
         "ingredient": "Budesonid",
         "use": "Asthma/COPD"
     },
+    "Camlostar": {
+        "ingredient": "Candesartan und Amlodipin",
+        "use": "Blutdruck"
+    },
     "Candecor": {
         "ingredient": "Candesartan",
         "use": "Blutdruck"
@@ -162,6 +170,10 @@
     "Celestamine N": {
         "ingredient": "Celestamine",
         "use": "Wespengiftallergie"
+    },
+    "Chloraldurat": {
+        "ingredient": "Chloraldurat",
+        "use": "Schlaf"
     },
     "Cipralex": {
         "ingredient": "Citalopram",
@@ -483,13 +495,13 @@
         "ingredient": "Edoxaban",
         "use": "Gerinnung"
     },
-    "Macrogol Pulver": {
-        "ingredient": "Macrogol, Kombinationen",
-        "use": "chronische Obstipation "
-    },
     "Macrogol": {
         "ingredient": "Macrogol",
         "use": "chron. Stuhlverhalt"
+    },
+    "Macrogol Pulver": {
+        "ingredient": "Macrogol, Kombinationen",
+        "use": "chronische Obstipation "
     },
     "Madopar": {
         "ingredient": "L-Dopa und Benserazid",
@@ -538,6 +550,10 @@
     "Metoprolol": {
         "ingredient": "Metoprolol",
         "use": "Blutdruck/Herzrhythmus"
+    },
+    "Metoprolol Nk": {
+        "ingredient": "Metoprolol",
+        "use": "Bluthochdruck"
     },
     "Metoprolol Su": {
         "ingredient": "Metoprololsuccinat",
@@ -896,9 +912,17 @@
         "ingredient": "Metformin und Sitagliptin",
         "use": "Diabetes"
     },
+    "Venlafaxin": {
+        "ingredient": "Venlafaxin",
+        "use": "Stimmung"
+    },
     "Viani": {
         "ingredient": "Salmeterol und Fluticason",
         "use": "Asthma / COPD"
+    },
+    "Vigantol Oel": {
+        "ingredient": "Colecalciferol",
+        "use": "Osteoporoseprophylaxe"
     },
     "Vimpat": {
         "ingredient": "Lacosamid",
