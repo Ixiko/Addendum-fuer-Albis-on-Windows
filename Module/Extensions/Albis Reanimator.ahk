@@ -31,7 +31,7 @@
 ;		Abhängigkeiten: 	 	siehe #includes
 ;
 ;	                    				Addendum für Albis on Windows
-;                        				by Ixiko started in September 2017 - last change 02.03.2021 - this file runs under Lexiko's GNU Licence
+;                        				by Ixiko started in September 2017 - last change 05.03.2021 - this file runs under Lexiko's GNU Licence
 ;										proof-of-concept version
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	#NoEnv
@@ -110,7 +110,7 @@ AlbisReanimator(AlbisMainPath:="", AlbisLocalPath:="", AlbisExe:="") {          
 
 			If !InStr(FileExist(adm.DBPath "\sonstiges"), "D")
 				FileCreateDir, % adm.DBPath "\sonstiges"
-			If !FileExist(adm.DBPath "\sonstiges\Albis_Reanimator Log.txt") {
+			If !FileExist(adm.DBPath "\sonstiges\Albis_Reanimator_Log.txt") {
 				FileAppend, %	"----------------------------------------------------------------------------------------------------------------------------------------`n"
 								.		"Logdatei für das Dokumentieren von laufenden Albis- und zugehörigen Prozessen durch AlbisReanimator.ahk`n"
 								.	  	"aufgelistet werden ein Zeitstempel und in der Zeile darunter die Namen der geschlossenen Prozesse.`n"
@@ -153,13 +153,14 @@ AlbisGetRunningPIDs() {                                                         
 								, {"exe": "ipc"                                     	, "cmdline":""}
 								, {"exe": "javaw"                                 	, "cmdline":"CG\Java"}
 								, {"exe": "albis"                                   	, "cmdline":""}
+								, {"exe": "albisCS"                                 	, "cmdline":""}
 								, {"exe": "wkflsr"                                 	, "cmdline":""}
 								, {"exe": "bubblemanagerhostsystem"  	, "cmdline":""}
 								, {"exe": "MinervaHostsystem"             	, "cmdline":""}]
 
 	for process in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")
 		for procNr, proc in AlbisProcs
-			 If InStr(process.Name, proc.exe) && InStr(Process.CommandLine, proc.cmdLine)
+			 If RegExMatch(process.Name, proc.exe "\.exe") && InStr(Process.CommandLine, proc.cmdLine)
 				AlbisPIDs.Push({"name":process.Name, "PID" : process.ProcessID})
 
 return AlbisPIDs

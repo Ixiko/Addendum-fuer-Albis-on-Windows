@@ -17,21 +17,21 @@
 ;		Abhängigkeiten:	siehe includes
 ;
 ;	                    			Addendum für Albis on Windows
-;                        			by Ixiko started in September 2017 - last change 04.03.2021 - this file runs under Lexiko's GNU Licence
+;                        			by Ixiko started in September 2017 - last change 06.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; Einstellungen
 	#NoEnv
 	#Persistent
 	#KeyHistory, Off
-	;#MaxMem 4096
+
 	SetBatchLines, -1
 	ListLines    	, Off
 
 	global LabJ := Object()
 	global adm := Object()
 
-  ; startet die Windows Gdip Funktion
+  ; startet Windows Gdip
    	If !(pToken:=Gdip_Startup()) {
 		MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
 		ExitApp
@@ -45,14 +45,14 @@
 	adm.Ini              	:= AddendumDir "\Addendum.ini"
 	adm.DBPath      	:= AddendumDir "\logs'n'data\_DB"
 	adm.AlbisDBPath 	:= AlbisPath "\DB"
-	adm.compname	:= StrReplace(A_ComputerName, "-")                    	; der Name des Computer auf dem das Skript läuft
+	adm.compname	:= StrReplace(A_ComputerName, "-")                                                         	; der Name des Computer auf dem das Skript läuft
 
-  ; hier alle Parameter die gesondert verarbeitet werden sollen
+  ; hier alle Parameter eintragen welche gesondert verarbeitet werden sollen
 	Warnen	:= {	"nie"      	: 	"CHOL,LDL,TRIG,HDL,LDL/HD,HBA1CIFC"                                  	; nie      	= werden nie gezeigt
 						,	"immer" 	: 	"NTBNP,TROPI,TROPT,TROP,CKMB,K"                                         	; immer 	= wenn pathologisch
 						,	"exklusiv"	: 	"HBK-ST,COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,HIV,"     	; exklusiv 	= zeigen auch wenn kein ausgeprägtes path. Ergebnis
 											.	"ALYMP,ALYMPDIFF,ALYMPH,ALYMPNEO,ALYMPREA,ALYMPRAM," 	;					und bei negativem Befund (z.B. COVIA, HIV)
-											. 	"KERNS,MYELOC,PROMY,DIFANISO,DIFPOLYC,DIFHYPOC,DIFMIKRO,METAM,TROPOIHS,DDIM-CP"}
+											. 	"KERNS,MYELOC,PROMY,DIFANISO,DIFPOLYC,DIFPOIKL,DIFHYPOC,DIFMIKRO,METAM,TROPOIHS,DDIM-CP"}
 
   ; Laborjournal anzeigen
 	LabPat     := AlbisLaborJournal("", "", Warnen, 110, false)
@@ -68,6 +68,14 @@ ESC::
 return
 
 AlbisLaborJournal(Von="", Bis="", Warnen="", GW=100, Anzeige=true) {                 	;--  sehr abweichender Laborwerte
+
+	/*  Parameter
+
+		Von       	-	Anfangsdatum, leerer String oder Zahl
+							die Zahl steht für die Anzahl der Werktage die rückwärtig vom aktuellem Tagesdatum angezeigt werden soll
+		Bis         	-	Enddatum oder leer
+
+	*/
 
 		static Lab
 
@@ -94,18 +102,23 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GW=100, Anzeige=true) {            
 	;}
 
 	; Suchzeitraum ;{
+		RegExMatch(Von, "^\d+$", Tage)
+		If Tage
+			Von := ""
+
 		If !Von && !Bis {
 
-			Von 	:= A_YYYY A_MM A_DD
-			If (A_DDD = "Fr")
-				Von += -30, Days
+			Tage	:= Tage ? Tage : 30
+			Von 	:= A_YYYY . A_MM . A_DD
+			If A_DDD in Fr,Do
+				Von += -1*Tage, Days
 			else
-				Von += -30, Days
+				Von += (-1*Tage)-2, Days
 
 			FormatTime, Von, % Von, yyyyMMdd
-			QJ 	:= A_YYYY . Ceil(A_MM/3)
-			VB := "Von"
-			SciTEOutput("von: " Von)
+			QJ	:= A_YYYY . Ceil(A_MM/3)
+			VB	:= "Von"
+
 		}
 		else
 			VB := (Von && !Bis) ? "Von" : (!Von && Bis) ? "Bis" : "VonBis"

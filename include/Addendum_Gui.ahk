@@ -14,7 +14,7 @@
 ;
 ;
 ;	                    	Addendum für Albis on Windows
-;                        	by Ixiko started in September 2017 - letzte Änderung 04.03.2021 - this file runs under Lexiko's GNU Licence
+;                        	by Ixiko started in September 2017 - letzte Änderung 05.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
 
@@ -39,6 +39,7 @@ AddendumGui(admShow="") {
 				Addendum.iWin.RowColors	:= false
 				Addendum.iWin.Imports     	:= 0
 				Addendum.iWin.ReCheck   	:= 0
+				Addendum.iWin.paint        	:= 0
 				Addendum.Importing           	:= false           	; Import aus Patient Tab läuft
 				Addendum.ImportRunning    	:= false           	; Import aus dem Journal Tab läuft
 				Addendum.tessOCRRunning	:= false        	; OCR Vorgang läuft
@@ -515,6 +516,14 @@ AddendumGui(admShow="") {
 		Gui, adm: Add   	, Text, % "y+2 w" admWidth-tw-10 " vadmILAB2 " , % ""
 		;Gui, adm: Add  	, Text, % "x10 y" admHeight-50 " w" admWidth-20 " h40 vadmILAB1"  	, % ""
 
+		Addendum.iWin.paint ++
+		GuiControlGet, cp, adm: Pos, % admILAB2
+
+		Gui, adm: Font  	, % "s" fs " bold c172842"
+		Gui, adm: Add  	, Text, % "x10 y+" YPlus " w" tw      	, % "⚗ Infofenster"
+		Gui, adm: Font  	, % "s" fs " Normal"
+		Gui, adm: Add  	, Text, % "x+5 w100 vadmIWInit"	, % Addendum.iWin.paint " : " Addendum.iWin.Init
+
 	;}
 
 		Gui, adm: Tab
@@ -530,13 +539,16 @@ AddendumGui(admShow="") {
 				res                := Controls("", "Reset", "")
 				hMDIFrame	:= Controls("AfxMDIFrame1401"	, "ID", AlbisMDIChildGetActive())
 			}
-			SetParentByID(hMDIFrame, hadm)
 
+		; AfxMidiFrame als Child zuordnen
+			SetParentByID(hMDIFrame, hadm)
 			WinSet, Style   	, 0x50000000	, % "ahk_id " hadm
 			WinSet, ExStyle 	, 0x0802009C	, % "ahk_id " hadm
 
 		; Fenster anzeigen
-			Gui, adm: Show, % "x" Addendum.iWin.X " y" Addendum.iWin.Y " w" Addendum.iWin.W  " h" Addendum.iWin.H " HIDE NA " admShow, AddendumGui
+			Gui, adm: Show, % "x" Addendum.iWin.X " y" Addendum.iWin.Y " w" Addendum.iWin.W  " h" Addendum.iWin.H " NA " admShow, AddendumGui
+
+		; Fenster ist kein Child (WS_POPUP = 0x80000000) - schliessen und neuzeichnen
 			WinGet, Style, Style, % "ahk_id " hadm
 			If (Style & 0x80000000) {
 				admGui_Destroy()
@@ -555,19 +567,24 @@ AddendumGui(admShow="") {
 			Addendum.iWin.ReIndex := false
 
 		; Inhalte auffrischen und anzeigen
-			res := admGui_ShowTab(Addendum.iWin.firstTab, admHTab)
-			admGui_CountDown()
-			admGui_Journal( (!Addendum.iWin.Init ? true : false) )
-			Addendum.iWin.Init ++
-			admGui_TProtokoll(Addendum.TProtDate, 0, compname)
-			PatDocs := admGui_Reports()
 			Addendum.iWin.ReCheck := 0
+			Addendum.iWin.Init ++
+			GuiControl, adm:, admIWInit, % Addendum.iWin.paint " : " Addendum.iWin.Init
+			admGui_Journal( (!Addendum.iWin.Init ? true : false) )
+			If !Addendum.ImportRunning {
+				res := admGui_ShowTab(Addendum.iWin.firstTab, admHTab)
+				admGui_CountDown()
+				admGui_TProtokoll(Addendum.TProtDate, 0, compname)
+				PatDocs := admGui_Reports()
+			}
 	;}
 
 	; PDF Thumbnailpreview
 		;OnMessage(0x200,"admGui_ThumbnailView")
 
 	; Journalimport läuft gerade
+		while Addendum.ImportRunning && (A_Index < 10)
+			Sleep 50
 		If Addendum.ImportRunning {
 			res := admGui_ShowTab("Journal", admHTab)
 			admGui_ImportJournalAll()
@@ -746,7 +763,7 @@ return ;}
 adm_Journal:                                                                                     	;{ Journal Tab
 
 	; Default Listview, gewählter Dateiname
-		admGui_Default("admJournal")
+		Gui, adm: ListView, admJournal
 		admFile	:= LV_GetSelected("admJournal")
 		EventInfo	:= A_EventInfo
 
@@ -1774,17 +1791,6 @@ return
 
 admCM_JRenAll()                                                           	{              	; Kontextmenu: automatisiert die Benennung aller unbenannten PDF-Dateien
 
-	/*  mögliche Varianten Datumsangaben
-
-		Therapiekontrolle bei COPD am 15.12.20
-		CT horn and Akatomee mit LV, Kontrastmittelgabe vom 16.12.2020;
-		ambulante Vorstellung zuletzt am 14.12.2020.
-		MRT der BWS vom 14.12.2020
-		Aufnahme am: 20.12.2020 um 21:08 Uhr
-		Stationärer Aufenthalt: \n\r Vom 17.12.2020 bis zum 20.12.2020 auf unserer neurochirurgischen Station M115B
-
-	 */
-
 	; Variablen
 		static newadmFile, lastnewadmFile
 
@@ -1820,10 +1826,8 @@ admCM_JRenAll()                                                           	{    
 														. 	" " q txtpath q
 						stdout := StdOutToVar(cmdline)
 
-						If !FileExist(txtpath) {
-							;SciTEOutput(" [" cmdline "]`n" stdout)
+						If !FileExist(txtpath)
 							continue
-						}
 
 				} else if !PDFisSearchable(pdfPath) {
 					; Protokollierung
@@ -1869,12 +1873,13 @@ admCM_JRenAll()                                                           	{    
 								newadmFile .= "v. " fDates.Dokument[1] " "
 
 					; Anzeige von Wort und Zeichenzahl der Datei
-						admCM_JRnProgress([counter, filename, "neuen Dateinamen erstellt", words, chars, lastnewadmFile])
 						lastnewadmFile := newadmFile
+						admCM_JRnProgress([counter, filename, "neuen Dateinamen erstellt", words, chars, lastnewadmFile])
 
 					; Debug
-						 If ((res := Weitermachen("Datei: " counter "`nBez.: " newadmFile "`nWeitermachen?") <> 1))
+						 If ((res := Weitermachen("Datei: " counter "`nBez.: " newadmFile "`nWeitermachen?") <> 1)) {
 							break
+						}
 
 					; Umbenennen von Original, Backup und Textdatei
 						If (StrLen(newadmFile) > 0) {
@@ -1988,8 +1993,7 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 		local key, pdf, TLines, found, monIndex, admScreen, RNx, RNWidth
 
 		static RNminWidth := 350
-		static BEZPath, Beschreibung
-		static wT, Patname, Inhalt, Datum, bezeichner, oPV
+		static BEZPath, Beschreibung, wT, Patname, Inhalt, Datum, bezeichner, oPV
 		static oldadmFile, newadmFile, FileExt, FileOutExt, oldfilename
 
 	; PDF Vorschau anzeigen in neuem Sumatrafenster oder wenn geöffnet in diesem Fenster
@@ -2228,10 +2232,7 @@ RNProceed:                                       	;{   Datei wird umbenannt, PDF
 			PraxTT("Sie haben den Dateinamen nicht geändert!", "2 1")
 			gosub RNGuiBeenden
 			return
-		}
-
-	; Nutzer hat alles gelöscht
-		If (StrLen(newadmFile) = 0) {
+		} else If (StrLen(newadmFile) = 0) { ; Nutzer hat alles gelöscht
 			PraxTT("Ihr neuer Dateiname enthält keine Zeichen.", "2 1")
 			gosub RNGuiBeenden
 			return
@@ -2252,10 +2253,10 @@ RNProceed:                                       	;{   Datei wird umbenannt, PDF
 			FileOpen(BEZPath, "w", "UTF-8").Write(TLines)
 		}
 
-	; DATEIEN UMBENENNEN
+	; DATEIEN UMBENENNEN ;{
+
 	; Originaldatei umbennen
-		newadmFile := newadmFile "." FileExt
-		FileMove, % Addendum.BefundOrdner "\" oldadmFile, % Addendum.BefundOrdner "\" newadmFile, 1
+		FileMove, % Addendum.BefundOrdner "\" oldadmFile, % Addendum.BefundOrdner "\" (newadmFile := newadmFile "." FileExt), 1
 		If ErrorLevel {
 			MsgBox, 0x1024, Addendum für Albis on Windows
 									, % 	"Das Umbenennen der Datei`n"
@@ -2275,6 +2276,8 @@ RNProceed:                                       	;{   Datei wird umbenannt, PDF
 		If (FileExt = "pdf") && FileExist(txtfile)
 			FileMove, % txtfile, % Addendum.BefundOrdner "\Text\" RegExReplace(newadmFile, "\.pdf$", ".txt"), 1
 
+	;}
+
 	; ScanPool auffrischen
 		For key, pdf in ScanPool
 			If (pdf.name = oldadmFile) {
@@ -2283,11 +2286,11 @@ RNProceed:                                       	;{   Datei wird umbenannt, PDF
 			}
 
 	; Journal auffrischen
-		admGui_Default("admJournal")
+		Gui, adm: ListView, admJournal
 		Loop % LV_GetCount() {
 			LV_GetText(rowFilename, row := A_Index, 1)
 			If Instr(rowFilename, oldadmFile) {
-				admGui_Default("admJournal")
+				Gui, adm: ListView, admJournal
 				LV_Modify(row,, newadmFile)
 				GuiControl, adm: +Redraw, % "admJournal"
 				break
@@ -2300,7 +2303,7 @@ RNGuiBeenden:                                   	;{   weitere Dateien umbenennen
 
 	; nachschauen ob eine weitere Datei zum Umbenennen zur Verfügung steht
 		oldfilename := newadmFile
-		admGui_Default("admJournal")
+		Gui, adm: ListView, admJournal
 		rows := LV_GetCount()
 		LV_GetNext(row)
 		startrow := row := (row = 0 ? 1 : row)
@@ -2317,7 +2320,7 @@ RNGuiBeenden:                                   	;{   weitere Dateien umbenennen
 				break
 			}
 
-			admGui_Default("admJournal")
+			Gui, adm: ListView, admJournal
 			LV_GetText(filename, row, 1)
 			If !string.isFullNamed(filename)
 				break
@@ -2327,12 +2330,9 @@ RNGuiBeenden:                                   	;{   weitere Dateien umbenennen
 	; weiteres Dokument umbenennen?
 		If !string.isFullNamed(filename) && (filename <> oldfilename) {
 			oldfilename := filename
-			MsgBox, 0x4, Addendum für Albis on Windows, % "Möchten Sie mit der nächsten`n[" filename "]`nDatei fortfahren ?", 30
+			MsgBox, 4, Addendum für Albis on Windows, % "Möchten Sie mit der nächsten`n[" filename "]`nDatei fortfahren ?", 30
 			IfMsgBox, Yes
-			{
 				admGui_Rename(filename)
-				return
-			}
 		}
 ;}
 
@@ -2747,21 +2747,23 @@ admGui_ImportJournalAll(files="")                                    	{         
 		Addendum.ImportRunning := true
 		waituser := 10
 
-		admGui_Default("admJournal")
+		Gui, adm: ListView, admJournal
 		Loop % LV_GetCount() {                                                ; Dokumente ohne Personennamen werden ignoriert
 
 			 ; enthält keinen Personennamen dann weiter
-				admGui_Default("admJournal")
+				Gui, adm: ListView, admJournal
 				LV_GetText(rowFile, A_Index, 1)
 				If !string.isFullNamed(rowFile)
 					continue
 
 			; weiter mit Nachfrage
 				If (Addendum.iWin.Imports > 0) {
-					MsgBox, 0x1021, % "Addendum", % "Weiteres Dokument importieren?`n[" rowFile "]", % (A_Index < 3 ? waituser : waituser/2 )
-					IfMsgBox, Cancel
+					MsgBox, 0x1024, % "Addendum", % "Weiteres Dokument importieren?`n[" rowFile "]", % (A_Index < 3 ? waituser : waituser/2 )
+					IfMsgBox, No
 					{
 						Addendum.ImportRunning	:= false
+						Addendum.iWin.Imports	:= 0
+						Sleep 100
 						break
 					}
 				}

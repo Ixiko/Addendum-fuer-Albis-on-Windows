@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                                                                       	ADDENDUM HAUPTSKRIPT
-global                                                                               AddendumVersion:= "1.52" , DatumVom:= "04.03.2021"
+global                                                                               AddendumVersion:= "1.52" , DatumVom:= "06.03.2021"
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                    ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . . . . . . .                                           BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -17,11 +17,9 @@ global                                                                          
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 /*               	A DIARY OF CHANGES
-| **03.03.2020** | **F~** | **Laborjournal**	- es wurden mehr Parameter im Labor angezeigt als eingestellt, korrigiert |
-| **04.03.2020** | **F~** | **Infofenster**   	- Darstellung von PDF Dateien im Sumatra Reader funktioniert jetzt fehlerlos |
-
-
-
+| **03.03.2020** | **F~** | **Laborjournal**	- 	es wurden mehr Parameter im Labor angezeigt als eingestellt, korrigiert |
+| **05.03.2020** | **F~** | **Infofenster**   	- 	Darstellung von PDF Dateien im Sumatra Reader funktioniert jetzt fehlerlos
+																		-	fehlerhafte Darstellung bei erneutem Aufruf des Fensters beseitigt |
 
 
 	CGM_ALBIS DIENST Service SID:                    	S-1-5-80-845206254-3503829181-3941749774-3351807599-4094003504

@@ -7,7 +7,7 @@
 ;       Abhängigkeiten:		Addendum_Gui.ahk, Addendum.ahk
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_Calc started:    	02.03.2021
+;       Addendum_Calc started:    	06.03.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -69,7 +69,7 @@ FindDocStrings() {
 	global rxAnrede     	:= 	"(Betrifft)"
 	global rxAnredeM   	:= 	"(Herrn*|Patient|Patienten)"
 	global rxAnredeF   	:= 	"(Frau|Patientin)"
-	global rxVorname  	:= 	"Vo(rn|m)ar*me"
+	global rxVorname  	:= 	"[VY]o(rn|m)ar*me"
 	global rxNachname	:= 	"([Nn]ach)*[Nn]ame"
 	global rxNameW    	:= 	"[Nn]ame[\w]*"
 
@@ -455,7 +455,6 @@ FindDocNames(Text, debug:=false)                                  	{            
 
 			}
 
-			ToolTip,,,, 15
 	}
 
 		; ---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -501,8 +500,10 @@ FindDocNames(Text, debug:=false)                                  	{            
 
 	; alle Namen mit gleicher Trefferanzahl werden behalten ;{
 		For PatID, Pat in PatBuf
-			If (Pat.hits = maxHits) {
-				;SciTEOutput(" (" PatID ") " Pat.Nn ", " Pat.Vn " < hits: " Pat.hits)
+			If (PatID = "Diff")
+				continue
+			else If (Pat.hits = maxHits) {
+				;SciTEOutput(" (" PatID ") " Pat.Nn ", " Pat.Vn ", hits: " Pat.hits)
 				BestHits[PatID] := {"Nn":Pat.Nn, "Vn":Pat.Vn, "Gd":Pat.Gd}
 			}
 	;}
@@ -802,57 +803,4 @@ GetTextDates(txt) 																{
 return dates
 }
 
-/*
-ExclBuf := ""
-		If (PatBuf.Count() = 0) {
 
-			spos := 1
-			while (spos := RegExMatch(text, "([A-ZÄÖÜ][\pL-]+)[\s,.;:]+([A-ZÄÖÜ][\pL-]+)", name, spos)) {
-
-				; überflüssige Zeichen entfernen
-					name1 := RegExReplace(name1, "[\s\n\r\f]")
-					name2 := RegExReplace(name2, "[\s\n\r\f]")
-
-				; Bindestrichworte ignorieren
-					If RegExMatch(name1, "\-$") {
-						spos += StrLen(name1)                    ; ein Wort weiter
-						continue
-					} else if RegExMatch(name2, "\-$") {
-						spos += StrLen(name)                     ; beide Wörter weiter
-						continue
-					} else if (StrLen(name1) = 0) || (StrLen(name2) = 0) {
-						spos += StrLen(name)
-						continue
-					}
-
-					matches := admDB.StringSimilarityEx(name1, name2)
-					If IsObject(matches) {
-
-						spos += StrLen(name)
-
-						For PatID, Pat in matches {
-
-							If PatID in %excludeIDs%
-								continue
-
-							If PatBuf.haskey(PatID)
-								PatBuf[PatID].hits += 1
-							else
-								PatBuf[PatID]	:= {"Nn":Pat.Nn, "Vn":Pat.Vn, "Gd":Pat.Gd, "hits":1, "method":1}
-
-							If debug
-								SciTEOutput("   " PatID " , hits: " PatBuf[PatID].hits)
-						}
-
-					}
-					else
-						spos += StrLen(name1)
-
-			}
-
-			ToolTip,,,, 15
-	}
-
-
-
- */

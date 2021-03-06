@@ -8,7 +8,7 @@
 ;       Abhängigkeiten:
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Laborabruf_iBWC.ahk last change:    	21.02.2021
+;       Laborabruf_iBWC.ahk last change:    	06.03.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -43,7 +43,7 @@
   ; Pfade und Einstellungen
   ; -------------------------------------------------------------------------------------------------------------------------------------------------------;{
 
-		admLaborAbrufGui()
+		LaborAbrufGui()
 
 	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	; Pfad zu Addendum und den Einstellungen
@@ -155,7 +155,7 @@
 		; Automatisierungsfunktionen von Addendum.ahk ausstellen per IPC!
 		; Addendum.ahk automatisiert den Laborabruf zum Teil und würde wenn die Funktionen
 		; nicht angehalten werden in fehlerhafter RPA-Ausführung enden
-			If !(writeStr := admLaborAbrufToggle("off")) {
+			If !(writeStr := LaborAbrufToggle("off")) {
 				MsgBox, 1024, % adm.scriptname, % (amsg := writeStr), 6
 				FuncExitApp()
 			}
@@ -178,7 +178,7 @@
 		; 4. alle ins Laborblatt übertragen
 			If adm.hLabbuch {
 				If !adm.AutoLaborAbrufStatus && adm.AutoLaborAbruf
-					admLaborAbrufToggle("restore")
+					LaborAbrufToggle("restore")
 
 				if adm.Labor.AutoLDTImport && adm.AutoLaborAbrufStatus && !adm.AutoLaborAbruf  {
 					writeStr := "|" A_ThisFunc "()`t- Labordatenimport nicht möglich! AutoLaborAbruf-Funktion von Addendum ist ausgeschaltet!.`n"
@@ -403,14 +403,6 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 ; -------------------------------------------------------------------------------------------------------------------------------------------------------
 ; Helfer
 ; -------------------------------------------------------------------------------------------------------------------------------------------------------;{
-SleepLoop(a, b, c) {
-
-	Sleep % a
-	Loop % b
-		Sleep % c
-
-}
-
 ListBoxAbfrage(liste, GTitle:="", GText:="") {
 
 	global
@@ -420,13 +412,17 @@ ListBoxAbfrage(liste, GTitle:="", GText:="") {
 	Gui, LBW: Default
 	Gui, +AlwaysOnTop +LastFound -DPIScale +HWNDhLBW
 	Gui, Color, cFFCCAA, c777744
+
 	Gui, Font, s11 bold	, Calibri
-	Gui, Add, Text   	, xm ym w270, % GText
+	Gui, Add, Text   	, xm ym w270                                           	, % GText
+
 	Gui, Font, s11 cWhite Normal, Calibri
-	Gui, Add, ListBox	, y+10 w270 r5 0x100 vLBR AltSubmit, % liste
+	Gui, Add, ListBox	, y+10 w270 r5 0x100 vLBR AltSubmit       	, % liste
+
 	Gui, Font, s11 cBlack Normal, Calibri
-	Gui, Add, Button	, xm y+10 vLBWOK 	gBtnHandler, OK
-	Gui, Add, Button	, x+20 vLBWCancel 	gLBWGuiEscape, Abbruch
+	Gui, Add, Button	, xm y+10  	vLBWOK 		gBtnHandler      	, OK
+	Gui, Add, Button	, x+20      	vLBWCancel 	gLBWGuiEscape	, Abbruch
+
 	Gui, Show, AutoSize, Laborabruf
 
 	while !inputdone || WinExist(GTitle " ahk_class AutoHotkeyGUI") {
@@ -456,28 +452,26 @@ BtnHandler:
 return LBR
 }
 
-
 ; - - - - -
-admLaborAbrufGui(Title:="") {
+LaborAbrufGui(Title:="") {
 
 		global
 
-		GuiTitle := (StrLen(Title) = 0 ? adm.scriptname : Title) " - IPC Gui"
-
 	; IPC Gui erstellen
+		GuiTitle  	:= (StrLen(Title) = 0 ? adm.scriptname : Title) " - IPC Gui"
 		AlbisWinID:= WinExist("ahk_class OptoAppClass")
 		AlbisPos	:= GetWindowSpot(AlbisWinID)
-		LCw      	:= 700, LCh := 300
+		LCw      	:= 850, LCh := 300
+		amsg    	:= "----------------------------------------------------------" 	"`n"
+		amsg     	.= datestamp(1) "  " adm.scriptname " gestartet"         	"`n"
+		amsg    	.= "----------------------------------------------------------" 	"`n`n"
 
 		Gui, LC: New, +hwndhLabCall +ToolWindow -Caption +AlwaysOnTop
 		Gui, LC: Margin, 0, 0
 		Gui, LC: Color, c172842, c172842
 		Gui, LC: Font, s8 q5 cWhite, Consolas
-		amsg := "----------------------------------------------------------`n"
-		amsg .= datestamp(1) "  " adm.scriptname " gestartet`n"
-		amsg .= "----------------------------------------------------------`n`n"
-		Gui, LC: Add, Edit     	, % "xm ym w" LCw " h" LCh " vLCdbg hwndhLCdbg", % amsg
-		Gui, LC: Add, Progress	, % "xm y+0 w" LCw " h20 Background172842 cWhite vLCPrg hwndhLCPrg", 100
+		Gui, LC: Add, Edit     	, % "xm ym 	w" LCw " h" LCh " 	vLCdbg	hwndhLCdbg"                                       	, % amsg
+		Gui, LC: Add, Progress	, % "xm y+0 	w" LCw " h20 		vLCPrg 	hwndhLCPrg Background172842 cWhite"	, 100
 
 		Gui, LC: Show, % "x" (AlbisPos.X+7) " y" (AlbisPos.Y+AlbisPos.H-LCh-30) " w" LCw " h" LCh+20 " NA", % GuiTitle ;AlbisPos.W-LCw-
 		WinSet, Trans, 220, % "ahk_id " hLabCall
@@ -493,12 +487,12 @@ admLaborAbrufGui(Title:="") {
 			return 0
 
 	; Autoupdate Debug Gui
-		func_Autoupdate := Func("admAutoupdateLCdbg")
+		func_Autoupdate := Func("AutoUpdateLCdbg")
 		SetTimer, % func_Autoupdate, 50
 
 }
 
-admAutoupdateLCdbg() {
+AutoUpdateLCdbg() {
 
 	global LC, LCdbg, hLCdbg
 	static vOutput, RoundZ
@@ -512,7 +506,7 @@ admAutoupdateLCdbg() {
 
 }
 
-admLaborAbrufToggle(Switch="Off", Title:="") {
+LaborAbrufToggle(Switch="Off", Title:="") {
 
 	; sendet eine Nachricht an Addendum.ahk, um die Laborabrufautomatisierung an- oder auszuschalten
 	; beim ersten Aufruf wird eine versteckte Gui erstellt (die ist notwendig für die Interprocesskommunikation)
@@ -566,11 +560,8 @@ admLaborAbrufToggle(Switch="Off", Title:="") {
 			; auf Antwort von Addendum.ahk warten (max. 5s wartet das Skript hier auf eine Änderung der ThreadControl Variable)
 			; die Messageworker() Funktion ändert die Variable auf false sobald eine Antwort von Addendum.ahk eingetroffen ist
 				ThreadControl := true
-				while, (ThreadControl && (A_Index <= 100)) {
-					;ToolTip, % "Laborabruf wartet auf Addendum: " ThreadControl "`nAddendumID: " adm.ID ", " hLabCall "`nEL: " eL "`nA_Index: " A_Index "/" 100
+				while, (ThreadControl && (A_Index <= 100))
 					Sleep 50
-				}
-				ToolTip
 
 			; keine Antwort, dann notieren und Fehler zurückmelden
 				If ThreadControl {
@@ -599,11 +590,10 @@ FuncExitApp(ExitReason:="failure") {
 	global func_Autoupdate, LC, hLCPrg
 
 	If (ExitReason = "failure")
-		admLaborAbrufToggle("restore destroy")
+		LaborAbrufToggle("restore destroy")
 	OnMessage(0x4a, "")
 	SetTimer, % func_Autoupdate, Delete
-	wTime := 20000
-	Interrupts := 100
+	wTime := 20000, 	Interrupts := 100
 	Loop, % Floor(wTime/Interrupts) {
 		ToolTip % 100 - Floor((100*(A_Index*interrupts))/wTime)
 		GuiControl, LC:, %hLCPrg%, % 100 - Floor((100*(A_Index*interrupts))/wTime)

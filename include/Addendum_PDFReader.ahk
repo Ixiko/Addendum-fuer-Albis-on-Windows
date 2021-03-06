@@ -1,13 +1,13 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;     	Addendum_PDFReader
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;		Verwendung:	    	-	RPA Funktionen PDF Anzeigeprogramme
-;	                                    für	1. Sumatra PDF V3.1 und V.2
-;	                                         	2. FoxitReader ab V9+
+;		Verwendung:	    	-	RPA Funktionen PDF Anzeigeprogramme für
+;	                                    	1. Sumatra PDF V3.1 und V.2
+;	                                        2. FoxitReader ab V9+
 ;
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_StackifyGui last change:    	16.02.2021
+;       Addendum_StackifyGui last change:    	05.03.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
 
@@ -756,17 +756,16 @@ return 1
 
 FoxitReader_SignDoc(hDokSig) {		                                     	                      		        	;-- Bearbeiten des 'Dokument signieren' (Sign Document) Dialoges
 
-		; letzte Änderung: 18.10.2020
+		; letzte Änderung: 05.03.2021
 
 		static appendix := "ahk_class #32770 ahk_exe FoxitReader.exe"
 
 		Addendum.PDF.RecentlySigned := true
 		FoxitID := GetParent(hDokSig)
 		PraxTT("Das Fenster 'Dokument signieren' wird gerade bearbeitet....!'", "30 2")   ; {"timeout":30, "zoom":2, "position":"Bottom", "parent":FoxitID}) 	;"30 2")
+		ActivateAndWait("ahk_id " hDokSig, 5)
 
 	;{ Felder im Signierfenster auf die in der INI festgelegten Werte einstellen
-
-			ActivateAndWait("ahk_id " hDokSig, 5)
 
 		; Signieren als -------------------------------------------------------------------------------------------------------
 			ControlFocus 	, ComboBox1                                                                 	, % "ahk_id " hDokSig
@@ -803,24 +802,18 @@ FoxitReader_SignDoc(hDokSig) {		                                     	          
 			If Addendum.PDF.DokumentSperren
 				VerifiedCheck("Button4","","", hDokSig)
 			sleep, 50
-
 	;}
 
-	;{ Signatur-Dialog schließen
-
-		; Signaturfenster schliessen
-			while WinExist("ahk_id " hDokSig) {
-
-				If VerifiedClick("Button5", hDokSig)
-					break
-				else If (A_Index > 10)
-					MsgBox, 4144, % "Addendum für AlbisOnWindows",  %	"Das Eintragen des Kennwortes hat nicht funktioniert.`n"
-											                                                		.	"Bitte tragen Sie es bitte manuell ein!`n"
-																									.	"Drücken Sie danach bitte erst auf Ok."
-				sleep, 50
-
-			}
-
+	;{ ; Signaturfenster schliessen
+		while WinExist("ahk_id " hDokSig) {
+			If VerifiedClick("Button5", hDokSig)
+				break
+			else If (A_Index > 10)
+				MsgBox, 4144, % "Addendum für AlbisOnWindows",  %	"Das Eintragen des Kennwortes hat nicht funktioniert.`n"
+																								.	"Bitte tragen Sie es bitte manuell ein!`n"
+																								.	"Drücken Sie danach bitte erst auf Ok."
+			sleep, 50
+		}
 	;}
 
 	;{ statistische Daten erfassen und speichern
@@ -835,38 +828,34 @@ FoxitReader_SignDoc(hDokSig) {		                                     	          
 			Addendum.PDF.SignaturePages += PdfPages.Max
 			IniWrite, % Addendum.PDF.SignatureCount	, % AddendumDir "\Addendum.ini", % "ScanPool", % "SignatureCount"
 			IniWrite, % Addendum.PDF.SignaturePages	, % AddendumDir "\Addendum.ini", % "ScanPool", % "SignaturePages"
-			ToolTip, %	"Signature Nr: "     	Addendum.PDF.SignatureCount
-						. 	"`nSeitenzahl: "         	                PdfPages.Max
-						. 	"`nges. Seiten: "     	Addendum.PDF.SignaturePages , 1000, 1, 10
+			ToolTip, %	"Signature Nr: "   	Addendum.PDF.SignatureCount
+						. 	"`nSeitenzahl: " 	PdfPages.Max
+						. 	"`nges. Seiten: " 	Addendum.PDF.SignaturePages , 1000, 1, 10
 
 	;}
 
 	; Dateidialog Routinen starten
-		SetTimer, PDFNotRecentlySigned		, -10000
+		SetTimer, PDFNotRecentlySigned		, -3000
 		PraxTT("'", "off")
 
 return
 
 PDFHelpCloseSaveDialogs:            	;{ - Notfalllösung für die immer noch unsichere Dialogerkennung
-
-		If (hwnd := WinExist("Speichern unter " appendix, "Speichern")) {
-
-			SetTimer, PDFHelpCloseSaveDialogs,  Off
-			VerifiedClick("Speichern", hwnd)                                                                 	; Speichern Button drücken
-			WinWait, % "Speichern unter bestätigen " appendix,, 2
-			If !ErrorLevel
-				return VerifiedClick("Ja", "Speichern unter bestätigen " appendix,,, true)    	; mit 'Ja' bestätigen
-			Addendum.PDF.RecentlySigned := false
-
-		}
-
+	If (hwnd := WinExist("Speichern unter " appendix, "Speichern")) {
+		SetTimer, PDFHelpCloseSaveDialogs, Off
+		VerifiedClick("Speichern", hwnd)                                                                 	; Speichern Button drücken
+		WinWait, % "Speichern unter bestätigen " appendix,, 2
+		If !ErrorLevel
+			return VerifiedClick("Ja", "Speichern unter bestätigen " appendix,,, true)    	; mit 'Ja' bestätigen
+		Addendum.PDF.RecentlySigned := false
+	}
 return ;}
 
 PDFNotRecentlySigned: ;{
-		Addendum.PDF.RecentlySigned := false
-		Addendum.SaveAsInvoked := false
-		SetTimer, PDFHelpCloseSaveDialogs,  Off
-		Tooltip,,,, 10
+	Addendum.PDF.RecentlySigned	:= false
+	Addendum.SaveAsInvoked     	:= false
+	SetTimer, PDFHelpCloseSaveDialogs,  Off
+	Tooltip,,,, 10
 return ;}
 }
 
