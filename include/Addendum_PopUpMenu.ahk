@@ -9,12 +9,13 @@
 ;                                	-	oder ein Rezept/Formular nochmal drucken ohne manuellen Eingriff
 ;
 ;		Basisskript:        	-	Addendum.ahk
-;       Abhängigkeiten:   	-	Addendum_Menu, Addendum_Window, Addendum_Albis
+;
+;       Abhängigkeiten:   	-	Addendum_Menu.ahk, Addendum_Window.ahk, Addendum_Albis.ahk, Addendum_PDFReader.ahk
 ;                                	-	benötigt wird außerdem ein ShellHook-Callback, welcher im Addendum.ahk Skript dafür angelegt ist
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_PopUpMenu started:    	20.06.2020
-;       Addendum_PopUpMenu last change:	25.09.2020
+;
+;       Addendum_PopUpMenu started: 20.06.2020 | last change: 07.03.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Addendum_PopUpMenu(hWin, hMenu) {                                                                               	;-- fügt neue Menupunkte dem Rechtsklickmenu der Karteikarte hinzu
@@ -407,52 +408,21 @@ return pm
 }
 
 ; ~~~~~ PDF Reader/Viewer Funktionen ~~~~~
-admMenu_PdfSaveAs(PdfFullFilePath	, PDFViewerClass, PDFViewerHwnd) {                               	;-- Callback Funktion für Befundexporte (_scan)
+admMenu_PdfSaveAs(PdfFullFilePath, PDFViewerClass, PDFViewerHwnd) {                               	;-- Callback Funktion für Befundexporte (_scan)
 
-		static foxitSaveAs    	:= "Speichern unter ahk_class #32770 ahk_exe FoxitReader.exe"
-		static sumatraSaveAs	:= "Speichern unter ahk_class #32770 ahk_exe SumatraPDF.exe"
-		static notallowed     	:= "~#%&*:<>?/\{|}" q
+	; Hinweis
+		PraxTT("PDF Datei wird exportiert.", "20 0")
 
-		PdfFullFilePath := RegExReplace(PdfFullFilePath, "\~|\#|\%|\&|\*|\<|\>|\?|\/|\{|\||\}|\" q)
-
-	; Pfad und Dateiname
-		SplitPath, PdfFullFilePath, OutFileName, OutDir
-
-	; verschiedene RPA-Routinen je nach benutztem PDFReader (im Moment FoxitReader und
-		If InStr(PDFViewerClass, "Foxit") {                ; FoxitReader
-
-			FoxitInvoke("SaveAs", PDFViewerHwnd)                    	; 'Speichern unter' - Dialog
-			WinWait, % foxitSaveAs,, 6                                       	; wartet 6 Sekunden auf das Dialogfenster
-			hfoxitSaveAs := GetHex(WinExist(foxitSaveAs))        	; 'Speichern unter' - Dialog handle
-			VerifiedSetText("Edit1", PdfFullFilePath , hfoxitSaveAs)	; Speicherpfad eingeben
-			VerifiedClick("Button3", hfoxitSaveAs,,, true)               	; Speichern Button drücken
-			FoxitInvoke("Close", PDFViewerHwnd)                        	; dieses Dokument schließen
-
-		}
-		else If InStr(PDFViewerClass, "Sumatra") {	; Sumatra PdfReader
-
-			SumatraInvoke("SaveAs", PDFViewerHwnd)                	; 'Speichern unter' - Dialog
-			WinWait, % sumatraSaveAs,, 6                                  	; wartet 6 Sekunden auf das Dialogfenster
-			hSaveAs := GetHex(WinExist(sumatraSaveAs))        	; 'Speichern unter' - Dialog handle
-			VerifiedSetText("Edit1", PdfFullFilePath , hSaveAs)     	; Speicherpfad eingeben
-			VerifiedClick("Button2", hSaveAs,,, true)                  	; Speichern Button drücken
-			SumatraInvoke("Close", PDFViewerHwnd)                  	; dieses Dokument schließen
-
-		}
-
-	; Wartet bis Datei fertig gespeichert wurde
-		while !(FExists := FileExist(PdfFullFilePath)) {
-			Sleep, 200
-			If (A_Index > 40)
-				break
-		}
+	; Foxit/Sumatra (universelle Funktion)
+		FExists := PdfSaveAs(PdfFullFilePath, PDFViewerClass, PDFViewerHwnd)
 
 	; Albis wieder aktivieren
 		AlbisActivate(2)
 
 	; Hinweis über Erfolg oder Mißerfolg
+		SplitPath, PdfFullFilePath, OutFileName, OutDir
 		If FExists
-			PraxTT("(" FExists ") Der Befund wurde im Verzeichnis:`n" OutDir "`nunter dem Namen:`n" OutFileName "`ngespeichert." , "6 0")
+			PraxTT("(" FExists ") Der Befund wurde im Verzeichnis:`n" OutDir "`nunter dem Namen:`n" OutFileName "`ngespeichert." , "8 0")
 		else
 			PraxTT("Der Befund konnte nicht exportiert werden!. `nOutput: " FExists , "6 0")
 
@@ -463,43 +433,16 @@ admMenu_PdfPrint(Param, PDFViewerClass, PDFViewerHwnd) {                        
 	; Funktion bedient den Druck auf einen Hardwaredrucker und auch für virtuelle Druckertreiber z.B. Fax
 
 		PraxTT("Pdf Dokument wird gedruckt.`nBitte warten!", "20 3")
-		PatID	:= AlbisAktuellePatID()
-		LogText	:= StrSplit(Param, "#").1
-		Printer	:= StrSplit(Param, "#").2
 
-		If InStr(PDFViewerClass, "Foxit") {                ; FoxitReader
-
-			PdfPage := FoxitReader_GetPages(PDFViewerHwnd)                                    	; Seitenzahl des Dokumentes ermitteln
-			LogText	 .= ", Dokument mit " PdfPage.max " Seite(n) gedruckt"                       ; LogText präzisieren
-			admGui_PatLog(PatID, "AddToLog", LogText)                                                	; die ausgedruckte Datei inkl. Seitenzahl protokollieren
-
-			res := FoxitReader_ToPrint(PDFViewerHwnd, Printer)                                    	; Dokument drucken
-			If (res.ItemNr = 0) {                                                                                     	; Fehlerausgabe wenn Drucker nicht vorhanden ist
-				PraxTT("Drucker: " Printer "`nkonnte nicht gefunden werden.`n"
-				      	.  "Bitte die Druckereinstellungen in der Addendum.ini prüfen.", "8 3")
-				return                                                                                                    	; Druck-Dialog wird für manuelle Auswahl offen gelassen
-			}
-			FoxitInvoke("Close", PDFViewerHwnd)                                                           	; dieses Dokument schließen
-
-		}
-		else If InStr(PDFViewerClass, "Sumatra") {	; Sumatra PdfReader
-
-			PdfPage := Sumatra_GetPages(PDFViewerHwnd)                                        	; Seitenzahl des Dokumentes auslesen
-			LogText	 .= ", Dokument mit " PdfPage.max " Seite(n) gedruckt"                        ; LogText präzisieren
-			admGui_PatLog(PatID, "AddToLog", LogText)                                                	; die ausgedruckte Datei inkl. Seitenzahl protokollieren
-
-			res := Sumatra_ToPrint(PDFViewerHwnd, Printer)                                        	; Dokument drucken
-			If (res.ItemNr = 0) {                                                                                     	; Fehlerausgabe wenn Drucker nicht vorhanden ist
-				PraxTT("Drucker: " Printer "`nkonnte nicht gefunden werden.`n"
-				      	.  "Bitte die Druckereinstellungen in der Addendum.ini prüfen.", "8 3")
-				return                                                                                                    	; Druck-Dialog wird für manuelle Auswahl offen gelassen
-			}
-			SumatraInvoke("Close", PDFViewerHwnd)                                                    	; Dokument schließen
-
-		}
+		PatID		:= AlbisAktuellePatID()
+		LogText		:= StrSplit(Param, "#").1
+		Printer   	:= StrSplit(Param, "#").2
+		PdfPages	:= PdfPrint(Printer, PDFViewerClass, PDFViewerHwnd)
+		LogText	 	.= ", Dokument mit " PdfPages.max " Seite(n) gedruckt"                      	; LogText präzisieren
+		admGui_PatLog(PatID, "AddToLog", LogText)                                                  	; die ausgedruckte Datei inkl. Seitenzahl protokollieren
 
 		PraxTT("", "off")                                                                                                	; Info-Anzeige aus
-		AlbisActivate(2)                                                                                               	; Albis wieder aktivieren
+		AlbisActivate(2)                                                                                               	; zurück zu Albis
 
 }
 

@@ -805,58 +805,10 @@ ErrorBox(ErrorString, CallingScript:="", Screenshot:=false) {                   
 
 }
 
-; Addendum.ahk
-AutoSkriptReload() {                                                                                                        	;-- Timerfunktion, startet Skript um 0 Uhr immer neu
-	; Addendum.ahk setzt bei Albis das Tagesdatum um 0Uhr auf den neuen Tag
-	If ( TimeDiff("000000", "now", "m")=0 )
-		SkriptReload()
-}
 
-WinEventHook_Helper_Thread:                                                                                      	;{ Labordaten - Fenster abfangen
-
-	hpop:= GetLastActivePopup(AlbisWinID())
-	If (hpop != AlbisWinID()) && (hpop != hpop_old)	{
-
-		EHWT		:= WinGetTitle(hpop)
-		EHWText	:= WinGetText(hpop)
-		hpop_old	:= hpop
-
-		If InStr(EHWT, "Labordaten")		{
-
-			SetTimer, WinEventHook_Helper_Thread, Off
-			VerifiedCheck("Button5"	, hpop,,, 1)
-			VerifiedClick("Button1" 	, hpop)
-			AlbisLaborbuchOeffnen()
-
-		}
-
-	}
-
-return
-;}
-
-WinEvent_HMV(hHook, event, hwnd, idObject, idChild, eventThread, eventTime) {           	; Hookprocedure welche nur bei geöffneten Heilmittelverordnungsformularen aktiv ist
-	Critical
-	HmvHookHwnd:= GetHex(hwnd)
-	HmvEvent:= GetHex(event)
-	SetTimer, Heilmittelverordnung_WinHandler,  -0
-return 0
-
-Heilmittelverordnung_WinHandler:                                                                                 	;{ Eventhookhandler - kümmert sich nur um Heilmittelverordnungsfenster
-
-return ;}
-}
-
-; ----------------------- zugehörige Funktionen für die WinEventHandler Labels
-SplashAus: ;{
-	SplashTextOff
-return ;}
-			else if InStr(EHWT   	, "CGM LIFE")	                                                                                    	 {  	; Verbindungsfehler (gesperrt durch Windows Firewall)
-				WinClose, % "CGM LIFE ahk_class Afx:00400000:0:00010005:86101803"
-			}
-
-
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum_Controls
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;\/\/ RICHEDIT \/\/
 Rich_FindText(hEdit, Text, Mode:="WHOLEWORD") {
 
@@ -1383,6 +1335,54 @@ DoingStatisticalThings:                     	;{
 
 return
 ;}
+
+AutoSkriptReload() {                                                                                                        	;-- Timerfunktion, startet Skript um 0 Uhr immer neu
+	; Addendum.ahk setzt bei Albis das Tagesdatum um 0Uhr auf den neuen Tag
+	If ( TimeDiff("000000", "now", "m")=0 )
+		SkriptReload()
+}
+
+WinEventHook_Helper_Thread:                                                                                      	;{ Labordaten - Fenster abfangen
+
+	hpop:= GetLastActivePopup(AlbisWinID())
+	If (hpop != AlbisWinID()) && (hpop != hpop_old)	{
+
+		EHWT		:= WinGetTitle(hpop)
+		EHWText	:= WinGetText(hpop)
+		hpop_old	:= hpop
+
+		If InStr(EHWT, "Labordaten")		{
+
+			SetTimer, WinEventHook_Helper_Thread, Off
+			VerifiedCheck("Button5"	, hpop,,, 1)
+			VerifiedClick("Button1" 	, hpop)
+			AlbisLaborbuchOeffnen()
+
+		}
+
+	}
+
+return
+;}
+
+WinEvent_HMV(hHook, event, hwnd, idObject, idChild, eventThread, eventTime) {           	; Hookprocedure welche nur bei geöffneten Heilmittelverordnungsformularen aktiv ist
+	Critical
+	HmvHookHwnd:= GetHex(hwnd)
+	HmvEvent:= GetHex(event)
+	SetTimer, Heilmittelverordnung_WinHandler,  -0
+return 0
+
+Heilmittelverordnung_WinHandler:                                                                                 	;{ Eventhookhandler - kümmert sich nur um Heilmittelverordnungsfenster
+
+return ;}
+}
+
+SplashAus: ;{	; ----------------------- zugehörige Funktionen für die WinEventHandler Labels
+	SplashTextOff
+return ;}
+			else if InStr(EHWT   	, "CGM LIFE")	                                                                                    	 {  	; Verbindungsfehler (gesperrt durch Windows Firewall)
+				WinClose, % "CGM LIFE ahk_class Afx:00400000:0:00010005:86101803"
+			}
 
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2119,7 +2119,9 @@ CryptHash(pData, nSize, SID = "CRC32", nInitial = 0) {
 }
 
 
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum_Internal.ahk
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ProcessExist(ProcName, cmd:="") {                                                                                            	;-- sucht nur nach Autohotkeyprozessen
 
 	; use cmd = "PID" to receive the PID of an Autohotkey process
@@ -2137,3 +2139,44 @@ ProcessExist(ProcName, cmd:="") {                                               
 
 return false
 }
+
+
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; Addendum_PDFReader.ahk
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+RGBColorToBGR(vColor) {												; function: convert RGB 6 character hex color code to BGR
+	; example:  "8e3e2d" -> "2d3e8e"
+  If (StrLen(vColor) = 6)
+    Return SubStr(vColor,5,2) SubStr(vColor,3,2) SubStr(vColor,1,2)
+}
+
+SetSystemCursor(Cursor := "") {										; function: SetSystemCursor() set custom system cursor or restore default cursor
+
+	; - no parameter     : restore default cursor
+	; - parameter "CROSS": change custom system cursor to cross
+	; original function by Flipeador , https://www.autohotkey.com/boards/viewtopic.php?p=206703#p206703
+
+	Static Cursors := {APPSTARTING: 32650, ARROW: 32512, CROSS: 32515, HAND: 32649, HELP: 32651, IBEAM: 32513
+                    , NO: 32648, SIZEALL: 32646, SIZENESW: 32643, SIZENS: 32645
+                    , SIZENWSE: 32642, SIZEWE: 32644, UPARROW: 32516, WAIT: 32514}
+
+  If (Cursor == "")
+    ; Restore default cursors
+    Return DllCall("User32.dll\SystemParametersInfoW", "UInt", 0x0057, "UInt", 0, "Ptr", 0, "UInt", 0)
+
+  ; Replace default cursors with custom cursor
+  Cursor := InStr(Cursor, "3") ? Cursor : Cursors[Cursor]
+  For Each, ID in Cursors
+  {
+    ; 2 = IMAGE_CURSOR | 0x00008000 = LR_SHARED
+    hCursor := DllCall("User32.dll\LoadImageW", "Ptr", 0, "Int", Cursor, "UInt", 2, "Int", 0, "Int", 0, "UInt", 0x00008000, "Ptr")
+    hCursor := DllCall("User32.dll\CopyIcon", "Ptr", hCursor, "Ptr")
+    DllCall("User32.dll\SetSystemCursor", "Ptr", hCursor, "UInt",  ID)
+  }
+} ; https://msdn.microsoft.com/en-us/library/windows/desktop/ms648395(v=vs.85).aspx
+
+
+
+
+
+

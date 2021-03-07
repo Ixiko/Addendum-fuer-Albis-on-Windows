@@ -2,14 +2,93 @@
 ;     	Addendum_PDFReader
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;		Verwendung:	    	-	RPA Funktionen PDF Anzeigeprogramme für
-;	                                    	1. Sumatra PDF V3.1 und V.2
-;	                                        2. FoxitReader ab V9+
+;	                                   	1. Sumatra PDF V3.1 und V.2
+;	                                  	2. FoxitReader ab V9+
 ;
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_StackifyGui last change:    	05.03.2021
+;       Addendum_StackifyGui last change:    	07.03.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
+
+; -------------------------------------------------------------
+; SUMATRA/FOXIT Universell
+; -------------------------------------------------------------
+PdfPrint(Printer, PDFViewerClass, PDFViewerHwnd) {                                                       	;-- Pdf-Datei ausdrucken automatisiert
+
+	; Funktion bedient den Druckvorgang auf einem Hardwaredrucker
+	; auch für virtuelle Druckertreiber z.B. Fax, PDF-Druckertreiber geeignet
+
+		If InStr(PDFViewerClass, "Foxit") {                ; FoxitReader
+
+			PdfPages	:= FoxitReader_GetPages(PDFViewerHwnd)                                   	; Seitenzahl des Dokumentes ermitteln
+			PrintResult := FoxitReader_ToPrint(PDFViewerHwnd, Printer)                           	; Dokument drucken
+			If (PrintResult.ItemNr = 0) {                                                                          	; Fehlerausgabe wenn Drucker nicht vorhanden ist
+				PraxTT("Drucker: " Printer "`nkonnte nicht gefunden werden.`n"
+				      	.  "Bitte die Druckereinstellungen in der Addendum.ini prüfen.", "8 3")
+				return                                                                                                    	; Druck-Dialog wird für manuelle Auswahl offen gelassen
+			}
+			FoxitInvoke("Close", PDFViewerHwnd)                                                           	; dieses Dokument schließen
+
+		}
+		else If InStr(PDFViewerClass, "Sumatra") {	; Sumatra PdfReader
+
+			PdfPages	:= Sumatra_GetPages(PDFViewerHwnd)                                        	; Seitenzahl des Dokumentes auslesen
+			PrintResult	:= Sumatra_ToPrint(PDFViewerHwnd, Printer)                              	; Dokument drucken
+			If (PrintResult.ItemNr = 0) {                                                                           	; Fehlerausgabe wenn Drucker nicht vorhanden ist
+				PraxTT("Drucker: " Printer "`nkonnte nicht gefunden werden.`n"
+				      	.  "Bitte die Druckereinstellungen in der Addendum.ini prüfen.", "8 3")
+				return                                                                                                    	; Druck-Dialog wird für manuelle Auswahl offen gelassen
+			}
+			SumatraInvoke("Close", PDFViewerHwnd)                                                    	; dieses Dokument schließen
+
+		}
+
+return PdfPages
+}
+
+PdfSaveAs(PdfFullFilePath,PDFViewerClass, PDFViewerHwnd) {                                        	;-- Callback Funktion für Befundexporte (_scan)
+
+		static foxitSaveAs    	:= "Speichern unter ahk_class #32770 ahk_exe FoxitReader.exe"
+		static sumatraSaveAs	:= "Speichern unter ahk_class #32770 ahk_exe SumatraPDF.exe"
+		static rxNotAllowed   	:= "[" Chr(0x20) "~#%&<>\?\/|\{\}\|\*]"
+
+	; illegale Zeichen entfernen
+		PdfFullFilePath := RegExReplace(PdfFullFilePath, rxNotAllowed)
+
+	; verschiedene RPA-Routinen je nach benutztem PDFReader (im Moment FoxitReader und
+		If InStr(PDFViewerClass, "Foxit") {                                 	; FoxitReader
+
+			FoxitInvoke("SaveAs", PDFViewerHwnd)                    	; 'Speichern unter' - Dialog
+			WinWait, % foxitSaveAs,, 6                                       	; wartet 6 Sekunden auf das Dialogfenster
+			If !(hSaveAs := GetHex(WinExist(foxitSaveAs)))        	; 'Speichern unter' - Dialog handle
+				return
+			VerifiedSetText("Edit1", PdfFullFilePath , hSaveAs)     	; Speicherpfad eingeben
+			VerifiedClick("Button3", hSaveAs,,, true)                   	; Speichern Button drücken
+			FoxitInvoke("Close", PDFViewerHwnd)                        	; dieses Dokument schließen
+
+		}
+		else If InStr(PDFViewerClass, "Sumatra") {                   	; Sumatra PdfReader
+
+			SumatraInvoke("SaveAs", PDFViewerHwnd)                	; 'Speichern unter' - Dialog
+			WinWait, % sumatraSaveAs,, 6                                  	; wartet 6 Sekunden auf das Dialogfenster
+			If !(hSaveAs := GetHex(WinExist(sumatraSaveAs)))     	; 'Speichern unter' - Dialog handle
+				return
+			VerifiedSetText("Edit1", PdfFullFilePath , hSaveAs)     	; Speicherpfad eingeben
+			VerifiedClick("Button2", hSaveAs,,, true)                  	; Speichern Button drücken
+			SumatraInvoke("Close", PDFViewerHwnd)                  	; dieses Dokument schließen
+
+		}
+
+	; Wartet bis Datei fertig gespeichert wurde
+		while !(FExists := FileExist(PdfFullFilePath)) {
+			Sleep, 200
+			If (A_Index > 40)
+				break
+		}
+
+return FExists
+}
 
 ; -------------------------------------------------------------
 ; SUMATRA PDF
@@ -339,7 +418,6 @@ return {"viewer": "SumatraPDF", "AR":sw/sh, "ID":hSumatra, "PID":PIDSumatra, "x"
 ; -------------------------------------------------------------
 ; FOXITREADER
 ; -------------------------------------------------------------
-
 FoxitInvoke(command, FoxitID="") {		                                                                        	;-- wm_command wrapper for FoxitReader Version:  9.1
 
 		/* DESCRIPTION of FUNCTION:  FoxitInvoke() by Ixiko (version 11.07.2020)
@@ -882,36 +960,3 @@ JEE_StrUtf8BytesToText(vUtf8) {                                                 
 		return StrGet(&vUtf8, "UTF-8")
 }
 
-/*
-RGBColorToBGR(vColor) {												; function: convert RGB 6 character hex color code to BGR
-	; example:  "8e3e2d" -> "2d3e8e"
-  If (StrLen(vColor) = 6)
-    Return SubStr(vColor,5,2) SubStr(vColor,3,2) SubStr(vColor,1,2)
-}
-
-SetSystemCursor(Cursor := "") {										; function: SetSystemCursor() set custom system cursor or restore default cursor
-
-	; - no parameter     : restore default cursor
-	; - parameter "CROSS": change custom system cursor to cross
-	; original function by Flipeador , https://www.autohotkey.com/boards/viewtopic.php?p=206703#p206703
-
-	Static Cursors := {APPSTARTING: 32650, ARROW: 32512, CROSS: 32515, HAND: 32649, HELP: 32651, IBEAM: 32513
-                    , NO: 32648, SIZEALL: 32646, SIZENESW: 32643, SIZENS: 32645
-                    , SIZENWSE: 32642, SIZEWE: 32644, UPARROW: 32516, WAIT: 32514}
-
-  If (Cursor == "")
-    ; Restore default cursors
-    Return DllCall("User32.dll\SystemParametersInfoW", "UInt", 0x0057, "UInt", 0, "Ptr", 0, "UInt", 0)
-
-  ; Replace default cursors with custom cursor
-  Cursor := InStr(Cursor, "3") ? Cursor : Cursors[Cursor]
-  For Each, ID in Cursors
-  {
-    ; 2 = IMAGE_CURSOR | 0x00008000 = LR_SHARED
-    hCursor := DllCall("User32.dll\LoadImageW", "Ptr", 0, "Int", Cursor, "UInt", 2, "Int", 0, "Int", 0, "UInt", 0x00008000, "Ptr")
-    hCursor := DllCall("User32.dll\CopyIcon", "Ptr", hCursor, "Ptr")
-    DllCall("User32.dll\SetSystemCursor", "Ptr", hCursor, "UInt",  ID)
-  }
-} ; https://msdn.microsoft.com/en-us/library/windows/desktop/ms648395(v=vs.85).aspx
-
- */

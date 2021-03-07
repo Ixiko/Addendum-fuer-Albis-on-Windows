@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                                                                       	ADDENDUM HAUPTSKRIPT
-global                                                                               AddendumVersion:= "1.52" , DatumVom:= "06.03.2021"
+global                                                                               AddendumVersion:= "1.52" , DatumVom:= "07.03.2021"
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                    ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . . . . . . .                                           BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -1136,10 +1136,11 @@ return false
 :*R:zuschl::A-B-C-D-K1                                                                         	; Zuschläge
 :*R:JVEG::(sach:Anfrage Sozialgericht gem. JVEG:21.00)                     	; Anfrage Sozialgericht
 :*R:sozialgericht::(sach:Anfrage Sozialgericht gem. JVEG:21.00)          	; Anfrage Sozialgericht
-::lageso::(sach:Landesamt für Soziales u. Versorgung:21.00)               	; Anfrage LaGeSo
-:*R:lageso1::(sach:Landesamt für Soziales u. Versorgung:21.00)         	; Anfrage LaGeSo
-:*R:lageso2::(sach:Kurzauskunft LA für Soziales u. Versorgung:5.00)      	; Anfrage LaGeSo
-:*R:lagesokurz::(sach:Kurzauskunft LA für Soziales u. Versorgung:5.00)  	; Anfrage LaGeSo
+:*R:lasv1::(sach:Landesamt für Soziales u. Versorgung:21.00)               	; Anfrage LaGeSo Schwerbehinderung Normal
+:*R:lasv2::(sach:Kurzauskunft LA für Soziales u. Versorgung:5.00)          	; Anfrage LaGeSo Schwerbehinderung Kurzbefund
+:*R:lageso1::(sach:Landesamt für Soziales u. Versorgung:21.00)         	; Anfrage LaGeSo Schwerbehinderung Normal
+:*R:lageso2::(sach:Kurzauskunft LA für Soziales u. Versorgung:5.00)      	; Anfrage LaGeSo Schwerbehinderung Kurzbefund
+:*R:lagesokurz::(sach:Kurzauskunft LA für Soziales u. Versorgung:5.00)  	; Anfrage LaGeSo Schwerbehinderung Kurzbefund
 :*R:Rentenversich::(sach:Anfrage Rentenversicherung:28.20)                 	; Anfrage Rentenversicherung
 :*R:RLV::(sach:Anfrage Rentenversicherung:28.20)                              	; Anfrage Rentenversicherung
 :*R:DRV::(sach:Anfrage Rentenversicherung:28.20)                              	; Anfrage Rentenversicherung
@@ -1154,6 +1155,7 @@ return false
 return ;}
 :*:reiseunf::(sach:Reiseunfähigkeitsbescheinigung:20.00)                     	;{ Reiseunfähigkeitsbescheinigung
 :*:reiserüc::(sach:Reiseunfähigkeitsbescheinigung:20.00)                    	;} Reiseunfähigkeitsbescheinigung
+:*R:schreib::(sach:Schreibgebühr:3.50)                                                 	; Schreibgebühr
 :*R:stix::3652-                                                                                     	;{ Urinstix
 :*R:streifen::3652-                                                                               	; Urinstix
 :*R:urin::3652-                                                                                   	; Urinstix

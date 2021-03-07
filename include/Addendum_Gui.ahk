@@ -14,7 +14,7 @@
 ;
 ;
 ;	                    	Addendum für Albis on Windows
-;                        	by Ixiko started in September 2017 - letzte Änderung 05.03.2021 - this file runs under Lexiko's GNU Licence
+;                        	by Ixiko started in September 2017 - letzte Änderung 07.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
 
@@ -108,7 +108,16 @@ AddendumGui(admShow="") {
 				func_admOCRAll	:= Func("admGui_CM").Bind("JOCRAll")
 
 				Menu, admJCM, Add, Karteikarte öffnen                      	, % func_admOpen
-				Menu, admJCM, Add, Anzeigen                                 	, % func_admView1
+
+				If (StrLen(Addendum.PDF.Reader) > 0) && (StrLen(Addendum.PDF.ReaderAlternative) > 0) {
+					Menu, admJCMView, Add, % Addendum.PDF.ReaderName            	, % func_admView2
+					Menu, admJCMView, Add, % Addendum.PDF.ReaderAlternativeName	, % func_admView1
+					Menu, admJCM, Add, Anzeigen mit                          	, :admJCMView
+				} else if (StrLen(Addendum.PDF.Reader) = 0) && (StrLen(Addendum.PDF.ReaderAlternative) > 0)
+					Menu, admJCM, Add, Anzeigen                                	, % func_admView1
+				else if (StrLen(Addendum.PDF.Reader) > 0) && (StrLen(Addendum.PDF.ReaderAlternative) = 0)
+					Menu, admJCM, Add, Anzeigen                                	, % func_admView2
+
 				Menu, admJCM, Add, Importieren                             	, % func_admImport
 				Menu, admJCM, Add, Umbennen                              	, % func_admRename
 				;Menu, admJCM, Add, Aufteilem                                   	, % func_admSplit
@@ -520,7 +529,7 @@ AddendumGui(admShow="") {
 		GuiControlGet, cp, adm: Pos, % admILAB2
 
 		Gui, adm: Font  	, % "s" fs " bold c172842"
-		Gui, adm: Add  	, Text, % "x10 y+" YPlus " w" tw      	, % "⚗ Infofenster"
+		Gui, adm: Add  	, Text, % "x10 y+" YPlus " w" tw      	, % "🔄 Infofenster"
 		Gui, adm: Font  	, % "s" fs " Normal"
 		Gui, adm: Add  	, Text, % "x+5 w100 vadmIWInit"	, % Addendum.iWin.paint " : " Addendum.iWin.Init
 
@@ -1582,7 +1591,7 @@ admGui_CM(MenuName)                                               	{            
 				PraxTT("Die wird bearbeitet.`n...bitte warten...", "1 0")
 				Return
 			}
-			admGui_View(admFile)
+			admGui_View(admFile, MenuName)
 			return
 		}
 
@@ -2588,7 +2597,9 @@ PVHandler:
 return
 }
 
-admGui_View(filename)                                                 	{               	; Befund-/Bildanzeigeprogramm aufrufen
+admGui_View(filename, MenuName="")                           	{               	; Befund-/Bildanzeigeprogramm aufrufen
+
+	; letzte Änderung 07.03.2021
 
 	filepath := Addendum.BefundOrdner "\" filename
 	If (StrLen(filename) = 0) || !FileExist(filepath)
@@ -2599,19 +2610,36 @@ admGui_View(filename)                                                 	{        
 		Run % q filepath q
 	}
 	else {
-		If !FileExist(pdfReaderPath := Addendum.PDF.ReaderAlternative)
-			If !FileExist(pdfReaderPath := Addendum.PDF.Reader) {
-				PraxTT("Es konnte kein PDF-Anzeigeprogramm gefunden werden", "2 1")
+
+		If !RegExMatch(Addendum.PDF.Reader, "i)[A-Z]\:\\")
+			If !RegExMatch(Addendum.PDF.Reader, "[\\\/,;%\(\)]")
+				pdfReaderPath := GetAppImagePath(RegExReplace(Addendum.PDF.Reader, "\.exe$") ".exe")
+
+		If !RegExMatch(Addendum.PDF.ReaderAlternative, "i)[A-Z]\:\\")
+			If !RegExMatch(Addendum.PDF.ReaderAlternative, "[\\\/,;%\(\)]")
+				pdfReaderAlternativePath := GetAppImagePath(RegExReplace(Addendum.PDF.ReaderAlternative, "\.exe$") ".exe")
+
+		If !FileExist(pdfReaderAlternativePath)
+			If !FileExist(pdfReaderPath) {
+				PraxTT("Es konnte kein PDF-Anzeigeprogramm gefunden werden", "2 0")
 				return
 			}
-		PraxTT("PDF-Anzeigeprogramm wird geöffnet", "3 0")
+
+		If !MenuName
+			pdfReader := pdfReaderAlternativePath
+		else if (MenuName = "JView1")
+			pdfReader := pdfReaderAlternativePath
+		else if (MenuName = "JView2")
+			pdfReader := pdfReaderPath
+
+		PraxTT("PDF-Datei wird angezeigt", "3 0")
 		If !PDFisCorrupt(filepath)
-			Run % q pdfReaderPath q " " q filepath q
+			Run % q pdfReader q " " q filepath q
 		else
 			PraxTT("PDF Datei:`n>" fileName "<`nist defekt", "2 0")
 	}
 
-
+	Sleep 3000
 	PraxTT("", "off")
 
 return 1

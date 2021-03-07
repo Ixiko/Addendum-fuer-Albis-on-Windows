@@ -110,7 +110,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GW=100, Anzeige=true) {            
 
 			Tage	:= Tage ? Tage : 30
 			Von 	:= A_YYYY . A_MM . A_DD
-			If A_DDD in Fr,Do
+			If A_DDD in Fr,Do								; #### Wochenenden herausrechnen
 				Von += -1*Tage, Days
 			else
 				Von += (-1*Tage)-2, Days
