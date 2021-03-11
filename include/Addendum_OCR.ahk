@@ -7,7 +7,7 @@
 ;
 ;
 ;	                    	Addendum für Albis on Windows
-;                        	by Ixiko started in September 2017 - last change 08.02.2021 - this file runs under Lexiko's GNU Licence
+;                        	by Ixiko started in September 2017 - last change 08.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 tessOCRPdf(PDFName, params)             	{                          	;-- tesseract Texterkennung -> erstellt eine durchsuchbare PDF Datei
@@ -200,7 +200,7 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 				SciTEOutput(sep "`n  # [" PageMax "] Seite" (PageMax>1?"n":"") ": \" PDFName ".pdf")
 
 			If (StrLen(tess.preprocessing) > 0)
-				SciTEOutput("  - Preprocessing: " PageMax (PageMax > 1 ? " Seitenbilder werden" : " Seitenbild wird") " für die Texterkennung vorbereitet")
+				SciTEOutput("  - Preprocessing: " PageMax (PageMax > 1 ? " Seitenbilder werden" : " Seitenbild wird") " vorbereitet")
 
 		; Originalbilder entpacken
 			If (tess.convertwith = "pdftopng") {
@@ -222,7 +222,7 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 
 			; Bilder entpacken
 				If (params.debug > 0)
-					SciTEOutput("  - Preprocessing: Textlayer entfernen (Seitenbilder extrahieren)")
+					SciTEOutput("  - Preprocessing: Seitenbilder extrahieren")
 				tess.imgpattern := 0, tess.imgext := "jpg"
 				;pdfconvert	:= tess.imagick " " q tess.tempPath "\in.pdf" q " " q tess.tempPath "\conv." tess.imgext q
 				pdfconvert	:= tess.imagick " -units PixelsPerInch -density 200 " q tess.tempPath "\in.pdf" q " " q tess.tempPath "\conv." tess.imgext q
@@ -232,7 +232,7 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 
 			; Bilder wieder zu einer PDF zusammenlegen
 				If (params.debug > 0)
-					SciTEOutput(	"  - Preprocessing: extrahierte Bilder zu einer Bild-PDF vereinen")
+					SciTEOutput(	"  - Preprocessing: Bilder zu Bild-PDF vereinen")
 				pdfconvert	:= tess.imagick " " q tess.tempPath "\conv*." tess.imgext q " " q tess.tempPath "\out1.pdf" q
 				stdOut   	:= ParseStdOut(StdoutToVar(pdfconvert))
 				If (params.debug > 1)
@@ -253,7 +253,7 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 		If (tess.preprocessing = "imagemagick") {
 
 				If (params.debug > 1)
-					SciTEOutput("  - Preprocessing: Aufbereitung der Seitenbilder für Tesseract" )
+					SciTEOutput("  - Preprocessing: Aufbereitung der Seitenbilder" )
 
 			; OCR preprocessing mit Imagemagick
 				workExt      	:= "png"
@@ -291,7 +291,7 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 			FileOpen(tess.infilePath, "w", "CP0").Write(RTrim(workimgs, "`n"))
 		}
 		else {
-			SciTEOutput("  - # Abbruch: Fehler beim Preprocessing. Bilddateien nicht vorhanden!")
+			SciTEOutput("  - Abbruch: Preprocessingfehler. Bilddateien fehlen!")
 			return
 		}
 
@@ -303,7 +303,7 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 
 	; OCR                                        	;{
 
-		SciTEOutput("  - Texterkennung: Tesseract wird gestartet ...")
+		SciTEOutput("  - Texterkennung: gestartet ...")
 		tess_cmdline :=    tess.tessexe
 		tess_cmdline .= " --tessdata-dir " q tess.tessdata q " "                       	; Datenverzeichnis
 		tess_cmdline .= q tess.infilepath q                                                  	; Eingabedateien

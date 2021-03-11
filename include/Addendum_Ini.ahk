@@ -2,7 +2,7 @@
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                 liest Informationen aus der Addendum.ini ein für das globale Objekt Addendum
 ;                                                                              	!diese Bibliothek enthält Funktionen für Einstellungen des Addendum Hauptskriptes!
-;                                                            	by Ixiko started in September 2017 - last change 20.02.2021 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 10.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 return
@@ -256,7 +256,7 @@ admInfoWindowSettings() {                                                       
 									,	"JournalSort"      	: IniReadExt(compname, "Infofenster_JournalSortierung"               	, "3 1 1")
 									,	"LBDrucker"       	: IniReadExt(compname, "Infofenster_Laborblatt_Drucker"               	, "")
 									,	"LVScanPool"        	: {"W"	: (match2 - 10)
-																				,	"R"	: IniReadExt(compname, "InfoFenster_BefundAnzahl", 7)}}
+																	,	"R"	: IniReadExt(compname, "InfoFenster_BefundAnzahl", 7)}}
 
 		Addendum.iWin.LISTENERS := {	"WM_CREATE"                          	: 0x01
 														, 	"WM_DESTROY"                     	: 0x02
@@ -485,6 +485,14 @@ admOCRSettings() {                                                              
 		If InStr(Addendum.OCR.AutoOCRDelay, "Error")                   	; ## Abfrage integrieren
 			Addendum.OCR.AutoOCRDelay := 30
 
+	; wenn true dann ignoriert Watchfolder alle Dateiveränderungen solange nicht auf false gegangen wird
+		Addendum.OCR.PauseWF := false
+		Addendum.OCR.WFIgnore := Array()
+
+	; Zähler der Texterkennung, aktuell und seit Programmstart
+		Addendum.OCR.staticFileCount	:= 0
+		Addendum.OCR.filecount         	:= 0
+
 }
 
 admPraxisDaten() {                                                                                  	;-- Daten der Praxis
@@ -577,6 +585,9 @@ admSonstiges() {                                                                
 		}
 		else
 			PraxTT("File not exist: " Addendum.DBPath "\PatData\PatExtra.json", "4 1")
+
+	; Verzögerung bis zum Schliessen des Dialoges "Patient hat in diesem Quartal seine Chipkarte..." (0 = keine Verzögerung)
+		Addendum.noChippie := IniReadExt(compname, keineChipkarte, 3)
 
 }
 

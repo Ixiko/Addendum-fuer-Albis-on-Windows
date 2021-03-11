@@ -466,7 +466,6 @@ AlbisLeseDatumUndBezeichnung(MouseX, MouseY) {                                  
 		}
 
 		SendInput, {Escape}                                                                                               	; Karteikartenzeile freigeben
-
 		PdfTitel  	:= RegExReplace(PdfTitel, "\.*pdf$", "")                                                    	; eventuell noch vorhandene pdf Endung aus dem Karteikartentext entfernen
 
 return {"Text": PdfTitel, "Datum":KKDatum}

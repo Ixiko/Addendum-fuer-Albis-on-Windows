@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                                                                       	ADDENDUM HAUPTSKRIPT
-global                                                                               AddendumVersion:= "1.52" , DatumVom:= "07.03.2021"
+global                                                                               AddendumVersion:= "1.52" , DatumVom:= "11.03.2021"
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                    ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . . . . . . .                                           BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -17,10 +17,19 @@ global                                                                          
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 /*               	A DIARY OF CHANGES
-| **03.03.2020** | **F~** | **Laborjournal**	- 	es wurden mehr Parameter im Labor angezeigt als eingestellt, korrigiert |
-| **05.03.2020** | **F~** | **Infofenster**   	- 	Darstellung von PDF Dateien im Sumatra Reader funktioniert jetzt fehlerlos
-																		-	fehlerhafte Darstellung bei erneutem Aufruf des Fensters beseitigt |
+| **10.03.2020** | **F**    | **Laborabruf_iBWC**   	- 	Laborabruf wartet das Öffnen des Laborbuches ab und löst dann 'alle übertragen' aus. Addendum übernimmt dann die
+																					Übertragung ins Laborblatt.
+																					Voraussetzung ist, das bei Albis unter Optionen/Labor im Reiter Import bei 'Laborbuch nach Import automatisch öffnen'
+																					ein Häkchen gesetzt ist und das in Addendum die Einstellung Laborabruf automatisieren ebenso abgehakt ist.
+																					Anmerkung: 	Das Übertragen der Werte in das Laborblatt wird in einigen Fällen nicht komplett erfolgen können.
+																										Einige seltene Dialogfenster sind noch nicht erfasst und automatisiert worden durch mich.  |
+| **10.03.2020** | **F~** | **Infofenster**           	- 	RPA des Sumatra Readers funktioniert jetzt tadellos. Funktionen optimiert und fehlerhafte Listviewzugriff behoben. |
+| **03.03.2020** | **F~** | **Laborjournal**        	- 	es wurden mehr Parameter im Labor angezeigt als eingestellt, korrigiert |
 
+| **11.03.2020** | **F~** | **Addendum_Albis**     	- 	**AlbisKeineChipkarte()**<br>zum schnellen Schließen des Dialoges: "Patient hat in diesem Quartal seine Chipkarte noch
+																					nicht vorgezeigt"<br>
+																					**AlbisNeuerSchein()**<br>1. Teil von Funktionen zum Anlegen eines neuen Abrechnungsscheines. AlbisNeuerSchein öffnet
+																					und schließt das Fenster |
 
 	CGM_ALBIS DIENST Service SID:                    	S-1-5-80-845206254-3503829181-3941749774-3351807599-4094003504
 	CGM_ALBIS_BACKGROUND_SERVICE_(6002) 	S-1-5-80-4257249827-193045864-994999254-1414716813-2431842843
@@ -393,7 +402,7 @@ global                                                                          
 
 	; WatchFolder                                                                         	;{
 		Menu, SubMenu3, Add, % "Befundordner überwachen", Menu_WatchFolder
-		Menu, SubMenu3, % (Addendum.WatchFolder ? "Check":"UnCheck")           	, % "Befundordner überwachen"
+		Menu, SubMenu3, % (Addendum.OCR.WatchFolder ? "Check":"UnCheck")     	, % "Befundordner überwachen"
 	;}
 
 	; Schnellrezept                                                                       	;{
@@ -447,7 +456,7 @@ global                                                                          
 			func_ZeigeOnExitProtokoll := Func("ShowTextProtocol").Bind(protokoll)
 			Menu, SubMenu4, Add, % "OnExit Protokoll"                	, % func_ZeigeOnExitProtokoll
 		}
-		If FileExist(protokoll := Addendum.BefundOrdner	"\PDfImportLog.txt")                               	{
+		If FileExist(protokoll := Addendum.DBPath           	"\sonstiges\PDfImportLog.txt")                   	{
 			func_PDFImportLog  	:= Func("ShowTextProtocol").Bind(protokoll)
 			Menu, SubMenu4, Add, % "PDF Importprotokoll"            	, % func_PDFImportLog
 		}
@@ -591,7 +600,6 @@ HotkeyLabel:
     Hotkey, LAlt & v                         	, SciteDescriptionBlock, I2      	;= SciTe: Abschnittbezeichner für Addendumskripte
     Hotkey, LControl & Numpad4    	, SciteSmartCaretL                 	;= SciTe: for language depend moving of caret
     Hotkey, LControl & Numpad6    	, SciteSmartCaretR                 	;= SciTe: for language depend moving of caret
-    ;Hotkey, ^+h                            	, SciteHotKeyWriter                	;= SciTe: opens a gui for writing hotkey's because I ever forget the names
 	Hotkey, IfWinActive
 
 	;}
@@ -609,7 +617,7 @@ HotkeyLabel:
 	Hotkey, ~^RButton          	, % func_GetPatNameFromExplorer
 	Hotkey, IfWinActive
 
-	fn_FoxitFontSize    		:= Func("HoveredControl").Bind("classFoxitReader", "Edit5")
+	fn_FoxitFontSize    		:= Func("HoveredControl").Bind("classFoxitReader", "Edit4")
 	func_DeInkrementer	:= Func("DeInkrementer")
 	Hotkey, If, % fn_FoxitFontSize
 	Hotkey, WheelUp 	         	, % func_DeInkrementer
@@ -625,7 +633,6 @@ HotkeyLabel:
 	fn_Undo     	:= Func("UnRedo").Bind("Undo")
 	fn_Redo    	:= Func("UnRedo").Bind("Redo")
 	fn_Redo    	:= Func("UnRedo").Bind("Redo")
-
 	fn_cLP       	:= Func("isActiveFocus").Bind("contraction=lp|bg")
 	fn_LPTexte		:= Func("Privatabrechnung_Begruendungen")
 
@@ -709,30 +716,41 @@ HotkeyLabel:
 
 return
 
-HoveredControl(WinNN, CtrlNN) {
+HoveredControl(WinNN, CtrlNN) {                  ;-- gibt true zurück wenn der Mauszeiger über einem bestimmten Steuerelement steht
 
-	MouseGetPos,,, hWin
-	WinGetClass 	 , WinClass	, % "ahk_id " hWin
-	ControlGetFocus, fCtrl       	, % "ahk_id " hWin
-	If InStr(WinNN, WinClass) && (fCtrl = CtrlNN)
+	MouseGetPos, mx, my, hWin, hCtrl, 2
+	WinGetClass , WinClass	, % "ahk_id " hWin
+	If !InStr(WinClass, WinNN)
+		return false
+	fCtrl := Control_GetClassNN(hWin, hCtrl)
+	If (fCtrl = CtrlNN)
 		return true
 
 return false
+hCtrlOff:
+	ToolTip, % "classnn: " fCtrl, % mx-10, % my+30, 12
+	SetTimer, hCtrlOff, -1000
+	ToolTip,,,,12
+return
 }
 
 DeInkrementer() {
 
 	MouseGetPos,,, hWin, hCtrl, 2
+	ControlFocus,, % "ahk_id " hCtrl
 	ControlGetText, value,, % "ahk_id " hCtrl
 	If !RegExMatch(value, "^\d+$") {
-		If (A_ThisHotkey = "WheelUp")
-			ControlSend,, {Up}   	, % "ahk_id " hWin
-		else
-			ControlSend,, {Down}	, % "ahk_id " hWin
+		ControlSend,, (A_ThisHotkey="WheelUp" ? {Up}:{Down}), % "ahk_id " hWin
 		return
 	}
 
-	value := A_ThisHotkey = "WheelUp" ? value + 1 : value > 1 ? value - 1 : value
+	;value := A_ThisHotkey = "WheelUp" ? value + 1 : value > 1 ? value - 1 : value
+	If (A_ThisHotkey = "WheelUp")
+		value ++
+	else If (A_ThisHotkey = "WheelDown") && (value > 1)
+		value --
+	else
+		return
 
 	ControlSetText  	,, % value	, % "ahk_id " hCtrl
 	ControlSend     	,, {Enter}	, % "ahk_id " hCtrl
@@ -832,6 +850,10 @@ return ;}
 :*:kur::01622                                                                               	; Kurplan, Gutachten, Stellungnahme
 :*:gut::01622                                                                               	; Kurplan, Gutachten, Stellungnahme
 
+; Labor und Sonderziffern
+:*:sars::32006-88240                                                                	; COVID19 - Laborbudget und Sonderziffer
+:*:covid19::32006-88240                                                            	; COVID19 - Laborbudget und Sonderziffer
+
 ; Wunden/Verbände
 :*:Kompr::02313                                                                         	; Kompressionsverband
 
@@ -900,7 +922,7 @@ return ;}
 :*:gb::                                                                                      	;{ geriatrischer Basiskomplex
 	Auswahlbox(GeriatrieICD, "Diagnosenliste Geriatrie")
 return ;}
-:*:igpr::                                                                                       	;{ Impfung Grippe Privatpatienten
+:*:igpr::                                                                                    	;{ Impfung Grippe Privatpatienten
 
 	SendMode, Event
 	SetKeyDelay, 10, 10
@@ -935,18 +957,54 @@ return ;}
 
 return ;}
 :*R:grdia::Infektausschluß, A.v. {J06.9A};Impfung gegen Grippe, 2020/2021 (Influvac Tetra Ch: X17) {Z25.1G};                      	; Influvac Preis
-:*R:covid-19::COVID-19, Virus nachgewiesen {!U07.1G}; COVID-19, Virus nicht nachgewiesen {!U07.2G};
-:*R:covid19::COVID-19, Virus nachgewiesen {!U07.1G}; COVID-19, Virus nicht nachgewiesen {!U07.2G};
+:*R:covid-19na::COVID-19, Virus nachgewiesen {!U07.1G};
+:*R:covid-19ni::COVID-19, Virus nicht nachgewiesen {!U07.2G};
+:*R:covid19na::COVID-19, Virus nachgewiesen {!U07.1G};
+:*R:covid19ni:: COVID-19, Virus nicht nachgewiesen {!U07.2G};
 :*R:sars::Spezielle Verfahren zur Untersuchung auf SARS-CoV-2 {!U99.0G};Spezielle Verfahren zur Untersuchung auf infektiöse und parasitäre Krankheiten {Z11G};
-:*:#reflux::Refluxösophagitis, G. {K21.0G};
+:*X:sars2::LDSars()
 :*:#ledder::M.Ledderhose, li. {M72.2LG};
-:*:#zwerchf::Hernia diaphragmatica {K44.9G}
-:*:#hiatus h::Hernia diaphragmatica {K44.9G}
+:*:#hiatus h::Hernia diaphragmatica {K44.9G};
+:*:#zwerchf::Hernia diaphragmatica {K44.9G};
+:*:#harnw::Harnwegsinfektion {N39.0G};
+:*:#hti::Harnwegsinfektion {N39.0G};
+:*:#reflux::Refluxösophagitis {K21.0G};
+:*:#akute Bel::Akute Belastungsreaktion {F43.0G};
+:*:#Belast::Akute Belastungsreaktion {F43.0G};
+:*:#TIA::TIA {G45.92G};
+:*:#Hyperto::Benigne essentielle Hypertonie {I10.00G};
+:*:#Diabetes neur::Diabetes mellitus mit neurologischen Komplikationen {+E14.40G}; Diabetische Polyneuropathie {*G63.2BG};
+:*:#Diabetische Poly::Diabetes mellitus mit neurologischen Komplikationen {+E14.40G}; Diabetische Polyneuropathie {*G63.2BG};
+:*:#Diab2::Diabetes mellitus Typ 2 {E11.90G}
+:*:#Diabetes 2::Diabetes mellitus Typ 2 {E11.90G}
+:*:#Diabetes Typ2::Diabetes mellitus Typ 2 {E11.90G}
+:*:#Diabetes Typ 2::Diabetes mellitus Typ 2 {E11.90G}
 
 #If
+LDSars() {
+
+	hparent := AlbisSendText("RichEdit20A1", "Spezielle Verfahren zur Untersuchung auf SARS-CoV-2 {!U99.0G}"
+										  . ";Spezielle Verfahren zur Untersuchung auf infektiöse und parasitäre Krankheiten {Z11G};")
+
+	WinWait, % "ALBIS ahk_class #32770", % "meldepflichtig", 2
+	VerifiedClick("Button1", "ALBIS ahk_class #32770", "meldepflichtig",, true)
+
+	SciTEOutput("2:" hParent)
+	hParent := AlbisSendText("Edit6", "lko", hParent)
+
+	SciTEOutput("3:" hParent)
+		;return
+	hParent := AlbisSendText("RichEdit20A1", "88240-32006", hParent)
+	SciTEOutput("4:" hParent)
+		;return
+	hParent := AlbisSendText("Edit6", "**End", hParent)
+	SciTEOutput("5:" hParent "`n")
+		;return
+
+}
 ;}
 ; --- Info                                                                                          	;{
-#If ( InStr(AlbisGetActiveControl("contraction"), "info") && WinActive("ahk_class OptoAppClass") )
+#If (WinActive("ahk_class OptoAppClass") && InStr(AlbisGetActiveControl("contraction"), "info") )
 :R*:letztes::letztes Quartal nicht da (keine Chronikerziffer möglich)
 #If
 ;}
@@ -1146,10 +1204,18 @@ return false
 :*R:DRV::(sach:Anfrage Rentenversicherung:28.20)                              	; Anfrage Rentenversicherung
 :*R:Bundesa::(sach:Anfrage Bundesagentur für Arbeit gem. JVEG:32.50)	; Anfrage Rentenversicherung
 :*R:Agentur::(sach:Anfrage Bundesagentur für Arbeit gem. JVEG:32.50) 	; Anfrage Rentenversicherung
+:*R:porto0::(sach:Porto Standard:0.60)                                                	; Postkarte
+:*R:Postk::(sach:Porto Standard:0.60)                                                 	; Postkarte
 :*R:porto1::(sach:Porto Standard:0.80)                                                	; Porto bis 20g
+:*R:Standard::(sach:Porto Standard:0.80)                                             	; Porto bis 20g
 :*R:porto2::(sach:Porto Kompakt:0.95)                                                 	; Porto bis 50g
+:*R:Kompakt::(sach:Porto Kompakt:0.95)                                               	; Porto bis 50g
 :*R:porto3::(sach:Porto Groß:1.55)                                                      	; Porto bis 500g
+:*R:Groß::(sach:Porto Groß:1.55)                                                      	; Porto bis 500g
 :*R:porto4::(sach:Porto Maxi:2.70)                                                       	; Porto bis 1000g
+:*R:Maxi::(sach:Porto Maxi:2.70)                                                        	; Porto bis 1000g
+:*R:porto5::(sach:Porto Maxi:4.50)                                                       	; DHL-Päckchen
+:*R:Päck::(sach:Porto Maxi:4.50)                                                        	; DHL-Päckchen
 :*:kopie::                                                                                           	;{ Berechnung Kopiekosten
 	AlbisKopiekosten(0.5)
 return ;}
@@ -1351,7 +1417,7 @@ SciteWrite(text, ReplaceFromClipBoard:= false) {
 
 ;{ 	6.4 -- ÜBERALL
 
-;{     	5.a.3.1 -- Bestellungen
+;{     6.4.1 -- Bestellungen
 ::.Bestellungen:: ;{
 IniRead, bestelltext, % AddendumDir "\Addendum.ini", Addendum, Bestellung
 Loop, Parse, bestelltext, ##
@@ -1365,12 +1431,10 @@ Loop, Parse, bestelltext, ##
 
 VarSetCapacity(bestelltext, 0)
 return ;}
+;}
 
-;{     	5.a.3.2 -- sonstige Kürzel
+;{    	6.4.2 -- sonstige Kürzel
 ; Programmieren
-:*:#Heute::
- SendInput, % "{TEXT}" A_DD "." A_MM "." A_YYYY
-return
 :*:#ahk::Autohotkey
 :*:#lahk::language:Autohotkey
 :*:#sahk::site:Autohotkey
@@ -1384,55 +1448,6 @@ return ;}
 		Send, % "{Text}" Addendum.Praxis.MailStempel
 return ;}
 ;}
-
-;}
-
-;{ 	6.5. -- TYPORA
-#IfWinActive Typora ahk_class Chrome_WidgetWin_1
-:*R:.br::<br>
-:*R:.cbox::[Codebox=autohotkey file=Untitled.ahk][/Codebox]
-:*R:.keyStrg::![](M:/Praxis/_Praxisblog/Bilder/Icons/Key-White_Strg-Links.png){Right}+
-:*R:.keyhoch::![](M:/Praxis/_Praxisblog/Bilder/Icons/hoch.png)
-:*R:.keyrunter::![](M:/Praxis/_Praxisblog/Bilder/Icons/runter.png)
-:*R:.keyrechts::![](M:/Praxis/_Praxisblog/Bilder/Icons/KEy-White-Arrow-right.png)
-:*R:.keylinks::![](M:/Praxis/_Praxisblog/Bilder/Icons/links.png)
-:*R:.keyc::![](M:/Praxis/_Praxisblog/Bilder/Icons/Key-White-c.png)
-:*R:.keyx::![](M:/Praxis/_Praxisblog/Bilder/Icons/Key-White-x.png)
-:*R:.keyv::![](M:/Praxis/_Praxisblog/Bilder/Icons/Key-White-v.png)
-:*R:.keym::![](M:/Praxis/_Praxisblog/Bilder/Icons/Key-White-M.png)
-:*R:.keyL::![](M:/Praxis/_Praxisblog/Bilder/Icons/KeyL.png)
-:*R:.keyK::![](M:/Praxis/_Praxisblog/Bilder/Icons/KeyK.png)
-:*R:.keyAlt::![](M:/Praxis/_Praxisblog/Bilder/Icons/Alt.png){Right}+
-:*R:.keyF01::![](M:/Praxis/_Praxisblog/Bilder/Icons/F1.png)
-:*R:.keyF2::![](M:/Praxis/_Praxisblog/Bilder/Icons/F2.png)
-:*R:.keyF3::![](M:/Praxis/_Praxisblog/Bilder/Icons/F3.png)
-:*R:.keyF4::![](M:/Praxis/_Praxisblog/Bilder/Icons/F4.png)
-:*R:.keyF5::![](M:/Praxis/_Praxisblog/Bilder/Icons/F5.png)
-:*R:.keyF6::![](M:/Praxis/_Praxisblog/Bilder/Icons/F6.png)
-:*R:.keyF7::![](M:/Praxis/_Praxisblog/Bilder/Icons/F7.png)
-:*R:.keyF8::![](M:/Praxis/_Praxisblog/Bilder/Icons/F8.png)
-:*R:.keyF9::![](M:/Praxis/_Praxisblog/Bilder/Icons/F9.png)
-:*R:.keyF10::![](M:/Praxis/_Praxisblog/Bilder/Icons/F10.png)
-:*R:.keyF11::![](M:/Praxis/_Praxisblog/Bilder/Icons/F11.png)
-:*R:.keyF12::![](M:/Praxis/_Praxisblog/Bilder/Icons/F12.png)
-:*R:.keyRaute::![](M:/Praxis/_Praxisblog/Bilder/Icons/Raute.png)
-:*R:.keyDicom2Albis::![](M:/Praxis/_Praxisblog/Bilder/Icons/Dicom2Albis.png)
-:*R:.keyMonet::![](M:/Praxis/_Praxisblog/Bilder/Icons/Monet.png)
-:*R:.keyAddendum::![](M:/Praxis/_Praxisblog/Bilder/Icons/Addendum.png)
-:*R:.keyLaborabruf::![](M:/Praxis/_Praxisblog/Bilder/Icons/Laborabruf.png)
-:*R:.keyPraxomat::![](M:/Praxis/_Praxisblog/Bilder/Icons/Praxomat.png)
-:*R:.keyGVU::![](M:/Praxis/_Praxisblog/Bilder/Icons/Gesundheitsvorsorgeliste.png)
-:*R:.keyTPParser::![](M:/Praxis/_Praxisblog/Bilder/Icons/Tagesprotokollparser.png)
-:*R:.keyScanPool::![](M:/Praxis/_Praxisblog/Bilder/Icons/ScanPool.png)
-:*R:.keySonoCapture::![](M:/Praxis/_Praxisblog/Bilder/Icons/SonoCapture.png)
-:*R:.keyAchtung::![](M:/Praxis/_Praxisblog/Bilder/Icons/Achtung.png)
-:*R:.keyMedikamente::![](M:/Praxis/_Praxisblog/Bilder/Icons/Medikamente.png)
-:*R:.keyMenu::![](M:/Praxis/_Praxisblog/Bilder/Icons/Menu.png)
-:*R:.keyImpfung::![](M:/Praxis/_Praxisblog/Bilder/Icons/Impfung.png)
-:*R:.keyCave::![](M:/Praxis/_Praxisblog/Bilder/Icons/Cave.png)
-:*R:.TrennerKlein::![](Docs\Trenner_klein.png)
-:*R:.TrennerGroß::![](Docs\Trenner.png)
-#IfWinActive
 
 ;}
 
@@ -2186,6 +2201,9 @@ SkriptReload(msg:="") {                                                         
 				Return
 		}
 
+	; Status des Infofenster sichern
+		If Addendum.AddendumGui
+			admGui_SaveStatus()
 
 	; Programmdatum auf aktuelles Datum setzen
 		If (msg = "AutoReload") && WinExist("ahk_class OptoAppClass")
@@ -3432,14 +3450,41 @@ WinEventProc(hHook, event, hwnd, idObject, idChild, eventThread, eventTime) {   
 
 		Critical
 
-		If (GetDec(hwnd) = 0)    	; || (StrLen(cClass:=WinGetClass(hwnd)) = 0)
+		;If (GetDec(hwnd) = 0)
+		If !hwnd
 			return 0
 
-		EHookHwnd	:= Format("0x{:x}", hwnd)
+		EHookHwnd := Format("0x{:x}", hwnd)
 		If (Addendum.LastHookHwnd = EHookHwnd)
 			return 0
 
-		cClass:=WinGetClass(hwnd)
+		cClass := WinGetClass(hwnd)
+
+	; Fensterklassen Filter
+		For fnr, filterclass in class_filter
+			If (cClass = filterclass) {
+
+				known := false
+				For snr, item in EHStack
+					If (item.Hwnd = EHookHwnd) {
+						known := true
+						break
+					}
+				If !known {
+					WinGetTitle, HTitle, % "ahk_id " EHookHwnd
+					WinGetText, HText, % "ahk_id " EHookHwnd
+					If (StrLen(HTitle . HText) > 0) {
+						EHStack.InsertAt(1, {"Hwnd"	: EHookHwnd
+													, "Event"	: Format("0x{:x}", Event)
+													, "Title"   	: HTitle
+													, "Text"   	: StrReplace(HText, "`r`n", " ")
+													, "Class"	: cClass})
+						If !EHWHStatus
+							SetTimer, EventHook_WinHandler, -1
+					}
+				}
+
+			}
 
 	; Callback für
 		If (StrLen(Addendum.FuncCallback) > 0) {
@@ -3459,32 +3504,12 @@ WinEventProc(hHook, event, hwnd, idObject, idChild, eventThread, eventTime) {   
 					}
 		}
 
-	; Fensterklassen Filter
-		For fnr, filterclass in class_filter
-			If (cClass = filterclass) {
-
-				For snr, item in EHStack
-					If (item.Hwnd = EHookHwnd)
-						return 0
-
-				WinGetTitle, HTitle, % "ahk_id " EHookHwnd
-				WinGetText, HText, % "ahk_id " EHookHwnd
-				If (StrLen(HTitle . HText) = 0)
-					return 0
-
-				EHStack.InsertAt(1, {"Hwnd":GetHex(EHookHwnd), "Event":GetHex(Event), "Title":HTitle, "Text":StrReplace(StrReplace(HText, "`n", " "), "`r", ""), "Class":cClass})
-				If !EHWHStatus
-					SetTimer, EventHook_WinHandler, -1
-
-				return 0
-			}
-
 	; Order & Entry Programm läßt sich nicht filtern
 		WinGet, EHproc, ProcessName, % "ahk_id " EHookHwnd
 		If Instr(EHProc, "infoBoxWebClient") {
-			WinGetTitle, Title, % "ahk_id " EHookHwnd
-			WinGetText, Text, % "ahk_id " EHookHwnd
-			EHStack.InsertAt(1,  {"Hwnd":GetHex(EHookHwnd), "Event":GetHex(Event), "Title":Title, "Text":StrReplace(Text, "`r`n", " "), "Class":cClass})
+			;~ WinGetTitle, Title, % "ahk_id " EHookHwnd
+			;~ WinGetText, Text, % "ahk_id " EHookHwnd
+			EHStack.InsertAt(1,  {"Hwnd":EHookHwnd, "Event":Format("0x{:x}", Event), "Title":HTitle, "Text":StrReplace(HText, "`r`n", " "), "Class":cClass})
 			If !EHWHStatus
 				SetTimer, EventHook_WinHandler, -1
 		}
@@ -3764,13 +3789,12 @@ return ;}
 EventHook_WinHandler:                                                                                                	;{ Eventhookhandler - Popupblocker/Fensterhandler - für diverse Fenster verschiedener Programme
 
 	StackEntry:
-	EHWHStatus :=true
-	thisWin	:= EHStack.Pop()
-	EHWT	:= thisWin.title, EHWText := StrReplace(thisWin.Text, "`n", " "), EHWClass := thisWin.Class
-	Addendum.LastHookHwnd := hHookedWin := GetHex(thisWin.Hwnd)
+	EHWHStatus :=true, thisWin := EHStack.Pop()
+	EHWT := thisWin.title, EHWText := thisWin.Text, EHWClass := thisWin.Class
+	Addendum.LastHookHwnd := hHookedWin := thisWin.Hwnd
 
 	If (StrLen(EHWT . EHWText) = 0) || InStr(EHWText, "SkinLoader")
-		If !EHStack.Count() {
+		If (EHStack.Count() = 0) {
 			EHWHStatus := Addendum.LastHookHwnd := false
 			return
 		} else
@@ -3782,10 +3806,9 @@ EventHook_WinHandler:                                                           
 		If !EHproc1 && !EHStack.Count() {
 			EHWHStatus := Addendum.LastHookHwnd := false
 			return
-		} else if !EHproc1 && EHStack.Count()
+		} else if !EHproc1 && (EHStack.Count() > 0)
 			goto StackEntry
 	}
-
 
 	If        InStr(EHproc1, "albis")                                                                      	{        	; ALBIS
 
@@ -3794,12 +3817,10 @@ EventHook_WinHandler:                                                           
 				GNRChanged 	:= true
 			}
 			else If InStr(EHWT  	, "Daten von") && GNRChanged                                                              	 {  	; schließt nach Änderung der GNR das Fenster "Daten von " für schnelleres Handling
-				while (A_Index < 30)
+				while (A_Index < 30) || WinExist("ALBIS ahk_class #32770", "ist keine Ausnahmeindikation")
 					Sleep 10
-				If !WinExist("", "ist keine Ausnahmeindikation")  {
-					VerifiedClick("Button30", "Daten von ahk_class #32770")
-					GNRChanged 	:= false
-				}
+				VerifiedClick("Button30", "Daten von ahk_class #32770")
+				GNRChanged 	:= false
 			}
 			else If InStr(EHWText	, "ALBIS wartet auf Rückgabedatei")                                                          	 {  	; Laborhinweis schliessen
 				BlockInput, On
@@ -3809,9 +3830,11 @@ EventHook_WinHandler:                                                           
 				WinActivate, % "ahk_class #32770", % "ALBIS wartet auf Rückgabedatei"
 				BlockInput, Off
 			}
-			else If InStr(EHWText	, "Chipkarte")                                                                                          	 {  	; in Abhängigkeit des Client wird das Fenster sofort oder verzögert geschlossen
-				Sleep, 3000
-				VerifiedClick("Button1", hHookedWin)
+			else If InStr(EHWText	, "Patient hat in diesem")                                                                           	 {  	; in Abhängigkeit des Client wird das Fenster sofort oder verzögert geschlossen
+				hNoChippie := hHookedWin
+				If (Addendum.noChippie > 0)
+					Sleep % Addendum.noChippie*1000
+				VerifiedClick("Button1", hNoChippie)
 			}
 			else if Instr(EHWText	, "Der Parameter ist bereits in dieser Gruppe")                                         	 {  	; Fenster wird geschlossen
 				VerifiedClick("Button1", hHookedWin)
@@ -3860,7 +3883,7 @@ EventHook_WinHandler:                                                           
 			else if InStr(EHWT  	, "CGM HEILMITTELKATALOG")                                                              	 { 	; Fensterposition wird innerhalb des Albisfenster zentriert
 				AlbisHeilmittelKatologPosition()
 			}
-			else if InStr(EHWT  	, "Dauerdiagnosen von")                                                                        	 { 	; automatisches Sortieren von anamnestischen und Behandlungsdiagnosen
+			else if InStr(EHWT  	, "Dauerdiagnosen von")                                                                        	 { 	; Autopositionierung des Dauerdiagnosenfensters
 				res:= AlbisResizeDauerdiagnosen()
 			}
 			else if InStr(EHWT  	, "ICD-10 Thesaurus")                                                                            	 { 	; vergrößert den Diagnosenauswahlbereich
@@ -3909,7 +3932,7 @@ EventHook_WinHandler:                                                           
 			}
 			else If Addendum.Labor.AutoAbruf && InStr(EHWT  	, "GNR der Anford")             	                 	 {		;
 				If !Addendum.LaborAbruf.Status
-					AlbisRestrainLabWindow(1, hHookedWin)       	         	; Listbox1 enthält Rechnungsdaten
+					AlbisLaborGNRHandler(1, hHookedWin)       	         	; Listbox1 enthält Rechnungsdaten
 			}
 
 	}
@@ -3970,11 +3993,11 @@ EventHook_WinHandler:                                                           
 			if InStr(EHWT, "Speichern unter") && RegExMatch(EHWText, "i)Speichern|Save", gotText) {
 				Addendum.PDF.RecentlySigned := false
 				thisFoxitID := GetParent(hHookedWin)                          	; Handle des zugehörigen FoxitReader Fenster
-				If VerifiedClick("Speichern", hHookedWin,,,1)                 	; Speichern Button drücken
+				If VerifiedClick("Speichern", hHookedWin,,,true)                 	; Speichern Button drücken
 					Addendum.SaveAsInvoked := true
-				WinWait, % "Speichern unter bestätigen" ,, 2
+				WinWait, % "Speichern unter bestätigen" ,, 4
 				If !ErrorLevel
-					VerifiedClick("Ja", "Speichern unter bestätigen",,, 1)    	; mit 'Ja' bestätigen
+					VerifiedClick("Ja", "Speichern unter bestätigen",,, true)    	; mit 'Ja' bestätigen
 				}
 			}
 		If Addendum.PDFSignieren && (InStr(EHWT, "Sign Document") || InStr(EHWT, "Dokument signieren"))          	; für die englische und deutsche FoxitReader Version
@@ -4094,7 +4117,6 @@ CurrPatientChange(AlbisTitle) {                                                 
 			return
 		 AlbisTitleO	:= AlbisTitle
 		 AktiveAnzeige := AlbisGetActiveWindowType()
-		;SciTEOutput(AlbisTitle)
 
 	; Zurücksetzen des Status des Laborabrufes ist bei Wechsel auf eine andere Ansicht möglich
 		Addendum.LaborAbruf.Status := ""

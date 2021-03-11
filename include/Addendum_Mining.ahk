@@ -108,10 +108,11 @@ FindDocStrings() {
 	global rxTags	       	:= {	1:	"Druckdatum|Erstellungszeitpunkt|Dokumentdatum|D[ae]tum|Beginn|ausgedruckt|"
 											. 	"Probenentnahmedatu*m*|Abnahmedatum|Berichtsdatum|Eingangsdatum|"
 											. 	"Eingang\s+am|gedruckt\s+am|angelegt|angelegt\s+am|"
-											.	"Anfrage\s+vom|Arztbrief\s+vom||Befund\s+vom|Befundbericht\s+vom|"
+											.	"Anfrage\s+vom|Arztbrief\s+vom|Befund\s+vom|Befundbericht\s+vom|"
 											. 	"Behandlung\s+vom|Ebenen\s+vom|Ebenen\/axial\s+vom|"
-											.	"Echokardiografie vom|Konsil\s+vom|Labor\s+vom|Laborblatt\s+vom|Nachricht\s+vom||"
+											.	"Echokardiografie vom|Konsil\s+vom|Labor\s+vom|Laborblatt\s+vom|Nachricht\s+vom|"
 											. 	"Startzeit|Aufgezeichnet|Erstellt\s+am|Eing[.,\-\s]+Dat[.,-]+|Ausg[.,\-\s]+Dat[.,-]+"
+											.	"Labor(blatt)*\svom"
 										,	2:	"Behandlung|haben wir.*|sich"}
 
 	global rxBehandlung	:= [	"i)(" rxTags[2] ")\svom\s(?<Datum1>[\d.]+)\s*(bis\s*z*u*m*)\s*(?<Datum2>[\d.]+)"                	; 	1| (haben wir ...| sich) vom .... bis (zum) .....

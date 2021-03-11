@@ -123,6 +123,10 @@
         "ingredient": "Bisoprolol",
         "use": "Blutdruck/Herzrhythmus"
     },
+    "Bisoprolol Rat": {
+        "ingredient": "Bisoprolol",
+        "use": "Bluthochdruck"
+    },
     "Blopress": {
         "ingredient": "Candesartan",
         "use": "Blutdruck"
@@ -816,6 +820,10 @@
     "Spiriva Respimat": {
         "ingredient": "Tiotropiumbromid",
         "use": "chron.Bronchitis"
+    },
+    "Spiro Comp": {
+        "ingredient": "Spironolacton und Furosemid",
+        "use": "Wassertablette"
     },
     "Spironolacton": {
         "ingredient": "Spironolacton",

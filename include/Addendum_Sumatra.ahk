@@ -554,20 +554,23 @@ SumatraGetDocumentFilepath() {																						;-- function: get filepath f
 	; - IDC_REPLY_FILE_PATH = 1500
 	; - Works in SumatraPDF 32bit/64bit and AutoHotkey 32bit/64bit unicode, all combinations
 
-  if !WinActive("ahk_class SUMATRA_PDF_FRAME")
-    Return
-  vWinId := WinExist("A")
-  DetectHiddenWindows, On
+	  DetectHiddenWindows, On
+	  if !WinActive("ahk_class SUMATRA_PDF_FRAME")
+		Return
+	  vWinId := WinExist("A")
+
   ; start listener for WM_COPYDATA that SumatraPDF will send after we first call
-  OnMessage(0x4a, "Receive_WM_COPYDATA")
+	OnMessage(0x4a, "Receive_WM_COPYDATA")
+
   ; clear super-global variable
-  vFilepathReturn := ""
+	vFilepathReturn := ""
+
   ; make first call to SumatraPDF
   ; - 0x111 is WM_COMMAND
   ; - IDM_COPY_FILE_PATH = 1500
   ; - A_SCriptHwnd is Hwnd to this script's hidden window
   ;   Note: A_SCriptHwnd is hex, WinTitle ahk_id accepts both hex and dec values
-  SendMessage, 0x111, 1500, A_ScriptHwnd, , % "ahk_id " vWinId
+	SendMessage, 0x111, 1500, A_ScriptHwnd, , % "ahk_id " vWinId
 
   ; todo test more if this delays operation and/or improves stability
   ; wait for message up to 250 ms
@@ -576,10 +579,11 @@ SumatraGetDocumentFilepath() {																						;-- function: get filepath f
   ;    sleep 5
 
   ; after Receive_WM_COPYDATA has reacted, stop listener
-  OnMessage(0x4a, "Receive_WM_COPYDATA", 0)
+	OnMessage(0x4a, "Receive_WM_COPYDATA", 0)
+
   ; check for \ to ensure filepath an not only filename
-  If InStr(vFilepathReturn, "\")
-    return vFilepathReturn
+	If InStr(vFilepathReturn, "\")
+		return vFilepathReturn
 }
 
 SumatraRemoveAnnotationAtCursor() {																				;-- function: remove annotation in active SumatraPDF window
@@ -699,7 +703,8 @@ SumatraPrepareForCanvasPosCheck() {																				;-- function: prepare Sum
 SumatraGetCanvasPosFromNotification(ByRef x, Byref y) {													;-- function: Read SumatraPDF notification to get mouse position in canvas pt units
 
   ; get mouse position in SumatraPDF canvas in pt units (one decimal)
-  ControlGetText, vPos, SUMATRA_PDF_NOTIFICATION_WINDOW1, A
+	ControlGetText, vPos, SUMATRA_PDF_NOTIFICATION_WINDOW1, A
+
   ; extract X Y pos with decimals and round later
 
   ; - Do not use the ":" in regex because not present in all translations
@@ -716,14 +721,17 @@ SumatraGetCanvasPosFromNotification(ByRef x, Byref y) {													;-- function
   ; ": 4.401 000,3 x 341,000.3 pt"
   ; "a 4.401 000,3 x 341,000.3 pt"
   ; regex pattern match
-  vPattern := "\D ([\d \.,]+)[\.,](\d+) x ([\d \.,]+)[\.,](\d+) pt$"
-  RegExMatch(vPos, vPattern, vPos)
+	  vPattern := "\D ([\d \.,]+)[\.,](\d+) x ([\d \.,]+)[\.,](\d+) pt$"
+	  RegExMatch(vPos, vPattern, vPos)
+
   ; remove separators to get integers
-  vPos1 := RegExReplace(vPos1, "[ \.,]", "")
-  vPos3 := RegExReplace(vPos3, "[ \.,]", "")
+	vPos1 := RegExReplace(vPos1, "[ \.,]", "")
+	vPos3 := RegExReplace(vPos3, "[ \.,]", "")
+
   ; concatenate (integer)(dot-separator)(fraction)
-  x := vPos1 "." vPos2
-  y := vPos3 "." vPos4
+	x := vPos1 "." vPos2
+	y := vPos3 "." vPos4
+
 }
 
 SumatraGetDocumentFilepathFromTitle() {																			;-- function: Get document filepath by parsing window title
@@ -767,3 +775,8 @@ SumatraGetDocumentFilepathFromTitle() {																			;-- function: Get docu
   If InStr(vFile, ":\") and FileExist(vFile)
     Return vFile
 }
+
+
+
+
+

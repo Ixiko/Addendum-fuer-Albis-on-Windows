@@ -7,7 +7,7 @@
 ;
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_StackifyGui last change:    	07.03.2021
+;       Addendum_StackifyGui last change:    	11.03.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
 
@@ -337,6 +337,12 @@ SumatraInvoke(command, SumatraID="") {                                          
 
 }
 
+SumatraClose(PID, ID="") {                                                                                               	;-- beendet einen Sumatra Prozeß
+	Process, Close, % PID
+	If !ErrorLevel
+		SumatraInvoke("Exit", ID)
+}
+
 Sumatra_GetPages(SumatraID="") {                                                                                	;-- aktuelle und maximale Seiten des aktuellen Dokumentes ermitteln
 
 	If !SumatraID
@@ -347,6 +353,31 @@ Sumatra_GetPages(SumatraID="") {                                                
 	RegExMatch(PageMax, "\s*(?<Max>\d+)", Page)
 
 return {"disp":PageDisp, "max":PageMax}
+}
+
+Sumatra_Show(filepath) {                                                                                                	;--	 ein Dokument mit Sumatra anzeigen
+
+	SumatraCMD := GetAppImagePath("SumatraPDF")
+
+	IF !WinExist("ahk_class SUMATRA_PDF_FRAME")
+		cmdline := q SumatraCMD q " -new-window -view " q "single page" q " -zoom " q "fit page" q " " q filePath q
+	else
+		cmdline := q SumatraCMD q " -view " q "single page" q " -zoom " q "fit page" q " " q filePath q
+
+	Run, % cmdline,, Hide UseErrorLevel, PIDSumatra
+	WinWait, % "ahk_class SUMATRA_PDF_FRAME",, 6
+	WinWaitActive, % "ahk_class SUMATRA_PDF_FRAME",, 6
+	hSumatra := WinExist("A")
+
+	SumatraInvoke("ShowToolbar", hSumatra)
+	Sleep 300
+	SumatraInvoke("SinglePage", hSumatra)
+	Sleep 300
+	SumatraInvoke("FitPage", hSumatra)
+
+	s := GetWindowSpot(hSumatra)
+
+return {"viewer": "SumatraPDF", "AR":sw/sh, "ID":hSumatra, "PID":PIDSumatra, "x":s.X, "y":s.Y, "w":s.W, "h":s.H}
 }
 
 Sumatra_ToPrint(SumatraID="", Printer="") {                                                                     	;-- Druck Dialoghandler - Ausdruck auf übergebenen Drucker
@@ -390,30 +421,114 @@ Sumatra_ToPrint(SumatraID="", Printer="") {                                     
 return {"DialogID":hSumatraPrint, "ItemNr":ItemNr}                                 	; für Erfolgskontrolle und eventuelle weitere Abarbeitungen
 }
 
-Sumatra_Show(filepath) {                                                                                                	;--	 ein Dokument mit Sumatra anzeigen
+SumatraDDE(hSumatra, cmd, params*) {                                                                  			;-- Befehle an Sumatra per DDE schicken
 
-	SumatraCMD := GetAppImagePath("SumatraPDF")
+	/*  DESCRIPTION
 
-	IF !WinExist("ahk_class SUMATRA_PDF_FRAME")
-		cmdline := q SumatraCMD q " -new-window -view " q "single page" q " -zoom " q "fit page" q " " q filePath q
-	else
-		cmdline := q SumatraCMD q " -view " q "single page" q " -zoom " q "fit page" q " " q filePath q
+		https://github.com/sumatrapdfreader/sumatrapdf/issues/1398
+		https://gist.github.com/nod5/4d172a31a3740b147d3621e7ed9934aa
+		functions Send_WM_COPYDATA() and RECEIVE_WM_COPYDATA() are required
+		Required data to tell SumatraPDF to interpret lpData as DDE command text, always 0x44646557
 
-	Run, % cmdline,, Hide UseErrorLevel, PIDSumatra
-	WinWait, % "ahk_class SUMATRA_PDF_FRAME",, 6
-	WinWaitActive, % "ahk_class SUMATRA_PDF_FRAME",, 6
-	hSumatra := WinExist("A")
+		SumatraPDF DDE command unicode text, https://www.sumatrapdfreader.org/docs/DDE-Commands.html
 
-	SumatraInvoke("ShowToolbar", hSumatra)
-	Sleep 300
-	SumatraInvoke("SinglePage", hSumatra)
-	Sleep 300
-	SumatraInvoke("FitPage", hSumatra)
+		DDE Commands
+		Sumatra can be controlled in a limited way from other software by sending DDE commands. They are mostly
+		used to use SumatraPDF as a preview tool from e.g. LaTeX editors that generate PDF files.
 
-	s := GetWindowSpot(hSumatra)
+		Format of DDE comands
+			Single DDE command:   	[Command(parameter1, parameter2, ..., )]
+			Multiple DDE commands: 	[Command1(parameter1, parameter2, ..., )][Command2(...)][...]
 
-return {"viewer": "SumatraPDF", "AR":sw/sh, "ID":hSumatra, "PID":PIDSumatra, "x":s.X, "y":s.Y, "w":s.W, "h":s.H}
+		List of DDE commands:
+        	[Open file]
+			format:     	[Open("<pdffilepath>"[,<newwindow>,<focus>,<forcerefresh>])]
+			arguments:	if newwindow is 1 then a new window is created even if the file is already open
+								if focus is 1 then the focus is set to the window
+								if forcerefresh is 1 the command forces the refresh of the file window if already open
+								(useful for files opened over network that don't get file-change notifications)".
+			example:   	[Open("c:\file.pdf", 1, 1, 0)]
+
+			[Forward-Search]
+			format: [ForwardSearch(["<pdffilepath>",]"<sourcefilepath>",<line>,<column>[,<newwindow>,<setfocus>])]
+			arguments:
+			pdffilepath:     	path to the PDF document (if this path is omitted and the document isn't already open,
+	                    			SumatraPDF won't open it for you)
+			column:         	this parameter is for future use (just always pass 0)
+			newwindow:  	1 to open the document in a new window (even if the file is already opened)
+			focus:             	1 to set focus to SumatraPDF's window.
+			examples:     	[ForwardSearch("c:\file.pdf","c:\folder\source.tex",298,0)]
+                                   	[ForwardSearch("c:\folder\source.tex",298,0,0,1)]
+
+           	[GotoNamedDest]
+           	format:         	[GotoNamedDest("<pdffilepath>","<destination name>")]
+           	example:       	[GotoNamedDest("c:\file.pdf", "chapter.1")]
+           	note:             	the pdf file must be already opened
+
+           	[Go to page]
+           	format:         	[GotoPage("<pdffilepath>",<page number>)]
+           	example:       	[GotoPage("c:\file.pdf", 37)]
+           	note:             	the pdf file must be already opened.
+
+        	[SetView]
+   			format: 			[SetView("<pdffilepath>","<view mode>",<zoom level>[,<scrollX>,<scrollY>])]
+   			arguments:
+   			view mode: 		"single page"
+   									"facing"
+    								"book view"
+    								"continuous"
+    								"continuous facing"
+    								"continuous book view"
+   			zoom level : 		either a zoom factor between 8 and 6400 (in percent) or one
+	                            	of -1 (Fit Page), -2 (Fit Width) or -3 (Fit Content)
+   			scrollX, scrollY: 	PDF document (user) coordinates of the point to be visible in the top-left of the window
+   			example: 			[SetView("c:\file.pdf","continuous",-3)]
+   			note: 				the pdf file must already be opened
+    		Example:			[SetView("c:\file.pdf","continuous",-3)]
+
+			made by Ixiko 	Feb. 2021
+
+	 */
+
+		static dwData := 0x44646557
+
+		lpData := { 	"OpenFile"         	: ("[Open(""p1"",p2,p3,p4)]")
+														; p1=filepath, p2=sourcefilepath, p3=1 for focus, p4=1 for force refresh
+
+														; [p1=filepath,] p2=sourcefilepath, p3=line, p4=column[, p5=1 for new window, p6=1 to set focus]
+						,	"ForwardSearch" 	: ("[ForwardSearch(""p1"",""p2"",p3,p4,p5,p6)]")
+
+														; p1=filepath, p2=destination name
+						,	"GotoNamedDest"	: ("[GotoNamedDest(""p1"",""p2"")]")
+
+														; p1=filepath, p2=PageNr
+						,	"GotoPage"        	: ("[GotoPage(""p1"",p2)]")
+
+														; p1=filepath, p2=view mode, p3=zoom level [, p4=scrollX, p5=scrollY>]
+						,	"SetView"           	: ("[SetView(""p1"",""p2"",p3,p4,p5)]")}
+
+		For index, param in params
+			lpData[cmd] := StrReplace(lpData[cmd], "p" index, param)
+
+		lpData[cmd] := RegExReplace(lpData[cmd], ",*\""*\s*p\d\s*\""*\,*")
+
+		;SciTEOutput(" " lpData[cmd])
+
+return Send_WM_COPYDATA_EX(hSumatra, dwData, lpData[cmd])
 }
+
+Send_WM_COPYDATA_EX(hWin, dwData, lpData) 	{                                                      	;-- für die Kommunikation mit Sumatra und SumatraDDE()
+
+	VarSetCapacity(COPYDATASTRUCT, 3*A_PtrSize, 0)
+    cbData := (StrLen(lpData) + 1) * (A_IsUnicode ? 2 : 1)
+    NumPut(dwData	, COPYDATASTRUCT, 0*A_PtrSize)
+    NumPut(cbData 	, COPYDATASTRUCT, 1*A_PtrSize)
+    NumPut(&lpData	, COPYDATASTRUCT, 2*A_PtrSize)
+	SendMessage, 0x4a, 0, &COPYDATASTRUCT,, % "ahk_id " hWin ; 0x4a WM_COPYDATA
+
+return ErrorLevel == "FAIL" ? false : true
+}
+
 
 ; -------------------------------------------------------------
 ; FOXITREADER

@@ -8,7 +8,7 @@
 ;       Abhängigkeiten:
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Laborabruf_iBWC.ahk last change:    	06.03.2021
+;       Laborabruf_iBWC.ahk last change:    	10.03.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -24,7 +24,7 @@
 	SetBatchLines					, -1
 	;ListLines    						, Off
 	FileEncoding                 	, UTF-8
-	;}
+  ;}
 
   ; -------------------------------------------------------------------------------------------------------------------------------------------------------
   ; Variablen
@@ -37,7 +37,7 @@
 	adm.Labor           	:= Object()
 	adm.scriptname	:= RegExReplace(A_ScriptName, "\.ahk$")
 	adm.ID             	:= GetAddendumID()
-	;}
+  ;}
 
   ; -------------------------------------------------------------------------------------------------------------------------------------------------------
   ; Pfade und Einstellungen
@@ -77,7 +77,9 @@
 			ExitApp
 		}
 
-		adm.LogFilePath := adm.DBPath "\Labordaten\LaborabrufLog.txt"
+		; neues Tagesdatum in die Logdatei schreiben
+		FileAppend	, % "---------------------------------------- " A_DD "." A_MM "." A_YYYY "," A_Hour ":" A_Min " ----------------------------------------`n"
+							, % adm.LogFilePath := adm.DBPath "\Labordaten\LaborabrufLog.txt"
 
 	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	; Skripteinstellungen laden
@@ -160,10 +162,6 @@
 				FuncExitApp()
 			}
 
-		; 	neues Tagesdatum in die Logdatei schreiben
-			FileAppend	, % "---------------------------------------- " A_DD "." A_MM "." A_YYYY "," A_Hour ":" A_Min " ----------------------------------------`n"
-								, % adm.LogFilePath
-
 		; 1. externes Programm für Download der LDT Datei starten
 			If !infoBoxWebClient()
 				FuncExitApp()
@@ -177,19 +175,24 @@
 
 		; 4. alle ins Laborblatt übertragen
 			If adm.hLabbuch {
-				If !adm.AutoLaborAbrufStatus && adm.AutoLaborAbruf
-					LaborAbrufToggle("restore")
 
-				if adm.Labor.AutoLDTImport && adm.AutoLaborAbrufStatus && !adm.AutoLaborAbruf  {
-					writeStr := "|" A_ThisFunc "()`t- Labordatenimport nicht möglich! AutoLaborAbruf-Funktion von Addendum ist ausgeschaltet!.`n"
-					FileAppend, % (amsg .= datestamp(2) "|" StrReplace(writeStr, "`n", " ")) "`n", % adm.LogFilePath
-				} else {
+				; AutoLaborAbruf wiederherstellen
+					If !adm.AutoLaborAbrufStatus && adm.AutoLaborAbruf
+						LaborAbrufToggle("restore")
 
-				}
+				; Information ins Logfile schreiben falls der Labordatenimport ausgestellt ist
+				; ansonsten Laborblattübertragung (LaborImport - nutzt ein anderes Logfile) starten
+					if adm.Labor.AutoLDTImport && adm.AutoLaborAbrufStatus && !adm.AutoLaborAbruf  {
+						writeStr := "|" A_ThisFunc "()`t- Labordatenimport nicht möglich! AutoLaborAbruf-Funktion von Addendum ist ausgeschaltet!."
+						FileAppend, % (amsg .= datestamp(2) writeStr "`n", % adm.LogFilePath
+					} else {
+						writeStr := "|" A_ThisFunc "()`t- Laborbuch 'alle übertragen' ausgeführt [" AlbisLaborAlleUebertragen() "]"
+						FileAppend, % (amsg .= datestamp(2) writeStr "`n", % adm.LogFilePath
+					}
 
 			} else {
 				writeStr := "|" A_ThisFunc "()`t- Das Laborbuch ließ sich nicht öffnen. Der Labordatenimport konnte nicht fortgesetzt werden.`n"
-				FileAppend, % (amsg .= datestamp(2) "|" StrReplace(writeStr, "`n", " ")) "`n", % adm.LogFilePath
+				FileAppend, % (amsg .= datestamp(2) writeStr "`n", % adm.LogFilePath
 			}
 
 		; Automatisierungsfunktionen im Hauptskript wieder anschalten
@@ -352,22 +355,26 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 								, % adm.LogFilePath
 			return 0
 		}
+
 	; Button: Sammelimport drücken
 		If !VerifiedClick("Button1"	, WinLabordaten,,, 3) {
 			FileAppend	, % (amsg .= datestamp(2)  "| " A_ThisFunc "() `t- Labordaten Sammelimport: "
 								. 	 "konnte nicht geschlossen werden`n")
 								, % adm.LogFilePath
 			return 0
-
 		}
 
 	; Import: 	Fortschrittsanzeige detektieren und solange warten bis der Import abgeschlossen ist
 	; 				wartet auf das erste Popupfenster und wartet bis dieses geschlossen wurde
+	;				oder bricht ab wenn das Laborbuch angezeigt wird
 		PopupWin := false
 		writeStr := "| " A_ThisFunc "() `t- Labordaten Sammelimport: letztes Fenster (Importfortschritt) konnte nicht abgefangen werden"
 		Loop {
 
-			If (A_Index >= 80) {
+			If InStr(AlbisGetActiveWinTitle(), "Laborbuch")
+				return 1
+
+			If (A_Index > 600) { ; ~60 Sekunden
 				FileAppend, % (amsg .= datestamp(2) writeStr " [1]`n"), % adm.LogFilePath
 				return 0
 			}
@@ -378,9 +385,9 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 				WinGetTitle	, PopTitle	, % "ahk_id " hPopupWin
 				WinGetClass	, PopClass, % "ahk_id " hPopupWin
 				while WinExist(PopTitle " ahk_class " PopClass) {
-					If (A_Index >= 80) {
+					If (A_Index >= 600) {
 						FileAppend, % (amsg .= datestamp(2) writeStr " [2]`n"), % adm.LogFilePath
-						break
+						return 0
 					}
 					Sleep 100
 				}
@@ -395,6 +402,8 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 			Sleep 100
 
 		}
+
+
 
 }
 

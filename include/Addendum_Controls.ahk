@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 16.02.2021 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 10.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
 return
@@ -26,12 +26,12 @@ return buff
 
 Control_GetClassNN(hWnd, hCtrl) {
 	; SKAN: www.autohotkey.com/forum/viewtopic.php?t=49471
- WinGet, CH, ControlListHwnd, ahk_id %hWnd%
- WinGet, CN, ControlList, ahk_id %hWnd%
- LF:= "`n",  CH:= LF CH LF, CN:= LF CN LF,  S:= SubStr( CH, 1, InStr( CH, LF hCtrl LF ) )
- StringReplace, S, S,`n,`n, UseErrorLevel
- StringGetPos, LP, CN, `n, L%ErrorLevel%
- Return SubStr( CN, LP+2, InStr( CN, LF, 0, LP+2 ) -LP-2 )
+ WinGet, CH, ControlListHwnd	, % "ahk_id " hWnd
+ WinGet, CN, ControlList       	, % "ahk_id " hWnd
+ LF:= "`n",  CH:= LF CH LF, CN:= LF CN LF,  S:= SubStr(CH,1,InStr(CH,LF hCtrl LF))
+ S:= StrReplace(S,"`n","`n", RplCount)
+ LP:= InStr(CN, "`n",,, RplCount) - 1
+ Return SubStr(CN,LP+2,InStr(CN,LF,0,LP+2)-LP-2)
 }
 
 GetClassNN(Chwnd, Whwnd) {
@@ -58,16 +58,17 @@ GetClassNN_EnumChildProc(hwnd, lparam) {
 GetFocusedControl()  {                                                                                  	;-- retrieves the ahk_id (HWND) of the active window's focused control.
 
    ; This script requires Windows 98+ or NT 4.0 SP3+.
-   guiThreadInfoSize := 8 + 6 * A_PtrSize + 16
+   guiThreadInfoSize := 8 + 6*A_PtrSize + 16
    VarSetCapacity(guiThreadInfo, guiThreadInfoSize, 0)
    NumPut(GuiThreadInfoSize, GuiThreadInfo, 0)
    ; DllCall("RtlFillMemory" , "PTR", &guiThreadInfo, "UInt", 1 , "UChar", guiThreadInfoSize)   ; Below 0xFF, one call only is needed
    if (DllCall("GetGUIThreadInfo" , "UInt", 0, "PTR", &guiThreadInfo) = 0) {   ; Foreground thread
-			ErrorLevel := A_LastError   ; Failure
-			Return 0
+		ErrorLevel := A_LastError   ; Failure
+		Return 0
    }
 
-Return NumGet(guiThreadInfo, 8+A_PtrSize, "Ptr") ; *(addr + 12) + (*(addr + 13) << 8) +  (*(addr + 14) << 16) + (*(addr + 15) << 24)
+; *(addr + 12) + (*(addr + 13) << 8) +  (*(addr + 14) << 16) + (*(addr + 15) << 24)
+Return Format("0x{:X}", NumGet(guiThreadInfo, 8+A_PtrSize, "Ptr"))
 }
 
 GetFocusedControlHwnd(hwnd:="A") {
@@ -912,7 +913,7 @@ VerifiedChoose(CName, WTitle, RxStrOrPos ) {                                    
 return 0
 }
 
-VerifiedSetFocus(CName, WTitle:="", WText:="", WinID:="") {                         	;-- setzt den Eingabefokus und überprüft das dieser auch gesetzt wurde
+VerifiedSetFocus(CName, WTitle:="", WText:="", WinID:="", activate:=true) {     	;-- setzt den Eingabefokus und überprüft das dieser auch gesetzt wurde
 
 	; Rückgabeparameter: 	erfolgreich - 	das Handle des Controls
 	;                                	erfolglos  	-	0
@@ -922,57 +923,51 @@ VerifiedSetFocus(CName, WTitle:="", WText:="", WinID:="") {                     
 		SetControlDelay, -1
 
 	; leeren des Fenster-Titel und Textes wenn ein Handle übergeben wurde
-		if WinID {
-				WTitle:= "ahk_id " WinID
-				WText:= ""
-		} else if RegExMatch(WTitle, "^0x[\w]+$") {
-				WTitle	:= RegExMatch(WTitle, "^0x[\w]+$")	? ("ahk_id " WTitle)	: (WTitle)
-		} else if RegExMatch(WTitle, "^\d+$", digits) {
-				WTitle	:= StrLen(WTitle) = StrLen(digits)     	? ("ahk_id " digits)  	: (WTitle)
-		} else {
-				WTitle:= "ahk_id " WinID := GetHex(WinExist(WTitle, WText))
-		}
+		if (StrLen(WinID) > 0)
+			WText := "", WTitle := "ahk_id " WinID
+		else if RegExMatch(WTitle, "i)^(0x[A-F\d]+|[\d]+)$")
+			WText := "", WinID := GetHex(WinTitle), WTitle := "ahk_id " WTitle
 
-		WinActivate	 , % WTitle
-		WinWaitActive, % WTitle,, 1
+		if activate {
+			WinActivate	 , % WTitle
+			WinWaitActive, % WTitle,, 1
+		}
 
 	; Focus setzen und überprüfen das der Focus gesetzt wurde
-		If StrLen(CName) > 0
-		{
-				while !InStr(GetFocusedControlClassNN(WinID), CName)
-				{
-                    	If A_Index > 1
-                            	sleep, 200
-                    	ControlFocus, % CName, % WTitle
-                    	idx ++
-                    	If idx > 10
-                            break
-				}
+		If (StrLen(CName) > 0) {
+			while !InStr(GetFocusedControlClassNN(WinID), CName) {
+               	If (A_Index > 1)
+					sleep, 200
+              	ControlFocus, % CName, % WTitle
+				idx ++
+                If (idx > 10)
+					break
+			}
 		}
-		else
-		{
-				while !(GetFocusedControlHwnd(), WinID)
-				{
-                    	If A_Index > 1
-                            	sleep, 200
-                    	ControlFocus,, % WTitle
-                    	idx ++
-                    	If idx > 10
-                            break
-				}
+		else {
+
+			while !(GetFocusedControlHwnd() = WinID) {
+				If (A_Index > 1)
+                   	sleep, 200
+                ControlFocus,, % WTitle
+                idx ++
+                If (idx > 10)
+					break
+			}
 		}
 
 		SetControlDelay, % cd
 		SetTitleMatchMode, % tmm
+		SciTEOutput("idx: " idx)
 
 return idx = 0 ? 1 : 0
 }
 
-VerifiedSetText(CName="", NewText="", WTitle="", delay=200, WText="") {    	;-- erweiterte ControlSetText Funktion
+VerifiedSetText(CName="", NewText="", WTitle="", delay=100, WText="") {    	;-- erweiterte ControlSetText Funktion
 
 	; kontrolliert ob der Text tatsächlich eingefügt wurde und man kann noch eine Verzögerung übergeben
 	; delay = Zeit in ms zwischen den Versuchen
-		abb:= delay > 2000 ? 1 : Floor(2000//delay)	;damit wird höchsten 2 Sekunden versucht den Text in das Control einzutragen
+		abb:= delay > 2000 ? 20 : Floor(2000//delay)	;damit wird höchsten 2 Sekunden versucht den Text in das Control einzutragen
 
 	; leeren des Fenster-Titel und Textes wenn ein Handle übergeben wurde
 		If RegExMatch(WTitle, "^0x[\w]+$")
@@ -983,12 +978,10 @@ VerifiedSetText(CName="", NewText="", WTitle="", delay=200, WText="") {    	;-- 
 			WTitle:= "ahk_id " WinID := GetHex(WinExist(WTitle, WText))
 
 	Loop 	{
-
-		If (A_Index > abb)
+		If (A_Index >= abb)
               return 0
 		ControlSetText, % CName, % NewText, % WTitle, % WText
 		sleep % delay
-
 	} until (ControlGetText(CName, WTitle, WText) = NewText)
 
 return (ControlGetText(CName, WTitle, WText) = NewText ? true : false)
@@ -1060,6 +1053,7 @@ LVM_GetNext(hLV, rLV=0, oLV=0) {
 	; hLV = ListView handle.
 	; rLV = 1 based index of the starting row for the flag search. Omit or 0 to find first occurance specified flags.
 	; oLV = Combination of one or more LVNI flags. See reference above.
+	; LVNI_ALL := 0x0, LVNI_FOCUSED := 0x1, LVNI_SELECTED := 0x2
 	;LVIS_SELECTED:=	2
 
 Return DllCall("SendMessage", "uint", hLV, "uint", 4108, "uint", rLV-1, "uint", oLV) + 1 ; LVM_GETNEXTITEM
@@ -1157,9 +1151,9 @@ LV_FindRow(LV, col, searchStr) {                                                
 	Gui, adm: ListView, % LV
 
 	Loop % LV_GetCount() {
-		LV_GetText(cmpStr, row := A_Index, col)
+		LV_GetText(cmpStr, A_Index, col)
 		If InStr(cmpStr, searchStr)
-			return row
+			return A_Index
 		}
 
 return 0

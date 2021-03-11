@@ -50,9 +50,10 @@
   ; hier alle Parameter eintragen welche gesondert verarbeitet werden sollen
 	Warnen	:= {	"nie"      	: 	"CHOL,LDL,TRIG,HDL,LDL/HD,HBA1CIFC"                                  	; nie      	= werden nie gezeigt
 						,	"immer" 	: 	"NTBNP,TROPI,TROPT,TROP,CKMB,K"                                         	; immer 	= wenn pathologisch
-						,	"exklusiv"	: 	"HBK-ST,COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,HIV,"     	; exklusiv 	= zeigen auch wenn kein ausgeprägtes path. Ergebnis
+						,	"exklusiv"	: 	"COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,COVMU501,"     	; exklusiv 	= zeigen auch wenn kein ausgeprägtes path. Ergebnis
 											.	"ALYMP,ALYMPDIFF,ALYMPH,ALYMPNEO,ALYMPREA,ALYMPRAM," 	;					und bei negativem Befund (z.B. COVIA, HIV)
-											. 	"KERNS,MYELOC,PROMY,DIFANISO,DIFPOLYC,DIFPOIKL,DIFHYPOC,DIFMIKRO,METAM,TROPOIHS,DDIM-CP"}
+											. 	"KERNS,MYELOC,PROMY,DIFANISO,DIFPOLYC,DIFPOIKL,DIFHYPOC,DIFMIKRO,METAM,"
+											.	"TROPOIHS,DDIM-CP,HBK-ST,HIV"}
 
   ; Laborjournal anzeigen
 	LabPat     := AlbisLaborJournal("", "", Warnen, 110, false)
@@ -608,7 +609,7 @@ LaborJournal(LabPat, Anzeige=true) {
 		static cCol2    	:= ";color: BlueViolet"
 		static FWeight2	:= ";font-weight: bold"
 		static cCol3   	:= ";color: DarkTeal"
-		static FWeight3	:= ";font-weight: bold"
+		static FWeight3	:= ";font-weight: bold;font-family: sans-serif"
 
 	; HTML Seitendaten
 		htmlheader =

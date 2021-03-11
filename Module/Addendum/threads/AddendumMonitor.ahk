@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------------------------------------------------------------------
 ;------------------------------------------------ ADDENDUM MONITOR ----------------------------------------------------
 ;-----------------------------------------------------------------------------------------------------------------------------------
-													Version:= "1.0" , vom:= "27.02.2021"
+													Version:= "1.0" , vom:= "11.03.2021"
 ;------------------------------------------------------ Runtime-Skript ----------------------------------------------------------
 ;------------------- startet Addendum bei einem Absturz oder (un-))absichtlichen Schliessen neu --------------------
 ;-------------------------------------------- Addendum für AlbisOnWindows -----------------------------------------------
@@ -153,7 +153,8 @@ return
 ^+!ö::ExitApp
 ^!ö::    	;{ Skriptneustart
 	TrayTip, AddendumMonitor, Skript wird neu gestartet, 1
-	Sleep 1000
+	gosub ReleaseObjects
+	Sleep 3000
 	Reload
 return ;}
 #IfWinExist ahk_class AutoHotkey2, Neustart
@@ -164,6 +165,16 @@ return ;}
 	}
 return
 #IfWinExist
+
+ReleaseObjects: ;{
+
+	ObjRelease(winmgmts)
+	ObjRelease(createSink)
+	ObjRelease(DeleteSink)
+	winmgmts := deleteSink := ""
+
+return ;}
+
 ;}
 ;}
 
@@ -176,10 +187,12 @@ AHK_NOTIFYICON(wParam, lParam) {
     }
 }
 admMonReload:
+gosub ReleaseObjects
 Reload
-admMonExitApp:
-ExitApp
-admMonTimerInfo:
+admMonExitApp: ;{
+gosub ReleaseObjects
+ExitApp ;}
+admMonTimerInfo: ;{
 	nextcall 		:= Addendum.TimedCheck-((A_TickCount - Addendum.TimerCall)/1000)
 	nextcall_min	:= Floor(nextcall/60)
 	nextcall_sec	:= Floor(nextcall - (nextcall_min*60))
@@ -187,12 +200,12 @@ admMonTimerInfo:
 						. 	 "nächster Check in: " 	nextcall_min "m " SubStr("00" nextcall_sec, -1) "s"
 	;TrayTip, Addendum Monitor, % TTipMsg, 1, 16
 	Menu, Tray, Tip, % TrTip1 "`n" TrTip2
-return
-admMonInfo:
-return
-admMonCheck:
+return ;}
+admMonInfo: ;{
+return ;}
+admMonCheck: ;{
 RestartAddendum("override")
-return
+return ;}
 ;}
 
 ;{ Funktionen
