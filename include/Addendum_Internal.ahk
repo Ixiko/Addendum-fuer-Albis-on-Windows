@@ -255,9 +255,9 @@ return 1
 
 Weitermachen(Message="", Title="Guck!", TimeOut=0) {                                                          	;-- weiter oder abbrechen (Debug Hilfe)
 
-	msg := StrLen(Message) > 0  ? Message "`n" : "Weiter oder Abbrechen?"
-	tout	:= TimeOut ? TimeOut : ""
-	MsgBox, 0x1021, % Title, % msg, % tout
+	MsgBox, 0x1021	, % Title
+								, % (StrLen(Message) > 0  ? Message "`n" : "Weiter oder Abbrechen?")
+								, % (TimeOut ? TimeOut : "")
 	IfMsgBox, Cancel
 		return 0
 

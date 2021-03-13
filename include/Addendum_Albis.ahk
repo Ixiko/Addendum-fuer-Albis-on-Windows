@@ -1,7 +1,7 @@
 ﻿;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - letzte Änderung 11.03.2021 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - letzte Änderung 13.03.2021 - this file runs under Lexiko's GNU Licence
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
 return
@@ -294,7 +294,7 @@ return
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; INFO's VON ANDEREN STEUERELEMENTEN                                                                                                                                                                                             	(03)
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; (01) AlbisGetActiveControl           	(02) AlbisGetActiveWindowType   	(03) AlbisLVContent                       	(04) #AlbisGetStammPos             	(05) #AlbisAktuellesKuerzel
+; (01) AlbisGetActiveControl          	(02) AlbisGetActiveWindowType   	(03) AlbisLVContent                            	(04) #AlbisGetStammPos             	(05) #AlbisAktuellesKuerzel
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~;{
 ;01
 AlbisGetActiveControl(cmd) {                                                            	;-- ermittelt den aktuellen Eingabefocus und gibt zusätzliche Informationen zur Identifikation zurück
@@ -498,8 +498,8 @@ AlbisAktuellesKuerzel() {                                                       
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; DATEN VOM AKTUELLEN PATIENTEN                                                                                                                                                                                                      	(08)
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; (01) AlbisAktuellePatID                 	(02) AlbisCurrentPatient              	(03) AlbisPatientGeschlecht             	(04) AlbisPatientGeburtsdatum   	(05) AlbisPatientVersicherung
-; (06) AlbisVersArt                          	(07) AlbisTitle2Data                   	(08) AlbisAbrechnungsscheinVorhanden                                               	(09) AlbisAbrechnungsscheinAktuell
+; (01) AlbisAktuellePatID               	(02) AlbisCurrentPatient              	(03) AlbisPatientGeschlecht                 	(04) AlbisPatientGeburtsdatum   	(05) AlbisPatientVersicherung
+; (06) AlbisVersArt                        	(07) AlbisTitle2Data                   	(08) AlbisAbrechnungsscheinVorhanden                                                  	(09) AlbisAbrechnungsscheinAktuell
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~;{
 ;01		;-- Patienten bezogene Informationen
 AlbisAktuellePatID() {                                                                 	;-- liest aus dem Fenstertitel nur die PatientenID aus
@@ -604,11 +604,11 @@ return AbrSchein
 
 ;}
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; FENSTERELEMENTE AUSLESEN UND BEHANDELN                                                                                                                                                                                    	(12)
+; FENSTERELEMENTE AUSLESEN UND BEHANDELN                                                                                                                                                                                    	(13)
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; (01) AlbisGetCaveZeile                	(02) AlbisGetCave                     	(03) AlbisCaveAddRows                 	(04) AlbisCaveGetCellFocus          	(05) AlbisCaveGetCellFocus
-; (06) AlbisCaveUnFocus                 	(07) AlbisMuster30ControlList()     	(08) AlbisOptPatientenfenster         	(09) AlbisHeilMittelKatologPosition	(10) AlbisSortiereDiagnosen
-; (11) AlbisReadFromListbox           	(12) AlbisResizeDauerdiagnosen
+; (01) AlbisGetCaveZeile               	(02) AlbisGetCave                     	(03) AlbisCaveAddRows                      	(04) AlbisCaveGetCellFocus          	(05) AlbisCaveGetCellFocus
+; (06) AlbisCaveUnFocus               	(07) AlbisMuster30ControlList()     	(08) AlbisOptPatientenfenster             	(09) AlbisHeilMittelKatologPosition	(10) AlbisSortiereDiagnosen
+; (11) AlbisReadFromListbox          	(12) AlbisResizeDauerdiagnosen 	(13) AlbisResizeLaborAnzeigegruppen
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~;{
 ;01
 AlbisGetCaveZeile(nr, SuchString="", CloseCave=false) {             	;-- Auslesen einer oder aller Zeilen im Cave! von Dialog
@@ -1016,10 +1016,7 @@ AlbisResizeDauerdiagnosen(Options:= "xCenterScreen yCenterScreen w0 h0") { ;-- s
 	If !hWin || (hStored = hWin)
 		return 0
 
-	RegExMatch(Options, "x(?<X>[A-Z0-9]+)\s+"	, Opt)
-	RegExMatch(Options, "y(?<Y>[A-Z0-9]+)\s+"	, Opt)
-	RegExMatch(Options, "w(?<W>[A-Z0-9]+)\s+"	, Opt)
-	RegExMatch(Options, "h(?<H>[A-Z0-9]+)\s+"	, Opt)
+	opt := ParseGuiOptions(Options)
 
 	hStored	:= hWin
 	hMed	:= Controls("SysListView322", "ID", hWin)
@@ -1041,6 +1038,63 @@ AlbisResizeDauerdiagnosen(Options:= "xCenterScreen yCenterScreen w0 h0") { ;-- s
 	ControlMove, SysListView321, 430,, % inCW - 440 ,, % WT
 
 return 1
+}
+ParseGuiOptions(optString) {
+
+	RegExMatch(Options, "i)x(?<X>[A-Z0-9]+)(\s+|$)"  	, opt)
+	RegExMatch(Options, "i)y(?<Y>[A-Z0-9]+)(\s+|$)"  	, opt)
+	RegExMatch(Options, "i)w(?<W>[A-Z0-9]+)(\s+|$)"	, opt)
+	RegExMatch(Options, "i)h(?<H>[A-Z0-9]+)(\s+|$)"  	, opt)
+
+	If !optX && !opY && !opW && !opH
+		return
+
+return {"X":optX, "Y":optY, "W":optW, "H":optH}
+}
+;13
+AlbisResizeLaborAnzeigegruppen(Options:= "xCenterScreen yCenterScreen w0 h0") { ;-- Fensterhöhe verändert für mehr Übersicht
+
+	static WT := "Labor - Anzeigegruppen ahk_class #32770"
+	static hStored
+
+	hWin := WinExist(WT)
+	If !hWin || (hStored = hWin)
+		return 0
+
+	opt := ParseGuiOptions(Options)
+
+	hStored	:= hWin
+	hMGroup	:= Controls("Listbox1", "ID", hWin)
+	hPara   	:= Controls("Listbox2", "ID", hWin)
+	hIGroup   	:= Controls("Listbox3", "ID", hWin)
+
+	albis        	:= GetWindowSpot(AlbisWinID())
+	win          	:= GetWindowSpot(hwin)
+	mg          	:= GetWindowSpot(hMGroup)
+	pa        	:= GetWindowSpot(hPara)
+	ig         	:= GetWindowSpot(hIGroup)
+
+	monIndex	:= GetMonitorIndexFromWindow(AlbisWinID())
+	Mon     	:= ScreenDims(monIndex)
+
+	ControlGetPos,,,, TaskbarH	, ReBarWindow321	, % "ahk_class Shell_TrayWnd"
+	ControlGetPos,,,, Btn1H     	, Button1 	            	, % WT
+	ControlGetPos,,,, LB1H      	, ListBox1                	, % WT
+	ControlGetPos,,,, LB2H      	, ListBox2                	, % WT
+	ControlGetPos,,,, LB3H      	, ListBox3                	, % WT
+
+	HeightPlus := (Mon.H-TaskbarH) - win.H - win.BH
+
+	win.X := Floor(albis.W/2 - win.W/2)
+	win.Y := (albis.Y<0?0:albis.Y)
+	SetWindowPos(hwin, win.X, win.Y, win.W, Mon.H-TaskbarH)
+
+	ControlMove, Button1	,,,, % Btn1H	+ HeightPlus - 10	, % WT
+	ControlMove, ListBox1	,,,, % LB1H	+ HeightPlus - 10	, % WT
+	ControlMove, ListBox2	,,,, % LB2H	+ HeightPlus     	, % WT
+	ControlMove, ListBox3	,,,, % LB3H	+ HeightPlus     	, % WT
+
+
 }
 ;}
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4481,7 +4535,7 @@ return hLabbuch
 ;04
 AlbisLaborGNRHandler(nr, hwnd) {                                                                          	;-- automatisiert 'GNR der Anford.-Ident übernehmen'
 
-	; letzte Änderung: 10.03.2021
+	; letzte Änderung: 13.03.2021
 
 		static WinGNRAnforderung := "GNR der Anford ahk_class #32770"
 		static rxStatics1 := {"AfNr" : "^\d+$", "BArt" : "^[A-Z][\sa-z]+$", "Pat" : "^(?<Name>.*,.*)\s+\((?<ID>\d+)\)$"}
@@ -4557,6 +4611,10 @@ AlbisLaborGNRHandler(nr, hwnd) {                                                
 					For idx, win in childs {
 						If InStr(win.text, "Soll der unbekannte Parameter") {
 							VerifiedClick("Ja", "ALBIS ahk_class #32770", "Soll der unbekannte Parameter")
+						} else If InStr(win.text, "Labordaten liegen als Vor-") {
+							VerifiedClick("Nein", "ALBIS ahk_class #32770", "Labordaten liegen als")
+						} else If InStr(win.text, "GO-Nr. werden nicht übertragen") {
+							VerifiedClick("OK", "ALBIS ahk_class #32770", "GO-Nr. werden nicht übertragen")
 						} else if InStr(win.title, "Bitte warten") {
 							sleep 100
 						} else if !InStr(win.title, "GNR der Anford") {

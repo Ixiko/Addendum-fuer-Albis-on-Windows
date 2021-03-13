@@ -330,7 +330,7 @@ Vorquartal(Datum, retFormat:="YYYYQ") {                                         
 return retStr
 }
 
-DateValidator(dateString) {                                                                                   		;-- prüft ob
+DateValidator(dateString) {                                                                                   		;-- prüft per RegEx ob der String ein gültiges Datum enthält
 
 	; RegEx Strings
 		static global rxMonths:=	"Jan*u*a*r*|Feb*r*u*a*r*|Mä*a*rz|Apr*i*l*|Mai|Jun*i*|Jul*i*|Aug*u*s*t*|Sept*e*m*b*e*r*|Okt*o*b*e*r*|Nov*e*m*b*e*r*|Deze*m*b*e*r*"
@@ -353,6 +353,7 @@ DateValidator(dateString) {                                                     
 
 return SubStr("0" dD, -1) "." SubStr("0" dM, -1) "." dY	; Rückgabe immer im Format dd.mm.yy oder dd.mm.yyyy
 }
+
 
 ; Zeit berechnen
 FormatSeconds(timestr, formatstring:="hh:mm:ss")  {                                              	;-- Sekunden in Stunden:Minuten:Sekunden umrechnungen

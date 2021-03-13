@@ -17,7 +17,7 @@
 ;		Abhängigkeiten:	siehe includes
 ;
 ;	                    			Addendum für Albis on Windows
-;                        			by Ixiko started in September 2017 - last change 06.03.2021 - this file runs under Lexiko's GNU Licence
+;                        			by Ixiko started in September 2017 - last change 13.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; Einstellungen
@@ -61,13 +61,16 @@
 
 return
 
-ESC::
+ESC:: ;{
 	If WinActive("Laborjournal") {
 		SaveGuiPos(labJ.hwnd)
 		ExitApp
 	}
-return
+return ;}
 
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; Berechnungen
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 AlbisLaborJournal(Von="", Bis="", Warnen="", GW=100, Anzeige=true) {                 	;--  sehr abweichender Laborwerte
 
 	/*  Parameter
@@ -85,17 +88,9 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GW=100, Anzeige=true) {            
 		immerWarnen 	:= "\b(" StrReplace(Warnen.immer 	, ","	, "|") ")\b"
 		exklusivWarnen	:= "\b(" StrReplace(Warnen.exklusiv	, ","	, "|") ")\b"
 
-
-	; Albis und Addendum Datenbankpfad ;{
-		RegRead, AlbisPath, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, Installationspfad
-		RegExMatch(A_ScriptDir, "[A-Z]\:.*?AlbisOnWindows", AddendumDir)
-		AddendumDBPath := AddendumDir "\logs'n'data\_DB"
-		AlbisDBPath      	:= AlbisPath "\DB"
-		;}
-
 	; vorberechnete Laborwertgrenzen laden bei Bedarf ;{
 		If !IsObject(Lab) {
-			If !FileExist(AddendumDBpath "\sonstiges\Laborwertgrenzen.json")
+			If !FileExist(adm.DBPath "\sonstiges\Laborwertgrenzen.json")
 				Lab := AlbisLaborwertGrenzen(adm.DBPath "\sonstiges\Laborwertgrenzen.json", Anzeige)
 			else
 				Lab := JSON.Load(FileOpen(adm.DBPath "\sonstiges\Laborwertgrenzen.json", "r", "UTF-8").Read())
@@ -126,7 +121,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GW=100, Anzeige=true) {            
 	;}
 
 	; Albis: Datenbank laden und entsprechend des Datums die Leseposition vorrücken ;{
-		labDB := new DBASE(AlbisDBPath "\LABBLATT.dbf", Anzeige)
+		labDB := new DBASE(adm.AlbisDBPath "\LABBLATT.dbf", Anzeige)
 		labDB.OpenDBF()
 	;}
 
@@ -584,6 +579,10 @@ AlbisLabParam() {                                                               
 
 }
 
+
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; grafische Anzeige
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 LaborJournal(LabPat, Anzeige=true) {
 
 	; letzte Fensterposition laden
@@ -954,37 +953,10 @@ LabJournal_Close(event) {
 
 }
 
-PatientDBF(basedir, infilter="", outfilter="", debug=0) {                                            	;-- gibt nur benötigte Daten der albiswin\db\PATIENT.DBF zurück
 
-	; Rückgabeparameter ist ein Objekt mit Patienten Nr. und dazugehörigen Datenobjekten (die key's sind die Feldnamen in der DBASE Datenbank)
-
-		PatDBF := Object()
-
-	; für Abrechnungsüberprüfungen die geschätzt minimal notwendigste Datenmenge
-		If !IsObject(infilter)
-			infilter := ["NR", "NAME", "VORNAME", "GEBURT", "MORTAL", "LAST_BEH"]
-
-	; liest alle Patientendaten in ein temp. Objekt ein
-		database 	:= new DBASE(basedir "\PATIENT.dbf", debug)
-		res        	:= database.OpenDBF()
-		matches	:= database.GetFields(infilter)
-		res         	:= database.CloseDBF()
-
-	; temp. Objekt wird nach PATNR sortiert
-		For idx, m in matches {
-
-			strObj	:= Object()
-			For key, val in m
-				If (key <> "NR")
-					strObj[key] := val
-
-			PatDBF[m.NR] := strObj
-
-		}
-
-return PatDBF
-}
-
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; Hilfsfunktionen
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 SaveGuiPos(hwnd) {
 
 	win 			:= GetWindowSpot(hwnd)
@@ -1043,7 +1015,7 @@ hWnd_to_hBmp( hWnd:=-1, Client:=0, A:="", C:="" ) {                             
 Return A.tBM
 }
 
-SavePicture(hBM, sFile) {                                            ; By SKAN on D293 @ bit.ly/2krOIc9
+SavePicture(hBM, sFile) {                                                                                        	;-- By SKAN on D293 @ bit.ly/2krOIc9
 Local V,  pBM := VarSetCapacity(V,16,0)>>8,  Ext := LTrim(SubStr(sFile,-3),"."),  E := [0,0,0,0]
 Local Enc := 0x557CF400 | Round({"bmp":0, "jpg":1,"jpeg":1,"gif":2,"tif":5,"tiff":5,"png":6}[Ext])
   E[1] := DllCall("gdi32\GetObjectType", "Ptr",hBM ) <> 7
@@ -1054,8 +1026,41 @@ Local Enc := 0x557CF400 | Round({"bmp":0, "jpg":1,"jpeg":1,"gif":2,"tif":5,"tiff
 Return E[1] ? 0 : E[2] ? -1 : E[3] ? -2 : E[4] ? -3 : 1
 }
 
+PatientDBF(basedir, infilter="", outfilter="", debug=0) {                                            	;-- gibt nur benötigte Daten der albiswin\db\PATIENT.DBF zurück
 
-;{ INCLUDES
+	; Rückgabeparameter ist ein Objekt mit Patienten Nr. und dazugehörigen Datenobjekten (die key's sind die Feldnamen in der DBASE Datenbank)
+
+		PatDBF := Object()
+
+	; für Abrechnungsüberprüfungen die geschätzt minimal notwendigste Datenmenge
+		If !IsObject(infilter)
+			infilter := ["NR", "NAME", "VORNAME", "GEBURT", "MORTAL", "LAST_BEH"]
+
+	; liest alle Patientendaten in ein temp. Objekt ein
+		database 	:= new DBASE(basedir "\PATIENT.dbf", debug)
+		res        	:= database.OpenDBF()
+		matches	:= database.GetFields(infilter)
+		res         	:= database.CloseDBF()
+
+	; temp. Objekt wird nach PATNR sortiert
+		For idx, m in matches {
+
+			strObj	:= Object()
+			For key, val in m
+				If (key <> "NR")
+					strObj[key] := val
+
+			PatDBF[m.NR] := strObj
+
+		}
+
+return PatDBF
+}
+
+
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; Includes
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
 #Include %A_ScriptDir%\..\..\include\Addendum_Albis.ahk
 #Include %A_ScriptDir%\..\..\include\Addendum_Controls.ahk
 #Include %A_ScriptDir%\..\..\include\Addendum_DB.ahk

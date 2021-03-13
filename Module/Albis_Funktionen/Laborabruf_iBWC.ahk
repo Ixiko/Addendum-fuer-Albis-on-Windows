@@ -8,7 +8,7 @@
 ;       Abhängigkeiten:
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Laborabruf_iBWC.ahk last change:    	10.03.2021
+;       Laborabruf_iBWC.ahk last change:    	13.03.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -184,15 +184,16 @@
 				; ansonsten Laborblattübertragung (LaborImport - nutzt ein anderes Logfile) starten
 					if adm.Labor.AutoLDTImport && adm.AutoLaborAbrufStatus && !adm.AutoLaborAbruf  {
 						writeStr := "|" A_ThisFunc "()`t- Labordatenimport nicht möglich! AutoLaborAbruf-Funktion von Addendum ist ausgeschaltet!."
-						FileAppend, % (amsg .= datestamp(2) writeStr "`n", % adm.LogFilePath
+						FileAppend, % (amsg .= datestamp(2) writeStr "`n"), % adm.LogFilePath
 					} else {
-						writeStr := "|" A_ThisFunc "()`t- Laborbuch 'alle übertragen' ausgeführt [" AlbisLaborAlleUebertragen() "]"
-						FileAppend, % (amsg .= datestamp(2) writeStr "`n", % adm.LogFilePath
+						result	:= AlbisLaborAlleUebertragen()
+						writeStr := "|" A_ThisFunc "()`t- Laborbuch 'alle übertragen' ausgeführt [" result "]"
+						FileAppend, % (amsg .= datestamp(2) writeStr "`n"), % adm.LogFilePath
 					}
 
 			} else {
 				writeStr := "|" A_ThisFunc "()`t- Das Laborbuch ließ sich nicht öffnen. Der Labordatenimport konnte nicht fortgesetzt werden.`n"
-				FileAppend, % (amsg .= datestamp(2) writeStr "`n", % adm.LogFilePath
+				FileAppend, % (amsg .= datestamp(2) writeStr "`n"), % adm.LogFilePath
 			}
 
 		; Automatisierungsfunktionen im Hauptskript wieder anschalten
@@ -374,7 +375,7 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 			If InStr(AlbisGetActiveWinTitle(), "Laborbuch")
 				return 1
 
-			If (A_Index > 600) { ; ~60 Sekunden
+			If (A_Index > 1200) { ; ~120 Sekunden
 				FileAppend, % (amsg .= datestamp(2) writeStr " [1]`n"), % adm.LogFilePath
 				return 0
 			}
@@ -385,7 +386,7 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 				WinGetTitle	, PopTitle	, % "ahk_id " hPopupWin
 				WinGetClass	, PopClass, % "ahk_id " hPopupWin
 				while WinExist(PopTitle " ahk_class " PopClass) {
-					If (A_Index >= 600) {
+					If (A_Index >= 1200) {
 						FileAppend, % (amsg .= datestamp(2) writeStr " [2]`n"), % adm.LogFilePath
 						return 0
 					}

@@ -2045,6 +2045,51 @@ admGui_RemoveImports(ImportList)                               	{               
 
 }
 
+;CheckJournal() { ...
+For idx, pdf in ScanPool
+	If (pdf.name = pdfFile) {
+		ScanPool[idx] := GetPDFData(Addendum.BefundOrdner, pdfFile)
+		break
+	}
+
+;BefundIndex() { ....
+ScanPool.Push(GetPDFData(Addendum.BefundOrdner, filename))
+
+	; Originaldatei umbennen
+		FileMove, % Addendum.BefundOrdner "\" oldadmfile, % Addendum.BefundOrdner "\" (newadmfile := newadmfile "." FileExt), 1
+		If ErrorLevel {
+			MsgBox, 0x1024, Addendum für Albis on Windows
+									, % 	"Das Umbenennen der Datei`n"
+									.	"  <" oldadmFile ">  `n"
+									. 	"wurde von Windows aufgrund des`n"
+									.	"Fehlercode (" A_LastError ") abgelehnt."
+			gosub RNGuiBeenden
+			return
+		}
+
+	; Backup Datei umbennen
+		If (fileext = "pdf") && FileExist(Addendum.BefundOrdner "\Backup\" oldadmfile)
+			FileMove, % Addendum.BefundOrdner "\Backup\" oldadmfile, % Addendum.BefundOrdner "\Backup\" newadmfile, 1
+
+	; Textdokument umbennen
+		txtfile := Addendum.BefundOrdner "\Text\" RegExReplace(oldadmfile, "\.\w+$", ".txt")
+		If (FileExt = "pdf") && FileExist(txtfile)
+			FileMove, % txtfile, % Addendum.BefundOrdner "\Text\" RegExReplace(newadmfile, "\.pdf$", ".txt"), 1
+
+			FileMove, % pdfPath	, % docPath "\" 				newadmFile ".pdf"	, 1               	; Originaldatei umbenennen
+			FileMove, % bupPath	, % docPath "\Backup\" 	newadmFile ".pdf"	, 1               	; Backupdatei umbenennen
+			FileMove, % txtPath	, % docPath "\Text\" 		newadmFile ".txt" 	, 1           		; zugehörige Text Datei umbenennen
+
+		If IsObject(fDates)
+			If fDates.Behandlung[1]
+				newadmFile .= "v. " fDates.Behandlung[1]	" "
+				else
+			newadmFile .= "v. " fDates.Dokument[1] 	" "
+
+				pdfPath  	:= docPath "\" filename
+				bupPath 	:= docPath "\Backup\" filename
+				txtPath   	:= docPath "\Text\" StrReplace(filename, ".pdf", ".txt")
+
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum_Ini.ahk

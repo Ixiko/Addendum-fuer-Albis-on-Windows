@@ -14,7 +14,7 @@
 ;
 ;
 ;	                    	Addendum für Albis on Windows
-;                        	by Ixiko started in September 2017 - letzte Änderung 11.03.2021 - this file runs under Lexiko's GNU Licence
+;                        	by Ixiko started in September 2017 - letzte Änderung 13.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
 
@@ -1771,19 +1771,19 @@ admCM_JRecog(admFile)                                              	{           
 		fNames	:= FindDocNames(PdfText)
 		fDates 	:= FindDocDate(PdfText, fNames)
 		admGui_ImportGui(false, "Autonaming Dokument`n" admFile "`nläuft", "admJournal")
+
+	; neuen Dateinamen erstellen
 		If IsObject(fNames)  {
 
 			if (fNames.Count() = 1) {
+
 				For PatID, Pat in fNames {
-					newfilename := fNames[PatID].Nn ", " fNames[PatID].Vn ", " ;(StrLen(withoutname) = 0 ? "Befund" : withoutname)	; " [" PatID "]
+					newfilename := fNames[PatID].Nn ", " fNames[PatID].Vn ", "
 					break
 				}
 
 				If IsObject(fDates)
-					If fDates.Behandlung[1]
-						newfilename .= "v. " fDates.Behandlung[1]
-					else
-						newfilename .= "v. " fDates.Dokument[1]
+					newadmFile .= "v. " (fDates.Behandlung[1] ? fDates.Behandlung[1]	: fDates.Dokument[1])
 
 			; wird umbenannt
 				admGui_Rename(admFile,, newfilename ".pdf")
@@ -1791,7 +1791,7 @@ admCM_JRecog(admFile)                                              	{           
 
 			}
 			else {
-				For PatID, Pat in found
+				For PatID, Pat in fNames
 					t .= "   [" PatID "] " Pat.Nn ", " Pat.Vn " geb.am " Pat.Gd "`n"
 				SciTEOutput("  Das Dokument konnte nicht eindeutig zugeordnet werden. Folgende Namen stehen zu Auswahl:`n" t)
 			}
@@ -1818,43 +1818,46 @@ admCM_JRenAll()                                                           	{    
 			return
 		}
 
-	; Patienten und Dokumentdatum finden
+	; Vorbereitungen
 		docPath := Addendum.BefundOrdner
+		cPref	:= ""
+		Loop % (cLen	:= StrLen(unnamed.Count())-1)
+			cPref .= "0"
+
+	; Patienten und Dokumentdatum finden
 		For idx, filename in unnamed {
 
 			; Pfade festlegen
-				pdfPath  	:= docPath "\" filename
-				bupPath 	:= docPath "\Backup\" filename
-				txtPath   	:= docPath "\Text\" StrReplace(filename, ".pdf", ".txt")
-				counter  	:= idx "/" unnamed.Count()
+				path  	:= Befunde.GetPaths(filename)
+				counter	:= SubStr(cPref . idx, -1*cLen) "/" unnamed.Count()
+				Befunde.Backup(path.fF)
 
-			; optional Text extrahieren
-				If PDFisSearchable(pdfPath) && !FileExist(txtpath) {
+			; Text extrahieren, falls noch nicht geschehen
+				If PDFisSearchable(Path.fF) && !FileExist(path.fT) {
 
 					; Fortschritt anzeigen
 						admCM_JRnProgress([counter, filename, "Text wird extrahiert....", "", "", lastnewadmFile])
 
 					; pdftotext extrahiert den Text aus der PDF Datei
 						cmdline := Addendum.PDF.xpdfPath "\pdftotext.exe"
-														. 	" -f 1 -l " PDFGetPages(pdfPath, Addendum.PDF.qpdfPath)
+														. 	" -f 1 -l " PDFGetPages(Path.fF, Addendum.PDF.qpdfPath)
 														. 	" -bom -enc UTF-8"
-														.	" " q pdfPath q
-														. 	" " q txtpath q
+														.	" " q Path.fF q
+														. 	" " q Path.fT q
 						stdout := StdOutToVar(cmdline)
-
-						If !FileExist(txtpath)
+						If !FileExist(Path.fT)
 							continue
 
-				} else if !PDFisSearchable(pdfPath) {
+				} else if !PDFisSearchable(Path.fF) {
 					; Protokollierung
-						PraxTT("Datei " idx " " filename " ist nicht durchsuchbar" )
+						PraxTT("Datei [" idx "] " filename " ist nicht durchsuchbar" )
 						continue
 				}
 
 			; extrahierten Text lesen
-				doctext := FileOpen(txtpath, "r").Read()
+				doctext := FileOpen(Path.fT, "r").Read()
 				If (StrLen(Trim(doctext)) = 0) {
-					PraxTT("Der extrahierte Text enthält keine Zeichen.`n[" admFile "]", "2 2")
+					PraxTT("Der extrahierte Text enthält keine Zeichen.`n[" filename "]", "2 2")
 					FileDelete, % txtPath
 					continue
 				}
@@ -1868,7 +1871,7 @@ admCM_JRenAll()                                                           	{    
 				fDates 	:= FindDocDate(doctext)
 
 			; Datei umbenennen
-				If (IsObject(fNames) && fNames.Count() = 1) {
+				If      	(IsObject(fNames) && fNames.Count() = 1) {
 
 					; Name des Patienten
 						newadmFile := ""
@@ -1883,44 +1886,45 @@ admCM_JRenAll()                                                           	{    
 
 					; Behandlungzeitraum oder Datum des Dokuments
 						If IsObject(fDates)
-							If fDates.Behandlung[1]
-								newadmFile .= "v. " fDates.Behandlung[1] " "
-							else
-								newadmFile .= "v. " fDates.Dokument[1] " "
+							newadmFile .= "v. " (fDates.Behandlung[1] ? fDates.Behandlung[1]	: fDates.Dokument[1])
 
 					; Anzeige von Wort und Zeichenzahl der Datei
 						lastnewadmFile := newadmFile
 						admCM_JRnProgress([counter, filename, "neuen Dateinamen erstellt", words, chars, lastnewadmFile])
 
 					; Debug
-						 If ((res := Weitermachen("Datei: " counter "`nBez.: " newadmFile "`nWeitermachen?") <> 1)) {
+						 If (Weitermachen("Datei: " counter "`nBez.: " newadmFile "`nWeitermachen?",, 2) = 0)
 							break
-						}
 
 					; Umbenennen von Original, Backup und Textdatei
 						If (StrLen(newadmFile) > 0) {
-							filename_changed := true
-							FileMove, % pdfPath	, % docPath "\" 				newadmFile ".pdf"	, 1               	; Originaldatei umbenennen
-							FileMove, % bupPath	, % docPath "\Backup\" 	newadmFile ".pdf"	, 1               	; Backupdatei umbenennen
-							FileMove, % txtPath	, % docPath "\Text\" 		newadmFile ".txt" 	, 1           		; zugehörige Text Datei umbenennen
+							;filename_changed := true
+							admGui_FWPause(true, [filename  	, newadmfile], 12)    	; FolderWatch pausieren (6s bis zur Wiederherstellung)
+							row	:= Journal.Replace(filename		, newadmfile)        	; Journal auffrischen
+							pdf	:= pdfpool.Rename(filename		, newadmfile)        	; Objektdaten ändern
+							res	:= Befunde.Rename(filename		, newadmfile)        	; Dateien umbenennen (Original, Backup, Text)
 							newadmFile := ""
 						}
 
 				}
-				else if (IsObject(fNames) && fNames.Count() < 1) {
+				else if	(IsObject(fNames) && fNames.Count() < 1) {
 					PraxTT("Dokument: " filename "`nkonnte keinem Patienten zugeordnet werden", "4 1")
 				}
-				else If (IsObject(fNames) && fNames.Count() > 1) {
+				else If 	(IsObject(fNames) && fNames.Count() > 1) {
+
 					t := ""
 					For PatID, Pat in fNames
 						t .= " `t[" PatID "] " Pat.Nn ", " Pat.Vn " geb.am " Pat.Gd "`n"
 
-					SciTEOutput("  [" idx "/" unnamed.Count() "]`n  1: " filename "`n  2: #keine eindeutige Zuordnung möglich")
+					SciTEOutput("  [" counter "]")
+					SciTEOutput("  1: " filename)
+					SciTEOutput("  2: #keine eindeutige Zuordnung möglich")
 					SciTEOutput("  Namen:       `t" 	fNames.Count())
 					SciTEOutput("  Beh. Datum:`t" 	fDates.Behandlung.Count())
 					SciTEOutput("  Doc. Datum:`t" 	fDates.Dokument.Count())
 					SciTEOutput(t)
 					SciTEOutput("  -------------------------------------------------------------------" )
+
 				}
 				else {
 					PraxTT("Dokument: " filename "`nkonnte keinem Patienten zugeordnet werden", "4 1")
@@ -1929,30 +1933,33 @@ admCM_JRenAll()                                                           	{    
 		}
 
 	; Anzeige schliessen
-		admGui_ImportGui(false, "Autonaming Dokument`n" admFile "`nläuft", "admJournal")
+		;admGui_ImportGui(false, "A U T O N A M I N G`n" admFile "`nläuft", "admJournal")
+		admGui_ImportGui(false, "A U T O N A M I N G`n" filename "`nläuft", "admJournal")
 
 	; Anzeige auffrischen
-		If filename_changed
-			admGui_Reload()
+		;~ If filename_changed
+			;~ admGui_Reload()
 
 return
 }
 
 admCM_JRnProgress(ProgressText)                                 	{              	; zeigt den Fortschritt beim Umbennen an
 
-		static outmsgTitle := "Automatische Dateinamengenerierung`n`n"
+		static outmsgTitle := "A U T O N A M I N G .#`n`n"
+		static call:=1
 
 	; nur eine Zahl übergeben dann wird die Progressbar verändert
-		If !RegExMatch(ProgressText, "^\d+$") {
+		If IsObject(ProgressText) {
 
-			outmsg :="Zähler:   `t"		ProgressText.1      	"`n"
-						.	"Name:   `t"  	ProgressText.2      	"`n"
-						. 	"Status:   `t"     	ProgressText.3     	"`n"
-						. 	"Wörter:  `t"   	ProgressText.4	   	"`n"
-						. 	"Zeichen:`t"   	ProgressText.5   	"`n"
-						. 	"`n- - - letzter Fund - - -`n" newadmFile
+			outmsg := "Zähler:   `t" 	ProgressText.1      	"`n"
+						.	 "Name:   `t" 	ProgressText.2      	"`n"
+						. 	 "Status:   `t"  	ProgressText.3     	"`n"
+						. 	 "Wörter:  `t" 	ProgressText.4	   	"`n"
+						. 	 "Zeichen:`t"  	ProgressText.5   	"`n"
+						. 	 (ProgressText[6] ? "`n- - - letzter Fund - - -`n" ProgressText.6 : "")
 
-			admGui_ImportGui(true, outmsgTitle . outmsg, "admJournal")
+			admGui_ImportGui(true, StrReplace(outmsgTitle, "#", SubStr("................", 1, call)) . outmsg, "admJournal")
+			call := call = 5 ? 1 : call+1
 
 		}
 
@@ -2016,6 +2023,9 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 			If (oPV.Previewer = "Sumatra") {
 				If (StrLen(WinGetTitle(oPV.ID)) > 0) {
 					SumatraDDE(oPV.ID, "OpenFile"	, Addendum.BefundOrdner "\" filename, 0, 0, 0)
+					Sleep 100
+					SumatraDDE(oPV.ID, "SetView"	, Addendum.BefundOrdner "\" filename, "single page", "-1") 	; -1 = fit page
+					Sleep 100
 					SumatraDDE(oPV.ID, "SetView"	, Addendum.BefundOrdner "\" filename, "single page", "-1") 	; -1 = fit page
 					Gui, RN: Default
 				}
@@ -2270,8 +2280,8 @@ RNProceed:                                       	;{   Datei wird umbenannt, PDF
 	;}
 
 	; FolderWatch pausieren/alle Dateien umbenennen/FolderWatch fortsetzen
-		newadmfile .= FileExt
-		admGui_FWPause(true	, [newadmfile, oldadmfile], 20)    	; FolderWatch pausieren (6s bis zur Wiederherstellung)
+		newadmfile .= "." FileExt
+		admGui_FWPause(true	, [newadmfile, oldadmfile], 20)    	; FolderWatch pausieren (20s bis zur Wiederherstellung)
 		row	:= Journal.Replace(oldadmfile	, newadmfile)        	; Journal auffrischen
 		pdf	:= pdfpool.Rename(oldadmfile	, newadmfile)        	; Objektdaten ändern
 		res	:= Befunde.Rename(oldadmfile	, newadmfile)        	; Dateien umbenennen (Original, Backup, Text)
@@ -2281,34 +2291,37 @@ RNProceed:                                       	;{   Datei wird umbenannt, PDF
 RNGuiBeenden:                                   	;{   weitere Dateien umbenennen
 
 	; nachschauen ob eine weitere Datei zum Umbenennen zur Verfügung steht
-		oldfilename := newadmFile
-		rows := LV_GetCount()
-		startrow := row
+		oldfilename := newadmFile, startrow := rows := LV_GetCount()
 		Loop {
 
 			rowL := row
 			row ++
 			row := row > rows ? 1 : row
+			If (row = startrow) || (A_Index > rows)
+				break
+
 			LV_Modify(rowL	, "-Select")
 			LV_Modify(row	, "Focus")
 			LV_Modify(row	, "Select")
-			Sleep 50
-			If (row = startrow) || (A_Index > rows) {
-				startrow := row
-				break
-			}
-			LV_GetText(LVfilename, row, 1)
-			If !string.isFullNamed(LVfilename)
+
+
+			LV_GetText(lvFilename, row, 1)
+			If !string.isFullNamed(lvFilename)
 				break
 
 		}
 
+		If StrLen(lvFilename) = 0
+			SciTEOutput("0 Länge: " row)
+
 	; weiteres Dokument umbenennen?
-		If !string.isFullNamed(LVfilename) && (LVfilename <> oldfilename) {
-			oldfilename := LVfilename
-			MsgBox, 4, Addendum für Albis on Windows, % "Möchten Sie mit der nächsten`n[" LVfilename "]`nDatei fortfahren ?", 30
+		If (StrLen(lvFilename) > 0) && !string.isFullNamed(lvFilename) && (lvFilename <> oldfilename) {
+			MsgBox, 0x1024, Addendum für Albis on Windows, % "Möchten Sie mit der nächsten`n[" lvFilename "]`nDatei fortfahren ?", 30
 			IfMsgBox, Yes
-				admGui_Rename(LVfilename)
+			{
+				admGui_Rename(lvFilename)
+				return
+			}
 		}
 ;}
 
@@ -2359,7 +2372,6 @@ return ;}
 class Journal                                                                 	{                	; Listviewhandler des Journals
 
 		;selNextUnnamed
-
 
 		Remove(fname:="", rLV:="")  {        	; entfernt eine Datei aus der Listview
 		; ein Dateiname oder eine Zeilennummer können übergeben werden
@@ -2414,7 +2426,7 @@ class Journal                                                                 	{
 		return rText
 		}
 
-		Replace(sourcefile,targetfile)	{         	; Dateinamen ändern
+		Replace(sourcefile, targetfile)	{         	; Dateinamen ändern
 
 			this.Default()
 			Loop % LV_GetCount() {
@@ -2458,6 +2470,7 @@ class Journal                                                                 	{
 		SciTEOutput("Journal.Show(): " admHTab)
 		return admGui_ShowTab("Journal", admHTab)
 		}
+
 }
 
 class Befunde                                                                   	{               	; Dokument-Datei-Handler
@@ -2487,11 +2500,12 @@ class Befunde                                                                   
 			}
 		}
 
-	; Backup der Datei erstellen
+	; Backupdatei erstellen
 		Backup(filename) {
 
 			eL 	:= []
-			path	:= this.GetPaths(newfilename, oldfilename)
+		; oF - original file path, oB - original backup path
+			path	:= this.GetPaths(filename)
 
 			If !FileExist(path.fB) {
 				FileCopy, % path.fF, % path.fB
@@ -2501,12 +2515,12 @@ class Befunde                                                                   
 			}
 		}
 
-	; Dateien umbenennen
+	; umbenennen
 		Rename(oldfilename, newfilename) {
 
+				eL 	:= []
 			; oF - original file path, oB - original backup path
 				path	:= this.GetPaths(newfilename, oldfilename)
-				eL 	:= []
 
 				If this.debug
 					SciTEOutput("Rename " oldfilename " to " newfilename)
@@ -2559,6 +2573,19 @@ class Befunde                                                                   
 		return eL.Count() > 0 ? eL : 1
 		}
 
+	; RegEx umbenennen für Batch-Renaming
+		RegExRename(filename, rnPattern) {
+			If RegExMatch(rnPattern, "^(?<Options>.*)?\)(?<pattern>.*)$", rx)
+			RegExMatch(filename, "o" )
+			this.Rename(filename, newfilename)
+		}
+
+	; Datei/en löschen (##)
+		Remove(filename, fileshorts:="fbt") {
+
+
+		}
+
 	; Datei wurde importiert
 		MoveToImports(filename) {
 
@@ -2606,8 +2633,8 @@ class Befunde                                                                   
 						this.Path.[BasisName][BasisOrdner oder andere Bezeichnung]
 
 						[BasisName]
-							.o		= old oder Quell-Dateiname
 							.f		= Dateiname wenn kein Quell-Dateiname übergeben wurde, oder neuer Dateiname
+							.o		= old oder Quell-Dateiname
 							.i		= Dateibasis für importierte Dateien
 
 						[BasisOrdner oder andere Bezeichnung]
@@ -2623,6 +2650,7 @@ class Befunde                                                                   
 
 			*/
 
+			; Hauptordner eintragen
 				If !path && !this.FPath
 					this.FPath := Addendum.BefundOrdner
 				else if path
@@ -2661,8 +2689,8 @@ class Befunde                                                                   
 				this.Path.fB	:= this.FPath "\Backup\"                	filename
 				this.Path.iB	:= this.FPath "\Backup\Importiert\" 	filename
 				If (this.Path.fX = "pdf") {
-					this.Path.fT	:= this.FPath "\Text\"          	RegExReplace(filename, "\.\w+$", ".txt")
-					this.Path.iT	:= this.Fpath "\Text\Backup\"	RegExReplace(filename, "\.\w+$", ".txt")
+					this.Path.fT := this.FPath "\Text\"            	RegExReplace(filename, "\.\w+$", ".txt")
+					this.Path.iT := this.Fpath "\Text\Backup\"	RegExReplace(filename, "\.\w+$", ".txt")
 				}
 
 			; Ausgabe
@@ -2808,7 +2836,7 @@ admGui_PDFPreview(fileName)                                      	{             
 		If RegExMatch(filename, "[A-Z]\:\\")
 			pdfPath	:= fileName
 		else
-			pdfPath	:= Addendum.BefundOrdner "\" fileName
+			pdfPath	:= Addendum.BefundOrdner "\" filename
 
 		pages := PDFGetPages(pdfPath, Addendum.PDF.qpdfPath)
 
@@ -2862,15 +2890,14 @@ admGui_PDFPreview(fileName)                                      	{             
 				DetectHiddenWindows, On
 
 				Run, % q SumatraCMD q " -view " q "single page" q " -zoom " q "fit page" q " " q pdfPath q,, UseErrorLevel, PIDSumatra   ; -new-window
-				WinWait        	, % SmtraClass,, 6
+				WinWait        	, % SmtraClass,, 12
 				WinActivate		, % SmtraClass
-				WinWaitActive	, % SmtraClass,, 1
+				WinWaitActive	, % SmtraClass,, 4
 
-				hSumatra := WinExist(SmtraClass)
+				hSumatra  	:= WinExist(SmtraClass)
 				WinGet      	,	SumatraPID, PID, % "ahk_id " hSumatra
 				ControlGet	,	hSumatraCnvs, HWND,, SUMATRA_PDF_CANVAS1, % "ahk_id " hSumatra
 				WinGetPos	,,	stY,, stH, ahk_class Shell_TrayWnd
-				;WinSet      	,	Style, 0x16C40000, % "ahk_id " hSumatra  ; Minimieren, Maximieren und Beenden werden entfernt
 
 				AspectRatio	:= 1.5
 				smtraWin   	:= GetWindowSpot(hSumatra)
@@ -3008,17 +3035,16 @@ admGui_ImportGui(Show=true, msg="", gctrl="")              	{                 	;
 		gCtrl := "admReports"
 		res := admGui_ShowTab("Patient", admHTab)
 	}
-	else if (gCtrl = "admJournal") {
-		res := admGui_ShowTab("Journal", admHTab)
-	}
+	else if (gCtrl = "admJournal")
+		res :=Befunde.Show()
 
 	If Show {
 
 		; zeigt den Hinweis auch an wenn das Infofenster neu gezeichnet wurde
 			If Addendum.Importing && (StrLen(msg) > 0) {
-				gctrl := last_ctrl
+				last_ctrl	:= gctrl
 				If (last_msg <> msg) {
-					GuiControl, adm2:, AdmImporter, % msg
+					GuiControl, adm2:, admImporter, % msg
 					last_msg := msg
 				}
 				return
@@ -3030,22 +3056,18 @@ admGui_ImportGui(Show=true, msg="", gctrl="")              	{                 	;
 					msg := "Importvorgang läuft...`nbitte nicht unterbrechen!"
 			}
 
-			GuiControlGet, rpos, adm: Pos, % gCtrl
-
 			Gui, adm2: New	, +HWNDhadm2 +ToolWindow -Caption +Parent%hadm%
 			Gui, adm2: Color	, c3170A0
 			Gui, adm2: Font	, s10 q5 cFFFFFF Bold, % Addendum.Default.Font
 
-			MsgOpt := InStr(msg, "Dateinamen") ? "" : "Center", PrgOpt := ""
-			Gui, adm2: Add	, Text    	, % "x60 y1 w" (rposW-60) " " MsgOpt " vadmImporter"  	, % msg
+			MsgOpt := InStr(msg, "Dateinamen") ? "" : "Center"
+			GuiControlGet, rp, adm: Pos, % gCtrl
+			Gui, adm2: Add	, Text    	, % "x60 y1 w" (rpW-60) " " MsgOpt " vadmImporter"  	, % msg
 
-			PrgOpt := ""
-			;Gui, adm2: Add	, Progress	, % "x30 y" rposH-30 " w" rposW-30 " vAdmImporterPrg"
+			Gui, adm2: Show	, % "x" rpX " y" rpY " w" rpW " h" rpH " Hide NA"                       	, admImportLayer
 
-			Gui, adm2: Show	, % "x" rposX " y" rposY " w" rposW " h" rposH " Hide NA"              	, admImportLayer
-
-			GuiControlGet, cpos, adm2: Pos, admImporter
-			GuiControl, adm2: Move, admImporter, % "y" Floor(rposH // 2 - cposH // 2)
+			GuiControlGet	, cp, adm2: Pos, admImporter
+			GuiControl    	, adm2: Move, admImporter, % "y" Floor(rpH // 2 - cpH // 2)
 			Gui, adm2: Show	, % "NA"
 
 			WinSet, Style         	, 0x50020000	, % "ahk_id " hadm2
@@ -3124,7 +3146,7 @@ return
 
 admGui_ImportFromJournal(filename)                              	{               	; Journal: 	Einzelimport-Funktion ### LV Ausgabe anpassen
 
-	; letzte Änderung: 11.03.2021
+	; letzte Änderung: 12.03.2021
 
 		global 	admHPDFfilenames, hadm, admHTab
 		static 	WZEintrag	:= {"LASV":"Anfragen", "Anfrage":"Anfragen", "Antrag":"Anfragen", "Lageso":"Anfragen", "Lebensversicherung":"Anfragen"}
@@ -3142,7 +3164,7 @@ admGui_ImportFromJournal(filename)                              	{              
 		}
 
 	; Dokumentdatum aus dem Dateinamen entnehmen, falls enthalten
-		DocDate := string.Get.DocDate(filename)
+		DocDate := string.get.DocDate(filename)
 
 	; Befund importieren
 		If      	RegExMatch(filename, "\.pdf")                                             	{
@@ -3158,6 +3180,7 @@ admGui_ImportFromJournal(filename)                              	{              
 		else If	RegExMatch(filename, "\.(jpg|png|tiff|bmp|wav|mov|avi)$")	{
 			If !AlbisImportiereBild(filename, string.Replace.Names(filename), DocDate)
 				return 0
+			res	:= Befunde.MoveToImports(filename)
 		}
 		else
 			return 0
@@ -3186,23 +3209,22 @@ admGui_ImportFromPatient()                                            	{        
 		For key, file in PatDocs		{
 
 			Addendum.FuncCallback := ""
-			If !FileExist(Addendum.BefundOrdner "\Backup\" file.name) && FileExist(Addendum.BefundOrdner "\" file.name)
-				FileCopy, Addendum.BefundOrdner "\" file.name, Addendum.BefundOrdner "\Backup\" file.name
+			Befunde.Backup(file.name)                                          	; Backup der Datei anlegen falls bisher nicht erfolgt
 
-			DocDate 	:= string.Get.DocDate(file.name)
+			DocDate 	:= string.get.DocDate(file.name)
 			KKText    	:= string.Karteikartentext(file.name)
 
-			; Bild importieren
+		; Bild importieren
 			If RegExMatch(file.name, "\.(jpg|png|tiff|bmp|wav|mov|avi)$")	{
 
-				FileCopy, % Addendum.BefundOrdner "\" file.name, % Addendum.BefundOrdner "\Backup\Importiert\" file.name, 1
 				If !AlbisImportiereBild(file.name, KKText, DocDate) {
 					Docs.Push(file)
 					continue
 				}
+				res := Befunde.MoveToImports(file.name)     	; Backup- und Textdatei in ihre Unterverzeichnisse verschieben
 
 			}
-			; Pdf importieren
+		; Pdf importieren
 			else {
 
 				; sind ohne .pdf ?
@@ -3213,29 +3235,14 @@ admGui_ImportFromPatient()                                            	{        
 					}
 
 				; Logfile schreiben. Backup-PDF-Datei und PDF-Textdatei verschieben
-					admGui_MoveFile(file.name)
-					pdf := pdfpool.Remove(file.name)
-
-				; wartet auf den FoxitReader
-					while, % (StrLen(Addendum.FuncCallback) > 0) {
-						Sleep, 50
-						If (A_Index > 40)
-							break
-					}
-
-				;SciTEOutput("FuncCallback: " Addendum.FuncCallback)
+					res	:= Befunde.MoveToImports(file.name)
+					pdf	:= pdfpool.Remove(file.name)
 
 			}
 
+			journal.Remove(file.name)                                      	; aus Listview entfernen
 			FileAppend, % datestamp() "| " file.name "`n", % Addendum.DBPath "\sonstiges\PdfImportLog.txt"
-			admGui_Default("admReports")
-			Loop % LV_GetCount() {
-				LV_GetText(celltext, A_Index, 1)
-				If (imported = celltext) {
-					LV_Delete(A_Index)
-					break
-				}
-			}
+
 		}
 
 	; PatDocs  leeren und mit nicht verarbeiteten Dateien füllen
@@ -3245,19 +3252,6 @@ admGui_ImportFromPatient()                                            	{        
 			PatDocs.Push(file)
 
 return Imports
-}
-
-admGui_MoveFile(filename)                                             	{               	; behandelt die PDF Backup Dateien
-
-	; Backup PDF in anderen Ordner verschieben
-		If FileExist(Addendum.BefundOrdner "\Backup\" filename)
-			FileMove, % Addendum.BefundOrdner "\Backup\" filename, % Addendum.BefundOrdner "\Backup\Importiert\" filename, 1
-
-	; PDF-Text in anderen Ordner verschieben
-		txtfilename := RegExReplace(filename, "\.pdf$", ".txt")
-		If FileExist(Addendum.BefundOrdner "\Text\" txtfilename)        ; PDF in einen anderen Ordner verschieben
-			FileMove, % Addendum.BefundOrdner "\Text\" txtfilename, % Addendum.BefundOrdner "\Text\Backup\" txtfilename, 1
-
 }
 
 
@@ -3497,13 +3491,13 @@ admGui_FWPause(FWPause, files, PTime=8)                  	{               	; Fol
 			SetTimer, FWPauseOff, % -1*PTime*1000
 		}
 
-		SciTEOutput("FWPause at  " A_Min ":" A_Sec ": " (Addendum.OCR.FWPause ? "true":"false"))
+		;SciTEOutput("FWPause at  " A_Min ":" A_Sec ": " (Addendum.OCR.FWPause ? "true":"false"))
 
 return
 FWPauseOff:
 	Addendum.OCR.FWPause 	:= false
 	Addendum.OCR.FWIgnore	:= Array()
-	SciTEOutput("FWPause at  " A_Min ":" A_Sec ": " (Addendum.OCR.FWPause ? "true":"false"))
+	;SciTEOutput("FWPause at  " A_Min ":" A_Sec ": " (Addendum.OCR.FWPause ? "true":"false"))
 return
 }
 
@@ -3951,36 +3945,7 @@ return files
 
 /*
 
-CheckJournal() { ...
-;~ For idx, pdf in ScanPool
-	;~ If (pdf.name = pdfFile) {
-		;~ ScanPool[idx] := GetPDFData(Addendum.BefundOrdner, pdfFile)
-		;~ break
-	;~ }
 
-BefundIndex() { ....
-ScanPool.Push(GetPDFData(Addendum.BefundOrdner, filename))
-
-	; Originaldatei umbennen
-		FileMove, % Addendum.BefundOrdner "\" oldadmfile, % Addendum.BefundOrdner "\" (newadmfile := newadmfile "." FileExt), 1
-		If ErrorLevel {
-			MsgBox, 0x1024, Addendum für Albis on Windows
-									, % 	"Das Umbenennen der Datei`n"
-									.	"  <" oldadmFile ">  `n"
-									. 	"wurde von Windows aufgrund des`n"
-									.	"Fehlercode (" A_LastError ") abgelehnt."
-			gosub RNGuiBeenden
-			return
-		}
-
-	; Backup Datei umbennen
-		If (fileext = "pdf") && FileExist(Addendum.BefundOrdner "\Backup\" oldadmfile)
-			FileMove, % Addendum.BefundOrdner "\Backup\" oldadmfile, % Addendum.BefundOrdner "\Backup\" newadmfile, 1
-
-	; Textdokument umbennen
-		txtfile := Addendum.BefundOrdner "\Text\" RegExReplace(oldadmfile, "\.\w+$", ".txt")
-		If (FileExt = "pdf") && FileExist(txtfile)
-			FileMove, % txtfile, % Addendum.BefundOrdner "\Text\" RegExReplace(newadmfile, "\.pdf$", ".txt"), 1
 
 */
 

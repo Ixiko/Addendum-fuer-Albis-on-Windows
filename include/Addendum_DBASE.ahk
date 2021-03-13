@@ -17,7 +17,7 @@
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
 ;       Addendum_DBASE begonnen am:          	12.11.2020
-;       Addendum_DBASE letzte Änderung am: 	18.02.2021
+;       Addendum_DBASE letzte Änderung am: 	13.03.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -398,10 +398,30 @@ class DBASE {                                     ; native DBASE Klasse nur für
 	  ; -------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	  ; Each record is first divided into fields which can be searched individually.
 	  ; -------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		SearchExt(pattern, outfields, startrecord=0, options="") {
+		SearchExt(pattern, outfields, startrecord=0, options="", callbackFunc="") {
 
-		; comparison is possible with ranges or Instr() operations. One date can be compared with another
-		; by only showing the dates that are greater, less or equal. This also works with pure numerical values.
+		/* Extended search
+
+			- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+			Date comparison / filter by date
+			- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+			Comparison is possible with ranges or Instr() operations. One date can be compared with another
+			by only showing the dates that are greater, less or equal. This also works with pure numerical values.
+			Above calculation is only triggered by field names containing words like 'DATUM' or 'DATE'.
+			Using the field type instead of matching inside field name would be better in most cases, but is yet not implemented.
+
+			- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+			filter return values
+			- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+			Outfields parameter is an array of field names you want to retrieve.
+
+			- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+			callbackFunc
+			- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+			If you want to use this, make your function variadic like 'MyCallbackFunc(p*)'
+			4 value will be given to your callback function, with variadic mode you can shorten your code.
+
+		 */
 
 			If !IsObject(pattern)
 				throw "Parameter: pattern must be an object"
@@ -428,7 +448,7 @@ class DBASE {                                     ; native DBASE Klasse nur für
 		; prepare pattern operations
 			For pLabel, pCondition in pattern {
 
-				If (pLabel = "DATUM") {
+				If RegExMatch(pLabel, "[A-Z]+(DATUM|DATE)") {
 					mObj:=Object()
 					RegExMatch(pCondition, "O)(?<cd1>[!><=]+)(?<date1>\d{8})(?<AO>[&|]+)*(?<cd2>[!><=]+)*(?<date2>\d{8})*", m)
 					Loop % m.Count()
@@ -458,16 +478,17 @@ class DBASE {                                     ; native DBASE Klasse nur für
 					set 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
 
 				; debug some actions
-					If (this.debug > 0) && (Mod(A_Index, this.ShowAt) = 0)
-						If (this.debug = 1)
-							ToolTip, % "Get:`t" SubStr("00000000" A_Index + startrecord, this.slen) "/" this.maxRecs "`nmatches: " matches.Count()
+					If (StrLen(callbackFunc) > 0) && (Mod(A_Index, this.ShowAt) = 0)
+						%callbackFunc%(A_Index, this.records, this.len, matches.Count())
+
+							;ToolTip, % "Get:`t" SubStr("00000000" A_Index + startrecord, this.slen) "/" this.maxRecs "`nmatches: "
 
 				; compare pattern field condition with dataset
 					pLabelHit := 0
 					For pLabel, pCondition in pattern {
 
 						val := Trim(SubStr(set, this.dbfields[pLabel].start, this.dbfields[pLabel].len))
-						If (pLabel = "DATUM") {
+						If RegExMatch(pLabel, "[A-Z]+(DATUM|DATE)") {
 
 							cdhits := 0
 							Loop % pCondition.CCount {
@@ -476,6 +497,7 @@ class DBASE {                                     ; native DBASE Klasse nur für
 								conds 	:= StrReplace(pCondition["cd" A_Index], "!")
 								negate 	:= InStr(pCondition["cd" A_Index], "!") ? false : true
 								cd	    	:= StrSplit(conds)
+
 								Loop % cd.Count() {
 
 									cda := cd[A_Index]
@@ -498,7 +520,7 @@ class DBASE {                                     ; native DBASE Klasse nur für
 
 						}
 						else If IsObject(pCondition) {
-							If RegExMatch(val, pCondition.rxStr)
+							If RegExMatch(val, pCondition.rx)
 								pLabelHit ++
 							else
 								break
@@ -510,9 +532,8 @@ class DBASE {                                     ; native DBASE Klasse nur für
 
 					}
 
-					If (pLabelHit = pattern.Count()) {
+					If (pLabelHit = pattern.Count())
 						matches.Push(this.GetSubData(set, this.retSubs))
-					}
 
 			}
 
