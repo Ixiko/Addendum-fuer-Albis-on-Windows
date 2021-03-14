@@ -1769,7 +1769,7 @@ admCM_JRecog(admFile)                                              	{           
 
 	; RegEx Auswertungen
 		fNames	:= FindDocNames(PdfText)
-		fDates 	:= FindDocDate(PdfText, fNames)
+		fDates 	:= FindDocDate(PdfText, fNames, true)
 		admGui_ImportGui(false, "Autonaming Dokument`n" admFile "`nläuft", "admJournal")
 
 	; neuen Dateinamen erstellen
@@ -1783,7 +1783,7 @@ admCM_JRecog(admFile)                                              	{           
 				}
 
 				If IsObject(fDates)
-					newadmFile .= "v. " (fDates.Behandlung[1] ? fDates.Behandlung[1]	: fDates.Dokument[1])
+					newfilename .= "v. " (fDates.Behandlung[1] ? fDates.Behandlung[1]	: fDates.Dokument[1])
 
 			; wird umbenannt
 				admGui_Rename(admFile,, newfilename ".pdf")
@@ -3500,6 +3500,7 @@ FWPauseOff:
 	;SciTEOutput("FWPause at  " A_Min ":" A_Sec ": " (Addendum.OCR.FWPause ? "true":"false"))
 return
 }
+
 
 ; ------------------------ Texterkennung
 TesseractOCR(files)                                                         	{               	; erstellt einen zusätzlichen echten Thread

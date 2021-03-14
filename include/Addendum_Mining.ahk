@@ -7,7 +7,7 @@
 ;       Abhängigkeiten:		Addendum_Gui.ahk, Addendum.ahk
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_Calc started:    	06.03.2021
+;       Addendum_Calc started:    	14.03.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -36,6 +36,7 @@ FindDocStrings() {
 	global excludeIDs  	:= 	"2"
 
 	global rx               	:= 	"[;,:.\s]+"
+	global rx1               	:= 	"[;,:.\s]"
 	global ry               	:= 	"[,:.;\s\n\r\f]+"
 	global rz               	:= 	"[.,;\s]+.*?"
 	global rs               	:= 	"\s+"
@@ -106,7 +107,7 @@ FindDocStrings() {
 	; REGEXSTRINGS FÜR DOKUMENTDATUM (FindDocDate)
 	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	global rxTags	       	:= {	1:	"Druckdatum|Erstellungszeitpunkt|Dokumentdatum|D[ae]tum|Beginn|ausgedruckt|"
-											. 	"Probenentnahmedatu*m*|Abnahmedatum|Berichtsdatum|Eingangsdatum|"
+											. 	"Probenentnahmedatu*m*|Abnahmedatu*m*|Berichtsdatu*m*|Eingangsdatu*m*|"
 											. 	"Eingang\s+am|gedruckt\s+am|angelegt|angelegt\s+am|"
 											.	"Anfrage\s+vom|Arztbrief\s+vom|Befund\s+vom|Befundbericht\s+vom|"
 											. 	"Behandlung\s+vom|Ebenen\s+vom|Ebenen\/axial\s+vom|"
@@ -118,12 +119,12 @@ FindDocStrings() {
 	global rxBehandlung	:= [	"i)(" rxTags[2] ")\svom\s(?<Datum1>[\d.]+)\s*(bis\s*z*u*m*)\s*(?<Datum2>[\d.]+)"                	; 	1| (haben wir ...| sich) vom .... bis (zum) .....
 										, 	"i)(" rxTags[2] ")\svom\s(?<Datum1>[\d.]+)\s*(\-)\s*(?<Datum2>[\d.]+)"]                                 	; 	2| (haben wir ...| sich) vom ..... - .......
 
-	global rxDokDatum	:=[	"i)\s*(" rxTags[1] ")" rx "*(" rxWDay ")*[.,\s]+(?<Datum1>\d+\.\d+\.\d+)"                               	;   1| Erstellungszeitpunkt: Do, 02.01.2020
-							    		,	"i)\s*(" rxTags[1] ")" rx "*(" rxWday ")*[.,\s]+(?<Datum1>" rxDatumLang ")"                                  	;   2| Erstellungszeitpunkt: Do. 02. Januar 2020
+	global rxDokDatum	:=[	"i)\s*(" rxTags[1] ")" rx "(" rxWDay ")*[.,;\s]+(?<Datum1>\d+\.\d+\.\d+)"                                  	;   1| Erstellungszeitpunkt: Do, 02.01.2020
+							    		,	"i)\s*(" rxTags[1] ")" rx "(" rxWDay ")*[.,;\s]+(?<Datum1>" rxDatumLang ")"                                  	;   2| Erstellungszeitpunkt: Do. 02. Januar 2020
 										, 	"i)(gedruckt|angelegt|sich)\s*am\s*[;:]*\s*(?<Datum1>\d+\.\d+\.\d+)"                                   	;   3| gedruckt am: 02.01.2020
 										,	"i)(gedruckt|angelegt)\s*[;:]*\s*(?<Datum1>\d+\.\d+\.\d+)"                                                	;	4| angelegt: 02.01.2020
 							    		,	"i)^[\pL\-]+\s[\pL\-]+\s*[;,.]\s*(den)*\s+(?<Datum1>\d+\.\d+\.\d+)\s*$"                              	;   5| Hamburg-Hochburg, 02.01.2020 (nur Leerzeichen folgen)
-							    		,	"i)^[\pL\-]+\s[\pL\-]+\s*[;,.]\s*(den)*\s+(?<Datum1>" rxDatumLang ")\s*$"                             	;   6| Hamburg-Hochburg, 02. Januar 2020 (nur Leerzeichen folgen)
+							    		,	"i)^[\pL\-]+\s[\pL\-]+\s*[;,.]\s*(den)*\s+(?<Datum1>" rxDatumLang ")\s*$"                             	;   6| Hamburg-Hochburg, (den) 02. Januar 2020 (nur Leerzeichen folgen)
 							    		,	"^s*[\pL\s\(\)]+\s*[,;.]\s*(den\s)*(?<Datum1>\d{1,2}\.\d{1,2}\.\d{2,4})"                            	;   7| Hamburg, (den) 02.01.2020
 							    		,	"^s*[\pL\s\(\)]+\s*[,;.]\s*(den\s)*(?<Datum1>" rxDatumLang ")\s*"                                           	;   8| Hamburg, (den) 2. Januar 2020
 							    		,	"^\s*(?<Datum1>\d{2}\.\d{2}\.(\d{2}|\d{4}))\s*$"                                                            	;   9| 02.01.2020 (alleinstehend in Zeile)
@@ -518,16 +519,17 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 	; RegEx-Strings zusammenstellen
 	; ---------------------------------------------------------------------------------------------------------------------------------------------------;{
 		global FindDocStrings_Init
-
 		If !FindDocStrings_Init
 			FindDocStrings()
 
 		global excludeIDs								; Ausschluß von bestimmten Patientennummern (PatID)
 		global rxBehandlung, rxDokDatum  	; Datum
 
-
 	;}
 
+	; ---------------------------------------------------------------------------------------------------------------------------------------------------
+	; Objekte
+	; ---------------------------------------------------------------------------------------------------------------------------------------------------;{
 		DocDates := Object()
 		DocDates.Behandlung 	:= Object()
 		DocDates.Dokument  	:= Object()
@@ -535,6 +537,7 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 		retDates := Object()
 		retDates.Behandlung := Array()
 		retDates.Dokument  	:= Array()
+	;}
 
 	; Text in Zeilen aufspalten
 		TLines := StrSplit(Text, "`n", "`r")
@@ -542,11 +545,30 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 	; Behandlung von ... bis ....
 		For RxStrIndex, rxDateStr in rxBehandlung {
 			For LNr, line in TLines {
+
 				If !RegExMatch(line, rxDateStr, D)
 					continue
-				DDatum1 := DateValidator(DDatum1)
-				DDatum2 := DateValidator(DDatum2)
+
+				DDatum1 := DateValidator(DDatum1, A_YYYY)
+				DDatum2 := DateValidator(DDatum2, A_YYYY)
+
+			; prüft ob die Daten Geburtstage sind
+				For PatID, Pat in names {
+					If (Pat.Gd = Datum1)
+						Datum1 := ""
+					If (Pat.Gd = Datum2)
+						Datum2 := ""
+					If (StrLen(Datum1 Datum2) = 0)
+						break
+				}
+				If (StrLen(Datum1 Datum2) = 0)
+					continue
+				If (StrLen(Datum1) = 0) && (StrLen(Datum2) > 0)
+					Datum1 := Datum2, Datum2 := ""
+
+			; Datumstring(s) speichern
 				saveDate := DDatum1 (DDatum2 ? "-" DDatum2 : "")
+				SciTEOutput(" B2: " saveDate)
 				If !DocDates.Behandlung.HasKey(saveDate)
 					DocDates.Behandlung[saveDate] := {"fLine":[LNr], "dcount":1}
 				else {
@@ -563,11 +585,31 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 	; Erstellungsdatum des Dokumentes
 		For RxStrIndex, rxDateStr in rxDokDatum {
 			For LNr, line in TLines {
+
 				If !RegExMatch(line, rxDateStr, D)
 					continue
-				DDatum1 := DateValidator(DDatum1)
-				DDatum2 := DateValidator(DDatum2)
+
+				DDatum1 := DateValidator(DDatum1, A_YYYY)
+				DDatum2 := DateValidator(DDatum2, A_YYYY)
+				SciTEOutput(" D: " DDatum1 ", " DDatum2)
+
+			; prüft ob die Daten Geburtstage sind
+				For PatID, Pat in names {
+					If (Pat.Gd = Datum1)
+						Datum1 := ""
+					If (Pat.Gd = Datum2)
+						Datum2 := ""
+					If (StrLen(Datum1 Datum2) = 0)
+						break
+				}
+				If (StrLen(Datum1 Datum2) = 0)
+					continue
+				If (StrLen(Datum1) = 0) && (StrLen(Datum2) > 0)
+					Datum1 := Datum2, Datum2 := ""
+
+			; Datumstring(s) speichern
 				saveDate := DDatum1 (DDatum2 ? "-" DDatum2 : "")
+				SciTEOutput(" D: " saveDate)
 				If !DocDates.Dokument.HasKey(saveDate) {
 					DocDates.Dokument[saveDate] := {"fLine":[LNr], "dcount":1}
 				}
@@ -648,15 +690,6 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 			SciTEOutput("  " (DocDates.Behandlung.Count() - retDates.Behandlung.Count()) " Behandlungstage wurde(n) aussortiert!")
 
 	;}
-
-	; Rückgabe Objekt auf Geburtsdaten prüfen und diese entfernen
-		;~ If IsObject(names) {
-			;~ tmp := Array()
-			;~ For PatID, Pat in names {
-				;~ For DateIdx, date in retDates.Behandlung
-					;~ If (PatID <> admDB.MatchID("gd", date))
-			;~ }
-		;~ }
 
 return retDates
 }

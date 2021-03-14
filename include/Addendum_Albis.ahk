@@ -26,7 +26,7 @@ return
 ;
 ;        - keine Wartezeit nach Funktionsende 	 - 	nachdem eine Automatisierungsfunktion beendet ist, ist kein sleep Befehl notwendig um auf Fenster oder anderes zu warten
 ;                                                        			  	Die nächsten Befehle können unmittelbar erfolgen.
-;                                                                	    Es ist nicht nötig die Dauer eines sleep-Befehles innerhalb einer Funktion zu ändern !!
+;                                                                	    Es ist nicht unbedingt notwendig die Dauer eines sleep-Befehles innerhalb einer Funktion zu ändern !!
 ;                                                        			  	Die Zeiten haben ich durch tägliche Nutzung meiner Skripte im Laufe der Jahre optimiert. In meiner Praxis gibt es schnelle sowie
 ;                                                                  	  	auch langsame Computer. Auf allen funktioniert das Timing der Skripte gut.
 ;

@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                                                                       	ADDENDUM HAUPTSKRIPT
-global                                                                               AddendumVersion:= "1.52" , DatumVom:= "13.03.2021"
+global                                                                               AddendumVersion:= "1.53" , DatumVom:= "14.03.2021"
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                    ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . . . . . . .                                           BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -17,22 +17,9 @@ global                                                                          
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 /*               	A DIARY OF CHANGES
-| **13.03.2020** | **F~**    | **Addendum**           	- 	der Auto-Neustart des Skriptes setzt wieder das Albis-Programmdatum auf das aktuelle Datum
-																					-	der Dialog 'Labor Anzeigegruppen' wird abgefangen um die Steuerelemente zu vergrößern  |
-| **10.03.2020** | **F+**    | **Laborabruf_iBWC**   	- 	Laborabruf wartet das Öffnen des Laborbuches ab und löst dann 'alle übertragen' aus. Addendum übernimmt dann die
-									    												Übertragung ins Laborblatt.
-										     											Voraussetzung ist, das bei Albis unter Optionen/Labor im Reiter Import bei 'Laborbuch nach Import automatisch öffnen'
-											      										ein Häkchen gesetzt ist und das in Addendum die Einstellung Laborabruf automatisieren ebenso abgehakt ist.
-												     									Anmerkung: 	Das Übertragen der Werte in das Laborblatt wird in einigen Fällen nicht komplett erfolgen können.
-													    													Einige seltene Dialogfenster sind noch nicht erfasst und automatisiert worden durch mich.  |
-| **10.03.2020** | **F~** | **Infofenster**           	- 	RPA des Sumatra Readers funktioniert jetzt tadellos. Funktionen optimiert und fehlerhafte Listviewzugriff behoben. |
-| **03.03.2020** | **F~** | **Laborjournal**        	- 	es wurden mehr Parameter im Labor angezeigt als eingestellt, korrigiert |
+| **14.03.2020** | **F+~** | **Laborjournal**        	- 	es wurden mehr Parameter im Labor angezeigt als eingestellt war <br>
+																				-	Zeigt die Laborwerte der letzten n Werktage an. Es kommt somit immer eine feste Anzahl an Tagen zur Darstellung. <br>**Addendum V1.53**|
 
-| **11.03.2020** | **F~** | **Addendum_Albis**     	- 	**AlbisKeineChipkarte()**<br>zum schnellen Schließen des Dialoges: "Patient hat in diesem Quartal seine Chipkarte noch
-																					nicht vorgezeigt"<br>
-																					**AlbisNeuerSchein()**<br>1. Teil von Funktionen zum Anlegen eines neuen Abrechnungsscheines. AlbisNeuerSchein öffnet
-																					und schließt das Fenster
-																					**AlbisResizeLaborAnzeigegruppen()**<br>Funktion erweitert die Listboxsteuerelemente im Dialog 'Labor Anzeigegruppen' |
 
 	CGM_ALBIS DIENST Service SID:                    	S-1-5-80-845206254-3503829181-3941749774-3351807599-4094003504
 	CGM_ALBIS_BACKGROUND_SERVICE_(6002) 	S-1-5-80-4257249827-193045864-994999254-1414716813-2431842843

@@ -21,21 +21,21 @@
 		labbuch   	:= new DBASE(basedir "\LABBUCH.dbf", 4)
 		res        	:= labbuch.OpenDBF()
 		matches 	:= labbuch.GetFields("GetAll")
+
 		FileOpen(A_Temp "\labbuch.json", "w", "UTF-8").Write(JSON.Dump(matches,,1))
 
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 	; 2.Zeit - Dauer des Zählens
 	;-------------------------------------------------------------------------------------------------------------------------------------------
-
-		objSize1 	:= labbuch.GetCapacity()
 		duration	:= A_TickCount - starttime
+
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 	; Ausgabe in Scite
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 		t := " records count:     `t"   	labbuch.record                                                 	"`n"
 		t .= " entrys found:        `t" 	matches.Count()                                            	"`n"
 		t .= " Duration all:         `t" 	Round(duration  / 1000, 2) 	" seconds"            	"`n"
-		t .= " records/second:    `t" 	Round(recCount / (duration/1000))                	"`n"
+		t .= " records/second:    `t" 	Round(labbuch.record/(duration/1000))           	"`n"
 		t .= " ---------------------------------------------------------------------------------"     	"`n"
 
 		SciTEOutput(RTrim(t, "`n"))

@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                            	Funktionen für die Berechnung/Umwandlung von Tagesdaten, Quartalsdaten
-;                                                            	by Ixiko started in September 2017 - last change 02.03.2021 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 14.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; Datum berechnen
@@ -218,6 +218,8 @@ QuartalTage(Quartal) {                                                          
 				    							2a) .TFormat: 	YYYYMMDD o. DDMMYYYY - dies vermittelt die Reihenfolge des Zahlenformates
 					    												DBASE ist als Wert auch möglich und entspricht dann YYYYMMDD
 
+			letzte Änderung: 14.03.2020
+
 	 */
 
 		If !IsObject(Quartal) && (Quartal != "aktuell")	{
@@ -276,33 +278,25 @@ QuartalTage(Quartal) {                                                          
 		}
 
 		Quartal.Monat       	:= Object()
-
-		; erster Monat
-		Quartal.MBeginn    	:= SubStr("0" (Quartal.Quartal - 1) * 3 + 1	, -1)
-		; letzter Monat
-		Quartal.MEnde      	:= SubStr("0" Quartal.MBeginn + 2            	, -1)
-		; erster Tag im Quartal
-		Quartal.TDBeginn	   	:= "01." SubStr("0" Quartal.MBeginn, -1) "." Quartal.Jahr
-		; letzter Tag im Quartal
-		Quartal.TDEnde       	:= DaysInMonth(Quartal.Jahr Quartal.MEnde) "." Quartal.MEnde "." Quartal.Jahr
-
-		Loop 3 {
+		Quartal.MBeginn    	:= SubStr("0" (Quartal.Quartal - 1) * 3 + 1	, -1)                                                	; erster Monat
+		Quartal.MEnde      	:= SubStr("0" Quartal.MBeginn + 2            	, -1)                                                	; letzter Monat
+		Quartal.TDBeginn	   	:= "01." SubStr("0" Quartal.MBeginn, -1) "." Quartal.Jahr                                    	; erster Tag im Quartal
+		Quartal.TDEnde       	:= DaysInMonth(Quartal.Jahr Quartal.MEnde) "." Quartal.MEnde "." Quartal.Jahr	; letzter Tag im Quartal
+		Loop 3 {                                                                                                                                            	; je Quartal Tage und Wochen, Monatsname
 
 			dsim     	:= DaysInMonth(Quartal.Jahr (Quartal.MBeginn - A_Index + 1))
 			dsgesamt	+= dsim
 			wochen		:= Round(dsim/7)
 			wogesamt	+= wochen
-			FormatTime, NameLang, % (Quartal.MBeginn - A_Index + 1)	, MMMM
-			FormatTime, NameKurz, % (Quartal.MBeginn - A_Index + 1)	, MMM
+			FormatTime, NameLang	, % (Quartal.MBeginn - A_Index + 1)	, MMMM
+			FormatTime, NameKurz 	, % (Quartal.MBeginn - A_Index + 1)	, MMM
 			Quartal.Monat.Push({"Tage":dsim, "Wochen":wochen, "NameLang":NameLang, "NameKurz":NameKurz})
 
 		}
-
-		Quartal.Tage        	:= dsgesamt
-		Quartal.Wochen      	:= wogesamt
-		; kann auch als timestamp genutzt werden (YYYYMMDD-Format)
-		Quartal.DBaseStart  	:= Quartal.Jahr Quartal.MBeginn "01"
-		Quartal.DBaseEnd   	:= Quartal.Jahr Quartal.MEnde Quartal.Monat.1.Tage
+		Quartal.Tage        	:= dsgesamt                                                                                                      	; Anzahl der Tage im Quartal
+		Quartal.Wochen      	:= wogesamt                                                                                                       	; Anzahl der Wochen im Quartal
+		Quartal.DBaseStart  	:= Quartal.Jahr Quartal.MBeginn "01"                                                                	; erster Tag im DBase-Format (yyyyMMdd)
+		Quartal.DBaseEnd   	:= Quartal.Jahr Quartal.MEnde Quartal.Monat.3.Tage                                      	; letzter Tag im DBase-Format (yyyyMMdd)
 
 return Quartal
 }
@@ -330,7 +324,46 @@ Vorquartal(Datum, retFormat:="YYYYQ") {                                         
 return retStr
 }
 
-DateValidator(dateString) {                                                                                   		;-- prüft per RegEx ob der String ein gültiges Datum enthält
+DateValidator(dateString, interpolateCentury:="") {                                             		;-- prüft String auf enthaltenes Datum
+
+	/*  	DateValidator() by Ixiko 2021
+
+			* die Funktion ist für den Abgleich/Überprüfung von OCR-Texten geschrieben worden
+
+			erkennt ein Datum in deutscher Schreibweise:
+
+				dd[.,;:]\s*(Monatsname lang|Montagsname kurz|MM)[.,;:]*\s+(yy|yyyy)  / Jahr 2 oder 4 stellig
+				z.B. 12.Dezember 2020, 12. Dez. 20, 12.12.2020 oder 12.12.20
+				die RegEx Strings habe ich auf einer Internetseite gefunden und sind in der Lage völlig falsche Tageszahlen zu erkennen
+				oder besser auszuschließen. Ein Datum wie 32.04.2021 wird nicht als Datum erkannt.
+
+			Rückgabewert:
+
+				ein Datum der Schreibweisen Tageszahl.Monatsname.Jahreszahl wird in ein reines "Zahlen"-Datum umgewandelt
+				aus dem 12.Dezember 2020 wird der 12.12.2020
+
+			optionale Änderung:
+
+				2-stellige Jahreszahlen können in 4-stellige Jahrezahlen umgerechnet werden, wenn der Parameter:
+				interpolateCentury (ipolC) einen Integerwert enthält. Die Funktion prüft diesen Wert nicht auf Plausibilität.
+				Nimmt also jeden Wert entgegen. Ausserdem wird die optionale Änderung nur für 2-stellige DateStr Jahreszahlen
+				ausgeführt.
+
+				Es wird das Jahr des validierten Strings wird mit dem ipolC Jahr verglichen.
+				Dabei kommt es auf die Länge (Anzahl der Stellen) des ipoLC Jahres an!
+
+				Zweistellige valStr Daten werden in 4 stellige Daten umgewandelt, wenn ipolC vier Stellen hat.
+				Es wird nur interpoliert wenn ipolC mindestens eine Stelle mehr als der dateStr besitzt.
+				z.B. dateString = 12.12.20 und interpolateCentury = 2021 ergibt den 12.12.2020, übergibt man
+				interpolateCentury = 2019 ergibt dies den 12.12.1920. Es wird davon ausgegangen das es sich nicht um ein Datum
+				in der Zukunft handelt.
+
+				Was wird für interpolateCentury = 219 berechnet?
+				Antwort: der 12.12.120
+
+			**letzte Änderung: 14.03.2021
+
+	 */
 
 	; RegEx Strings
 		static global rxMonths:=	"Jan*u*a*r*|Feb*r*u*a*r*|Mä*a*rz|Apr*i*l*|Mai|Jun*i*|Jul*i*|Aug*u*s*t*|Sept*e*m*b*e*r*|Okt*o*b*e*r*|Nov*e*m*b*e*r*|Deze*m*b*e*r*"
@@ -340,8 +373,9 @@ DateValidator(dateString) {                                                     
 
 	; OCR Korrektur ausführen und erste Evaluierung (Format ist korrekt) durchführen
 		dateString := RegExReplace(Trim(dateString), rxDateOCRrpl, ".")
-		If !RegExMatch(dateString, rxDateValidator[1], d) && !RegExMatch(dateString, rxDateValidator[2], d)
-			return
+		If !RegExMatch(dateString, rxDateValidator[1], d)
+			If !RegExMatch(dateString, rxDateValidator[2], d)
+				return
 
 	; geschriebenen Monat in Zahl umwandeln
 		If RegExMatch(dM, "(" rxMonths ")") {
@@ -351,7 +385,48 @@ DateValidator(dateString) {                                                     
 			dM := nrMonth
 		}
 
+	; das Jahrhundert interpolieren
+		If RegExMatch(interpolateCentury, "^\d+$") && (StrLen(interpolateCentury) > StrLen(dY)) && (StrLen(dY) = 2) {
+
+			refYear 	:= SubStr(interpolateCentury, -1)	; die letzten 2 Stellen
+			refCentury	:= SubStr(interpolateCentury, 1, StrLen(interpolateCentury) - 2)
+			dY          	:= (dY < refYear ? refCentury-1 : refCentury) dY
+
+		}
+
 return SubStr("0" dD, -1) "." SubStr("0" dM, -1) "." dY	; Rückgabe immer im Format dd.mm.yy oder dd.mm.yyyy
+}
+
+WeekDayNr(wday) {                                                                                              	;-- Wochentag als Zahl
+
+	; wday - Zahl oder Kurzname des Wochentages
+
+	static WDays := ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
+	If RegExMatch(wday, "i)^[a-z]+$") {
+		For wdNr, day in WDays
+			If (day = wday)
+				return wdNr
+	} else {
+
+		return WDays[wDay]
+	}
+
+return
+}
+
+GetWeekday(dateStr, format:="dd.mm.YYYY") {                                                     	;-- Name des Wochentages vom übergebenen Datum
+
+	; jNizM Funktion modifiziert
+	; festes Format wird vorausgesetzt!
+
+	dates := StrSplit(dateStr, ".")
+    d := dates.1, m := dates.2, y := dates.3
+    if (m < 3)  {
+        m += 12
+        y -= 1
+    }
+    wd := mod(d + (2 * m) + floor(6 * (m + 1) / 10) + y + floor(y / 4) - floor(y / 100) + floor(y / 400) + 1, 7) + 1
+    return WeekDayNr(wd)
 }
 
 

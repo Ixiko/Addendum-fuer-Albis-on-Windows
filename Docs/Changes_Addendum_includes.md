@@ -6,6 +6,10 @@
 
 |     Datum      |  Teil   | Beschreibung                                                 |
 | :------------: | :-----: | :----------------------------------------------------------- |
+| **14.03.2020** | **F+** | <u>**Addendum_Datum**</u><br>- hat mehrere neue Funktionen erhalten |
+|  | **F+** | <u>**Addendum_Mining**</u><br>- Verbesserte Datumauswertung. Daten die Patienten Geburtstage sind werden aussortiert. |
+| **13.03.2020** | **F~** | **<u>Addendum_DBase</u>**<br>- **SearchExt()** - hat Callback Funktionalität erhalten, Fehlerbehebung beim Stringvergleich |
+| **11.03.2020** | **F~** | **<u>Addendum_Albis</u>**<br>-**AlbisKeineChipkarte()**<br>zum schnellen Schließen des Dialoges: "Patient hat in diesem Quartal seine Chipkarte noch nicht vorgezeigt"<br>**AlbisNeuerSchein()**<br>1. Teil von Funktionen zum Anlegen eines neuen Abrechnungsscheines. AlbisNeuerSchein öffnet und schließt das Fenster<br>**AlbisResizeLaborAnzeigegruppen()**<br>Funktion erweitert die Listboxsteuerelemente im Dialog 'Labor Anzeigegruppen' |
 | **01.03.2021**	|	**F+**	| <u>**Addendum_Mining**</u><br>- Verbesserung der Erkennung des Dokumentdatums<br>- Validierung des Datumformats und Umwandlung eines geschriebenen Datums |
 | **28.02.2021**	|	**F~**	| <u>**AlbisReanimator**</u><br>- weitere Albisprozesse der Erkennungsroutine hinzugefügt<br>- zweiten Befehl für das Beenden von Prozessen hinzugefügt<br>- das Skript führt auf Wunsch zu Dokumentationszwecken eine Logdatei mit den Namen und der Anzahl dergeschlossenen Prozesse **Addendum V1.52** |
 | **27.02.2021**	|	**F+**	| **<u>Addendum_Exporter</u>**<br>- Fortschrittsanzeige verbessert |

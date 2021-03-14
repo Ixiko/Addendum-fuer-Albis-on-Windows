@@ -1,8 +1,8 @@
 ![Addendum.png](assets/AddendumLogo2021.png)
 #### Extends the possibilities through surface analysis and manipulation
 
-### preRelease Version 1.52 vom 02.03.2021
-lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.32+ Unicode 64bit*,
+### preRelease Version 1.53 vom 14.03.2021
+lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.33+ Unicode 64bit*,
 geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ![Trenner](Docs/TrennerExtraBreit.png)
@@ -18,7 +18,7 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ### &#10042; wichtigste Neuerung: Addendum hat Zugriff auf Albis Datenbanken
 
-​		<u>die folgenden Module sind deshalb möglich geworden</u>:<br>
+​		<u>Module mit Datenbankzugriff</u>:<br>
 
 - Laborjournal
 
@@ -36,7 +36,7 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ### &#10042; weitere Funktionen
 
-- medizinische Berechnungen, Karteikartenexport (besser als das was die Compugroup anbietet!), automatischer Laborabruf, ein übersichtlicheres Laborjournal, Faxanhänge aus Albis extrahieren, Albis reanimieren und ein bißchen mehr
+- medizinische Berechnungen, Karteikartenexport (besser als das was die Compugroup anbietet!), automatischer Laborabruf,  Faxanhänge aus Outlook extrahieren, Albis reanimieren und ein bißchen mehr
 
 
 
@@ -148,11 +148,14 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ###  &#9733; Laborjournal
 
-- schnelle Übersicht auffälliger Laborwerte der letzten Tage
+- schnelle Übersicht auffälliger Laborwerte der letzten Werk*tage (\*neu seit V1.53) 
 
 ###  &#9733; Laborabruf
 
-- zeitgesteuerter Abruf von Labordaten mit anschliessendem Import in das Laborblatt der Patienten. Die Uhrzeiten des Abrufs können selbst festgelegt werden.
+- zeitgesteuerter Abruf von Labordaten mit anschliessendem Import in das Laborblatt der Patienten. Die Uhrzeiten des Abrufs können selbst festgelegt werden. 
+
+### &#9733; Laborimport
+- fast vollständig automatisierter Importvorgang neuer Laborwerte ins Laborblatt der Patienten
 
 ###  &#9733; Outlook Anhänge extrahieren
 
@@ -243,17 +246,17 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
 
     - **Kopie** bei ***lp*** als aktivem Kürzel oder in der Privatabrechnung eingeben. Es öffnet sich ein Fenster das sie nach der Anzahl der Kopien fragt. Nach Eingabe von z.B. 38 Seiten wird der Text so erweitert: ***(sach:Kopien 38x a 50 cent:19.00)***
 
-        | Hotstring                               | Erweiterung                                             |
-        | --------------------------------------- | ------------------------------------------------------- |
-        | **JVEG**, **sozialgericht**             | (sach:Anfrage Sozialgericht gem. JVEG:21.00)            |
-        | **lageso**                              | (sach:Landesamt für Gesundheit und Soziales:21.00)      |
-        | **lagesokurz**                          | (sach:Landesamt für Gesundheit und Soziales:5.00)       |
-        | **Rentenversich**, **RLV** oder **DRV** | (sach:Anfrage Rentenversicherung:28.20)                 |
-        | **Bundesa** oder **Agentur**            | (sach:Anfrage Bundesagentur für Arbeit gem. JVEG:32.50) |
-        | **porto1**                              | (sach:Porto Standard:0.80)	; bis 20g                 |
-        | **porto2**                              | (sach:Porto Kompakt:0.95) 	; bis 50g                 |
-        | **porto4**                              | (sach:Porto Groß:1.55)      	; bis 500g              |
-        | **porto4**                              | (sach:Porto Maxi:2.70)       	; bis 1000g            |
+        | Hotstring                              | Erweiterung                                             |
+        | -------------------------------------- | ------------------------------------------------------- |
+        | **JVEG**/**sozialgericht**             | (sach:Anfrage Sozialgericht gem. JVEG:21.00)            |
+        | **lageso**                             | (sach:Landesamt für Gesundheit und Soziales:21.00)      |
+        | **lagesokurz**                         | (sach:Landesamt für Gesundheit und Soziales:5.00)       |
+        | **Rentenversich**/**RLV** oder **DRV** | (sach:Anfrage Rentenversicherung:28.20)                 |
+        | **Bundesa** oder **Agentur**           | (sach:Anfrage Bundesagentur für Arbeit gem. JVEG:32.50) |
+        | **porto1**/**Standard**                | (sach:Porto Standard:0.80)	; bis 20g                 |
+        | **porto2**/**Kompakt**                 | (sach:Porto Kompakt:0.95) 	; bis 50g                 |
+        | **porto3**/**Groß**                    | (sach:Porto Groß:1.55)      	; bis 500g              |
+        | **porto4**/**Maxi**                    | (sach:Porto Maxi:2.70)       	; bis 1000g            |
 
     
 

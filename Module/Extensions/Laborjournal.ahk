@@ -17,7 +17,7 @@
 ;		Abhängigkeiten:	siehe includes
 ;
 ;	                    			Addendum für Albis on Windows
-;                        			by Ixiko started in September 2017 - last change 13.03.2021 - this file runs under Lexiko's GNU Licence
+;                        			by Ixiko started in September 2017 - last change 14.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; Einstellungen
@@ -45,15 +45,15 @@
 	adm.Ini              	:= AddendumDir "\Addendum.ini"
 	adm.DBPath      	:= AddendumDir "\logs'n'data\_DB"
 	adm.AlbisDBPath 	:= AlbisPath "\DB"
-	adm.compname	:= StrReplace(A_ComputerName, "-")                                                         	; der Name des Computer auf dem das Skript läuft
+	adm.compname	:= StrReplace(A_ComputerName, "-")                                                                 	; der Name des Computer auf dem das Skript läuft
 
   ; hier alle Parameter eintragen welche gesondert verarbeitet werden sollen
-	Warnen	:= {	"nie"      	: 	"CHOL,LDL,TRIG,HDL,LDL/HD,HBA1CIFC"                                  	; nie      	= werden nie gezeigt
-						,	"immer" 	: 	"NTBNP,TROPI,TROPT,TROP,CKMB,K"                                         	; immer 	= wenn pathologisch
-						,	"exklusiv"	: 	"COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,COVMU501,"     	; exklusiv 	= zeigen auch wenn kein ausgeprägtes path. Ergebnis
-											.	"ALYMP,ALYMPDIFF,ALYMPH,ALYMPNEO,ALYMPREA,ALYMPRAM," 	;					und bei negativem Befund (z.B. COVIA, HIV)
-											. 	"KERNS,MYELOC,PROMY,DIFANISO,DIFPOLYC,DIFPOIKL,DIFHYPOC,DIFMIKRO,METAM,"
-											.	"TROPOIHS,DDIM-CP,HBK-ST,HIV"}
+	Warnen	:= {	"nie"      	: 	"CHOL,LDL,TRIG,HDL,LDL/HD,HBA1CIFC"                                                 	; nie      	= werden nie gezeigt
+						,	"immer" 	: 	"NTBNP,TROPI,TROPT,TROP,CKMB,K"                                                        	; immer 	= wenn pathologisch
+						,	"exklusiv"	: 	"COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,COVMU501,COVM6970,"  	; exklusiv 	= zeigen auch wenn kein ausgeprägtes path. Ergebnis
+											.	"ALYMP,ALYMPDIFF,ALYMPH,ALYMPNEO,ALYMPREA,ALYMPRAM,"               	;					und bei negativem Befund (z.B. COVIA, HIV)
+											. 	"KERNS,MYELOC,PROMY,DIFANISO,DIFPOLYC,DIFPOIKL,"
+											.	"DIFHYPOC,DIFMIKRO,METAM,TROPOIHS,DDIM-CP,HBK-ST,HIV"}
 
   ; Laborjournal anzeigen
 	LabPat     := AlbisLaborJournal("", "", Warnen, 110, false)
@@ -76,7 +76,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GW=100, Anzeige=true) {            
 	/*  Parameter
 
 		Von       	-	Anfangsdatum, leerer String oder Zahl
-							die Zahl steht für die Anzahl der Werktage die rückwärtig vom aktuellem Tagesdatum angezeigt werden soll
+							eine Zahl als Wert wird als Anzahl der Werktage die rückwärtig vom aktuellem Tagesdatum angezeigt werden soll gewertet
 		Bis         	-	Enddatum oder leer
 
 	*/
@@ -98,26 +98,41 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GW=100, Anzeige=true) {            
 	;}
 
 	; Suchzeitraum ;{
-		RegExMatch(Von, "^\d+$", Tage)
-		If Tage
-			Von := ""
 
-		If !Von && !Bis {
+		; Von enthält kein Datum
+			RegExMatch(Von, "^\d+$", Tage)
+			Von 	:= Tage ? "" : Von
+			Bis 	:= Tage ? "" : Bis
 
-			Tage	:= Tage ? Tage : 30
-			Von 	:= A_YYYY . A_MM . A_DD
-			If A_DDD in Fr,Do								; #### Wochenenden herausrechnen
-				Von += -1*Tage, Days
+		; es werden Werktage berechnet
+			If !Von && !Bis {
+
+				Tage	    	:= Tage ? Tage : 14                            	; kein Zeitraum, Defaulteinstellung sind 14 Tage
+				Von      	:= A_YYYY . A_MM . A_DD                	; aktueller Tag
+
+			; Zahl der Tage berechnen, welche kein Werktag sind
+				Wochen 	:= Floor(Tage/7)                               	; Tage in ganze Wochen umrechnen
+				RestTage	:= Tage-Wochen*7                            	; verbliebene Resttage
+				NrWTag	:= WeekDayNr(A_DDD)                		; Nr. des Wochentages
+				WMod  	:= Mod(NrWTag-RestTage+1, 7)			; Divisonrest = Nummer des Wochentages minus berechnete RestTage + 1 durch 7
+				PDays   	:= WMod = 0 ? 1 : WMod < 0 ? 2 : 0	; Divisonrest = 0 wäre Sonntag +1 Tag, < 0 alle Tage vor Sonntag also +2 Tage
+				PDays   	:= PDays + Wochen*2                       	; + die Zahl der Wochenendtage der ganzen Wochen
+				PDaysW	:= Floor(PDays/7)                               	; mehr als 7 Tage ist mindestens ein Wochende enthalten
+				DaysPlus	:= PDays + 2*PDaysW + Tage
+				Von      	+= -1*(DaysPlus), Days
+				Von 	    	:= SubStr(Von, 1, 8)
+
+				ViewStart 	:= FormatDate(Von, "YMD", "dd.MM.yyyy")
+				WTag    	:= GetWeekDay(ViewStart)
+				LabJ.Tagesanzeige :=  "ab " WTag ", " StrReplace(ViewStart, A_YYYY) " (" Tage " Werktage)"
+
+				FormatTime, Von, % Von, yyyyMMdd
+				QJ	:= A_YYYY . Ceil(A_MM/3)
+				VB	:= "Von"
+
+			}
 			else
-				Von += (-1*Tage)-2, Days
-
-			FormatTime, Von, % Von, yyyyMMdd
-			QJ	:= A_YYYY . Ceil(A_MM/3)
-			VB	:= "Von"
-
-		}
-		else
-			VB := (Von && !Bis) ? "Von" : (!Von && Bis) ? "Bis" : "VonBis"
+				VB := (Von && !Bis) ? "Von" : (!Von && Bis) ? "Bis" : "VonBis"
 	;}
 
 	; Albis: Datenbank laden und entsprechend des Datums die Leseposition vorrücken ;{
@@ -622,32 +637,35 @@ LaborJournal(LabPat, Anzeige=true) {
 			<style>
 
 			header {
-			  width: 100`%;
-			  display: flex;
-			  background: #6e6c6c;
-			  font-family: Segoe UI;
-			  font-size: 90`%;
+				width:        	100`%;
+				display:       	flex;
+				background: #6e6c6c;
+				font-family: 	Segoe UI;
+
+				margin:     	0;
+				padding:    	0;
 			}
 
 			.title-bar {
-			  font-family: Segoe UI;
-			  padding: 0.35em 0.5em;
-			  flex-grow: 1;
-			  font-size: 90`%;
+				overflow: hidden;
+				font-family: Segoe UI;
+				flex-grow: 1;
+				font-size: 100`%;
 			}
 
 			.title-txt {
-				width: 50 px;
-				 font-size: 30`%;
-				 vertical-align: bottom;
+				font-family: Segoe Script;
+				color:#D9D8D8;
+				margin-top:2px;
+				vertical-align: center;
 			}
 
 			.title-btn {
-			  padding: 0.35em 1.0em;
-			  cursor: pointer;
-			  vertical-align: bottom;
-			  font-family: Webdings;
-			  font-size: 11pt;
+				padding: 0.35em 1.0em;
+				cursor: pointer;
+				vertical-align: bottom;
+				font-family: Webdings;
+				font-size: 11pt;
 			}
 
 			.title-btn:hover {
@@ -656,6 +674,44 @@ LaborJournal(LabPat, Anzeige=true) {
 
 			.title-btn-close:hover {
 			  background: #dc3545;
+			}
+
+			.title-menu {
+				float:left;
+				cursor: pointer;
+				vertical-align: bottom;
+				font-family: Segoe Script;
+				font-size: 10pt;
+				background: #999898;
+				padding-left:12px;
+				padding-right:12px;
+				margin-bottom:1px;
+				margin-top:3px;
+				border-radius: 8px;
+				transition-timing-function: ease-in-out;
+			}
+
+			.title-menu-btn1 {
+				position: absolute;
+				left: 70px;
+			}
+
+			.title-menu-btn2 {
+				position: absolute;
+				left: 194px;
+			}
+
+			.title-menu-btn3 {
+				position: absolute;
+				left: 266px;
+			}
+
+			.title-menu-active {
+				background-color: #70A0A6;
+			}
+
+			.title-menu:hover {
+			  background: #AEACAC;
 			}
 
 			html, body {
@@ -700,7 +756,7 @@ LaborJournal(LabPat, Anzeige=true) {
 
 			th {
 				border: 1px solid #888888;
-				background-color:powderblue;
+				background-image: linear-gradient(#70A0A6, #B0E0E6, #70A0A6);
 				text-align: left;
 				padding: 4px;
 				font-size: 11;
@@ -765,15 +821,21 @@ LaborJournal(LabPat, Anzeige=true) {
 
 		)
 
-		srchdrecords := LTrim(labJ.srchdrecords, "0")
-		dbrecords 	:= labJ.records
+		; background-color:powderblue;
+		srchdrecords  	:= LTrim(labJ.srchdrecords, "0")
+		dbrecords     	:= labJ.records
+		Tagesanzeige	:= LabJ.Tagesanzeige
 		htmlbody =
 		(
-			 <header id="LaborJournal_Header" >
-				<span class='title-bar' onmousedown='neutron.DragTitleBar()'>Laborjournal (Datensätze durchsucht: %srchdrecords%, Datensätze gesamt: %dbrecords%)</span>
-				<span class='title-btn' onclick='neutron.Minimize()'>0</span>
-				<span class='title-btn' onclick='neutron.Maximize()'>1</span>
-				<span class='title-btn title-btn-close' onclick='ahk.LabJournal_Close()'>r</span>
+			 <header id='LaborJournal_Header'>
+				<div class='title-bar' onmousedown='neutron.DragTitleBar()'>[..]</div>
+				<div class='title-menu title-menu-btn1' onclick='neutron.Menu_LabJournal()'>Laborjournal</div>
+				<div class='title-menu title-menu-btn2' onclick='neutron.Menu_LabJ_Suche()'>Suche</div>
+				<div class='title-menu title-menu-btn3' onclick='neutron.Menu_LabJ_Props()'>Einstellungen</div>
+				<div class='title-txt'>%Tagesanzeige%</div>
+				<div class='title-btn' onclick='neutron.Minimize()'>0</div>
+				<div class='title-btn' onclick='neutron.Maximize()'>1</div>
+				<div class='title-btn title-btn-close' onclick='ahk.LabJournal_Close()'>r</div>
 			</header>
 
 			<body>
@@ -1056,6 +1118,7 @@ PatientDBF(basedir, infilter="", outfilter="", debug=0) {                       
 
 return PatDBF
 }
+
 
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -1,6 +1,6 @@
 ﻿
 ;	Beispielskript für die Verwendung von Addendum_DBASE.ahk
-;	konvertiert die komplette Datenbank in einen JSON String
+;	sucht nach einem Parameter (COV**) und zählt positive und negative Befunde
 
 	#NoEnv
 	SetBatchLines, -1
@@ -20,10 +20,10 @@
 		labblatt   	:= new DBASE(basedir "\labblatt.dbf", 4)
 		res        	:= labblatt.OpenDBF()
 		;matches 	:= labblatt.SearchExt({"AUSDATUM":"rx:202103(08|09|10|11|12|13)"}, ["ANFNR", "AUSDATUM", "PARAMBEZ"])
-		;~ matches 	:= labblatt.SearchExt({"PARAM":"rx:COV[A-Z\d-]+"}  ; , "ERG":"POSITIV" ; "DATUM":">20200101",
-													;~ ,  	 ["ANFNR", "EINDATLDT3", "PARAM", "BERICHT", "ERGEBNIS", "BEFUND", "DATUM", "BERZEIT"],,, "MyToolTip")
-		matches 	:= labblatt.SearchExt({"PARAM":"rx:HEPE[A-Z\d-]+"}  ; , "ERG":"POSITIV" ; "DATUM":">20200101",
-													,  	 ["PATNR", "ANFNR", "PARAM", "ERGEBNIS", "BEFUND", "DATUM"],,, "MyToolTip")
+		matches 	:= labblatt.SearchExt({"PARAM":"rx:COV[A-Z\d-]+"}  ; , "ERG":"POSITIV" ; "DATUM":">20200101",
+													,  	 ["ANFNR", "EINDATLDT3", "PARAM", "BERICHT", "ERGEBNIS", "BEFUND", "DATUM", "BERZEIT"],,, "MyToolTip")
+		;~ matches 	:= labblatt.SearchExt({"PARAM":"rx:HEPE[A-Z\d-]+"}  ; , "ERG":"POSITIV" ; "DATUM":">20200101",
+													;~ ,  	 ["PATNR", "ANFNR", "PARAM", "ERGEBNIS", "BEFUND", "DATUM"],,, "MyToolTip")
 
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 	; Treffer nach Anforderungsnummer und Parameterbezeichnung sortieren
@@ -54,8 +54,8 @@
 		}
 
 		FileOpen(A_Temp "\labblatt.json", "w", "UTF-8").Write(JSON.Dump(results,,1,"UTF-8"))
-		FileOpen(A_Temp "\Hepatits E.json", "w", "UTF-8").Write(JSON.Dump(Covids,,1,"UTF-8"))
-		Run, % A_Temp "\Hepatits E.json"
+		FileOpen(A_Temp "\covids.json", "w", "UTF-8").Write(JSON.Dump(Covids,,1,"UTF-8"))
+
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 	; 2.Zeit - Dauer des Zählens
 	;-------------------------------------------------------------------------------------------------------------------------------------------
@@ -101,22 +101,22 @@ MyToolTip(p*) {
 
 LaborParameter() {
 
-		labparam 	:= new DBASE(basedir "\LABPARAM.dbf", 4)
-		res        	:= labparam.OpenDBF()
-		matches 	:= labparam.GetFields("GetAll")
+	labparam 	:= new DBASE(basedir "\LABPARAM.dbf", 4)
+	res        	:= labparam.OpenDBF()
+	matches 	:= labparam.GetFields("GetAll")
 
-		PARAMs := ""
-		Spaces := "                                                                                                                                                                   "
-		For idx, obj in matches
-			PARAMs .= 	obj.NAME 	SubStr(Spaces, 1, Floor(23-StrLen(obj.NAME)*1.3)) 	"`t|`t"
-						 .  	obj.BEZEICH SubStr(Spaces, 1, Floor(71-StrLen(obj.BEZEICH)*1.3))	"`t|`t"
-						 .  	obj.EINHEIT "`n"
+	PARAMs := ""
+	Spaces := "                                                                                                                                                                   "
+	For idx, obj in matches
+		PARAMs .= 	obj.NAME 	SubStr(Spaces, 1, Floor(23-StrLen(obj.NAME)*1.3)) 	"`t|`t"
+					 .  	obj.BEZEICH SubStr(Spaces, 1, Floor(71-StrLen(obj.BEZEICH)*1.3))	"`t|`t"
+					 .  	obj.EINHEIT "`n"
 
-		Sort, PARAMs, U
+	Sort, PARAMs, U
 
-		FileOpen(A_Temp "\labparam.txt", "w", "UTF-8").Write(PARAMs)
-		res        	:= labparam.CloseDBF()
-		;Run, % A_Temp "\labparam.txt"
+	FileOpen(A_Temp "\labparam.txt", "w", "UTF-8").Write(PARAMs)
+	res        	:= labparam.CloseDBF()
+	;Run, % A_Temp "\labparam.txt"
 
 }
 
