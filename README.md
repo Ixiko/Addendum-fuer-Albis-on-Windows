@@ -5,7 +5,9 @@
 ### Version 1.34 vom 08.08.2020
 lauffähig ab *Autohotkey_H V1.1.32.00 Unicode 64bit* , geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
-<img src="Docs\TrennerExtraBreit.png" style="zoom: 67%;" />
+Link zur [preRelease Version V1.5+](https://github.com/Ixiko/Addendum-fuer-Albis-on-Windows/tree/meta) - Tesseract, Hotfolder, Autonaming, Laborjournal, Karteikartenexport ....
+
+![](Docs/TrennerExtraBreit.png)
 
 ### DIES IST KEINE OFFIZIELLE ERWEITERUNG FÜR ALBIS!
 ##### Der Hersteller der Praxissoftware Albis*, die Compugroup AG, hat mit dieser Software nichts zu tun, geschweige denn, wurde diese offiziell durch die CompuGroup AG legitimiert!
