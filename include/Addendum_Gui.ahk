@@ -2281,7 +2281,7 @@ RNProceed:                                       	;{   Datei wird umbenannt, PDF
 
 	; FolderWatch pausieren/alle Dateien umbenennen/FolderWatch fortsetzen
 		newadmfile .= "." FileExt
-		admGui_FWPause(true	, [newadmfile, oldadmfile], 20)    	; FolderWatch pausieren (20s bis zur Wiederherstellung)
+		admGui_FWPause(true	, [newadmfile, oldadmfile], 4)    	; FolderWatch pausieren (20s bis zur Wiederherstellung)
 		row	:= Journal.Replace(oldadmfile	, newadmfile)        	; Journal auffrischen
 		pdf	:= pdfpool.Rename(oldadmfile	, newadmfile)        	; Objektdaten ändern
 		res	:= Befunde.Rename(oldadmfile	, newadmfile)        	; Dateien umbenennen (Original, Backup, Text)
@@ -2720,6 +2720,107 @@ class Befunde                                                                   
 
 		}
 
+
+}
+
+class pdfpool                                                                 	{               	; verwaltet das ScanPool Objekt
+
+	; Abhängigkeiten - Addendum_PdfHelper.ahk
+	; Funktion: Refresh ist ineffektiv!
+
+	; sucht nach Dateinamen im Pool
+		inPool(filename) {
+
+			For docID, PDF in ScanPool
+				If (PDF.name = filename)
+					return docID
+
+		return 0
+		}
+
+	; fügt die PDF-Datei mit allen notwendigen Informationen dem Scanpool hinzu
+	; oder frischt die Metadaten der Datei auf
+		Add(path, filename) {
+
+			If !FileExist(path "\" filename)
+				return
+
+			docID	:= this.inPool(filename)
+			oPDF	:= this.FileMeta(path, filename)
+
+			If !docID
+				ScanPool.Push(oPDF)
+			else
+				ScanPool[docID] := oPDF
+
+		return oPDF
+		}
+
+	; Datei entfernen
+		Remove(filename) {
+			If (docID := this.inPool(filename))
+				return ScanPool.RemoveAt(docID)
+		return
+		}
+
+	; Datei umbenennen
+		Rename(oldfilename, newfilename) {
+			If (docID := this.inPool(oldfilename)) {
+				ScanPool[docID].name := newfilename
+				return ScanPool[docID]
+			}
+		return
+		}
+
+	; Umbenanntes Dokument finden
+		GetUnnamed(StartDocID:=0) {
+
+			For docID, PDF in ScanPool
+				If (docID > StartDocID) && !string.isFullNamed(PDF.name)
+					return PDF
+
+		return
+		}
+
+	; ScanPool komplett leeren
+		Empty() {
+
+			Loop % (mxIdx := ScanPool.MaxIndex())
+				ScanPool.Pop()
+
+		return mxIdx
+		}
+
+	; ScanPool speichern/laden
+		Load(path) {
+			return JSONData.Load(path "\PdfDaten.json", "", "UTF-8")
+		}
+
+		Save(path) {
+			return JSONData.Save(path "\PdfDaten.json", ScanPool, true,, 1, "UTF-8")
+		}
+
+	; + + + + + + + INTERN + + + + + + +
+		FileSize(fullfilepath) {
+			FileGetSize	, FSize, % fullfilepath, K
+		return FSize
+		}
+
+		FileTime(fullfilepath) {
+			FileGetTime	, timeStamp 	, % fullfilepath, C
+			FormatTime	, FileTime     	, % timeStamp, dd.MM.yyyy
+		return {"FileTime" : FileTime, "timeStamp":timeStamp}
+		}
+
+		FileMeta(path, filename ) {
+			file := this.FileTime(path "\" filename)
+			return {	"name"          	: filename
+					, 	"filesize"        	: this.FSize(path "\" filename)
+					, 	"timestamp"    	: file.timeStamp
+					, 	"filetime"        	: file.FileTime
+					, 	"pages"         	: PDFGetPages(path "\" filename, Addendum.PDF.qpdfPath)
+					, 	"isSearchable"	: (PDFisSearchable(path "\" filename) ? 1 : 0 )}
+		}
 
 }
 

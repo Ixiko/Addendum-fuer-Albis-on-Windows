@@ -390,7 +390,7 @@ DateValidator(dateString, interpolateCentury:="") {                             
 
 			refYear 	:= SubStr(interpolateCentury, -1)	; die letzten 2 Stellen
 			refCentury	:= SubStr(interpolateCentury, 1, StrLen(interpolateCentury) - 2)
-			dY          	:= (dY < refYear ? refCentury-1 : refCentury) dY
+			dY          	:= (dY > refYear ? refCentury-1 : refCentury) dY
 
 		}
 

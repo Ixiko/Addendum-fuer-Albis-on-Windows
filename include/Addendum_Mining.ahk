@@ -7,7 +7,7 @@
 ;       Abhängigkeiten:		Addendum_Gui.ahk, Addendum.ahk
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_Calc started:    	14.03.2021
+;       Addendum_Calc started:    	15.03.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -136,6 +136,10 @@ FindDocStrings() {
 	global rxDateOCRrpl		:= "[,;:]"
 	global rxDateValidator	:= [ 	"^(?<D>[0]?[1-9]|[1|2][0-9]|[3][0|1]).(?<M>[0]?[1-9]|[1][0-2]).(?<Y>[0-9]{4}|[0-9]{2})$"
 											,	"^(?<D>[0]?[1-9]|[1|2][0-9]|[3][0|1])[.;,\s]+(?<M>" rxMonths ")[.;,\s]+(?<Y>[0-9]{4}|[0-9]{2})$"]
+
+
+	rxSentence := "[A-Z]\pL.*?\.(?=[\s\n\r]|[A-Z]|$)"
+	rxSatzende := "(?!\pL)\,(?=[\s\n\r]*[A-Z]|$)" ; Komma durch . ersetzen
 
 }
 
@@ -551,20 +555,21 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 
 				DDatum1 := DateValidator(DDatum1, A_YYYY)
 				DDatum2 := DateValidator(DDatum2, A_YYYY)
+				;SciTEOutput(" B1: " DDatum1 " | " DDatum2)
 
 			; prüft ob die Daten Geburtstage sind
 				For PatID, Pat in names {
-					If (Pat.Gd = Datum1)
+					If (Pat.Gd = DDatum1)
 						Datum1 := ""
-					If (Pat.Gd = Datum2)
+					If (Pat.Gd = DDatum2)
 						Datum2 := ""
-					If (StrLen(Datum1 Datum2) = 0)
+					If (StrLen(DDatum1 DDatum2) = 0)
 						break
 				}
-				If (StrLen(Datum1 Datum2) = 0)
+				If (StrLen(DDatum1 DDatum2) = 0)
 					continue
-				If (StrLen(Datum1) = 0) && (StrLen(Datum2) > 0)
-					Datum1 := Datum2, Datum2 := ""
+				If (StrLen(DDatum1) = 0) && (StrLen(DDatum2) > 0)
+					DDatum1 := DDatum2, DDatum2 := ""
 
 			; Datumstring(s) speichern
 				saveDate := DDatum1 (DDatum2 ? "-" DDatum2 : "")
@@ -591,25 +596,25 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 
 				DDatum1 := DateValidator(DDatum1, A_YYYY)
 				DDatum2 := DateValidator(DDatum2, A_YYYY)
-				SciTEOutput(" D: " DDatum1 ", " DDatum2)
+				SciTEOutput(" D1: " DDatum1 ", " DDatum2)
 
 			; prüft ob die Daten Geburtstage sind
 				For PatID, Pat in names {
-					If (Pat.Gd = Datum1)
-						Datum1 := ""
-					If (Pat.Gd = Datum2)
-						Datum2 := ""
-					If (StrLen(Datum1 Datum2) = 0)
+					If (Pat.Gd = DDatum1)
+						DDatum1 := ""
+					If (Pat.Gd = DDatum2)
+						DDatum2 := ""
+					If (StrLen(DDatum1 DDatum2) = 0)
 						break
 				}
-				If (StrLen(Datum1 Datum2) = 0)
+				If (StrLen(DDatum1 DDatum2) = 0)
 					continue
-				If (StrLen(Datum1) = 0) && (StrLen(Datum2) > 0)
-					Datum1 := Datum2, Datum2 := ""
+				If (StrLen(DDatum1) = 0) && (StrLen(DDatum2) > 0)
+					DDatum1 := DDatum2, DDatum2 := ""
 
 			; Datumstring(s) speichern
 				saveDate := DDatum1 (DDatum2 ? "-" DDatum2 : "")
-				SciTEOutput(" D: " saveDate)
+				SciTEOutput(" D2: " saveDate)
 				If !DocDates.Dokument.HasKey(saveDate) {
 					DocDates.Dokument[saveDate] := {"fLine":[LNr], "dcount":1}
 				}
@@ -759,21 +764,6 @@ FindName_BestHit(PatBuf) 													{
 				BestHits[PatID] := {"Nn":Pat.Nn, "Vn":Pat.Vn, "Gd":Pat.Gd}
 
 return BestHits
-}
-
-FindNameNewWay(txt) 														{
-
-	WBuf := Array()
-	txt := RegExReplace(txt, "[\n\r]"   	, " ")
-	txt := RegExReplace(txt, "[\s]{2,}"	, " ")
-	;~ stext := StrSplit(text, " ")
-	;~ For FNIndex, word in sText {
-
-
-	;~ }
-	dates := GetTextDates(txt)
-
-
 }
 
 FindDocOther(Text)                                                       	{                	;-- Kategorisierung von nicht Patientenbriefen

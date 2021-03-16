@@ -19,7 +19,25 @@ global                                                                          
 /*               	A DIARY OF CHANGES
 | **14.03.2020** | **F+~** | **Laborjournal**        	- 	es wurden mehr Parameter im Labor angezeigt als eingestellt war <br>
 																				-	Zeigt die Laborwerte der letzten n Werktage an. Es kommt somit immer eine feste Anzahl an Tagen zur Darstellung. <br>**Addendum V1.53**|
+| **13.03.2020** | **F~**    | **Addendum**           	- 	der Auto-Neustart des Skriptes setzt das Albis-Programmdatum wieder auf das aktuelle Tagesdatum
+																					-	der Dialog 'Labor Anzeigegruppen' wird abgefangen um die Steuerelemente zu vergrößern
+																					-	|
+| **10.03.2020** | **F+**    | **Laborabruf_iBWC**   	- 	Laborabruf wartet das Öffnen des Laborbuches ab und löst dann 'alle übertragen' aus. Addendum übernimmt dann die
+									    												Übertragung ins Laborblatt.
+										     											Voraussetzung ist, das bei Albis unter Optionen/Labor im Reiter Import bei 'Laborbuch nach Import automatisch öffnen'
+											      										ein Häkchen gesetzt ist und das in Addendum die Einstellung Laborabruf automatisieren ebenso abgehakt ist.
+												     									Anmerkung: 	Das Übertragen der Werte in das Laborblatt wird in einigen Fällen nicht komplett erfolgen können.
+													    													Einige seltene Dialogfenster sind noch nicht erfasst und automatisiert worden durch mich.  |
+| **10.03.2020** | **F~** | **Infofenster**           	- 	RPA des Sumatra Readers funktioniert jetzt tadellos. Funktionen optimiert und fehlerhafte Listviewzugriff behoben. |
 
+| **14.03.2020** | **F+** | **Addendum_Datum**  	- 	hat mehrere neue Funktionen erhalten |
+| **14.03.2020** | **F+** | **Addendum_Mining** 	- 	Verbesserte Datumauswertung. Daten die Patienten Geburtstage sind werden aussortiert. |
+| **13.03.2020** | **F~** | **Addendum_DBase**  	- 	**SearchExt()** - hat Callback Funktionalität erhalten, Fehlerbehebung beim Stringvergleich |
+| **11.03.2020** | **F~** | **Addendum_Albis**     	- 	**AlbisKeineChipkarte()**<br>zum schnellen Schließen des Dialoges: "Patient hat in diesem Quartal seine Chipkarte noch
+																					nicht vorgezeigt"<br>
+																					**AlbisNeuerSchein()**<br>1. Teil von Funktionen zum Anlegen eines neuen Abrechnungsscheines. AlbisNeuerSchein öffnet
+																					und schließt das Fenster
+																					**AlbisResizeLaborAnzeigegruppen()**<br>Funktion erweitert die Listboxsteuerelemente im Dialog 'Labor Anzeigegruppen' |
 
 	CGM_ALBIS DIENST Service SID:                    	S-1-5-80-845206254-3503829181-3941749774-3351807599-4094003504
 	CGM_ALBIS_BACKGROUND_SERVICE_(6002) 	S-1-5-80-4257249827-193045864-994999254-1414716813-2431842843
@@ -839,6 +857,8 @@ return ;}
 ; Formulare
 :*:kur::01622                                                                               	; Kurplan, Gutachten, Stellungnahme
 :*:gut::01622                                                                               	; Kurplan, Gutachten, Stellungnahme
+:*:mdk::01622                                                                            	; Kurplan, Gutachten, Stellungnahme
+:*:Muster52::01621                                                                     	; Muster 52
 
 ; Labor und Sonderziffern
 :*:sars::32006-88240                                                                	; COVID19 - Laborbudget und Sonderziffer
@@ -947,11 +967,13 @@ return ;}
 
 return ;}
 :*R:grdia::Infektausschluß, A.v. {J06.9A};Impfung gegen Grippe, 2020/2021 (Influvac Tetra Ch: X17) {Z25.1G};                      	; Influvac Preis
-:*R:covid-19na::COVID-19, Virus nachgewiesen {!U07.1G};
-:*R:covid-19ni::COVID-19, Virus nicht nachgewiesen {!U07.2G};
-:*R:covid19na::COVID-19, Virus nachgewiesen {!U07.1G};
-:*R:covid19ni:: COVID-19, Virus nicht nachgewiesen {!U07.2G};
-:*R:sars::Spezielle Verfahren zur Untersuchung auf SARS-CoV-2 {!U99.0G};Spezielle Verfahren zur Untersuchung auf infektiöse und parasitäre Krankheiten {Z11G};
+:*:covid-19na::COVID-19, Virus nachgewiesen {!U07.1G};{Left 2}{LShift Down}{Left}{LShift Up}
+:*:covid-19ni::COVID-19, Virus nicht nachgewiesen {!U07.2G};{Left 2}{LShift Down}{Left}{LShift Up}
+:*:covid19na::COVID-19, Virus nachgewiesen {!U07.1G};{Left 2}{LShift Down}{Left}{LShift Up}
+:*:covid19ni:: COVID-19, Virus nicht nachgewiesen {!U07.2G};{Left 2}{LShift Down}{Left}{LShift Up}
+:*:covid1::COVID-19, Virus nachgewiesen {!U07.1G};{Left 2}{LShift Down}{Left}{LShift Up}
+:*:covid2::COVID-19, Virus nicht nachgewiesen {!U07.2G};{Left 2}{LShift Down}{Left}{LShift Up}
+:*:sars::Spezielle Verfahren zur Untersuchung auf SARS-CoV-2 {!U99.0G};Spezielle Verfahren zur Untersuchung auf infektiöse und parasitäre Krankheiten {Z11G};
 :*X:sars2::LDSars()
 :*:#ledder::M.Ledderhose, li. {M72.2LG};
 :*:#hiatus h::Hernia diaphragmatica {K44.9G};
@@ -1130,21 +1152,58 @@ return false
 ;}
 ; --- Privatabrechnung                                                                   	;{
 #If WinActive("ahk_class OptoAppClass") && (RegExMatch(AlbisGetActiveControl("contraction"), "lp|lbg") || InStr(AlbisGetActiveWindowType(), "Privatabrechnung"))  ; GOÄ [lp, lpg oder Privatabrechnung]
+; Abstrichentnahme
 :*R:Abstrich1::298-                                                                              	; Entnahme und gegebenenfalls Aufbereitung von Abstrichmaterial zur mikrobiologischen Untersuchung
 :*R:AbstrichRa::298(ltext:Abstrich Rachenraum)-                                     	; Entnahme und gegebenenfalls Aufbereitung von Abstrichmaterial zur mikrobiologischen Untersuchung
 :*R:AbstrichNa::298(ltext:Abstrich Nase)-                                              	; Entnahme und gegebenenfalls Aufbereitung von Abstrichmaterial zur mikrobiologischen Untersuchung
+
+; Beratung
 :*R:Bera1::1(fak:3,5:Beratung < 10 Minuten)-                                     	; Beratung < 10 Minuten
 :*R:Bera2::3(fakt:2,3:Beratung mind. 10 Minuten)-                               	; Beratung mind. 10 Minuten
 :*R:Bera3::3(fakt:3,5:Beratung < 20 Minuten)-                                      	; Beratung < 20 Minuten
 :*R:Bera4::34(fakt:2,3:Beratung, eingehend mindestens 20 Minuten)-  	; Beratung, eingehend mindestens 20 Minuten
+:*R:hb::50(dkm:4)-                                                                               	; Hausbesuch
+:*R:verweil::56-                                                                                  	; Verweilen außerhalb der Praxis
+:*R:zuschl::A-B-C-D-K1                                                                         	; Zuschläge
+:*R:verbale::849-                                                                                 	; verbale Intervention - psychosomatik
+:*R:verband::200-                                                                                	; Verband
+
+; Diagnostik
+:*R:lzRR::654                                                                                    		; Langzeitblutdruckmessung
+:*R:lufu::605                                                                                    		; Lungenfunktion
+:*R:Lungenf::605                                                                              		; Lungenfunktion
+:*R:oxy::602-                                                                                    	; Pulsoxymetrie
+:*R:Pulsoxy::602-                                                                                  	; Pulsoxymetrie
+:*R:sono1::410-420                                                                             	; Ultraschall von bis zu drei weiteren Organen im Anschluss an Nummern 410 bis 418, je Organ. Organe sind anzugeben.
+:*R:sono2::410(organ:Leber)-420(organ:Gb)-420(organ:Niere bds.)     	; Ultraschall mehrere Untersuchungen
+:*R:sonoknie::410(organ:Kniegelenk li.)                                                	; Utraschall Knie
+:*R:sono knie::410(organ:Kniegelenk li.)                                               	; Utraschall Knie
+
+; Labor
 :*R:BA::250-                                                                                       	; Blutabnahme
 :*R:BSG::3501-                                                                                    	; BSG
 :*R:BZ::3560-                                                                                    	; Blutzucker
 :*R:Blutzuc::3560-                                                                                	; Blutzucker
 :*R:glucose::3560-                                                                            	; Blutzucker
 :*R:glukose::3560-                                                                                ; Blutzucker
+:*:sang::3500-                                                                                    	;{ Ausgabe iFOPT Test (Stuhl auf Sanguis)
+:*:Stuhl::3500-                                                                                   	;  Ausgabe iFOPT Test (Stuhl auf Sanguis)
+:*:iFop::3500-                                                                                   	;  Ausgabe iFOPT Test (Stuhl auf Sanguis)
+:*:haemof::3500-                                                                                 ;} Ausgabe iFOPT Test (Stuhl auf Sanguis)
+:*R:stix::3652-                                                                                     	;{ Urinstix
+:*R:streifen::3652-                                                                               	; Urinstix
+:*R:urin::3652-                                                                                   	; Urinstix
+:*R:ustix::3652-                                                                                   	; Urinstix
+:*R:urinstix::3652-					                                                             	;} Urinstix
+
+; körperliche Untersuchung
 :*R:gleichg::826-                                                                               	; neurologische Gleichgewichtsprüfung
-:*R:hb::50(dkm:4)-                                                                               	; Hausbesuch
+:*R:neuro::800-                                                                                    	; eingehende neurologische Untersuchung
+:*R:rekt::11-                                                                                      	; rektale Untersuchung
+:*R:Unters1::7(fakt:2,3)-                                                                    	; Vollständige Untersuchung – ein Organsystem
+:*R:Unters2::7(fakt:3,5)-                                                                    	; Vollständige Untersuchung – mehrere Organsysteme
+
+; Medikamentengabe
 :*R:infil1::267-                                                                                     	; Medikamentöse Infiltrationsbehandlung, je Sitzung
 :*R:infil2::268-                                                                                     	; Medikamentöse Infiltrationsbehandlung im Bereich mehrerer Körperregionen
 :*R:infusion k::271-                                                                              	; Infusion < 30 min
@@ -1156,32 +1215,15 @@ return false
 :*R:inj im::252-                                                                                    	; Injection s.c., i.m., i.c.
 :*R:inj iv::253-                                                                                    	; Injection i.v.
 :*R:inr::3530-                                                                                  		; INR mit Gerät
+:*R:Medik::76(ltext:Erstellung Medikationsplan)                                  		; Medikationsplan
+:*R:Medpl::76(ltext:Erstellung Medikationsplan)                                  		; Medikationsplan
+
+; Impfungen
 :*R:impf::375-                                                                                    	; Impfung GOÄ Ziffer
 :*R:influvac::(sach:Influenzaimpfstoff Influvac: 10.94)                            	; Impfung gegen Grippe Ziffern + Preis für Influvac
 :*R:grlp::1-5-375-(sach:Influenzaimpfstoff Influvac: 10.94)                    	; Impfung gegen Grippe Ziffern + Preis für Influvac
-:*R:lzRR::654                                                                                    		; Langzeitblutdruckmessung
-:*R:lufu::605                                                                                    		; Lungenfunktion
-:*R:Lungenf::605                                                                              		; Lungenfunktion
-:*R:Medik::76(ltext:Erstellung Medikationsplan)                                  		; Medikationsplan
-:*R:Medpl::76(ltext:Erstellung Medikationsplan)                                  		; Medikationsplan
-:*R:neuro::800-                                                                                    	; eingehende neurologische Untersuchung
-:*R:oxy::602-                                                                                    	; Pulsoxymetrie
-:*R:Pulsoxy::602-                                                                                  	; Pulsoxymetrie
-:*R:rekt::11-                                                                                      	; rektale Untersuchung
-:*:sang::3500-                                                                                    	;{ Ausgabe iFOPT Test (Stuhl auf Sanguis)
-:*:Stuhl::3500-                                                                                   	;  Ausgabe iFOPT Test (Stuhl auf Sanguis)
-:*:iFop::3500-                                                                                   	;  Ausgabe iFOPT Test (Stuhl auf Sanguis)
-:*:haemof::3500-                                                                                 ;} Ausgabe iFOPT Test (Stuhl auf Sanguis)
-:*R:sono1::410-420                                                                             	; Ultraschall von bis zu drei weiteren Organen im Anschluss an Nummern 410 bis 418, je Organ. Organe sind anzugeben.
-:*R:sono2::410(organ:Leber)-420(organ:Gb)-420(organ:Niere bds.)     	; Ultraschall mehrere Untersuchungen
-:*R:sonoknie::410(organ:Kniegelenk li.)                                                	; Utraschall Knie
-:*R:sono knie::410(organ:Kniegelenk li.)                                               	; Utraschall Knie
-:*R:Unters1::7(fakt:2,3)-                                                                    	; Vollständige Untersuchung – ein Organsystem
-:*R:Unters2::7(fakt:3,5)-                                                                    	; Vollständige Untersuchung – mehrere Organsysteme
-:*R:verbale::849-                                                                                 	; verbale Intervention - psychosomatik
-:*R:verband::200-                                                                                	; Verband
-:*R:verweil::56-                                                                                  	; Verweilen außerhalb der Praxis
-:*R:zuschl::A-B-C-D-K1                                                                         	; Zuschläge
+
+; Anfragen
 :*R:JVEG::(sach:Anfrage Sozialgericht gem. JVEG:21.00)                     	; Anfrage Sozialgericht
 :*R:sozialgericht::(sach:Anfrage Sozialgericht gem. JVEG:21.00)          	; Anfrage Sozialgericht
 :*R:lasv1::(sach:Landesamt für Soziales u. Versorgung:21.00)               	; Anfrage LaGeSo Schwerbehinderung Normal
@@ -1194,6 +1236,8 @@ return false
 :*R:DRV::(sach:Anfrage Rentenversicherung:28.20)                              	; Anfrage Rentenversicherung
 :*R:Bundesa::(sach:Anfrage Bundesagentur für Arbeit gem. JVEG:32.50)	; Anfrage Rentenversicherung
 :*R:Agentur::(sach:Anfrage Bundesagentur für Arbeit gem. JVEG:32.50) 	; Anfrage Rentenversicherung
+
+; Porto
 :*R:porto0::(sach:Porto Standard:0.60)                                                	; Postkarte
 :*R:Postk::(sach:Porto Standard:0.60)                                                 	; Postkarte
 :*R:porto1::(sach:Porto Standard:0.80)                                                	; Porto bis 20g
@@ -1212,11 +1256,7 @@ return ;}
 :*:reiseunf::(sach:Reiseunfähigkeitsbescheinigung:20.00)                     	;{ Reiseunfähigkeitsbescheinigung
 :*:reiserüc::(sach:Reiseunfähigkeitsbescheinigung:20.00)                    	;} Reiseunfähigkeitsbescheinigung
 :*R:schreib::(sach:Schreibgebühr:3.50)                                                 	; Schreibgebühr
-:*R:stix::3652-                                                                                     	;{ Urinstix
-:*R:streifen::3652-                                                                               	; Urinstix
-:*R:urin::3652-                                                                                   	; Urinstix
-:*R:ustix::3652-                                                                                   	; Urinstix
-:*R:urinstix::3652-					                                                             	;} Urinstix
+
 #If
 ;}
 ; --- Blockeingaben                                                                         	;{
