@@ -2558,10 +2558,11 @@ Menu_WatchFolder:                        	;{
 ;{12. Allgemeine Funktionen
 
 ;Screenshot
-ScreenShotArea() {                                                                                                    	;-- Screenshot subfunktion
+ScreenShotArea(mode:="mouse") {                                                                               	;-- Screenshot
 
 	ListLines, Off
 	DetectHiddenWindows, On
+
 	InputRect(vWinX, vWinY, vWinR, vWinB)
 	vWinW := vWinR-vWinX, vWinH := vWinB-vWinY
 	if (vScrInputRectState = -1)

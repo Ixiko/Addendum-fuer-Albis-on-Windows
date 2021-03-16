@@ -17,7 +17,7 @@
 ;		Abhängigkeiten:	siehe includes
 ;
 ;	                    			Addendum für Albis on Windows
-;                        			by Ixiko started in September 2017 - last change 15.03.2021 - this file runs under Lexiko's GNU Licence
+;                        			by Ixiko started in September 2017 - last change 16.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; Einstellungen
@@ -665,7 +665,7 @@ LaborJournal(LabPat, Anzeige=true) {
 		static TDR2a     	:= "<TD style='text-align:Right;border-bottom:0px'>"
 		static TDR2b     	:= "<TD style='text-align:Right;border-top:0px;border-bottom:0px'>"
 		static TDR3      	:= "<TD class='tooltip' data-tooltip='##' style='text-align:Right'>"                    ; Param
-		static TDC     	:= "<TD style='text-align:Center'>"
+		static TDC     	:= "<TD style='text-align:Right'>"
 		static TDJ      	:= "<TD style='text-align:Justify'>"
 
 		static cCol1   	:= ";color: Red"
@@ -791,7 +791,7 @@ LaborJournal(LabPat, Anzeige=true) {
 			}
 
 			.table-btn1:hover {
-				background: rgba(0, 0, 0, .4);
+				background: rgba(0, 0, 0, .2);
 				cursor: pointer;
 			}
 
@@ -800,7 +800,7 @@ LaborJournal(LabPat, Anzeige=true) {
 			}
 
 			.table-btn2:hover {
-				background: rgba(0, 0, 0, .4);
+				background: rgba(0, 0, 0, .2);
 				cursor: pointer;
 			}
 
@@ -822,7 +822,7 @@ LaborJournal(LabPat, Anzeige=true) {
 
 			th {
 				border: 1px solid #888888;
-				background-image: linear-gradient(#70A0A6, #B0E0E6, #70A0A6);
+				background: #70A0A6;
 				text-align: left;
 				padding: 4px;
 				font-size: 11;
@@ -947,11 +947,13 @@ LaborJournal(LabPat, Anzeige=true) {
 
 		)
 
+		; background-image: linear-gradient(#70A0A6, #B0E0E6, #70A0A6);
+
 		; background-color:powderblue;
 		htmlbody =
 		(
 			 <header id='LaborJournal_Header'>
-				<div class='title-bar' onmousedown='neutron.DragTitleBar()'>[..]</div>
+				<div class='title-bar' onmousedown='neutron.DragTitleBar()'>            </div>
 				<div class='title-menu title-menu-btn1' onclick='neutron.Menu_LabJournal()'>Laborjournal</div>
 				<div class='title-menu title-menu-btn2' onclick='neutron.Menu_LabJ_Suche()'>Suche</div>
 				<div class='title-menu title-menu-btn3' onclick='neutron.Menu_LabJ_Props()'>Einstellungen</div>
@@ -971,7 +973,7 @@ LaborJournal(LabPat, Anzeige=true) {
 					<th style='text-align:Right'>Param</th>
 					<th style='text-align:Right'>Wert</th>
 					<th style='text-align:Center' colspan='2'>Normalwerte</th>
-					<th style='text-align:Center'; >+/-</th>
+					<th style='text-align:Right'; >+/-</th>
 					<th style='text-align:Right'>⍉ Abw.</th>
 				</tr>
 

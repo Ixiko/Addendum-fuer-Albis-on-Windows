@@ -99,7 +99,7 @@ MonitorScreenShot(MonNr, ScriptName:="", Path:="") {                            
 		sW 	:= MonitorInfoRight    	- MonitorInfoLeft
 		sH 	:= MonitorInfoBottom 	- MonitorInfoTop
 		screen:= sX . "|" . sY . "|" . sW . "|" . sH
-	} else if (MonNr=="All") {
+	} else if (MonNr = "All") {
 
 	}
 

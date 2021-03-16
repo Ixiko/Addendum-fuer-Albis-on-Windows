@@ -8,7 +8,7 @@
 ;       Abhängigkeiten:
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Laborabruf_iBWC.ahk last change:    	13.03.2021
+;       Laborabruf_iBWC.ahk last change:    	16.03.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -73,7 +73,11 @@
 			ExitApp
 		}
 		If !FilePathCreate(adm.DBPath "\Labordaten") {
-			MsgBox, 1024, % adm.scriptname, % "Der Pfad für das Backup der empfangenen`n`tLabordateien konnte nicht angelegt werden.`n`t[" adm.DBPath "\Labor" "]`n"
+			MsgBox, 1024, % adm.scriptname, % "Der Pfad für Labordateien konnte nicht angelegt werden.`n`t[" adm.DBPath "\Labor" "]`n"
+			ExitApp
+		}
+		If !FilePathCreate(adm.DBPath "\Labordaten\LDT") {
+			MsgBox, 1024, % adm.scriptname, % "Der Backup-Pfad für die Labordaten-Dateien konnte nicht angelegt werden.`n`t[" adm.DBPath "\Labor" "]`n"
 			ExitApp
 		}
 
@@ -135,8 +139,8 @@
 		; Auto Labordatenimport nach erfolgreichem Download von Labordaten ausführen?
 			If (StrLen(adm.Labor.AutoLDTImport) = 0 || InStr(adm.Labor.AutoLDTImport, "ERROR")) {
 				adm.Labor.AutoLDTImport := false
-				MsgBox, 4, % adm.scriptname, % 	"Möchten Sie neue Labordaten automatisch in die`n"
-																.	" Patienten Laborblätter übertragen ['alle übertragen' im Laborbuch]?"
+				MsgBox, 4, % adm.scriptname, % 	"Möchten Sie neue Labordaten automatisch in das`n"
+																.	" Laborblatt übertragen ['alle übertragen' im Laborbuch]?"
 				IfMsgBox, Yes
 					adm.Labor.AutoLDTImport := true
 				IniWrite, % (adm.Labor.AutoLDTImport ? "ja" : "nein"), % adm.ini, % "Laborabruf", % "AutoLDTImport"
@@ -265,7 +269,7 @@ infoBoxWebClient() {                                                            
 			; eine neue Datei ist da
 				If (ANow = LDTTime) {
 					datestamp := (A_YYYY "-" A_MM "-" A_DD " " A_Hour "_" A_Min "_" A_Min)
-					FileCopy, % A_LoopFileFullPath, % adm.DBPath "\Labordaten\" datestamp . A_LoopFileName
+					FileCopy, % A_LoopFileFullPath, % adm.DBPath "\Labordaten\LDT\" datestamp . A_LoopFileName
 					writeText .= A_LoopFileName ", "
 				}
 
@@ -297,7 +301,6 @@ infoBoxWebClient() {                                                            
 			sleep 500
 			VerifiedClick(ctrlClass, hVianova)
 		}
-
 
 
 return LabDataReceived
@@ -333,12 +336,8 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 		}
 
 	; ein anderes Fenster [Labordaten Sammelimport] öffnet sich jetzt
-		while !WinExist(WinLabordaten, "Sammelimport") {
-			If (A_Index >= 100)
-				break
+		while !WinExist(WinLabordaten, "Sammelimport") && (A_Index < 100){
 			Sleep 50
-			Loop 10
-				Sleep 5
 		}
 		If !WinExist(WinLabordaten, "Sammelimport") {
 			FileAppend	, % (amsg .= datestamp(2) "| " A_ThisFunc "() `t- Labordaten Sammelimport: hat sich nicht geöffnet`n")
@@ -350,15 +349,16 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 		Sleep 1500
 
 	; Checkbox: [für Sammelimport vormerken] anhaken
-		If !VerifiedCheck("Button5", WinLabordaten,,, 1) {
-			FileAppend	, % (amsg .= datestamp(2) "| " A_ThisFunc "() `t- Labordaten Sammelimport: Checkbox"
-								. 	 " ''für Sammelimport vormerken'' konnte nicht gesetzt werden`n")
-								, % adm.LogFilePath
+		If !VerifiedCheck("Button5", WinLabordaten,,, 1)
+			If !VerifiedClick("Button5", WinLabordaten) {
+				FileAppend	, % (amsg .= datestamp(2) "| " A_ThisFunc "() `t- Labordaten Sammelimport: Checkbox"
+									. 	 " ''für Sammelimport vormerken'' konnte nicht gesetzt werden`n")
+									, % adm.LogFilePath
 			return 0
 		}
 
 	; Button: Sammelimport drücken
-		If !VerifiedClick("Button1"	, WinLabordaten,,, 3) {
+		If !VerifiedClick("Button1", WinLabordaten,,, 3) {
 			FileAppend	, % (amsg .= datestamp(2)  "| " A_ThisFunc "() `t- Labordaten Sammelimport: "
 								. 	 "konnte nicht geschlossen werden`n")
 								, % adm.LogFilePath
@@ -387,7 +387,7 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 				WinGetClass	, PopClass, % "ahk_id " hPopupWin
 				while WinExist(PopTitle " ahk_class " PopClass) {
 					If (A_Index >= 1200) {
-						FileAppend, % (amsg .= datestamp(2) writeStr " [2]`n"), % adm.LogFilePath
+						FileAppend, % (amsg .= datestamp(2) writeStr " [" PopTitle " ahk_class " PopClass "]`n"), % adm.LogFilePath
 						return 0
 					}
 					Sleep 100
