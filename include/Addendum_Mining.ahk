@@ -1,13 +1,13 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                         	** Addendum_Mining **
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;		Beschreibung:	    	einfachste Funktionen für Datenextraktionen aus Textdateien
+;		Beschreibung:	    	einfachste Funktionen für Datenextraktionen aus Text
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; 		Inhalt:
 ;       Abhängigkeiten:		Addendum_Gui.ahk, Addendum.ahk
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_Calc started:    	15.03.2021
+;       Addendum_Calc started:    	17.03.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -146,7 +146,6 @@ FindDocStrings() {
 FindDocNames(Text, debug:=false)                                  	{               	;-- sucht Namen von Patienten im Dokument
 
 	; letzte Änderung: 26.02.2021
-		debug := true
 
 	; ---------------------------------------------------------------------------------------------------------------------------------------------------
 	; RegEx-Strings zusammenstellen
@@ -392,16 +391,16 @@ FindDocNames(Text, debug:=false)                                  	{            
 				thisPat := 0
 				For pidx, word in PNames {
 					DiffA	:= StrDiff(word, Pat.Nn), DiffB := StrDiff(word, Pat.Vn)
-					;SciTEOutput("      word: " word  " A: " DiffA)
 					If (DiffA <= 0.21) || (DiffB <= 0.21) {
 						thisPat += 1
-						SciTEOutput("   PatID:    `t" PatID " word: " word " A:" DiffA " B: " DiffB)
+						If debug
+							SciTEOutput("   PatID:    `t" PatID " word: " word " A:" DiffA " B: " DiffB)
 					}
 				}
 				If (thisPat >= 2) {
 					PatBuf[PatID].hits += 1
 					If debug
-						SciTEOutput("   " PatID " , hits: " PatBuf[PatID].hits)
+						SciTEOutput("   PatID:    `t" PatID " , hits: " PatBuf[PatID].hits)
 				}
 			}
 		}
@@ -526,8 +525,11 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 		If !FindDocStrings_Init
 			FindDocStrings()
 
-		global excludeIDs								; Ausschluß von bestimmten Patientennummern (PatID)
-		global rxBehandlung, rxDokDatum  	; Datum
+		global excludeIDs				                    				; Ausschluß von bestimmten Patientennummern (PatID)
+		global rxBehandlung, rxDokDatum, rxDatumLang  	; Datum
+
+		If debug
+		  SciTEOutput("`n  --------------------------------------`n {FindDocDates}")
 
 	;}
 
@@ -555,7 +557,9 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 
 				DDatum1 := DateValidator(DDatum1, A_YYYY)
 				DDatum2 := DateValidator(DDatum2, A_YYYY)
-				;SciTEOutput(" B1: " DDatum1 " | " DDatum2)
+
+				If debug
+					SciTEOutput(" B1: " DDatum1 " | " DDatum2)
 
 			; prüft ob die Daten Geburtstage sind
 				For PatID, Pat in names {
@@ -573,7 +577,10 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 
 			; Datumstring(s) speichern
 				saveDate := DDatum1 (DDatum2 ? "-" DDatum2 : "")
-				SciTEOutput(" B2: " saveDate)
+
+				If debug
+					SciTEOutput(" B2: " saveDate)
+
 				If !DocDates.Behandlung.HasKey(saveDate)
 					DocDates.Behandlung[saveDate] := {"fLine":[LNr], "dcount":1}
 				else {
@@ -595,26 +602,26 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 					continue
 
 				DDatum1 := DateValidator(DDatum1, A_YYYY)
-				DDatum2 := DateValidator(DDatum2, A_YYYY)
-				SciTEOutput(" D1: " DDatum1 ", " DDatum2)
+
+				If debug
+					SciTEOutput(" D1: " DDatum1)
 
 			; prüft ob die Daten Geburtstage sind
 				For PatID, Pat in names {
-					If (Pat.Gd = DDatum1)
+					If (Pat.Gd = DDatum1) {
 						DDatum1 := ""
-					If (Pat.Gd = DDatum2)
-						DDatum2 := ""
-					If (StrLen(DDatum1 DDatum2) = 0)
 						break
+					}
 				}
-				If (StrLen(DDatum1 DDatum2) = 0)
+				If (StrLen(DDatum1) = 0)
 					continue
-				If (StrLen(DDatum1) = 0) && (StrLen(DDatum2) > 0)
-					DDatum1 := DDatum2, DDatum2 := ""
 
 			; Datumstring(s) speichern
-				saveDate := DDatum1 (DDatum2 ? "-" DDatum2 : "")
-				SciTEOutput(" D2: " saveDate)
+				saveDate := DDatum1
+
+				If debug
+					SciTEOutput(" D2: " saveDate)
+
 				If !DocDates.Dokument.HasKey(saveDate) {
 					DocDates.Dokument[saveDate] := {"fLine":[LNr], "dcount":1}
 				}
@@ -634,6 +641,10 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 
 			DocPages	:= FindDocPages(Text)
 			PageNr 	:= 1
+
+			If debug
+				SciTEOutput("  keine Daten gefunden`n  Seiten: " DocPages)
+
 			For LNr, line in TLines {
 
 				; eine Seite weiter
@@ -643,29 +654,42 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 					}
 
 				; einzelnes Datum wird auf seine Position innerhalb des Dokumentes geprüft
-					If RegExMatch(line, "(?<Datum1>\d{2}\.\d{2}\.\d{2,4})", D) {
+					If RegExMatch(line, "(?<Datum1>\d{2}\.\d{2}\.\d{2,4}|" rxDatumLang ")", D) {
 
-						; Datum befindet sich in der "Kopf- oder Fußzeile"
-							OberesViertel := Floor(DocPages[PageNr]/5)
-							UnteresViertel := Floor(DocPages[PageNr] - DocPages[PageNr]/5)
+						; Datum muss sich im Kopf- oder Fußzeilenbereich befinden
 							If (LNr <= OberesViertel) || (LNr >= UnteresViertel) {
 
-								saveDate := DDatum1 (DDatum2 ? "-" DDatum2 : "")
-								If !DocDates.Dokument.HasKey(saveDate) {
-									DocDates.Dokument[saveDate] := {"fLine":[LNr], "dcount":1}
-								}
-								else {
-									For DDIdx, fLineNr in DocDates.Dokument[saveDate].fline
-										If (fLineNr = LNr)
-											continue
-									savedLNr := LNr
-									DocDates.Dokument[saveDate].fLine.Push(LNr)
-									DocDates.Dokument[saveDate].dcount += 1
-								}
+									OberesViertel 	:= Floor(DocPages[PageNr]/5)
+									UnteresViertel	:= Floor(DocPages[PageNr] - DocPages[PageNr]/5)
+									saveDate      	:= DateValidator(DDatum1, A_YYYY)
 
+								; Geburtstage aussortieren
+									For PatID, Pat in names {
+										If (Pat.Gd = DDatum1) {
+											DDatum1 := ""
+											break
+										}
+									}
+									If (StrLen(DDatum1) = 0)
+										continue
+
+								; Datum hinzufügen
+									If !DocDates.Dokument.HasKey(saveDate) {
+										DocDates.Dokument[saveDate] := {"fLine":[LNr], "dcount":1}
+									}
+									else {
+										For DDIdx, fLineNr in DocDates.Dokument[saveDate].fline
+											If (fLineNr = LNr)
+												continue
+										savedLNr := LNr
+										DocDates.Dokument[saveDate].fLine.Push(LNr)
+										DocDates.Dokument[saveDate].dcount += 1
+									}
 							}
+
 					}
 			}
+
 		}
 
 	; Rückgabe Objekt: alle Daten unter maximaler Häufigkeit aussortieren [Dokument] ;{

@@ -947,9 +947,6 @@ LaborJournal(LabPat, Anzeige=true) {
 
 		)
 
-		; background-image: linear-gradient(#70A0A6, #B0E0E6, #70A0A6);
-
-		; background-color:powderblue;
 		htmlbody =
 		(
 			 <header id='LaborJournal_Header'>

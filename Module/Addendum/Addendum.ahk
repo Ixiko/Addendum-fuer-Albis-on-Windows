@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                                                                       	ADDENDUM HAUPTSKRIPT
-global                                                                               AddendumVersion:= "1.53" , DatumVom:= "14.03.2021"
+global                                                                               AddendumVersion:= "1.53" , DatumVom:= "17.03.2021"
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                    ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . . . . . . .                                           BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -863,6 +863,8 @@ return ;}
 ; Labor und Sonderziffern
 :*:sars::32006-88240                                                                	; COVID19 - Laborbudget und Sonderziffer
 :*:covid19::32006-88240                                                            	; COVID19 - Laborbudget und Sonderziffer
+:*:app::02402-02403                                                                	; bei Corona-App Warnung abzurechnen
+:*:Muster10C::32779-32811-32816                                          	; Abrechnungsspezialitäten Corona bei Verwendung Muster 10C
 
 ; Wunden/Verbände
 :*:Kompr::02313                                                                         	; Kompressionsverband

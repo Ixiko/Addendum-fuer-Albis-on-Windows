@@ -59,6 +59,10 @@ AlbisReanimator(AlbisMainPath:="", AlbisLocalPath:="", AlbisExe:="") {          
 		procView := ""
 		For procNr, proc in AlbisGetRunningPIDs() {
 
+			; eigenen Prozess ausschliessen
+				If InStr(proc.Name, RegExReplace(A_ScriptName, "i)\.[a-z]+$"))
+					continue
+
 			; Information
 				btt(procView . "Process " proc.Name "[" proc.PID "] wird beendet", A_ScreenWidth-500, 20,, "Style4")
 

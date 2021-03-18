@@ -14,7 +14,7 @@
 ;
 ;
 ;	                    	Addendum für Albis on Windows
-;                        	by Ixiko started in September 2017 - letzte Änderung 13.03.2021 - this file runs under Lexiko's GNU Licence
+;                        	by Ixiko started in September 2017 - letzte Änderung 17.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
 
@@ -1690,7 +1690,7 @@ admGui_CM(MenuName)                                               	{            
 				PraxTT("Ein Texterkennungsvorgang läuft im Moment noch.`n...bitte abwarten...", "1 0")
 				return
 			}
-			admCM_JRenAll()
+			admCM_JRecogAll()
 			return
 		}
 		else if	InStr(MenuName, "JRename")	{	; manuelles Umbenennen
@@ -1805,38 +1805,45 @@ admCM_JRecog(admFile)                                              	{           
 return
 }
 
-admCM_JRenAll()                                                           	{              	; Kontextmenu: automatisiert die Benennung aller unbenannten PDF-Dateien
+admCM_JRecogAll()                                                         	{              	; Kontextmenu: automatisiert die Benennung aller unbenannten PDF-Dateien
 
 	; Variablen
 		static newadmFile, lastnewadmFile
 
-		filename_changed := false
-
 	; Dateinamen unbenannter PDF-Dateien einsammeln
-		If !IsObject(unnamed := GetUnamedDocuments()) {
+		MsgBox, 0x1024, Addendum für AlbisOnWindows, Sollen nur bisher unbenannte Dokumente verarbeitet werden?
+		IfMsgBox, Yes
+			unnamed := pdfpool.GetUnamedDocuments()
+		IfMsgBox, No
+			unnamed := pdfpool.GetAllDocNames()
+
+		If !IsObject(unnamed) {
 			PraxTT("Keine Dateien für eine automatische Umbennung vorhanden!", "1 2")
 			return
 		}
 
 	; Vorbereitungen
-		docPath := Addendum.BefundOrdner
-		cPref	:= ""
+		cPrefix   	:= ""
 		Loop % (cLen	:= StrLen(unnamed.Count())-1)
-			cPref .= "0"
+			cPrefix .= "0"
 
 	; Patienten und Dokumentdatum finden
 		For idx, filename in unnamed {
 
 			; Pfade festlegen
 				path  	:= Befunde.GetPaths(filename)
-				counter	:= SubStr(cPref . idx, -1*cLen) "/" unnamed.Count()
+				counter	:= SubStr(cPrefix . idx, -1*cLen) "/" unnamed.Count()
 				Befunde.Backup(path.fF)
+
+			; Debug
+				If (idx > 1) && (Weitermachen("Datei: " counter "`nBez.: " filename "`nWeitermachen?",, 6) = 0)
+					break
 
 			; Text extrahieren, falls noch nicht geschehen
 				If PDFisSearchable(Path.fF) && !FileExist(path.fT) {
 
 					; Fortschritt anzeigen
-						admCM_JRnProgress([counter, filename, "Text wird extrahiert....", "", "", lastnewadmFile])
+						admCM_JRnProgress([counter, filename, "Text wird extrahiert....", "---", "---", lastnewadmFile])
 
 					; pdftotext extrahiert den Text aus der PDF Datei
 						cmdline := Addendum.PDF.xpdfPath "\pdftotext.exe"
@@ -1850,7 +1857,7 @@ admCM_JRenAll()                                                           	{    
 
 				} else if !PDFisSearchable(Path.fF) {
 					; Protokollierung
-						PraxTT("Datei [" idx "] " filename " ist nicht durchsuchbar" )
+						PraxTT("Datei [" counter "] " filename " ist nicht durchsuchbar", "2 2" )
 						continue
 				}
 
@@ -1858,17 +1865,21 @@ admCM_JRenAll()                                                           	{    
 				doctext := FileOpen(Path.fT, "r").Read()
 				If (StrLen(Trim(doctext)) = 0) {
 					PraxTT("Der extrahierte Text enthält keine Zeichen.`n[" filename "]", "2 2")
-					FileDelete, % txtPath
+					FileDelete, % Path.fT
 					continue
 				}
 
 			; Fortschritt anzeigen
-				words := StrSplit(doctext, " ").MaxIndex(), chars := StrLen(RegExReplace(doctext, "[\s\n\r\f]"))
-				admCM_JRnProgress([counter, filename, "Textinhalt wird analysiert....", words, chars, lastnewadmFile])
+				admCM_JRnProgress([ counter
+												, filename
+												, "Textinhalt wird analysiert...."
+												, (words	:= StrSplit(doctext, " ").MaxIndex())
+												, (chars	:= StrLen(RegExReplace(doctext, "[\s\n\r\f\v]")))
+												, lastnewadmFile])
 
 			; Patientennamen und Behandlungs- oder Dokumentdatum finden
-				fNames	:= FindDocNames(doctext)
-				fDates 	:= FindDocDate(doctext)
+				fNames	:= FindDocNames(doctext, false)
+				fDates 	:= FindDocDate(doctext, fNames, true)
 
 			; Datei umbenennen
 				If      	(IsObject(fNames) && fNames.Count() = 1) {
@@ -1890,19 +1901,15 @@ admCM_JRenAll()                                                           	{    
 
 					; Anzeige von Wort und Zeichenzahl der Datei
 						lastnewadmFile := newadmFile
-						admCM_JRnProgress([counter, filename, "neuen Dateinamen erstellt", words, chars, lastnewadmFile])
-
-					; Debug
-						 If (Weitermachen("Datei: " counter "`nBez.: " newadmFile "`nWeitermachen?",, 2) = 0)
-							break
+						admCM_JRnProgress([counter, filename, "neuer Dateiname erstellt", words, chars, lastnewadmFile])
 
 					; Umbenennen von Original, Backup und Textdatei
 						If (StrLen(newadmFile) > 0) {
-							;filename_changed := true
 							admGui_FWPause(true, [filename  	, newadmfile], 12)    	; FolderWatch pausieren (6s bis zur Wiederherstellung)
-							row	:= Journal.Replace(filename		, newadmfile)        	; Journal auffrischen
+							row	:= journal.Replace(filename		, newadmfile)        	; Journal auffrischen
 							pdf	:= pdfpool.Rename(filename		, newadmfile)        	; Objektdaten ändern
 							res	:= Befunde.Rename(filename		, newadmfile)        	; Dateien umbenennen (Original, Backup, Text)
+							admGui_FWPause(false, [filename  	, newadmfile], 12)    	; FolderWatch pausieren (6s bis zur Wiederherstellung)
 							newadmFile := ""
 						}
 
@@ -1933,7 +1940,6 @@ admCM_JRenAll()                                                           	{    
 		}
 
 	; Anzeige schliessen
-		;admGui_ImportGui(false, "A U T O N A M I N G`n" admFile "`nläuft", "admJournal")
 		admGui_ImportGui(false, "A U T O N A M I N G`n" filename "`nläuft", "admJournal")
 
 	; Anzeige auffrischen
@@ -1945,20 +1951,22 @@ return
 
 admCM_JRnProgress(ProgressText)                                 	{              	; zeigt den Fortschritt beim Umbennen an
 
-		static outmsgTitle := "A U T O N A M I N G .#`n`n"
+		static outmsgTitle := "A U T O N A M I N G ..#"
 		static call:=1
 
 	; nur eine Zahl übergeben dann wird die Progressbar verändert
 		If IsObject(ProgressText) {
 
-			outmsg := "Zähler:   `t" 	ProgressText.1      	"`n"
-						.	 "Name:   `t" 	ProgressText.2      	"`n"
-						. 	 "Status:   `t"  	ProgressText.3     	"`n"
-						. 	 "Wörter:  `t" 	ProgressText.4	   	"`n"
-						. 	 "Zeichen:`t"  	ProgressText.5   	"`n"
-						. 	 (ProgressText[6] ? "`n- - - letzter Fund - - -`n" ProgressText.6 : "")
+			outmsg := StrReplace(outmsgTitle, "#", SubStr("................", 1, call)) "`n"
+						.	 "- - - - - - - - - - - - - - - - - - - - - - - - - "	"`n"
+						.	 "Zähler:   `t" 	ProgressText.1             	"`n"
+						.	 "Datei:    `t" 	ProgressText.2             	"`n"
+						. 	 "Status:   `t"  	ProgressText.3            	"`n"
+						. 	 "Wörter:  `t" 	ProgressText.4	          	"`n"
+						. 	 "Zeichen:`t"  	ProgressText.5           	"`n"
+						. 	 "letzter:   `t"   	ProgressText.6
 
-			admGui_ImportGui(true, StrReplace(outmsgTitle, "#", SubStr("................", 1, call)) . outmsg, "admJournal")
+			admGui_ImportGui(true, outmsg, "admJournal")
 			call := call = 5 ? 1 : call+1
 
 		}
@@ -2098,7 +2106,7 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 		RNWidth	:= admPos.W - (2*admPos.BW)
 		RNWidth	:= RnWidth < RNminWidth ? RNminWidth : RnWidth
 
-		Gui, RN: new, % "AlwaysOnTop -DpiScale -ToolWindow -Caption +Border HWNDhadmRN"
+		Gui, RN: new, % "AlwaysOnTop -DpiScale +ToolWindow -Caption +Border HWNDhadmRN"
 		Gui, RN: Margin, 5, 5
 
 		;-: Hinweise
@@ -2374,11 +2382,25 @@ class Journal                                                                 	{
 		;selNextUnnamed
 
 		Remove(fname:="", rLV:="")  {        	; entfernt eine Datei aus der Listview
-		; ein Dateiname oder eine Zeilennummer können übergeben werden
-		return LV_Delete((fname?this.getRow(fname):rLV))
+
+			; ein Dateiname oder eine Zeilennummer können übergeben werden
+
+			global admJournal, adm, admHTab, admHJournal
+
+			this.Default()
+			this.RedrawLV(false)
+			row := fname?this.getRow(fname) : rLV?rLV : 0
+			If (row > 0)
+				res := LV_Delete(row)
+			else
+				res := -1
+			this.RedrawLV(true)
+
+		return res
 		}
 
 		getNext(rLV:=0, LVNI:=2)    	{        	; findet die nächste ausgewählte Zeile
+			global admJournal, adm, admHTab, admHJournal
 			; rLV = 1 based index of the starting row for the flag search. Omit or 0 to find first occurance specified flags.
 			; LVNI_ALL := 0x0, LVNI_FOCUSED := 0x1, LVNI_SELECTED := 0x2
 		return DllCall("SendMessage", "uint", admHJournal, "uint", 4108, "uint", rLV-1, "uint", LVNI) + 1
@@ -2386,14 +2408,17 @@ class Journal                                                                 	{
 
 		getRow(sStr, col:=1)            	{         	; Zeilennummer mit diesem Dateinamen
 
+			row := 0
 			this.Default()
 			Loop % LV_GetCount() {
 				LV_GetText(rText, A_Index, col)
-				If (rText = sStr)
-					return A_Index
+				If (rText = sStr) {
+					row := A_Index
+					break
+				}
 			}
 
-		return 0
+		return row
 		}
 
 		getSelected(col:=1)              	{        	; alle ausgewählten Zeilen auslesen
@@ -2452,22 +2477,31 @@ class Journal                                                                 	{
 		}
 
 		Focus()                                	{        	; das Listview erhält den Eingabefokus
+			global admJournal, adm, admHTab, admHJournal
 			this.Default()
-			GuiControl, adm: Focus, % vJournal
+			GuiControl, adm: Focus, % "admJournal"
+		return ErrorLevel
 		}
 
 		Default()                             	{        	; Gui und Listview Default machen
+			global admJournal, adm, admHTab, admHJournal
 			Gui, adm: Default
 			Gui, adm: ListView, % "admJournal"
 		}
 
 		ListView()                            	{        	; nur das Listview Default machen
-			Gui, adm: Default
+			global admJournal, adm, admHTab, admHJournal
+			Gui, adm: ListView, % "admJournal"
+		}
+
+		RedrawLV(rdw)                     	{      	; Listview neuzeichnen an oder aus
+			global admJournal, adm, admHTab, admHJournal
+			GuiControl, % "adm: " (rdw?"+":"-") "Redraw", admJournal
+		return ErrorLevel
 		}
 
 		Show()                               	{        	; zeigt den Journal Tab an
-		global admHTab
-		SciTEOutput("Journal.Show(): " admHTab)
+			global admHTab
 		return admGui_ShowTab("Journal", admHTab)
 		}
 
@@ -2772,14 +2806,35 @@ class pdfpool                                                                 	{
 		return
 		}
 
-	; Umbenanntes Dokument finden
-		GetUnnamed(StartDocID:=0) {
+	; alle Dateinamen zurückgeben
+		GetAllDocNames() {
+			docNames := Array()
+			For docID, PDF in ScanPool
+				docNames.Push(PDF.name)
+			If (docNames.MaxIndex() = 0)
+				return
+		return docNames
+		}
 
+	; Unbenanntes Dokument finden
+		GetUnnamed(StartDocID:=0) {
 			For docID, PDF in ScanPool
 				If (docID > StartDocID) && !string.isFullNamed(PDF.name)
 					return PDF
-
 		return
+		}
+
+	; erstellt einen Array mit den Dateinamen unbezeichneter Dokumente
+		GetUnamedDocuments(refreshDocs=false)                      	{
+			If refreshDocs
+				admGui_Reload(true)
+			unnamed := Array()
+			For docID, PDF in ScanPool
+				If !string.ContainsName(PDF.name)
+					unnamed.Push(PDF.name)
+			If (unnamed.MaxIndex() = 0)
+				return
+		return unnamed
 		}
 
 	; ScanPool komplett leeren
@@ -3132,56 +3187,58 @@ admGui_ImportGui(Show=true, msg="", gctrl="")              	{                 	;
 	global adm, adm2, hadm, hadm2, admImporter, admImporterPrg, admJournal, last_msg, last_ctrl
 	global admHTab
 
-	If (StrLen(gCtrl) = 0) {
-		gCtrl := "admReports"
-		res := admGui_ShowTab("Patient", admHTab)
-	}
-	else if (gCtrl = "admJournal")
-		res :=Befunde.Show()
+	; das richtige Tab-Control anzeigen
+		If (StrLen(gCtrl) = 0) || (gCtrl = "admReports")
+			res := admGui_ShowTab("Patient", admHTab), gCtrl := "admReports"
+		else if (gCtrl = "admJournal")
+			res :=journal.Show()
 
-	If Show {
+	; Gui zeigen oder beenden
+		If Show {
 
-		; zeigt den Hinweis auch an wenn das Infofenster neu gezeichnet wurde
-			If Addendum.Importing && (StrLen(msg) > 0) {
-				last_ctrl	:= gctrl
-				If (last_msg <> msg) {
-					GuiControl, adm2:, admImporter, % msg
-					last_msg := msg
+			; zeigt den Hinweis auch an wenn das Infofenster neu gezeichnet wurde
+				If Addendum.Importing && (StrLen(msg) > 0) {
+					last_ctrl	:= gctrl
+					If (last_msg <> msg) {
+						GuiControl, adm2:, admImporter, % msg
+						last_msg := msg
+					}
+					return
 				}
-				return
-			}
-			else if !Addendum.Importing {
-				last_msg := msg, last_ctrl 	:= gctrl
-				Addendum.Importing := true
-				If (StrLen(msg) = 0)
-					msg := "Importvorgang läuft...`nbitte nicht unterbrechen!"
-			}
+				else if !Addendum.Importing {
+					last_msg := msg, last_ctrl 	:= gctrl
+					Addendum.Importing := true
+					If (StrLen(msg) = 0)
+						msg := "Importvorgang läuft...`nbitte nicht unterbrechen!"
+				}
 
-			Gui, adm2: New	, +HWNDhadm2 +ToolWindow -Caption +Parent%hadm%
-			Gui, adm2: Color	, c3170A0
-			Gui, adm2: Font	, s10 q5 cFFFFFF Bold, % Addendum.Default.Font
+				Gui, adm2: New	, +HWNDhadm2 +ToolWindow -Caption +Parent%hadm%
+				Gui, adm2: Color	, c3170A0
+				Gui, adm2: Font	, s10 q5 cFFFFFF Bold, % Addendum.Default.Font
 
-			MsgOpt := InStr(msg, "Dateinamen") ? "" : "Center"
-			GuiControlGet, rp, adm: Pos, % gCtrl
-			Gui, adm2: Add	, Text    	, % "x60 y1 w" (rpW-60) " " MsgOpt " vadmImporter"  	, % msg
+				MsgOpt := RegExMatch(msg, "i)(Dateinamen|Datei)") ? "" : ""
+				GuiControlGet, rp, adm: Pos, % gCtrl
+				Gui, adm2: Add	, Text    	, % "x20 y1 " MsgOpt " vadmImporter"  	, % msg
 
-			Gui, adm2: Show	, % "x" rpX " y" rpY " w" rpW " h" rpH " Hide NA"                       	, admImportLayer
+				Gui, adm2: Show	, % "x" rpX " y" rpY " w" rpW " h" rpH " Hide NA"                       	, admImportLayer
 
-			GuiControlGet	, cp, adm2: Pos, admImporter
-			GuiControl    	, adm2: Move, admImporter, % "y" Floor(rpH // 2 - cpH // 2)
-			Gui, adm2: Show	, % "NA"
+				; Text zentrieren
+				GuiControlGet	, cp, adm2: Pos	, admImporter
+				GuiControl    	, adm2: Move	, admImporter, % "x" Floor(rpW/2 - cpW/2)  " y" Floor(rpH/2 - cpH/2)
 
-			WinSet, Style         	, 0x50020000	, % "ahk_id " hadm2
-			WinSet, ExStyle	    	, 0x0802009C	, % "ahk_id " hadm2
-			WinSet, Transparent	, 210             	, % "ahk_id " hadm2
+				Gui, adm2: Show	, % "NA"
 
-	} else {
+				WinSet, Style         	, 0x50020000	, % "ahk_id " hadm2
+				WinSet, ExStyle	    	, 0x0802009C	, % "ahk_id " hadm2
+				WinSet, Transparent	, 220             	, % "ahk_id " hadm2
 
-			Gui, adm2: Destroy
-			last_msg := last_ctrl := ""
-			Addendum.Importing := false
+		} else {
 
-	}
+				Gui, adm2: Destroy
+				last_msg := last_ctrl := ""
+				Addendum.Importing := false
+
+		}
 
 }
 
@@ -3378,8 +3435,8 @@ FuzzyKarteikarte(NameStr)                                             	{        
 
 		} else {
 
-			SciTEOutput(NameStr ": " Pat.Nn ", " Pat.Vn)
-			SciTEOutput(" (matches: " Patients.Count() ") mindiff: " m.minDiff ", [" m.bestID "] " m.bestNn ", " m.bestVn)
+			SciTEOutput("  " NameStr ": " Pat.Nn ", " Pat.Vn)
+			SciTEOutput("  (matches: " Patients.Count() ") mindiff: " m.minDiff ", [" m.bestID "] " m.bestNn ", " m.bestVn)
 			For PatID, Pat in Patients
 				SciTEOutput(" [" PatID "] " Pat.Nn ", " Pat.Vn)
 			return 0
@@ -3571,14 +3628,16 @@ admGui_FWPause(FWPause, files, PTime=8)                  	{               	; Fol
 			return
 
 	; Resettimer verlängern
-		If Addendum.OCR.FWPause {
+		If Addendum.OCR.FWPause && FWPause {
 			SetTimer, FWPauseOff, % (-1*PTime*1000)
 			return
 		}
 
 	; zu ignorierende Dateiliste anlegen
 		If !FWPause {
+			Addendum.OCR.FWIgnore:= ""
 			Addendum.OCR.FWPause	:= false
+			return
 		}
 		else {
 			Addendum.OCR.FWIgnore := Array()
@@ -3596,8 +3655,8 @@ admGui_FWPause(FWPause, files, PTime=8)                  	{               	; Fol
 
 return
 FWPauseOff:
-	Addendum.OCR.FWPause 	:= false
 	Addendum.OCR.FWIgnore	:= Array()
+	Addendum.OCR.FWPause 	:= false
 	;SciTEOutput("FWPause at  " A_Min ":" A_Sec ": " (Addendum.OCR.FWPause ? "true":"false"))
 return
 }
@@ -3810,25 +3869,6 @@ GetNoOCRFiles()                                                           	{    
 
 return noOCR
 }
-
-GetUnamedDocuments(refreshDocs=false)                      	{                	; erstellt einen Array mit den Dateinamen unbezeichneter Dokumente
-
-	; ScanPool ist global
-	unnamed := Array()
-
-	If refreshDocs
-		admGui_Reload(true)
-
-	For idx, pdf in ScanPool
-		If !string.ContainsName(pdf.name)
-			unnamed.Push(pdf.name)
-
-	If (unnamed.MaxIndex() = 0)
-		return
-
-return unnamed
-}
-
 
 ; ------------------------ Dateien indizieren
 BefundIndex(save=true)                                                  	{	               	;-- erststellt das ScanPool Objekt neu
