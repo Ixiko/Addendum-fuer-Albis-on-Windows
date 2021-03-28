@@ -276,7 +276,7 @@ MsgBoxEx(Text, Title := "", Buttons := "", Icon := "", ByRef CheckText := "", St
     Return
 }
 
-ResConImg(OriginalFile, NewWidth:="", NewHeight:="", NewName:="", NewExt:="", NewDir:="", PreserveAspectRatio:=true, BitDepth:=24) {										;-- Resize and convert images. png, bmp, jpg, tiff, or gif
+ResConImg(OriginalFile, NewWidth:="", NewHeight:="", NewName:="", NewExt:="", NewDir:="", PreserveAspectRatio:=true, BitDepth:=24) {		;Resize and convert images. png, bmp, jpg, tiff, or gif
 
     /*  ResConImg
          *    By kon
@@ -2044,6 +2044,90 @@ admGui_RemoveImports(ImportList)                               	{               
 			}
 
 }
+
+admGui_RenameAC(hCtrl, inhalt, bezeichner, LBRows=10)	{
+
+	static admAC, admACh, admACLB
+
+		If !IsObject(Bezeichner) || (StrLen(inhalt) = 0)
+			Return
+		If (hCtrl = "hide") {
+			Gui, admAC: Show, Hide NA
+			Gui, RN: Default
+			return
+		}
+
+	; Autocomplete Inhalt zusammenstellen
+		cboxShow := cboxInhalt := ""
+		inhalte := StrSplit(Trim(inhalt), " ")
+
+		For bzPos, bezeichnung in bezeichner {
+			matching	:= 0
+			bez := " " RegExReplace(bezeichnung, "[\.,\-\_\\\/\(\)]", " ")
+			For iPos, inh in inhalte {
+				If (StrLen(inh) >= 3) && RegExMatch(bez, "i)\s" inh) {
+					;SciTEOutput(bez ": " inh)
+					matching ++
+				}
+			}
+			If matching
+				cboxInhalt .= matching " " bezeichnung "`n"
+		}
+
+	; numerische Sortierung (N) in umgekehrter Reihenfolge (R)
+	; doppelte Elemente werden aussortiert (U)
+		Sort, cboxInhalt, N U R
+		cboxShow := ""
+		For cbPos, cbline in StrSplit(cboxInhalt, "`n")
+			cboxShow .= RegExReplace(cbline, "^\d+\s+") "|"
+		cboxShow := RTrim(cboxShow, "|")
+
+	; Inhalt auffrischen oder neue Gui erstellen
+		If WinExist("Infofenster AutoComplete ahk_class AutoHotkeyGUI") {
+			Gui, admAC: Default
+			Gui, admAC: Show, NA
+			GuiControl, admAC:, admACLB, % ""
+			GuiControl, admAC:, admACLB, % cboxShow
+			Gui, RN: Default
+		} else
+			gosub admACGui
+
+return
+
+admACGui:
+
+		fSize := (A_ScreenWidth > 1920 ? 10 : 9)
+		cp := GetWindowSpot(hCtrl)
+		cp.Y := cp.Y + cp.H + 2
+
+		Gui, admAC: Font, % "s" fSize " q5 Normal", Arial
+		Gui, admAC: new		, % "-Caption -DpiScale +ToolWindow +AlwaysOnTop HWNDadmACh"
+		Gui, admAC: Margin	, 0, 0
+		Gui, admAC: Add		, Listbox, % "x0 y0 r" LBRows " w" cp.W " vadmACLB" , % cboxShow
+		Gui, admAC: Show	, % "x" cp.X " y" cp.Y " NA", Infofenster AutoComplete
+
+		Hotkey, IfWinExist, Infofenster AutoComplete
+		Hotkey, TAB	, admACLBChoose
+		Hotkey, Esc	, admACGuiEscape
+
+		Gui, RN: Default
+
+return
+
+admACLBChoose:
+
+	Gui, admAC: Submit, NoHide
+	Gui, admAC: Destroy
+
+return admACLB
+
+admACGuiClose:
+admACGuiEscape:
+	Gui, admAC: Destroy
+return
+
+}
+
 
 ;CheckJournal() { ...
 For idx, pdf in ScanPool

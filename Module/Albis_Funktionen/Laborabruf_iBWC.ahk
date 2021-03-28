@@ -8,7 +8,7 @@
 ;       Abhängigkeiten:
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Laborabruf_iBWC.ahk last change:    	16.03.2021
+;       Laborabruf_iBWC.ahk last change:    	27.03.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -40,7 +40,7 @@
   ;}
 
   ; -------------------------------------------------------------------------------------------------------------------------------------------------------
-  ; Pfade und Einstellungen
+  ; Pfade und Einstellungen laden
   ; -------------------------------------------------------------------------------------------------------------------------------------------------------;{
 
 		LaborAbrufGui()
@@ -89,15 +89,16 @@
 	; Skripteinstellungen laden
 	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 		; Einstellungen laden
-			adm.Labor.ExecuteFile         	:= IniReadExt("LaborAbruf"	, "Laborabruf_Extern"  	, ""            	)  	; externes Programm das für den Abruf ausgeführt werden muss
-			adm.Labor.LDTDirectory      	:= IniReadExt("LaborAbruf"	, "LDTDirectory"         	, "C:\Labor"	)
-			adm.Labor.LaborName       	:= IniReadExt("LaborAbruf"	, "LaborName"           	, ""             	)
-			adm.Labor.Laborkuerzel      	:= IniReadExt("LaborAbruf"	, "Aktenkuerzel"          	, "labor"    	)
-			adm.Labor.AutoLDTImport  	:= IniReadExt("LaborAbruf"	, "AutoLDTImport"       	, "nein"         	)
-			adm.Labor.ZeigeLabJournal 	:= IniReadExt("LaborAbruf"	, "Zeige_Laborjournal"  	, "nein"        	)
+			adm.Labor.ExecuteFile         	:= IniReadExt("LaborAbruf"	, "Laborabruf_Extern"                 	, ""            	)  	; externes Programm das für den Abruf ausgeführt werden muss
+			adm.Labor.ZeigeLabJournal 	:= IniReadExt("LaborAbruf"	, "Laborabruf_Zeige_Laborbuch"   	, "nein"        	)
+			adm.Labor.LDTDirectory      	:= IniReadExt("LaborAbruf"	, "LDTDirectory"                         	, "C:\Labor"	)
+			adm.Labor.LbName          	:= IniReadExt("LaborAbruf"	, "LaborName"                           	, ""             	)
+			adm.Labor.Laborkuerzel      	:= IniReadExt("LaborAbruf"	, "Aktenkuerzel"                          	, "labor"    	)
+			adm.Labor.Alarmgrenze     	:= IniReadExt("LaborAbruf"	, "Alarmgrenze"                        	    , "30%"      	)  	; Alarmierungsgrenze in Prozent oberhalb der Normgrenzen
+			adm.Labor.AutoImport		    := IniReadExt(compname	, "Laborimport_automatisieren"   	, "nein"        	)
 
 		; Laborname ist unbekannt. Skript holt sich den Namen aus einer Albisdatenbank.
-			If (StrLen(adm.Labor.LaborName) = 0 || InStr(adm.Labor.LaborName, "ERROR")) {
+			If (StrLen(adm.Labor.LbName) = 0 || InStr(adm.Labor.LbName, "ERROR")) {
 				labore := GetDBFData(adm.AlbisDBPath "\LABSTAMM.DBF" , {"ID":"rx:\d+"}, ["ID", "NAME", "PFAD"], 0)
 				If (labore.Count() > 1) {
 					For idx, labor in labore
@@ -111,9 +112,9 @@
 				else
 					LNr := 1
 
-				adm.Labor.LaborName 	:= labore[LNr].NAME
+				adm.Labor.LbName      	:= labore[LNr].NAME
 				adm.Labor.LDTDirectory	:= labore[LNr].PFAD
-				IniWrite, % adm.Labor.LaborName	, % adm.ini, % "Laborabruf", % "LaborName"
+				IniWrite, % adm.Labor.LbName     	, % adm.ini, % "Laborabruf", % "LaborName"
 				IniWrite, % adm.Labor.LDTDirectory	, % adm.ini, % "Laborabruf", % "LDTDirectory"
 			}
 
@@ -137,13 +138,13 @@
 			}
 
 		; Auto Labordatenimport nach erfolgreichem Download von Labordaten ausführen?
-			If (StrLen(adm.Labor.AutoLDTImport) = 0 || InStr(adm.Labor.AutoLDTImport, "ERROR")) {
-				adm.Labor.AutoLDTImport := false
+			If (StrLen(adm.Labor.AutoImport) = 0 || InStr(adm.Labor.AutoImport, "ERROR")) {
+				adm.Labor.AutoImport := false
 				MsgBox, 4, % adm.scriptname, % 	"Möchten Sie neue Labordaten automatisch in das`n"
 																.	" Laborblatt übertragen ['alle übertragen' im Laborbuch]?"
 				IfMsgBox, Yes
-					adm.Labor.AutoLDTImport := true
-				IniWrite, % (adm.Labor.AutoLDTImport ? "ja" : "nein"), % adm.ini, % "Laborabruf", % "AutoLDTImport"
+					adm.Labor.AutoImport := true
+				IniWrite, % (adm.Labor.AutoImport ? "ja" : "nein"), % adm.ini, % compname, % "Laborimport_automatisieren"
 			}
 
 	;}
@@ -171,7 +172,7 @@
 				FuncExitApp()
 
 		; 2. LDT Datei importieren
-			If !AlbisLaborImport(adm.Labor.LaborName)
+			If !AlbisLaborImport(adm.Labor.LbName)
 				FuncExitApp()
 
 		; 3. Laborbuch aufrufen
@@ -181,13 +182,13 @@
 			If adm.hLabbuch {
 
 				; AutoLaborAbruf wiederherstellen
-					If !adm.AutoLaborAbrufStatus && adm.AutoLaborAbruf
-						LaborAbrufToggle("restore")
+					If !adm.Labor.AbrufStatus && adm.Labor.AutoAbruf
+						LaborAbrufToggle("on")
 
 				; Information ins Logfile schreiben falls der Labordatenimport ausgestellt ist
 				; ansonsten Laborblattübertragung (LaborImport - nutzt ein anderes Logfile) starten
-					if adm.Labor.AutoLDTImport && adm.AutoLaborAbrufStatus && !adm.AutoLaborAbruf  {
-						writeStr := "|" A_ThisFunc "()`t- Labordatenimport nicht möglich! AutoLaborAbruf-Funktion von Addendum ist ausgeschaltet!."
+					if adm.Labor.AutoImport && adm.Labor.AbrufStatus && !adm.Labor.AutoAbruf  {
+						writeStr := "|" A_ThisFunc "()`t- Labordatenimport nicht möglich! Labor AutoAbruf-Funktion von Addendum ist ausgeschaltet!."
 						FileAppend, % (amsg .= datestamp(2) writeStr "`n"), % adm.LogFilePath
 					} else {
 						result	:= AlbisLaborAlleUebertragen()
@@ -225,7 +226,6 @@ infoBoxWebClient() {                                                            
 		If !(hVianova := WinExist(vianovaClass)) {
 			FileAppend	, % (amsg .= datestamp(2)  "|" A_ThisFunc "() `t- infoBoxWebClient: Fenster nicht gefunden`n")
 								, % adm.LogFilePath
-			MsgBox, 1024, % adm.scriptname, % "Fenster: vianova infoBoWebClient `nwurde nicht gefunden!`n"
 			return 0
 		}
 
@@ -279,18 +279,18 @@ infoBoxWebClient() {                                                            
 		IniWrite	, % datestamp(1) , % adm.ini, % "LaborAbruf", % "Letzter_Abruf"
 		If (StrLen(writeTExt) > 0) {
 			IniWrite			, % datestamp(1) , % adm.ini, % "LaborAbruf", % "Letzter_Abruf_mit_Daten"
-			FileAppend	, % (amsg .= datestamp(2)  "| " A_ThisFunc "()  `t- # Daten vorhanden [" RTrim(writeText, ", ") "]`n")
+			FileAppend	, % (amsg .= datestamp(2)  "|" A_ThisFunc "() `t- # Daten vorhanden [" RTrim(writeText, ", ") "]`n")
 								, % adm.LogFilePath, UTF-8
 			LabDataReceived := true
 		}	else {
 			IniWrite			, % datestamp(1) , % adm.ini, % "LaborAbruf", % "Letzter_Abruf_ohne_Daten"
-			FileAppend	, % (amsg .= datestamp(2) "| " A_ThisFunc "()  `t- # Keine Daten vorhanden`n")
+			FileAppend	, % (amsg .= datestamp(2) "|" A_ThisFunc "() `t- # Keine Daten vorhanden`n")
 								, % adm.LogFilePath, UTF-8
 			LabDataReceived := false
 		}
 
 	; externes Programmfenster schließen
-		amsg .= datestamp(2) "|" A_ThisFunc "()  - WebClient Fenster wird geschlossen`n"
+		amsg .= datestamp(2) "|" A_ThisFunc "() `t- WebClient Fenster wird geschlossen`n"
 		sleep 500
 		Controls("","reset","")
 		hVianova := WinExist(vianovaClass)
@@ -306,14 +306,14 @@ infoBoxWebClient() {                                                            
 return LabDataReceived
 }
 
-AlbisLaborImport(LaborName) {												;-- Labordaten importieren
+AlbisLaborImport(LbName) {			         									;-- Labordaten importieren
 
 		WinLabordaten := "Labordaten ahk_class #32770"
 
 	; Aufruf des Dialoges Labor wählen über das Menu Extern\Labor\Daten importieren ....
 		hLaborwaehlen := AlbisLaborwaehlen()
-		If !VerifiedChoose("ListBox1", hLaborwaehlen, LaborName) {
-			FileAppend	, % (amsg .= datestamp(2)  "| " A_ThisFunc "() `t- Labor wählen: Listboxeintrag " LaborName
+		If !VerifiedChoose("ListBox1", hLaborwaehlen, LbName) {
+			FileAppend	, % (amsg .= datestamp(2)  "|" A_ThisFunc "() `t- Labor wählen: Listboxeintrag " LbName
 								. 	 " konnte nicht ausgewählt werden.`n")
 								, % adm.LogFilePath
 			return 0
@@ -325,11 +325,11 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 		amsg 	.= datestamp(2) "| " A_ThisFunc "() `t- Warte auf den nächsten Laborabruf-Dialog"
 		WinWait, ALBIS, Keine Datei(en) im Pfad, 2
 		If (ErrorLevel = 0) 	{
-			FileAppend	, % 	(amsg .= datestamp(2) "| " A_ThisFunc "() `t- Labor wählen: keine Daten im Ordner "
+			FileAppend	, % 	(amsg .= datestamp(2) "|" A_ThisFunc "() `t- Labor wählen: keine Daten im Ordner "
 								.   	adm.Labor.LDTDirectory "`n")
 								, % 	adm.LogFilePath
 			If !(err := VerifiedClick("Button1", "ALBIS", "Keine Datei(en) im Pfad"))
-				FileAppend	, % (amsg .= datestamp(2) "| " A_ThisFunc "() `t- Fenster ''Keine Datei(en) im Pfad'': "
+				FileAppend	, % (amsg .= datestamp(2) "|" A_ThisFunc "() `t- Fenster ''Keine Datei(en) im Pfad'': "
 									. 	  "konnte nicht geschlossen werden`n")
 									, % adm.LogFilePath
 			return err
@@ -340,7 +340,7 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 			Sleep 50
 		}
 		If !WinExist(WinLabordaten, "Sammelimport") {
-			FileAppend	, % (amsg .= datestamp(2) "| " A_ThisFunc "() `t- Labordaten Sammelimport: hat sich nicht geöffnet`n")
+			FileAppend	, % (amsg .= datestamp(2) "|" A_ThisFunc "() `t- Labordaten Sammelimport: hat sich nicht geöffnet`n")
 								, % adm.LogFilePath
 			return 0
 		}
@@ -351,7 +351,7 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 	; Checkbox: [für Sammelimport vormerken] anhaken
 		If !VerifiedCheck("Button5", WinLabordaten,,, 1)
 			If !VerifiedClick("Button5", WinLabordaten) {
-				FileAppend	, % (amsg .= datestamp(2) "| " A_ThisFunc "() `t- Labordaten Sammelimport: Checkbox"
+				FileAppend	, % (amsg .= datestamp(2) "|" A_ThisFunc "() `t- Labordaten Sammelimport: Checkbox"
 									. 	 " ''für Sammelimport vormerken'' konnte nicht gesetzt werden`n")
 									, % adm.LogFilePath
 			return 0
@@ -359,7 +359,7 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 
 	; Button: Sammelimport drücken
 		If !VerifiedClick("Button1", WinLabordaten,,, 3) {
-			FileAppend	, % (amsg .= datestamp(2)  "| " A_ThisFunc "() `t- Labordaten Sammelimport: "
+			FileAppend	, % (amsg .= datestamp(2)  "|" A_ThisFunc "() `t- Labordaten Sammelimport: "
 								. 	 "konnte nicht geschlossen werden`n")
 								, % adm.LogFilePath
 			return 0
@@ -369,7 +369,7 @@ AlbisLaborImport(LaborName) {												;-- Labordaten importieren
 	; 				wartet auf das erste Popupfenster und wartet bis dieses geschlossen wurde
 	;				oder bricht ab wenn das Laborbuch angezeigt wird
 		PopupWin := false
-		writeStr := "| " A_ThisFunc "() `t- Labordaten Sammelimport: letztes Fenster (Importfortschritt) konnte nicht abgefangen werden"
+		writeStr := "|" A_ThisFunc "() `t- Labordaten Sammelimport: letztes Fenster (Importfortschritt) konnte nicht abgefangen werden"
 		Loop {
 
 			If InStr(AlbisGetActiveWinTitle(), "Laborbuch")
@@ -516,7 +516,7 @@ AutoUpdateLCdbg() {
 
 }
 
-LaborAbrufToggle(Switch="Off", Title:="") {
+LaborAbrufToggle(Switch="off", Title:="") {
 
 	; sendet eine Nachricht an Addendum.ahk, um die Laborabrufautomatisierung an- oder auszuschalten
 	; beim ersten Aufruf wird eine versteckte Gui erstellt (die ist notwendig für die Interprocesskommunikation)
@@ -535,35 +535,35 @@ LaborAbrufToggle(Switch="Off", Title:="") {
 			; ThreadControl wird hier immer true gesetzt
 				ThreadControl := true, eLvl := 1
 
-			; AutoLaborAbruf Funktionalität von Addendum ausschalten
+			; Labor AutoAbruf Funktionalität von Addendum ausschalten
 				If InStr(Switch, "off") {
-					adm.AutoLaborabruf := ""
-					writeStr := "|" A_ThisFunc "()`t- Addendum hat nicht geantwortet!`nDie Automatisierungsfunktionen konnten nicht angehalten werden."
+					adm.Labor.AutoAbruf := ""
+					writeStr := "|" A_ThisFunc "()`t- Addendum hat nicht geantwortet! Die Automatisierungsfunktionen konnten nicht angehalten werden."
 					eL := Send_WM_COPYDATA("AutoLaborAbruf|Status|" hLabCall, adm.ID)
 					ThreadControl := true
-					amsg .= " |" A_ThisFunc "()`t- Laborabruf Abfrage des AutoLaborAbruf Status von Addendum`n"
+					amsg .= datestamp(2) "|" A_ThisFunc "()  - Laborabruf Abfrage des Labor AutoAbruf Status von Addendum`n"
 					while, (ThreadControl && (A_Index <= 100)) {
 						ToolTip, % "Laborabruf wartet auf Addendum: " ThreadControl "`nAddendumID: " adm.ID ", " hLabCall "`nEL: " eL "`nA_Index: " A_Index "/" 100
 						Sleep 50
 					}
 					ToolTip
 					If ThreadControl {
-						writeStr := "|" A_ThisFunc "()`t- Laborabruf AutoLaborAbruf Status wurde nicht empfangen`n"
+						writeStr := "|" A_ThisFunc "()`t- Labor AutoAbruf Status wurde nicht empfangen`n"
 						FileAppend, % (amsg .= datestamp(2) "|" StrReplace(writeStr, "`n", " ")) "`n", % adm.LogFilePath
 						eLvl := 0
 					}
 					else
-						amsg .= "|" A_ThisFunc "()`t- Der AutoLaborabruf ist: " (adm.AutoLaborabruf ? "an" : "aus") "`n"
+						amsg .= datestamp(2) "|" A_ThisFunc "()  - Der Labor AutoAbruf ist: " (adm.Labor.AutoAbruf ? "an" : "aus") "`n"
 
-					If adm.AutoLaborabruf {
+					If adm.Labor.AutoAbruf {
 						eL := Send_WM_COPYDATA("AutoLaborAbruf|aus|" hLabCall	, adm.ID)
-						amsg .= "|" A_ThisFunc "()`t- Der AutoLaborabruf wurde vorübergehend abgeschaltet.`n"
+						amsg .= datestamp(2) "|" A_ThisFunc "()  - Der AutoLaborabruf wurde vorübergehend abgeschaltet.`n"
 					}
-					adm.AutoLaborAbrufStatus := false
+					adm.Labor.AbrufStatus := false
 				}
 			; AutoLaborAbruf Funktionalität von Addendum einschalten oder wiederherstellen
 				else if RegExMatch(Switch, "i)(on|restore)") {
-					If (adm.AutoLaborabruf) || RegExMatch(Switch, "i)on")
+					If (adm.Labor.AutoAbruf) || RegExMatch(Switch, "i)on")
 						eL := Send_WM_COPYDATA("AutoLaborAbruf|an|" hLabCall, adm.ID)
 				}
 
@@ -575,13 +575,13 @@ LaborAbrufToggle(Switch="Off", Title:="") {
 
 			; keine Antwort, dann notieren und Fehler zurückmelden
 				If ThreadControl {
-					adm.AutoLaborAbrufStatus := false
-					writeStr := "|" A_ThisFunc "()`t- Addendum hat nicht geantwortet!`nDie Automatisierungsfunktionen konnten nicht wiederhergestellt werden.`n"
+					adm.Labor.AbrufStatus := false
+					writeStr := "|" A_ThisFunc "()`t- Addendum hat nicht geantwortet! Die Automatisierungsfunktionen konnten nicht wiederhergestellt werden.`n"
 					FileAppend, % (amsg .= datestamp(2) "|" StrReplace(writeStr, "`n", " ")) "`n", % adm.LogFilePath
 					eLvl := 0
 				} else {
-					adm.AutoLaborAbrufStatus := true
-					amsg .= "|" A_ThisFunc "()`t- Der AutoLaborabruf ist wieder eingeschaltet.`n"
+					adm.Labor.AbrufStatus := true
+					amsg .= datestamp(2) "|" A_ThisFunc "()  - Der AutoLaborabruf ist wieder eingeschaltet.`n"
 				}
 
 		}
@@ -627,7 +627,7 @@ MessageWorker(msg) {                                                       		;--
 			ThreadControl := false
 		else If InStr(recv.txtmsg, "AutoLaborAbruf Status") {
 			ThreadControl := false
-			adm.AutoLaborabruf := recv.Opt ? true : false
+			adm.Labor.AutoAbruf := recv.Opt ? true : false
 		}
 
 		PraxTT(recv.txtmsg, "6 1")

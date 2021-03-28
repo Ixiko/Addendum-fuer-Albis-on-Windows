@@ -7,7 +7,7 @@
 ;
 ;
 ;	                    	Addendum für Albis on Windows
-;                        	by Ixiko started in September 2017 - last change 08.03.2021 - this file runs under Lexiko's GNU Licence
+;                        	by Ixiko started in September 2017 - last change 28.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 tessOCRPdf(PDFName, params)             	{                          	;-- tesseract Texterkennung -> erstellt eine durchsuchbare PDF Datei
@@ -189,7 +189,7 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 			FileCopy, % pdfPath, % tess.backupPath "\" PDFName ".pdf"
 
 		FileCopy, % pdfPath, % tess.tempPath "\in.pdf", 1
-
+		FileGetSize, PDFSizeOld	, % tess.tempPath "\in.pdf"
 	;}
 
 	; Seitenbilder extrahieren            	;{
@@ -250,6 +250,8 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 
 	; OCR preprocessing                 	;{
 
+		startTime := A_TickCount
+
 		If (tess.preprocessing = "imagemagick") {
 
 				If (params.debug > 1)
@@ -277,7 +279,7 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 		}
 
 		If (params.debug > 0)
-			SciTEOutput("  - Preprocessing: abgeschlossen")
+			SciTEOutput("  - Preprocessing: abgeschlossen [" Round((A_TickCount-startTime)/1000, 1) " s]")
 
 	  ; infile und config file erstellen     	;{
 		workimgs := ""
@@ -304,7 +306,8 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 	; OCR                                        	;{
 
 		SciTEOutput("  - Texterkennung: gestartet ...")
-		tess_cmdline :=    tess.tessexe
+		startTime := A_TickCount
+		tess_cmdline := tess.tessexe
 		tess_cmdline .= " --tessdata-dir " q tess.tessdata q " "                       	; Datenverzeichnis
 		tess_cmdline .= q tess.infilepath q                                                  	; Eingabedateien
 		tess_cmdline .= " -l " tess.uselang " "                                                  	; OCR-Sprache
@@ -326,7 +329,7 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 		If (params.debug > 1)
 			SciTEOutput("  - Texterkennung: Tesseract Ausgabe`n   `t[" tess_cmdline  "]" (StrLen(stdOut) > 0 ? "`n" ParseStdOut(stdout) : ""))
 		else If (params.debug > 0)
-			SciTEOutput("  - Texterkennung: beendet")
+			SciTEOutput("  - Texterkennung: beendet [" Round((A_TickCount-startTime)/1000, 1) " s]")
 	;}
 
 	; OCR postprocessing                	;{
@@ -356,16 +359,16 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 		}
 		else {
 			; Überschreiben der Originaldatei
-			FileMove, % tess.tempPath "\merged.pdf", % tess.docPath "\" PDFName ".pdf", 1
+			FileCopy, % tess.tempPath "\merged.pdf", % tess.docPath "\" PDFName ".pdf", 1
 			If (params.debug > 0)
-				SciTEOutput(	"  - Dateierzeugung: PDF Datei wurde durch OCR Datei ersetzt`n"
-								.	"  - Dateierzeugung: Textdatei mit OCR Inhalt " ((TXTSize > 0) ? "wurde erstellt" : "konnte nicht erstellt werden"))
+				SciTEOutput(	"  - Dateierzeugung: PDF Datei [" Floor(PDFSizeOld/1024) " kb] wurde mit OCR Datei [" Floor(PDFSize/1024) " kb] ersetzt`n"
+								.	"  - Dateierzeugung: Textdatei mit OCR Inhalt " ((TXTSize > 0) ? " wurde erstellt [" TXTSize " Zeichen]" : "konnte nicht erstellt werden"))
 		}
 
 		; Textdatei kopieren wenn es einen Pfad für Textdateien gibt
-		If (tess.txtOCRPath <> "") && (TXTSize > 0) {
+		If (StrLen(tess.txtOCRPath) > 0) && (TXTSize > 0) {
 			PdfText :=  FileOpen(tess.tempPath "\out2.txt", "r").Read()
-			FileMove, % tess.tempPath "\out2.txt", % tess.txtOCRPath "\" PDFName ".txt", 1
+			FileCopy, % tess.tempPath "\out2.txt", % tess.txtOCRPath "\" PDFName ".txt", 1
 		}
 
 	}
@@ -378,7 +381,7 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 		else
 			LogText := "file:" PDFName ";time:" OCRDuration ";pages:" PageMax "; ocr failure: `n" RegExReplace(RegExReplace(stdout, "[\n\r]", "|"), "[\t]", " ")
 
-		FileAppend, % LogText "`n", % tess.OCRLogPath, % "UTF-8"
+		FileAppend, % "[" A_DD "-" A_MM "-" A_YYYY " " A_Hour ":" A_Min  "] " LogText "`n", % tess.OCRLogPath, % "UTF-8"
 	;}
 
   ;

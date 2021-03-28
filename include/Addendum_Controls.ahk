@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 10.03.2021 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 25.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
 return
@@ -193,9 +193,9 @@ GetButtonType(hwndButton) {                                                     
  return types[1+(btnStyle & 0xF)]
 }
 
-Controls(Control,cmd,WinTitle,HiddenText=1,HiddenWin=1,MatchModeSpeed="slow") {                	;-- Universalfunktion für Steuerelemente
+Controls(Control="",cmd="",WinTitle="",HTxt=1,HWin=1,MMSpeed="slow") {   	;-- Universalfunktion für Steuerelemente
 
-	; ********	    ********		Funktion wächst und gedeiht, gegossen am 16.02.2021
+	; ********	    ********		Funktion wächst und gedeiht, gegossen am 25.03.2021
 	;***	     *    ***	    ***	dependencies: 	Function: ClientToScreen()
 	;***             ***      ***                        	Function: KeyValueObjectFromLists()
 	;***             ***      ***                         	Function: VerifiedSetText() - [ ControlGetText() ]
@@ -215,16 +215,24 @@ Controls(Control,cmd,WinTitle,HiddenText=1,HiddenWin=1,MatchModeSpeed="slow") { 
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
 		static knWinTitle, knWinText, Ctrl := Object()
 
+	  ; first cmd - empty Ctrls Object now if called
+		If RegExMatch(Control " " cmd " " WinTitle " " , "i)Reset\s") || (StrLen(Control cmd WinTitle) = 0)      	{
+           	Ctrl			:= Object()
+           	result		:= 1
+           	knWinTitle	:= ""
+           	return 1
+		}
+
 		HiddenTextStatus        	:= A_DetectHiddenText
 		HiddenWinStatus        	:= A_DetectHiddenWindows
 		MatchModeSpeedStatus	:= A_TitleMatchModeSpeed
 		CoordModeWinStatus	:= A_CoordModeMouse
-		DetectHiddenText      	, % HiddenText=true ? "On":"Off"
-		DetectHiddenWindows	, % HiddenWin=true ? "On":"Off"
-		SetTitleMatchMode    	, % MatchModeSpeed
+		DetectHiddenText      	, % HTxt=true 	? "On":"Off"
+		DetectHiddenWindows	, % HWin=true	? "On":"Off"
+		SetTitleMatchMode    	, % MMSpeed
 		CoordMode              	, Mouse	, Screen
 		CoordMode              	, Pixel   	, Screen
-		sleep, 10                    	; CoordMode needs a pause to update - https://www.autohotkey.com/boards/viewtopic.php?f=14&t=38467
+		;sleep, 10                    	; CoordMode needs a pause to update - https://www.autohotkey.com/boards/viewtopic.php?f=14&t=38467
 	;}
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
@@ -321,45 +329,66 @@ Controls(Control,cmd,WinTitle,HiddenText=1,HiddenWin=1,MatchModeSpeed="slow") { 
 		else if RegExMatch(cmd	, "i)^\s*ControlClick"           	)         	{   	; clicks a control by its text or classNN and returns the ErrorLevel
 
 			; möglicher Syntax z.B. Controls("", "ControlClick, Speichern, Button", "YourWinTitle")
-				searchText		:= Trim( StrSplit(cmd, ",").2 )
-				searchClass	:= Trim( StrSplit(cmd, ",").3 )
+				searchText		:= Trim(StrSplit(cmd, ",").2)
+				searchClass	:= Trim(StrSplit(cmd, ",").3)
 
 				If (StrLen(searchText) > 0)  {
 					For ControlClass, ControlHwnd in Ctrl	{
 						ControlGetText, ControlText,, % "ahk_id " ControlHwnd
-
-						If ( InStr(ControlClass, searchClass) && InStr(ControlText, searchText) ) {
-							SciteOutPut(ControlClass ", " searchClass " - " ControlText ", " searchText)
+						ControlText := RegExReplace(ControlText, "[\&]", "")
+						If ( InStr(ControlClass, searchClass) && InStr(ControlText, searchText) )
 							return VerifiedClick(ControlClass, WinTitle)
-						}
 					}
 				}
 				else
 					return VerifiedClick(searchClass, WinTitle)		;searchClass must be the exact ClassNN in this case
 
 		}
-		else if RegExMatch(cmd	, "i)^\s*ControlFind"            	)        	{   	; finds a control by its text and returns it's ControlClassNN
+		else if RegExMatch(cmd	, "i)^\s*ControlFind"            	)        	{   	; finds a control by its text or hwnd, returns ControlClassNN and/or HWND
 
-			; möglicher Syntax z.B. Controls("", "ControlFind, Speichern, Button, return hwnd", winhwnd)
+			; möglicher Syntax (Textmodus)	Controls("", "ControlFind, Speichern, Button, return hwnd", winhwnd)
+			; möglicher Syntax (HWND) 		Controls("", "ControlFind, 0xaf454, [leer lassen], return hwnd", winhwnd)
 				searchText 	:= Trim(StrSplit(cmd, ",").2)
 				searchClass	:= Trim(StrSplit(cmd, ",").3)
 				returnOpt  	:= Trim(StrSplit(cmd, ",").4)
 
+				If RegExMatch(searchText, "i)^(0x[A-F0-9]+|\d+)$")
+					searchmode := 2
+				else
+					searchmode := 1
+
+				ctrlFound := false
 				For ControlClass, ControlHwnd in Ctrl {
-					ControlGetText, ControlText,, % "ahk_id " ControlHwnd
-					ControlText := RegExReplace(ControlText, "(\w)\&(\w)", "$1$2")
-					If InStr(ControlClass, searchClass) && InStr(ControlText, searchText) {
-						If RegExMatch(returnOpt, "i)^\s*return\s*both|all")
-							return {"class":ControlClass, "hwnd":GetHex(ControlHwnd)}
-						else if RegExMatch(returnOpt, "i)^\s*return\s*hwnd|id|handle")
-							return GetHex(ControlHwnd)
-						else
-							return ControlClass
+					If InStr(ControlClass, searchClass) {
+
+						If (searchmode = 1) 	    	{			; class search-mode
+							ControlGetText, ControlText,, % "ahk_id " ControlHwnd
+							ControlText := RegExReplace(ControlText, "[\&]", "")
+							If InStr(ControlText, searchText) {
+								ctrlFound := true
+								break
+							}
+						}
+						else if (searchmode = 2) 	{			; search hwnd by ctrl
+							If (GetDec(searchText) = GetDec(ControlHwnd)) {
+								ctrlFound := true
+								break
+							}
+						}
+
 					}
 				}
 
-				return
+				If ctrlFound {
+					If RegExMatch(returnOpt, "i)^\s*return\s*both|all")
+						return {"class":ControlClass, "hwnd":GetHex(ControlHwnd)}
+					else if RegExMatch(returnOpt, "i)^\s*return\s*hwnd|id|handle")
+						return GetHex(ControlHwnd)
+					else
+						return ControlClass
+				}
 
+				return
 		}
 		else if RegExMatch(cmd	, "i)^\s*ControlPos"           	)        	{   	; returns the controls position inside window
 
@@ -595,7 +624,7 @@ ControlGetFont(hWnd,ByRef Name,ByRef Size,ByRef Style,IsGDIFontSize=0) {  	;-- F
 
 	; www.autohotkey.com/forum/viewtopic.php?p=465438#465438
 
-    SendMessage 0x31, 0, 0, , ahk_id %hWnd% ; WM_GETFONT
+    SendMessage 0x31, 0, 0,, % "ahk_id " hWnd ; WM_GETFONT
     If (ErrorLevel == "FAIL")
         Return
 
@@ -782,6 +811,8 @@ VerifiedClick(CName, WTitle="", WText="", WinID="", WaitClose=0) {              
 		else if RegExMatch(WTitle, "i)^(0x[A-F\d]+|[\d]+)$")
 			WText := "", WTitle := "ahk_id " WTitle
 
+		CName := RegExReplace(CName, "[\&]", "")
+
 	; 3 verschiedene Wege einen Buttonklick auszulösen
 		ControlClick, % CName, % WTitle, % WText,,, NA
 		If (EL := ErrorLevel) {                                                                            ; Misserfolg = 1 , Erfolg = 0
@@ -824,7 +855,7 @@ VerifiedCheck(CName, WTitle="", WText="", WinID="", CheckIt=true) {          	;-
 		cd         	:= A_ControlDelay
 
 		SetTitleMatchMode, 2
-		SetControlDelay	, -1
+		SetControlDelay	, 10
 
 		if WinID
 			WTitle := "ahk_id " WinID, WText := ""

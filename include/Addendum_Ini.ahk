@@ -2,7 +2,7 @@
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                 liest Informationen aus der Addendum.ini ein für das globale Objekt Addendum
 ;                                                                              	!diese Bibliothek enthält Funktionen für Einstellungen des Addendum Hauptskriptes!
-;                                                            	by Ixiko started in September 2017 - last change 10.03.2021 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 20.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 return
@@ -16,7 +16,6 @@ admObjekte() {                                                                  
 		Addendum.Hooks                  	:= Object()       	; enthält Adressen der Callbacks der Hookprozeduren und anderes
 		Addendum.Kosten                  	:= Object()        	; hinterlegte Preise für Hotstringausgaben bei Privatabrechnungen
 		Addendum.Labor	    	        	:= Object()			; Laborabruf und andere Daten für Laborprozesse
-		Addendum.Laborabruf            	:= Object()         	; Statusinformationen zum Laborabruf
 		Addendum.LAN	                    	:= Object()			; LAN Kommunikationseinstellungen
 		Addendum.LAN.Clients          	:= Object()          	; LAN Netzwerkgeräte Einstellungen
 		Addendum.Module                  	:= Object()        	; Addendum Skriptmodule
@@ -54,7 +53,7 @@ admVerzeichnisse() {                                                            
 		Addendum.TPPath	                        	:= Addendum.DBPath "\Tagesprotokolle\" A_YYYY                     	; Tagesprotokollverzeichnis
 		Addendum.TPFullPath                      	:= Addendum.TPPath "\" A_MM "-" A_MMMM "_TP.txt" 	               	; Name des aktuellen Tagesprotokolls
 
-		Addendum.ExportOrdner                	:= IniReadExt("ScanPool"   	, "ExportOrdner"        	, Addendum.BefundOrdner "\Export")  ;### ÜBERPRÜFUNG ANLEGEN
+		Addendum.ExportOrdner                	:= IniReadExt("ScanPool"   	, "ExportOrdner", Addendum.BefundOrdner "\Export")  ;### ÜBERPRÜFUNG ANLEGEN
 		Addendum.AdditionalData_Path       	:= AddendumDir "\include\Daten"
 
 
@@ -202,6 +201,10 @@ admFunktionen() {                                                               
 		Addendum.Labor.AutoAbruf 		    := IniReadExt(compname	, "Laborabruf_automatisieren"         	, "nein"              	)
 		If InStr(Addendum.Labor.AutoAbruf, "Error") || (StrLen(Addendum.Labor.AutoAbruf) = 0)
 			Addendum.Labor.AutoAbruf	:= false
+	; Laborabruf bei manuellem Start automatisieren
+		Addendum.Labor.AutoImport		    := IniReadExt(compname	, "Laborimport_automatisieren"         	, "nein"              	)
+		If InStr(Addendum.Labor.AutoImport, "Error") || (StrLen(Addendum.Labor.AutoImport) = 0)
+			Addendum.Labor.AutoImport	:= false
 	; Infofenster das den Inhalt des Bildvorlagen-Ordners anzeigt
 		Addendum.AddendumGui          	:= IniReadExt(compname	, "Infofenster_anzeigen"                  	, "ja"                 	)
 	; Logbuch für Aktionen in der Karteikarte
@@ -213,14 +216,15 @@ admFunktionen() {                                                               
 	; die Addendum Toolbar starten
 		Addendum.ToolbarThread            	:= IniReadExt(compname	, "Toolbar_anzeigen"                         	, "nein"                 	)
 	; Schnellrezept integrieren
-		Addendum.Schnellrezept           	:= IniReadExt("Addendum"	, "Schnellrezept"                              	, "ja"                 	)
+		Addendum.Schnellrezept           	:= IniReadExt(compname	, "Schnellrezept"                              	, "ja"                 	)
 	; zeigt TrayTips
-		Addendum.ShowTrayTips           	:= IniReadExt("Addendum"	, "TrayTips_zeigen"                            	, "nein"                 	)
+		Addendum.ShowTrayTips           	:= IniReadExt(compname	, "TrayTips_zeigen"                            	, "nein"                 	)
 	; AutoOCR - Eintrag wird nur auf dem dazu berechtigten Client angezeigt
 		Addendum.OCR.AutoOCR            	:= IniReadExt("OCR"      	, "AutoOCR"                                  	, "nein"                 	)
 	; ermöglicht die sofortige Bearbeitung/Anzeige neuer Dateien
 		Addendum.OCR.WatchFolder    	:= IniReadExt(compname	, "BefundOrdner_ueberwachen"       	, "ja"                 	)
-
+	; automatische Bestätigung bei "Möchten Sie diesen Eintrag wirklich löschen?"
+		Addendum.AutoDelete                	:= IniReadExt(compname	, "Eintrag_wirklich-loeschen"            	, "nein"                 	)
 
 }
 
@@ -233,7 +237,7 @@ admGesundheitsvorsorge() {                                                      
 
 }
 
-admPIDHandles() {                                                                                   	;-- Prozess-ID's
+admPIDHandles() {                                                                                  	;-- Prozess-ID's
 
 		Addendum.AlbisPID                        	:= AlbisPID()
 		Addendum.scriptPID                       	:= DllCall("GetCurrentProcessId")          	; die ScriptPID wird für das SkriptReload und die Interskript-Kommunikation benötigt
@@ -245,16 +249,23 @@ admInfoWindowSettings() {                                                       
 		tmp1 := IniReadExt(compname, "InfoFenster_Position", "y2 w400 h340")
 		RegExMatch(tmp1, "y\s*(\d+)\s*w\s*(\d+)\s*h\s*(\d+)", match)
 
+	; nutze hier oder in der ini den Syntax [Trigger1,Trigger2](Name des Wartezimmer,Kommentar,Anwesenheit)
+	; wenn bei Kommentar "Dateiname" steht nutzt das Infofenster die Dokumentbezeichnung
+		DefaultTrigger := "[Anfrage,Antrag](Anfragen,Dateiname,Ohne Status)"
+
 		Addendum.iWin := {	"Y"                     	: match1
 									, 	"W"                    	: match2
 									,	"ReIndex"            	: false
 									,	"rowprcs"           	: 0
 									,	"Init"                    	: false
-									,	"ConfirmImport"   	: IniReadExt(compname, "Infofenster_Import_Einzelbestaetigung"  	, "Ja")
-									,	"firstTab"           	: IniReadExt(compname, "Infofenster_aktuelles_Tab"                     	, "Patient")
-									,	"TProtDate"         	: IniReadExt(compname, "Infofenster_Tagesprotokoll_Datum"       	, "Heute")
-									,	"JournalSort"      	: IniReadExt(compname, "Infofenster_JournalSortierung"               	, "3 1 1")
-									,	"LBDrucker"       	: IniReadExt(compname, "Infofenster_Laborblatt_Drucker"               	, "")
+									,	"AbrHelfer"        	: IniReadExt(compname, "Infofenster_Abrechnungshelfer"        	, "Ja")                    		; Abrechnungshelfer anzeigen
+									,	"WZKommentar"   	: IniReadExt(compname, "Infofenster_AutoWZ_Kommentar"        	, "Ja")
+									,	"AutoWZTrigger" 	: IniReadExt(compname, "Infofenster_AutoWZ_Trigger"               	, DefaultTrigger)
+									,	"ConfirmImport"   	: IniReadExt(compname, "Infofenster_Import_Einzelbestaetigung"	, "Ja")
+									,	"firstTab"           	: IniReadExt(compname, "Infofenster_aktuelles_Tab"                 	, "Patient")
+									,	"TProtDate"         	: IniReadExt(compname, "Infofenster_Tagesprotokoll_Datum"    	, "Heute")
+									,	"JournalSort"      	: IniReadExt(compname, "Infofenster_JournalSortierung"             	, "3 1 1")
+									,	"LBDrucker"       	: IniReadExt(compname, "Infofenster_Laborblatt_Drucker"          	, "")
 									,	"LVScanPool"        	: {"W"	: (match2 - 10)
 																	,	"R"	: IniReadExt(compname, "InfoFenster_BefundAnzahl", 7)}}
 
@@ -300,9 +311,6 @@ admInfoWindowSettings() {                                                       
 		If InStr(thisT, "ERROR") || (StrLen(thisT) = 0)
 			Addendum.iWin.TProtDate := "Heute"
 
-	; Tab - Patient
-		Addendum.iWin.AbrHelfer	:= IniReadExt(compname, "Infofenster_Abrechnungshelfer", "ja"	)  	; Abrechnungshelfer anzeigen
-
 	Addendum.ImportRunning 	:= false
 	Addendum.iWin.Init	:= 0
 
@@ -340,19 +348,20 @@ admTools() {                                                                    
 
 admLaborDaten() {                                                                                	;-- Laborabruf, Verarbeitung Laborwerte
 
-		Addendum.Laborabruf.Status	:= false
-		Addendum.Laborabruf.Daten:= false
-		Addendum.Laborabruf.Voll  	:= false
+		Addendum.Labor.AbrufStatus	:= false
+		Addendum.Labor.AbrufDaten:= false
+		Addendum.Labor.AbrufVoll  	:= false
 
-		Addendum.Labor.LDTDirectory     	:= IniReadExt("LaborAbruf"	, "LDTDirectory"                        , "C:\Labor"	)
-		Addendum.Labor.ExecuteOn       	:= IniReadExt("LaborAbruf"	, "OnlyRunOnClient"                     	    , ""    	)  	; auf welchem/n Client/s der Laborabruf ausgeführt werden darf
-		Addendum.Labor.ExecuteFile       	:= IniReadExt("LaborAbruf"	, "Laborabruf_Extern"                    	    , ""    	)  	; externes Programm das für den Abruf ausgeführt werden muss
-		Addendum.Labor.ExecuteScript     	:= IniReadExt("LaborAbruf"	, "Laborabruf_Skript"                    	    , ""    	)  	; Skript das den Abruf übernimmt
-		Addendum.Labor.LaborName       	:= IniReadExt("LaborAbruf"	, "LaborName"                             	    , ""    	)  	; falls sie mehrere Labore haben, tragen Sie das aktuelle hier ein
-		Addendum.Labor.Laborkuerzel     	:= IniReadExt("LaborAbruf"	, "Aktenkuerzel"                            	    , "labor")  	; Karteikartenkürzel um Informationen ablegen zu können
-		Addendum.Labor.Alarmgrenze     	:= IniReadExt("LaborAbruf"	, "Alarmgrenze"                            	    , "30%"	)  	; Alarmierungsgrenze in Prozent oberhalb der Normgrenzen
-		                           AbrufZeiten      	:= IniReadExt("LaborAbruf"	, "LaborAbruf_Zeiten"                    	    , ""    	)	; z.B. "06:00, 15:00, 19:00, 21:00"
-		Addendum.Labor.Kennwort       	:= IniReadExt("LaborAbruf"	, "LaborKennwort"                        	    , ""    	)	; für order&entry per CGM-Channel
+		                           AbrufZeiten      	:= IniReadExt("LaborAbruf"	, "LaborAbruf_Zeiten"           	    , ""            	)	; z.B. "06:00, 15:00, 19:00, 21:00"
+		Addendum.Labor.ExecuteOn       	:= IniReadExt("LaborAbruf"	, "OnlyRunOnClient"             	    , ""            	)  	; auf welchem/n Client/s der Laborabruf ausgeführt werden darf
+		Addendum.Labor.ExecuteFile       	:= IniReadExt("LaborAbruf"	, "Laborabruf_Extern"           	    , ""            	)  	; externes Programm das für den Abruf ausgeführt werden muss
+		Addendum.Labor.ExecuteScript     	:= IniReadExt("LaborAbruf"	, "Laborabruf_Skript"                	, ""            	)  	; Skript das den Abruf übernimmt
+		Addendum.Labor.ZeigeLabJournal	:= IniReadExt("LaborAbruf"	, "Laborabruf_ZeigeJournal"    	, "nein"        	)	; nach dem Ende des Laborabrufes das Laborbuch anzeigen lassen
+		Addendum.Labor.LbName         	:= IniReadExt("LaborAbruf"	, "LaborName"                     	    , ""            	)  	; falls sie mehrere Labore haben, tragen Sie das aktuelle hier ein
+		Addendum.Labor.Alarmgrenze     	:= IniReadExt("LaborAbruf"	, "Alarmgrenze"                    	    , "30%"      	)  	; Alarmierungsgrenze in Prozent oberhalb der Normgrenzen
+		Addendum.Labor.Laborkuerzel     	:= IniReadExt("LaborAbruf"	, "Aktenkuerzel"                    	    , "labor"    	)  	; Karteikartenkürzel um Informationen ablegen zu können
+		Addendum.Labor.LDTDirectory     	:= IniReadExt("LaborAbruf"	, "LDTDirectory"                       	, "C:\Labor"	)	; Verzeichnis in dem die heruntergeladenen LDT-Dateien zwischengespeichert werden
+		Addendum.Labor.Kennwort       	:= IniReadExt("LaborAbruf"	, "LaborKennwort"                 	    , ""            	)	; für order&entry per CGM-Channel
 		If InStr(Addendum.Labor.Kennwort, "Error")
 			Addendum.Labor.Kennwort := ""
 
@@ -587,7 +596,7 @@ admSonstiges() {                                                                
 			PraxTT("File not exist: " Addendum.DBPath "\PatData\PatExtra.json", "4 1")
 
 	; Verzögerung bis zum Schliessen des Dialoges "Patient hat in diesem Quartal seine Chipkarte..." (0 = keine Verzögerung)
-		Addendum.noChippie := IniReadExt(compname, keineChipkarte, 3)
+		Addendum.noChippie := IniReadExt(compname, "keineChipkarte", 3)
 
 }
 

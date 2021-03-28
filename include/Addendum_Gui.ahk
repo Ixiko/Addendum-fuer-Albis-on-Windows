@@ -14,7 +14,7 @@
 ;
 ;
 ;	                    	Addendum für Albis on Windows
-;                        	by Ixiko started in September 2017 - letzte Änderung 17.03.2021 - this file runs under Lexiko's GNU Licence
+;                        	by Ixiko started in September 2017 - letzte Änderung 28.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
 
@@ -172,10 +172,12 @@ AddendumGui(admShow="") {
 	;}
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
-	; Vorbereitungen
+	; Überprüfungen
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
 	; Albis wurde beendet -return-
 		If !WinExist("ahk_class OptoAppClass") {
+			Addendum.iWin.ReCheck := 0
+			Addendum.iWin.lastPatID := 0
 			admGui_Destroy()
 			return
 		}
@@ -183,36 +185,22 @@ AddendumGui(admShow="") {
 	; mehr als 9 Versuche das MDIFrame zu finden, führen zum Abbruch des Selbstaufrufes der Funktion
 		If (Addendum.iWin.ReCheck > 9) {
 			Addendum.iWin.ReCheck := 0
+			Addendum.iWin.lastPatID := 0
+			admGui_Destroy()
 			TrayTip, AddendumGui, % "Die Integration des Infofenster ist fehlgeschlagen.", 2
 			return
 		}
 
 	; Position innerhalb des Albisfenster für die Integration finden
-		Aktiv         	:= Addendum.AktiveAnzeige := AlbisGetActiveWindowType()
+		Aktiv	:= Addendum.AktiveAnzeige := AlbisGetActiveWindowType()
 		res                := Controls("", "Reset", "")
 		hMDIFrame	:= Controls("AfxMDIFrame1401"	, "ID", AlbisMDIChildGetActive())
 		hStamm		:= Controls("#327701"             	, "ID", hMDIFrame)
-		If !RegExMatch(Aktiv, "i)Karteikarte|Laborblatt|Biometriedaten|Rechnungsliste") || (GetDec(hMDIFrame) = 0) || (GetDec(hStamm) = 0) {
+		If !RegExMatch(Aktiv, "i)(Karteikarte|Laborblatt|Biometriedaten|Rechnungsliste)") || (GetDec(hMDIFrame) = 0) || (GetDec(hStamm) = 0) {
 			SetTimer, % func_admGui, -1000
 			Addendum.iWin.lastPatID := 0
 			Addendum.iWin.ReCheck ++
 			return
-		}
-
-	; legt die Höhe der Gui anhand der Größe des MDIFrame-Fenster fest
-		If (Addendum.iWin.lastPatID <> AlbisAktuellePatID()) {
-
-			APos  	:= GetWindowSpot(AlbisWinID())
-			SPos 	:= GetWindowSpot(hStamm)
-
-			Addendum.iWin.StammY	:= Round(SPos.Y / factor)
-			Addendum.iWin.X	         	:= APos.CW - Addendum.iWin.W ; ClientWidth passt besser!
-			Addendum.iWin.H          	:= admHeight := SPos.CH
-			admWidth                     	:= Addendum.iWin.W
-
-		; der Albisinfobereich (Stammdaten, Dauerdiagnosen, Dauermedikamente) wird für das Einfügen der Gui verkleinert
-			If (SPos.W > APos.CW - admWidth) ; verhindert ein wiederholtes Verkleinern
-				SetWindowPos(hStamm, 2, 2, APos.CW - admWidth - 4, SPos.CH)
 		}
 
 	;}
@@ -221,7 +209,20 @@ AddendumGui(admShow="") {
 	; Gui zeichnen
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
 	If (Addendum.iWin.lastPatID <> AlbisAktuellePatID()) {
-		Addendum.iWin.lastPatID := AlbisAktuellePatID()
+
+			APos          	:= GetWindowSpot(AlbisWinID())
+			SPos          	:= GetWindowSpot(hStamm)
+
+		; legt die Höhe der Gui anhand der Größe des MDIFrame-Fenster fest
+			Addendum.iWin.StammY	:= Round(SPos.Y / factor)
+			Addendum.iWin.X	         	:= APos.CW - Addendum.iWin.W ; ClientWidth passt besser!
+			Addendum.iWin.H          	:= admHeight := SPos.CH
+			admWidth                     	:= Addendum.iWin.W
+			Addendum.iWin.lastPatID	:= AlbisAktuellePatID()
+
+		; der Albisinfobereich (Stammdaten, Dauerdiagnosen, Dauermedikamente) wird für das Einfügen der Gui verkleinert
+			If (SPos.W > APos.CW - admWidth) ; verhindert ein wiederholtes Verkleinern
+				SetWindowPos(hStamm, 2, 2, APos.CW - admWidth - 4, SPos.CH)
 
 	; umgeht die seltene Problematik der eines nicht mehr vorhandenen Handle eines MDIFrame, wenn der Nutzer eine
 	; Karteikarte schon geschlossen hat und das Skript noch dieses Handle erfasst hatte
@@ -546,10 +547,10 @@ AddendumGui(admShow="") {
 	;---------------------------------------------------------------------------------------------------------------------------------------------
 	; Gui zeigen
 	;---------------------------------------------------------------------------------------------------------------------------------------------;{
-		; Fensterstyles anpassen
-			If !hMDIFrame {
-				res                := Controls("", "Reset", "")
-				hMDIFrame	:= Controls("AfxMDIFrame1401"	, "ID", AlbisMDIChildGetActive())
+		; MDIFrame handle prüfen
+			res := Controls("Reset")
+			If !InStr(Controls("", "ControlFind, " hMDIFrame ",, return class", AlbisMDIChildGetActive()), "AfxMDIFrame1401") {
+				hMDIFrame	:= Controls("AfxMDIFrame1401", "ID", AlbisMDIChildGetActive())
 			}
 
 		; AfxMidiFrame als Child zuordnen
@@ -775,7 +776,7 @@ return ;}
 adm_Journal:                                                                                     	;{ Journal Tab
 
 	; Default Listview, gewählter Dateiname
-		If A_EventInfo = EventInfo
+		If (A_EventInfo = EventInfo)
 			return
 		EventInfo	:= A_EventInfo
 		Journal.ListView()
@@ -785,7 +786,6 @@ adm_Journal:                                                                    
 			GuiControl, adm: , admButton2, % "Importieren [" admFile.Count() "]"
 		else
 			GuiControl, adm: , admButton2, % "Importieren"
-
 
 	; Kontextmenu
 		If InStr(A_GuiEvent	, "RightClick") && (StrLen(admFile) > 0) && !IsObject(admFile)	{
@@ -1402,26 +1402,23 @@ admGui_Journal(refreshDocs=false)                              	{	            	;
 		global admHJournal
 		static FirstRun := true
 
-		ImageImport := false
-		PdfImport   	:= false
-
 		admGui_Default("admJournal")
 		LV_Delete()
 
-	; SCANPOOL OBJECT UND "PdfIndex.json" DATEI AUFFRISCHEN
+	; SCANPOOL OBJECT AUFFRISCHEN
 		If (refreshDocs || FirstRun) {
 			FirstRun := false
-			newPDF := BefundIndex()
-		}
+			pdfpool.Update(false, true, Addendum.DBPath "\sonstiges")  ; (ReIndex = false, save = true)
+		} else
+			pdfpool.RemoveNoFile()
 
 	; PDF BEFUNDE DES PATIENTEN HINZUFÜGEN
+		admGui_OCRButton("-OCR ausführen")
 		Addendum.iWin.OCREnabled := false
-		For key, pdf in ScanPool	{
-			If FileExist(filePath := Addendum.BefundOrdner "\" pdf.name) {
-				LV_Add((pdf.isSearchable ? "ICON3" : "ICON1"), pdf.name, pdf.pages, pdf.filetime, pdf.timeStamp) 	; anderes Symbol für durchsuchbare PDF Dateien
-				If !pdf.isSearchable && !Addendum.iWin.OCREnabled
-					Addendum.iWin.OCREnabled := true
-			}
+		For docID, pdf in ScanPool	{
+			LV_Add((pdf.isSearchable ? "ICON3" : "ICON1"), pdf.name, pdf.pages, pdf.filetime, pdf.timeStamp) 	; anderes Symbol für durchsuchbare PDF Dateien
+			If !Addendum.iWin.OCREnabled && !pdf.isSearchable
+				Addendum.iWin.OCREnabled := true
 		}
 
 	; OCR BUTTON
@@ -1431,8 +1428,6 @@ admGui_Journal(refreshDocs=false)                              	{	            	;
 			else
 				admGui_OCRButton("+OCR ausführen")
 		}
-		else
-			admGui_OCRButton("-OCR ausführen")
 
 	; BILD-DOKUMENTE HINZUFÜGEN
 		Loop, Files, % Addendum.BefundOrdner "\*.*"
@@ -1831,6 +1826,7 @@ admCM_JRecogAll()                                                         	{    
 		For idx, filename in unnamed {
 
 			; Pfade festlegen
+
 				path  	:= Befunde.GetPaths(filename)
 				counter	:= SubStr(cPrefix . idx, -1*cLen) "/" unnamed.Count()
 				Befunde.Backup(path.fF)
@@ -1842,6 +1838,7 @@ admCM_JRecogAll()                                                         	{    
 			; Text extrahieren, falls noch nicht geschehen
 				If PDFisSearchable(Path.fF) && !FileExist(path.fT) {
 
+					SciTEOutput("Textpath: " path.fT)
 					; Fortschritt anzeigen
 						admCM_JRnProgress([counter, filename, "Text wird extrahiert....", "---", "---", lastnewadmFile])
 
@@ -1852,19 +1849,23 @@ admCM_JRecogAll()                                                         	{    
 														.	" " q Path.fF q
 														. 	" " q Path.fT q
 						stdout := StdOutToVar(cmdline)
-						If !FileExist(Path.fT)
+						If !FileExist(Path.fT) {
+							PraxTT("Datei [" counter "] " filename "`nTextextraktion fehlgeschlagen", "2 1" )
 							continue
+						}
 
 				} else if !PDFisSearchable(Path.fF) {
 					; Protokollierung
-						PraxTT("Datei [" counter "] " filename " ist nicht durchsuchbar", "2 2" )
+						PraxTT("Datei [" counter "] " filename " ist nicht durchsuchbar", "2 1" )
+						Sleep 500
 						continue
 				}
 
 			; extrahierten Text lesen
 				doctext := FileOpen(Path.fT, "r").Read()
 				If (StrLen(Trim(doctext)) = 0) {
-					PraxTT("Der extrahierte Text enthält keine Zeichen.`n[" filename "]", "2 2")
+					PraxTT("Der extrahierte Text enthält keine Zeichen.`n[" filename "]", "2 1")
+					Sleep 500
 					FileDelete, % Path.fT
 					continue
 				}
@@ -1915,7 +1916,7 @@ admCM_JRecogAll()                                                         	{    
 
 				}
 				else if	(IsObject(fNames) && fNames.Count() < 1) {
-					PraxTT("Dokument: " filename "`nkonnte keinem Patienten zugeordnet werden", "4 1")
+					PraxTT("Dokument: " filename "`nkonnte keinem Patienten zugeordnet werden", "1 1")
 				}
 				else If 	(IsObject(fNames) && fNames.Count() > 1) {
 
@@ -1934,7 +1935,7 @@ admCM_JRecogAll()                                                         	{    
 
 				}
 				else {
-					PraxTT("Dokument: " filename "`nkonnte keinem Patienten zugeordnet werden", "4 1")
+					PraxTT("Dokument: " filename "`nkonnte keinem Patienten zugeordnet werden", "1 1")
 				}
 
 		}
@@ -2011,6 +2012,613 @@ admGui_LaborblattDruck(Printer, Druckspalten)                 	{                
 }
 
 
+; -------- Dokumentklassen
+class Journal                                                                 	{                	; Listviewhandler des Journals
+
+		;selNextUnnamed
+
+		Remove(fname:="", rLV:="")  {        	; entfernt eine Datei aus der Listview
+
+			; ein Dateiname oder eine Zeilennummer können übergeben werden
+
+			global admJournal, adm, admHTab, admHJournal
+
+			this.Default()
+			this.RedrawLV(false)
+			row := fname?this.getRow(fname) : rLV?rLV : 0
+			If (row > 0)
+				res := LV_Delete(row)
+			else
+				res := -1
+			this.RedrawLV(true)
+
+		return res
+		}
+
+		GetNext(rLV:=0, LVNI:=2)   	{        	; findet die nächste ausgewählte Zeile
+			global admJournal, adm, admHTab, admHJournal
+			; rLV = 1 based index of the starting row for the flag search. Omit or 0 to find first occurance specified flags.
+			; LVNI_ALL := 0x0, LVNI_FOCUSED := 0x1, LVNI_SELECTED := 0x2
+		return DllCall("SendMessage", "uint", admHJournal, "uint", 4108, "uint", rLV-1, "uint", LVNI) + 1
+		}
+
+		GetRow(fname, col:=1)        	{         	; Zeilennummer mit diesem Dateinamen
+
+			row := 0
+			this.Default()
+			Loop % LV_GetCount() {
+				LV_GetText(rText, A_Index, col)
+				If (rText = fname) {
+					row := A_Index
+					break
+				}
+			}
+
+		return row
+		}
+
+		GetSelected(col:=1)             	{        	; alle ausgewählten Zeilen auslesen
+
+			row 		:= 0
+			JFiles	:= Array()
+
+			this.Default()
+			while (row := LV_GetNext(row)) {
+				LV_GetText(fname, row, col)
+				JFiles.Push(fname)
+			}
+
+			if (JFiles.MaxIndex() = 1)
+				return JFiles[1]
+			else if (JFiles.MaxIndex() > 1)
+				return JFiles
+			else
+				return ""
+
+		}
+
+		GetText(row, col:=1)            	{        	; Text einer Zeile, Spalte auslesen
+			this.Default()
+			LV_GetText(rText, row, col)
+		return rText
+		}
+
+		Replace(sourcefile, targetfile)	{         	; Dateinamen ändern
+
+			row := 0
+
+			this.Default()
+			this.RedrawLV(false)
+
+			Loop % LV_GetCount() {
+				row := A_Index
+				LV_GetText(rowFilename, row, 1)
+				If (rowFilename = sourcefile) {
+					this.ListView()
+					LV_Modify(row, "Vis", targetfile)
+					break
+				}
+			}
+
+			this.RedrawLV(true)
+
+		return row		; 0 = nicht gefunden
+		}
+
+		ShowMenu(admFileObj)    	{        	; Kontextmenu anzeigen
+
+			MouseGetPos, mx, my, mWin, mCtrl, 2
+			If IsObject(admFileObj)
+				Menu, admJCM1	, Show, % mx - 20, % my + 10
+			else
+				Menu, admJCM	, Show, % mx - 20, % my + 10
+
+		return
+		}
+
+		Default()                             	{        	; Gui und Listview Default machen
+			global admJournal, adm, admHTab, admHJournal
+			Gui, adm: Default
+			Gui, adm: ListView, % "admJournal"
+		}
+
+		Focus()                                	{        	; das Listview erhält den Eingabefokus
+			global admJournal, adm, admHTab, admHJournal
+			this.Default()
+			GuiControl, adm: Focus, % "admJournal"
+		return ErrorLevel
+		}
+
+		ListView()                            	{        	; nur das Listview Default machen
+			global admJournal, adm, admHTab, admHJournal
+			Gui, adm: ListView, % "admJournal"
+		}
+
+		RedrawLV(rdw)                     	{      	; Listview neuzeichnen an oder aus
+			global admJournal, adm, admHTab, admHJournal, hadm
+			GuiControl, % "adm: " (rdw?"+":"-") "Redraw", % "admJournal"
+			RedrawWindow(hadm)
+		return ErrorLevel
+		}
+
+		Show()                               	{        	; zeigt den Journal Tab an
+			global admHTab
+		return admGui_ShowTab("Journal", admHTab)
+		}
+
+}
+
+class Befunde                                                                	{               	; Dokument-Datei-Handler
+
+	; Diese Klasse ist nur für Addendum ausgelegt.
+	; Sie operiert in einem Hauptordner mit 2 Unterordnern und jeweils einem Backupordner.
+
+		dbgStatus[]                                                            	{ 	; getter und setter
+			get {
+				return this.debug
+			}
+		}
+
+		fPath[]                                                                    	{	; aufrufen um den Hauptpfad abzurufen
+			get {
+				return this.fPath
+			}
+		}
+
+		Backup(fname)                                                       	{	; Backupdatei erstellen
+
+		  ; fF	- original file path, fB - original backup path
+			eL 	:= []
+			path	:= this.GetPaths(fname)
+
+			If !FileExist(path.fB) {
+				FileCopy, % path.fF, % path.fB
+				ErrorLevel ? (eL.1 := A_LastError) : ""
+				If this.debug && ErrorLevel
+					SciTEOutput("Backup konnte nicht erstellt werden")
+			}
+
+		}
+
+		Rename(oldfile, newfile)                                          	{	; umbenennen
+
+			; oF - original file path, oB - original backup path
+				eL 	:= []
+				path	:= this.GetPaths(newfile, oldfile)
+
+				If this.debug
+					SciTEOutput("Rename " oldfile " to " newfile)
+
+			; Dokument umbenennen
+				If !FileExist(path.oF) {
+					PraxTT("Datei: <" oldfile ">`nist nicht vorhanden!", "2 0")
+					eL.1 := "no file"
+					return eL
+				}
+				FileMove, % path.oF, % path.fF, 1
+				If ErrorLevel {
+					ErrorLevel ? (eL.2 := A_LastError) : ""
+					PraxTT("Das Umbenennen der Datei`n#1<" oldfile ">`nwurde mit dem Fehlercode (" A_LastError ") abgelehnt.", "4 0")
+					return eL
+				}
+
+			; Backup-Datei umbennen, ggf. erstellen
+				If !FileExist(path.oB) {
+
+					FileCopy, % path.fF, % path.fB                                    ; wird mit dem neuen Dateinamen erstellt
+					ErrorLevel ? (eL.3 := A_LastError) : ""
+					If this.debug && ErrorLevel
+						SciTEOutput("Backup konnte nicht erstellt werden")
+					else If this.debug && !ErrorLevel
+						SciTEOutput("Backup Datei wurde angelegt.")
+
+				} else {
+
+					FileMove, % path.oB, % path.fB, 1
+					ErrorLevel ? (eL.4 := A_LastError) : ""
+					If this.debug && ErrorLevel
+						SciTEOutput("Backup konnte nicht umbenannt werden")
+
+				}
+
+			; Textdatei umbenennen
+				If (path.oX = "pdf") {
+					If FileExist(path.oT) {
+						FileMove, % path.oT, % path.fT, 1
+						ErrorLevel ? (eL.5 := A_LastError) : ""
+						If this.debug && ErrorLevel
+							SciTEOutput("Text-Datei konnte nicht umbenannt werden")
+					} else {
+						If this.debug
+							SciTEOutput("Text-Datei nicht vorhanden")
+					}
+				}
+
+		return eL.Count() > 0 ? eL : 1
+		}
+
+		RegExRename(fname, rnPattern)                              	{	; RegEx umbenennen für Batch-Renaming
+			If RegExMatch(rnPattern, "^(?<Options>.*)?\)(?<pattern>.*)$", rx)
+			RegExMatch(fname, "o" )
+			this.Rename(fname, newfile)
+		}
+
+		MoveToImports(fname)                                           	{	; Dateien in den Import-Ordner verschieben
+
+			; es gibt keine Remove-Funktion, alle Dokumente erhalten ein Backup
+			; verschiebt konsequent die Dateien in den zweiten Backup Pfad
+			; der erste Pfad dient der Kontrolle der Zuverlässigkeit der programmierten Dateioperationen
+			; es sollten schließlich keine Daten verloren gehen
+
+			; .fB - document backup path
+			; .iB - document import path 	(second backup path)
+				eL 	:= []
+				path	:= this.GetPaths(fname)
+
+			; Backup-Dokument - verschieben nach Imports
+				If FileExist(path.fB) {
+					FileMove, % path.fB, % path.iB, 1
+					ErrorLevel ? (eL.1 := A_LastError) : ""
+					If this.debug && ErrorLevel
+						SciTEOutput("Backup konnte nicht verschoben werden")
+				}
+
+			; Textdatei wird verschoben, insofern vorhanden
+				If FileExist(path.fT) {
+					FileMove, % path.fT, % path.iT, 1
+					ErrorLevel ? (eL.2 := A_LastError) : ""
+					If this.debug && ErrorLevel
+						SciTEOutput("Text-Datei konnte nicht verschoben werden")
+				}
+
+		return eL.Count() > 0 ? eL : 1
+		}
+
+		CleanImport(fromDate)                                            	{	; Dateien die älter sind werden vollständig gelöscht
+
+
+
+		}
+
+		GetFileExt(fname)                                                   	{	; Dateiendung
+			RegExMatch(fname, "i)\.(?<Ext>[a-z]+)$", File)
+		return FileExt
+		}
+
+		GetPaths(fname:="", oldfile:="", path:="")                 	{	; erstellt alle notwendigen Dateipfade
+
+			/* 	Beschreibung
+
+				- 	erstellt in einem Durchgang alle Dateipfade für die in 3 Ordner verteilten PDF und Textdateien
+				- 	vereinfacht dadurch Löschvorgänge, das Umbenennen oder das Importieren, da mit jeder Änderung der eigentlichen
+					PDF-Datei die anderen beiden Dateien entsprechend verschoben, entfernt oder umbenannt werden müssen
+				-	erstellte Strings werden im Object Path gespeichert. Die Variablennamen sind dabei sehr kurz gewählt.
+					verwendete Kurzzeichen:
+
+						this.Path.[BasisName][BasisOrdner oder andere Bezeichnung]
+
+						[BasisName]
+							.f		= Dateiname wenn kein Quell-Dateiname übergeben wurde, oder neuer Dateiname
+							.o		= old oder Quell-Dateiname
+							.i		= Dateibasis für importierte Dateien
+
+						[BasisOrdner oder andere Bezeichnung]
+							F		= Pfad + Dateiname zum Stammordner
+							B		= Pfad + Dateiname zum Backupordner
+							T		=	Pfad + Dateiname zum Textdateiordner
+							X		= Dateiendung
+							N		= nur der Dateiname
+
+						.fFN ist nur der Dateiname (ohne Pfad) der Datei im Stammordner
+
+				-	## austehend: legt bei Bedarf alle Unterverzeichnisse an
+
+				-	letzte Änderung: 23.03.2021 - erstellt nur die Basis-Pfade wenn fname und oldfile leer ist
+
+			*/
+
+			; Hauptordner eintragen
+				fpathChanged := false
+				If (StrLen(path) = 0) && (StrLen(this.fPath) = 0) {
+					fpathChanged := true
+					this.fPath := Addendum.BefundOrdner
+				}
+				else if path && (this.fPath<>path) {
+					fpathChanged := true
+					this.fPath := path
+				}
+
+			; Unterpfade eintragen
+				If this.initPaths {
+
+					this.initPaths	:= false
+					this.fBPath		:= this.fPath "\Backup"
+					this.iBPath		:= this.fPath "\Backup\Importiert"
+					this.fTPath		:= this.fPath "\Text"
+					this.iTPath		:= this.fPath "\Text\Backup"
+
+					If !this.pathExist(this.fBPath)
+						throw A_ThisFunc ": Dokument Backup Pfad ist nicht vorhanden!"
+					If !this.pathExist(this.iBPath)
+						throw A_ThisFunc ": Dokument Import Pfad ist nicht vorhanden!"
+					If !this.pathExist(this.fTPath)
+						throw A_ThisFunc ": Textdatei Pfad ist nicht vorhanden!"
+					If !this.pathExist(this.iBPath)
+						throw A_ThisFunc ": Textdatei Backup Pfad ist nicht vorhanden!"
+				}
+
+			; zurück wenn beide Dateinamen leer sind
+				If !fname && ! oldfile
+					return this.fPath
+
+			; Pfadstrings leeren
+				this.Path := Object()
+
+			; prüft die Dateien auf passende Dateierweiterungen
+				this.Path.fX := this.GetFileExt(fname)
+				If (StrLen(oldfile) > 0) {
+
+					; Dateierweiterung erhalten
+						this.Path.oX := this.GetFileExt(oldfile)
+
+					; vergleicht die Dateierweiterungen und ergänzt bei Bedarf eine fehlende
+						If (StrLen(this.Path.fX) = 0) && (StrLen(this.Path.oX) > 0)
+							this.Path.fFN := (fname .= "." this.Path.oX), this.Path.fX := this.Path.oX
+						else if (StrLen(this.Path.fX) > 0) && (StrLen(this.Path.oX) > 0) && (this.Path.oX <> this.Path.fX) {
+							PraxTT("Dateinamen haben unterschiedliche Dateierweiterungen.`nDatei wird nicht umbenannt!", "1 0")
+							return 0
+						}
+						else If (StrLen(this.Path.fX) > 0) && (StrLen(this.Path.oX) = 0)
+							this.Path.oFN := (oldfile .= "." this.Path.fX), this.Path.oX := this.Path.fX
+
+					; Quelldatei
+						this.Path.oF := this.fPath	"\"	oldfile        	; Haupt-Pfad
+						this.Path.oB := this.fBPath	"\" oldfile        	; Backup-Pfad
+						If (this.Path.oX = "pdf")
+							this.Path.oT := this.fTPath "\" RegExReplace(oldfile, "\.\w+$", ".txt")
+
+				}
+
+			; Dateipfad, Backup sowie Pfade für importierte Dateien
+				this.Path.fF	:= this.fPath  	"\" fname        	; Hauptpfad
+				this.Path.fB	:= this.fBPath	"\" fname        	; Backup
+				this.Path.iB	:= this.iBPath 	"\" fname        	; Backup\Importpfad
+				If (this.Path.fX = "pdf") {
+					this.Path.fT := this.fTPath	"\" RegExReplace(fname, "\.\w+$", ".txt")
+					this.Path.iT := this.iTPath	"\" RegExReplace(fname, "\.\w+$", ".txt")
+				}
+
+			; Ausgabe
+				If this.debug = true
+					For key, path in this.Path
+						SciTEOutput(key ": " path)
+
+		return this.Path
+		}
+
+		pathExist(path)                                                        	{	; gibt true zurück wenn ein Pfad vorhanden ist
+			If InStr(FileExist(path), "D")
+				return true
+		return false
+		}
+
+		options(dbgstatus, path="")                                     	{	; Debug-Ausgaben ein oder ausschalten
+
+			If InStr(dbgStatus, "toggle")
+				this.debug := !this.debug
+			else
+				this.debug := dbgStatus
+
+			If path && !RegExMatch(path, "^([A-Z]\:\\|\\\\w+)")
+				throw A_ThisFunc ": No valid path!`n" path
+			else If path && !InStr(FileExist(path), "D")
+				throw A_ThisFunc ": Path not exists!`n" path
+			else if path
+				this.FPath := path, this.initPaths := true
+			else
+				this.FPath := Addendum.BefundOrdner, this.initPaths := true
+
+		}
+
+}
+
+class pdfpool                                                                 	{               	; verwaltet das ScanPool Objekt
+
+	; Abhängigkeiten - Addendum_PdfHelper.ahk
+	; ScanPool - muss ein Super-Globales Objekt sein
+	; Funktion: Refresh ist ineffektiv!
+
+		inPool(fname)                                                         	{	; sucht nach Dateinamen im Pool
+
+			For docID, PDF in ScanPool
+				If (PDF.name = fname)
+					return docID
+
+		return 0
+		}
+
+		Add(path, fname)                                                    	{ 	; Dokument hinzufügen + Metadaten erstellen
+
+			If !FileExist(path "\" fname)
+				return
+
+			docID	:= this.inPool(fname)
+			oPDF	:= this.FileMeta(path, fname)
+
+			If !docID
+				ScanPool.Push(oPDF)
+			else
+				ScanPool[docID] := oPDF
+
+		return oPDF
+		}
+
+		Update(ReIndex=false, save=true, path="")            	{ 	; neue Dateien hinzufügen, nicht existierende entfernen
+
+			; WICHTIG!: braucht eine globale Variable im aufrufenden Skript: ScanPool := Object()
+				global admPatientTitle, admJournalTitle
+
+			; ReIndex = true - ScanPool wird komplett neu erstellt oder falls leer wird das gespeicherte Objekt geladen
+				If ReIndex
+					this.Empty()
+				else {
+					max := this.Load()
+				}
+
+			; alle pdf Dokumente des Befundordners dem ScanPool Objekt hinzufügen
+				files  	:= this.GetFiles(Addendum.BefundOrdner, "*.pdf")
+				iLen  	:= StrLen(files.MaxIndex())-1
+				fcount	:= SubStr("00000" files.MaxIndex(), -1*iLen)
+
+			; gefundene Dateien dem ScanPool Objekt hinzufügen, den Fortschritt anzeigen
+				For idx, filename in files {
+					If !this.inPool(filename)
+						this.Add(Addendum.BefundOrdner, filename)
+					GuiControl, adm: , admPatientTitle	, % (InfoText := "indiziere Dokument: " SubStr("00000" A_Index, -1*iLen) " von " fcount)
+					GuiControl, adm: , admJournalTitle	, % InfoText
+				}
+
+			; nicht mehr vorhandene Dateien entfernen
+				this.RemoveNoFile()
+
+			; Speichern
+				res := save ? this.Save() : ""
+
+		return ScanPool.MaxIndex()
+		}
+
+		Remove(fname)                                                     	{	; Datei entfernen
+			If (docID := this.inPool(fname))
+				return ScanPool.RemoveAt(docID)
+		return
+		}
+
+		RemoveNoFile()                                                     	{	; entfernt Dateien die nicht mehr existieren
+			removed := 0
+			If (ScanPool.MaxIndex() > 0) {
+				Loop, % (max := ScanPool.MaxIndex()-1)
+					If !FileExist(Addendum.BefundOrdner "\" ScanPool[(docID := max-A_Index+1)].name) {
+						removed ++
+						ScanPool.RemoveAt(docID)
+					}
+			}
+			return removed
+		}
+
+		Rename(oldfile, newfile)                                          	{	; Datei umbenennen
+			If (docID := this.inPool(oldfile)) {
+				ScanPool[docID].name := newfile
+				return ScanPool[docID]
+			}
+		return
+		}
+
+		GetAllDocNames()                                                 	{	; alle Dateinamen zurückgeben
+			docNames := Array()
+			For docID, PDF in ScanPool
+				docNames.Push(PDF.name)
+			If (docNames.MaxIndex() = 0)
+				return
+		return docNames
+		}
+
+		GetNoOCRFiles()                                                      	{ 	; PDF Dateien ohne Texterkennung
+			noOCR := Array()
+			For idx, pdf in ScanPool
+				If !pdf.isSearchable {
+					InStack := false
+					For stidx, stfile in Addendum.iWin.FilesStack  	; Datei ist in Bearbeitung (z.B. OCR Vorgang), dann ignorieren
+						If (stfile = pdf.name) {
+							InStack := true
+							break
+						}
+					If !Instack                              					 	; Datei hinzufügen
+						noOCR.Push(pdf.name)
+				}
+		return noOCR
+		}
+
+		GetUnnamed(StartDocID:=0)                                 	{	; Unbenanntes Dokument finden
+			For docID, PDF in ScanPool
+				If (docID > StartDocID) && !string.isFullNamed(PDF.name)
+					return PDF
+		return
+		}
+
+		GetUnamedDocuments(refreshDocs=false)               	{	; erstellt einen Array mit den Dateinamen unbezeichneter Dokumente
+			If refreshDocs
+				admGui_Reload(true)
+			unnamed := Array()
+			For docID, PDF in ScanPool
+				If !string.ContainsName(PDF.name)
+					unnamed.Push(PDF.name)
+			If (unnamed.MaxIndex() = 0)
+				return
+		return unnamed
+		}
+
+		Empty()                                                                 	{	; ScanPool komplett leeren
+			If !IsObject(ScanPool) {
+				PraxTT("ScanPool ist kein Objekt!", "2 1")
+				return
+			}
+			Loop % (mxIdx := ScanPool.MaxIndex())
+				ScanPool.Pop()
+		return mxIdx
+		}
+
+		Load(path="")                                                         	{	; ScanPool laden
+			If FileExist(scanpoolPath := this.GetValidPath(path) "\PdfDaten.json") {
+				For docID, pdf in JSONData.Load(scanpoolPath, "", "UTF-8")
+					If FileExist(Addendum.BefundOrdner "\" pdf.name) && !this.inPool(pdf.name)
+						ScanPool.Push(pdf)
+			}
+		return ScanPool.MaxIndex()
+		}
+
+		Save(path="")                                                          	{	; ScanPool speichern
+		return JSONData.Save(this.GetValidPath(path) "\PdfDaten.json", ScanPool, true,, 1, "UTF-8")
+		}
+
+	; + + + + + + + INTERN + + + + + + +
+		FileSize(fullfilepath)                                                 	{
+			FileGetSize	, FSize, % fullfilepath, K
+		return FSize
+		}
+
+		FileTime(fullfilepath)                                               	{
+			FileGetTime	, timeStamp 	, % fullfilepath, C
+			FormatTime	, FileTime     	, % timeStamp, dd.MM.yyyy
+		return {"FileTime" : FileTime, "timeStamp":timeStamp}
+		}
+
+		FileMeta(path, fname )                                           	{
+			file := this.FileTime(path "\" fname)
+			return {	"name"          	: fname
+					, 	"filesize"        	: this.FSize(path "\" fname)
+					, 	"timestamp"    	: file.timeStamp
+					, 	"filetime"        	: file.FileTime
+					, 	"pages"         	: PDFGetPages(path "\" fname, Addendum.PDF.qpdfPath)
+					, 	"isSearchable"	: (PDFisSearchable(path "\" fname) ? 1 : 0 )}
+		}
+
+		GetFiles(path, filepattern:="*.*", options:="")           	{
+			files := Array()
+			Loop, Files, % path "\" filepattern, % (options ? options : "")
+				files.Push(A_LoopFileName)
+		return files
+		}
+
+		GetValidPath(path)                                                  	{
+		return (this.isPath(path) ? path : Addendum.BefundOrdner)
+		}
+
+		isPath(path)                                                           	{
+		return (StrLen(path) > 0 && RegExMatch(path, "i)[A-Z]\:\\") && InStr(FileExist(path),"D") ? true : false)
+		}
+
+}
+
 ; -------- PDF Dateien umbenennen / teilen
 admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog für Dokument umbenennen oder teilen
 
@@ -2034,7 +2642,7 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 					Sleep 100
 					SumatraDDE(oPV.ID, "SetView"	, Addendum.BefundOrdner "\" filename, "single page", "-1") 	; -1 = fit page
 					Sleep 100
-					SumatraDDE(oPV.ID, "SetView"	, Addendum.BefundOrdner "\" filename, "single page", "-1") 	; -1 = fit page
+					SumatraDDE(oPV.ID, "SetView"	, Addendum.BefundOrdner "\" filename, "single page", "-1") 	; 2x senden, einmal reicht manchmal nicht
 					Gui, RN: Default
 				}
 				else
@@ -2099,21 +2707,23 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 
 ; Gui                                                  	;{
 
+		;-: Variablen                                                  	;{
 		wT          	:= 0
 		edW     	:= 100
 		fSize     	:= (A_ScreenWidth > 1920 ? 10 : 9)
 		admPos	:= GetWindowSpot(hadm)
 		RNWidth	:= admPos.W - (2*admPos.BW)
-		RNWidth	:= RnWidth < RNminWidth ? RNminWidth : RnWidth
+		RNWidth	:= RnWidth < RNminWidth ? RNminWidth : RnWidth		;}
 
+		;-: Gui Start                                                   	;{
 		Gui, RN: new, % "AlwaysOnTop -DpiScale +ToolWindow -Caption +Border HWNDhadmRN"
-		Gui, RN: Margin, 5, 5
+		Gui, RN: Margin, 5, 5		;}
 
-		;-: Hinweise
+		;-: Hinweise                                                    	;{
 		Gui, RN: Font, % "s" fSize - 1
-		Gui, RN: Add, Text, % "xm ym Center vRNC1"                     	, % "[ Pfeil ⏶& ⏷ von Feld zu Feld, Eingabe für Umbenennen ]"
+		Gui, RN: Add, Text, % "xm ym Center vRNC1"                     	, % "[ Pfeil ⏶& ⏷ von Feld zu Feld, Eingabe für Umbenennen ]"		;}
 
-		;-: Eingabefelder
+		;-: Eingabefelder                                              	;{
 		Gui, RN: Font, % "s" fSize
 		Gui, RN: Add, Text        	, % "xm y+8 Right vRNT1 "                                             	, % "Name"
 		Gui, RN: Add, Edit         	, % "x+5 w" edW " r1 vRNE1 HWNDRNhE1 gRNEHandler"	, % Patname
@@ -2121,8 +2731,10 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 		Gui, RN: Add, Edit            	, % "x+5 w" edW " r1 vRNE2 HWNDRNhE2 gRNEHandler"	, % Inhalt
 		Gui, RN: Add, Text        	, % "xm y+5 Right vRNT3 "                                             	, % "Datum"
 		Gui, RN: Add, Edit         	, % "x+5 w" edW " r1 vRNE3 HWNDRNhE3 gRNEHandler"	, % Datum
+		;}
 
-		;-: Name, Inhalt, Datum - Steuerelemente auf gleiche Breite bringen, Edit-Felder maximieren
+		;-: Name, Inhalt, Datum - Breite angleichen    	;{
+		; Edit-Felder maximieren
 		Loop, 3 {
 			cp 	:= GuiControlGet("RN", "Pos", "RNT" A_Index)
 			wT	:= cp.W > wT ? cp.W : wT
@@ -2131,9 +2743,9 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 			GuiControl, RN:Move, % "RNT" A_Index, % "w" wT
 			cp := GuiControlGet("RN", "Pos", "RNT" A_Index)
 			GuiControl, RN:Move, % "RNE" A_Index, % "x" cp.X + wT + 5 " y" cp.Y - 3 " w" RNWidth - wT - 15
-		}
+		}		;}
 
-		;-: maximale Zeichenzahl
+		;-: maximale Zeichenzahl                                 	;{
 		cp := GuiControlGet("RN", "Pos", "RNE3")
 		Gui, RN: Font             	, % "s" fSize - 1 " cWhite", Calibri
 		Gui, RN: Add, Progress	, % "x0      	y" cp.Y+cp.H+5 	" w10 h20 c7B89BB vRNPG1 HWNDRNhPG1"          	, 100
@@ -2142,40 +2754,39 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 		GuiControl, RN: Move, % "RNPG1", % "h" dp.H + 5
 
 		Gui, RN: Font            	, % "s" fSize - 1 " cWhite Bold", Consolas
-		Gui, RN: Add, Text    	, % "x+5                                    	Left Backgroundtrans vRNLen "                           	, % SubStr("00" (StrLen(Inhalt) + StrLen(Datum)), -1) . " / 70"
+		Gui, RN: Add, Text    	, % "x+5                                    	Left Backgroundtrans vRNLen "                           	, % SubStr("00" (StrLen(Inhalt) + StrLen(Datum)), -1) . " / 70"		;}
 
-		;-: Dateinamenvorschau
+		;-: Dateinamenvorschau                                 	;{
 		cp := GuiControlGet("RN", "Pos", "RNPG1")
 		dp := GuiControlGet("RN", "Pos", "RNHW1")
 		Gui, RN: Font            	, % "s" fSize - 1 " cBlack Normal", Arial
 		Gui, RN: Add, Progress	, % "x0 y" dp.Y+dp.H+5 " w10 h" cp.H*2 " cAfC2ff vRNPG2 HWNDRNhPG2"             	, 100
 		Gui, RN: Add, Text    	, % "x5 y" dp.Y+dp.H+7 " w" edW " h" dp.H*2 " Center	Backgroundtrans vRNPV "   	, % admGui_FileName(Patname, Inhalt, Datum)
 		cp := GuiControlGet("RN", "Pos", "RNPV")
-		GuiControl, RN: Move, % "RNCancel", % "h" cp.H + dp.H + 10
+		GuiControl, RN: Move, % "RNCancel", % "h" cp.H + dp.H + 10		;}
 
-		;-: OK, Abbruch
+		;-: OK, Abbruch                                            	;{
 		Gui, RN: Font, % "s" fSize
 		Gui, RN: Add, Button, % "xm                         	Center vRNOK  	gRNProceed"         	, % "Umbennen"
 		Gui, RN: Add, Button, % "x+20                  	Center vRNCancel	gRNProceed"         	, % "Abbruch"
 		cp := GuiControlGet("RN", "Pos", "RNE3"), dp := GuiControlGet("RN", "Pos", "RNCancel")
-		GuiControl, RN: Move, % "RNCancel", % "x" cp.X + cp.W - dp.W
+		GuiControl, RN: Move, % "RNCancel", % "x" cp.X + cp.W - dp.W		;}
 
-		;-: Show Hide
+		;-: Show Hide                                                	;{
 		monIndex  	:= GetMonitorIndexFromWindow(hadm)
 		admScreen	:= ScreenDims(monIndex)
 		RNx := ((admPos.X - 2*admPos.BW) + RnWidth) > admScreen.W ? admScreen.W - RnWidth : admPos.X - 2*admPos.BW
+		Gui, RN: Show, % "x" RNx " y" admPos.Y + admPos.H " w" RNWidth " Hide", Addendum (Datei umbenennen)		;}
 
-		Gui, RN: Show, % "x" RNx " y" admPos.Y + admPos.H " w" RNWidth " Hide", Addendum (Datei umbenennen)
-
-		;-: Titel und Preview anpassen
+		;-: Titel und Preview anpassen                          	;{
 		gs := GetWindowSpot(hadmRN)
 		GuiControl, RN: Move, % "RNC1"	, % "w"   	gs.CW - 5
 		GuiControl, RN: Move, % "RNPV"	, % "w"  	gs.CW - 5
 		GuiControl, RN: Move, % "RNE1"	, % "w"  	gs.CW - wT - 15
 		GuiControl, RN: Move, % "RNE2"	, % "w"  	gs.CW - wT - 15
-		GuiControl, RN: Move, % "RNE3"	, % "w"  	gs.CW - wT - 15
+		GuiControl, RN: Move, % "RNE3"	, % "w"  	gs.CW - wT - 15		;}
 
-		;-: Zeichenzähler zentrieren
+		;-: Zeichenzähler zentrieren                             	;{
 		dp := GuiControlGet("RN", "Pos", "RNHW1")
 		cp := GuiControlGet("RN", "Pos", "RNLen")
 		dcpLen := dp.W + 5 + cp.W
@@ -2183,28 +2794,24 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 		gsMid	:= Floor(gs.w/2)
 		gsLeft	:= (gsMid - dcpMid)
 		GuiControl, RN: Move, % "RNHW1"	, % "x" gsLeft
-		GuiControl, RN: Move, % "RNLen"  	, % "x" gsLeft + dp.W + 5
+		GuiControl, RN: Move, % "RNLen"  	, % "x" gsLeft + dp.W + 5		;}
 
-		;-: Abbruch Button verschieben
+		;-: Abbruch Button verschieben                        	;{
 		dp := GuiControlGet("RN", "Pos", "RNCancel")
-		GuiControl, RN: Move, % "RNCancel", % "x" gs.W - dp.W - 5
+		GuiControl, RN: Move, % "RNCancel", % "x" gs.W - dp.W - 5		;}
 
-		;-: Progress anpassen
+		;-: Progress anpassen                                     	;{
 		cp := GuiControlGet("RN", "Pos", "RNPV")
 		GuiControl, RN: Move, % "RNPG1"	, % "x0 w" gs.W
 		GuiControl, RN: Move, % "RNPG2"	, % "x0 w" gs.W
 		WinSet, ExStyle, 0x0, % "ahk_id " RNhPG1
-		WinSet, ExStyle, 0x0, % "ahk_id " RNhPG2
+		WinSet, ExStyle, 0x0, % "ahk_id " RNhPG2		;}
 
 		;-: Show
 		Gui, RN: Show
 
-		Hotkey, IfWinActive, % "Addendum (Datei umbenennen)"
-		Hotkey, Escape 	, RNGuiClose
-		Hotkey, Up    	, RNGuiUpDown
-		Hotkey, Down	, RNGuiUpDown
-		Hotkey, Enter 	, RNProceed
-		Hotkey, IfWinActive
+		admGui_RenameHotkeys()
+		ACGShow := false
 
 		;}
 
@@ -2230,16 +2837,22 @@ return ;}
 RNEHandler:                                      	;{   Dateinamenvorschau und Vorschläge
 
 		Gui, RN: Submit, NoHide
-		RegExMatch(A_GuiControl, "\d", nr)
+		RegExMatch(A_GuiControl, "\d", gcNr)
 
+	; zu lange Zeicheneingabe verhindern
 		GuiControl, RN:, RNLen, % SubStr("00" (charsNow := StrLen(RNE2) + StrLen(RNE3)), -1) " / 70 "
 		If (charsNow > 70) {
 			BlockInput, Send
 			Send, % "{BackSpace " (charsNow - 70) "}"
 			BlockInput, Off
 		}
-
 		Gui, RN: Submit, NoHide
+
+	; Autocomplete je nach Eingabefeld
+		If (gcNr = 1 && RNE1old <> RNE1)  {
+			RNE1old := RNE1
+			admGui_AutoComplete(A_GuiControl, RNE1, {"Face":"MS Sans Serif", "Size":fSize-1})
+		}
 
 	; Dateinamenvorschau auffrischen
 		GuiControl, RN:, RNPV, % admGui_FileName(RNE1, RNE2, RNE3)
@@ -2333,17 +2946,20 @@ RNGuiBeenden:                                   	;{   weitere Dateien umbenennen
 		}
 ;}
 
-RNGuiClose:
-RNGuiEscape:                                    	;{   Fenster definitiv schliessen
-
-	; Gui beenden
-		Gui, RN: Destroy
-		;Gui, admAC: Destroy
+RNGuiClose:                                      	;{   Fenster definitiv schliessen
+RNGuiEscape:
 
 	; PDF Previewer beenden
 		If (oPV.Previewer = "Sumatra")
 			oPV := SumatraClose(oPV.PID, oPV.ID)
 		oPV := ""
+
+	; Gui beenden
+		Gui, RN: Destroy
+		If WinExist("Addendum AutoCompleteGui ahk_class AutoHotkeyGUI")
+			Gui, ACG: Destroy
+		ACGShow := false
+		;Gui, admAC: Destroy
 
 	; Hotkeys freigeben
 		;~ Hotkey, IfWinActive, % "Addendum (Datei umbenennen)"
@@ -2358,6 +2974,10 @@ RNGuiEscape:                                    	;{   Fenster definitiv schliess
 return ;}
 
 RNGuiUpDown:                                   	;{   mit den Pfeiltasten zwischen den Eingabefeldern wechseln
+
+	; AutoComplete Listbox wird angezeigt
+	If ACGShow
+		return
 
 	Gui, RN: Submit, NoHide
 	GuiControlGet, vctrl, RN:Focus
@@ -2377,590 +2997,114 @@ RNGuiUpDown:                                   	;{   mit den Pfeiltasten zwische
 return ;}
 }
 
-class Journal                                                                 	{                	; Listviewhandler des Journals
+admGui_RenameHotkeys(status:="On") {
 
-		;selNextUnnamed
-
-		Remove(fname:="", rLV:="")  {        	; entfernt eine Datei aus der Listview
-
-			; ein Dateiname oder eine Zeilennummer können übergeben werden
-
-			global admJournal, adm, admHTab, admHJournal
-
-			this.Default()
-			this.RedrawLV(false)
-			row := fname?this.getRow(fname) : rLV?rLV : 0
-			If (row > 0)
-				res := LV_Delete(row)
-			else
-				res := -1
-			this.RedrawLV(true)
-
-		return res
-		}
-
-		getNext(rLV:=0, LVNI:=2)    	{        	; findet die nächste ausgewählte Zeile
-			global admJournal, adm, admHTab, admHJournal
-			; rLV = 1 based index of the starting row for the flag search. Omit or 0 to find first occurance specified flags.
-			; LVNI_ALL := 0x0, LVNI_FOCUSED := 0x1, LVNI_SELECTED := 0x2
-		return DllCall("SendMessage", "uint", admHJournal, "uint", 4108, "uint", rLV-1, "uint", LVNI) + 1
-		}
-
-		getRow(sStr, col:=1)            	{         	; Zeilennummer mit diesem Dateinamen
-
-			row := 0
-			this.Default()
-			Loop % LV_GetCount() {
-				LV_GetText(rText, A_Index, col)
-				If (rText = sStr) {
-					row := A_Index
-					break
-				}
-			}
-
-		return row
-		}
-
-		getSelected(col:=1)              	{        	; alle ausgewählten Zeilen auslesen
-
-			row 		:= 0
-			JFiles	:= Array()
-			this.Default()
-
-			Loop {
-				If (row := LV_GetNext(row)) {
-					LV_GetText(fname, row, col)
-					JFiles.Push(fname)
-				}
-				else
-					break
-			}
-
-			if (JFiles.MaxIndex() = 1)
-				return JFiles[1]
-			else if (JFiles.MaxIndex() > 1)
-				return JFiles
-			else
-				return ""
-
-		}
-
-		getText(row, col:=1)             	{        	; Text einer Zeile, Spalte auslesen
-			this.Default()
-			LV_GetText(rText, row, col)
-		return rText
-		}
-
-		Replace(sourcefile, targetfile)	{         	; Dateinamen ändern
-
-			this.Default()
-			Loop % LV_GetCount() {
-				LV_GetText(rowFilename, A_Index, 1)
-				If (rowFilename = sourcefile) {
-					LV_Modify(A_Index,, targetfile)
-					return A_Index
-				}
-			}
-
-		return 0		; nicht gefunden
-		}
-
-		ShowMenu(admFileObj)    	{        	; Kontextmenu anzeigen
-
-			MouseGetPos, mx, my, mWin, mCtrl, 2
-			If IsObject(admFileObj)
-				Menu, admJCM1	, Show, % mx - 20, % my + 10
-			else
-				Menu, admJCM	, Show, % mx - 20, % my + 10
-
-		return
-		}
-
-		Focus()                                	{        	; das Listview erhält den Eingabefokus
-			global admJournal, adm, admHTab, admHJournal
-			this.Default()
-			GuiControl, adm: Focus, % "admJournal"
-		return ErrorLevel
-		}
-
-		Default()                             	{        	; Gui und Listview Default machen
-			global admJournal, adm, admHTab, admHJournal
-			Gui, adm: Default
-			Gui, adm: ListView, % "admJournal"
-		}
-
-		ListView()                            	{        	; nur das Listview Default machen
-			global admJournal, adm, admHTab, admHJournal
-			Gui, adm: ListView, % "admJournal"
-		}
-
-		RedrawLV(rdw)                     	{      	; Listview neuzeichnen an oder aus
-			global admJournal, adm, admHTab, admHJournal
-			GuiControl, % "adm: " (rdw?"+":"-") "Redraw", admJournal
-		return ErrorLevel
-		}
-
-		Show()                               	{        	; zeigt den Journal Tab an
-			global admHTab
-		return admGui_ShowTab("Journal", admHTab)
-		}
+	Hotkey, IfWinActive, % "Addendum (Datei umbenennen)"
+	Hotkey, Escape 	, RNGuiClose	    , % status
+	Hotkey, Up    	, RNGuiUpDown	, % status
+	Hotkey, Down	, RNGuiUpDown	, % status
+	Hotkey, Enter 	, RNProceed			, % status
+	Hotkey, IfWinActive
 
 }
 
-class Befunde                                                                   	{               	; Dokument-Datei-Handler
+admGui_AutoComplete(GControl, text, font) {
 
-	; base Methoden (__Call wird nicht ausgeführt - warum?)
-		__Call(callee, args*)	{
+	global RNhE1, RNhE2
+	global ACG, hACG, ACGLb, hACGLb, ACGLb_ItemHeight, ACGShow
 
-			MsgBox, % callee
-			if !IsFunc(this[callee]) {
-				throw A_ThisFunc ": unknown function (" callee ") called!`nargs* MaxIndex(): " args.MaxIndex()
-				ExitApp
+	If (GControl = "RNE1") {
+		matches := admDB.GetExactMatches("Nn|Vn", 0, StrSplit(text, ",").1, StrSplit(text, ",").2)
+		If (matches.Count() > 0) {
+
+			admGui_RenameHotkeys("Off")
+
+			For PatID, Pat in matches
+				lbStr .= Pat.Nn ", " Pat.Vn "|"
+			lbStr := RTrim(lbStr, "|")
+			Sort, lbStr, U |
+
+			If !WinExist("Addendum AutoCompleteGui ahk_class AutoHotkeyGUI")
+				admGui_AutoCompleteGui(RNhE1, "RNE1", lbStr, font)
+			else {
+				GuiControl, ACG:             	, ACGLb, % lbStr
+				If !ACGShow
+					Gui      	, ACG: Show	, % " NA"
 			}
-			return this.Call(callee, args*)
+
+			ACGShow := true
+
+		}
+		else {
+
+			Gui, ACG: Destroy
+			admGui_RenameHotkeys("On")
+			ACGShow := false
 
 		}
 
-	; getter und setter
-		dbgStatus[] {
-			get {
-				return this.debug
-			}
-		}
-
-		FPath[] {
-			get {
-				return this.Fpath
-			}
-		}
-
-	; Backupdatei erstellen
-		Backup(filename) {
-
-			eL 	:= []
-		; oF - original file path, oB - original backup path
-			path	:= this.GetPaths(filename)
-
-			If !FileExist(path.fB) {
-				FileCopy, % path.fF, % path.fB
-				ErrorLevel ? (eL.1 := A_LastError) : ""
-				If this.debug && ErrorLevel
-					SciTEOutput("Backup konnte nicht erstellt werden")
-			}
-		}
-
-	; umbenennen
-		Rename(oldfilename, newfilename) {
-
-				eL 	:= []
-			; oF - original file path, oB - original backup path
-				path	:= this.GetPaths(newfilename, oldfilename)
-
-				If this.debug
-					SciTEOutput("Rename " oldfilename " to " newfilename)
-
-			; Dateien umbenennen
-				If !FileExist(path.oF) {
-					PraxTT("Datei: <" oldfilename ">`nist nicht vorhanden!", "2 0")
-					eL.1 := "no file"
-					return eL
-				} else {
-					FileMove, % path.oF, % path.fF, 1
-					If ErrorLevel {
-						ErrorLevel ? (eL.2 := A_LastError) : ""
-						PraxTT("Das umbenennen der Datei`n#1<" oldfilename ">`nwurde mit dem Fehlercode (" A_LastError ") abgelehnt.", "4 0")
-						return eL
-					}
-				}
-
-			; Backup - umbennen oder erstellen falls nicht vorhanden
-				If !FileExist(path.oB) {
-
-					FileCopy, % path.oF, % path.fB
-					ErrorLevel ? (eL.3 := A_LastError) : ""
-					If this.debug && ErrorLevel
-						SciTEOutput("Backup konnte nicht erstellt werden")
-					else If this.debug && !ErrorLevel
-						SciTEOutput("Backup Datei wurde angelegt.")
-
-				} else {
-
-					FileMove, % path.oB, % path.fB, 1
-					ErrorLevel ? (eL.4 := A_LastError) : ""
-					If this.debug && ErrorLevel
-						SciTEOutput("Backup konnte nicht umbenannt werden")
-
-				}
-
-			; Textdatei wird umbenannt insofern vorhanden
-				If (path.oX = "pdf")
-					If FileExist(path.oT) {
-						FileMove, % path.oT, % path.fT, 1
-						ErrorLevel ? (eL.5 := A_LastError) : ""
-						If this.debug && ErrorLevel
-							SciTEOutput("Text-Datei konnte nicht umbenannt werden")
-					} else {
-						If this.debug
-							SciTEOutput("Text-Datei nicht vorhanden")
-					}
-
-		return eL.Count() > 0 ? eL : 1
-		}
-
-	; RegEx umbenennen für Batch-Renaming
-		RegExRename(filename, rnPattern) {
-			If RegExMatch(rnPattern, "^(?<Options>.*)?\)(?<pattern>.*)$", rx)
-			RegExMatch(filename, "o" )
-			this.Rename(filename, newfilename)
-		}
-
-	; Datei/en löschen (##)
-		Remove(filename, fileshorts:="fbt") {
-
-
-		}
-
-	; Datei wurde importiert
-		MoveToImports(filename) {
-
-			; oF - original file path, oB - original backup path
-				eL 	:= []
-				path	:= this.GetPaths(newfilename, oldfilename)
-
-			; Backup - verschieben nach Imports
-				If FileExist(path.fB) {
-					FileMove, % path.fB, % path.iB, 1
-					ErrorLevel ? (eL.1 := A_LastError) : ""
-					If this.debug && ErrorLevel
-						SciTEOutput("Backup konnte nicht verschoben werden")
-				}
-
-			; Textdatei wird verschoben insofern vorhanden
-				If (path.oX = "pdf")
-					If FileExist(path.fT) {
-						FileMove, % path.fT, % path.iT, 1
-						ErrorLevel ? (eL.2 := A_LastError) : ""
-						If this.debug && ErrorLevel
-							SciTEOutput("Text-Datei konnte nicht verschoben werden")
-					}
-
-		return eL.Count() > 0 ? eL : 1
-		}
-
-	; Dateiendung
-		GetFileExt(filename) {
-			RegExMatch(filename, "i)\.(?<Ext>[a-z]+)$", File)
-		return FileExt
-		}
-
-	; Dateipfade
-		GetPaths(filename, oldfilename:="", path:="") {                    ;-- erstellt alle notwendigen Dateipfade
-
-			/* 	Beschreibung
-
-				- 	erstellt in einem Durchgang alle Dateipfade für die in 3 Ordner verteilten PDF und Textdateien
-				- 	vereinfacht dadurch Löschvorgänge, das Umbenennen oder das Importieren, da mit jeder Änderung der eigentlichen
-					PDF-Datei die anderen beiden Dateien entsprechend verschoben, entfernt oder umbenannt werden müssen
-				-	erstellte Strings werden im Object Path gespeichert. Die Variablennamen sind dabei sehr kurz gewählt.
-					verwendete Kurzzeichen:
-
-						this.Path.[BasisName][BasisOrdner oder andere Bezeichnung]
-
-						[BasisName]
-							.f		= Dateiname wenn kein Quell-Dateiname übergeben wurde, oder neuer Dateiname
-							.o		= old oder Quell-Dateiname
-							.i		= Dateibasis für importierte Dateien
-
-						[BasisOrdner oder andere Bezeichnung]
-							F		= Pfad + Dateiname zum Stammordner
-							B		= Pfad + Dateiname zum Backupordner
-							T		=	Pfad + Dateiname zum Textdateiordner
-							X		= Dateiendung
-							N		= nur der Dateiname
-
-						.fFN ist nur der Dateiname (ohne Pfad) der Datei im Stammordner
-
-				-	## austehend: legt bei Bedarf alle Unterverzeichnisse an
-
-			*/
-
-			; Hauptordner eintragen
-				If !path && !this.FPath
-					this.FPath := Addendum.BefundOrdner
-				else if path
-					this.FPath := path
-
-			; Pfadstrings leeren
-				this.Path := Object()
-
-			; prüft die Dateierweiterungen
-				this.Path.fX := this.GetFileExt(filename)
-				If (StrLen(oldfilename) > 0) {
-
-					; Dateierweiterung erhalten
-						this.Path.oX := this.GetFileExt(oldfilename)
-
-					; vergleicht die Dateierweiterungen und ergänzt eine fehlende
-						If (StrLen(this.Path.fX) = 0) && (StrLen(this.Path.oX) > 0)
-							this.Path.fFN := filename .= "." this.Path.oX, this.Path.fX := this.Path.oX
-						else if (StrLen(this.Path.oX) > 0) && (StrLen(this.Path.fX) > 0) && (this.Path.oX <> this.Path.fX) {
-							PraxTT("Dateinamen haben unterschiedliche Dateierweiterungen.`nDatei wird nicht umbenannt!", "1 0")
-							return 0
-						}
-						else If (StrLen(this.Path.fX) > 0) && (StrLen(this.Path.oX) = 0)
-							this.Path.oFN := oldfilename .= "." this.Path.fX, this.Path.oX := this.Path.fX
-
-					; Pfade für Umbennen von Dateien
-						this.Path.oF := this.FPath "\"             	oldfilename
-						this.Path.oB := this.FPath "\Backup\"	oldfilename
-						If (this.Path.oX = "pdf")
-							this.Path.oT := this.FPath "\Text\"  	RegExReplace(oldfilename, "\.\w+$", ".txt")
-
-				}
-
-			; Dateipfad, Backup sowie Pfade für importierte Dateien
-				this.Path.fF	:= this.FPath "\"                              	filename
-				this.Path.fB	:= this.FPath "\Backup\"                	filename
-				this.Path.iB	:= this.FPath "\Backup\Importiert\" 	filename
-				If (this.Path.fX = "pdf") {
-					this.Path.fT := this.FPath "\Text\"            	RegExReplace(filename, "\.\w+$", ".txt")
-					this.Path.iT := this.Fpath "\Text\Backup\"	RegExReplace(filename, "\.\w+$", ".txt")
-				}
-
-			; Ausgabe
-				If this.debug = true
-					For key, path in this.Path
-						SciTEOutput(key ": " path)
-
-		return this.Path
-		}
-
-	; Debug-Ausgaben ein oder ausschalten
-		options(dbgstatus, path="") {
-
-			If InStr(dbgStatus, "toggle")
-				this.debug := !this.debug
-			else
-				this.debug := dbgStatus
-
-			If path && !RegExMatch(path, "^([A-Z]\:\\|\\\\w+)")
-				throw A_ThisFunc ": No valid path!`n" path
-			else If path && !InStr(FileExist(path), "D")
-				throw A_ThisFunc ": Path not exists!`n" path
-			else if path
-				this.FPath := path
-			else
-				this.FPath := Addendum.BefundOrdner
-
-		}
+	} else If (GControl = "RNE2") {
+		ACGShow := true
+		If !WinExist("Addendum AutoCompleteGui ahk_class AutoHotkeyGUI")
+			admGui_AutoCompleteGui(RNhE1, "RNE2", "ABC", font)
+	} else {
+		Gui, ACG: Destroy
+		admGui_RenameHotkeys("On")
+		ACGShow := false
+	}
 
 
 }
 
-class pdfpool                                                                 	{               	; verwaltet das ScanPool Objekt
+admGui_AutoCompleteGui(hInputControl, GControl, Content, font:="") {
 
-	; Abhängigkeiten - Addendum_PdfHelper.ahk
-	; Funktion: Refresh ist ineffektiv!
+	global ACG, hACG, ACGLb, hACGLb, ACGLb_ItemHeight, ACGShow
+	global RNE1old, RNE2old, RNE1, RNE2, RNE3
+	static hIControl, GCtrl
 
-	; sucht nach Dateinamen im Pool
-		inPool(filename) {
+	hIControl 	:= hInputControl
+	GCtrl    	:= GControl
+	cp         	:= GetWindowSpot(hIControl)
+	font       	:= !IsObject(font) ? {"Face":"MS Sans Serif", "Size":"8"} : font
+	ACGShow := true
 
-			For docID, PDF in ScanPool
-				If (PDF.name = filename)
-					return docID
+	Gui, ACG: New, +AlwaysOnTop +ToolWindow -Caption +hwndhACG
+	Gui, ACG: Margin, 0, 0
+	Gui, ACG: Font, % "s" font.Size-1, % font.Face
+	Gui, ACG: Add, Listbox, % "x0 y0 w" cp.W " r8 vACGLb hwndhACGLb -Multi", % Content
+	Gui, ACG: Show, % "x" cp.X " y " cp.Y+cp.H-2 " NA", Addendum AutoCompleteGui
 
-		return 0
-		}
+	;~ SendMessage, 0x1A1, 0, 0, , % "ahk_id " hACGLb ; LB_GETITEMHEIGHT := 0x01A1
+	;~ ACGLb_ItemHeight	:= ErrorLevel
 
-	; fügt die PDF-Datei mit allen notwendigen Informationen dem Scanpool hinzu
-	; oder frischt die Metadaten der Datei auf
-		Add(path, filename) {
-
-			If !FileExist(path "\" filename)
-				return
-
-			docID	:= this.inPool(filename)
-			oPDF	:= this.FileMeta(path, filename)
-
-			If !docID
-				ScanPool.Push(oPDF)
-			else
-				ScanPool[docID] := oPDF
-
-		return oPDF
-		}
-
-	; Datei entfernen
-		Remove(filename) {
-			If (docID := this.inPool(filename))
-				return ScanPool.RemoveAt(docID)
-		return
-		}
-
-	; Datei umbenennen
-		Rename(oldfilename, newfilename) {
-			If (docID := this.inPool(oldfilename)) {
-				ScanPool[docID].name := newfilename
-				return ScanPool[docID]
-			}
-		return
-		}
-
-	; alle Dateinamen zurückgeben
-		GetAllDocNames() {
-			docNames := Array()
-			For docID, PDF in ScanPool
-				docNames.Push(PDF.name)
-			If (docNames.MaxIndex() = 0)
-				return
-		return docNames
-		}
-
-	; Unbenanntes Dokument finden
-		GetUnnamed(StartDocID:=0) {
-			For docID, PDF in ScanPool
-				If (docID > StartDocID) && !string.isFullNamed(PDF.name)
-					return PDF
-		return
-		}
-
-	; erstellt einen Array mit den Dateinamen unbezeichneter Dokumente
-		GetUnamedDocuments(refreshDocs=false)                      	{
-			If refreshDocs
-				admGui_Reload(true)
-			unnamed := Array()
-			For docID, PDF in ScanPool
-				If !string.ContainsName(PDF.name)
-					unnamed.Push(PDF.name)
-			If (unnamed.MaxIndex() = 0)
-				return
-		return unnamed
-		}
-
-	; ScanPool komplett leeren
-		Empty() {
-
-			Loop % (mxIdx := ScanPool.MaxIndex())
-				ScanPool.Pop()
-
-		return mxIdx
-		}
-
-	; ScanPool speichern/laden
-		Load(path) {
-			return JSONData.Load(path "\PdfDaten.json", "", "UTF-8")
-		}
-
-		Save(path) {
-			return JSONData.Save(path "\PdfDaten.json", ScanPool, true,, 1, "UTF-8")
-		}
-
-	; + + + + + + + INTERN + + + + + + +
-		FileSize(fullfilepath) {
-			FileGetSize	, FSize, % fullfilepath, K
-		return FSize
-		}
-
-		FileTime(fullfilepath) {
-			FileGetTime	, timeStamp 	, % fullfilepath, C
-			FormatTime	, FileTime     	, % timeStamp, dd.MM.yyyy
-		return {"FileTime" : FileTime, "timeStamp":timeStamp}
-		}
-
-		FileMeta(path, filename ) {
-			file := this.FileTime(path "\" filename)
-			return {	"name"          	: filename
-					, 	"filesize"        	: this.FSize(path "\" filename)
-					, 	"timestamp"    	: file.timeStamp
-					, 	"filetime"        	: file.FileTime
-					, 	"pages"         	: PDFGetPages(path "\" filename, Addendum.PDF.qpdfPath)
-					, 	"isSearchable"	: (PDFisSearchable(path "\" filename) ? 1 : 0 )}
-		}
-
-}
-
-
-admGui_RenameAC(hCtrl, inhalt, bezeichner, LBRows=10)	{
-
-	static admAC, admACh, admACLB
-
-		If !IsObject(Bezeichner) || (StrLen(inhalt) = 0)
-			Return
-		If (hCtrl = "hide") {
-			Gui, admAC: Show, Hide NA
-			Gui, RN: Default
-			return
-		}
-
-	; Autocomplete Inhalt zusammenstellen
-		cboxShow := cboxInhalt := ""
-		inhalte := StrSplit(Trim(inhalt), " ")
-
-		For bzPos, bezeichnung in bezeichner {
-			matching	:= 0
-			bez := " " RegExReplace(bezeichnung, "[\.,\-\_\\\/\(\)]", " ")
-			For iPos, inh in inhalte {
-				If (StrLen(inh) >= 3) && RegExMatch(bez, "i)\s" inh) {
-					;SciTEOutput(bez ": " inh)
-					matching ++
-				}
-			}
-			If matching
-				cboxInhalt .= matching " " bezeichnung "`n"
-		}
-
-	; numerische Sortierung (N) in umgekehrter Reihenfolge (R)
-	; doppelte Elemente werden aussortiert (U)
-		Sort, cboxInhalt, N U R
-		cboxShow := ""
-		For cbPos, cbline in StrSplit(cboxInhalt, "`n")
-			cboxShow .= RegExReplace(cbline, "^\d+\s+") "|"
-		cboxShow := RTrim(cboxShow, "|")
-
-	; Inhalt auffrischen oder neue Gui erstellen
-		If WinExist("Infofenster AutoComplete ahk_class AutoHotkeyGUI") {
-			Gui, admAC: Default
-			Gui, admAC: Show, NA
-			GuiControl, admAC:, admACLB, % ""
-			GuiControl, admAC:, admACLB, % cboxShow
-			Gui, RN: Default
-		} else
-			gosub admACGui
+	Hotkey, IfWinExist, % "Addendum AutoCompleteGui ahk_class AutoHotkeyGUI"
+	Hotkey, ESC     	, ACGuiStop
+	Hotkey, Up     	, ACGuiUpDown
+	Hotkey, Down  	, ACGuiUpDown
+	Hotkey, Tab 		, ACGuiProceed
+	Hotkey, Enter 	, ACGuiProceed
+	Hotkey, IfWinExist
 
 return
-
-admACGui:
-
-		fSize := (A_ScreenWidth > 1920 ? 10 : 9)
-		cp := GetWindowSpot(hCtrl)
-		cp.Y := cp.Y + cp.H + 2
-
-		Gui, admAC: Font, % "s" fSize " q5 Normal", Arial
-		Gui, admAC: new		, % "-Caption -DpiScale +ToolWindow +AlwaysOnTop HWNDadmACh"
-		Gui, admAC: Margin	, 0, 0
-		Gui, admAC: Add		, Listbox, % "x0 y0 r" LBRows " w" cp.W " vadmACLB" , % cboxShow
-		Gui, admAC: Show	, % "x" cp.X " y" cp.Y " NA", Infofenster AutoComplete
-
-		Hotkey, IfWinExist, Infofenster AutoComplete
-		Hotkey, TAB	, admACLBChoose
-		Hotkey, Esc	, admACGuiEscape
-
-		Gui, RN: Default
-
+ACGuiUpDown:
+	SetKeyDelay, -1, -1
+	ControlSend,, % "{" A_ThisHotkey "}", % "ahk_id " hACGLb
 return
-
-admACLBChoose:
-
-	Gui, admAC: Submit, NoHide
-	Gui, admAC: Destroy
-
-return admACLB
-
-admACGuiClose:
-admACGuiEscape:
-	Gui, admAC: Destroy
+ACGuiProceed:
+	GuiControlGet, entry, ACG:, ACGLb
+	Gui, ACG: Show, Hide
+	Gui, RN: 	 Default
+	GuiControl, RN:, % hIControl, % entry
+	GuiControl, RN: Focus, % (GCtrl="RNE1" ? "RNE2" : GCtrl="RNE2" ? "RNE3" : "RNE3")
+	If (GCtrl="RNE1")
+		RNE1old := RNE1
+	else if (GCtrl="RNE2")
+		RNE2old := RNE2
+ACGuiStop:
+	Gui, ACG: Destroy
+	admGui_RenameHotkeys("On")
+	ACGShow := false
 return
-
 }
 
 admGui_FileName(PatName, inhalt, Datum)                  	{                	; Hilfsfunktion: admGui_Rename
@@ -3051,6 +3195,7 @@ admGui_PDFPreview(fileName)                                      	{             
 				WinWaitActive	, % SmtraClass,, 4
 
 				hSumatra  	:= WinExist(SmtraClass)
+				;classnn        	:= GetClassName(hSumatra)
 				WinGet      	,	SumatraPID, PID, % "ahk_id " hSumatra
 				ControlGet	,	hSumatraCnvs, HWND,, SUMATRA_PDF_CANVAS1, % "ahk_id " hSumatra
 				WinGetPos	,,	stY,, stH, ahk_class Shell_TrayWnd
@@ -3064,6 +3209,7 @@ admGui_PDFPreview(fileName)                                      	{             
 				smtraX        	:= admPos.X - smtraW
 
 				DllCall("SetWindowPos", "Ptr", hSumatra	, "Ptr", 0, "Int", smtraX, "Int", 5, "Int", smtraW, "Int", smtraH, "UInt", 0x40) ;SHOW_WINDOW
+
 				DetectHiddenWindows, % lDetectHiddenWin
 				activeID := hSumatra, activePID := SumatraPID, Previewer := "Sumatra"
 			}
@@ -3507,12 +3653,10 @@ admGui_CheckJournal(pdffile, ThreadID)                          	{              
 
 		global admHJournal
 
-
 	; Farb-Markierung entfernen
 		If (rowNr := LV_FindRow("admJournal",1, pdffile)) {
 			admGui_Default("admJournal")
 			LV_Modify(rowNr, "ICON3")                                        	; ICON für durchsuchbare PDF hinzufügen
-			;admGui_ColorRow(admHJournal, rowNr, false)          	; Hintergrundfarbe der Zeile wird entfernt
 		}
 
 	; Datei aus dem Stapel entfernen
@@ -3522,7 +3666,7 @@ admGui_CheckJournal(pdffile, ThreadID)                          	{              
 				break
 			}
 
-	; ScanPool Array ändern und BefundIndex sichern
+	; ScanPool-Objekt updaten
 		oPDF := pdfpool.Add(Addendum.BefundOrdner, pdfFile)
 
 	; Nachricht an den OCR-Thread: OCR Vorgang fortsetzen
@@ -3562,6 +3706,8 @@ admGui_FolderWatch(path, changes)                              	{               
 						return
 			}
 
+			FileAppend, % action " | " name "`n", % Addendum.DBPath "\WatchFolder-Log.txt", UTF-8
+
 		; PDF Dateien
 			If RegExMatch(name, "i)\.pdf$")
 				If RegExMatch(action, "1|3|4")	{
@@ -3594,7 +3740,7 @@ admGui_FolderWatch(path, changes)                              	{               
 					SplitPath, name, filename, filepath
 					oPDF := pdfpool.Remove(filename)
 					Controls("", "reset", "")
-					If Controls("", "ControlFind, AddendumGui, AutoHotkeyGUI, return hwnd", "ahk_class OptoAppClass") {
+					If Controls("", "ControlFind, AddendumGui, AutoHotkeyGUI, return hwnd", "ahk_class OptoAppClass") {  ; Infofenster wird angezeigt?
 						admGui_Default("admJournal")
 						row := LV_FindRow("admJournal", 1, oPDF.name)
 						LV_Delete(row)
@@ -3812,7 +3958,6 @@ TesseractOCR(files)                                                         	{  
 			Addendum.tessOCRRunning := true
 		}
 
-
 }
 
 admGui_OCRAllFiles()                                                      	{               	; Texterkennung aller unbearbeiteten PDF-Dateien
@@ -3825,11 +3970,11 @@ admGui_OCRAllFiles()                                                      	{    
 		return
 	}
 
-	noOCR := GetNoOCRFiles()
+	noOCR := pdfpool.GetNoOCRFiles()
 	If (noOCR.MaxIndex() > 0) {
 
 		For key, filename in noOCR
-			Addendum.iWin.FilesStack.Push(admFile)
+			Addendum.iWin.FilesStack.Push(filename)
 
 		admGui_OCRButton("+OCR abbrechen")
 		Addendum.OCR.RestartAutoOCR := false
@@ -3840,74 +3985,6 @@ admGui_OCRAllFiles()                                                      	{    
 		admGui_OCRButton("-OCR ausführen")
 
 return
-}
-
-GetNoOCRFiles()                                                           	{               	; stellt PDF Dateien ohne Text zusammen für TesseractOCR
-
-	global admHJournal
-
-	noOCR := Array()
-
-	For idx, pdf in ScanPool
-		If !pdf.isSearchable {
-
-			; Datei ist in Bearbeitung (z.B. OCR Vorgang), dann ignorieren
-				InStack := false
-				For stackindex, stackfile in Addendum.iWin.FilesStack
-					If (stackfile = pdf.name) {
-						InStack := true
-						break
-					}
-
-			; Datei hinzufügen
-				If !Instack {
-					noOCR.Push(pdf.name)
-					;admGui_ColorRow(admHJournal, LV_FindRow("admJournal", 1, pdf.name), true) 			; kann per Flag ausgeschaltet werden
-				}
-
-		}
-
-return noOCR
-}
-
-; ------------------------ Dateien indizieren
-BefundIndex(save=true)                                                  	{	               	;-- erststellt das ScanPool Objekt neu
-
-	; WICHTIG!: braucht eine globale Variable im aufrufenden Skript: ScanPool := Object()
-		global admPatientTitle, admJournalTitle
-
-	; ScanPool nicht neu indizieren, nur die Einträge einzeln löschen, damit es kein neues Objekt wird
-		pdfpool.Empty()
-
-	; alle pdf Dokumente des Befundordners dem ScanPool Objekt hinzufügen
-		files  	:= GetFilesInDir(Addendum.BefundOrdner, "*.pdf")
-		iLen  	:= StrLen(files.MaxIndex())-1
-		fcount	:= SubStr("00000" files.MaxIndex(), -1*iLen)
-
-	; gefundene Dateien dem ScanPool Objekt hinzufügen, den Fortschritt anzeigen
-		For idx, filename in files {
-			pdfpool.Add(Addendum.BefundOrdner, filename)
-			InfoText := "indiziere Dokument: " SubStr("00000" A_Index, -1*iLen) " von " fcount
-			GuiControl, adm: , admPatientTitle, % InfoText
-			GuiControl, adm: , admJournalTitle	, % InfoText
-		}
-
-return ScanPool.MaxIndex()
-}
-
-GetPDFData(path, pdfname)                                           	{               	;-- erstellt Daten über PDF-Dateien für das ScanPool-Objekt
-
-	pdfPath := path "\" pdfname
-	FileGetSize	, FSize       	, % pdfPath, K
-	FileGetTime	, timeStamp 	, % pdfPath, C
-	FormatTime	, FTime     	, % timeStamp, dd.MM.yyyy
-
-return {	"name"          	: pdfname
-		, 	"filesize"          	: FSize
-		, 	"timestamp"   	: timeStamp
-		, 	"filetime"       	: FTime
-		, 	"pages"          	: PDFGetPages(pdfPath, Addendum.PDF.qpdfPath)
-		, 	"isSearchable"	: (PDFisSearchable(pdfPath)?1:0)}
 }
 
 
@@ -4072,17 +4149,9 @@ RedrawWindow(hwnd=0)                                              	{            
 	static RDW_FRAME          	:= 0x0400
 	static RDW_ALLCHILDREN	:= 0x0080
 
-return dllcall("RedrawWindow", "Ptr", (hwnd = 0 ? hadm : hwnd), "Ptr", 0, "Ptr", 0, "UInt", RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN)
+return DllCall("RedrawWindow", "Ptr", (hwnd = 0 ? hadm : hwnd), "Ptr", 0, "Ptr", 0, "UInt", RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN)
 }
 
-GetFilesInDir(path, filepattern:="*.*", options:="")              	{
-
-	files := Array()
-	Loop, Files, % path "\" filepattern, % (options ? options : "")
-		files.Push(A_LoopFileName)
-
-return files
-}
 
 
 /*

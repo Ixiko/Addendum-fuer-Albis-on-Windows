@@ -6,15 +6,15 @@
 ;                                                                                  	------------------------
 ;                                                	FÜR DAS AIS-ADDON: "ADDENDUM FÜR ALBIS ON WINDOWS"
 ;                                                                                  	------------------------
-;    		BY IXIKO STARTED IN SEPTEMBER 2017 - LAST CHANGE 09.03.2021 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
+;    		BY IXIKO STARTED IN SEPTEMBER 2017 - LAST CHANGE 28.03.2021 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                           	|                                          	|                                          	|                                          	|
 ; ▹PatDb                                 	PatDir                                    	class admDB
 
 ; ▹ReadGVUListe                   	IstChronischKrank           	    	InChronicList                  	    	IstGeriatrischerPatient
 
-; ▹class AlbisDatenbanken		Leistungskomplexe             		DBASEStructs                       		GetDBFData
-; 	 ReadPatientDBF					ReadDBASEIndex
+; ▹class AlbisDb						Karteikartenfilter						DBASEStructs                       		GetDBFData
+; 	 Leistungskomplexe             	ReadPatientDBF					ReadDBASEIndex
 
 ; ▹StrDiff                                	DLD                                      	FuzzyFind
 
@@ -120,17 +120,25 @@ class admDB                                                                 	{  
 			matches	:= Object()
 			getter    	:= StrSplit(getString, "|")
 
-			For PatID, Pat in oPat
-				If InStr(Pat["Nn"], Nn) && InStr(Pat["Vn"], Vn) && InStr(Pat["Gt"], Gt) && InStr(Pat["Gd"], Gd) && InStr(Pat["Kk"], Kk)			{
-					Loop % getter.MaxIndex()
-						If InStr(getter[A_Index], "PatID")
-							matches[getter[A_Index]] := PatID
-						else
-							matches[getter[A_Index]] := Pat[getter[A_Index]]
+			For PatID, Pat in oPat {
 
-						If OnlyFirstMatch
-							break
-					}
+				; ein Treffer reicht
+				m1 := (StrLen(Nn) > 0)	&& RegExMatch(Pat.Nn	, "i)^" Nn) 	? 1 : 0                    	; Nachname
+				m2 := (StrLen(Vn) > 0) 	&& RegExMatch(Pat.Vn	, "i)^" Vn) 	? 1 : 0                    	;
+				m3 := (StrLen(Gt) > 0)	&& RegExMatch(Pat.Gt	, "i)^" Gt)  	? 1 : 0                    	;
+				m4 := (StrLen(Gd) > 0)	&& RegExMatch(Pat.Gd	, "i)^" Gd) 	? 1 : 0                    	;
+				m5 := (StrLen(Kk) > 0)	&& RegExMatch(Pat.Kk	, "i)^" Kk) 	? 1 : 0                    	;
+				If (m1+m2+m3+m4+m5 = 0)
+					continue
+
+				matches[PatID] := Object()
+				For idx, getValue in getter
+					matches[PatID][getValue] := Pat[GetValue]
+
+				If OnlyFirstMatch
+					break
+
+			}
 
 		return matches
 		}
@@ -447,7 +455,7 @@ return false
 ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; ALBIS DBASE DATENBANKEN - benötigt Addendum-DBASE.ahk
 ;--------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-class AlbisDb { 		                             	 					         								;-- erweitert Addendum_DBASE um zusätzliche Funktionen
+class AlbisDb { 		                             	 					         		 			;-- erweitert Addendum_DBASE um zusätzliche Funktionen
 
 		; diese Klasse benötigt Addendum_DBASE, Addendum_Internal
 
@@ -591,43 +599,82 @@ class AlbisDb { 		                             	 					         								;-- erwei
 
 }
 
+Karteikartenfilter(DBPath) {                                                                   	;-- Albis Karteikartenfilter aus der Datenbank lesen
 
-DBASEStructs(AlbisPath, DBStructsPath:="") {                                         	;-- analysiert alle DBF Dateien im albiswin\db Ordner
+	KKFilter := Object()
+	dbf     	:= new DBase(DBPath "\BEFTAG.dbf", false)
+	res      	:= dbf.OpenDBF()
+	beftag	:= dbf.GetFields("alle")
+	res       	:= dbf.CloseDBF()
+	dbf      	:= ""
+
+	For idx, filter in beftag
+		If !filter.removed
+			KKFilter[filter.NAME] := {"Inhalt":StrReplace(filter.inhalt, ",", ", "), "Beschr":filter.beschr}
+
+return KKFilter
+}
+
+DBASEStructs(AlbisPath, DBStructsPath:="", debug=false) {                    	;-- analysiert alle DBF Dateien im albiswin\db Ordner
 
 	; schreibt die ausgelesenen Strukturen als JSON formatierte Datei
 
-		dbfStructs := Object()
-		AlbisDBpath:= AlbisPath "\db"
+		dbfStructs	:= Object()
+		dbfiles    	:= Array()
+		AlbisDBpath:= RegExReplace(AlbisPath, "i)\\db.*$") "\db"
 
 	; zählt für die Dateianzeige zunächst einmal die vorhandenen Dateien im Verzeichnis
 		Loop, Files, % AlbisDBpath "\*.dbf"
-			dbfStructs[StrReplace(A_LoopFileName, ".dbf")] := Object()
+			dbfiles.Push(StrReplace(A_LoopFileName, ".dbf"))
 
 	; für formatierte Ausgabe
-		dbFilesMax := dbfStructs.Count()
+		dbFilesMax := dbfiles.Count()
 		dbIL := StrLen(dbFilesMax) - 1
 
 	; öffnet jede DBASE Datei und liest den Header der Datei aus
 		dbNr := 0
-		For dbfName, struct in dbfStructs {
+		For dbfNr, dbfName in dbfiles {
 
-			ToolTip, % "lese: " SubStr("000" (dbNr ++), -1 * dbIL) "/" dbFilesMax ": " dbfName
+				If debug && (Mod(dbfNr, 20) = 0)
+					ToolTip, % "lese: " SubStr("000" (dbNr ++), -1 * dbIL) "/" dbFilesMax ": " dbfName
 
-			FileGetSize, SizeDBF	, % AlbisDBPath "\" dbfName ".dbf"		, K
-			FileGetSize, sizeDBT	, % AlbisDBPath "\" dbfName ".dbt" 	, K
-			FileGetSize, sizeMDX	, % AlbisDBPath "\" dbfName ".mdx"	, K
-			dbfSizeMax += sizeDBF
-			dbtSizeMax += sizeDBT
-			mdxSizeMax += sizeMDX
+			; Zeitstempel
+				FileGetTime, accessed,  % AlbisDBPath "\" dbfName ".dbf"	, A
+				FileGetTime, modified,  % AlbisDBPath "\" dbfName ".dbf"	, M
 
-			dbfStructs[dbfShort].fields     	:= Object()
-			dbfStructs[dbfShort].header   	:= Object()
+			; Datenbankgrößen
+				FileGetSize, SizeDBF	, % AlbisDBPath "\" dbfName ".dbf"		, K
+				FileGetSize, sizeDBT	, % AlbisDBPath "\" dbfName ".dbt" 	, K
+				FileGetSize, sizeMDX	, % AlbisDBPath "\" dbfName ".mdx"	, K
+				dbfSizeMax 	+= sizeDBF
+				dbtSizeMax 	+= sizeDBT
+				mdxSizeMax	+= sizeMDX
 
-			dbf  	:= new DBASE(AlbisDBPath "\" dbfName ".dbf", false)
-			dbfStructs[dbfName].fields     	:= isObject(dbf.dbfields) ? dbf.dbfields : "error reading dbase file"
-			dbfStructs[dbfName].header  	:= isObject(dbf.dbstruct) ? dbf.dbstruct : "error reading dbase file"
-			dbf.Close()
-			dbf := ""
+			; Datenbankstruktur
+
+				dbf  	:= new DBASE(AlbisDBPath "\" dbfName ".dbf", false)
+
+				If (dbf.Version = 0x8b || dbf.Version = 0x3) {
+					dbfStructs[dbfName]                     	:= Object()
+					dbfStructs[dbfName].Nr               	:= dbfNr
+					dbfStructs[dbfName].dbfields        	:= isObject(dbf.dbfields) 	? dbf.dbfields 	: "error reading dbase file"
+					dbfStructs[dbfName].fields         	:= isObject(dbf.fields)    	? dbf.fields    	: "error reading dbase file"
+					dbfStructs[dbfName].header      	:= isObject(dbf.dbstruct)	? dbf.dbstruct 	: "error reading dbase file"
+					dbfStructs[dbfName].headerLen  	:= dbf.headerLen
+					dbfStructs[dbfName].lendataset  	:= dbf.lendataset
+					dbfStructs[dbfName].records      	:= dbf.records
+					dbfStructs[dbfName].lastupdate  	:= dbf.lastupdateDate
+					dbfStructs[dbfName].lastupdateE	:= dbf.lastupdateEng
+					dbfStructs[dbfName].sizeDBF     	:= sizeDBF
+					dbfStructs[dbfName].sizeDBT     	:= sizeDBT
+					dbfStructs[dbfName].sizeMDX     	:= sizeMDX
+					dbfStructs[dbfName].accessed     	:= accessed
+					dbfStructs[dbfName].modified     	:= modified
+				}
+
+				dbf.Close()
+				dbf := ""
+
 		}
 		ToolTip
 
@@ -651,6 +698,7 @@ DBASEStructs(AlbisPath, DBStructsPath:="") {                                    
 
 	}
 
+return dbfstructs
 }
 
 GetDBFData(DBpath,p="",out="",s=0,opts="",dbg=0,dbgOpts="") {     	;-- holt Daten aus einer beliebigen Datenbank
@@ -713,10 +761,10 @@ Leistungskomplexe(PatID=0, StartQuartal="2009-4", SaveToPath="") {	;-- sammelt, 
 
 	; Daten von allen Patienten über alle Jahre sammeln
 		befund  	:= new DBASE(Addendum.AlbisDBPath "\BEFUND.dbf", 0)
-		filepos  	:= befund.OpenDBF()
+		filepos   	:= befund.OpenDBF()
 		startpos  	:= Floor((BefundDBF[StartQuartal]-befund.recordsStart)/befund.LenDataSet)
 		ziffern    	:= befund.SearchFast({"KUERZEL": "lko"}, ["DATUM", "PATNR", "INHALT"], startpos)
-		filepos  	:= befund.CloseDBF()
+		filepos   	:= befund.CloseDBF()
 
 	; Abr Ziffern mit gefundenem vergleichen
 		For mIdx, m in ziffern {

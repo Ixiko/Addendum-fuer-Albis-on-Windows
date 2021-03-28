@@ -2,6 +2,7 @@
 ; Advanced Library for ListViews
 ; by Dadepp
 ; Version 1.1 (minor bugfixes)
+; REMARK: lib contains ANSI functions!
 ; http://www.autohotkey.com/forum/viewtopic.php?t=43242
 ;{ ---------------------------------------------------------------------------------------
 ;
@@ -670,8 +671,7 @@ lva_OnNotifyProg(wParam, lParam, msg, hwnd) {
 
 lva_OnLVScroll(hwnd, uMsg, wParam, lParam) {
   Critical, 500
-  if (uMsg = 0x115)
-  {
+  if (uMsg = 0x115)  {
     DLow := wParam & 0xFFFF
     if !DLow
       DllCall("LockWindowUpdate", "UInt", hwnd)
@@ -747,15 +747,14 @@ lva_DrawProgress(Row, Col, hHandle) {
 
 lva_Info(Switch, Name, Row=0, Col=0, Data=0) {
   Static
-  if (Switch = 0)
-  {
-    Loop, % LVA_GetCellNum("GetRows", Name)
-    {
+  if (Switch = 0)  {
+
+    Loop, % LVA_GetCellNum("GetRows", Name)    {
+
       lRow := A_Index
       if LVA_InfoArray_%Name%_%lRow%_0_HasCellColor
         LVA_InfoArray_%Name%_%lRow%_0_HasCellColor := ""
-      Loop, % LVA_GetCellNum("GetCols", Name)
-      {
+      Loop, % LVA_GetCellNum("GetCols", Name)      {
         if LVA_InfoArray_%Name%_%lRow%_%A_Index%_HasProgressBar
           LVA_InfoArray_%Name%_%lRow%_%A_Index%_HasProgressBar := ""
         if LVA_InfoArray_%Name%_%lRow%_%A_Index%_HasMultiImage

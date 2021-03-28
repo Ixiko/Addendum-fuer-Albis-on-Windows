@@ -17,10 +17,8 @@
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
 ;       Addendum_DBASE begonnen am:          	12.11.2020
-;       Addendum_DBASE letzte Änderung am: 	13.03.2021
+;       Addendum_DBASE letzte Änderung am: 	26.03.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
 class DBASE {                                     ; native DBASE Klasse nur für Albis .dbf Files
 
 	; +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -69,7 +67,8 @@ class DBASE {                                     ; native DBASE Klasse nur für
 				year		:= 1900 + year
 				month	:= SubStr("00" month, -1)
 				day   	:= SubStr("00" day, -1)
-				this.lastupdateDate := day "." month "." year
+				this.lastupdateDate 	:= day "." month "." year
+				this.lastupdateEng 	:= year "." month "." day
 
 			  ; Byte: [  4-7  ]	- Number of records in the table. (Least significant byte first.)
 				this.records   	:= this._ReadNum(4, "Int")
@@ -152,12 +151,15 @@ class DBASE {                                     ; native DBASE Klasse nur für
 
 			; calculations for viewing of progress
 				this.ShowAt	:= Round(this.records/50)
-				this.slen     	:= -1 * (StrLen(this.records) - 1)
+				this.slen     	:= -1*(StrLen(this.records) - 1)
 				this.maxRecs	:= SubStr("00000000" this.records, this.slen)
 
 			; calculations of array size and filepointer position of first record in this database
 				this.maxBytes	:= this.lendataset * this.records > this.maxCapacity ? this.maxCapacity : this.lendataset * this.records
 				this.recordsStart	:= this.headerlen + this.headerrecordgap
+
+			; recordbuf
+				VarSetCapacity(this.recordbuf, this.lendataset, 0x20)
 
 		}
 
@@ -240,9 +242,6 @@ class DBASE {                                     ; native DBASE Klasse nur für
 		/* main description
 
 				- parameter: pattern is designed to use only RegEx for matching, use function SearchFields() for different search algorithms!
-				- use option with "collect fieldname" and function will collects all values found in a linear array ## collect functionality is useless at the moment!
-				- use option with "store nonhits " and function will store every PATNR without any hit too
-				- all options must be separated by a comma
 
 		*/
 
@@ -345,11 +344,12 @@ class DBASE {                                     ; native DBASE Klasse nur für
 				set 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
 
 			; debugging and callback function to show progress
-				If (Mod(A_Index, this.ShowAt) = 0) {
+
+				If (Mod(setNR := A_Index, this.ShowAt) = 0) {
 					If (this.debug = 1)
 						ToolTip, % "Search rx: " rxStr "`n" SubStr("00000000" A_Index, this.slen) "/" SubStr("00000000" this.records, this.slen)
 					If (StrLen(callbackFunc) > 0)
-						%callbackFunc%(A_Index, this.records, this.len)
+						%callbackFunc%(setNR, this.records, this.slen, matches.MaxIndex())
 				}
 
 			; no match - continue
@@ -391,6 +391,8 @@ class DBASE {                                     ; native DBASE Klasse nur für
 			this.breakrec	:= "!"
 
 			ToolTip
+			If (StrLen(callbackFunc) > 0)
+				%callbackFunc%(setNR, this.records, this.slen, matches.MaxIndex())
 
 		return matches
 		}
@@ -650,6 +652,66 @@ class DBASE {                                     ; native DBASE Klasse nur für
 		return data
 		}
 
+	  ; -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	  ; READ A BLOCK OF DATA SETS
+	  ; -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		ReadBlock(NrOfSets, getfields:="", StartBlock=0) {
+
+		; the function returns the data of all records as key:val object
+		; you have to specify getfields as an array containing fieldnames
+
+			static data, recordbuf
+
+		; prepares some variables
+			If !IsObject(this.data) || IsObject(getfields)  {
+
+					VarSetCapacity(recordbuf, this.lendataset, 0x20)
+					this.getfields	:= getfields
+
+				; creates an array with data for substring function retreave only fields that should be returned
+					this.subs       	:= this.BuildSubstringData(getfields)
+					If (this.subs.MaxIndex() = 0)                               	; returns here if all field names passed are unknown
+						return 2                                                        	; "field label(s) unknown"
+
+			}
+			this.data	:= Object()
+
+
+		; establish read access if not already done
+			If !IsObject(this.dbf) {
+				this.nofileaccess := true
+				this.pos := this.OpenDBF()
+			}
+
+		; filepointer is set to the data record with the number from startrecord
+			If (StartBlock > 0) {
+				StartRecord := ((StartBlock-1)*NrOfSets)+1
+				this.dbf.Seek(this.lendataset * startrecord, 1)
+				this.filepos := this.dbf.Tell()
+			}
+
+		; compile field data as an object
+			blockpos := 0
+			while (!this.dbf.AtEOF)  {
+
+				; reads a data set raw mode and converts it to a readable text format
+					bytes	:= this.dbf.RawRead(recordbuf, this.lendataset)
+					set 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
+					this.filepos := this.dbf.Tell()
+
+				; push object to data array (object contains the requested field names, values and its specific recordnr)
+					fields := this.GetSubData(set, this.subs)
+					If (fields["id"] = -1) || fields["remove"]
+						continue
+					this.data.Push(fields)
+					blockpos ++
+					If (blockpos = NrOfSets)
+						break
+			}
+
+		return this.data
+		}
+
 
 	;}
 
@@ -779,7 +841,7 @@ class DBASE {                                     ; native DBASE Klasse nur für
 							break
 						}
 
-			}	else {                        ; all fields
+			} else {                        ; all fields
 
 				For FieldsIndex, field in this.fields {
 					subs.Push({"label":field.label, "type":field.type, "start":field.start, "len":field.len})
@@ -788,7 +850,6 @@ class DBASE {                                     ; native DBASE Klasse nur für
 				}
 
 			}
-
 
 		return subs
 		}

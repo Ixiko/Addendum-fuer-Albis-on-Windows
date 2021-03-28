@@ -472,21 +472,21 @@ SetWindowPos(hWnd, x, y, w, h, hWndInsertAfter := 0, uFlags := 0x40) {          
 
 	/*  ; https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-setwindowpos
 
-	SWP_ASYNCWINDOWPOS	:= 0x4000	; This prevents the calling thread from blocking its execution while other threads process the request.
-	SWP_DEFERERASE                	:= 0x2000	; Prevents generation of the WM_SYNCPAINT message.
+	SWP_NOSIZE                       	:= 0x0001	; Retains the current size (ignores the cx and cy parameters).
+	SWP_NOMOVE                 	:= 0x0002	; Retains the current position (ignores X and Y parameters).
+	SWP_NOZORDER              	:= 0x0004	; Retains the current Z order (ignores the hWndInsertAfter parameter).
+	SWP_NOREDRAW             	:= 0x0008	; Does not redraw changes.
+	SWP_NOACTIVATE   	       	:= 0x0010	; Does not activate the window.
 	SWP_DRAWFRAME            	:= 0x0020	; Draws a frame (defined in the window's class description) around the window.
 	SWP_FRAMECHANGED     	:= 0x0020	; Applies new frame styles set using the SetWindowLong function.
+	SWP_SHOWWINDOW        	:= 0x0040	; Displays the window.
 	SWP_HIDEWINDOW         	:= 0x0080	; Hides the window
-	SWP_NOACTIVATE   	        	:= 0x0010	; Does not activate the window.
 	SWP_NOCOPYBITS            	:= 0x0100	; Discards the entire contents of the client area.
-	SWP_NOMOVE                 	:= 0x0002	; Retains the current position (ignores X and Y parameters).
 	SWP_NOOWNERZORDER 	:= 0x0200	; Does not change the owner window's position in the Z order.
-	SWP_NOREDRAW             	:= 0x0008	; Does not redraw changes.
 	SWP_NOREPOSITION        	:= 0x0200	; Same as the SWP_NOOWNERZORDER flag.
 	SWP_NOSENDCHANGING	:= 0x0400	; Prevents the window from receiving the WM_WINDOWPOSCHANGING message.
-	SWP_NOSIZE                       	:= 0x0001	; Retains the current size (ignores the cx and cy parameters).
-	SWP_NOZORDER              	:= 0x0004	; Retains the current Z order (ignores the hWndInsertAfter parameter).
-	SWP_SHOWWINDOW        	:= 0x0040	; Displays the window.
+	SWP_DEFERERASE                	:= 0x2000	; Prevents generation of the WM_SYNCPAINT message.
+	SWP_ASYNCWINDOWPOS	:= 0x4000	; This prevents the calling thread from blocking its execution while other threads process the request.
 
 	 */
 

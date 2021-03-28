@@ -123,6 +123,10 @@
         "ingredient": "Bisoprolol",
         "use": "Blutdruck/Herzrhythmus"
     },
+    "Bisoprolol Accord": {
+        "ingredient": "Bisoprolol",
+        "use": "Herz"
+    },
     "Bisoprolol Rat": {
         "ingredient": "Bisoprolol",
         "use": "Bluthochdruck"
@@ -231,6 +235,10 @@
         "ingredient": "Dorzolamid",
         "use": "grüner Star"
     },
+    "Doxazosin": {
+        "ingredient": "Doxazosin",
+        "use": "Bluthochdruck"
+    },
     "Duodart": {
         "ingredient": "Dutasterid und Tamsulosin",
         "use": "Prostata"
@@ -287,6 +295,10 @@
         "ingredient": "Ezetimib",
         "use": "Cholesterin"
     },
+    "Ezetimib/Simva": {
+        "ingredient": "Ezetimib und Simvastatin",
+        "use": "Cholesterin"
+    },
     "Falithrom": {
         "ingredient": "Phenprocoumon",
         "use": "Gerinnung"
@@ -294,6 +306,10 @@
     "Fastjekt Autoinjektor": {
         "ingredient": "Epinephrin",
         "use": "Wespengiftallergie"
+    },
+    "Febuxostat": {
+        "ingredient": "Febuxostat",
+        "use": "Herzrhythmus"
     },
     "Fenofibrat": {
         "ingredient": "Fenofibrat",
@@ -455,6 +471,10 @@
         "ingredient": "L-Thyroxin",
         "use": "Schilddrüse"
     },
+    "Lamotrigin Acis": {
+        "ingredient": "Lamotrigin",
+        "use": "Epilepsie"
+    },
     "Lantus": {
         "ingredient": "Insulin glargin",
         "use": "Diabetes"
@@ -471,12 +491,20 @@
         "ingredient": "Lercanidipin",
         "use": "Blutdruck"
     },
+    "Levetiracetam": {
+        "ingredient": "Levetiracetam",
+        "use": "Epilepsie"
+    },
     "Levetiragamma": {
         "ingredient": "Levetiracetam",
         "use": "Epilepsie"
     },
     "Levodopa Bens": {
         "ingredient": "Levodopa und Decarboxylasehemmer",
+        "use": "Parkinson"
+    },
+    "Levodopa/B-Neurax": {
+        "ingredient": "Levodopa und Benserazid",
         "use": "Parkinson"
     },
     "Levodopa/Carb": {
@@ -579,6 +607,10 @@
         "ingredient": "Metoprolol succinat",
         "use": "Blutdruck/Herzrhythmus"
     },
+    "Mictonorm Uno": {
+        "ingredient": "Propiverin",
+        "use": "Blase"
+    },
     "Mirtalich": {
         "ingredient": "Mirtazapin",
         "use": "Stimmung"
@@ -674,6 +706,10 @@
     "Pradaxa": {
         "ingredient": "Dabigatran",
         "use": "Gerinnung/VHF"
+    },
+    "Pramipexol": {
+        "ingredient": "Pramipexol",
+        "use": "Parkinson"
     },
     "Prednisolon": {
         "ingredient": "Prednisolon",
@@ -785,6 +821,10 @@
         "ingredient": "Cannabinoide",
         "use": "Muskelkrämpfe bei neurologischer Grunderkrankung"
     },
+    "Selegilin-Neurax": {
+        "ingredient": "Selegilin",
+        "use": "Parkinson"
+    },
     "Sertralin": {
         "ingredient": "Sertralin",
         "use": "Stimmung"
@@ -852,6 +892,10 @@
     "Tavor": {
         "ingredient": "Lorazepam",
         "use": "nicht anderweitig beherrschbare Panikattacke"
+    },
+    "Tavor Expidet": {
+        "ingredient": "Lorazepam",
+        "use": "Psyche"
     },
     "Tavu": {
         "ingredient": "Timolol und Latanoprost",
@@ -931,6 +975,10 @@
     "Vigantol Oel": {
         "ingredient": "Colecalciferol",
         "use": "Osteoporoseprophylaxe"
+    },
+    "Vigantolvit": {
+        "ingredient": "Cholecalciferol",
+        "use": "Vitamin D Mangel"
     },
     "Vimpat": {
         "ingredient": "Lacosamid",

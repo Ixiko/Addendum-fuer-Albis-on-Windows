@@ -10,9 +10,9 @@
 ;		Abhängigkeiten: 	-	siehe #includes
 ;
 ;	                    				Addendum für Albis on Windows
-;                        				by Ixiko started in September 2017 - last change 27.02.2021 - this file runs under Lexiko's GNU Licence
+;                        				by Ixiko started in September 2017 - last change 23.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;	Version 0.85
+;	Version 0.86
 
 
 	; Skripteinstellungen                                        	;{
@@ -38,6 +38,7 @@
 		global PatDok := Object(), PREVID := Object()
 		global q:=Chr(0x22)
 		global Addendum := Object()
+		global PatChoosed := false
 
 
 		RegExMatch(A_ScriptDir, ".*(?=\\Module)", AddendumDir)
@@ -80,18 +81,15 @@
 			docViewer := ""
 
 		IniRead, exportordner        	, % A_ScriptDir "\admExporter.ini", DokExporter, exportordner
-		IF InStr(exportordner, "ERROR") || (StrLen(exportordner) = 0) {
-
+		If InStr(exportordner, "ERROR") || (StrLen(exportordner) = 0) {
 			IniRead, exportordner, % AddendumDir "\Addendum.ini", % "Scanpool", % "Exportordner"
 			If InStr(exportordner, "ERROR") || (StrLen(exportordner) = 0) {
-
 				IniRead, exportordner, % "C:\albiswin.loc\Local.ini", % "bvl", "VP6001"
 				If InStr(exportordner, "ERROR") || (StrLen(exportordner) = 0) {
 					MsgBox, 1, % "Addendum für Albis on Windows", % "Das Skript kann kein Verzeichnis für den Export der Patientendokumente finden.`n"
 										. "Bitte hinterlegen Sie einen Pfad im entsprechenden Feld in der Gui"
 				}
 				exportordner := A_ScriptDir "\Dokumentexport"
-
 			}
 		}
 
@@ -317,15 +315,19 @@ DXP_Handler: ;{
 			LV_ChooseAll()
 
 		Case "DXP_EA":
-			LVExport()
+			If PatChoosed
+				LVExport()
 
 		Case "DXP_EP":
-			LVExport()
-			KarteikartenExport()
+			If PatChoosed {
+				LVExport()
+				KarteikartenExport()
+			}
 			; MsgBox, Hinweis was exportiert wurde
 
 		Case "DXP_FB":
-			LVShowExplorer()
+			If PatChoosed
+				LVShowExplorer()
 
 		Case "DXP_PB":
 			ChangeFolder()
@@ -485,6 +487,8 @@ LVShowExplorer() {                       	;-- öffnet den Exportpfad in einem Ex
 
 }
 
+
+
 ;}
 
 
@@ -493,16 +497,17 @@ LVShowExplorer() {                       	;-- öffnet den Exportpfad in einem Ex
 ZeigeDokumente(row) {
 
 	;global DXP_FxF, DXP_PLV
-	global DPGS_init
+	global DPGS_init, PatChoosed
 	static outBezeichner
 
-	Gui, DXP: Default
+		Gui, DXP: Default
 
 	; PATNR, NAME, VORNAME ermitteln
 		Pat := LV_GetSelectedRow()
 		If !RegExMatch(Pat.NR, "\d+")
 			return
 
+		PatChoosed := true
 		DPGS_init := true
 		DimmerGui("on")
 
@@ -564,6 +569,7 @@ ZeigeDokumente(row) {
 			docPath:= PatPath "\" file.datum " - " file.Bezeichnung "." file.ext
 			If FileExist(docPath) {
 
+				docExist := true
 				filestatus .= "X|"
 				If (file.ext = "pdf") {
 					filestatus .= PDFisSearchable(docPath) ? "S|" : "  |"
@@ -572,6 +578,7 @@ ZeigeDokumente(row) {
 
 			} else {
 
+				docExist := false
 				filestatus .= "  |"
 				if (file.ext = "pdf") {
 					filestatus .= PDFisSearchable(AlbisPath "\Briefe\" file.filename) ?	"S|" : "  |"
@@ -581,7 +588,7 @@ ZeigeDokumente(row) {
 
 			Gui, DXP: Default
 			Gui, DXP: ListView, DXP_DLV
-			LV_Add("", datum, ext, file.Bezeichnung, filestatus, LFDNR)
+			LV_Add((docExist?"Check":""), datum, ext, file.Bezeichnung, filestatus, LFDNR)
 
 		}
 
@@ -666,55 +673,64 @@ return ftoex
 ;--- Dokumente exportieren    	;{
 LVExport() {                                                                                                           	;-- exportiert ausgewählte Dokumente
 
-	Pat := LV_GetSelectedRow()
+		row := 0, dokument := Array()
+		Pat := LV_GetSelectedRow()
 
-	Gui, DXP: Default
-	Gui, DXP: ListView, DXP_DLV
-	row := 0, dokument := Array()
-	Loop {
-		If !(row := LV_GetNext(row, "C"))
-			break
-		LV_GetText(LFDNR, row, 5)
-		dokument[row] := PatDok[Pat.NR][LFDNR]
+	; Listview default machen
+		Gui, DXP: Default
+		Gui, DXP: ListView, DXP_DLV
 
-	}
+	; zu exportierende Dateien zusammenstellen
+		while (row := LV_GetNext(row, "C")) {
+			LV_GetText(LFDNR, row, 5)
+			dokument[A_Index] := PatDok[Pat.NR][LFDNR]
+		}
 
-	If !(dokument.Count() > 0) {
-		SB_SetText("KEINE EXPORTAUSWAHL GETROFFEN!", 1)
-		return
-	}
+	; Exportvorgang ausführen
+		If (dokument.Count() = 0) {
+			SB_SetText("KEINE EXPORTAUSWAHL GETROFFEN!", 1)
+			return 0
+		}
 
-	Dokumentexport(Pat.NR, Pat.NAME ", " Pat.VORNAME, dokument, exportordner)
+		filesLeft :=Dokumentexport(Pat.NR, Pat.NAME ", " Pat.VORNAME, dokument, exportordner)
+		SciTEOutput("Dateien exportiert. Rest " filesLeft)
 
-return
+
+return filesLeft = 0 ? 1 : -1*filesLeft
 }
 
-Dokumentexport(PATNR, PATName, files, exportPath) {
+Dokumentexport(PATNR, PATName, dokument, exportPath) {                                     	;-- kopiert die ausgewählten Dokumente aus albiswin/briefe in den Exportordner
 
-	PatPath := exportPath "\(" PATNR ") " PATName
+		global AlbisPath, exportordner
 
-	If !InStr(FileExist(PatPath), "D")
-		FileCreateDir, % PatPath "\"
-
-	Gui, DXP: Default
-	Gui, DXP: ListView, DXP_DLV
-
-	For row, file in files {
-		exportFile := PatPath "\" file.datum " - " file.Bezeichnung "." file.ext
-		If FileExist(exportFile)
-			continue
-		FileCopy, % AlbisPath "\Briefe\" file.filename, % exportFile, 1
-		SB_SetText(AlbisPath "\Briefe\" file.filename, 1)
-		SB_SetText(PatPath "\" file.datum " - " file.Bezeichnung "." file.ext, 4)
-		SB_SetText(ErrorLevel, 2)
-		If !ErrorLevel {
-			copynr ++
-			SB_SetText(copynr " von " files.Count() " Dateien exportiert.")
-			LV_Modify(row, "-Check")
+	; Dokumentenexportpfad anlegen
+		PatPath := CreatePatPath(PATNR, PATName, exportPath)
+		If (StrLen(PatPath) = 0) {
+			PraxTT(A_ScriptName "`n" A_ThisFunc "`nDer Patientenexportpfad konnte nicht angelegt werden", "3 1")
+			return -99
 		}
-	}
 
-return files.Count() - copynr
+	; Gui Default
+		Gui, DXP: Default
+		Gui, DXP: ListView, DXP_DLV
+
+	; Dateien kopieren
+		For row, file in dokument {
+			exportFile := PatPath "\" file.datum " - " file.Bezeichnung "." file.ext
+			If FileExist(exportFile)
+				continue
+			FileCopy, % AlbisPath "\Briefe\" file.filename, % exportFile, 1
+			SB_SetText(AlbisPath "\Briefe\" file.filename, 1)
+			SB_SetText(PatPath "\" file.datum " - " file.Bezeichnung "." file.ext, 4)
+			SB_SetText(ErrorLevel, 2)
+			If !ErrorLevel {
+				copynr ++
+				SB_SetText(copynr " von " dokument.Count() " Dateien exportiert.")
+				LV_Modify(row, "-Check")
+			}
+		}
+
+return dokument.Count() - copynr
 }
 
 KarteikartenExport() {                                                                                               	;-- Tagesprotokoll und Laborblatt werden exportiert
@@ -730,8 +746,11 @@ KarteikartenExport() {                                                          
 		If !RegExMatch(Pat.NR, "^\d+$")
 			return
 
-	; spezieller Exportpfad
-		PatPath   	:= exportordner "\(" Pat.NR ") " Pat.NAME ", " Pat.VORNAME
+	; Dokumentenexportpfad anlegen bei Bedarf
+		If !(PatPath := CreatePatPath(Pat.NR, Pat.NAME ", " Pat.VORNAME, exportordner)) {
+			PraxTT(A_ScriptName "`n" A_ThisFunc "`nDer Patientenexportpfad konnte nicht angelegt werden", "3 1")
+			return 0
+		}
 		KKFilePath	:= PatPath "\Karteikartenauszug von " Pat.NAME ", " Pat.VORNAME
 
 	; Karteikarte des Patienten öffnen
@@ -741,8 +760,14 @@ KarteikartenExport() {                                                          
 	; Laborblatt drucken
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 		; Werte exportieren
-			PraxTT("Laborwerte werden exportiert.", "20 1")
-			LBlattRes := LaborblattExport(Pat.NAME ", " Pat.VORNAME, PatPath)
+			If !FileExist(PatPath "\Laborkarte von " Pat.NAME ", " Pat.VORNAME) {
+				PraxTT("Laborwerte werden exportiert.", "20 1")
+				LBlattRes := LaborblattExport(Pat.NAME ", " Pat.VORNAME, PatPath)
+			}
+			else {
+				PraxTT("Laborwerte wurden bereits exportiert.", "3 1")
+				Sleep 3000
+			}
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	; TAGESPROTOKOLL EXPORTIEREN (Karteikarte!)
@@ -807,22 +832,22 @@ LaborblattExport(name, PatPath, Printer="", Spalten="Alles")                 	{ 
 
 }
 
-Karteikartenfilter(DBPath) {                                                                                    	;-- Albis Karteikartenfilter aus der Datenbank lesen
+CreatePatPath(PATNR, PATName, exportPath:="") {                                                   	;-- legt den Patientenexportpfad an
 
-	KKFilter := Object()
+	If !exportPath
+		exportPath := ExportOrdner
 
-	dbf     	:= new DBase(DBPath "\BEFTAG.dbf", false)
-	res      	:= dbf.OpenDBF()
-	beftag	:= dbf.GetFields("alle")
-	res       	:= dbf.CloseDBF()
-	dbf      	:= ""
+	If !InStr(FileExist(PatPath := exportPath "\(" PATNR ") " PATName), "D") {
+		FileCreateDir, % PatPath "\"
+		If ErrorLevel
+			return PatPath
+		return
+	}
 
-	For idx, filter in beftag
-		If !filter.removed
-			KKFilter[filter.NAME] := {"Inhalt":StrReplace(filter.inhalt, ",", ", "), "Beschr":filter.beschr}
-
-return KKFilter
+return PatPath
 }
+
+
 ;}
 
 ;--- Patientensuche                 	;{
@@ -1058,14 +1083,9 @@ AddNewComboxItem(newItem, cbhwnd, maxItems=50) {
 			}
 
 		If !itemfound {
-
-			; add item at beginning
-				cbitems.InsertAt(1, newitem)
-
-			; remove items from list
-				If (cbitems.Count() > maxItems)
-					cbitems.Delete(maxItems+1, cbitems.Count())
-
+			cbitems.InsertAt(1, newitem)									; add item at beginning
+			If (cbitems.Count() > maxItems)								; remove items from list
+				cbitems.Delete(maxItems+1, cbitems.Count())
 		}
 
 		; new cb list

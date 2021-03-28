@@ -3,10 +3,12 @@
 ;
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;  		Abhängigkeiten: 	xpdf commandline tools		- https://www.xpdfreader.com/download.html
+;                                	qpdf commandline tool
+;                                 	Addendum_Internal.ahk
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;
 ;	 	Addendum für Albis on Windows
-;   	by Ixiko started in September 2017 - last change 12.02.2021 - this file runs under Lexiko's GNU Licence
+;   	by Ixiko started in September 2017 - last change 28.03.2021 - this file runs under Lexiko's GNU Licence
 ;
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
@@ -305,7 +307,6 @@ IFilter(file, searchstring:="")                                             	{  
 return searchstring ? "" : Text
 }
 
-
 ;----------------------------------------------------------------------------------------------------------------------------------------------
 ; xpdf wrapper
 ;----------------------------------------------------------------------------------------------------------------------------------------------
@@ -455,7 +456,7 @@ return 1
 ;----------------------------------------------------------------------------------------------------------------------------------------------
 ; Sonstiges
 ;----------------------------------------------------------------------------------------------------------------------------------------------
-MetaDatenAnzeigen(PdfPath, ShowInfo:=false)	{		        	;-- zeigt die Metadaten einer PDF Datei an
+MetaDatenAnzeigen(PdfPath, ShowInfo:=false)	{		                         	;-- zeigt die Metadaten einer PDF Datei an
 
 	output:="", maxlength:=0
 	metadata:= Object()
@@ -475,4 +476,23 @@ MetaDatenAnzeigen(PdfPath, ShowInfo:=false)	{		        	;-- zeigt die Metadaten 
 
 return metadata
 }
+
+GetPDFData(path, pdfname) 	{                                                           	;-- Dateigröße, Durchsuchbar ...
+
+	pdfPath := path "\" pdfname
+	FileGetSize	, FSize       	, % pdfPath, K
+	FileGetTime	, timeStamp 	, % pdfPath, C
+	FormatTime	, FTime     	, % timeStamp, dd.MM.yyyy
+
+return {	"name"          	: pdfname
+		, 	"filesize"          	: FSize
+		, 	"timestamp"   	: timeStamp
+		, 	"filetime"       	: FTime
+		, 	"pages"          	: PDFGetPages(pdfPath, Addendum.PDF.qpdfPath)
+		, 	"isSearchable"	: (PDFisSearchable(pdfPath)?1:0)}
+}
+
+
+
+
 

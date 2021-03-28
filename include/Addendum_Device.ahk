@@ -1,120 +1,130 @@
 ﻿;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 07.10.2019 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 22.03.2021 - this file runs under Lexiko's GNU Licence
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ;	2 Funktionen für die automatische Erkennung einer eingelegten DICOM Daten CD
 WM_DEVICECHANGE( wParam, lParam) {                                                        	;--erkennt ob ein einlegen einer CD statt gefunden hat und gibt auch das Laufwerk aus - global drv
- Global Drv
- global DriveNotification
- Static DBT_DEVICEARRIVAL := 0x8000 ; http://msdn2.microsoft.com/en-us/library/aa363205.aspx
- Static DBT_DEVTYP_VOLUME := 0x2    ; http://msdn2.microsoft.com/en-us/library/aa363246.aspx
 
- /*
-    When wParam is DBT_DEVICEARRIVAL lParam will be a pointer to a structure identifying the
-    device inserted. The structure consists of an event-independent header,followed by event
-    -dependent members that describe the device. To use this structure,  treat the structure
-    as a DEV_BROADCAST_HDR structure, then check its dbch_devicetype member to determine the
-    device type.
- */
+	 /*
+		When wParam is DBT_DEVICEARRIVAL lParam will be a pointer to a structure identifying the
+		device inserted. The structure consists of an event-independent header,followed by event
+		-dependent members that describe the device. To use this structure,  treat the structure
+		as a DEV_BROADCAST_HDR structure, then check its dbch_devicetype member to determine the
+		device type.
+	 */
 
- dbch_devicetype := NumGet(lParam+4) ; dbch_devicetype is member 2 of DEV_BROADCAST_HDR
+	global Drv, DriveNotification
 
- If ( wParam = DBT_DEVICEARRIVAL AND dbch_devicetype = DBT_DEVTYP_VOLUME )
- {
+	static DBT_DEVICEARRIVAL   	:= 0x8000 	; http://msdn2.microsoft.com/en-us/library/aa363205.aspx
+	static DBT_DEVTYP_VOLUME	:= 0x2      	; http://msdn2.microsoft.com/en-us/library/aa363246.aspx
 
- ; Confirmed lParam is a pointer to DEV_BROADCAST_VOLUME and should retrieve Member 4
- ; which is dbcv_unitmask
+	dbch_devicetype := NumGet(lParam+4)  	; dbch_devicetype is member 2 of DEV_BROADCAST_HDR
 
-   dbcv_unitmask := NumGet(lParam+12 )
+	; Confirmed lParam is a pointer to DEV_BROADCAST_VOLUME and should retrieve Member 4 which is dbcv_unitmask
+		If ( wParam = DBT_DEVICEARRIVAL AND dbch_devicetype = DBT_DEVTYP_VOLUME ) {
 
- ; The logical unit mask identifying one or more logical units. Each bit in the mask corres
- ; ponds to one logical drive.Bit 0 represents drive A, Bit 1 represents drive B, and so on
+		 ; The logical unit mask identifying one or more logical units. Each bit in the mask corres
+		 ; ponds to one logical drive.Bit 0 represents drive A, Bit 1 represents drive B, and so on
+			dbcv_unitmask := NumGet(lParam+12 )
+			Loop 32                                                                         	; Scan Bits from LSB to MSB
+				If ((dbcv_unitmask >> (A_Index-1) & 1) = 1) {           	; If Bit is "ON"
+					Drv := Chr(64+A_Index)                                             	; Set Drive letter
+					Break
+				}
+		; special operation for Addendum für AlbisOnWindows
+			If IsObject(Addendum)
+				Addendum.DriveNotification := DriveData(Drv)
+			else
+				DriveNotification := DriveData(Drv)
+		}
 
-   Loop 32                                           ; Scan Bits from LSB to MSB
-     If ( ( dbcv_unitmask >> (A_Index-1) & 1) = 1 )  ; If Bit is "ON"
-      {
-        Drv := Chr(64+A_Index)                       ; Set Drive letter
-        Break
-      }
-   DriveNotification:=DriveData(Drv)
- }
 Return TRUE
 }
 
 DriveData(Drv) {                                                                                          		;--was wurde eingelegt. Identifiziert das Laufwerk und die Art des Mediums
 
-	global DICOMDevice
-	;AddendumDir sollte im aufrufenden Skript global gemacht sein
-	global ModalityResult
+	; letzte Änderung 22.03.2021 - Skriptstil modernisiert
 
-	DriveGet, Type  , Type  , %Drv%:
-	DriveGet, Label , Label , %Drv%:
-	DriveGet, Filesystem, Filesystem, %Drv%:
+		global DICOMDevice
+		global ModalityResult
 
-		;abbrechen des Vorganges wenn es eine Festplatte seien sollte, zB ein Netzwerklaufwerk
+		device    	:= Drv ":"
+		cmdline 	:= % device "\DICOMDIR --convert-to-utf8 " A_Temp "\DICOM.txt"
+		dicomfile	:= % device "\DICOMDIR"
+
+		DriveGet, Type      	, Type  	    	, % device
+		DriveGet, Label     	, Label      	, % device
+		DriveGet, Filesystem	, Filesystem	, % device
+		DriveGet, Serial     	, Serial      	, % device
+
+	; Abbruch wenn Festplatte erkannt, zB ein Netzwerklaufwerk
 		if Filesystem contains FAT,FAT32,NTFS
-					return
+			return
 
-	DriveGet, Serial, Serial, %Drv%:
-	DriveNotificationTitle = neues Medium in Drive : %Drv%:
-	DriveNotificationText = Type: %Type%`nLabel: %Label%`nFilesystem: %Filesystem%`nSerial: %Serial%
-	TrayTip, %DriveNotificationTitle%, %DriveNotificationText%, 5, 5
-		sleep, 5000
-	TrayTip, %DriveNotificationTitle%, Versuche den Inhalt der CD zu identifizieren., 5, 25
-		sleep, 3000
+	; auf eingelegte CD hinweisen
+		DriveNotificationTitle := "neues Medium im Laufwerk [" Drv "]"
+		DriveNotificationText := "Type: " Type "`nLabel: " Label "`nFilesystem: " Filesystem "`nSerial: " Serial
+		PraxTT(	DriveNotificationTitle "`n"
+				. 	DriveNotificationText "`n"
+				.  "Versuche den Inhalt der CD zu identifizieren.", "3 3")
 
-
-	cmdline = %Drv%:\DICOMDIR --convert-to-utf8 %A_Temp%\DICOM.txt
-	dicomfile = %Drv%:\DICOMDIR
-	localIndex:= 0
-
-	Loop {                                                                                    ;wartet hier so lange bis vom Betriebssystem kein Zugriff mehr auf das Laufwerk erfolgt.
-		DriveGet, status, StatusCD , %Drv%:
-		sleep,1000
-		localIndex++
+	 ; wartet hier so lange bis vom Betriebssystem kein Zugriff mehr auf das Laufwerk erfolgt.
+		status := ""
+		while (status <> "stopped") && (A_Index <= 90) {
+			DriveGet, status, StatusCD , % device
+			PraxTT(DriveNotificationTitle "`n"
+					. "Versuche den Inhalt der CD zu identifizieren. `n"
+					. 	"Warte auf Dateisystemzugriff seit: " Round(A_Index*300/1000, 1) "s`n"
+					. 	"Der Status des Lauwerkes ist: " status , "3 3")
 			If (status = "open") {
-						TrayTip, %DriveNotificationTitle%, Das Laufwerk ist offen. Das Einlesen der Daten wird abgebrochen, 6, 2
-						return
-				}
-			if localIndex>15
+				PraxTT(DriveNotificationTitle "`nDas Laufwerk ist geöffnet. Das Einlesen der Daten wird abgebrochen!", "6 2")
+				return 0
+			} else if (status = "stopped") {
 				break
-
-		TrayTip, %DriveNotificationTitle%, Versuche den Inhalt der CD zu identifizieren. `nWarte auf Zugriff auf das Dateisystem seit %localIndex% Sekunde.`nDer Status des Lauwerkes ist: %status%, 5, 3
-	} Until status = "stopped"
-
-	DICOMDevice:= Drv . ":"
-	If !FileExist(dicomfile) {					                                    	;schaut nach ob auf dem neu angemeldeten Medium die Datei DICOMDIR enthalten ist
-			TrayTip, Abbruch, Die eingelegte CD enthält keine DICOM Daten., 300, 300, 6
-					return
-				}
-
-	TrayTip, Konvertierung, Konvertiere die DICOMDIR-Datei nach %A_Temp%, 300, 300, 6
-	RunWait, %AddendumDir%\lib\dcm2xml.exe %cmdline%, , Min
-			If !FileExist(A_Temp . "\DICOM.txt") {                            ;Abbruch des Programmes wenn das Erstellen der DICOM.txt im Temp-Ordner fehlschlägt
-					MsgBox,1, Das Erstellen der DICOM.txt Datei in den %A_Temp%-Ordner ist fehlgeschlagen.`nDie automatische Umwandlungsroutine für DICOM-CD Inhalte wird nicht weiter ausgeführt.
-					return
-                            		}
-	TrayTip, Konvertierung, Konvertierung nach %A_Temp% beendet., 300, 300, 6
-
-	line:=""
-	Loop, Read, %A_Temp%\DICOM.txt
-	{
-		line:= A_LoopReadLine
-		If InStr(line, "Modality") {
-			ModalityResult:=line
-			break
+			}
+			sleep 300
 		}
-	}
 
-	if (A_PtrSize = 8) { 						;Einstellung für RegRead je nachdem welche AutohotkeyExe gewählt wurde 32bit oder 64bit, sonst kann die Registry nicht gelesen werden
-					SetRegView, 64
-				} else if (A_PtrSize = 4) {
-						SetRegView, 32
-					}
+	; Dateizugriff nicht erhalten
+		if (status <> "stopped") {
+			PraxTT(DriveNotificationTitle "`nZugriff auf den CD Inhalt nicht möglich`n", "3 3")
+			return 0
+		}
 
-	Run, Autohotkey.exe /f "%AddendumDir%\Module\Albis_Funktionen\DICOM2Albis\Dicom2Albis.ahk " %DICOMDevice%
+	; schaut nach ob auf dem neu angemeldeten Medium die Datei DICOMDIR enthalten ist
+		If !FileExist(dicomfile) {
+			PraxTT("Abbruch`nDie eingelegte CD enthält keine DICOM Daten.", "2 1")
+			return 0
+		}
 
- return ModalityResult
+	; Konvertierung starten
+		PraxTT("Konvertierung`nKonvertiere die DICOMDIR-Datei nach " A_Temp, "2 10"
+		RunWait, % Addendum.Dir "\lib\dcm2xml.exe " q cmdline q , , Min
+
+	; Abbruch des Programmes wenn das Erstellen der DICOM.txt im Temp-Ordner fehlschlägt
+		If !FileExist(A_Temp "\DICOM.txt") {
+			PraxTT(	"Das Erstellen der DICOM.txt Datei`n"
+					. 	"im " A_Temp "-Ordner ist fehlgeschlagen.`n"
+					. 	"Die automatische Umwandlungsroutine für DICOM-CD Inhalte`n"
+					. 	"wird nicht weiter ausgeführt.", "2 1")
+			return 0
+        }
+		PraxTT("Konvertierung`nKonvertierung nach " A_Temp " beendet.", "2 2")
+
+	; umgewandelte Datei lesen und die Art der Untersuchung auslesen
+		For lineNR, line in StrSplit(FileOpen(A_Temp "\DICOM.txt", "r", "UTF-8").Read(), "`n", "`r")
+			If InStr(line, "Modality") {
+				ModalityResult := line
+				break
+			}
+
+	; Einstellung für RegRead je nachdem welche AutohotkeyExe gewählt wurde 32bit oder 64bit, sonst kann die Registry nicht gelesen werden
+		SetRegView, % (A_PtrSize = 8 ? 64 : 32
+
+	; Skript ausführen
+		Run, % "Autohotkey.exe " q "/f " q Addendum.Dir "\Module\Albis_Funktionen\DICOM2Albis\Dicom2Albis.ahk " q " " q device q
+
+return ModalityResult
 }

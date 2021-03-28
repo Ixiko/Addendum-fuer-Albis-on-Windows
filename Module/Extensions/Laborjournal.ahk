@@ -17,7 +17,7 @@
 ;		Abhängigkeiten:	siehe includes
 ;
 ;	                    			Addendum für Albis on Windows
-;                        			by Ixiko started in September 2017 - last change 16.03.2021 - this file runs under Lexiko's GNU Licence
+;                        			by Ixiko started in September 2017 - last change 20.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; Einstellungen
@@ -37,6 +37,10 @@
 		ExitApp
 	}
 
+  ; Tray Icon erstellen
+	If (hIconLabJournal := Create_Laborjournal_ico())
+    	Menu, Tray, Icon, % "hIcon: " hIconLabJournal
+
   ; Albis Datenbankpfad / Addendum Verzeichnis
 	RegRead, AlbisPath, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, Installationspfad
 	RegExMatch(A_ScriptDir, "[A-Z]\:.*?AlbisOnWindows", AddendumDir)
@@ -51,8 +55,9 @@
   ; hier alle Parameter eintragen welche gesondert verarbeitet werden sollen
 	Warnen	:= {	"nie"      	: 	"CHOL,LDL,TRIG,HDL,LDL/HD,HBA1CIFC"                                                 	; nie      	= werden nie gezeigt
 						,	"immer" 	: 	"NTBNP,TROPI,TROPT,TROP,CKMB,K"                                                        	; immer 	= wenn pathologisch
-						,	"exklusiv"	: 	"COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,COVMU501,COVM6970,"  	; exklusiv 	= zeigen auch wenn kein ausgeprägtes path. Ergebnis
-											.	"ALYMP,ALYMPDIFF,ALYMPH,ALYMPNEO,ALYMPREA,ALYMPRAM,"               	;					und bei negativem Befund (z.B. COVIA, HIV)
+						; 	exklusiv 	: 	zeigen auch wenn kein ausgeprägtes path. Ergebnis und bei negativem Befund (z.B. COVIA, HIV)
+						,	"exklusiv"	: 	"COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,COVMU484,COVMU501,COVM6970,"
+											.	"ALYMP,ALYMPDIFF,ALYMPH,ALYMPNEO,ALYMPREA,ALYMPRAM,"
 											. 	"KERNS,MYELOC,PROMY,DIFANISO,DIFPOLYC,DIFPOIKL,"
 											.	"DIFHYPOC,DIFMIKRO,DIFMAKRO,DIFOVALO,METAM,TROPOIHS,"
 											.	"DDIM-CP,HBK-ST,HIV"}
@@ -64,7 +69,7 @@
 
 return
 
-ESC:: ;{
+~ESC:: ;{
 	If WinActive("Laborjournal") {
 		SaveGuiPos(labJ.hwnd)
 		ExitApp
@@ -650,14 +655,15 @@ LaborJournal(LabPat, Anzeige=true) {
 			winpos := "w950 h600"
 
 	; Patientendaten laden
-		PatDB 	:= PatientDBF(adm.AlbisDBPath, ["NR", "NAME", "VORNAME", "GEBURT"],, Anzeige)
+		PatDB 	:= ReadPatientDBF(adm.AlbisDBPath, ["NR", "NAME", "VORNAME", "GEBURT"],, Anzeige)
 
 	; Variablen bestücken
 		srchdrecords  	:= LTrim(labJ.srchdrecords, "0")
 		dbrecords     	:= labJ.records
 		Tagesanzeige	:= LabJ.Tagesanzeige
+		iconpath        	:= adm.Dir "\assets\ModulIcons\LabJournal.svg"
 
-	; HTML Vorbereitungen ;{
+	; HTML Vorbereitungen 	                              	;{
 		static TDL      	:= "<TD style='text-align:Left'>"
 		static TDL1     	:= "<TD style='text-align:Left;border-left:0px solid'>"
 		static TDR      	:= "<TD style='text-align:Right'>"
@@ -950,6 +956,7 @@ LaborJournal(LabPat, Anzeige=true) {
 		htmlbody =
 		(
 			 <header id='LaborJournal_Header'>
+				<img src='%iconpath%' alt='HTML5 Icon'  style='width:35px;height:28px;margin-left:10px;'>
 				<div class='title-bar' onmousedown='neutron.DragTitleBar()'>            </div>
 				<div class='title-menu title-menu-btn1' onclick='neutron.Menu_LabJournal()'>Laborjournal</div>
 				<div class='title-menu title-menu-btn2' onclick='neutron.Menu_LabJ_Suche()'>Suche</div>
@@ -979,7 +986,7 @@ LaborJournal(LabPat, Anzeige=true) {
 		html := RegExReplace(htmlheader . htmltable . htmlbody, "^\s{16}(.*[\n\r]+)", "$1")
 	;}
 
-	; HTML Tabelle wird erstellt
+	; HTML Tabelle wird erstellt                         	;{
 		trIDf:= false
 		sortDatum := Array()
 
@@ -1056,6 +1063,7 @@ LaborJournal(LabPat, Anzeige=true) {
 		}
 
 		html .= "</tbody></table></body></html>"
+		;}
 
 	; erstellte HTML Seite wird angezeigt
 		FileOpen(A_Temp "\Laborjournal.html", "w", "UTF-8").Write(html)
@@ -1221,6 +1229,7 @@ Local Enc := 0x557CF400 | Round({"bmp":0, "jpg":1,"jpeg":1,"gif":2,"tif":5,"tiff
 Return E[1] ? 0 : E[2] ? -1 : E[3] ? -2 : E[4] ? -3 : 1
 }
 
+/*
 PatientDBF(basedir, infilter="", outfilter="", debug=0) {                                            	;-- gibt nur benötigte Daten der albiswin\db\PATIENT.DBF zurück
 
 	; Rückgabeparameter ist ein Objekt mit Patienten Nr. und dazugehörigen Datenobjekten (die key's sind die Feldnamen in der DBASE Datenbank)
@@ -1251,8 +1260,100 @@ PatientDBF(basedir, infilter="", outfilter="", debug=0) {                       
 
 return PatDBF
 }
+ */
 
+Create_Laborjournal_ico(NewHandle := False) {                                                    	;-- ICON anzeigen
+Static hBitmap := 0
+If (NewHandle)
+   hBitmap := 0
+If (hBitmap)
+   Return hBitmap
+VarSetCapacity(B64, 9812 << !!A_IsUnicode)
+B64 :=	"AAABAAEAMDAAAAEAGACoHAAAFgAAACgAAAAwAAAAYAAAAAEAGAAAAAAAAAAAABwAAAAcAAAAAAAAAAAAAAAAHwAAHwAAHwAAHwAAHwAFIQNUSi+kc1zYjXj0nIj/oo//oo//oo//oo//oo//oo//oo//oo//oo//"
+		. 	"oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo/znIjYjXijc1tTSi8FIQMAHwAAHwAAHwAAHwAAHwAAHwAAHwAAHwAAHwBRSC3ckHv/oo/ai3isbVqWXk2OWUeOWUeOWUeOWUeOW"
+		.	"UeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeWXk2tbFvbi3n/oo/bj3pOSCwAHwAAHwAAHwAAHwAA"
+		. 	"HwAAHwACIAGKZk3/oo/HfmtjPSxCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd"
+		. 	"CKBdkPi3If2z/oo+JZU0CIAEAHwAAHwAAHwAAHwCLZk78oI2VXUxCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKB"
+		.	"dCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeWXk38oI2JZU0AHwAAHwAAHwBSSS7/oo+VXUxCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd"
+		.	"CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeXX03/oo9PRywAHwAGIgPdkHvHfmtCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKB"
+		.	"dCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBfIf2zbj3oFIQNVSzD/oo9jPSxCKBdCKBdCKBdCKBdC"
+		.	"KBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdkPi3/oo"
+		.	"9TSi+ldF3ainhCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdC"
+		.	"KBdCKBdCKBdCKBdCKBdCKBdCKBdCKBfcjHmiclvaj3qrbFlCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdiPCu5dWLKf23Ngm/Ngm/Ngm/Ngm/Ngm/Ngm/Ngm/Ngm/Ngm/Ngm/Ngm/Ngm/Ngm/"
+		.	"Ngm/Jf225dWNeOilCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBesbVrZjnnznIiWXk1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeWXk3/oo//oo//oo//oo//oo//oo//oo//oo//"
+		.	"oo//oo//oo//oo//oo//oo//oo//oo//oo//oo+RW0lCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeYYE7xmof/oo+OWUdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdHKxp2STi"
+		.	"BUT+BUT/ul4T/oo//oo//oo//oo//oo//oo//oo//oo//oo//oo/qlIKBUT+BUT90SDdGKhpCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeOWUf/oo//oo+OWUdCKBdCKBdCKBdCKBdCKBdCKBdCKB"
+		.	"dCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBflkX7/oo//oo//oo//oo//oo//oo//oo//oo//oo//oo/gjntCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeOWUf/oo//oo+OWU"
+		.	"dCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBflkX7/oo//oo//oo//oo//oo//oo//oo//oo//oo//oo/gjntCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKB"
+		.	"dCKBdCKBdCKBeOWUf/oo//oo+OWUdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeZYE6naVenaVenaVenaVenaVenaVenaVenaVenaVenaVeWXk1CKBdCKBdCKBdCKBdC"
+		.	"KBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeOWUf/oo//oo+OWUdCKBdCKBdSMiHBemjymofymofymofymofymofymofymofymofymofymofymofymofymofymofymofymofymofymofymofymofymofym"
+		.	"ofymofymofymofymofymofymofymofymofymofymofymofymofymofymoe8d2VOLx9CKBdCKBeOWUf/oo//oo+OWUdCKBdCKBfJf23hjnx7TTt0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd"
+		.	"0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd8TjzkkH3BemdCKBdCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9uRDNCKBdCKBdCKBdCKBdCKBdCKBdCK"
+		.	"BdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd0SDf+oY5CKBdCKBeOWUf/oo//oo+OWUdCKBdH"
+		.	"Kxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdDKRhEKhlCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH"
+		.	"/oo9CKBdCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBerbFmzcV5CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd"
+		.	"CKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9CKBdCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdDKRifZFNPMB9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdGKxnwmIbvl4VDK"
+		.	"RhCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9CKBdCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBemaVf/oo+KV0RCKBdCKBdCKBdCKB"
+		.	"dCKBdCKBdCKBdCKBd/Tz7kkX7vmIVtRDNCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9DKRhCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBeE"
+		.	"U0Hymoe4dGLAeWdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBfGfWudY1G4dGKnaVdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9DKRhCKBeOWUf/oo//oo+OWUdCKBdHKxr"
+		.	"/oo9lPy1CKBdCKBdCKBdCKBdCKBdmPi71nIl6TDpnQC70mohGKhpCKBdCKBdCKBdCKBdCKBdCKBdTMyL6n4xYNiV/Tz7gjntCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9DKRh"
+		.	"CKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdDKRhmPi5oQC9uRDPqlYKYYE5CKBdDKRjsloNwRTRCKBdCKBdCKBdCKBdCKBdCKBeXX03LgW5CKBdKLRz4nYtdOilCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdC"
+		.	"KBdCKBdCKBdCKBdrQjH/oo9DKRhCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdXNSTkkX7mkX/mkX+ycF5CKBdCKBdCKBe4dGKmaVdCKBdCKBdCKBdCKBdCKBdCKBfejXqEU0FCKBdCKBfHfmuXX01CKBdCKBdC"
+		.	"KBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9EKhlCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeBUT/ci3lCKBdCKBdCKBdCKBdCKBdpQS/zm4dJ"
+		.	"LRtCKBdCKBeNWEfRhXJCKBdCKBdCKBdCKBdFKhnVh3TymofymofymofymofKgG1CKBdCKBdrQjH/oo9FKhlCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdOLx/7oIxWNSR"
+		.	"CKBdCKBdCKBdCKBewcF6zcV5CKBdCKBdCKBdVNCP7oIxRMiBCKBdCKBdCKBeLV0bjkH1oQC9oQC9oQC9oQC9XNiRCKBdCKBdrQjH/oo9GKhpCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKB"
+		.	"dCKBdCKBdCKBdCKBdCKBfThXKLV0ZCKBdCKBdCKBdGKxnxmYZrQjFCKBdCKBdCKBdCKBfXiHaHVENCKBdCKBdGKxnnkn+CUj9CKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9FKhlCKBeOWUf/oo//oo+OWUdCKBdHK"
+		.	"xr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBecY1DBemdCKBdCKBdCKBeCUUDjkH1CKBdCKBdCKBdCKBdCKBeeZFLBemhCKBdCKBeWXkzdjHlDKRhCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9FKh"
+		.	"lCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdmPi71m4hGKhpCKBdCKBfKf22ZYE5CKBdCKBdCKBdCKBdCKBdjPiz2nIlILBpLLh3vl4V3SzlCKBdCKBdCKBdCKBdCKBd"
+		.	"CKBdCKBdCKBdrQjH/oo9FKhlCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdDKRjslYJxRjRCKBdVNST6n4xVNSRCKBdCKBdCKBdCKBdCKBdCKBfnkn94SzmgZVPThXJ"
+		.	"CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9FKhlCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBe2c2GnaVdCKBebYU/If2xCKBdCKBdCKBdCKBd"
+		.	"CKBdCKBdCKBesbVrBemf1m4htRDNCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9FKhlCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeAUD7djHl"
+		.	"CKBfhj32AUD5CKBdCKBdCKBdCKBdCKBdCKBdCKBdzSDb/oo/GfWtCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9FKhlCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBd"
+		.	"CKBdCKBdCKBdCKBdCKBdNMB77oIyBUT/ymodHKxpCKBdCKBdCKBdCKBdCKBdCKBdCKBdFKhndjHljPixCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9FKhlCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lP"
+		.	"y1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBfRhXLvl4WvblxCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9FKhlCKBeO"
+		.	"WUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBebYU//oo9oQC9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCK"
+		.	"BdCKBdCKBdCKBdrQjH/oo9FKhlCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdcOSi8d2VCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd"
+		.	"CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH7n41CKBdCKBeOWUf/oo//oo+OWUdCKBdGKxn+oY52SThCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKB"
+		.	"dCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd7TTvwmIZCKBdCKBeOWUf/oo/0nIiWXkxCKBdCKBe0cl/tl4SdY1GaYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+"
+		.	"aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+eZFLvmIW0cl9CKBdCKBeXX03ym4faj3urbFlCKBdCKBdJLRujZl"
+		.	"TNgm/Ngm/Ngm/Ngm/Ngm/WiHXZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfNgm/KgG2kZ1VILBpCKBdCKBesbVrajnmndV7YinZCKBdCKBdCKBdCKBdCKBdC"
+		.	"KBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBfai3ikc"
+		.	"1xWTDD+oY5iPCtCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdC"
+		.	"KBdCKBdCKBdCKBdCKBdCKBdjPSz/oo9USi8GIgPekHzFfGpCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKB"
+		.	"dCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBfHfmvckHsFIQMAHwBUSi//oo+UXUtCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd"
+		.	"CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeUXkv/oo9RSC0AHwAAHwAAHwCMZ0/8oI2UXUtCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd"
+		.	"CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeUXkv8oI2KZk0AHwAAHwAAHwAAHwACIAGMZ0//oo/FfWtiPCtCKBdC"
+		.	"KBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdjPSzGfmv/oo+KZk0CIAEAHwAAHwAA"
+		.	"HwAAHwAAHwAAHwBUSi/ekHz/oo/ai3irbFqWXkyOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWU"
+		.	"eOWUeOWUeOWUeWXkyrbFnainj/oo/dkHtRSC0AHwAAHwAAHwAAHwAAHwAAHwAAHwAAHwAAHwAGIgNWTDCmdF3ajnr1nIn/oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo/"
+		.	"/oo//oo//oo//oo//oo//oo//oo//oo/0nIjZjnqldF1VSzAFIQMAHwAAHwAAHwAAHwAAHwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+		.	"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+		.	"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+		.	"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+	If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", 0, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+	   Return False
+	VarSetCapacity(Dec, DecLen, 0)
+	If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", &Dec, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+	   Return False
+	; Bitmap creation adopted from "How to convert Image data (JPEG/PNG/GIF) to hBITMAP?" by SKAN
+	; -> http://www.autohotkey.com/board/topic/21213-how-to-convert-image-data-jpegpnggif-to-hbitmap/?p=139257
+	hData := DllCall("Kernel32.dll\GlobalAlloc", "UInt", 2, "UPtr", DecLen, "UPtr")
+	pData := DllCall("Kernel32.dll\GlobalLock", "Ptr", hData, "UPtr")
+	DllCall("Kernel32.dll\RtlMoveMemory", "Ptr", pData, "Ptr", &Dec, "UPtr", DecLen)
+	DllCall("Kernel32.dll\GlobalUnlock", "Ptr", hData)
+	DllCall("Ole32.dll\CreateStreamOnHGlobal", "Ptr", hData, "Int", True, "PtrP", pStream)
+	hGdip := DllCall("Kernel32.dll\LoadLibrary", "Str", "Gdiplus.dll", "UPtr")
+	VarSetCapacity(SI, 16, 0), NumPut(1, SI, 0, "UChar")
+	DllCall("Gdiplus.dll\GdiplusStartup", "PtrP", pToken, "Ptr", &SI, "Ptr", 0)
+	DllCall("Gdiplus.dll\GdipCreateBitmapFromStream",  "Ptr", pStream, "PtrP", pBitmap)
+	DllCall("Gdiplus.dll\GdipCreateHICONFromBitmap", "Ptr", pBitmap, "PtrP", hBitmap, "UInt", 0)
+	DllCall("Gdiplus.dll\GdipDisposeImage", "Ptr", pBitmap)
+	DllCall("Gdiplus.dll\GdiplusShutdown", "Ptr", pToken)
+	DllCall("Kernel32.dll\FreeLibrary", "Ptr", hGdip)
+	DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
 
+Return hBitmap
+}
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Includes
