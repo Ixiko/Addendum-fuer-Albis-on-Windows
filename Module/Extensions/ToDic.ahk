@@ -20,7 +20,7 @@
 		#MaxMem                    	, 256
 
 		SetBatchLines                	, -1
-		ListLines                        	, Off
+		;ListLines                        	, Off
 		SetControlDelay               	, -1
 		SetWinDelay                 	, -1
 		AutoTrim                       	, On
@@ -32,7 +32,8 @@
 		global q:=Chr(0x22)
 		global adm := Object()
 		global stats := Object()
-		global FilesP, FilesT
+		global FilesP, FilesT, FilesO
+		global ngrams
 
 		RegExMatch(A_ScriptDir, ".*(?=\\Module)", AddendumDir)
 		adm := AddendumBaseProperties(AddendumDir)
@@ -75,7 +76,7 @@
 		}
 
 		freqs := []
-		points := "▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀"
+		;~ points := "▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀"
 		;~ For num, freq in MFreq
 			;~ SciTEOutput( "|" num " " SubStr(points, 1, Floor(freq/8)) " " freq)
 
@@ -96,10 +97,10 @@
 
 	;}
 
-	;ngrams := RunCrazyNGrams("3,4", false)
-	clean := RemoveDoublettes(medicalWords, othersWords)
-	medicalWords 	:= clean.objA
-	othersWords  	:= clean.objB
+	ngrams := RunCrazyNGrams("3,4,5", true)
+	;clean := RemoveDoublettes(medicalWords, othersWords)
+	;medicalWords 	:= clean.objA
+	;othersWords  	:= clean.objB
 	gosub AlbisPDFOdner
 	;gosub BefundOrdner
 	;ReIndexMedicalList()
@@ -107,15 +108,6 @@
 	DicGui()
 	gosub CheckSyntax
 
-;Broncliologie -
-;Tumornellen -
-;Biopsatc + <<-
-;Ansahen +
-; Konltiltii -
-; Kammerseplum -
-; Odorland -
-; Doppier -
-; RR - Regulatioa
 return
 
 AlbisPDFOdner:	; Albis PDF Ordner , PDF -> Text	;{
@@ -123,36 +115,36 @@ AlbisPDFOdner:	; Albis PDF Ordner , PDF -> Text	;{
 		noOCRspath := adm.DBPath "\Dictionary\albisDir_NoOCR_PDF.json"
 		OCRspath		:= adm.DBPath "\Dictionary\albisDir_OCR_PDF.json"
 
-		If FileExist(noOCRspath)
-			FilesNT := JSONData.Load(noOCRspath,, "UTF-8")
-		else
-			FilesNT	:= Array()
+		;~ If FileExist(noOCRspath)
+			;~ FilesNT := JSONData.Load(noOCRspath,, "UTF-8")
+		;~ else
+			;~ FilesNT	:= Array()
 
 		If FileExist(OCRspath)
-			FilesO 	:= JSONData.Load(OCRspath,, "UTF-8")
+			FilesT 	:= JSONData.Load(OCRspath,, "UTF-8")
 		else
-			FilesO	:= Array()
+			FilesT	:= Array()
 
+	return
 
-		FilesT:= Array()
-		For oidx, ofile in FilesO {
-			FileFound := false
-		For pidx, pfile in FilesP
-			If (pfile = ofile) {
-				FileFound := true
-				break
-			}
-			If !FileFound
-				FilesT.Push(ofile)
+		;~ FilesT:= Array()
+		;~ For oidx, ofile in FilesO {
+			;~ FileFound := false
+			;~ For pidx, pfile in FilesP
+			;~ If (pfile = ofile) {
+				;~ FileFound := true
+				;~ break
+			;~ }
+			;~ If !FileFound
+				;~ FilesT.Push(ofile)
 
-			If Mod(oidx, 100) = 0
-				ToolTip, % "erstelle Dateiliste`n" oidx "/" FilesO.Count() "`nDateien aufgenommen`n" FilesT.Count()
+			;~ If Mod(oidx, 100) = 0
+				;~ ToolTip, % "erstelle Dateiliste`n" oidx "/" FilesO.Count() "`nDateien aufgenommen`n" FilesT.Count()
 
-		}
-		FilesNT := FilesO := ""
-		ToolTip
+		;~ }
+		;~ FilesNT := FilesO := ""
+		;~ ToolTip
 
-		return
 
 		FilesT		:= Array()
 		startT       	:= A_TickCount
@@ -221,10 +213,11 @@ return 	;}
 SaveData1: ;{
 SaveData2:
 
-	RunCrazyNGrams("3,4", true)
+	;RunCrazyNGrams("3,4", true)
 	JSONData.Save(medicalWords	, Medical	, true,, 1, "UTF-8")
 	JSONData.Save(othersWords 	, Others	, true,, 1, "UTF-8")
 	JSONData.Save(FilesProcessed	, FilesP   	, true,, 1, "UTF-8")
+	JSONData.Save(OCRspath    	, FilesT   	, true,, 1, "UTF-8")
 
 
 ExitApp ;}
@@ -234,7 +227,7 @@ CheckSyntax: ;{
 	WinGetPos, x, y, w, h, % "Wörterbucheditor ahk_class AutoHotkeyGUI"
 	Gui, ngram: new, -DPIScale
 	Gui, ngram: Font, s11 q5 cBlack, Arial
-	Gui, ngram: Add, Edit, xm ym    	w500 h300 	vngOut
+	Gui, ngram: Add, Edit, xm ym    	w500 h600 	vngOut
 	Gui, ngram: Add, Edit, xm y+10 	w500 r1    	vngInput gngInputValidate -AltSubmit
 	Gui, ngram: Show, % "x" x+w+5 " y" y " AutoSize NA", ngram-Syntaxchecker
 
@@ -246,18 +239,19 @@ CheckSyntax: ;{
 return ;}
 ngramSyntaxValidator: ;{
 
-	SciTEOutput("Wieso nicht")
 	Gui, ngram: Submit, NoHide
-	out:= ngInput "`n"
-	Loop 2 {
+	out := ngInput "`n"
+	Loop 3 {
 		NgramSize := 2+A_Index
 		Loop, % StrLen(ngInput) - (NgramSize - 1)  {
+
+			;If ngrams[NgramSize].haskey(sub := SubStr(ngInput, A_Index, NgramSize))
 			sub := SubStr(ngInput, A_Index, NgramSize)
-			If ngrams[NgramSize].haskey(sub)
+			If ngrams[NgramSize][sub].haskey("count")
 				out .= sub "`t+`n"
 			else {
 				out .= sub "`t-`n"
-			Gui, ngram: Color, cFF4444
+				Gui, ngram: Color, cFF4444
 			}
 		}
 		out .= "`n"
@@ -333,9 +327,6 @@ DicGui() {
 
 	Gui, Dic: Show, AutoSize, Wörterbucheditor [Substantive]
 
-	;~ #IfWinActive, Wörterbucheditor ahk_class AutohotkeyGUI1
-	;~ Hotkey, Right,
-	;~ #IfWinActive
 
 	If DicInit {
 		LoadText()
@@ -437,20 +428,25 @@ DIC_BTNS: ;{
 		addToDictionary()
 		WBStats()
 		LoadText()
+	} else if (A_GuiControl = "DIC_BXT") {
+		Gui, Dic: Destroy
+		gosub SaveData2
+		ExitApp
 	}
 
 return ;}
 
 DicGuiClose:
 DicGuiEscape:
- gosub SaveData2
+	FilesT.Push(popfile)
+	gosub SaveData2
 return
 }
 
 addToDictionary() {
 
 	;SciTEOutput("YO ich machs")
-	global Dic, DIC_LVDIC, DIC_LVTXT, DIC_WB, FNR
+	global Dic, DIC_LVDIC, DIC_LVTXT, DIC_WB, FNR, popfile
 	global medicalWords, othersWords, FilesProcessed
 	global Medical, Others, FilesP, FilesT
 
@@ -463,8 +459,6 @@ addToDictionary() {
 				LV_GetText(rtxt, row, A_Index)
 				rword[A_Index] := rtxt
 			}
-
-			;SciTEOutput("rword M: " rword.Count())
 
 			If !Medical.haskey(rword.2)
 				Medical[rword.2] := rword.3
@@ -489,7 +483,7 @@ addToDictionary() {
 				LV_GetText(rtxt, row, A_Index)
 				rword[A_Index] := rtxt
 			}
-			;SciTEOutput("rword O: " rword.Count())
+
 			If !Others.haskey(rword.2)
 				Others[rword.2] := 1
 			else
@@ -499,8 +493,7 @@ addToDictionary() {
 
 	GuiControl, Dic:, DIC_WB, % "[           ]"
 
-	FilesP.Push(FilesT[FNR])
-	FilesT.RemoveAt(FNR)
+	FilesP.Push(popfile)
 
 	;JSONData.Save(medicalWords	, Medical	, true,, 1, "UTF-8")
 	;JSONData.Save(othersWords 	, Others	, true,, 1, "UTF-8")
@@ -510,33 +503,34 @@ addToDictionary() {
 
 LoadText() {
 
-	global Dic, DIC_WD, DIC_FN, DIC_LVTXT, FNR, FilesT
+	global Dic, DIC_WD, DIC_FN, DIC_LVTXT, FNR, FilesT, popfile
 
-	words := CollectWords(FilesT[FNR])
-	;SciTEOutput("Files: " FilesT.Count() ", words: " words.Count())
-	If (words.Count() = 0) {
-		FilesP.Push(FilesT[FNR])
-		FNR++
-		If (FNR > FilesT.Count()) {
+	; Ende wenn keine Dateien mehr zu bearbeiten sind
+		If (FilesT.Count() = 0) {
 			MsgBox, Keine Dateien mehr zum Bearbeiten vorhanden
 			return
 		}
 
+	; letzte Datei wird geladen und unter Processed gespeichert
+		popfile := FilesT.pop()
+		;FilesP.Push(popfile)
+		FNR++
 		GuiControl, Dic:, DIC_WD	, % "[" FNR "/" FilesT.MaxIndex() "] [" words.MaxIndex() " Worte] "
-		GuiControl, Dic:, DIC_FN	, % FilesT[FNR]
-		LoadText()
-	}
+		GuiControl, Dic:, DIC_FN	, % popfile
 
-	GuiControl, Dic:, DIC_WD	, % "[" FNR "/" FilesT.MaxIndex() "] [" words.MaxIndex() " Worte] "
-	GuiControl, Dic:, DIC_FN	, % FilesT[FNR]
+	; Worte werden untersucht
+		words := CollectWords(popfile)
+		If (words.Count() = 0)
+			LoadText()
 
-	Gui, Dic: ListView, DIC_LVTxt
-	For word, wdata in words {
-		col1 := (wdata.list = 1 ? "unbekannt" : wdata.list = 2 ? "Medizin [" wdata.listcount "]" : wdata.list = 3 ? "andere  [" wdata.listcount "]" : "ngram   [" wdata.count "]")
-		LV_Add("", col1 , word, wdata.count)
-	}
-	LV_ModifyCol(1, "SortDesc", "Sort")
-	GuiControl, Dic: Focus, DIC_LVTXT
+	; Worte anzeigen
+		Gui, Dic: ListView, DIC_LVTxt
+		For word, wdata in words {
+			col1 := (wdata.list = 1 ? "unbekannt" : wdata.list = 2 ? "Medizin [" wdata.listcount "]" : wdata.list = 3 ? "andere  [" wdata.listcount "]" : "ngram   [" wdata.count "]")
+			LV_Add("", col1 , word, wdata.count)
+		}
+		LV_ModifyCol(1, "SortDesc", "Sort")
+		GuiControl, Dic: Focus, DIC_LVTXT
 
 return
 }
@@ -609,8 +603,8 @@ CrazyNGrams(NgramSize, save:=true) {
 
 	For idx, word in tmp {
 
-		If Mod(idx, 300) = 0
-			ToolTip, % "Wort: "  idx "/" tmp.Count()
+		If Mod(idx, 500) = 0
+			ToolTip, % "ngrams[" NgramSize "] "  idx "/" tmp.Count()
 		If (StrLen(word) < NgramSize)
 			continue
 
@@ -679,7 +673,6 @@ ReIndexMedicalList() {
 	For word, wcount in Medical
 		Medical[word] := 0
 
-
 	For fidx, filepath in FilesP {
 
 		ToolTip, % fidx "/" FilesP.MaxIndex() "`n" filepath, 4200, 50
@@ -723,49 +716,58 @@ CollectWords(filepath, debug:=false) {
 			SciTEOutput(filepath ": " StrLen(text))
 	}
 
+	text := RegExReplace(text, "([a-zäöüß])([A-ZÄÖÜ][a-zäöü])", "$1 $2")
+	text := RegExReplace(text, "[\n\r\f]", " ")
+
+	tLen := StrLen(text)
 	while (spos := RegExMatch(text, "\s(?<Name>[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*)", P, spos)) {
 
-		takeword := 0
-		if Medical.haskey(PName) {
-			If (Medical[PName] <= MFreqLimit) {
-				takeword := 0
-				;SciTEOutput("MEDICAL:`t" PName " " Medical[PName])
+			takeword := 99
+			ToolTip, % "Position: " spos "/" tLen, 900, 1
+			spos += StrLen(PName)
+		; wenn ein Wort in einem der beiden Wörterbücher vorkommt
+			if Medical.haskey(PName) {
+
+				Medical[PName] += 1
+				If (Medical[PName] <= MFreqLimit)
+					takeword := 0
+
 			}
-		}
-		else if Others.haskey(PName) {
-			If (Others[PName] <= OFreqLimit) {
-				If (StrLen(Pname) < 3) || ngramSyntaxValidate(PName, 3) {
-					If (StrLen(Pname) < 3) || ngramSyntaxValidate(PName, 4)
+			else if Others.haskey(PName) {
+
+				Others[PName] += 1
+				If (Others[PName] <= OFreqLimit) {
+					If ngramWordCheck(PName, 5)
 						takeword := 3
 					else
 						takeword := 4
 				}
-				;SciTEOutput("OTHERS:`t" PName " " Others[PName])
+
 			}
-		}
-		else  { ; If !Medical.haskey(PName) && !Others.haskey(PName)
-			If (StrLen(Pname) < 3) || ngramSyntaxValidate(PName, 3) {
-				If (StrLen(Pname) < 3) || ngramSyntaxValidate(PName, 4)
-					takeword := 1
+
+		; ausgeschlossene Buchstabenkombinationen - kommen ins Others Wörterbuch
+			If RegExMatch(PName, "[a-zäöüß\-][A-ZÄÖÜ]{2,}[a-zäöüß\-]*") {
+				Others[PName] := 1
+				continue
+			}
+
+		; ngram Evaluierung unbekannter Wörter
+			If !RegExMatch(takeword, "0|1|2|3|4")
+				If !ngramWordCheck(PName, 5)
+					takeword := 1            ; ngrams haben nicht funktioniert
 				else
-					takeword := 4
-			}
+					takeword := 4			 ; bisher unbekannt
 
-		}
-
-		;SciTEOutput("[" takeword "] " PName)
-
-		If takeword
-			If !PNames.haskey(PName)
-				PNames[PName] := {"count"    	: 1
-											, 	 "list"      	: takeword
-											, 	 "listcount"	: (takeword = 2 ? Medical[PName] : takeword = 3 ? Others[PName] : 0)}
-			else
-				PNames[PName].count += 1
+		; zur Auswahl vorzustellende Wörter
+			If (takeword < 99)
+				If !PNames.haskey(PName)
+					PNames[PName] := {"count"    	: 1
+												, 	 "list"      	: takeword
+												, 	 "listcount"	: (takeword = 2 ? Medical[PName] : takeword = 3 ? Others[PName] : 0)}
+				else
+					PNames[PName].count += 1
 
 
-		;SciTEOutput(SubStr("000" PName.MaxIndex(), -2) "(" SubStr("0000" spos, -3) ") | " PName " |" Medical[PName] "...." Others[PName])
-		spos += StrLen(PName)
 	}
 
 	;SciTEOutput(" - - - - - - - - - - - - - - - - - - - - - - - - - -`n")
@@ -773,22 +775,31 @@ CollectWords(filepath, debug:=false) {
 return PNames
 }
 
-ngramSyntaxValidate(word, NgramSize, updateNgrams:=false) {
+ngramWordCheck(word, depth:=5) {
 
-	static ngrams
-	If !IsObject(ngrams) || updateNgrams {
-		;ngrams := JSONData.Load(adm.DBPath "\Dictionary\MedicalNgrams-" NgramSize ".json",, "UTF-8")
-		ngrams := RunCrazyNGrams("3,4", false)
+	If (StrLen(word)-depth >= 0)
+	Limit := depth - 2
+	hits := 0
+	Loop, % Limit {
+		ngramLen := A_Index + 2
+
+If (StrLen(word) >= ngramLen) && ngramSyntaxValidate(word, ngramLen)
+			hits ++
 	}
 
+return hits=Limit ? true : false
+}
 
+ngramSyntaxValidate(word, NgramSize, updateNgrams:=false) {
+
+	global ngrams
+	If !IsObject(ngrams) || updateNgrams
+		ngrams := RunCrazyNGrams("3,4,5", false)
 
 	For idx, sword in StrSplit(word, "-")
-		Loop, % StrLen(sword) - (NgramSize-1) {
-			sub := SubStr(sword, A_Index, NgramSize)
-			If !ngrams[NgramSize].haskey(sub)
+		Loop, % StrLen(sword) - (NgramSize-1)
+			If !ngrams[NgramSize].haskey( SubStr(sword, A_Index, NgramSize) )
 				return false
-		}
 
 return true
 }
@@ -908,7 +919,7 @@ IFilter(file, searchstring:="") {                                               
 return searchstring ? "" : Text
 }
 
-PDFisSearchable(pdfFilePath)                                          	{               	;-- durchsuchbare PDF Datei?
+PDFisSearchable(pdfFilePath)	{                                                                              	;-- durchsuchbare PDF Datei?
 
 	; letzte Änderung 08.02.2021 : neuer Matchstring
 
@@ -938,7 +949,7 @@ inArr(str, arr) {
 return false
 }
 
-RemoveDoublettes(objA, objB) {
+RemoveDoublettes(objA, objB) {                                                                             	;-- d
 
 	removed := 0
 

@@ -342,7 +342,7 @@ QuickGui() {
 	;}
 
 	;-: ZEILE 3: Ausgabelistview                           	;{
-		LVOptions3 := "vQSDBR gQS_Handler HWNDQShDBR Count1000 -E0x200 -LV0x10 AltSubmit -Multi Grid"
+		LVOptions3 := "vQSDBR gQS_Handler HWNDQShDBR -E0x200 -LV0x10 AltSubmit -Multi Grid"
 		Gui, QS: Font	, % "s" FSize-1 " q5 Normal", Futura Bk Bt
 		Gui, QS: Add	, ListView    	, % "xm y+5 w" GClientW	" r25 " LVOptions3	, % "- -"
 	;}
@@ -418,25 +418,22 @@ Quicksearch(dbname, srstr) {
 
 		dbfields := dbfiles[dbname].dbfields
 		Gui, QS: ListView, QSDBR
-		For idx, match in matches {
-
-			rowNr := LV_Add("", " ")
-			for field, value in match {
-				colNr := dbfields[field].pos
-				SciTEOutput(field ", " colNr)
-				LV_Insert(rowNr, "Col" colNr, value)
-				t .= value " | "
-			}
-			t.="`n"
-			break
+		LV_Delete()
+		For rowNr, set in matches {
+			; Spalten zusammenstellen
+				cols := Object()
+				For flabel, value in set
+					If Props.isVisible(fLabel) && (colpos := Props.ColumnPos(flabel))
+						cols[colpos] := value
+			; Zeile hinzufügen
+				LV_Add("", cols*)
 		}
-
 		LV_ModifyCol()
 
-		;FileOpen(A_Temp "\QuicksearchTest.txt" , "w", "UTF-8").Write(t)
-		JSONData.Save(A_Temp "\Quicksearch.json", matches, true,, 2, "UTF-8")
-		JSONData.Save(A_Temp "\dbstructs.json", dbfiles, true,, 2, "UTF-8")
-		Run, % A_Temp "\dbstructs.json"
+
+
+		;~ JSONData.Save(A_Temp "\Quicksearch.json", matches, true,, 2, "UTF-8")
+		;~ Run, % A_Temp "\Quicksearch.json"
 
 
 }

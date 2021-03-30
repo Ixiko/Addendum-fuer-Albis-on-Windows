@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 25.03.2021 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 29.03.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
 return
@@ -102,70 +102,78 @@ return DllCall("WindowFromPoint", "int", ChildX + ParentX, "int", ChildY + Paren
 
 GetControls(hwnd, class_filter:="", type_filter:="", info_filter:="") {                  	  	;-- returns an array with ClassNN, ButtonTyp, Position.....
 
-	;class_filter - comma separated list of classes you don't want to store
-	;type_filter - comma separated list of classes you don't want to store
-	;info_filter - comma separated list of classes you !want! to store
+	;class_filter 	- comma separated list of classes        	you don't want to store
+	;type_filter 	- comma separated list of control types 	you don't want to store
+	;info_filter 	- comma separated list of classes       	you !want! to store
 
-	If StrLen(info_filter) = 0
-		info_filter:="hwnd,Pos,Enabled,Visible,Style,ExStyle"
+		If StrLen(info_filter) = 0
+			info_filter:="hwnd,Pos,Enabled,Visible,Style,ExStyle"
 
-	controls:=[], Control_Style:= "Style", Control_IsEnabled:= "Enabled", Control_IsVisible:= "Visible", Control_ExStyle:= "ExStyle", Control_Pos:= "Pos", Control_Handle:= "hwnd"
-	WinGet, classnn  	, ControlList        	,ahk_id %hwnd%
-	WinGet, controlId	, controllisthwnd	,ahk_id %hwnd%
+		controls := Array()
+		Control_Style           	:= "Style"
+		Control_IsEnabled 	:= "Enabled"
+		Control_IsVisible    	:= "Visible"
+		Control_ExStyle      	:= "ExStyle"
+		Control_Pos          	:= "Pos"
+		Control_Handle      	:= "hwnd"
 
-	loop, parse, classnn,`n
-	{
-		controls[A_Index]:=[]
-		controls[A_Index]["classNN"]:=A_LoopField
-	}
+		WinGet, classnnList  	, ControlList        	, % "ahk_id " hwnd
+		WinGet, controlIdList	, controllisthwnd	, % "ahk_id " hwnd
 
-	loop, parse, controlId,`n
-	{
-			RegExMatch(controls[A_Index]["classNN"], "[a-zA-Z]+", class)
-			If class in %class_filter%
-                    	continue
+		For idx, classnn in StrSplit(classnnList, "`n")
+			controls.Push({"classNN" : classnn})
 
-			If class in Button
-			{
-					bTyp:= GetButtonType(A_LoopField)
+		For idx, hwnd in StrSplit(controlIdList, "`n") {
+
+			; class is dismissed
+				RegExMatch(controls[idx].classNN, "i)[A-Z]+", class)
+				If class in %class_filter%
+					continue
+
+			; informations
+				hWin := "ahk_id " hwnd
+				If RegExMatch(class, "Button") {
+
+					bTyp:= GetButtonType(hwnd)
 					if bTyp in %type_filter%
 						continue
 
-					If bTyp in Radio,Checkbox
-						controls[A_Index]["checked"]	:= ControlGet("Checked", "", "", "ahk_id " A_LoopField)
+					controls[idx]["type"]:= bTyp
+					If RegExMatch(bTyp, "(Radio|Checkbox)")
+						controls[idx]["checked"]	:= ControlGet("Checked", "", "", hWin)
 					else
-						controls[A_Index]["text"]:= ControlGetText("", "ahk_id " A_LoopField)
+						controls[idx]["text"]      	:= ControlGetText("", hWin)
 
-					controls[A_Index]["type"]:= bTyp
-			}
+				}
+				else if RegExMatch(class, "(Edit|RichEdit)")	{
+					controls[idx]["text"]       	:= ControlGetText("", hWin)
+					controls[idx]["linecount"]	:= ControlGet("LineCount", "", "", hWin)
+				}
 
-			If class in Edit,RichEdit
-			{
-                   	controls[A_Index]["text"]:= ControlGetText("", "ahk_id " A_LoopField)
-                   	controls[A_Index]["linecount"]:= ControlGet("LineCount", "", "", "ahk_id " A_LoopField)
-			}
+				controls[idx]["text"]      	:= ControlGetText("", hWin)
 
-			If Control_Handle  	in %info_filter%
-				controls[A_Index]["hwnd"]   	:= A_Loopfield
+			; filter informations
+				If Control_Handle  	in %info_filter%
+					controls[idx]["hwnd"]   	:= hwnd
 
-			If Control_IsEnabled 	in %info_filter%
-				controls[A_Index]["Enabled"]	:= ControlGet("Enabled", "", "", "ahk_id " A_LoopField)
+				If Control_IsEnabled 	in %info_filter%
+					controls[idx]["Enabled"]	:= ControlGet("Enabled", "", "", hWin)
 
-			If Control_IsVisible 	in %info_filter%
-				controls[A_Index]["Visible"]  	:= ControlGet("visible", "", "", "ahk_id " A_LoopField)
+				If Control_IsVisible 	in %info_filter%
+					controls[idx]["Visible"]  	:= ControlGet("Visible", "", "", hWin)
 
-			If Control_Style      	in %info_filter%
-				controls[A_Index]["Style"]    	:= ControlGet("Style", "", "", "ahk_id " A_LoopField)
+				If Control_Style      	in %info_filter%
+					controls[idx]["Style"]    	:= ControlGet("Style", "", "", hWin)
 
-			If Control_ExStyle   	in %info_filter%
-				controls[A_Index]["Exstyle"]  	:= ControlGet("ExStyle", "", "", "ahk_id " A_LoopField)
+				If Control_ExStyle   	in %info_filter%
+					controls[idx]["Exstyle"]  	:= ControlGet("ExStyle", "", "", hWin)
 
-			If Control_Pos        	in %info_filter%
-			{
-                    ControlGetPos, cx, cy, cw, ch,, ahk_id %A_Loopfield%
-                    controls[A_Index]["Pos"]        	:= cx "," cy "," cw "," ch
-			}
-	}
+				If Control_Pos        	in %info_filter%
+				{
+					ControlGetPos, cx, cy, cw, ch,, % "ahk_id " hwnd
+					controls[idx]["Pos"]        	:= cx "," cy "," cw "," ch
+				}
+		}
 
 return controls
 }
@@ -193,25 +201,93 @@ GetButtonType(hwndButton) {                                                     
  return types[1+(btnStyle & 0xF)]
 }
 
+GetHeaderInfo(hHeader) {                                                                                	;-- Returns an object containing the text and width of each item of a remote SysHeader32 control
+
+	; from WinSpy
+
+    Static MAX_TEXT_LENGTH := 260
+         , MAX_TEXT_SIZE := MAX_TEXT_LENGTH * (A_IsUnicode ? 2 : 1)
+
+    WinGet PID, PID, ahk_id %hHeader%
+
+    ; Open the process for read/write and query info.
+    ; PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION | PROCESS_QUERY_INFORMATION
+    If !(hProc := DllCall("OpenProcess", "UInt", 0x438, "Int", False, "UInt", PID, "Ptr")) {
+        Return
+    }
+
+    ; Should we use the 32-bit struct or the 64-bit struct?
+    If (A_Is64bitOS) {
+        Try DllCall("IsWow64Process", "Ptr", hProc, "Int*", Is32bit := True)
+    } Else {
+        Is32bit := True
+    }
+
+    RPtrSize := Is32bit ? 4 : 8
+    cbHDITEM := (4 * 6) + (RPtrSize * 6)
+
+    ; Allocate a buffer in the remote process.
+    remote_item := DllCall("VirtualAllocEx", "Ptr", hProc, "Ptr", 0
+                         , "UPtr", cbHDITEM + MAX_TEXT_SIZE
+                         , "UInt", 0x1000, "UInt", 4, "Ptr") ; MEM_COMMIT, PAGE_READWRITE
+    remote_text := remote_item + cbHDITEM
+
+    ; Prepare the HDITEM structure locally.
+    VarSetCapacity(HDITEM, cbHDITEM, 0)
+    NumPut(0x3, HDITEM, 0, "UInt") ; mask (HDI_WIDTH | HDI_TEXT)
+    NumPut(remote_text, HDITEM, 8, "Ptr") ; pszText
+    NumPut(MAX_TEXT_LENGTH, HDITEM, 8 + RPtrSize * 2, "Int") ; cchTextMax
+
+    ; Write the local structure into the remote buffer.
+    DllCall("WriteProcessMemory", "Ptr", hProc, "Ptr", remote_item, "Ptr", &HDITEM, "UPtr", cbHDITEM, "Ptr", 0)
+
+    HDInfo := {}
+    VarSetCapacity(HDText, MAX_TEXT_SIZE)
+
+    SendMessage 0x1200, 0, 0,, ahk_id %hHeader% ; HDM_GETITEMCOUNT
+    Loop % (ErrorLevel != "FAIL") ? ErrorLevel : 0 {
+        ; Retrieve the item text.
+        SendMessage, % (A_IsUnicode) ? 0x120B : 0x1203, A_Index - 1, remote_item,, ahk_id %hHeader% ; HDM_GETITEMW
+        If (ErrorLevel == 1) { ; Success
+            DllCall("ReadProcessMemory", "Ptr", hProc, "Ptr", remote_item, "Ptr", &HDITEM, "UPtr", cbHDITEM, "Ptr", 0)
+            DllCall("ReadProcessMemory", "Ptr", hProc, "Ptr", remote_text, "Ptr", &HDText, "UPtr", MAX_TEXT_SIZE, "Ptr", 0)
+        } Else {
+            HDText := ""
+        }
+
+        HDInfo.Push({"Width": NumGet(HDITEM, 4, "UInt"), "Text": HDText})
+    }
+
+    ; Release the remote memory and handle.
+    DllCall("VirtualFreeEx", "Ptr", hProc, "Ptr", remote_item, "UPtr", 0, "UInt", 0x8000) ; MEM_RELEASE
+    DllCall("CloseHandle", "Ptr", hProc)
+
+    Return HDInfo
+}
+
 Controls(Control="",cmd="",WinTitle="",HTxt=1,HWin=1,MMSpeed="slow") {   	;-- Universalfunktion für Steuerelemente
 
-	; ********	    ********		Funktion wächst und gedeiht, gegossen am 25.03.2021
-	;***	     *    ***	    ***	dependencies: 	Function: ClientToScreen()
-	;***             ***      ***                        	Function: KeyValueObjectFromLists()
-	;***             ***      ***                         	Function: VerifiedSetText() - [ ControlGetText() ]
-	;***        *    ***      ***                        	Function: VerifiedClick()
-	;  *******       ********
+	;  ********	    ********		Function grows and thrives, watered at the 25.03.2021
+	; ***	     *    ***	    ***	dependencies: 	Function: ClientToScreen()
+	; ***            ***      ***                        	Function: KeyValueObjectFromLists()
+	; ***            ***      ***                         	Function: VerifiedSetText() - [ ControlGetText() ]
+	; ***        *   ***      ***                        	Function: VerifiedClick()
+	;   *******      ********
 	;
-	; BESCHREIBUNG: 	diese Funktion nutzt automatisch den richtigen Autohotkey Befehl um Steuerelemente anzusprechen.
-	;                              	Es ist nicht mehr notwendig sich Befehlsketten zu merken.
-	;                              	Z.b. ersetzt Controls("Edit1", "GetText", WinTitle) die Befehlskette ControlGet, var,, Edit1, % WinTitle
-	;                              	oder Controls("Listbox1", "GetText", WinTitle) die Befehlskette ControlGet, var, List, Edit1, % WinTitle
-	;                            	Eine Hexadezimalzahl als WinTitle wird automatisch als das Handle des Fensters interpretiert.
-	;                              	Ausserdem ließt die Funktion beim ersten Aufruf alle vorhandenen Steuerelement ClassNN und die
-	;                            	zugehörigen Handles in ein Objekt.
+	/* DESCRIPTION:
+
+		this function automatically uses the correct Autohotkey command to address controls.
+		It is no longer necessary to remember chains of commands.
+		E.g. Controls("Edit1", "GetText", WinTitle) replaces the command string ControlGet, var,, Edit1, % WinTitle
+		or Controls("Listbox1", "GetText", WinTitle) replaces the command string ControlGet, var, List, Edit1, % WinTitle.
+		A hexadecimal number as WinTitle is automatically interpreted as the handle of the window.
+		In addition, the function reads all existing control elements ClassNN and the associated handles into
+		an object when it is called for the first time.
+
+	*/
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
-	; Einstellungen für Hidden und TitleMode
+	; Properties
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
 		static knWinTitle, knWinText, Ctrl := Object()
 
@@ -232,7 +308,7 @@ Controls(Control="",cmd="",WinTitle="",HTxt=1,HWin=1,MMSpeed="slow") {   	;-- Un
 		SetTitleMatchMode    	, % MMSpeed
 		CoordMode              	, Mouse	, Screen
 		CoordMode              	, Pixel   	, Screen
-		;sleep, 10                    	; CoordMode needs a pause to update - https://www.autohotkey.com/boards/viewtopic.php?f=14&t=38467
+
 	;}
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
@@ -273,6 +349,9 @@ Controls(Control="",cmd="",WinTitle="",HTxt=1,HWin=1,MMSpeed="slow") {   	;-- Un
 							If InStr(ControlClass, control)
 								return ControlHwnd
 
+		}
+		else if RegExMatch(cmd	, "i)^\s*Buttontype"             	)        	{   	; like ControlClick, you need the exactly classNN name
+			return GetButtonType(RegExMatch(Control, "i)^(0x[A-F0-9]+|\d+)$") ? Control : Ctrl[control])
 		}
 		else if RegExMatch(cmd	, "i)^\s*Click"                      	)        	{   	; like ControlClick, you need the exactly classNN name
 
@@ -342,6 +421,18 @@ Controls(Control="",cmd="",WinTitle="",HTxt=1,HWin=1,MMSpeed="slow") {   	;-- Un
 				}
 				else
 					return VerifiedClick(searchClass, WinTitle)		;searchClass must be the exact ClassNN in this case
+
+		}
+		else if RegExMatch(cmd	, "i)^\s*ControlCheck"         	)        	{   	; finds a control by its text or hwnd, returns ControlClassNN and/or HWND
+
+			; possible commands are check, uncheck  ##### not working
+
+				Loop {
+					Control		, % cmd,, % CName, % WTitle, % WText
+					sleep, 20
+					ControlGet, isChecked, checked,, % CName, % WTitle, % WText
+				} until (isChecked = CheckIt) || (
+				> 10)
 
 		}
 		else if RegExMatch(cmd	, "i)^\s*ControlFind"            	)        	{   	; finds a control by its text or hwnd, returns ControlClassNN and/or HWND
@@ -705,29 +796,25 @@ ControlGetTabs(hTab) {                                                          
     Static MAX_TEXT_LENGTH	:= 260
 		   , MAX_TEXT_SIZE     	:= MAX_TEXT_LENGTH * (A_IsUnicode ? 2 : 1)
 
-    WinGet PID, PID, ahk_id %hTab%
+    WinGet PID, PID, % "ahk_id " hTab
 
     ; Open the process for read/write and query info.
     ; PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION | PROCESS_QUERY_INFORMATION
-    If !(hProc := DllCall("OpenProcess", "UInt", 0x438, "Int", False, "UInt", PID, "Ptr")) {
+    If !(hProc := DllCall("OpenProcess", "UInt", 0x438, "Int", False, "UInt", PID, "Ptr"))
         Return
-    }
 
     ; Should we use the 32-bit struct or the 64-bit struct?
-    If (A_Is64bitOS) {
+    If (A_Is64bitOS)
         Try DllCall("IsWow64Process", "Ptr", hProc, "Int*", Is32bit := true)
-    } Else {
+    Else
         Is32bit := True
-    }
 
     RPtrSize := Is32bit ? 4 : 8
     TCITEM_SIZE := 16 + RPtrSize * 3
 
     ; Allocate a buffer in the (presumably) remote process.
-    remote_item := DllCall("VirtualAllocEx", "Ptr", hProc, "Ptr", 0
-                         , "uPtr", TCITEM_SIZE + MAX_TEXT_SIZE
-                         , "UInt", 0x1000, "UInt", 4, "Ptr") ; MEM_COMMIT, PAGE_READWRITE
-    remote_text := remote_item + TCITEM_SIZE
+    remote_item	:= DllCall("VirtualAllocEx", "Ptr", hProc, "Ptr", 0, "uPtr", TCITEM_SIZE + MAX_TEXT_SIZE, "UInt", 0x1000, "UInt", 4, "Ptr") ; MEM_COMMIT, PAGE_READWRITE
+    remote_text	:= remote_item + TCITEM_SIZE
 
     ; Prepare the TCITEM structure locally.
     VarSetCapacity(TCITEM, TCITEM_SIZE, 0)
@@ -742,7 +829,7 @@ ControlGetTabs(hTab) {                                                          
     VarSetCapacity(TabText, MAX_TEXT_SIZE)
 
     SendMessage 0x1304, 0, 0,, ahk_id %hTab% ; TCM_GETITEMCOUNT
-    Loop % (ErrorLevel != "FAIL") ? ErrorLevel : 0 {
+    Loop % (ErrorLevel != "FAIL" ? ErrorLevel : 0) {
         ; Retrieve the item text.
         SendMessage, % (A_IsUnicode) ? 0x133C : 0x1305, A_Index - 1, remote_item,, ahk_id %hTab% ; TCM_GETITEM
         If (ErrorLevel == 1) { ; Success
@@ -758,7 +845,7 @@ ControlGetTabs(hTab) {                                                          
     DllCall("VirtualFreeEx", "Ptr", hProc, "Ptr", remote_item, "UPtr", 0, "UInt", 0x8000) ; MEM_RELEASE
     DllCall("CloseHandle", "Ptr", hProc)
 
-    Return Tabs
+Return Tabs
 }
 
 TabCtrl_GetCurSel(HWND) {                             		                                    	;-- index number of active tab in a gui
@@ -850,7 +937,7 @@ VerifiedCheck(CName, WTitle="", WText="", WinID="", CheckIt=true) {          	;-
 		; 02.08.2018 - neuer Parameter: CheckIt. Wenn dieser true, also gesetzt ist, wird ein Häkchen gesetzt , bei 'false' entfernt.
 		; die Funktion prüft nicht, ob das Setzen oder Entfernen überhaupt notwendig ist, wenn es schon gesetzt oder nicht gesetzt ist
 
-		command := CheckIt ? "Check":"UnCheck"
+		command := CheckIt ? "check":"uncheck"
 		tmm      	:= A_TitleMatchMode
 		cd         	:= A_ControlDelay
 

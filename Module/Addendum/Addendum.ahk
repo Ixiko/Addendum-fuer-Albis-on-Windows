@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                                                                       	ADDENDUM HAUPTSKRIPT
-global                                                                               AddendumVersion:= "1.54" , DatumVom:= "28.03.2021"
+global                                                                               AddendumVersion:= "1.54" , DatumVom:= "30.03.2021"
 ; . . . . . . . . . .
 ; . . . . . . . . . .                                    ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . . . . . . .                                           BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -17,23 +17,30 @@ global                                                                          
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 /*               	A DIARY OF CHANGES
+| **30.03.2020** | **F~**    | **Infofenster**            	- 	Erweiterung des Dokumentimports. Es lassen sich Stichworte festlegen die einen automatisierten Eintrag in ein selbst
+																						gewähltes Wartezimmer anlegen z.B. um noch auszufüllende Dokumente sichtbar abzulegen (ich befülle LASV,
+																						Rentenversicherungsanfragen mit dem FoxitReader. Das spart Zeit da man Daten per copy-paste eintragen kann.)<br>
+																					-	Autovervollständigung für Namen und Bezeichnungen im Dialog Datei umbenennen fertig gestellt <br>
+																					-	Fehlerbehebung bei der Dateibehandlung und bei der Anzeige in der Listview **V1.55** |
+| **29.03.2020** | **F+~** | **Quicksearch**            	-  	für die direkte Suche in den Datenbankdateien mit derzeit schon der Möglichkeit in den Spalten eine RegEx-Suche
+																						durchführen zu lassen. Die Suchergebnisse werden in einer eigenen Tabelle ausgegeben bei welcher man in Zukunft ganze Spalten
+																						ein- und ausblenden wird können.  <br>
 | **28.03.2020** | **F+~** | **Addendum**            	-  	es können etwas mehr Einstellungen über das Traymenu vorgenommen werden.<br>
 																					-	Funktion für automatisierte Korrektur von EBM-Ausnahmeziffern im Feld Ausnahmeindikation hinzugefügt<br>
 																					-	mehr Hotstrings für EBM, GOÄ Ziffern und Diagnosen  **V1.54**|
 | **27.03.2020** | **F+~** | **Laborjournal**        		- 	HTML schöner gemacht, CSS ToolTip Animation beim Überfahren von Laborparametern mit der Maus
 																						(Langtexte der Parameter werden gezeigt) |
 | **20.03.2020** | **F+**    | **Laborabruf_iBWC**   	- 	Protokoll und Ablaufanzeige konsistenter gemacht, mehr   |
-| **28.03.2020** | **F~**    | **Infofenster**            	- 	Erweiterung des Dokumentimports. Es lassen sich Stichworte festlegen die einen automatisierten Eintrag in ein selbst
-																						gewähltes Wartezimmer anlegen z.B. um noch auszufüllende Dokumente sichtbar abzulegen (ich befülle LASV,
-																						Rentenversicherungsanfragen mit dem FoxitReader. Das spart Zeit da man Daten per copy-paste eintragen kann.)
-																					-	Autovervollständigung für Namen und Bezeichnung im Dialog Datei umbenennen
-																					-	Fehlerbehebung bei der Dateibehandlung und bei der Anzeige in der Listview |
 
-| **25.03.2020** | **F~**    | **Addendum_Albis**     	- 	AlbisRezeptHelfer - CGM hat die Steuerelemente neu nummeriert. RPA Funktion angepasst.
-|                          | **F+**    |								     	-	**AlbisAusIndisKorrigieren()**, **class PatientenDaten**<br>
-																						eine Klasse und eine Funktion für die Änderungen der Ausnahmeindikationen
-																						im Dialog Patient/Stammdaten/Personalien/weitere Informationen. Die Funktion automatisiert die Korrektur
-																						und/oder das Hinzufügen von EBM-Ziffern |
+| **29.03.2020** | **F~**    | **Addendum_Albis**     	- 	**AlbisRezeptHelfer()**<br>CGM hat die Steuerelemente neu nummeriert. RPA Funktion angepasst.<br>
+|                          | **F+**    |								     	-	**AlbisAusindisKorrigieren()**, **class PatientenDaten**<br>
+																						eine Klasse und eine Funktion für die Änderungen der Ausnahmeindikationen im Dialog Patient / Stammdaten /
+																						Personalien / weitere Informationen. Die Funktion automatisiert die Korrektur und/oder das Hinzufügen von EBM-Ziffern<br>
+																					-	**AlbisMDITabActive()**<br>gibt den Namen (Text) eines MDI Childfensters zurück<br>
+																					-	**AlbisMDIChildTitle()**<br> gibt die Nummer oder den Titel des aktiven Tab zurück<br>
+																					-	**AlbisWZKommentar()**<br>automatisiert Wartezimmer - Kommentare eingeben/ändern<br>
+																					-	**AlbisWZTabSelect()**<br>aktiviert ein bestimmtes Wartezimmer
+																					-	**AlbisWZListe**<br>den Inhalt eines Wartezimmers auslesen und als Objekt zurückgeben |
 
 	CGM_ALBIS DIENST Service SID:                    	S-1-5-80-845206254-3503829181-3941749774-3351807599-4094003504
 	CGM_ALBIS_BACKGROUND_SERVICE_(6002) 	S-1-5-80-4257249827-193045864-994999254-1414716813-2431842843
@@ -366,7 +373,6 @@ global                                                                          
 		Menu, SubMenu3, Add, % "Albis Schnellrezept", Menu_Schnellrezept
 		Menu, SubMenu3, % (Addendum.Schnellrezept ? "Check":"UnCheck")           	, % "Albis Schnellrezept"
 	;}
-
 
 	; Automatisierung der PDF Signierung mit dem FoxitReader        	;{
 		Menu, SubMenu3, Add, % "FoxitReader Signaturhilfe"                                  	, Menu_PDFSignatureAutomation

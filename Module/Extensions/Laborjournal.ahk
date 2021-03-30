@@ -1229,39 +1229,6 @@ Local Enc := 0x557CF400 | Round({"bmp":0, "jpg":1,"jpeg":1,"gif":2,"tif":5,"tiff
 Return E[1] ? 0 : E[2] ? -1 : E[3] ? -2 : E[4] ? -3 : 1
 }
 
-/*
-PatientDBF(basedir, infilter="", outfilter="", debug=0) {                                            	;-- gibt nur benötigte Daten der albiswin\db\PATIENT.DBF zurück
-
-	; Rückgabeparameter ist ein Objekt mit Patienten Nr. und dazugehörigen Datenobjekten (die key's sind die Feldnamen in der DBASE Datenbank)
-
-		PatDBF := Object()
-
-	; für Abrechnungsüberprüfungen die geschätzt minimal notwendigste Datenmenge
-		If !IsObject(infilter)
-			infilter := ["NR", "NAME", "VORNAME", "GEBURT", "MORTAL", "LAST_BEH"]
-
-	; liest alle Patientendaten in ein temp. Objekt ein
-		database 	:= new DBASE(basedir "\PATIENT.dbf", debug)
-		res        	:= database.OpenDBF()
-		matches	:= database.GetFields(infilter)
-		res         	:= database.CloseDBF()
-
-	; temp. Objekt wird nach PATNR sortiert
-		For idx, m in matches {
-
-			strObj	:= Object()
-			For key, val in m
-				If (key <> "NR")
-					strObj[key] := val
-
-			PatDBF[m.NR] := strObj
-
-		}
-
-return PatDBF
-}
- */
-
 Create_Laborjournal_ico(NewHandle := False) {                                                    	;-- ICON anzeigen
 Static hBitmap := 0
 If (NewHandle)

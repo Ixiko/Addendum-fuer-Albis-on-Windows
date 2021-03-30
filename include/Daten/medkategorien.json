@@ -1,4 +1,8 @@
 ﻿{
+    "Abasaglar": {
+        "ingredient": "Insulin Glargin",
+        "use": "Diabetes"
+    },
     "Actraphane": {
         "ingredient": " Insulin (human), normal und I. Isophan (human)",
         "use": "Diabetes (Insulin)"
@@ -42,6 +46,10 @@
     "Amlodipin": {
         "ingredient": "Amlodipin",
         "use": "Blutdruck"
+    },
+    "Amlodipin Besilat": {
+        "ingredient": "Amlodipin",
+        "use": "Bluthochdruck"
     },
     "Ampho Moronal": {
         "ingredient": "Amphotericin B",
@@ -370,6 +378,10 @@
     "Gabapentin": {
         "ingredient": "Gabapentin",
         "use": "Schmerzen"
+    },
+    "Ganfort": {
+        "ingredient": "Bimatoprost und Timolol",
+        "use": "grüner Star"
     },
     "Gingium": {
         "ingredient": "Gingkoblätter Trockenextrakt",

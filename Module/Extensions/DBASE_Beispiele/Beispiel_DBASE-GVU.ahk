@@ -28,7 +28,7 @@
 		minAlter            := 35    	; Abrechnung möglich ab dem Alter von
 
 		; das aktuelle Abrechungsquartal
-		Abrechnungsquartal 	:= "0420"
+		Abrechnungsquartal 	:= "0121"
 		AbrQ      	:= QuartalTage({"Aktuell":Abrechnungsquartal})
 
 		; letztes GVU Datum muss älter als dieses sein

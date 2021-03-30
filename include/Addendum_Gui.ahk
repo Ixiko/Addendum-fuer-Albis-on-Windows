@@ -2610,7 +2610,7 @@ class pdfpool                                                                 	{
 		}
 
 		GetValidPath(path)                                                  	{
-		return (this.isPath(path) ? path : Addendum.BefundOrdner)
+		return (this.isPath(path) ? path : Addendum.DBPath "\sonstiges")
 		}
 
 		isPath(path)                                                           	{
@@ -2631,8 +2631,9 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f√
 		local key, pdf, TLines, found, monIndex, admScreen, RNx, RNWidth
 
 		static RNminWidth := 350
-		static BEZPath, Beschreibung, wT, Patname, Inhalt, Datum, bezeichner, oPV
+		static BEZPath, Beschreibung, wT, Patname, Inhalt, Datum, oPV
 		static oldadmFile, newadmFile, FileExt, FileOutExt, oldfilename
+		static names
 
 	; PDF Vorschau anzeigen in neuem Sumatrafenster oder wenn ge√∂ffnet in diesem Fenster
 		If IsObject(oPV) {
@@ -2660,9 +2661,14 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f√
 				FilePathCreate(Addendum.DBPath "\Dictionary")
 			} else {
 				bezeichner := FileOpen(BEZPath, "r", "UTF-8").Read()
-				ACBez := RTrim(RegExReplace(bezeichner, "[\n\r]", "|"), "|")
-				bezeichner := StrSplit(bezeichner, "`n", "`r")
+				bezeichner := RTrim(RegExReplace(bezeichner, "[\n\r]", "|"), "|")
+				bezeichner := StrSplit(bezeichner, "|")
 			}
+		}
+
+	; Namen aus der Datenbank erhalten
+		If !IsObject(names) {
+			names := admDB.GetNamesArray()
 		}
 
 	; Vorbereitung: Dokument zerlegen
@@ -2716,7 +2722,7 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f√
 		RNWidth	:= RnWidth < RNminWidth ? RNminWidth : RnWidth		;}
 
 		;-: Gui Start                                                   	;{
-		Gui, RN: new, % "AlwaysOnTop -DpiScale +ToolWindow -Caption +Border HWNDhadmRN"
+		Gui, RN: new, % "AlwaysOnTop -DpiScale +ToolWindow -Caption +Border -SysMenu +OwnDialogs HWNDhadmRN"
 		Gui, RN: Margin, 5, 5		;}
 
 		;-: Hinweise                                                    	;{
@@ -2810,8 +2816,12 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f√
 		;-: Show
 		Gui, RN: Show
 
+		If IsObject(bezeichner)
+			InputRNE1 := IAutoComplete_Create(RNhE2, bezeichner, ["AUTOSUGGEST", "UseTab"])
+		If IsObject(names)
+			InputRNE2 := IAutoComplete_Create(RNhE1, names   	, ["AUTOAPPEND", "UseTab"])
+
 		admGui_RenameHotkeys()
-		ACGShow := false
 
 		;}
 
@@ -2847,12 +2857,6 @@ RNEHandler:                                      	;{   Dateinamenvorschau und Vo
 			BlockInput, Off
 		}
 		Gui, RN: Submit, NoHide
-
-	; Autocomplete je nach Eingabefeld
-		If (gcNr = 1 && RNE1old <> RNE1)  {
-			RNE1old := RNE1
-			admGui_AutoComplete(A_GuiControl, RNE1, {"Face":"MS Sans Serif", "Size":fSize-1})
-		}
 
 	; Dateinamenvorschau auffrischen
 		GuiControl, RN:, RNPV, % admGui_FileName(RNE1, RNE2, RNE3)
@@ -2897,6 +2901,7 @@ RNProceed:                                       	;{   Datei wird umbenannt, PDF
 			TLines .= RNE2
 			Sort, TLines
 			FileOpen(BEZPath, "w", "UTF-8").Write(TLines)
+			bezeichner.Push(RNE2)
 		}
 	;}
 
@@ -2932,9 +2937,6 @@ RNGuiBeenden:                                   	;{   weitere Dateien umbenennen
 
 		}
 
-		If StrLen(lvFilename) = 0
-			SciTEOutput("0 L√§nge: " row)
-
 	; weiteres Dokument umbenennen?
 		If (StrLen(lvFilename) > 0) && !string.isFullNamed(lvFilename) && (lvFilename <> oldfilename) {
 			MsgBox, 0x1024, Addendum f√ºr Albis on Windows, % "M√∂chten Sie mit der n√§chsten`n[" lvFilename "]`nDatei fortfahren ?", 30
@@ -2956,17 +2958,7 @@ RNGuiEscape:
 
 	; Gui beenden
 		Gui, RN: Destroy
-		If WinExist("Addendum AutoCompleteGui ahk_class AutoHotkeyGUI")
-			Gui, ACG: Destroy
-		ACGShow := false
-		;Gui, admAC: Destroy
-
-	; Hotkeys freigeben
-		;~ Hotkey, IfWinActive, % "Addendum (Datei umbenennen)"
-		;~ Hotkey, Up, Off
-		;~ Hotkey, Down, Off
-		;~ Hotkey, Enter, Off
-		;~ Hotkey, IfWinActive
+		admGui_RenameHotkeys("Off")
 
 	; Journal fokussieren
 		Journal.Focus()
@@ -3006,105 +2998,6 @@ admGui_RenameHotkeys(status:="On") {
 	Hotkey, Enter 	, RNProceed			, % status
 	Hotkey, IfWinActive
 
-}
-
-admGui_AutoComplete(GControl, text, font) {
-
-	global RNhE1, RNhE2
-	global ACG, hACG, ACGLb, hACGLb, ACGLb_ItemHeight, ACGShow
-
-	If (GControl = "RNE1") {
-		matches := admDB.GetExactMatches("Nn|Vn", 0, StrSplit(text, ",").1, StrSplit(text, ",").2)
-		If (matches.Count() > 0) {
-
-			admGui_RenameHotkeys("Off")
-
-			For PatID, Pat in matches
-				lbStr .= Pat.Nn ", " Pat.Vn "|"
-			lbStr := RTrim(lbStr, "|")
-			Sort, lbStr, U |
-
-			If !WinExist("Addendum AutoCompleteGui ahk_class AutoHotkeyGUI")
-				admGui_AutoCompleteGui(RNhE1, "RNE1", lbStr, font)
-			else {
-				GuiControl, ACG:             	, ACGLb, % lbStr
-				If !ACGShow
-					Gui      	, ACG: Show	, % " NA"
-			}
-
-			ACGShow := true
-
-		}
-		else {
-
-			Gui, ACG: Destroy
-			admGui_RenameHotkeys("On")
-			ACGShow := false
-
-		}
-
-	} else If (GControl = "RNE2") {
-		ACGShow := true
-		If !WinExist("Addendum AutoCompleteGui ahk_class AutoHotkeyGUI")
-			admGui_AutoCompleteGui(RNhE1, "RNE2", "ABC", font)
-	} else {
-		Gui, ACG: Destroy
-		admGui_RenameHotkeys("On")
-		ACGShow := false
-	}
-
-
-}
-
-admGui_AutoCompleteGui(hInputControl, GControl, Content, font:="") {
-
-	global ACG, hACG, ACGLb, hACGLb, ACGLb_ItemHeight, ACGShow
-	global RNE1old, RNE2old, RNE1, RNE2, RNE3
-	static hIControl, GCtrl
-
-	hIControl 	:= hInputControl
-	GCtrl    	:= GControl
-	cp         	:= GetWindowSpot(hIControl)
-	font       	:= !IsObject(font) ? {"Face":"MS Sans Serif", "Size":"8"} : font
-	ACGShow := true
-
-	Gui, ACG: New, +AlwaysOnTop +ToolWindow -Caption +hwndhACG
-	Gui, ACG: Margin, 0, 0
-	Gui, ACG: Font, % "s" font.Size-1, % font.Face
-	Gui, ACG: Add, Listbox, % "x0 y0 w" cp.W " r8 vACGLb hwndhACGLb -Multi", % Content
-	Gui, ACG: Show, % "x" cp.X " y " cp.Y+cp.H-2 " NA", Addendum AutoCompleteGui
-
-	;~ SendMessage, 0x1A1, 0, 0, , % "ahk_id " hACGLb ; LB_GETITEMHEIGHT := 0x01A1
-	;~ ACGLb_ItemHeight	:= ErrorLevel
-
-	Hotkey, IfWinExist, % "Addendum AutoCompleteGui ahk_class AutoHotkeyGUI"
-	Hotkey, ESC     	, ACGuiStop
-	Hotkey, Up     	, ACGuiUpDown
-	Hotkey, Down  	, ACGuiUpDown
-	Hotkey, Tab 		, ACGuiProceed
-	Hotkey, Enter 	, ACGuiProceed
-	Hotkey, IfWinExist
-
-return
-ACGuiUpDown:
-	SetKeyDelay, -1, -1
-	ControlSend,, % "{" A_ThisHotkey "}", % "ahk_id " hACGLb
-return
-ACGuiProceed:
-	GuiControlGet, entry, ACG:, ACGLb
-	Gui, ACG: Show, Hide
-	Gui, RN: 	 Default
-	GuiControl, RN:, % hIControl, % entry
-	GuiControl, RN: Focus, % (GCtrl="RNE1" ? "RNE2" : GCtrl="RNE2" ? "RNE3" : "RNE3")
-	If (GCtrl="RNE1")
-		RNE1old := RNE1
-	else if (GCtrl="RNE2")
-		RNE2old := RNE2
-ACGuiStop:
-	Gui, ACG: Destroy
-	admGui_RenameHotkeys("On")
-	ACGShow := false
-return
 }
 
 admGui_FileName(PatName, inhalt, Datum)                  	{                	; Hilfsfunktion: admGui_Rename
@@ -3706,7 +3599,7 @@ admGui_FolderWatch(path, changes)                              	{               
 						return
 			}
 
-			FileAppend, % action " | " name "`n", % Addendum.DBPath "\WatchFolder-Log.txt", UTF-8
+			FileAppend, % A_DD "." A_MM "." A_YYYY " " A_Hour ":" A_Min " | " action " | " name "`n", % Addendum.DBPath "\WatchFolder-Log.txt", UTF-8
 
 		; PDF Dateien
 			If RegExMatch(name, "i)\.pdf$")
@@ -4152,6 +4045,339 @@ RedrawWindow(hwnd=0)                                              	{            
 return DllCall("RedrawWindow", "Ptr", (hwnd = 0 ? hadm : hwnd), "Ptr", 0, "Ptr", 0, "UInt", RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN)
 }
 
+
+RegisterSyncCallback(FunctionName, Options:="", ParamCount:=""){
+
+    if !(fn := Func(FunctionName)) || fn.IsBuiltIn
+        throw Exception("Bad function", -1, FunctionName)
+    if (ParamCount == "")
+        ParamCount := fn.MinParams
+    if (ParamCount > fn.MaxParams && !fn.IsVariadic || ParamCount+0 < fn.MinParams)
+        throw Exception("Bad param count", -1, ParamCount)
+
+    static sHwnd := 0, sMsg, sSendMessageW
+    if !sHwnd
+    {
+        Gui RegisterSyncCallback: +Parent%A_ScriptHwnd% +hwndsHwnd
+        OnMessage(sMsg := 0x8000, Func("RegisterSyncCallback_Msg"))
+        sSendMessageW := DllCall("GetProcAddress", "ptr", DllCall("GetModuleHandle", "str", "user32.dll", "ptr"), "astr", "SendMessageW", "ptr")
+    }
+
+    if !(pcb := DllCall("GlobalAlloc", "uint", 0, "ptr", 96, "ptr"))
+        throw
+    DllCall("VirtualProtect", "ptr", pcb, "ptr", 96, "uint", 0x40, "uint*", 0)
+
+    p := pcb
+    if (A_PtrSize = 8)    {
+        /*
+        48 89 4c 24 08  ; mov [rsp+8], rcx
+        48 89 54'24 10  ; mov [rsp+16], rdx
+        4c 89 44 24 18  ; mov [rsp+24], r8
+        4c'89 4c 24 20  ; mov [rsp+32], r9
+        48 83 ec 28'    ; sub rsp, 40
+        4c 8d 44 24 30  ; lea r8, [rsp+48]  (arg 3, &params)
+        49 b9 ..        ; mov r9, .. (arg 4, operand to follow)
+        */
+        p := NumPut(0x54894808244c8948, p+0)
+        p := NumPut(0x4c182444894c1024, p+0)
+        p := NumPut(0x28ec834820244c89, p+0)
+        p := NumPut(  0xb9493024448d4c, p+0) - 1
+        lParamPtr := p, p += 8
+
+        p := NumPut(0xba, p+0, "char") ; mov edx, nmsg
+        p := NumPut(sMsg, p+0, "int")
+        p := NumPut(0xb9, p+0, "char") ; mov ecx, hwnd
+        p := NumPut(sHwnd, p+0, "int")
+        p := NumPut(0xb848, p+0, "short") ; mov rax, SendMessageW
+        p := NumPut(sSendMessageW, p+0)
+        /*
+        ff d0        ; call rax
+        48 83 c4 28  ; add rsp, 40
+        c3           ; ret
+        */
+        p := NumPut(0x00c328c48348d0ff, p+0)
+    }
+    else     { ;(A_PtrSize = 4)
+        p := NumPut(0x68, p+0, "char")      ; push ... (lParam data)
+        lParamPtr := p, p += 4
+        p := NumPut(0x0824448d, p+0, "int") ; lea eax, [esp+8]
+        p := NumPut(0x50, p+0, "char")      ; push eax
+        p := NumPut(0x68, p+0, "char")      ; push nmsg
+        p := NumPut(sMsg, p+0, "int")
+        p := NumPut(0x68, p+0, "char")      ; push hwnd
+        p := NumPut(sHwnd, p+0, "int")
+        p := NumPut(0xb8, p+0, "char")      ; mov eax, &SendMessageW
+        p := NumPut(sSendMessageW, p+0, "int")
+        p := NumPut(0xd0ff, p+0, "short")   ; call eax
+        p := NumPut(0xc2, p+0, "char")      ; ret argsize
+        p := NumPut((InStr(Options, "C") ? 0 : ParamCount*4), p+0, "short")
+    }
+    NumPut(p, lParamPtr+0) ; To be passed as lParam.
+    p := NumPut(&fn, p+0)
+    p := NumPut(ParamCount, p+0, "int")
+return pcb
+}
+
+RegisterSyncCallback_Msg(wParam, lParam){
+    if (A_Gui != "RegisterSyncCallback")
+        return
+    fn := Object(NumGet(lParam + 0))
+    paramCount := NumGet(lParam + A_PtrSize, "int")
+    params := []
+    Loop % paramCount
+        params.Push(NumGet(wParam + A_PtrSize * (A_Index-1)))
+    return %fn%(params*)
+}
+IAutoComplete_Create(HEDT, Strings, Options := "", WantReturn := False, Enable := True) {
+   Return New IAutoComplete(HEDT, Strings, Options, WantReturn, Enable)
+}
+; Used internally to pass the return key to single-line edit controls.
+IAutoComplete_SubclassProc(HWND, Msg, wParam, lParam, ID, Data) {
+   If (Msg = 0x0087) && (wParam = 13) ; WM_GETDLGCODE, VK_RETURN
+      Return 0x0004 ; DLGC_WANTALLKEYS
+   If (Msg = 0x0002) { ; WM_DESTROY
+      DllCall("RemoveWindowSubclass", "Ptr", HWND, "Ptr", Data, "Ptr", ID)
+      DllCall("GlobalFree", "Ptr", Data)
+      If (IAutoCompleteAC := Object(ID))
+         IAutoCompleteAC.SubclassProc := 0
+   }
+   Return DllCall("Comctl32.dll\DefSubclassProc", "Ptr", HWND, "UInt", Msg, "Ptr", wParam, "Ptr", lParam)
+}
+Class IAutoComplete {
+   Static Attached := []
+   ; -------------------------------------------------------------------------------------------------------------------------------
+   ; Constructor - see AutoComplete_Create()
+   ; -------------------------------------------------------------------------------------------------------------------------------
+   __New(HEDT, Strings, Options := "", WantReturn := False, Enable := True) {
+      Static IAC2_Init := A_PtrSize * 3
+      If AutoComplete.Attached[HEDT]
+         Return ""
+      This.HWND := HEDT
+      This.SubclassProc := 0
+      If !(IAC2 := ComObjCreate("{00BB2763-6A77-11D0-A535-00C04FD7D062}", "{EAC04BC0-3791-11d2-BB95-0060977B464C}"))
+         Return ""
+      This.IAC2 := IAC2
+      If !(IES := IEnumString_Create())
+         Return ""
+      If !IEnumString_SetStrings(IES, Strings) {
+         DllCall("GlobalFree", "Ptr", IES)
+         Return ""
+      }
+      This.IES := IES
+      This.VTBL := NumGet(IAC2 + 0, "UPtr")
+      If DllCall(NumGet(This.VTBL + IAC2_Init, "UPtr"), "Ptr", IAC2 + 0, "Ptr", HEDT, "Ptr", IES, "Ptr", 0, "Ptr", 0, "UInt")
+         Return ""
+      This.SetOptions(Options = "" ? ["AUTOSUGGEST"] : Options)
+      This.Enabled := True
+      If !(Enable)
+         This.Disable()
+      If (WantReturn) {
+         ControlGet, Styles, Style, , , ahk_id %HEDT%
+         If !(Styles & 0x0004) && (CB := RegisterCallback("IAutoComplete_SubclassProc")) { ; !ES_MULTILINE
+            If DllCall("SetWindowSubclass", "Ptr", HEDT, "Ptr", CB, "Ptr", &This, "Ptr", CB, "UInt")
+               This.SubclassProc := CB
+            Else
+               DllCall("GlobalFree", "Ptr", CB, "Ptr")
+         }
+      }
+      AutoComplete.Attached[HEDT] := True
+   }
+   ; -------------------------------------------------------------------------------------------------------------------------------
+   ; Destructor
+   ; -------------------------------------------------------------------------------------------------------------------------------
+   __Delete() {
+      ; The edit control keeps own references to IAC2. Hence autocompletion has to be disabled before it can be released.
+      ; The only way to reenable autocompletion is to assign a new autocompletion object to the edit.
+      If (This.IAC2) {
+         This.Disable()
+         ObjRelease(This.IAC2)
+      }
+      If (This.SubclassProc) {
+         DllCall("RemoveWindowSubclass", "Ptr", This.HWND, "Ptr", This.SubclassProc, "Ptr", &This)
+         DllCall("GlobalFree", "Ptr", This.SubclassProc)
+      }
+      AutoComplete.Attached.Delete(This.HWND)
+   }
+   ; -------------------------------------------------------------------------------------------------------------------------------
+   ; Enables / disables autocompletion.
+   ;     Enable   -  True or False
+   ; -------------------------------------------------------------------------------------------------------------------------------
+   Enable(Enable := True) {
+      Static IAC2_Enable := A_PtrSize * 4
+      If !(This.VTBL)
+         Return False
+      This.Enabled := !!Enable
+      Return !DllCall(NumGet(This.VTBL + IAC2_Enable, "UPtr"), "Ptr", This.IAC2, "Int", !!Enable, "UInt")
+   }
+   ; -------------------------------------------------------------------------------------------------------------------------------
+   ; Disables autocompletion.
+   ; -------------------------------------------------------------------------------------------------------------------------------
+   Disable() {
+      Return This.Enable(False)
+   }
+   ; -------------------------------------------------------------------------------------------------------------------------------
+   ;  Sets the autocompletion options.
+   ;     Options  -  Simple array of option strings corresponding to the keys defined in ACO
+   ; -------------------------------------------------------------------------------------------------------------------------------
+   SetOptions(Options) {
+      Static IAC2_SetOptions := A_PtrSize * 5
+      Static ACO := {NONE: 0, AUTOSUGGEST: 1, AUTOAPPEND: 2, SEARCH: 4, FILTERPREFIXES: 8, USETAB: 16
+                   , UPDOWNKEYDROPSLIST: 32, RTLREADING: 64, WORD_FILTER: 128, NOPREFIXFILTERING: 256}
+      If !(This.VTBL)
+         Return False
+      Opts := 0
+      For Each, Opt In Options
+         Opts |= (Opt := ACO[Opt]) <> "" ? Opt : 0
+      Return !DllCall(NumGet(This.VTBL + IAC2_SetOptions, "UPtr"), "Ptr", This.IAC2, "UInt", Opts, "UInt")
+   }
+   ; -------------------------------------------------------------------------------------------------------------------------------
+   ; Updates the autocompletion strings.
+   ;     Strings  -  Simple array of strings. If you pass a non-object value the string table will be emptied.
+   ; -------------------------------------------------------------------------------------------------------------------------------
+   UpdStrings(Strings) {
+      Static IID_IACDD := "{3CD141F4-3C6A-11d2-BCAA-00C04FD929DB}" ; IAutoCompleteDropDown
+           , IACDD_ResetEnumerator := A_PtrSize * 4
+      If !(This.IES)
+         Return False
+      If !(IEnumString_SetStrings(This.IES, Strings))
+         Return False
+      If (IACDD := ComObjQuery(This.IAC2, IID_IACDD)) {
+         DllCall(NumGet(NumGet(IACDD + 0, "UPtr") + IACDD_ResetEnumerator, "UPtr"), "Ptr", This.IAC2, "UInt")
+         ObjRelease(IACDD)
+      }
+      Return True
+   }
+}
+
+IEnumString_Create() {
+   Static IESInit := True, IESSize := A_PtrSize * 10, IESVTBL
+   If (IESInit) {
+      VarSetCapacity(IESVTBL, IESSize, 0)
+      Addr := &IESVTBL + A_PtrSize
+      Addr := NumPut(RegisterSyncCallback("IEnumString_QueryInterface") , Addr + 0, "UPtr")
+      Addr := NumPut(RegisterSyncCallback("IEnumString_AddRef")         , Addr + 0, "UPtr")
+      Addr := NumPut(RegisterSyncCallback("IEnumString_Release")        , Addr + 0, "UPtr")
+      Addr := NumPut(RegisterSyncCallback("IEnumString_Next")           , Addr + 0, "UPtr")
+      Addr := NumPut(RegisterSyncCallback("IEnumString_Skip")           , Addr + 0, "UPtr")
+      Addr := NumPut(RegisterSyncCallback("IEnumString_Reset")          , Addr + 0, "UPtr")
+      Addr := NumPut(RegisterSyncCallback("IEnumString_Clone")          , Addr + 0, "UPtr")
+      IESInit := False
+   }
+   If !(IES := DllCall("GlobalAlloc", "UInt", 0x40, "Ptr", IESSize, "UPtr"))
+      Return False
+   DllCall("RtlMoveMemory", "Ptr", IES, "Ptr", &IESVTBL, "Ptr", IESSize)
+   NumPut(IES + A_PtrSize, IES + 0, "UPtr")
+   Return IES
+}
+
+IEnumString_SetStrings(IES, ByRef Strings) {
+   PrevTbl := NumGet(IES + (A_PtrSize * 9), "UPtr")
+   StrSize := 0
+   StrArray := []
+   Loop, % Strings.Length()
+      If ((S := Strings[A_Index]) <> "")
+         L := StrPut(S, "UTF-16") * 2
+         , StrSize += L
+         , StrArray.Push({S: S, L: L})
+      Else
+         Break
+   StrCount := StrArray.Length()
+   StrTblSize := (A_PtrSize * 2) + (StrCount * A_PtrSize * 2) + StrSize
+   If !(StrTbl := DllCall("GlobalAlloc", "UInt", 0x40, "Ptr", StrTblSize, "UPtr"))
+      Return False
+   Addr := StrTbl + A_PtrSize
+   Addr := NumPut(StrCount, Addr + 0, "UPtr")
+   StrPtr := Addr + (StrCount * A_PtrSize * 2)
+   For Each, Str In StrArray {
+      Addr := NumPut(StrPtr, Addr + 0, "UPtr")
+      Addr := NumPut(Str.L, Addr + 0, "UPtr")
+      StrPut(Str.S, StrPtr, "UTF-16")
+      StrPtr += Str.L
+   }
+   If (PrevTbl)
+      DllCall("GlobalFree", "Ptr", PrevTbl)
+   NumPut(StrTbl, IES + (A_PtrSize * 9), "UPtr")
+   Return True
+}
+
+IEnumString_QueryInterface(IES, RIID, ObjPtr) {
+   Static IID := "{00000101-0000-0000-C000-000000000046}", IID_IEnumString := 0
+        , Init := VarSetCapacity(IID_IEnumString, 16, 0) + DllCall("Ole32.dll\IIDFromString", "WStr", IID, "Ptr", &IID_IEnumString)
+   Critical
+   If DllCall("Ole32.dll\IsEqualGUID", "Ptr", RIID, "Ptr", &IID_IEnumString, "UInt") {
+      IEnumString_AddRef(IES)
+      Return !(NumPut(IES, ObjPtr + 0, "UPtr"))
+   }
+   Else
+      Return 0x80004002
+}
+
+IEnumString_AddRef(IES) {
+   NumPut(RefCount := NumGet(IES + (A_PtrSize * 8), "UPtr") + 1,  IES + (A_PtrSize * 8), "UPtr")
+   Return RefCount
+}
+
+IEnumString_Release(IES) {
+   RefCount := NumGet(IES + (A_PtrSize * 8), "UPtr")
+   If (RefCount > 0) {
+      NumPut(--RefCount, IES + (A_PtrSize * 8), "UPtr")
+      If (RefCount = 0) {
+         DllCall("GlobalFree", "Ptr", NumGet(IES + (A_PtrSize * 9), "UPtr")) ; string table
+         DllCall("GlobalFree", "Ptr", IES)
+      }
+   }
+   Return RefCount
+}
+
+IEnumString_Next(IES, Fetch, Strings, Fetched) {
+   Critical
+   I := 0
+   , StrTbl := NumGet(IES + (A_PtrSize * 9), "UPtr")
+   , Current := NumGet(StrTbl + 0, "UPtr")
+   , Maximum := NumGet(StrTbl + A_PtrSize, "UPtr")
+   , StrAddr := StrTbl + (A_PtrSize * 2) + (A_PtrSize * Current * 2)
+   While (Current < Maximum) && (I < Fetch)
+      Ptr := NumGet(StrAddr + 0, "UPtr")
+      , Len := NumGet(StrAddr + A_PtrSize, "UPtr")
+      , Mem := DllCall("Ole32.dll\CoTaskMemAlloc", "Ptr", Len, "UPtr")
+      , DllCall("RtlMoveMemory", "Ptr", Mem, "Ptr", Ptr, "Ptr", Len)
+      , NumPut(Mem, Strings + (I * A_PtrSize), "Ptr")
+      , NumPut(++I, Fetched + 0, "UInt")
+      , NumPut(++Current, StrTbl + 0, "UPtr")
+      , StrAddr += A_PtrSize * 2
+   Return (I = Fetch) ? 0 : 1
+}
+
+IEnumString_Skip(IES, Skip) {
+   Critical
+   StrTbl := NumGet(IES + (A_PtrSize * 9), "UPtr")
+   , Current := NumGet(StrTbl + 0, "UPtr")
+   , Maximum := NumGet(StrTbl + A_PtrSize, "UPtr")
+   If ((Current + Skip) <= Maximum)
+      Return (NumPut(Current + Skip, StrTbl, "UPtr") & 0)
+   Return 1
+}
+
+IEnumString_Reset(IES) {
+   Return (NumPut(0, NumGet(IES + (A_PtrSize * 9), "UPtr"), "UPtr") & 0)
+}
+; ----------------------------------------------------------------------------------------------------------------------------------
+IEnumString_Clone(IES, ObjPtr) { ; Not sure about the reference counter (IES + (A_PtrSize * 8))!
+   IESSize := DllCall("GlobalSize", "Ptr", IES, "Ptr")
+   StrTbl := NumGet(IES + (A_PtrSize * 9), "UPtr")
+   StrTblSize := DllCall("GlobalSize", "Ptr", StrTbl, "Ptr")
+   If !(IESClone := DllCall("GlobalAlloc", "UInt", 0x40, "Ptr", IESSize, "UPtr"))
+      Return False
+   If !(StrTblClone := DllCall("GlobalAlloc", "UInt", 0x40, "Ptr", StrTblSize, "UPtr")) {
+      DllCall("GlobalFree", "Ptr", IESClone)
+      Return False
+   }
+   DllCall("RtlMoveMemory", "Ptr", IESClone, "Ptr", IES, "Ptr", IESSize)
+   DllCall("RtlMoveMemory", "Ptr", StrTblClone, "Ptr", StrTbl, "Ptr", StrTblSize)
+   NumPut(0, IESClone + (A_PtrSize * 8), "UPtr") ; Set the reference counter to zero or one in this case???
+   NumPut(StrTblClone, IESCLone + (A_PtrSIze * 9), "UPtr")
+   Return (NumPut(IESClone, ObjPtr + 0, "UPtr") & 0)
+}
 
 
 /*

@@ -1,7 +1,7 @@
 ﻿;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - letzte Änderung 25.03.2021 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - letzte Änderung 29.03.2021 - this file runs under Lexiko's GNU Licence
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
 return
@@ -133,11 +133,11 @@ AlbisStatus() {                                                                 
 }
 ;}
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; MDI CONTROL FUNKTIONEN                                                                                                                                                                                                                 	(11)
+; MDI CONTROL FUNKTIONEN                                                                                                                                                                                                                 	(13)
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; (01) AlbisMDIClientHandle          	(02) AlbisMDIWartezimmerID      	(03) AlbisMDIClientWindows          	(04) AlbisMDIChildActivate         	(05) AlbisMDIChildHandle
-; (06) AlbisMDIChildHandle           	(07) AlbisMDIMinMaxStatus        	(08) AlbisMDIChildWindowClose       	(09) AlbisMDITabActivate           	(10) AlbisMDITabHandle
-; (11) AlbisMDITabNames
+; (06) AlbisMDIChildHandle           	(07) AlbisMDIChildTitle               	(08) AlbisMDIChildWindowClose       	(09) AlbisMDIMinMaxStatus        	(10) AlbisMDITabActive
+; (11) AlbisMDITabActivate                 (12) AlbisMDITabHandle              	(13) AlbisMDITabNames
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~;{
 ;01    	;-- MDI Control Funktionen
 AlbisMDIClientHandle() {                                                           	;-- ermittelt das Handle des MDIClient (Basishandle für alle Unterfenster)
@@ -180,7 +180,7 @@ AlbisMDIChildActivate(MDITitle) {		                                        	;-- 
 	else
 		hMdiChild	:= AlbisMDIChildHandle(MDITitle)
 
-	SendMessage, 0x222, % hMdiChild,,, % "ahk_id " hMdi := AlbisMDIClientHandle()
+	SendMessage, 0x222, % hMdiChild,,, % "ahk_id " (hMdi := AlbisMDIClientHandle())
 
 return (ErrorLevel = 0 ? hMdiChild : {"ErrorLevel": ErrorLevel, "LastError": A_LastError, "hMdi": hmdi})
 }
@@ -195,6 +195,26 @@ AlbisMDIChildHandle(MDITitle) {		                                        	;-- er
 return GetHex(FindChildWindow({"Class": "OptoAppClass"}, {"Title": MDITitle}, "Off"))
 }
 ;07
+AlbisMDIChildTitle(hMdiChild) {                                                  	;-- gibt den Namen (Text) eines MDI Childfensters zurück
+	ControlGetText, MDITitle,, % "ahk_id " hMdiChild
+return MDITitle
+}
+;08
+AlbisMDIChildWindowClose(MDITitle) {                                        	;-- schließt ein per Titel identifiziertes MDIClient Fenster
+
+	; MDITitle - darf ein Teil des Namens, die komplette Patienten-ID, Geburtsdatum, .... sein
+
+	; wird nur ausgeführt wenn der Titel gefunden werden kann
+		If (hMdiChild := AlbisMDIChildHandle(MDITitle)) 	{
+			SendMessage, 0x0221, % hMdiChild,,, % "ahk_id " AlbisMDIClientHandle() ;WM_MDIDESTROY
+			return ErrorLevel ? 1 : 0
+		}
+		else
+			return 0
+
+return 1
+}
+;09
 AlbisMDIMinMaxStatus(MDITitle) {                                               	;-- stellt fest ob das gewählte MDI Fenster maximiert und im Vordergrund ist
 
 	; MDITitle - Titel des gesuchten MDI Fenster
@@ -217,28 +237,25 @@ AlbisMDIMinMaxStatus(MDITitle) {                                               	
 	}
 
 }
-;08
-AlbisMDIChildWindowClose(MDITitle) {                                        	;-- schließt ein per Titel identifiziertes MDIClient Fenster
-
-	; MDITitle - darf ein Teil des Namens, die komplette Patienten-ID, Geburtsdatum, .... sein
-
-	; wird nur ausgeführt wenn der Titel gefunden werden kann
-		If (hMdiChild := AlbisMDIChildHandle(MDITitle)) 	{
-			SendMessage, 0x0221, % hMdiChild,,, % "ahk_id " AlbisMDIClientHandle() ;WM_MDIDESTROY
-			return ErrorLevel ? 1 : 0
-		}
-		else
-			return 0
-
-return 1
+;10                                                        > MDI Tab Funktionen <
+AlbisMDITabActive(MDITitle, ret:="Index") {                                 	;-- gibt die Nummer oder den Titel des aktiven Tab zurück
+	SendMessage, 0x130B,,,, % "ahk_id " (hMdiTab := AlbisMDITabHandle(MDITitle))
+	tabIndex := ErrorLevel
+	If (ret = "Index")
+		return tabIndex
+	else if (ret = "Name") {
+		tabs := AlbisMDITabNames(MDITitle)
+		return tabs[tabIndex+1]
+	}
 }
-;09
+;11
 AlbisMDITabActivate(MDITitle, TabName:="") {                             	;-- aktiviert ein MDI-Tab, merkt sich welches TabControl zuletzt aufgerufen wurde
 
 	; ruft man die Funktion mehrfach nacheinander unter demselben MDITitle auf, ermittelt er nicht jedesmal alle Handles neu (Speicherung in tabs - Object)
 	; Beispiel: result:= AlbisMDITabActivate("Wartezimmer", "Arzt")
 	; Rückgabewert ist 0 wenn er keinen passenden Tab finden konnte, >0 wenn die Funktion erfolgreich war
-	; letzte Änderung: 10.02.2021
+	; MDITitle: darf ein Fensterhandle sein
+	; letzte Änderung: 29.03.2021
 
 		static last_MDITitle, hMDITab
 
@@ -252,6 +269,10 @@ AlbisMDITabActivate(MDITitle, TabName:="") {                             	;-- ak
 			hMDITab	:= AlbisMDITabHandle(MDITitle)
 		}
 
+	; kein handle gefunden
+		If !hMDITab
+			return 0
+
 	; Position des Tab finden und dann fokussieren
 		For idx, tab in AlbisMDITabNames(MDITitle)
 			If InStr(tab, TabName)
@@ -259,30 +280,33 @@ AlbisMDITabActivate(MDITitle, TabName:="") {                             	;-- ak
 
 return ErrorLevel
 }
-;10
+;12
 AlbisMDITabHandle(MDITitle) {                                                     	;-- ermittelt das Handle eines spezifischen MDI-TabControls
 
-	; letzte Änderung: 10.02.2021
+	; MDITitle kann der Fenstertitel oder das Handle sein
+	; letzte Änderung: 29.03.2021
 
-	hSpecMDI	:= GetHex(AlbisMDIChildHandle(MDITitle))
-	If (key := ObjFindValue(GetControls(hSpecMDI), "SysTabControl321"))
-		return oCtrl[key]["Hwnd"]
+	hSpecMDI	:= RegExMatch(MDITitle, "i)^(0x[A-F\d]+|[\d]+)$") ? MDITitle : GetHex(AlbisMDIChildHandle(MDITitle))
+	oCtrl     	:= GetControls(hSpecMDI)
+	If (key := ObjFindValue(oCtrl, "SysTabControl32"))
+		return oCtrl[key].Hwnd
 
-	PraxTT(A_ThisFunc " (" (A_LineNumber - 3) "): SysTabControl321 nicht gefunden:`n" MDITitle, "2 1")
+	PraxTT(A_ThisFunc " (" (A_LineNumber - 3) "): SysTabControl32 nicht gefunden:`n" MDITitle, "2 1")
 
-return
+return 0
 }
-;11
-AlbisMDITabNames(MDITitle) {                                         	;-- ermittelt die Namen aller Tabs eines SysTabControls321
+;13
+AlbisMDITabNames(MDITitle) {                                                   	;-- ermittelt die Namen aller Tabs eines SysTabControls321
 
   ; Funktion kann ohne die anderen MDI Funktionen aufgerufen werden
+  ; MDITitle: darf ein Fensterhandle sein
   ; Abhängigkeiten: GetHex(), GetControls, ObjFindValue(), ControlGetTabs()
-  ; letzte Änderung: 10.02.2021
+  ; letzte Änderung: 29.03.2021
 
-	hSpecMDI	:= GetHex(AlbisMDIChildHandle(MDITitle))
-	key			:= ObjFindValue(GetControls(hSpecMDI), "SysTabControl321")
-	hMdiTab	:= oCtrl[key]["Hwnd"]
-	If key
+	hSpecMDI	:= RegExMatch(MDITitle, "i)^(0x[A-F\d]+|[\d]+)$") ? MDITitle : GetHex(AlbisMDIChildHandle(MDITitle))
+	oCtrl     	:= GetControls(hSpecMDI)
+	key			:= ObjFindValue(oCtrl, "SysTabControl32")
+	If (hMdiTab := oCtrl[key].Hwnd)
 		return ControlGetTabs(hMdiTab)
 
 	PraxTT(A_ThisFunc " (" (A_LineNumber - 3) "): SysTabControl321 nicht gefunden:`n" MDITitle, "2 1")
@@ -951,8 +975,8 @@ AlbisSortiereDiagnosen() {                                                      
 			return -1
 	LVRow:= AlbisLVContent(hDia, "SysListView321", "1")
 	ControlGet, hLV, HWND,, SysListView321, ahk_id %hDia%
-	Loop, % LVRow.MaxIndex()
-	{
+	Loop, % LVRow.MaxIndex()	{
+
 			If RegExMatch(LVRow[A_Index], "^Behandlung")
 					thisrow:= "Behandlung"
 			else if RegExMatch(LVRow[A_Index], "^anamnestisch")
@@ -2048,10 +2072,10 @@ return hParent
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; FORMULARE                                                                                                                                                                                                                                           	(15)
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; (01) AlbisDruckeBlankoFormular  	(02) AlbisRezeptHelfer                	(03) AlbisRezeptHelferGui            		(04) AlbisRezeptFelderLoeschen  	(05) AlbisRezeptFelderAuslesen
+; (01) AlbisDruckeBlankoFormular  	(02) AlbisRezeptHelfer                	(03) AlbisRezeptHelferGui              	(04) AlbisRezeptFelderLoeschen  	(05) AlbisRezeptFelderAuslesen
 ; (06) AlbisRezeptSchalterLoeschen 	(07) AlbisDruckePatientenAusweis	(08) AlbisRezeptAutIdem                	(09) AlbisRezept_DauermedikamenteAuslesen
-; (10) AlbisFormular                       	(11) AlbisHautkrebsScreening     	(12) AlbisFristenRechner                    	(13) AlbisFristenGui                   	(14) IfapVerordnung
-; (15) AlbisWeitereMedikamente        	(16*) AlbisVerordnungsplan        	(17*) AlbisAusfuellhilfe
+; (10) AlbisFormular                       	(11) AlbisHautkrebsScreening     	(12) AlbisFristenRechner                 	(13) AlbisFristenGui                   	(14) IfapVerordnung
+; (15) AlbisWeitereMedikamente     	(16*) AlbisVerordnungsplan        	(17*) AlbisAusfuellhilfe
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~;{
 ;1
 AlbisDruckeBlankoFormular(Art:="KR1", BnPlus:=0) {			                                    	;-- Funktion zum Ausdrucken von Blankoformularen
@@ -3433,12 +3457,12 @@ AlbisAusfuellhilfe(Formular, cmd) {                                             
 
 ;}
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; WARTEZIMMER                                                                                                                                                                                                                                        	(02)
+; WARTEZIMMER                                                                                                                                                                                                                                        	(05)
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; (01) AlbisWZPatientEntfernen       	(02) AlbisOeffneWarteZimmer
+; (01) AlbisWZPatientEntfernen       	(02) AlbisWZOeffnen	                 	(03) AlbisWZKommentar                 	(04) AlbisWZTabSelect                  	(05) AlbisWZListe
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~;{
 ;1
-AlbisWZPatientEntfernen(Nachname, Vorname) { 				                                    	;--##### benötigt einen REWRITE ###### entfernt einen Patienten aus dem Wartezimmer
+AlbisWZPatientEntfernen(Nachname, Vorname) {                                                     	;--##### benötigt einen REWRITE ###### entfernt einen Patienten aus dem Wartezimmer
 
 	;es wird der Patient entfernt der aktuell ausgewählt ist, noch kein direktes entfernen über den Patientennamen möglich!
 	wzflag:=2
@@ -3458,18 +3482,16 @@ AlbisWZPatientEntfernen(Nachname, Vorname) { 				                               
 return wzflag
 }
 ;2
-AlbisOeffneWarteZimmer() {                            					                                    	;-- öffnet das Wartezimmer
+AlbisWZOeffnen(Maximize:=true) {                                                                          	;-- öffnet das Wartezimmer
 
 	; https://docs.microsoft.com/en-us/windows/desktop/winmsg/wm-mdimaximize
 	static WM_MDIMAXIMIZE:= 0x0225, WM_MDIGETACTIVE:= 0x0229				;wParam: A handle to the MDI child window to be maximized.
-	localIndex:=0
 
 	If !(hWZ:= AlbisMDIWartezimmerID())	{
 		PostMessage, 0x111, 32924,,, % "ahk_id " AlbisWinID()                                                      	;ruft das Wartezimmer auf
 		sleep, 200
 		while !(hWZ:= AlbisMDIWartezimmerID())	{
-			localIndex++
-			If (localIndex > 11)
+			If (A_Index > 11)
 				return 0 ; kein Erfolg!
 			sleep, 200
 			PostMessage, 0x111, 32924,,, % "ahk_id " AlbisWinID()
@@ -3477,31 +3499,132 @@ AlbisOeffneWarteZimmer() {                            					                     
 	}
 
 	; Wartezimmer wird maximiert
-		PostMessage, % WM_MDIMAXIMIZE, % hWZ,,, % "ahk_id " AlbisMDIClientHandle()
+		If Maximize
+			PostMessage, % WM_MDIMAXIMIZE, % hWZ,,, % "ahk_id " AlbisMDIClientHandle()
 
-return 1		;oder war schon geöffnet
+return hWZ		;oder war schon geöffnet
 }
 ;3
-AlbisWZKommentar(WZ, Kommentar, Anwesenheit) {                                            		;-- automatisiert Wartezimmer Kommentare eingeben/ändern
+AlbisWZKommentar(WZ, Kommentar, Anwesenheit) {                                             	;-- automatisiert Wartezimmer - Kommentare eingeben/ändern
+
+	; Beispiele:
+	; ::^!Numpad1::AlbisWzKommentar("Labor", "Blutabnahme"	, "Anwesend")
+	; ::^!Numpad2::AlbisWzKommentar("Arzt"	, "Sprechzimmer 1", "Anwesend")
+	; ::^!Numpad3::AlbisWzKommentar("Arzt"	, "Pat. bitte um Rückruf", "Abwesend")
+
+	; letzte Änderung: 29.03.2021
 
 		wzkom := "Wartezimmer - Kommentar ahk_class #32770"
 
+	; nur ausführbar bei angezeigter Karteikarte
+		If !RegExMatch(AlbisGetActiveWindowType(), "i)Karteikarte")
+			return 0
+
+		hKarteikarte 	:= AlbisMDIChildGetActive()
+		Patient       	:= AlbisCurrentPatient()
+
 	; Wartezimmer - Kommentar aufrufen
-		If !(hWin:= Albismenu(32945, wzkomm, 3)) {
+		If !(hWin := Albismenu(32945, wzkom, 3)) {
 			PraxTT(A_ScriptName ": Fenster [" RegExReplace(wzkom, "ahk_class.*") "]ließ sich nicht anzeigen!", "1 0")
 			return 0
 		}
 
-
-		VerifiedChoose("Listbox1"		, WZ         	, hWin)  	; Wartezimmer wählen
-		 VerifiedSetText("Edit1"    		, Kommentar	, hWin) 	; Kommentar einsetzen
-		  VerifiedCheck(Anwesenheit	, hWin)
-
-	; Wartezimmer Fenster öffnen falls nicht vorhanden
-	; das Wartezimmer im Hintergrund ändern - TCM_SETCURFOCUS (0x1330)	: TAB wählen
-		SendMessage, 0x1330, % TabToShow,,, % "ahk_id " hTab
+		 Controls("", "reset", "")
+		hAnwesenheit := Controls("", "ControlFind," Anwesenheit ", Button, return Hwnd", hWin)
+		VerifiedChoose("Listbox1", hWin, WZ)                     	; Wartezimmer wählen
+		 VerifiedSetText("Edit1", Kommentar, hWin)             	; Kommentar einsetzen
+		  VerifiedCheck("", hAnwesenheit)                            	; Anwesenheit setzen
+		    VerifiedClick("OK", hwin)
 
 }
+;4
+AlbisWZTabSelect(TabName, hWZ:=0, activate:=false) {                                        	;-- aktiviert ein bestimmtes Wartezimmer
+
+	; Funktion überprüft während der Ausführung das der richtige Tab aktiviert wurde
+	; letzte Änderung 29.03.2021
+
+	; handle des Wartezimmer ermitteln
+		If !(hWZ := hWZ ? hWZ : AlbisWZOeffnen(false))
+			return -1
+
+	; derzeit aktiven Tab ermitteln
+		If !(TabindexA 	:= AlbisMDITabActive(hWZ, "index"))
+			return -2
+		If !(TabNameA	:= AlbisMDITabActive(hWZ, "name"))
+			return -3
+
+	; gewünschter Tab = aktueller Tab?
+		If InStr(TabNameA, TabName)
+			return TabindexA + 1             	; +1 damit ich 0 bei einem Fehler zurückgeben kann
+
+	; Tab wird nicht angezeigt, Tabindex suchen
+		tabMatched := false
+		If !tabMatched && !RegExMatch(TabName, "^\d+$")
+			For tabindex, Tab in AlbisMDITabNames(hWZ)
+				If InStr(Tab, TabName) {
+					tabMatched := true
+					break
+				}
+		If !tabMatched
+			return -4
+
+	; handle des SystabControls erhalten
+		If !(hTab := AlbisMDITabHandle(hWZ))
+			return -5
+
+	; per Postmessage auf das gewünschte Tab umschalten
+		PostMessage, 0x1330, % tabindex-1,,, % "ahk_id " hTab
+		Sleep 100
+		while !InStr(AlbisMDITabActive(hWZ, "name"), TabName) && (A_Index < 20) {
+			If (A_Index > 1)
+				Sleep 50
+			PostMessage, 0x1330, % tabindex-1,,, % "ahk_id " hWZ
+		}
+		If !InStr(AlbisMDITabActive(hWZ, "name"), TabName)
+			return -6
+
+	; Wartezimmer aktivieren (nach vorne holen) bei Bedarf
+		If activate
+			If !IsObject(err := AlbisMDIChildActivate(hWZ))
+				return err   ; handle des Wartezimmers
+
+return tabindex-1
+}
+;5
+AlbisWZListe(TabName, hWZ:=0, activate:=false) {                                                	;-- den Inhalt eines Wartezimmers auslesen
+
+	; handle des Wartezimmer ermitteln
+		If !(hWZ := hWZ ? hWZ : AlbisWZOeffnen(false))
+			return -1
+
+	; auf das Wartezimmer umschalten
+		tabIndex := AlbisWZTabSelect(TabName, hWZ, activate)
+
+	; handle der Listview und Auslesen des Inhaltes
+		ControlGet, hLV, hwnd,, SysListview321, % "ahk_id " hWZ
+
+	; Listview-Header auslesen
+		SendMessage 0x101F, 0, 0,, % "ahk_id " hLV ; LVM_GETHEADER
+		oheader := GetHeaderInfo(ErrorLevel)
+
+	; Syslistview auslesen
+		ControlGet, csv, List,,, % "ahk_id " hLV
+		csv := RegExReplace(csv, "[\t]", "|")
+
+	; Tabelle in ein key:value Objekt umwandeln
+		wz := Array()
+		For Lnr, line in StrSplit(csv, "`n") {
+			wz.Push(Object())
+			For Enr, element in StrSplit(line, "|") {
+				key := oHeader[Enr].Text
+				wz[Lnr][key] := element
+			}
+		}
+
+return wz
+}
+;6
+
 ;}
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; KARTEIKARTE/AKTE oder ALBIS-MENU                                                                                                                                                                                                        	(15)
@@ -3889,7 +4012,7 @@ Albismenu(mcmd, FTitel:="", WZeit:=2, methode:=1) {                             
 			}
 		}
 
-	; Menuaufruf mit wartet auf bis zu 2 verschiedene Fenstertitel
+	; Menuaufruf. Wartet auf bis zu 2 verschiedene Fenster
 		Loop 	{
 
 			; Prüfen ob erwartete Fenster schon geöffnet sind
@@ -4302,9 +4425,9 @@ return 0
 }
 ;}
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; VERSCHIEDENE ANDERE DIALOGE                                                                                                                                                                                                           (2+4)
+; ANDERE DIALOGE                                                                                                                                                                                                                                   (2+4)
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; (01) AlbisAusIndisKorrigieren
+; (01) AlbisAusindisKorrigieren
 ; (02) class PatientenDaten
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~;{
 AlbisAusIndisKorrigieren(IndisToRemove:="", IndisToHave:="", Chroniker:=true, GB:=true) {  ; Ausnahmeindikationen: bestehende EBM-Ziffern tauschen oder hinzufügen
@@ -4998,7 +5121,7 @@ AlbisLaborblattDrucken(Spalten, Drucker:="", SaveDir:="") {                     
 		}
 
 	; das Wartezimmer wieder anzeigen
-	;	AlbisOeffneWarteZimmer()
+	;	AlbisWZOeffnen()
 
 return
 }
@@ -6606,7 +6729,7 @@ AlbisAutoLogin(MsgBoxZeit:=10) {                                                
 					MouseClick, Left
 			}
 
-			AlbisOeffneWarteZimmer()
+			AlbisWZOeffnen()
 		}
 
 return

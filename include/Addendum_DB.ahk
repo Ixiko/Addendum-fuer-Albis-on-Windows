@@ -114,6 +114,14 @@ class admDB                                                                 	{  
 
 		}
 
+	; nur Nachname und Vorname als Array zurückgeben
+		GetNamesArray() {
+			names:=[]
+			For PatID, Pat in oPat
+				names.Push(Pat.Nn "," Pat.Vn)
+		return names
+		}
+
 	; GetExactMatches
 		GetExactMatches(getString:="PatID|Gd", OnlyFirstMatch:=0, Nn:="", Vn:="", Gt:="", Gd:="", Kk:="") {
 

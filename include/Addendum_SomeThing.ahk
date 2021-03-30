@@ -2175,6 +2175,172 @@ ScanPool.Push(GetPDFData(Addendum.BefundOrdner, filename))
 				txtPath   	:= docPath "\Text\" StrReplace(filename, ".pdf", ".txt")
 
 
+	; Autocomplete je nach Eingabefeld
+		If (gcNr = 31 && StrLen(RNE1) > 0 && RNE1old <> RNE1)  {
+			RNE1old := RNE1
+			admGui_AutoComplete(A_GuiControl, RNE1, {"Face":"MS Sans Serif", "Size":fSize-1})
+		} else If (gcNr = 32 && StrLen(RNE2) > 0 && RNE2old <> RNE2)  {
+			RNE2old := RNE2
+			admGui_AutoComplete(A_GuiControl, RNE2, {"Face":"MS Sans Serif", "Size":fSize-1})
+		}
+
+admGui_AutoComplete(GControl, text, font) {
+
+	global RNhE1, RNhE2
+	global ACG, hACG, ACGLb, hACGLb, ACGLb_ItemHeight, ACGShow
+	global bezeichner
+	static kat, textO := []
+
+	If !IsObject(kat) {
+		kat := RegExReplace(bezeichner, "[,\-\+]", " ")
+		kat := RegExReplace(kat, "\s(\d\d.\d\d.\d\d\d\d)", " ")
+		kat := RegExReplace(kat, "[\n\r\f]", " ")
+		kat := RegExReplace(kat, "[\s]{2,}", " ")
+		kat := RegExReplace(kat, "[\s]", "|")
+		Sort, kat, U D|
+		SciTEOutput(kat)
+		kat := StrSplit(kat, "|")
+	}
+
+	If (GControl = "RNE1") {
+
+		matches := admDB.GetExactMatches("Nn|Vn", 0, StrSplit(text, ",").1, StrSplit(text, ",").2)
+		If (matches.Count() > 0) {
+
+			admGui_RenameHotkeys("Off")
+
+			lbStr := ""
+			For PatID, Pat in matches
+				lbStr .= Pat.Nn ", " Pat.Vn "|"
+			lbStr := RTrim(lbStr, "|")
+			Sort, lbStr, U D|
+
+			If !WinExist("Addendum AutoCompleteGui ahk_class AutoHotkeyGUI")
+				admGui_AutoCompleteGui(RNhE1, "RNE1", lbStr, font)
+			else {
+				admGui_RenameHotkeys("On")
+				GuiControl, ACG:             	, ACGLb, % lbStr
+				Gui, ACG: Show, % " NA"
+			}
+			ACGShow := true
+
+		}
+		else {
+
+			Gui, ACG: Destroy
+			admGui_RenameHotkeys("On")
+
+			ACGShow := false
+			Content := ACGLb := ""
+
+		}
+
+	}
+	else If (GControl = "RNE2") {
+
+		admGui_RenameHotkeys("Off")
+		admGui_RenameHotkeys("On")
+
+		lbStr := ""
+		pattern := RegExReplace(text, "[\s]{2,}", " ")
+		pattern := RegExReplace(pattern, "[\s]", "\s")
+		For tidx, line in bezeichner
+			If RegExMatch(line, "^" text)
+				lbStr .= line "|"
+		lbStr := RTrim(lbStr, "|")
+
+		If StrLen(RegExReplace(lbStr, "[\s\|]")) = 0
+			return
+
+		If !WinExist("Addendum AutoCompleteGui ahk_class AutoHotkeyGUI")
+			admGui_AutoCompleteGui(RNhE2, "RNE2", lbStr, font)
+		else {
+			admGui_RenameHotkeys("Off")
+			GuiControl, ACG:, ACGLb, % lbStr
+			Gui, ACG: Show, % " NA"
+		}
+		ACGShow := true
+
+	} else {
+		Gui, ACG: Destroy
+		admGui_ACGHotkeys("Off")
+		admGui_RenameHotkeys("On")
+		ACGShow := false
+		TextO := Text := Content := ACGLb := ""
+	}
+
+
+}
+
+admGui_AutoCompleteGui(hInputControl, GControl, Content, font:="") {
+
+	global ACG, hACG, ACGLb, hACGLb, ACGLb_ItemHeight, ACGShow
+	global RNE1old, RNE2old, RNE1, RNE2, RNE3
+	static hIControl, GCtrl
+
+	hIControl 	:= hInputControl
+	GCtrl    	:= GControl
+	cp         	:= GetWindowSpot(hIControl)
+	font       	:= !IsObject(font) ? {"Face":"MS Sans Serif", "Size":"8"} : font
+
+	Gui, ACG: New, +AlwaysOnTop +ToolWindow -Caption +hwndhACG
+	Gui, ACG: Margin, 0, 0
+	Gui, ACG: Font, % "s" font.Size-1, % font.Face
+	Gui, ACG: Add, Listbox, % "x0 y0 w" cp.W " r5 vACGLb hwndhACGLb -Multi", % ""
+	Gui, ACG: Show, % "x" cp.X " y " cp.Y+cp.H-2 " NA Hide", Addendum AutoCompleteGui
+
+	;~ SendMessage, 0x1A1, 0, 0, , % "ahk_id " hACGLb ; LB_GETITEMHEIGHT := 0x01A1
+	;~ ACGLb_ItemHeight	:= ErrorLevel
+
+	admGui_ACGHotkeys("On")
+
+return
+ACGuiUpDown:
+	SetKeyDelay, -1, -1
+	ControlSend,, % "{" A_ThisHotkey "}", % "ahk_id " hACGLb
+return
+ACGuiProceed:
+
+  ; Abbruch wenn Hauptfenster nicht aktiv ist
+	WinGetActiveTitle, acWin
+	If !RegExMatch(acWin, "(Datei\sumbenennen|AutoCompleteGui)") {
+		return
+	}
+
+  ; gewählte Zeile ermitteln	und übertragen
+	GuiControlGet, entry, ACG:, ACGLb
+	If (StrLen(entry) > 0) {
+		Gui, RN: 	 Default
+		GuiControl, RN:, % hIControl, % entry
+		GuiControl, RN: Focus, % (GCtrl="RNE1" ? "RNE2" : GCtrl="RNE2" ? "RNE3" : "RNE3")
+		If (GCtrl="RNE1")
+			RNE1old := RNE1
+		else if (GCtrl="RNE2")
+			RNE2old := RNE2
+	}
+	Gui, ACG: Show, Hide
+ACGuiStop:
+	Gui, ACG: Destroy
+	admGui_ACGHotkeys("Off")
+	admGui_RenameHotkeys("On")
+	ACGShow := false
+	Content := ACGLb := ""
+return
+}
+
+admGui_ACGHotkeys(status:="On")                               	{
+
+	Hotkey, IfWinExist, % "Addendum AutoCompleteGui ahk_class AutoHotkeyGUI"
+	Hotkey, ESC     	, ACGuiStop                	, status
+	Hotkey, Up     	, ACGuiUpDown         	, status
+	Hotkey, Down  	, ACGuiUpDown         	, status
+	Hotkey, Tab 		, ACGuiProceed         	, status
+	Hotkey, ~Enter 	, ACGuiProceed         	, status
+	Hotkey, IfWinExist
+
+}
+
+
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum_Ini.ahk
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

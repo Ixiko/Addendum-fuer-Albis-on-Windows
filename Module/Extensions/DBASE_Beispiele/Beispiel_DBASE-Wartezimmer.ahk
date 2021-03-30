@@ -18,8 +18,9 @@
 							,	"output"     	: "Wartezimmer-Arzt-19112020"
 							,	"showPatID"  	: true
 							,	"text"          	: "Anzahl Patienten:     `t"
-							,	"fields"      	: {"DATUM"   	: "rx:20201119"
-													,	"RAUM"	    	: "Arzt"}}
+							,	"fields"      	: {"DATUM"   	: "rx:20210329"
+													,	"RAUM"	    	: "Arzt"}
+							, 	"out"				: ["DATUM","PATNR", "UM", "NAME", "VORNAME", "TERMZEIT","TIMESTAMP", "VERFUEGBAR" ]}
 
 		nr         	:= 1
 		With      	:= Object()
@@ -36,7 +37,7 @@
 	; Datenbankpfad	- vollständiger Pfad zur Datenbank in der Form M:\albiswin\db\BEFUND.dbf
 	; debug                	- Ausgabe von Werten zur Kontrolle des Ablaufes, Voreinstellung: keine Ausgabe
 	;-------------------------------------------------------------------------------------------------------------------------------------------
-		wzimmer   	:= new DBASE(basedir "\" search[nr].DBASEfile ".dbf", false)
+		wzimmer   	:= new DBASE(basedir "\" search[nr].DBASEfile ".dbf", 4)
 
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 	; Lesezugriff einrichten. Rückgabewert ist die Position des Dateizeigers
@@ -48,7 +49,7 @@
 	; StringObjekt	- Objekt mit den Feldnamen als key und einem RegExString als value
 	; exportPfad  	- optional ein Pfad - dann wird aber kein Array mit den extrahierten Zeilen zurückgegeben
 	;-------------------------------------------------------------------------------------------------------------------------------------------
-		matches 	:= wzimmer.Search(Search[nr].fields)
+		matches 	:= wzimmer.SearchExt(Search[nr].fields)
 
 	;-------------------------------------------------------------------------------------------------------------------------------------------
 	; Datenbankzugriff kann geschlossen werden
@@ -98,6 +99,6 @@ ExitApp
 
 
 
-#Include %A_ScriptDir%\..\..\Include\Addendum_DBASE.ahk
-#Include %A_ScriptDir%\..\..\lib\SciTEOutput.ahk
-#Include %A_ScriptDir%\..\..\lib\class_JSON.ahk
+#Include %A_ScriptDir%\..\..\..\Include\Addendum_DBASE.ahk
+#Include %A_ScriptDir%\..\..\..\lib\SciTEOutput.ahk
+#Include %A_ScriptDir%\..\..\..\lib\class_JSON.ahk

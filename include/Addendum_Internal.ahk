@@ -224,6 +224,32 @@ IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="", convert:=true) {   
 return Trim(OutPutVar)
 }
 
+IniInsertSection(iniPath, InsertBeforeSection, newSectionName, backupPath:="") {                     	;-- eine Sektion in eine Ini-Datei einfügen
+
+	If !FileExist(iniPath)
+		return 0
+
+	SplitPath, iniPath, iniName
+	If RegExMatch(backup, "i)[A-Z]\:\") && InStr(FileExist(Backup), "D") {
+		FileCopy, % iniPath, % backupPath "\" A_YYYY "-" A_MM "-" A_DD " " A_Hour ":" A_Min ":" A_Sec "_" iniName, 1
+		If ErrorLevel
+			return 0
+		else
+			SciTEOutput(A_ThisFunc ": Ini file backup created.")
+	}
+	ini := FileOpen(iniPath, "r", "UTF-8").Read()
+	If !InStr(ini, "[" newSectionName "]") {
+		ini := RegExReplace(ini, "i)(\[.*" InsertBeforeSection ".*?\])", "[" newSectionName "]`n" "`n$1")
+		FileOpen(iniPath, "w", "UTF-8").Write(ini)
+		If !ErrorLevel
+			SciTEOutput(A_ThisFunc ": new section for ini file: " iniName " was added.`n" )
+		else
+			return 0
+	}
+
+return 1
+}
+
 IniAppend(value, filename, section, key) {                                                                                 	;-- vorhandenen Werten weitere Werte hinzufügen
 
 	IniRead, schreib, % filename, % section, % key
