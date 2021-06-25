@@ -17,7 +17,7 @@
 ;		Abhängigkeiten:	siehe includes
 ;
 ;	                    			Addendum für Albis on Windows
-;                        			by Ixiko started in September 2017 - last change 20.03.2021 - this file runs under Lexiko's GNU Licence
+;                        			by Ixiko started in September 2017 - last change 28.04.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; Einstellungen
@@ -30,6 +30,8 @@
 
 	global LabJ := Object()
 	global adm := Object()
+	global load_Bar, percent
+	global PatDB
 
   ; startet Windows Gdip
    	If !(pToken:=Gdip_Startup()) {
@@ -52,20 +54,42 @@
 	adm.AlbisDBPath 	:= AlbisPath "\DB"
 	adm.compname	:= StrReplace(A_ComputerName, "-")                                                                 	; der Name des Computer auf dem das Skript läuft
 
+
   ; hier alle Parameter eintragen welche gesondert verarbeitet werden sollen
-	Warnen	:= {	"nie"      	: 	"CHOL,LDL,TRIG,HDL,LDL/HD,HBA1CIFC"                                                 	; nie      	= werden nie gezeigt
-						,	"immer" 	: 	"NTBNP,TROPI,TROPT,TROP,CKMB,K"                                                        	; immer 	= wenn pathologisch
-						; 	exklusiv 	: 	zeigen auch wenn kein ausgeprägtes path. Ergebnis und bei negativem Befund (z.B. COVIA, HIV)
-						,	"exklusiv"	: 	"COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,COVMU484,COVMU501,COVM6970,"
-											.	"ALYMP,ALYMPDIFF,ALYMPH,ALYMPNEO,ALYMPREA,ALYMPRAM,"
-											. 	"KERNS,MYELOC,PROMY,DIFANISO,DIFPOLYC,DIFPOIKL,"
-											.	"DIFHYPOC,DIFMIKRO,DIFMAKRO,DIFOVALO,METAM,TROPOIHS,"
-											.	"DDIM-CP,HBK-ST,HIV"}
+						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+						  ; nie         	= werden nie angezeigt
+						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	Warnen	:= {	  "nie"    	: 	"CHOL,LDL,TRIG,HDL,LDL/HD,HBA1CIFC,nicht au,AUFTRAG,Sprosspilz,Erreger"
+						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+						  ; immer 	 	= nur wenn pathologisch
+						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+					    	, "immer" 	: 	"NA,K,BNP,NTBNP,TropIs,TROPI,TROPT,TROP,TROPOIHS,CK,CKMB,HBK-ST,DDIM-CP,PROCAL"
+						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+						  ; exklusiv 	= wenn pathologisch und bei negativen Befund (z.B. COVIA, HIV)
+						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+							, "exklusiv"	: 	"ALYMP,ALYMPDIFF,ALYMPH,ALYMPNEO,ALYMPREA,ALYMPRAM,KERNS,METAM,MYELOC,PROMY,HLAMBDA," 		; Leukozytenveränderungen
+											.	"DIFANISO,DIFPOLYC,DIFPOIKL,DIFHYPOC,DIFMIKRO,DIFMAKRO,DIFOVALO," 					                             	; Erythrozytenveränderungen
+											.	"COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,COVMU484,COVMU501,COVM6970,HIV,"									; Infektionen
+											.	"KAP,KAP-U,LAM,LAM-U,"																																		; Tumor
+											.	"I"                        ; I = ikterisch                                                                                                                            	; sonstige
+						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+						  ; Gruppierungen
+						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+							, "Gruppe"   	: {"atyp. Leuko"	: "ALYMP,ALYMPDIFF,ALYMPH,ALYMPNEO,ALYMPREA,ALYMPRAM,KERNS,METAM,MYELOC,PROMY,HLAMBDA"
+												,	"atyp. Ery" 	: "DIFANISO,DIFPOLYC,DIFPOIKL,DIFHYPOC,DIFMIKRO,DIFMAKRO,DIFOVALO"
+												,	"COVID-19"	: "COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,COVMU484,COVMU501,COVM6970"}}
+
+  ; load_Bar anzeigen
+	LoadBar_Gui()
+
+ ; Patientendaten laden
+	load_Bar.Set(0, "lade Patientendatenbank")
+	PatDB 	:= ReadPatientDBF(adm.AlbisDBPath,, ["NR", "NAME", "VORNAME", "GEBURT"])
+	load_Bar.Set(1, "Patientendatenbank geladen")
 
   ; Laborjournal anzeigen
-	LabPat     := AlbisLaborJournal("", "", Warnen, 140, false)
-	LaborJournal(LabPat, false)
-
+	LabPat     := AlbisLaborJournal("", "", Warnen, 140, true)
+	LaborJournal(LabPat, true)
 
 return
 
@@ -79,7 +103,7 @@ return ;}
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Berechnungen
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {                 	;--  sehr abweichender Laborwerte
+AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {               	;--  sehr abweichender Laborwerte
 
 	/*  Parameter
 
@@ -91,44 +115,56 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 
 		static Lab
 
+	; Variablen                                                                                                         	;{
 		LabPat := Object()
-		nieWarnen    	:= "\b(" StrReplace(Warnen.nie      	, ","	, "|") ")\b"
-		immerWarnen 	:= "\b(" StrReplace(Warnen.immer 	, ","	, "|") ")\b"
-		exklusivWarnen	:= "\b(" StrReplace(Warnen.exklusiv	, ","	, "|") ")\b"
-
-	; durchschnittliche Abweichung von den Normwertgrenzen laden oder berechnen ;{
-		If !IsObject(Lab) {
-			If !FileExist(adm.LabDBPath "\Laborwertgrenzen.json")
-				Lab := AlbisLaborwertGrenzen(adm.LabDBPath "\Laborwertgrenzen.json", Anzeige)
-			else
-				Lab := JSONData.Load(adm.LabDBPath "\Laborwertgrenzen.json", "", "UTF-8")
-		}
+		nieWarnen    	:= "i)\b(" StrReplace(Warnen.nie      	, ","	, "|") ")\b"
+		immerWarnen 	:= "i)\b(" StrReplace(Warnen.immer 	, ","	, "|") ")\b"
+		exklusivWarnen	:= "i)\b(" StrReplace(Warnen.exklusiv	, ","	, "|") ")\b"
+		skipErgebnis		:= "i)(Siehe un|Material)"
 	;}
 
-	; Laborparameter lange Bezeichnungen laden
-		LabDic := AlbisLabParam("load","short")
+	; durchschnittliche Abweichung von den Normwertgrenzen laden oder berechnen 	;{
+		If !IsObject(Lab) {
+			If !FileExist(adm.LabDBPath "\Laborwertgrenzen.json") {
+				load_Bar.Set(1, "ermittle Laborwertgrenzen ...")
+				Lab := AlbisLaborwertGrenzen(adm.LabDBPath "\Laborwertgrenzen.json", Anzeige)
+			} else {
+				load_Bar.Set(1, "lade Laborwertgrenzen ...")
+				Lab := JSONData.Load(adm.LabDBPath "\Laborwertgrenzen.json", "", "UTF-8")
+			}
+		}
+		load_Bar.Set(5, "Laborwertgrenzen geladen")
+	;}
 
-	; Suchzeitraum ;{
+	; Laborparameter lange Bezeichnungen laden                                                     	;{
+		load_Bar.Set(6, "lade Bezeichnungen der Laborparameter")
+		LabDic := AlbisLabParam("load","short")
+		load_Bar.Set(7, "Bezeichnungen der Laborparameter geladen")
+	;}
+
+	; Suchzeitraum                                                                                                  	;{
+
+		load_Bar.Set(7, "berechne den Suchzeitraum")
 
 		; Von enthält kein Datum
 			RegExMatch(Von, "^\d+$", Tage)
 			Von 	:= Tage ? "" : Von
 			Bis 	:= Tage ? "" : Bis
 
-		; es werden Werktage berechnet
+		; die Anzeige wird für x Werktage berechnet
 			If !Von && !Bis {
 
 				Tage	    	:= Tage ? Tage : 14                            	; kein Zeitraum, Defaulteinstellung sind 14 Tage
 				Von      	:= A_YYYY . A_MM . A_DD                	; aktueller Tag
 
-			; Zahl der Tage berechnen, welche kein Werktag sind
+			; Zahl der Tage berechnen, die kein Werktag sind
 				Wochen 	:= Floor(Tage/7)                               	; Tage in ganze Wochen umrechnen
 				RestTage	:= Tage-Wochen*7                            	; verbliebene Resttage
 				NrWTag	:= WeekDayNr(A_DDD)                		; Nr. des Wochentages
 				WMod  	:= Mod(NrWTag-RestTage+1, 7)			; Divisonrest = Nummer des Wochentages minus berechnete RestTage + 1 durch 7
 				PDays   	:= WMod = 0 ? 1 : WMod < 0 ? 2 : 0	; Divisonrest = 0 wäre Sonntag +1 Tag, < 0 alle Tage vor Sonntag also +2 Tage
 				PDays   	:= PDays + Wochen*2                       	; + die Zahl der Wochenendtage der ganzen Wochen
-				PDaysW	:= Floor(PDays/7)                               	; mehr als 7 Tage ist mindestens ein Wochende enthalten
+				PDaysW	:= Floor(PDays/7)                               	; mehr als 7 Tage dann ist mindestens ein Wochende enthalten
 				DaysPlus	:= PDays + 2*PDaysW + Tage
 				Von      	+= -1*(DaysPlus), Days
 				Von 	    	:= SubStr(Von, 1, 8)
@@ -144,94 +180,139 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 			}
 			else
 				VB := (Von && !Bis) ? "Von" : (!Von && Bis) ? "Bis" : "VonBis"
+
+		load_Bar.Set(8, "Suchzeitraum berechnet")
 	;}
 
-	; Albis: Datenbank laden und entsprechend des Datums die Leseposition vorrücken ;{
-		labDB := new DBASE(adm.AlbisDBPath "\LABBLATT.dbf", Anzeige)
+	; Albis: Datenbank laden und entsprechend des Datums die Leseposition vorrücken	;{
+		labDB := new DBASE(adm.AlbisDBPath "\LABBLATT.dbf", 0)
 		labDB.OpenDBF()
 	;}
 
-	; Datei: Startposition berechnen ;{
+	; Datei: Startposition berechnen                                                                            	;{
 		If (VB = "Von") || (VB = "VonBis") {
 			If !QJ
 				QJ := SubStr(Von, 1, 4) . Ceil(SubStr(Von, 5, 2)/3)
+
+			SciTEOutput(QJ)
+
+			If !lab.seek.HasKey(QJ) {
+				; ein Quartal davor
+				nYYYY 	:= SubStr(QJ, 1, 4)
+				nQ      	:= SubStr(QJ, 5, 1)
+				nQ    	:= nQ-1=0 ? 4 : nQ-1
+				nYY    	:= nQ=4 ? nYYYY-1 : nYYYY
+				QJ     	:= nYYYY nQ
+			}
+
+			SciTEOutput(QJ)
+
 			startrecord := Lab.seeks[QJ]
-			labDB._SeekToRecord(startrecord, 1)
+			res := labDB._SeekToRecord(startrecord, 1)
+			;~ SciTEOutput(QJ ": " startrecord ", " res)
 		}
 	;}
+
+		t :=  nieWarnen "`n" exklusivWarnen "`n" immerWarnen "`n`n"
+		ShowAt := Floor(labDB.records/80)
+		load_Bar.Set(8, "lade neue Laborwerte")
 
 	; filtert nach Datum und ab einer Überschreitung von der durchschnittlichen Abweichung von den Grenzwerten anhand
 	; der zuvor für jeden Laborwert berechneten durchschnittlichen prozentualen Überschreitung des Grenzwertes aus den
 	; Daten der LABBLATT.dbf [AlbisLaborwertGrenzen()]
 		while !(labDB.dbf.AtEOF) {
 
-				data := labDB.ReadRecord(["PATNR", "ANFNR", "DATUM", "LABID", "PARAM", "ERGEBNIS", "EINHEIT", "GI", "NORMWERT"])
-				UDatum := data.Datum
+			; Daten zeilenweise auslesen
+				data := labDB.ReadRecord(["PATNR", "ANFNR", "DATUM", "BEFUND", "PARAM", "ERGEBNIS", "EINHEIT", "GI", "NORMWERT"])
 
 			; Fortschritt
-				If Anzeige && (Mod(A_Index, 3000) = 0)
-					ToolTip, % ConvertDBASEDate(UDatum) ": " PSU "," PSO "`n" SubStr("00000000" labDB.recordnr, -5) "/" SubStr("00000000" labDB.records, -5) ;"`n" lfound
+				If Anzeige && (Mod(A_Index, ShowAt) = 0) {
+					tt := "lade Laborwerte  [" ConvertDBASEDate(data.Datum) "]  " SubStr("00000000" labDB.recordnr, -5) "/" SubStr("00000000" labDB.records, -5)
+					percent := Floor(((labDB.recordnr*100)/labDB.records)*0.8)
+					load_Bar.Set(8+percent, tt)
+				}
 
 			; Datum passt nicht, weiter
 				Switch VB {
-
 					Case "Von":
-						If (UDatum <= Von)
+						If (data.Datum <= Von)
 							continue
 					Case "Bis":
-						If (UDatum => Bis)
+						If (data.Datum => Bis)
 							continue
 					Case "VonBis":
-						If (UDatum < Von) || (UDatum > Bis)
+						If (data.Datum < Von || data.Datum > Bis)
 							continue
-
 				}
 
 			; kein pathologischer Wert und in keiner Filterliste dann weiter ;{
 				PNImmer := PNExklusiv := false
-				PN := data.PARAM                                              	; Parameter-Name
-
-				If RegExMatch(PN, nieWarnen)                            	; Parameter in nieWarnen - weiter
+				If RegExMatch((PN := data.PARAM ), nieWarnen)  	; Parameter nieWarnen
 					continue
-				If RegExMatch(PN, immerWarnen)                        	; Parameter immerWarnen - aufnehmen
-					PNImmer  	:= true
-				If RegExMatch(PN, exklusivWarnen)                    	; Parameter exklusivWarnen - aufnehmen
-					PNExklusiv	:= true
-				If !PNExklusiv && !PNImmer                                	; nicht in exklusiv und immer
-					If !InStr(data["GI"], "+")                                    	; und Parameter nicht als path. markiert - weiter
+				else if RegExMatch(PN, exklusivWarnen)               	; Parameter exklusivWarnen
+					PNExklusiv := true
+				else if RegExMatch(PN, immerWarnen)                  	; Parameter immerWarnen
+					If RegExMatch(data.GI, "(\+|\-)")                      	; und Wert ist pathologisch
+						PNImmer 	:= true
+					else
 						continue
 			;}
 
 			; Strings lesbarer machen (oder auch nicht)                        	;{
-				P	    	:= ""
-				PW   	:= StrReplace(data["ERGEBNIS"]	, ",", ".") 	; Parameter Wert
-				PE	    	:= data.EINHEIT				                    	; Parameter Einheit
-				ONG	:= UNG := 0                                        	; Obere/Untere Norm-Grenze
-			;}
 
-			; Grenzwertüberschreitungen berechnen
-				If !PNExklusiv {
-
-				  ; Normwert-String mit RegEx aufsplitten
-					RegExMatch(data["NORMWERT"], "(?<V>[\<\>])*(?<SU>[\d,]+)\-*(?<SO>[\d,]+)*", P)
-					PSU  	:= StrReplace(PSU	, ",", ".")                              	; unterer Grenzwert
-					PSO  	:= StrReplace(PSO, ",", ".")                              	; oberer Grenzwert
-					PSO  	:= PSO ? PSO : PSU                                       	; kein u.GW, dann gibt es nur einen o.GW
-
-					If (PW >= PSO)                                                           	; Laborwert ist größer gleich dem oberen Grenzwert
-						ONG := Floor(Round((PW * 100)/PSO, 3))               	; Oberere Normgrenze in Prozent
-					else If (PW <= PSU)                                                   	; Laborwert ist kleiner gleich dem unteren Grenzwert
-						UNG := Floor(Round((PSU * 100)/PW, 3))		   	     	; Untere Normgrenze in Prozent
-
-					If !ONG && !UNG                                                      	; ONG und UNG sind beide null -> weiter
+				; Laborergebnis oder Wert
+					PW    	:= StrReplace(data.ERGEBNIS	, ",", ".")        	; Parameter - Wert
+					If RegExMatch(PW, skipErgebnis)
 						continue
 
-					If (ONG > 0)                                                            	; ONG überschritten
-						plus := Round((ONG*100)/(lab.params[PN].OD))		; Überschreitung der ONG in Prozent
-					else if (UNG > 0 )                                                     	; UNG überschritten
-						plus := Round(((lab.params[PN].UD)*100)/UNG)    	; Unterschreitung der UNG in Prozent
+				; NORMWERTGRENZE - AUSWERTEN
+				; PV kann > oder < sein, PSU - unterer Grenzwert, PSO - oberer Grenzwert
+				; 	Beispiele aus der LABBLATT dBASE Datei Spalte Normwerte
+				; 		1. Beispiel: "0,02 - 0,08"	 --> PSU="0,02" u. PSO="0,08"
+				; 		2. Beispiel: "< 0,01"  		 --> PV="<" u. PSO="0,01"
+				; 		3. Beispiel: "> 1,04"	    	 --> PV=">" u. PSU=0,01
+					data.NORMWERT := RegExReplace(data.NORMWERT, "[a-z]+$")  ; entfernt nicht auswertbare Buchstaben
+					RegExMatch(data.NORMWERT, "(?<V>[\<\>])*(?<SU>[\d,\.]+)[\-\s]*(?<SO>[\d,\.]+)*", P)   ; Normwert-String mit RegEx aufsplitten
+					PSU  	:= StrReplace(PSU	, ",", ".")                            	; unterer Grenzwert
+					PSO  	:= StrReplace(PSO, ",", ".")                            	; oberer Grenzwert
+					PSO  	:= !PSO ? PSU : PSO                                  	; wenn kein oberer Grenzwert vorhanden ist, dann ist es ein Cut-Wert
+					If (PV = "<")
+						PSO := PSU ? PSU : PSO
+					else if (PV = ">")
+						PSU := PSO ? PSO : PSU
+
+					OD    	:= lab.params[PN].OD                              	; durchschnittliche Abweichung von der oberen Normwertgrenze (oberer Durchschnitt in Prozent)
+					UD	  	:= lab.params[PN].UD                                	; durchschnittliche Abweichung von der unteren Normwertgrenze (unterer Durchschnitt in Prozent)
+					PE	    	:= data.EINHEIT				                        	; Parameter - Einheit
+					ONG	:= UNG := 0                                            	; Obere/Untere Norm-Grenze
+			;}
+
+			; außer bei immer anzuzeigenden Parametern ausführen
+				If !PNExklusiv {
+
+					If (PW > PSO)                                                    	; Laborwert überschreitet die obere Grenze
+						ONG := Floor(Round((PW*100)/PSO, 3))        	; Oberere Normgrenze in Prozent
+					else if (PW < PSU)                                               	; Laborwert ist kleinerals der untere Grenzwert
+						UNG := Floor(Round((PSU*100)/PW, 3))	    	; Untere Normgrenze in Prozent
+
+					If !ONG && !UNG                                              	; ONG und UNG sind beide null -> weiter
+						continue
+
+					If (ONG > 0)                                                     	; ONG überschritten
+						plus := Floor(Round((ONG*100)/OD,1))           	; Überschreitung der ONG in Prozent
+					else if (UNG > 0 )                                              	; UNG überschritten
+						plus := Floor(Round((UNG*100)/UD,1))           	; Unterschreitung der UNG in Prozent
+
+					If PNImmer
+						If (plus <= 100)
+							PNImmer := false
+
 
 				}
+
+					;~ If plus < 102
+						;~ t .= "D:" data["DATUM"] " | P:" data["PARAM"] " | PW:" PW " | NW:"  data["NORMWERT"]
+							;~ . 	" | PSU: " PSU " | PSO:" PSO " | UNG:" UNG " | ONG:" ONG " | UD:" UD " | OD:" OD " => plus:" plus "`n"
 
 			; Laborwert liegt über der Grenzwert-Abweichung oder gehört zu einer Filterliste
 				If (plus > GWA || PNImmer || PNExklusiv) {
@@ -240,7 +321,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 						Datum 	:= data.Datum
 						PW    	:= RegExReplace(PW, "(\.[0-9]+[1-9])0+$", "$1")
 						AN    	:= LabPat[Datum][PatID][PN].AN
-						AN    	:= !RegExMatch(AN, "\b" datum.ANFNR "\b") ? AN "," datum.AFNR : AN
+						AN    	:= !RegExMatch(AN, "\b" data["ANFNR"] "\b") ? AN "," data["ANFNR"] : AN
 
 					; Subobjekte anlegen
 						If !IsObject(LabPat[Datum])
@@ -250,23 +331,23 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 						If !IsObject(LabPat[Datum][PatID][PN])
 							LabPat[Datum][PatID][PN] := Object()
 
-					; durchschnittliche Abweichungen von den Normgrenzen
-					; wurde zuvor berechnet aus allen Werten in ihrer Datenbank dieses Parameters (alle Patienten)
-						labOD	:= lab.params[PN].OD   	; durchschnittliche Abweichung von der oberen Normwertgrenze (oberer Durchschnitt in Prozent)
-						labUD	:= lab.params[PN].UD    	; durchschnittliche Abweichung von der unteren Normwertgrenze (unterer Durchschnitt in Prozent)
-
 					; Daten übergeben
-						LabPat[Datum][PatID][PN].PatID	:= PatID
-						LabPat[Datum][PatID][PN].CV  	:= PNImmer ? 1 : PNExklusiv ? 2 : 0                                                             	; CAVE-Wert für andere Textfarbe im Journal
-						LabPat[Datum][PatID][PN].PN  	:= PN                                                                                                        	; Parameter Name
-						LabPat[Datum][PatID][PN].PW  	:= RegExReplace(PW, "\.0+$")                                                                     	; Parameter Wert
-						LabPat[Datum][PatID][PN].PV		:= P ? StrReplace(P, ",", ".") : data.NORMWERT                                             	; Parameter Varianz Normwertgrenzen
-						LabPat[Datum][PatID][PN].PL 		:= (ONG > 0 ? "+" Round(ONG/100, 1)	: (UNG > 0 ? "-" UNG : ""))                                   	;
-						LabPat[Datum][PatID][PN].PA		:= (ONG > 0 ? labOD : (UNG > 0 ? labUD : "" ))                                     	; Parameter Abweichung +/-
-						LabPat[Datum][PatID][PN].PD		:= (ONG > 0 ? "+" ONG - labOD : (UNG > 0 ? "-" UNG - labUD : ""))      	;
-						LabPat[Datum][PatID][PN].PE		:= PE                                                                                                    		; Einheit
-						LabPat[Datum][PatID][PN].AN	:= LTrim(AN, ",")                                                                                          	; Labor Anforderungsnummer
-						LabPat[Datum][PatID][PN].PB 	:= LabDic[PN].1                                                                                           	; Parameter Bezeichnung: ausgeschriebene Parameterbezeichnung
+						If !RegExMAtch(LabPat[Datum][PatID]["ANFNR"], "\[" data["ANFNR"])
+							LabPat[Datum][PatID]["ANFNR"] := data["ANFNR"] " " data["BEFUND"] ", "
+
+						PL 	:= ONG > 0 ? "+" Round(ONG/100, 1)	: (UNG > 0 ? "-" Round(UNG/100,1)   	: "")
+						PD	:= ONG > 0 ? "+" Round(ONG - labOD)	: (UNG > 0 ? "-" Round(UNG - labUD)	: "")
+						LabPat[Datum][PatID][PN].PatID	:= PatID                                                                                                                  	; Patienten-ID
+						LabPat[Datum][PatID][PN].CV  	:= PNImmer ? 1 : PNExklusiv ? 2 : 0                                                                         	; CAVE-Wert für andere Textfarbe im Journal
+						LabPat[Datum][PatID][PN].PN  	:= PN                                                                                                                    	; Parameter Name
+						LabPat[Datum][PatID][PN].PW  	:= RegExReplace(PW, "\.0+$")                                                                                 	; Parameter Wert
+						LabPat[Datum][PatID][PN].PV		:= P ? StrReplace(P, ",", ".") : data["NORMWERT"]                                                      	; Parameter Varianz (Normwertgrenzen)
+						LabPat[Datum][PatID][PN].PL 		:= PL                                                                                                                    	; proz. Abweichung von der Normgrenze (oberhalb sowie unterhalb)
+						LabPat[Datum][PatID][PN].PA		:= ONG > 0 ? OD : (UNG > 0 ? UD : "" )                                                                	; Parameter Abweichung +/-
+						LabPat[Datum][PatID][PN].PD		:= PD                                                                                                                     	;
+						LabPat[Datum][PatID][PN].PE		:= PE                                                                                                    	            	; Parameter Einheit
+						LabPat[Datum][PatID][PN].AN  	:= LTrim(AN, ",")                                                                                                     	; Labor Anforderungsnummer
+						LabPat[Datum][PatID][PN].PB   	:= LabDic[PN].1                                                                                                       	; Parameter Bezeichnung: ausgeschriebene Parameterbezeichnung
 
 					}
 
@@ -275,202 +356,12 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 	; Lesezugriff beenden
 		labDB.CloseDBF()
 		LabDB := ""
-		ToolTip
+		If Anzeige
+			ToolTip
+		percent := percent + 8
 
-return LabPat
-}
-
-AlbisLaborJournal_new(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {       	;-- Laborwerte mit gewisser Überschreitung der Normgrenzen werden erfasst
-
-		static Lab
-
-		LabPat := Object()
-
-		If IsObject(Warnen) {
-			nieWarnen    	:= "(" StrReplace(Warnen.nie      	, ","	, "|") ")$"
-			immerWarnen 	:= "(" StrReplace(Warnen.immer 	, ","	, "|") ")$"
-			exklusivWarnen	:= "(" StrReplace(Warnen.exklusiv	, ","	, "|") ")$"
-		}
-
-	; Laborwertgrenzen laden oder berechnen                                                          	;{
-		If !IsObject(Lab) {
-			If !FileExist(adm.LabDBPath "\Laborwertgrenzen.json")
-				Lab := AlbisLaborwertGrenzen(adm.LabDBPath "\Laborwertgrenzen.json", Anzeige)
-			else
-				Lab := JSON.Load(FileOpen(adm.LabDBPath "\Laborwertgrenzen.json", "r", "UTF-8").Read())
-		}
-	;}
-
-	; Suchzeitraum                                                                                                  	;{
-		If !Von && !Bis {
-			Von 	:= A_YYYY A_MM A_DD
-			If (A_DDD = "Fr")
-				Von += -30, days
-			else
-				Von += -30, days
-
-			FormatTime, Von, % Von, yyyyMMdd
-			QJ 	:= A_YYYY . Ceil(A_MM/3)
-			VB  	:= "Von"
-		}
-		else {
-			VB := (Von && !Bis) ? "Von" : (!Von && Bis) ? "Bis" : "VonBis"
-			QJ := SubStr(Von, 1, 4) . Ceil(SubStr(Von, 5, 2)/3)   ; Quartalsjahr QQYYYY z.B. 012021
-		}
-
-	;}
-
-	; Laborbuchdaten laden                                                                                      	;{
-		;~ p := ["ANFNR", "STATUS"]
-		;~ s :=
-		;~ labbuch := GetDBFData(adm.AlbisDBPath "\LABBUCH.dbf",p,,s)
-	;}
-
-
-	; Albis: Datenbank laden und entsprechend des Datums die Leseposition vorrücken ;{
-		labDB := new DBASE(adm.AlbisDBPath "\LABBLATT.dbf", Anzeige)
-		labDB.OpenDBF()
-	;}
-
-	; Datenbank: Startposition berechnen ;{
-		startrecord := 0
-		If (VB = "Von") || (VB = "VonBis") {
-			startrecord := Lab.seeks[QJ] - 1
-			labDB._SeekToRecord(startrecord, 1)
-		}
-		LabJ.srchdrecords	:= SubStr("00000000" (labDB.records - startrecord), -5)
-		LabJ.records     	:= LabDB.records
-	;}
-
-	; filtert nach Datum und ab einer Überschreitung von der durchschnittlichen Abweichung von den Grenzwerten anhand
-	; der zuvor für jeden Laborwert berechneten durchschnittlichen prozentualen Überschreitung des Grenzwertes aus den
-	; Daten der LABBLATT.dbf [AlbisLaborwertGrenzen()]
-		while !(labDB.dbf.AtEOF) {
-
-			; eine Zeile lesen
-				data := labDB.ReadRecord(["PATNR", "ANFNR", "DATUM", "PARAM", "ERGEBNIS", "EINHEIT", "GI", "NORMWERT"])
-				UDatum := data.Datum
-
-			; Fortschritt                                                     	;{
-				If Anzeige && (Mod(A_Index, 3000) = 0)
-					ToolTip, % ConvertDBASEDate(UDatum) ": " PSU "," PSO "`n" SubStr("00000000" labDB.recordnr, -5) "/" LabJ.srchdrecords ;"`n" lfound
-			;}
-
-			; Datum prüfen                                             	;{
-				Switch VB {
-
-					Case "Von":
-						If (UDatum <= Von)
-							continue
-					Case "Bis":
-						If (UDatum => Bis)
-							continue
-					Case "VonBis":
-						If (UDatum < Von) || (UDatum > Bis)
-							continue
-
-				}
-			;}
-
-			; Kriterien prüfen                                           	;{
-				PNImmer := PNExklusiv := false
-				PN := data.PARAM                                            	; Parameter (Name)
-
-				If RegExMatch(PN, "(" nieWarnen ")")
-					continue
-				If RegExMatch(PN, "(" immerWarnen ")")
-					PNImmer := true
-				If RegExMatch(PN, "(" exklusivWarnen ")")
-					PNExklusiv := true
-				If !PNExklusiv && !PNImmer
-					If !InStr(data["GI"], "+")
-						continue
-				;}
-
-			; Strings lesbarer machen (oder auch nicht)    	;{
-				P	    	:= ""
-				PW   	:= StrReplace(data["ERGEBNIS"]	, ",", ".") 	; Wert
-				PE	    	:= data.EINHEIT				                    	; Einheit
-			;}
-
-			/* Beschreibung der Variablen
-
-					GWA	- Grenzwertabweichung in %
-
-					ONG	- Abweichung vom oberen Normgrenzwert in %
-					UNG	- Abweichung vom unteren Normgrenzwert in %
-
-					P        	- (P)arameter
-					P(N)    	- (N)ame
-					P(W)    	- (W)ert
-					P(E)    	- (E)inheit
-
-					P(SU)	- unterer Grenzwert aus dem Laborblatt
-					P(SO)	- oberer Grenzwert aus dem Laborblatt
-
-				# diese Daten werden vorher aus allen Einträgen der LABBLATT.dbf für alle Parameter berechnet
-
-					lab.param[PN].OD 	- durchschnittliche Abweichung vom oberen Grenzwert
-
-			*/
-
-			; Grenzwertüberschreitungen berechnen          	;{
-				If !PNExklusiv {           ; exklusiv Parameter werden immer gelistet
-
-					RegExMatch(data["NORMWERT"], "(?<V>[\<\>])*(?<SU>[\d,]+)\-*(?<SO>[\d,]+)*", P)
-					PSU  	:= StrReplace(PSU	, ",", ".")                                     	; unterer Grenzwert
-					PSO  	:= StrReplace(PSO, ",", ".")                                       	; oberer Grenzwert
-					PSO  	:= PSO ? PSO : PSU                                               	; wenn es nur einen Grenzwert gibt
-					ONG 	:= (PW >= PSO) 	? Round((PW*100)/PSO	, 2) 	: 0	; Grenzwertüberschreitung in %
-					UNG 	:= (PW <= PSU) 	? Round((PSU*100)/PW	, 2)	: 0	; Grenzwertunterschreitung in %
-
-				; weiter wenn keine Grenzwerte über- oder unterschritten wurden
-					If !(ONG && UNG)
-						continue
-
-				; berechnet die prozentuale Abweichung von der durchschnittlichen Grenzwertabweichung dieses Parameters
-					plus := (ONG > 0) ? Round((ONG*100)/lab.params[PN].OD) : (UNG > 0) ? Round((lab.params[PN].UD*100)/UNG) : 0
-
-				}
-			;}
-
-			; Datenobjekt erstellen                                    	;{
-				If (plus >= GWA || PNImmer || PNExklusiv) {
-
-						PatID 	:= data.PATNR
-						Datum 	:= data.Datum
-						AFNR	:= data.AFNR
-
-						If !IsObject(LabPat[Datum])
-							LabPat[Datum] := Object()
-						If !IsObject(LabPat[Datum][PatID])
-							LabPat[Datum][PatID] := Object()
-						If !IsObject(LabPat[Datum][PatID][PN])
-							LabPat[Datum][PatID][PN] := Object()
-						If !IsObject(LabPat[Datum][PatID].AFNR) 			; Anforderungsnummern und Teil oder Endbefund zusammen bringen
-							LabPat[Datum][PatID].AFNR := Object()
-
-						PW := RegExReplace(PW, "(\.[0-9]+[1-9])0+$", "$1")
-						LabPat[Datum][PatID][PN].PatID	:= PatID
-						LabPat[Datum][PatID][PN].AFNR	:= AFNR                                                                                                                                        	; Anforderungsnummer
-						LabPat[Datum][PatID][PN].CV  	:= PNImmer ? 1 : PNExklusiv ? 2 : 0                                                                                                	; CAVE-Wert für andere Textfarbe im Journal
-						LabPat[Datum][PatID][PN].PN  	:= PN                                                                                                                                           	; Parameter Name
-						LabPat[Datum][PatID][PN].PW  	:= RegExReplace(PW, "\.0+$")                                                                                                        	; Parameter Wert
-						LabPat[Datum][PatID][PN].PV		:= P ? StrReplace(P, ",", ".") : data.NORMWERT                                                                                  	; Parameter Normwert
-						LabPat[Datum][PatID][PN].PL 		:= (ONG > 0 ? "+" ONG	: (UNG > 0 ? "-" UNG : ""))                                                                      	; obere Normwertgrenze
-						LabPat[Datum][PatID][PN].PA		:= (ONG > 0 ? lab.params[PN].OD : (UNG > 0 ? lab.params[PN].UD : "" ))                                     	; durchschn. Abweichung vom Normwert [+/-] in %
-						LabPat[Datum][PatID][PN].PD		:= (ONG > 0 ? "+" ONG - lab.params[PN].OD : (UNG > 0 ? "-" UNG - lab.params[PN].UD : ""))  	; untere Normwertgrenze
-						LabPat[Datum][PatID][PN].PE		:= PE                                                                                                                                           		; Einheit
-
-					}
-			;}
-
-		}
-
-	; Lesezugriff beenden
-		labDB.CloseDBF()
-		LabDB := ""
-		ToolTip
+		;~ FileOpen(A_Temp "\labdata.txt", "w", "UTF-8").Write(t)
+		;~ Run, % A_Temp "\labdata.txt"
 
 return LabPat
 }
@@ -484,11 +375,20 @@ AlbisLaborwertGrenzen(LbrFilePath, Anzeige=true) {                              
 		⚬	Durch Nutzung eines Faktors (Prozent) sind die dadurch mit Annährung erreichte "Warngrenze" auch bei unterschiedlichen
 			Einheiten praktikabel, außerdem entfällt das Anpassen an die sich wechselnden Normbereiche.
 
-		⊛ Die Ausgabe nur wirklich auffälliger pathologischer Laborwerte war das Ziel. Bei über 300 Laborparametern per Hand einen Alarm-
-			wert anzulegen ist aufgrund sich häufig ändernder Normbereich unsinnig. Die Idee war nur die Über- und Unterschreitung der Grenzwerte
-			zu beachten. Normwerte werden nicht "gewichtet". Die einfachste Methode ist die Ermittlung des Durchschnitts um minimale und maximale
-			Überschreitungen ausgleichen zu können. Die erreichten Alarmwerte sind in vielen Fällen gut und an der ärztlichen Wirklichkeit, in vielen
-			anderen Fällen aber auch nicht. Diese Funktion filtert viel unnütze Information heraus, macht dies aber noch zu einheitlich mechanisch.
+		⊛ Die Aufgabe war (ist es noch) einen Algorithmus zu finden, welcher mit einer guten Zuverlässigkeit klinisch bedeutsame
+			Laborwerte herausfiltern kann. Möglichst wenige Informationen sollten angezeigt werden. Die Relevanz von path. Laborwerten ist manchmal ganz
+			deutlich am Grenzwert festzumachen. Als bestes Beispiel sind hier wären hier Elektrolytwert-Veränderungen zu nennen. Bei anderen Parametern ist
+			dies aber nicht so. Warum wirft man als langjährig tätiger Arzt manchmal nur einen Blick die Parameter und weiß sofort die Relevanz zu ermessen?
+			Mit diesem Programm versuche ich mich unter anderem dieser Fragestellung zu nähern.
+			So sind im Laufe meiner Tätigkeit als niedergelassener Arzt circa 300 verschiedene Laborparameter interessant geworden.
+			Bei der Menge an Parametern ist eine regelmäßige Wichtung schon aufgrund regelmäßig vom Laboranbieter angepasster Normbereiche unsinnig.
+			Die Idee war also nur die Über- und Unterschreitung der Grenzwerte zu wichten. Bei der Berechnung werden alle im Normbereich liegenden
+			Werte vom Algorithmus ignoriert. Über- und Unterschreitungen werden als relative Abweichung erfasst.
+			Der Einfachheit halber in Prozent (200 % oder das 2fache der Norm z.B.). Für die Abweichungen in beide Richtungen werden für jeden Parameter
+			zwei Werte gebildet. Erfasst wird am Ende die maximale prozentuale Abweichung und aus den Laborwerten aller Patienten wird für jeden Parameter
+			der Durchschnitt berechnet. Ich nenne es die "durchschnittliche Abweichung" vom oberen oder unteren Grenzwert.
+			Die erreichten Alarmwerte sind in vielen Fällen gut und recht nah dran an dem was ich sehen wollte.
+			Bei einigen Parameter sehe ich noch Einschränkungen. Fehlerhaft ist im Moment noch die Erkennung von Unterschreitungen.
 
 	 */
 
@@ -511,24 +411,29 @@ AlbisLaborwertGrenzen(LbrFilePath, Anzeige=true) {                              
 				If Anzeige && (Mod(A_Index, 1000) = 0)
 					ToolTip, % "Laborwertgrenzen werden berechnet.`ngefundene Parameter: " lab.Count() "`nDatensatz: " SubStr("00000000" A_Index, -5) "/" SubStr("00000000" labDB.records, -5) ;"`n" lfound
 
-				If !InStr(data["GI"], "+")
+				If !RegExMatch(data["GI"], "(\+|\-)") || StrLen(data["NORMWERT"]) = 0
 					continue
 
 				PN	:= data.PARAM
 				PE		:= data.EINHEIT
-				PW	:= StrReplace(data["ERGEBNIS"]	, ",", ".")
-				RegExMatch(data["NORMWERT"], "(?<V>[\<\>])*(?<SU>[\d,]+)\-*(?<SO>[\d,]+)*", P)
+				PW	:= StrReplace(data["ERGEBNIS"]	, ",", ".")                                                                         ; PARAMETER WERT
+				RegExMatch(data["NORMWERT"], "(?<V>[\<\>])*(?<SU>[\d,\.]+)[\-\s]*(?<SO>[\d,\.]+)*", P)
 				PSU	:= StrReplace(PSU	, ",", ".")
 				PSO	:= StrReplace(PSO, ",", ".")
+
 
 			; berechnet die Grenzwertüberschreitungen
 				ONG :=UNG := 0
 				PSO := StrLen(PSO) > 0 ? PSO : PSU
-				If (PW >= PSO) {
+				If (PW >= PSO)
 					ONG := Floor(Round((PW * 100)/PSO, 3))
-				}
-				else If (PW <= PSU) {
+				else If (PW <= PSU)
 					UNG := Floor(Round((PSU * 100)/PW, 3))
+
+				If (PN = "NA" && PW < 130 ) {
+					dcount ++
+					SciTEOutput( "D: " data["DATUM"] " | P: " data["PARAM"] " | E: " PW " | N: "  data["NORMWERT"]
+									. 	" | U: " PSU " | O: " PSO " | UG: " UNG " | OG: " ONG )
 				}
 
 				If !ONG && !UNG
@@ -540,7 +445,7 @@ AlbisLaborwertGrenzen(LbrFilePath, Anzeige=true) {                              
 					Lab[PN] := {	"PZ" 	: 1			; Parameterzähler
 									, 	"O" 	: 0			; Summe d. prozentualen Abweichung vom oberen Grenzwert
 									, 	"OI"	: 0			; Abweichungszähler (obere Grenzwerte)
-									, 	"OD"	: 0			; durchschittliche prozentuale Abweichung vom oberen Grenzwert (O/OI)
+									, 	"OD"	: 0			; durchschnittliche prozentuale Abweichung vom oberen Grenzwert (O/OI)
 									, 	"OM": 0    		; maximale prozentuale Abweichung an der Obergrenze
 									,	"NI"	: 0			; Normalwertzähler
 									,	"ND"	: 0			; Normalwertdurchschnitt
@@ -584,7 +489,10 @@ AlbisLaborwertGrenzen(LbrFilePath, Anzeige=true) {                              
 			Labwrite.seeks[QJ] := filepos
 
 	; Speichern der Daten
-		JSONData.Save(LbrFilePath, Labwrite, true,, 1, "UTF-8")
+		JSONData.Save(LbrFilePath "\Laborwertgrenzen.json", Labwrite, true,, 1, "UTF-8")
+		JSONData.Save(LbrFilePath "\Laborwertbasis.json", Lab, true,, 1, "UTF-8")
+
+		ToolTip
 
 return Labwrite
 }
@@ -652,407 +560,162 @@ LaborJournal(LabPat, Anzeige=true) {
 	; letzte Fensterposition laden
 		IniRead, winpos, % adm.ini, % adm.compname, LaborJournal_Position
 		If (InStr(winpos, "ERROR") || StrLen(winpos) = 0)
-			winpos := "w950 h600"
+			winpos := "w920 h500"
 
-	; Patientendaten laden
-		PatDB 	:= ReadPatientDBF(adm.AlbisDBPath, ["NR", "NAME", "VORNAME", "GEBURT"],, Anzeige)
-
-	; Variablen bestücken
+	; Variablen bestücken                                	;{
 		srchdrecords  	:= LTrim(labJ.srchdrecords, "0")
 		dbrecords     	:= labJ.records
 		Tagesanzeige	:= LabJ.Tagesanzeige
 		iconpath        	:= adm.Dir "\assets\ModulIcons\LabJournal.svg"
+	;}
 
 	; HTML Vorbereitungen 	                              	;{
-		static TDL      	:= "<TD style='text-align:Left'>"
-		static TDL1     	:= "<TD style='text-align:Left;border-left:0px solid'>"
-		static TDR      	:= "<TD style='text-align:Right'>"
-		static TDR1     	:= "<TD style='text-align:Right;border-right:0px solid'>"
-		static TDR2a     	:= "<TD style='text-align:Right;border-bottom:0px'>"
-		static TDR2b     	:= "<TD style='text-align:Right;border-top:0px;border-bottom:0px'>"
-		static TDR3      	:= "<TD class='tooltip' data-tooltip='##' style='text-align:Right'>"                    ; Param
-		static TDC     	:= "<TD style='text-align:Right'>"
-		static TDJ      	:= "<TD style='text-align:Justify'>"
+		static TDL      	:= "<TD style='text-align:Left'>"                                                                                                   	; Textausrichtung links
+		static TDL1     	:= "<TD style='text-align:Left; border-left:0px solid'>"                                                                   	; Textausrichtung links kein Rand links
+		static TDLR1     	:= "<TD style='text-align:Left; border-right:0px solid; border-left:0px solid'>"                              	; Textausrichtung links, kein Rand rechts
+		static TDR      	:= "<TD style='text-align:Right' border-right:0px solid border-left:1px solid'>"                                	; Textausrichtung rechts
+		static TDR1     	:= "<TD style='text-align:Right; border-right:0px solid'>"                                                            	; Textausrichtung rechts, kein Rand rechts
+		static TDR2a     	:= "<TD style='text-align:Right; border-right:1px'>"
+		static TDR2b     	:= "<TD style='text-align:Right; border-right:1px; border-top:0px;border-bottom:0px'>"                	; Tooltip
+		static TDR3      	:= "<TD class='tooltip' data-tooltip='##' style='text-align:Right'>"                                              	; Param
+		static TDC     	:= "<TD style='text-align:Right' border-right:1px>"                                                                     	;
+		static TDJ      	:= "<TD style='text-align:Justify' border-right:1px>"
 
-		static cCol1   	:= ";color: Red"
-		static FWeight1	:= ";font-weight: bold"
-		static cCol2    	:= ";color: BlueViolet"
-		static FWeight2	:= ";font-weight: bold"
-		static cCol3   	:= ";color: DarkTeal"
-		static FWeight3	:= ";font-weight: bold;font-family: sans-serif"
+		static cCol     	:= ["color: Red", "color: BlueViolet", "color: DarkTeal"]
+		static FWeight	:= ["font-weight: bold", "font-weight: bold", "font-weight: bold; font-family: sans-serif"]
+
+		If !IsObject(cColW) {
+			cColW := []
+			For i, htmlcolor in cCol
+				cColW[i] := ";" cCol[i] ";" FWeight[i]
+		}
+
 
 	; HTML Seitendaten
-		htmlheader =
-		(
-			<!DOCTYPE html>
-			<html lang="de">
-			<head>
-			<meta http-equiv="X-UA-Compatible" content="IE=edge">
-			<title>Laborjournal</title>
-			<meta charset="utf-8">
-			<style>
-
-			header {
-				width:        	100`%;
-				display:       	flex;
-				background: #6e6c6c;
-				font-family: 	Segoe UI;
-
-				margin:     	0;
-				padding:    	0;
-			}
-
-			.title-bar {
-				overflow: hidden;
-				font-family: Segoe UI;
-				flex-grow: 1;
-				font-size: 100`%;
-			}
-
-			.title-txt {
-				font-family: Segoe Script;
-				color:#D9D8D8;
-				margin-top:2px;
-				vertical-align: center;
-			}
-
-			.title-btn {
-				padding: 0.35em 1.0em;
-				cursor: pointer;
-				vertical-align: bottom;
-				font-family: Webdings;
-				font-size: 11pt;
-			}
-
-			.title-btn:hover {
-			  background: rgba(0, 0, 0, .2);
-			}
-
-			.title-btn-close:hover {
-			  background: #dc3545;
-			}
-
-			.title-menu {
-				float:                 	left;
-				cursor:              	pointer;
-				vertical-align:    	bottom;
-				font-family:       	Segoe Script;
-				font-size:           	10pt;
-				background:     	#999898;
-				padding-left:      	12px;
-				padding-right:    	12px;
-				margin-bottom: 	1px;
-				margin-top:      	3px;
-				border-radius:    	8px;
-				transition-timing-function: ease-in-out;
-			}
-
-			.title-menu-btn1 {
-				position: absolute;
-				left: 70px;
-			}
-
-			.title-menu-btn2 {
-				position: absolute;
-				left: 194px;
-			}
-
-			.title-menu-btn3 {
-				position: absolute;
-				left: 266px;
-			}
-
-			.title-menu-active {
-				background-color: #70A0A6;
-			}
-
-			.title-menu:hover {
-			  background: #AEACAC;
-			}
-
-			html, body {
-				width: 100`%; height: 100`%;
-				margin: 0; padding: 0;
-				font-family: sans-serif;
-			}
-
-			body {
-				display: flex;
-				flex-direction: column;
-			}
-		)
-
-		htmltable =
-		(
-
-			table {
-				font-family: Segoe UI, sans-serif;
-				border-collapse: collapse;
-				overflow-x:auto;
-				width: 100`%;
-			}
-
-			.table-btn1 {
-			  background: #ffffff;
-			}
-
-			.table-btn1:hover {
-				background: rgba(0, 0, 0, .2);
-				cursor: pointer;
-			}
-
-			.table-btn2 {
-			  background: #f1f1c1;
-			}
-
-			.table-btn2:hover {
-				background: rgba(0, 0, 0, .2);
-				cursor: pointer;
-			}
-
-			.table-btn3a {
-			  background: #ffffff;
-			}
-
-			.table-btn3a:hover {
-				cursor: info;
-			}
-
-			.table-btn3b {
-			  background: #f1f1c1;
-			}
-
-			.table-btn3b:hover {
-				cursor: info;
-			}
-
-			th {
-				border: 1px solid #888888;
-				background: #70A0A6;
-				text-align: left;
-				padding: 4px;
-				font-size: 11;
-			}
-
-			td {
-				border-left: 1px solid #888888;
-				border-right: 1px solid #888888;
-				padding-right: 4px;
-				padding-left: 4px;
-				font-size: 90`%;
-			}
-
-			#td1a {
-				background-color: #ffffff;
-				padding-top: 18px;
-				padding-bottom: 2px;
-				border-top: 3px solid #555555;
-				border-left: 1px solid #888888;
-				border-right: 1px solid #888888;
-				border-bottom: 0px solid #888888;
-			}
-
-			#td1b {
-				background-color: #ffffff;
-				padding-top: 2px;
-				padding-bottom: 2px;
-				border-top: 0px solid #555555;
-				border-left: 1px solid #888888;
-				border-right: 1px solid #888888;
-				border-bottom: 0px solid #888888;
-			}
-
-			#td2a {
-				background-color: #f1f1c1;
-				padding-top: 18px;
-				padding-bottom: 2px;
-				border-top: 3px solid #555555;
-				border-left: 1px solid #888888;
-				border-right: 1px solid #888888;
-				border-bottom: 0px solid #888888;
-			}
-
-			#td2b {
-				background-color: #f1f1c1;
-				padding-top: 2px;
-				border-top: 0px solid #555555;
-				border-left: 1px solid #888888;
-				border-right: 1px solid #888888;
-				border-bottom: 0px solid #888888;
-			}
-
-			TD.tooltip {
-				cursor:                      	default;
-				position:                    	relative;
-				text-decoration:         	none;
-			}
-
-			TD.tooltip:hover {
-				background: rgba(0, 0, 0, .1);
-			}
-
-			TD.tooltip:after {
-				content:                    	attr(data-tooltip);
-				font-family:                	Segoe UI, sans-serif;
-				font-style:                    	normal;
-				font-weight:                	normal;
-				font-size:                    	80`%;
-				position:                   	absolute;
-				bottom:                     	0`%;
-				left:                              	30`%;
-				background:               	#ffcb66;
-				padding:                    	3px 8px;
-				color:                         	black;
-				-webkit-border-radius: 	10px;
-				-moz-border-radius : 	10px;
-				border-radius :             	10px;
-				white-space:              	nowrap;
-				opacity:                     	0;
-				-webkit-transition:      	all 0.4s ease;
-				-moz-transition :          	all 0.4s ease;
-				transition :                 	all 0.4s ease;
-			}
-
-			TD.tooltip:before {
-				content:                     	"";
-				position:                     	absolute;
-				width:                         	0;
-				height:                         	0;
-				border-top:                 	20px solid #ffcb66;
-				border-left:                 	20px solid transparent;
-				border-right:             	20px solid transparent;
-				-webkit-transition:      	all 0.4s ease;
-				-moz-transition :         	all 0.4s ease;
-				transition :                 	all 0.4s ease;
-				opacity:                     	0;
-				bottom:                     	60`%;
-				left:                             	90`%;
-			}
-
-			TD.tooltip:hover:after {
-				bottom:                      	100`%;
-			}
-
-			TD.tooltip:hover:before {
-				bottom:                     	70`%;
-			}
-
-			TD.tooltip:hover:after, a:hover:before {
-				opacity: 1;
-			}
-
-			.main {
-				display: flex;
-				flex-grow: 1;
-				padding: 1.5em;
-				 justify-content: space-between;
-			}
-
-			</style>
-			</head>
-
-		)
-
+		htmlheader := FileOpen(A_ScriptDir "\assets\Laborjournal.html", "r", "UTF-8").Read()
+		htmlheader := StrReplace(htmlheader, "##01##", iconpath)
+		htmlheader := StrReplace(htmlheader, "##02##", Tagesanzeige)
 		htmlbody =
 		(
-			 <header id='LaborJournal_Header'>
-				<img src='%iconpath%' alt='HTML5 Icon'  style='width:35px;height:28px;margin-left:10px;'>
-				<div class='title-bar' onmousedown='neutron.DragTitleBar()'>            </div>
-				<div class='title-menu title-menu-btn1' onclick='neutron.Menu_LabJournal()'>Laborjournal</div>
-				<div class='title-menu title-menu-btn2' onclick='neutron.Menu_LabJ_Suche()'>Suche</div>
-				<div class='title-menu title-menu-btn3' onclick='neutron.Menu_LabJ_Props()'>Einstellungen</div>
-				<div class='title-txt'>%Tagesanzeige%</div>
-				<div class='title-btn' onclick='neutron.Minimize()'>0</div>
-				<div class='title-btn' onclick='neutron.Maximize()'>1</div>
-				<div class='title-btn title-btn-close' onclick='ahk.LabJournal_Close()'>r</div>
-			</header>
 
-			<body>
-			<div STYLE='overflow-y:auto;'>
+			<div style='overflow-x:scroll; width:100`%; height:100`%;'>
 			<table id='LabJournal_Table'>
 
 				<tr>
 					<th style='text-align:Right'>Datum</th>
-					<th style='text-align:Left'>Patient</th>
+					<th style='text-align:Center' colspan='3'>NR, Name, Vorname, Geburtsdatum</th>
+					<th style='text-align:Left'>Anford.Nr</th>
 					<th style='text-align:Right'>Param</th>
 					<th style='text-align:Right'>Wert</th>
 					<th style='text-align:Center' colspan='2'>Normalwerte</th>
-					<th style='text-align:Right'; >+/-</th>
+					<th style='text-align:Right'>+/-</th>
 					<th style='text-align:Right'>⍉ Abw.</th>
 				</tr>
 
+			<div style='overflow-y: scroll;'>
 		)
 
-		html := RegExReplace(htmlheader . htmltable . htmlbody, "^\s{16}(.*[\n\r]+)", "$1")
+		html := RegExReplace(htmlheader . htmlbody, "^\s{16}(.*[\n\r]+)", "$1")
+
+		load_Bar.Set(percent+2, "erstelle die Journalanzeige")
 	;}
 
 	; HTML Tabelle wird erstellt                         	;{
-		trIDf:= false
-		sortDatum := Array()
 
+		trIDf      	:= false                    	; alternierende Farbanzeige
+		sortDatum	:= Array()
 		For Datum, Patients in LabPat
 			sortDatum.InsertAt(1, Datum)
 
+	; ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+	; Journalausgabe wird mit absteigendem Datum erstellt
+	; ――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 		For idx, Datum in sortDatum {
 
 				If (DatumLast <> Datum)
 					UDatum := ConvertDBASEDate(Datum)
 
-				For PatID, parameter  in LabPat[Datum] {
+			; ―――――――――――――――――――――――――――――――――――――――――――――――――――――
+			; Ausgabe der Werte nach Patient
+			; ―――――――――――――――――――――――――――――――――――――――――――――――――――――
+				For PatID, parameter in LabPat[Datum] {
 
-					If (PatIDLast <> PatID) || (DatumLast <> Datum) {
-						Patient  	:= PatDB[PatID].NAME ", " PatDB[PatID].VORNAME " (" ConvertDBASEDate(PatDB[PatID].GEBURT) ") [" PatID "]"
+					If (PatIDLast <> PatID) || (DatumLast <> Datum) {                            	; der Patient wird nur einmal pro Tag angezeigt
+						Patient  	:= PatDB[PatID].NAME ", " PatDB[PatID].VORNAME
+						PatGeburt	:= ConvertDBASEDate(PatDB[PatID].GEBURT)
+						ANFNR  	:= RTrim(parameter["ANFNR"], ", ")
 						PatIDLast	:= PatID
-						trIDf      	:= !trIDf	; flag für alternierenden Farbwechsel
+						trIDf      	:= !trIDf                                                                        	; Pat. hat sich geändert, alternierende Farbänderung
 					}
 
-					For key, PN in parameter {
+				; ―――――――――――――――――――――――――――――――――――――――――――――――――――
+				; Parameter Objekt (PN) - Erstellung der Datenzeilen
+				; ―――――――――――――――――――――――――――――――――――――――――――――――――――
+ 					For key, PN in parameter {
 
-						TRPat    	:= "<TR" (UDatum 	? (trIdf ? " id='td1a'" : " id='td2a'") : (trIdf ? " id='td1b'" : " id='td2b'") ) ">"
-						tdPat     	:= "<TD" (Patient  	? (trIdf ? " class='table-btn1'" : " class='table-btn2'") " onclick='ahk.LabJournal_KarteiKarte(event)'>" : ">")
-						tbDatum 	:= UDatum ? SubStr(UDatum, 1, 6) : ""
+					  ; ist PN leer, einfach ignorieren
+						If !IsObject(PN)
+							continue
+
+					  ;  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+					  ; Tabelle  ‧  ‧  ‧ 	einzelne Zellen vorbereiten (HTML CSS Styles den Tabellenfelder zuordnen)
+					  ;  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+
+						; temporäre Variablen
+						TDPATBUTTONS 	:= (Patient  	? (trIdf ? " class='table-btn1'" : " class='table-btn2'") " onclick='ahk.LabJournal_KarteiKarte(event)'" : "")
+						TDR4	            	:= StrReplace(TDR3, "##", PN.PB)         ; Laborparameterbeschreibung
+						html_ID              	:= PatID "_" Patient
+
+					  ; Datum                                                     Farbe1        Farbe2
+						TRDAT    	:= "<TR" (UDatum 	? (trIdf ? " id='td1a'" : " id='td2a'") : (trIdf ? " id='td1b'" : " id='td2b'") ) ">"
 						TDRDX		:= UDatum ? TDR2a : TDR2b
+					  ; ID
+						TDPATNR 	:= RTrim(TDLR1, ">")  	TDPATBUTTONS "; id='" html_ID "'>"
+					  ; Patientenname
+						TDPAT     	:= RTrim(TDLR1, ">") 	TDPATBUTTONS "; id='" html_ID "'>"
+					  ; Parameter Name                             PN.CV = CAVE
+						TDR1X     	:= PN.CV = 0 ? TDR4 	: (PN.CV = 1 ? StrReplace(TDR4, "'>", cColW.1 "'>") : StrReplace(TDR4 	, "'>", cColW.2 "'>"))
+					  ; Parameter Wert
+						TDR2X     	:= PN.CV = 0 ? TDR 	: (PN.CV = 1 ? StrReplace(TDR 	, "'>"	, cColW.1 "'>") : StrReplace(TDR  	, "'>", cColW.2 "'>"))
+					  ; Parameter Normwerte
+						TDR3X     	:= PN.CV = 0 ? TDR1	: (PN.CV = 1 ? StrReplace(TDR1, "'>"	, cColW.1 "'>") : StrReplace(TDR1	, "'>", cColW.2 "'>"))
+					  ; Parameter Einheit
+						TDL1X     	:= PN.CV = 0 ? TDL1	: (PN.CV = 1 ? StrReplace(TDL1	, "'>"	, cColW.1 "'>") : StrReplace(TDL1	, "'>", cColW.2 "'>"))
+					  ; Parameter Lage (Hinweiszeichen)
+						TDCX      	:= PN.CV = 0 ? TDC 	: (PN.CV = 1 ? StrReplace(TDC	, "'>"	, cColW.1 "'>") : StrReplace(TDC 	, "'>", cColW.2 "'>"))
 
-						TDRX      	:= PN.CV = 0 ? TDR 	: (PN.CV = 1 ? StrReplace(TDR 	, "'>"	, cCol1 FWeight1 "'>") : StrReplace(TDR  	, "'>", cCol2 FWeight2 "'>"))
-						TDR1X     	:= PN.CV = 0 ? TDR1	: (PN.CV = 1 ? StrReplace(TDR1, "'>"	, cCol1 FWeight1 "'>") : StrReplace(TDR1	, "'>", cCol2 FWeight2 "'>"))
-
-						TDR4		:= StrReplace(TDR3, "##", PN.PB)
-						TDR2X     	:= PN.CV = 0 ? TDR4 	: (PN.CV = 1 ? StrReplace(TDR4, "'>", cCol1 FWeight1 "'>") : StrReplace(TDR4 	, "'>", cCol2 FWeight2 "'>"))
-
-						TDCX      	:= PN.CV = 0 ? TDC 	: (PN.CV = 1 ? StrReplace(TDC	, "'>"	, cCol1 FWeight1 "'>") : StrReplace(TDC 	, "'>", cCol2 FWeight2 "'>"))
-						TDL1X     	:= PN.CV = 0 ? TDL1	: (PN.CV = 1 ? StrReplace(TDL1	, "'>"	, cCol1 FWeight1 "'>") : StrReplace(TDL1	, "'>", cCol2 FWeight2 "'>"))
-
-					; Abweichung oberhalb der Norm und PN.CV (CAVE) negativ (CV - wenn wahr dann wird andere Farbkennzeichnung)
+					; Abweichung oberhalb der Norm und PN.CV (CAVE) negativ (CV - wenn wahr dann andere Farbkennzeichnung)
 						If (PN.PL > 250 && !PN.CV) {
-							TDRX      	:= StrReplace(TDR 	, "'>"	, cCol3 FWeight3 "'>")
-							TDR1X     	:= StrReplace(TDR1	, "'>"	, cCol3 FWeight3 "'>")
-							TDCX      	:= StrReplace(TDC	, "'>"	, cCol3 FWeight3 "'>")
-							TDL1X     	:= StrReplace(TDL1	, "'>"	, cCol3 FWeight3 "'>")
+							TDRX      	:= StrReplace(TDR 	, ">"	, " " cColW.3 "'>")
+							TDR1X     	:= StrReplace(TDR1	, ">"	, " " cColW.3 "'>")
+							TDCX      	:= StrReplace(TDC	, ">"	, " " cColW.3 "'>")
+							TDL1X     	:= StrReplace(TDL1	, ">"	, " " cColW.3 "'>")
 						}
 
 						If PN.PA {
-
 							RegExMatch(PN.PV, "(?<V>[\<\>])*(?<SU>[\d.]+)\-*(?<SO>[\d.]+)*", P)
 							PSM  	:= PSO ? PSO : PSU
-							PA     	:= Round(PN.PA * (PSM/100), 1)
-							PA     	:= RegExReplace(PA, "\.0+$")
-
+							PA     	:= RegExReplace(Round(PN.PA * (PSM/100), 1), "\.0+$")
 						}
 
-						PE := Trim(PN.PE)	? PN.PE : "" ;" - - - - -"
+						PE         	:= Trim(PN.PE)	? PN.PE : "" ;" - - - - -"
+						tbDatum	:= UDatum ? SubStr(UDatum, 1, 6) : ""
 
-						html .= "`t`t`t" TRPat "`n"
-								.  	" "	TDRDX	. 	tbDatum                             	"</td>"	; Abnahmedatum                	[Datum]
-								. 	" "	tdPat  	.	Patient             	                  	"</td>"	; Patientenname                    [Patient]
-								. 	" "	TDR2X 	.	PN.PN                                 	"</td>"	; Parameter Name              	[Param]
-								. 	" "	TDRX	.	PN.PW                               	"</td>"	; Parameter Wert               	[Wert]
-								.	" "	TDR1X	.	PN.PV			                     	"</td>"	; Parameter Normwerte        	[Normalwerte]
-								.	" "	TDL1X 	.	PE                                       	"</td>"	; Parameter Einheit                [      ]
-								. 	" "	TDCX	.	(PN.PL	? PN.PL "x" 	: "")     	"</td>"	; Parameter Lage                   [+/-]
-								. 	" "	TDRX	.	(PA   	? PA " " PE  	: "") 		"</td>"	; Parameter Abweichung     	[⍉ Abw.]
-								. 	" </TR>`n`n"
+						html .= "`t" TRDAT "`n"
+								.  	"`t`t "	TDRDX  	. 	tbDatum                             	"</TD>`n"	; Abnahmedatum                	[Datum]
+								. 	"`t`t "	TDPATNR	.	PatID             	                  	"</TD>`n"	; Patientennummer                [Patient]
+								. 	"`t`t "	TDPAT     	.	Patient             	                  	"</TD>`n"	; Patientenname                    [Patient]
+								. 	"`t`t "	TDPAT     	.	PatGeburt        	                  	"</TD>`n"	; Patientengeburtstag           	[Patient]
+								. 	"`t`t "	TDPAT     	.	ANFNR          	                  	"</TD>`n"	; Anforderungsnummer       	[Patient]
+								. 	"`t`t "	TDR1X     	.	PN.PN                                 	"</TD>`n"	; Parameter Name              	[Param]
+								. 	"`t`t "	TDR2X    	.	PN.PW                               	"</TD>`n"	; Parameter Wert               	[Wert]
+								.	"`t`t "	TDR3X    	.	PN.PV			                     	"</TD>`n"	; Parameter Normwerte        	[Normalwerte]
+								.	"`t`t "	TDL1X     	.	PE                                       	"</TD>`n"	; Parameter Einheit                [      ]
+								. 	"`t`t "	TDCX    	.	(PN.PL	? PN.PL "x" 	: "")     	"</TD>`n"	; Parameter Lage                   [+/-]
+								. 	"`t`t "	TDR       	.	(PA   	? PA " " PE  	: "") 		"</TD>`n"	; Parameter Abweichung     	[⍉ Abw.]
+								. 	"`t</TR>`n`n"
 
-						PE := PA := UDatum := Patient := ""
+						PE := PA := UDatum := PatID := Patient := PatGeburt := ANFNR := ""
 
 					}
 
@@ -1062,17 +725,18 @@ LaborJournal(LabPat, Anzeige=true) {
 
 		}
 
-		html .= "</tbody></table></body></html>"
+		html .= "</div></table></div></body></html>"
+		;html .= "</tbody></table></div></body></html>"
 		;}
 
-	; erstellte HTML Seite wird angezeigt
+	; erstellte HTML Seite wird angezeigt         		;{
 		FileOpen(A_Temp "\Laborjournal.html", "w", "UTF-8").Write(html)
-		neutron := new NeutronWindow("","","","Laborjournal" LabJ.maxrecords ")", "+AlwaysOnTop minSize900x400")
+		neutron := new NeutronWindow("","","","Laborjournal" LabJ.maxrecords ")", "+AlwaysOnTop minSize920x400")
 		neutron.Load(A_Temp "\Laborjournal.html")
 		neutron.Gui("+LabelNeutron")
 		neutron.Show(winpos)
 		hLJ := WinExist("A")
-		WinSet, AlwaysOnTop,, % "ahk_id " hLJ
+		;WinSet, AlwaysOnTop,, % "ahk_id " hLJ
 
 		obj := neutron.wb.document.getElementById("LaborJournal_Header")	, hcr	:= obj.getBoundingClientRect()
 		obj := neutron.wb.document.getElementById("LabJournal_Table")    	, tcr	:= obj.getBoundingClientRect()
@@ -1082,7 +746,16 @@ LaborJournal(LabPat, Anzeige=true) {
 		labJ.TableHeight   	:= Floor(tcr.Bottom  + 1)
 		labJ.enrolled	    		:= true
 
+		npos := PosStringToObject(winpos)
+		If !IsInsideVisibleArea(npos.X, npos.Y, npos.W, npos.H)
+			winpos := "xCenter yCenter w" npos.W " h" npos.H
+
 		neutron.Show(winpos)
+
+		load_Bar.Set(100, "Das Laborjounal ist geladen!")
+		Gui, load_BarGUI: Destroy
+
+	;}
 
 	; speichern als BMP zum Versenden als Bilddatei
 		;hBMP := hWnd_to_hBmp(labJ.hwnd)
@@ -1101,11 +774,12 @@ LabJournal_KarteiKarte(neutron, event) {
 
 	; event.target will contain the HTML Element that fired the event.
 	; Show a message box with its inner text.
-		RegExMatch(event.target.innerText, "^(?<Name>.*)\[(?<ID>\d+)\]", Pat)
+		RegExMatch(event.target.id, "^\s*(?<ID>\d+)?_(?<Name>.*)", thisPat)
+		;~ SciTEOutput("ID: " thisPatID ", text: " thisPatName ", " event.target.id)
 
 		If labJ.enrolled ="x" {
 
-			lj := GetWindowSpot(labJ.hwnd)
+			lj  	:= GetWindowSpot(labJ.hwnd)
 			dh	:= lj.h
 			dtb	:= labJ.TableHeight - labJ.HeaderHeight + 1
 			dStep:= Floor(dtb/25)
@@ -1118,9 +792,10 @@ LabJournal_KarteiKarte(neutron, event) {
 
 		}
 
-		AlbisAkteOeffnen(PatName, PatID)
-		AlbisLaborBlattZeigen()
-
+		If AlbisAkteOeffnen(thisPatName, thisPatID)
+			AlbisLaborBlattZeigen()
+		else
+			PraxTT("Die Patientenakte konnte nicht geöffnet werden!")
 
 }
 
@@ -1156,6 +831,9 @@ LabJournal_Close(event) {
 
 }
 
+LabJournal_Grenzen(event) {
+AlbisLaborwertGrenzen(adm.LabDBPath)
+}
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Hilfsfunktionen
@@ -1166,6 +844,17 @@ SaveGuiPos(hwnd) {
 	winPos	 	:= "x" win.X " y" win.Y " w" win.CW " h" win.CH
 	IniWrite, % winpos	, % adm.Ini, % adm.compname, LaborJournal_Position
 
+}
+
+PosStringToObject(string) {
+
+	p := Object()
+	For wIdx, coord in StrSplit("XYWH") {
+		RegExMatch(string, "i)" coord "(?<Pos>\d+)", w)
+		p[coord] := wPos
+	}
+
+return p
 }
 
 MessageWorker(InComing) {                                                                                    	;-- verarbeitet die eingegangen Nachrichten
@@ -1321,6 +1010,151 @@ B64 :=	"AAABAAEAMDAAAAEAGACoHAAAFgAAACgAAAAwAAAAYAAAAAEAGAAAAAAAAAAAABwAAAAcAAAA
 
 Return hBitmap
 }
+
+LoadBar_Gui(show:=1, opt:="") {
+
+	global load_BarGUI, load_Bar
+
+	If !IsObject(opt)
+		opt:={"col": ["0x4D4D4D","0xFFFFFF","0xEFEFEF"], "w":320,	"h":36}
+
+	Gui, load_BarGUI: -Border -Caption +ToolWindow HWNDhLoad_BarWin
+	Gui, load_BarGUI: Color, % opt.col.1, % opt.col.2
+
+	load_Bar := new LoaderBar("load_BarGUI", 3, 3, opt.W, opt.H, "LABORJOURNAL", 1, opt.col.3)
+
+	wW :=load_Bar.Width + 2*load_Bar.X
+	wH :=load_Bar.Height + 2*load_Bar.Y
+
+	Gui, load_BarGUI: Show, % "w" wW " h" wH, % "Laborjournal lädt..."
+	load_Bar.hWin := hLoad_BarWin
+
+}
+
+LoadBar_Callback() {
+
+
+}
+
+class LoaderBar {
+
+	__New(GUI_ID:="Default",x:=0,y:=0,w:=280,h:=28,Title:="",ShowDesc:=0,FontColorDesc:="2B2B2B",FontColor:="EFEFEF",BG:="2B2B2B|2F2F2F|323232",FG:="66A3E2|4B79AF|385D87") {
+		SetWinDelay,0
+		SetBatchLines,-1
+		if (StrLen(A_Gui))
+			_GUI_ID:=A_Gui
+		else
+			_GUI_ID:=1
+		if ( (GUI_ID="Default") || !StrLen(GUI_ID) || GUI_ID==0 )
+			GUI_ID:=_GUI_ID
+
+		this.GUI_ID := GUI_ID
+		Gui, %GUI_ID%:Default
+
+		this.BG     	:= StrSplit(BG,"|")
+		this.BG.W  	:= w
+		this.BG.H  	:= h
+		this.Width 	:=w
+		this.Height	:=h
+		this.FG       	:= StrSplit(FG,"|")
+		this.FG.W  	:= this.BG.W - 2
+		this.FG.H   	:= (fg_h:=(this.BG.H - 2))
+		this.Percent 	:= 0
+		this.X        	:= x
+		this.Y        	:= y
+		fg_x            	:= this.X + 1
+		fg_y            	:= this.Y + 1
+		this.FontColor := FontColor
+		this.ShowDesc := ShowDesc
+
+		;DescBGColor:="4D4D4D"
+		DescBGColor:="Black"
+		this.DescBGColor := DescBGColor
+
+		this.FontColorDesc := FontColorDesc
+
+		Gui,Font,s10
+		Gui, Add, Text, % "x" x " y" y " w" w " h" h " BackgroundTrans 0xE hwndhLoaderBarTitle", % Title
+		this.hLoaderBarTitle := hLoaderBarTitle
+
+		Gui,Font,s8
+		Gui, Add, Text, % "x" x " y+1 w" w " h" h " 0xE hwndhLoaderBarBG"
+		this.ApplyGradient(this.hLoaderBarBG	:= hLoaderBarBG,this.BG.1, this.BG.2, this.BG.3,1)
+
+		Gui, Add, Text, x%fg_x% y%fg_y% w0 h%fg_h% 0xE hwndhLoaderBarFG
+		this.ApplyGradient(this.hLoaderBarFG   	:= hLoaderBarFG,this.FG.1, this.FG.2, this.FG.3,1)
+
+		Gui, Add, Text, x%x% y%y% w%w% h%h% 0x200 border center BackgroundTrans hwndhLoaderNumber c%FontColor%, % "[ 0 % ]"
+			this.hLoaderNumber := hLoaderNumber
+
+		if (this.ShowDesc) {
+			Gui, Add, Text, xp y+2 w%w% h16 0x200 Center border BackgroundTrans hwndhLoaderDesc c%FontColorDesc%, Loading...
+			this.hLoaderDesc := hLoaderDesc
+			this.Height:=h+18
+		}
+
+		Gui,Font
+
+		Gui, %_GUI_ID%:Default
+	}
+
+	Set(p,w:="Loading...") {
+		if (StrLen(A_Gui))
+			_GUI_ID:=A_Gui
+		else
+			_GUI_ID:=1
+		GUI_ID := this.GUI_ID
+
+		Gui, %GUI_ID%:Default
+		GuiControlGet, LoaderBarBG, Pos, % this.hLoaderBarBG
+
+		this.BG.W := LoaderBarBGW
+		this.FG.W := LoaderBarBGW - 2
+		this.Percent:=(p>=100) ? p:=100 : p
+
+		PercentNum	:= Round(this.Percent,0)
+		PercentBar	:= Floor((this.Percent/100)*(this.FG.W))
+
+		hLoaderBarTitle		:= this.hLoaderBarTitle
+		hLoaderBarFG  	:= this.hLoaderBarFG
+		hLoaderNumber 	:= this.hLoaderNumber
+
+		GuiControl,Move	,% hLoaderBarFG  	, % "w" PercentBar
+		GuiControl,       	,% hLoaderNumber 	, % "[" PercentNum "% ]"
+
+		if (this.ShowDesc) {
+			hLoaderDesc := this.hLoaderDesc
+			GuiControl,,%hLoaderDesc%, %w%
+		}
+		Gui, %_GUI_ID%:Default
+	}
+
+	ApplyGradient( Hwnd, LT := "101010", MB := "0000AA", RB := "00FF00", Vertical := 1 ) {
+		Static STM_SETIMAGE := 0x172
+		ControlGetPos,,, W, H,, ahk_id %Hwnd%
+		PixelData := Vertical ? LT "|" LT "|" LT "|" MB "|" MB "|" MB "|" RB "|" RB "|" RB : LT "|" MB "|" RB "|" LT "|" MB "|" RB "|" LT "|" MB "|" RB
+		hBitmap := this.CreateDIB( PixelData, 3, 3, W, H, True )
+		oBitmap := DllCall( "SendMessage", "Ptr",Hwnd, "UInt",STM_SETIMAGE, "Ptr",0, "Ptr",hBitmap )
+		Return hBitmap, DllCall( "DeleteObject", "Ptr",oBitmap )
+	}
+
+	CreateDIB( PixelData, W, H, ResizeW := 0, ResizeH := 0, Gradient := 1  ) {
+		; http://ahkscript.org/boards/viewtopic.php?t=3203                  SKAN, CD: 01-Apr-2014 MD: 05-May-2014
+		Static LR_Flag1 := 0x2008 ; LR_CREATEDIBSECTION := 0x2000 | LR_COPYDELETEORG := 8
+			,  LR_Flag2 := 0x200C ; LR_CREATEDIBSECTION := 0x2000 | LR_COPYDELETEORG := 8 | LR_COPYRETURNORG := 4
+			,  LR_Flag3 := 0x0008 ; LR_COPYDELETEORG := 8
+		WB := Ceil( ( W * 3 ) / 2 ) * 2,  VarSetCapacity( BMBITS, WB * H + 1, 0 ),  P := &BMBITS
+		Loop, Parse, PixelData, |
+		P := Numput( "0x" A_LoopField, P+0, 0, "UInt" ) - ( W & 1 and Mod( A_Index * 3, W * 3 ) = 0 ? 0 : 1 )
+		hBM := DllCall( "CreateBitmap", "Int",W, "Int",H, "UInt",1, "UInt",24, "Ptr",0, "Ptr" )
+		hBM := DllCall( "CopyImage", "Ptr",hBM, "UInt",0, "Int",0, "Int",0, "UInt",LR_Flag1, "Ptr" )
+		DllCall( "SetBitmapBits", "Ptr",hBM, "UInt",WB * H, "Ptr",&BMBITS )
+		If not ( Gradient + 0 )
+			hBM := DllCall( "CopyImage", "Ptr",hBM, "UInt",0, "Int",0, "Int",0, "UInt",LR_Flag3, "Ptr" )
+		Return DllCall( "CopyImage", "Ptr",hBM, "Int",0, "Int",ResizeW, "Int",ResizeH, "Int",LR_Flag2, "UPtr" )
+	}
+}
+
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Includes

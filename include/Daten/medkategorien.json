@@ -1,4 +1,8 @@
 ﻿{
+    "": {
+        "ingredient": "",
+        "use": ""
+    },
     "Abasaglar": {
         "ingredient": "Insulin Glargin",
         "use": "Diabetes"
@@ -47,8 +51,20 @@
         "ingredient": "Amlodipin",
         "use": "Blutdruck"
     },
+    "Amlodipin Axcount": {
+        "ingredient": "Amlodipin",
+        "use": "bluthochdruck"
+    },
     "Amlodipin Besilat": {
         "ingredient": "Amlodipin",
+        "use": "Bluthochdruck"
+    },
+    "Amlodipin dura": {
+        "ingredient": "Amlodipin",
+        "use": "Blutdruck"
+    },
+    "Amlodipin/Valsa": {
+        "ingredient": "Valsartan und Amlodipin",
         "use": "Bluthochdruck"
     },
     "Ampho Moronal": {
@@ -83,6 +99,10 @@
         "ingredient": "Atorvastin",
         "use": "Cholesterin"
     },
+    "Atozet": {
+        "ingredient": "Atorvastatin und Ezetimib",
+        "use": "Cholesterin"
+    },
     "Azithromycin": {
         "ingredient": "Azithromycin",
         "use": "mit Antibiotika therapierbarer Infekt"
@@ -107,6 +127,10 @@
         "ingredient": "Insulin Isophan (human)",
         "use": "Diabetes"
     },
+    "Berlthyrox": {
+        "ingredient": "L-Thyroxin",
+        "use": "Schilddrüse"
+    },
     "Berodual N": {
         "ingredient": "Fenoterol und Ipratropium bromid",
         "use": "COPD/Asthma (Notfall)"
@@ -122,6 +146,10 @@
     "Biso": {
         "ingredient": "Bisoprolol",
         "use": "Blutdruck/Herzrhythmus"
+    },
+    "Bisobeta": {
+        "ingredient": "Bisoprolol",
+        "use": "Blutdruck"
     },
     "BisoHEXAL": {
         "ingredient": "Bisoprolol",
@@ -155,6 +183,10 @@
         "ingredient": "Candesartan und Amlodipin",
         "use": "Blutdruck"
     },
+    "Candeamlo Hex": {
+        "ingredient": "Candesartan und Amlodipin",
+        "use": "Bluthochdruck"
+    },
     "Candecor": {
         "ingredient": "Candesartan",
         "use": "Blutdruck"
@@ -171,6 +203,14 @@
         "ingredient": "Candesartan und Hydrochlorothiazid",
         "use": "Blutdruck"
     },
+    "Capto": {
+        "ingredient": "Captopril",
+        "use": "Bluthochdruck"
+    },
+    "Caramlo": {
+        "ingredient": "",
+        "use": "Hypertonie"
+    },
     "Carmen Ace": {
         "ingredient": "Enalapril und Lercanidipin",
         "use": "Blutdruck"
@@ -178,6 +218,10 @@
     "Carvedilol": {
         "ingredient": "Carvedilol",
         "use": "Herzrhythmus"
+    },
+    "Celebrex": {
+        "ingredient": "Celecoxib",
+        "use": "Schmerzen"
     },
     "Celestamine": {
         "ingredient": "Betametason",
@@ -206,6 +250,10 @@
     "Clonid": {
         "ingredient": "Clonidin-Hcl",
         "use": "Auge"
+    },
+    "Clonid Ophtal": {
+        "ingredient": "Clonidin",
+        "use": "grüner Star"
     },
     "Clopidogrel": {
         "ingredient": "Clopidogrel",
@@ -278,6 +326,10 @@
     "Escitalopram": {
         "ingredient": "Escitalopram",
         "use": "Stimmung"
+    },
+    "Esomeprazol": {
+        "ingredient": "Esopremazol",
+        "use": "Magensäure"
     },
     "Etoricoxib": {
         "ingredient": "Etoricoxib",
@@ -415,6 +467,10 @@
         "ingredient": "Insulin lispro",
         "use": "Diabetes"
     },
+    "Humalog Kwikpen": {
+        "ingredient": "Insulin lispro",
+        "use": "Diabetes"
+    },
     "Huminsulin": {
         "ingredient": "Insulin Isophan (human)",
         "use": "Diabetes"
@@ -469,6 +525,10 @@
     },
     "L Thyrox": {
         "ingredient": "Levothyroxin",
+        "use": "Schilddrüse"
+    },
+    "L Thyrox Jod": {
+        "ingredient": "L-Thyroxin",
         "use": "Schilddrüse"
     },
     "L Thyroxin": {
@@ -575,6 +635,10 @@
         "ingredient": "Metformin",
         "use": "Diabetes"
     },
+    "Metformin Lich": {
+        "ingredient": "Metformin",
+        "use": "Diabetes"
+    },
     "Metobeta": {
         "ingredient": "Metoprolol",
         "use": "Blutdruck"
@@ -610,6 +674,10 @@
     "Metoprololsu": {
         "ingredient": "Metoprolol",
         "use": "Blutdruck"
+    },
+    "Metoprololsu dura": {
+        "ingredient": "Metoprolol",
+        "use": "Hypertonie"
     },
     "Metoprololsuc": {
         "ingredient": "Metoprolol",
@@ -659,6 +727,10 @@
         "ingredient": "Glyceroltrinitrat",
         "use": "Brustenge/Angina pectoris"
     },
+    "Nitrendipin": {
+        "ingredient": "Nitrendipin",
+        "use": "Bluthochdruck"
+    },
     "Novaminsulfon": {
         "ingredient": "Metamizol",
         "use": "Schmerzen"
@@ -667,12 +739,20 @@
         "ingredient": "Metamizol",
         "use": "Schmerzen"
     },
+    "Novorapid Flexpen": {
+        "ingredient": "Insulin aspart",
+        "use": "Diabetes"
+    },
     "Olanzapin": {
         "ingredient": "Olanzapin",
         "use": "Psyche"
     },
     "Olmesartan": {
         "ingredient": "Olmesartan",
+        "use": "Bluthochdruck"
+    },
+    "Olmesartan/Amlo Hex": {
+        "ingredient": "Olmesartan und Amlodipin",
         "use": "Bluthochdruck"
     },
     "Omepra": {
@@ -694,6 +774,10 @@
     "Oxycodon/Naloxon": {
         "ingredient": "Oxycodon und Naloxon",
         "use": "Schmerzen [Morphin]"
+    },
+    "Ozempic": {
+        "ingredient": "Semaglutid",
+        "use": "Diabetes"
     },
     "Palexia": {
         "ingredient": "Tapentadol",
@@ -824,6 +908,10 @@
         "remark": "Notfallspray",
         "use": "Asthma/COPD (Notfall)"
     },
+    "SalbuHEXAL N": {
+        "ingredient": "Salbutamol",
+        "use": "Asthma"
+    },
     "Salbutamol": {
         "ingredient": "Salbutamol",
         "remark": "Notfallspray",
@@ -841,7 +929,15 @@
         "ingredient": "Sertralin",
         "use": "Stimmung"
     },
+    "Simbrinza": {
+        "ingredient": "Brinzolamid und Brimonidin",
+        "use": "grüner Star"
+    },
     "Simva Basics": {
+        "ingredient": "Simvastatin",
+        "use": "Cholesterin"
+    },
+    "Simva sto": {
         "ingredient": "Simvastatin",
         "use": "Cholesterin"
     },
@@ -884,6 +980,10 @@
     "Spironolacton Accord": {
         "ingredient": "Spironolacton",
         "use": "Herzschwäche"
+    },
+    "Srivasso": {
+        "ingredient": "",
+        "use": "COPD"
     },
     "Tamox": {
         "ingredient": "Tamoxifen",
@@ -938,6 +1038,10 @@
         "ingredient": "Torasemid",
         "use": "Blutdruck/Wassertbl."
     },
+    "Torem": {
+        "ingredient": "Torasemid",
+        "use": "Bluthochdruck/Wassertablette"
+    },
     "Tramadol": {
         "ingredient": "Tramadol",
         "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
@@ -947,6 +1051,10 @@
         "ingredient": "Tramadol",
         "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
         "use": "Schmerzen (Morphin)"
+    },
+    "Trimbow": {
+        "ingredient": "Formoterol, Glycopyrroniumbromid und Beclometason",
+        "use": "Asthma/COPD"
     },
     "Trulicity": {
         "ingredient": "Dulaglutid",
@@ -999,6 +1107,10 @@
     "Vitamin B": {
         "ingredient": "Cyanocobalamin",
         "use": "Vitamin B12 Mangel"
+    },
+    "Vitamin B Komplex": {
+        "ingredient": "Vitamin B Komplex",
+        "use": "Vitamin B Mangel"
     },
     "Vitamin B12": {
         "ingredient": "Cyanocobalamin",

@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 20.02.2021 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 07.04.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
 ; FENSTER                                                                                                                                                                                                                                                   	(49)
@@ -715,12 +715,12 @@ GetMonitorInfo(hMonitor) {
 
 IsInsideVisibleArea(x,y,w,h) {
 
-  isVis:=0
+  isVis := 0
   SysGet, MonitorCount, MonitorCount
-  Loop, % MonitorCount   {
-    SysGet, Monitor%A_Index%, MonitorWorkArea, %A_Index%
-    if (x+w-10>Monitor%A_Index%Left) and (x+10<Monitor%A_Index%Right) and (y+20>Monitor%A_Index%Top) and (y+20<Monitor%A_Index%Bottom)
-      isVis:=1
+  Loop % MonitorCount {
+    SysGet, Monitor%A_Index%, MonitorWorkArea, % A_Index
+    if (x+w-10>Monitor%A_Index%Left) && (x+10<Monitor%A_Index%Right) && (y+20>Monitor%A_Index%Top) && (y+20<Monitor%A_Index%Bottom)
+      isVis := 1
   }
 
 return, IsVis

@@ -2,15 +2,17 @@
 ;                                                                        Tesseract - OCR (Multithreading Skript)
 ;
 ;      Funktion:   	PDF zu PDF-Text Umwandlung mit der Funktion tessOCRPdf
+;							- wird als Thread über Addendum_Ini.ahk geladen
+;							- Addendum_Mining.ahk wird hinzugefügt um die automatische Benennung ausserhalb vom Addendum-Skript vorzunehmen
 ;
 ;      Basisskript: 	Addendum.ahk, Addendum_Gui.ahk
 ;
 ;
 ;	                    	Addendum für Albis on Windows
-;                        	by Ixiko started in September 2017 - last change 28.03.2021 - this file runs under Lexiko's GNU Licence
+;                        	by Ixiko started in September 2017 - last change 02.04.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-tessOCRPdf(PDFName, params)             	{                          	;-- tesseract Texterkennung -> erstellt eine durchsuchbare PDF Datei
+tessOCRPdf(PDFName, params)                                         	{              	;-- tesseract Texterkennung -> erstellt eine durchsuchbare PDF Datei
 
 	; OCR einer bestehenden PDF Datei mit tesseract 4+
 	; enthaltene Bilder werden extrahiert
@@ -27,7 +29,7 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 		global tess
 		static iniFile, tesspath, xpdfpath, docPath, rmdrive, backupPath, txtOCRPath, OCRLogPath ;, tessconfig
 		static tempPath, lastSetName, PageMax
-		static sep := " -------------------------------------------------------------------"
+		static sep := " -----------------------------------------------------------"
 		static ocrPreProcessing	:= 1
 		static negateArg         	:= 2
 		static performScaleArg	:= 1
@@ -49,7 +51,6 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 				lastSetName := params.SetName
 
 			; Arbeitspfade korrigieren
-				;tess.iniFile         	:= Trim(RTrim(params.inipath        	, "\"))
 				tess.tessPath      	:= Trim(RTrim(params.tessPath      	, "\"))
 				tess.leptPath      	:= Trim(RTrim(params.leptPath      	, "\"))
 				tess.xpdfPath      	:= Trim(RTrim(params.xpdfpath      	, "\"))
@@ -177,14 +178,14 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
   ; -------------------------------------------------------------------------------------------------------------
   ; Texterkennung
 
-	; noch vorhandene Bilddateien löschen ;{
+	; vorhandene Bilddateien löschen	;{
 		FileDelete, % tess.tempPath "\work*.*"
 		FileDelete, % tess.tempPath "\conv*.*"
 		FileDelete, % tess.tempPath "\in.pdf"
 		FileDelete, % tess.tempPath "\out*.*"
 	;}
 
-	; zu verarbeitende PDF ins Arbeits- und Backupverzeichnis kopieren ;{
+	; Verzeichnisoperationen             	;{
 		If !FileExist(tess.backupPath "\" PDFName ".pdf")
 			FileCopy, % pdfPath, % tess.backupPath "\" PDFName ".pdf"
 
@@ -200,15 +201,15 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 				SciTEOutput(sep "`n  # [" PageMax "] Seite" (PageMax>1?"n":"") ": \" PDFName ".pdf")
 
 			If (StrLen(tess.preprocessing) > 0)
-				SciTEOutput("  - Preprocessing: " PageMax (PageMax > 1 ? " Seitenbilder werden" : " Seitenbild wird") " vorbereitet")
+				SciTEOutput("  - Preprocessing: " PageMax (PageMax > 1 ? " Seiten werden" : " Seite wird") " vorbereitet")
 
 		; Originalbilder entpacken
 			If (tess.convertwith = "pdftopng") {
 				tess.imgpattern := 5, tess.imgext := "png"
-				pdfconvert := tess.pdftopng " -f 1 -l " PageMax " -r 300 -aa yes -freetype yes -aaVector yes " q tess.tempPath "\in.pdf" q " " q tess.tempPath "\orig" q
+				pdfconvert := tess.pdftopng " -f 1 -l " PageMax " -r 200 -aa yes -freetype yes -aaVector yes " q tess.tempPath "\in.pdf" q " " q tess.tempPath "\orig" q
 			}	else If (tess.convertwith = "pdftoppm") {
 				tess.imgpattern := 5, tess.imgext := "ppm"
-				pdfconvert := tess.pdftoppm " -tif -f 1 -l " PageMax " -r 300 -aa yes -freetype yes -aaVector yes " q tess.tempPath "\in.pdf" q " " q tess.tempPath "\orig" q
+				pdfconvert := tess.pdftoppm " -tif -f 1 -l " PageMax " -r 200 -aa yes -freetype yes -aaVector yes " q tess.tempPath "\in.pdf" q " " q tess.tempPath "\orig" q
 			}	else If (tess.convertwith = "pdfimages") {
 				tess.imgpattern := 3, tess.imgext := "jpg"
 				pdfconvert := tess.pdfimages " -j " q tess.tempPath "\in.pdf" q " " q tess.tempPath "\orig" q
@@ -224,7 +225,6 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 				If (params.debug > 0)
 					SciTEOutput("  - Preprocessing: Seitenbilder extrahieren")
 				tess.imgpattern := 0, tess.imgext := "jpg"
-				;pdfconvert	:= tess.imagick " " q tess.tempPath "\in.pdf" q " " q tess.tempPath "\conv." tess.imgext q
 				pdfconvert	:= tess.imagick " -units PixelsPerInch -density 200 " q tess.tempPath "\in.pdf" q " " q tess.tempPath "\conv." tess.imgext q
 				stdOut   	:= ParseStdOut(StdoutToVar(pdfconvert))
 				If (params.debug > 1)
@@ -279,7 +279,7 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 		}
 
 		If (params.debug > 0)
-			SciTEOutput("  - Preprocessing: abgeschlossen [" Round((A_TickCount-startTime)/1000, 1) " s]")
+			SciTEOutput("  - Preprocessing: abgeschlossen [" Round((A_TickCount-startTime)/1000, 1) "s]")
 
 	  ; infile und config file erstellen     	;{
 		workimgs := ""
@@ -329,13 +329,13 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 		If (params.debug > 1)
 			SciTEOutput("  - Texterkennung: Tesseract Ausgabe`n   `t[" tess_cmdline  "]" (StrLen(stdOut) > 0 ? "`n" ParseStdOut(stdout) : ""))
 		else If (params.debug > 0)
-			SciTEOutput("  - Texterkennung: beendet [" Round((A_TickCount-startTime)/1000, 1) " s]")
+			SciTEOutput("  - Texterkennung: beendet [" Round((A_TickCount-startTime)/1000, 1) "s]")
 	;}
 
 	; OCR postprocessing                	;{
 		If !ocrfailure {
 		 ; Bilder wieder zu einer PDF zusammenlegen
-			SciTEOutput(	"  - Postprocessing: image-only und text-only PDF-Dateien vereinen")
+			SciTEOutput(	"  - Postprocessing: image-only u. text-only Dateien vereinen")
 			pdfmerge	:= tess.qpdf " --underlay " q tess.tempPath "\out2.pdf" q " -- " q tess.tempPath "\out1.pdf" q " " q tess.tempPath "\merged.pdf"
 			stdOut   	:= StdoutToVar(pdfmerge)
 			stdOut   	:= ParseStdOut(stdout)
@@ -361,8 +361,8 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 			; Überschreiben der Originaldatei
 			FileCopy, % tess.tempPath "\merged.pdf", % tess.docPath "\" PDFName ".pdf", 1
 			If (params.debug > 0)
-				SciTEOutput(	"  - Dateierzeugung: PDF Datei [" Floor(PDFSizeOld/1024) " kb] wurde mit OCR Datei [" Floor(PDFSize/1024) " kb] ersetzt`n"
-								.	"  - Dateierzeugung: Textdatei mit OCR Inhalt " ((TXTSize > 0) ? " wurde erstellt [" TXTSize " Zeichen]" : "konnte nicht erstellt werden"))
+				SciTEOutput(	"  - Dateierzeugung: PDF [" Floor(PDFSizeOld/1024) " kb] ersetzt mit OCR-PDF [" Floor(PDFSize/1024) " kb]`n"
+								.	"  - Dateierzeugung: Textdatei " ((TXTSize > 0) ? " wurde erstellt [" TXTSize " Zeichen]" : "konnte nicht erstellt werden"))
 		}
 
 		; Textdatei kopieren wenn es einen Pfad für Textdateien gibt
@@ -377,11 +377,11 @@ tessOCRPdf(PDFName, params)             	{                          	;-- tessera
 	; Daten in Logdatei schreiben	    	;{
 		OCRDuration := Round((A_TickCount - startTime) / 1000, 1)
 		If !ocrfailure
-			LogText := "file:" PDFName ";time:" OCRDuration ";pages:" PageMax ";filesize:" (PDFSize = "" ? 0 : PDFSize) ";textlength:" (TXTSize = "" ? 0 : TXTSize)
+			LogText := ";" PDFName ";time:" OCRDuration ";pages:" PageMax ";filesize:" (PDFSize = "" ? 0 : PDFSize) ";textlength:" (TXTSize = "" ? 0 : TXTSize)
 		else
-			LogText := "file:" PDFName ";time:" OCRDuration ";pages:" PageMax "; ocr failure: `n" RegExReplace(RegExReplace(stdout, "[\n\r]", "|"), "[\t]", " ")
+			LogText := ";" PDFName ";time:" OCRDuration ";pages:" PageMax "; ocr failure: `n" RegExReplace(RegExReplace(stdout, "[\n\r]", "|"), "[\t]", " ")
 
-		FileAppend, % "[" A_DD "-" A_MM "-" A_YYYY " " A_Hour ":" A_Min  "] " LogText "`n", % tess.OCRLogPath, % "UTF-8"
+		FileAppend, % "[" A_DD "-" A_MM "-" A_YYYY " " A_Hour ":" A_Min  "]" LogText "`n", % tess.OCRLogPath, % "UTF-8"
 	;}
 
   ;
@@ -391,7 +391,7 @@ return PdfText
 }
 
 ;--------------------------------- file system
-PDFisSearchable(pdfFilePath)                    	{                          	;-- durchsuchbare PDF Datei?
+PDFisSearchable(pdfFilePath)                                                	{              	;-- durchsuchbare PDF Datei?
 
 	; letzte Änderung 08.02.2021 : neuer Matchstring
 
@@ -414,7 +414,7 @@ PDFisSearchable(pdfFilePath)                    	{                          	;--
 return 0
 }
 
-PDFGetPages(pdfFilePath)                         	{                          	;-- gibt die Anzahl der Seiten einer PDF zurück
+PDFGetPages(pdfFilePath)                                                     	{              	;-- gibt die Anzahl der Seiten einer PDF zurück
 
 	; last change 30.11.2020
 
@@ -459,11 +459,11 @@ PDFGetPages(pdfFilePath)                         	{                          	;-
 return 0
 }
 
-PDFGetVersion(pdfFilePath)                    	{                            	;-- PDF Version erhalten
+PDFGetVersion(pdfFilePath)                                                	{                	;-- PDF Version erhalten
 return FileOpen(pdfFilePath, "r", "CP0").ReadLine()
 }
 
-PDFGetEOLBytes(pdfFilePath)                 	{                            	;-- PDF Dateiendbytes lesen
+PDFGetEOLBytes(pdfFilePath)                                             	{                	;-- PDF Dateiendbytes lesen
 
 	If !(fobj := FileOpen(pdfFilePath, "r", "CP0"))
 		return 0
@@ -476,7 +476,7 @@ PDFGetEOLBytes(pdfFilePath)                 	{                            	;-- P
 return Format("{:02X}", NumGet(EOL, 0, "Int")) = "0A" ? 1 : 2
 }
 
-PDFGetXREF(pdfFilePath, EOLBytes=0)   	{                            	;-- PDF XREF Daten lesen (Metadaten)
+PDFGetXREF(pdfFilePath, EOLBytes=0)                               	{                	;-- PDF XREF Daten lesen (Metadaten)
 
 	If !EOLBytes
 		EOLBytes := PDFGetEOLBytes(pdfFilePath)
@@ -534,7 +534,7 @@ PDFGetXREF(pdfFilePath, EOLBytes=0)   	{                            	;-- PDF XRE
 	MsgBox, % "Table: n=" n " objects=" NrObjects "`n" t
 }
 
-PDFisCorrupt(pdfFilePath)                     		{                            	;-- prüft ob die PDF Datei defekt ist
+PDFisCorrupt(pdfFilePath)                                                 		{                	;-- prüft ob die PDF Datei defekt ist
 
 	If !(fobj := FileOpen(pdfFilePath, "r", "CP0"))
 		return 0
@@ -547,7 +547,7 @@ PDFisCorrupt(pdfFilePath)                     		{                            	;-
 return InStr(StrGet(&EndOfFile, 5, "CP0"), "EOF") ? false : true
 }
 
-PDFObjectSearch(pdfFilePath,mstring)       	{                            	;-- Suchen in den Objekteigenschaften
+PDFObjectSearch(pdfFilePath,mstring)                                   	{                	;-- Suchen in den Objekteigenschaften
 
 	; mstring - matchstring
 
@@ -571,7 +571,7 @@ return 0
 
 }
 
-FileIsLocked(FullFilePath)                     		{                             	;-- ist die Datei gesperrt?
+FileIsLocked(FullFilePath)                     	                            	{                 	;-- ist die Datei gesperrt?
 
 	f := FileOpen(FullFilePath, "rw")
 	LE		:= A_LastError
@@ -582,7 +582,7 @@ FileIsLocked(FullFilePath)                     		{                             	
 return LE = 32 ? true : false
 }
 
-GetPDFViewerArg(class, hwnd)            		{
+GetPDFViewerArg(class, hwnd)            	                            	{
 
 	WinGet PID, PID, % "ahk_id " hwnd
 	SciTEOutput("Foxit: " Viewercmdline)
@@ -599,50 +599,51 @@ GetPDFViewerArg(class, hwnd)            		{
 }
 
 ;--------------------------------- cmdline
-StdoutToVar(sCmd, sEncoding="UTF-8", sDir="", ByRef nExitCode=0) {                               	;-- cmdline Ausgabe in einen String umleiten
+StdoutToVar(sCmd,sEnc:="",sDir=""
+, ByRef nExitCode=0)                                                         	{              	;-- cmdline Ausgabe in einen String umleiten
+
+	If !sEnc
+		sEnc := "UTF-8"
 
     DllCall( "CreatePipe",           PtrP,hStdOutRd, PtrP,hStdOutWr, Ptr,0, UInt,0 )
     DllCall( "SetHandleInformation", Ptr,hStdOutWr, UInt,1, UInt,1                 )
 
-            VarSetCapacity( pi, (A_PtrSize == 4) ? 16 : 24,  0 )
-    siSz := VarSetCapacity( si, (A_PtrSize == 4) ? 68 : 104, 0 )
-    NumPut( siSz,         si,  0,                                      		"UInt" )
-    NumPut( 0x100,     si,  (A_PtrSize == 4) ? 44 : 60, 	"UInt" )
-    NumPut( hStdOutWr, si,  (A_PtrSize == 4) ? 60 : 88, 	"Ptr"  )
-    NumPut( hStdOutWr, si,  (A_PtrSize == 4) ? 64 : 96, 	"Ptr"  )
+				VarSetCapacity( pi, (A_PtrSize == 4) ? 16 : 24,  0 )
+    siSz :=	VarSetCapacity( si, (A_PtrSize == 4) ? 68 : 104, 0 )
+    NumPut( siSz         	, si,  0										, "UInt"	)
+    NumPut( 0x100     	, si,  (A_PtrSize == 4) ? 44 : 60	, "UInt"	)
+    NumPut( hStdOutWr	, si,  (A_PtrSize == 4) ? 60 : 88	, "Ptr"	)
+    NumPut( hStdOutWr	, si,  (A_PtrSize == 4) ? 64 : 96	, "Ptr"	)
 
     If (!DllCall( "CreateProcess", "Ptr",0, "Ptr",&sCmd, "Ptr",0, "Ptr",0, "Int",True, "UInt",0x08000000, "Ptr",0, "Ptr",sDir?&sDir:0, "Ptr",&si, "Ptr",&pi ))
         Return ""
       , DllCall( "CloseHandle", "Ptr",hStdOutWr )
       , DllCall( "CloseHandle", "Ptr",hStdOutRd )
 
-    DllCall( "CloseHandle", "Ptr",hStdOutWr ) ; The write pipe must be closed before reading the stdout.
-    While ( 1 )  { ; Before reading, we check if the pipe has been written to, so we avoid freezings.
+    DllCall( "CloseHandle", "Ptr",hStdOutWr )
 
+    While ( 1 )  {
         If (!DllCall( "PeekNamedPipe", Ptr,hStdOutRd, Ptr,0, UInt,0, Ptr,0, UIntP,nTot, Ptr,0 ))
             Break
-
-        If ( !nTot ) { ; If the pipe buffer is empty, sleep and continue checking.
+        If !nTot {
             Sleep, 100
             Continue
-        } ; Pipe buffer is not empty, so we can read it.
-
+        }
         VarSetCapacity(sTemp, nTot+1)
         DllCall( "ReadFile", Ptr,hStdOutRd, Ptr,&sTemp, UInt,nTot, PtrP,nSize, Ptr,0 )
-        sOutput .= StrGet(&sTemp, nSize, sEncoding)
-
+        sOutput .= StrGet(&sTemp, nSize, sEnc)
     }
 
-    ; * SKAN has managed the exit code through SetLastError.
-    DllCall( "GetExitCodeProcess", Ptr,NumGet(pi,0), UIntP,nExitCode )
-    DllCall( "CloseHandle",        Ptr,NumGet(pi,0)                              )
-    DllCall( "CloseHandle",        Ptr,NumGet(pi,A_PtrSize)                   )
-    DllCall( "CloseHandle",        Ptr,hStdOutRd                                   )
+    DllCall( "GetExitCodeProcess"	, Ptr, NumGet(pi,0), UIntP,nExitCode	)
+    DllCall( "CloseHandle"       	, Ptr, NumGet(pi,0)                         	)
+    DllCall( "CloseHandle"       	, Ptr, NumGet(pi,A_PtrSize)             	)
+    DllCall( "CloseHandle"       	, Ptr, hStdOutRd                             	)
 
 Return sOutput
 }
 
-RunCMD(CmdLine, WorkingDir:="", Codepage:="CP0", Fn:="RunCMD_Output") {  ;         RunCMD v0.94
+RunCMD(CmdLine, WorkingDir:=""
+, Codepage:="CP0", Fn:="RunCMD_Output")                     	{              	;-- RunCMD v0.94
 
 	Local         ; RunCMD v0.94 by SKAN on D34E/D37C @ autohotkey.com/boards/viewtopic.php?t=74647
 	Global A_Args ; Based on StdOutToVar.ahk by Sean @ autohotkey.com/board/topic/15455-stdouttovar
@@ -687,7 +688,7 @@ RunCMD(CmdLine, WorkingDir:="", Codepage:="CP0", Fn:="RunCMD_Output") {  ;      
 Return sOutput
 }
 
-ParseStdOut(stdOut, indent="    `t")      	{
+ParseStdOut(stdOut, indent="    `t")                                      	{
 
 	For i, line in StrSplit(stdOut, "`n", "`r")
 		t .= StrLen(line) > 0 ? indent . line "`n" : ""
@@ -696,7 +697,7 @@ return RTrim(t, "`n")
 }
 
 ;--------------------------------- Debugging
-SciTEOutput(Text:="", Clear=false, LineBreak=true, Exit=false) {     	; modified version for Addendum für Albis on Windows
+SciTEOutput(Text="",Clear=false,LineBreak=true,Exit=false)	{               	;-- modified version
 
 	; last change 17.08.2020
 
@@ -741,7 +742,7 @@ SciTEOutput(Text:="", Clear=false, LineBreak=true, Exit=false) {     	; modified
 }
 
 ;--------------------------------- Kommunikation
-Send_WM_COPYDATA(ByRef StringToSend, ScriptID) {        	;-- für die Interskriptkommunikation - keine Netzwerkkommunikation!
+Send_WM_COPYDATA(ByRef StringToSend, ScriptID)          	{               	;-- für die Interskriptkommunikation - keine Netzwerkkommunikation!
 
     static TimeOutTime            	:= 4000
     Prev_DetectHiddenWindows	:= A_DetectHiddenWindows
@@ -761,7 +762,7 @@ Send_WM_COPYDATA(ByRef StringToSend, ScriptID) {        	;-- für die Interskrip
 return ErrorLevel  ; Return SendMessage's reply back to our caller.
 }
 
-Receive_WM_COPYDATA(wParam, lParam) {                     	;-- empfängt Nachrichten von anderen Skripten die auf demselben Computer ausgeführt werden
+Receive_WM_COPYDATA(wParam, lParam)                        	{                 	;-- empfängt Nachrichten von anderen Skripten die auf demselben Computer ausgeführt werden
 
     StringAddress := NumGet(lParam + 2*A_PtrSize)
 	fn_MsgWorker := Func("MessageWorker").Bind(StrGet(StringAddress))
@@ -770,7 +771,7 @@ Receive_WM_COPYDATA(wParam, lParam) {                     	;-- empfängt Nachric
 return
 }
 
-MessageWorker(msg) {                                                       	;{  verarbeitet die eingegangen Nachrichten
+MessageWorker(msg)                                                        	{               	;--  verarbeitet die eingegangen Nachrichten
 
 		;SciTEOutput("  - [OCR Thread] Message received: " msg)
 		recv := {	"txtmsg"		: (StrSplit(msg, "|").1)
@@ -786,6 +787,72 @@ MessageWorker(msg) {                                                       	;{  
 return
 }
 
+;--------------------------------- Strings
+StrDiff(str1, str2, maxOffset:=5)                                          	{       	    	;-- SIFT3 : Super Fast and Accurate string distance algorithm, Nutze ich um Rechtschreibfehler auszugleichen
 
+	if (str1 = str2)
+		return (str1 == str2 ? 0/1 : 0.2/StrLen(str1))
+	if (str1 = "" || str2 = "")
+		return (str1 = str2 ? 0/1 : 1/1)
+	StringSplit, n, str1
+	StringSplit, m, str2
+	ni := 1, mi := 1, lcs := 0
+	while ((ni <= n0) && (mi <= m0))
+	{
+			if (n%ni% == m%mi%)
+				lcs += 1
+			else if (n%ni% = m%mi%)
+				lcs += 0.8
+			else {
+				Loop, % maxOffset {
+					oi := ni + A_Index, pi := mi + A_Index
+					if ((n%oi% = m%mi%) && (oi <= n0)) {
+						ni := oi, lcs += (n%oi% == m%mi% ? 1 : 0.8)
+						break
+					}
+					if ((n%ni% = m%pi%) && (pi <= m0)) {
+						mi := pi, lcs += (n%ni% == m%pi% ? 1 : 0.8)
+						break
+					}
+				}
+			}
+			ni += 1
+			mi += 1
+	}
+	return ((n0 + m0)/2 - lcs) / (n0 > m0 ? n0 : m0)
+}
 
+DateValidator(dateString, interpolateCentury:="")                	{           		;-- prüft String auf enthaltenes Datum
+
+	; RegEx Strings
+		static global rxMonths:=	"Jan*u*a*r*|Feb*r*u*a*r*|Mä*a*rz|Apr*i*l*|Mai|Jun*i*|Jul*i*|Aug*u*s*t*|Sept*e*m*b*e*r*|Okt*o*b*e*r*|Nov*e*m*b*e*r*|Deze*m*b*e*r*"
+		static rxDateOCRrpl	:= "[,;:]"
+		static rxDateValidator	:= [ 	"^(?<D>[0]?[1-9]|[1|2][0-9]|[3][0|1]).(?<M>[0]?[1-9]|[1][0-2]).(?<Y>[0-9]{4}|[0-9]{2})$"
+											,	"^(?<D>[0]?[1-9]|[1|2][0-9]|[3][0|1])[.;,\s]+(?<M>" rxMonths ")[.;,\s]+(?<Y>[0-9]{4}|[0-9]{2})$"]
+
+	; OCR Korrektur ausführen und erste Evaluierung (Format ist korrekt) durchführen
+		dateString := RegExReplace(Trim(dateString), rxDateOCRrpl, ".")
+		If !RegExMatch(dateString, rxDateValidator[1], d)
+			If !RegExMatch(dateString, rxDateValidator[2], d)
+				return
+
+	; geschriebenen Monat in Zahl umwandeln
+		If RegExMatch(dM, "(" rxMonths ")") {
+			For nrMonth, rxMonth in StrSplit(rxMonths, "|")
+				If RegExMatch(dM, rxMonth)
+					break
+			dM := nrMonth
+		}
+
+	; das Jahrhundert interpolieren
+		If RegExMatch(interpolateCentury, "^\d+$") && (StrLen(interpolateCentury) > StrLen(dY)) && (StrLen(dY) = 2) {
+
+			refYear 	:= SubStr(interpolateCentury, -1)	; die letzten 2 Stellen
+			refCentury	:= SubStr(interpolateCentury, 1, StrLen(interpolateCentury) - 2)
+			dY          	:= (dY > refYear ? refCentury-1 : refCentury) dY
+
+		}
+
+return SubStr("0" dD, -1) "." SubStr("0" dM, -1) "." dY	; Rückgabe immer im Format dd.mm.yy oder dd.mm.yyyy
+}
 

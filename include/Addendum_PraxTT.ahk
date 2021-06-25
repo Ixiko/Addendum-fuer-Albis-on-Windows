@@ -1,4 +1,4 @@
-﻿PraxTT(Textmsg, Params:="3 0 B") {																				;--Tooltip Ersatz im Addendum/Nutzer Design mit off-Timer Feature
+﻿PraxTT(Textmsg:="", Params:="3 0 B") {						 												;--Tooltip Ersatz im Addendum/Nutzer Design mit off-Timer Feature
 
 	/* FUNKTIONSBESCHREIBUNG,  last change: 16.02.2021
 	   *
@@ -19,6 +19,7 @@
 		*                                   	   Beispiel: PraxTT("Textnachricht", {timeout:3, zoom:0, position:"Bottom", parent:"ahk_class OptoAppClass"} - OptoAppClass ist das Albisfenster
 		*                                    	- der ToolTip wird standardmäßig innerhalb des Albisfenster eingeblendet
 		*					15.02.2021	- Performanceverbesserungen, Code gekürzt
+		*					15.06.2021	- Performanceverbesserungen, Code gekürzt, mehr Kommentare
 		*
 	   *
 	*/
@@ -111,18 +112,18 @@
 		cFontSize	:= Addendum.Default.FontSize + FontSizeMultiplicator
 
 	  ; tFont - In- oder Dekrement für Titelfont des Fenster
-		tFont:= 1.25
+		tFont:= 1.15
 
 	;}
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	; AUSBLENDEN WENN LIFETIME OFF IST, TIMER BEENDEN WENN FUNKTIONSAUFRUF VORZEITIG KOMMT
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-		If InStr(lifetime, "off") {
+		If (InStr(lifetime, "off") || StrLen(MsgText . Params) = 0) {
 			gosub PraxTTOff
 			return
 		} else if WinExist("PraxTT-Info ahk_class AutoHotkeyGUI") {
-			;SetTimer, PraxTTOff, Off
+			SetTimer, PraxTTOff, Delete
 			gosub PraxTTOff
 		}
 	;}
@@ -130,7 +131,7 @@
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	; GUI ERSTELLEN ODER INHALTE AUFFRISCHEN
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-		Gui, PraxTT: New      	, AlwaysOnTop +ToolWindow -Caption -DPIScale +Disabled +E0x8000000 HWNDPraxTThGui
+		Gui, PraxTT: New      	, AlwaysOnTop +ToolWindow -Caption -DPIScale +Disabled +Owner +E0x8000000 HWNDPraxTThGui
 		Gui, PraxTT: Color     	, % "c" BgCol2
 		Gui, PraxTT: Margin  	, 0, 0
 
@@ -141,37 +142,38 @@
 	  ; ADD: Title
 		Gui, PraxTT: Font   		, % "q5 s" Floor(cFontSize*tFont) " c" FntCol1, % Addendum.Default.BoldFont
 		Gui, PraxTT: Add, Text	, % "x" MrgX " y0 BackgroundTrans Center HWNDhTitle" , % ModulName
+		Gui, PraxTT: Font       	, % "s" cFontSize " c" FntCol2, % Addendum.Default.Font
+	  ; zentrieren
+		ControlGetPos	,TitleX,, TitleW, TitleH,                     	, % "ahk_id " hTitle
+		ControlMove 	,, 0, 0, % TitleW+MrgX, % TitleH+3	, % "ahk_id " hProgress
 
-		ControlGetPos,TitleX,, TitleW, TitleH,, % "ahk_id " hTitle
-		ControlMove,, 0, 0, % TitleW+MrgX, % TitleH+3, % "ahk_id " hProgress
+	  ; ADD: Textzeilen hinzufügen
+ 		cwMax  	:= TitleW + (2*MrgX)					; maximal mögliche Breite des Gui
+		For LNr, printline in StrSplit(TextMsg, "`n", "`r") {
 
-	  ; Add: Informationstexte
-		Gui, PraxTT: Font, % "s" cFontSize " c" FntCol2, % Addendum.Default.Font
-		linespace	:= Floor(cFontSize * 0.5)
-		cwMax  	:= TitleW + (2*MrgX)					; für Ermittlung der maximalen Breite der Anzeige (zentrieren!)
-		Loop, Parse, TextMsg, `n
-		{
-				printline:= A_LoopField, plusSize := 0
+		  ; Zeilenabstand - leere Zeilen erzeugen etwas größere Zeilenabstände
+			linespace	:= Floor(cFontSize * ((A_Index > 1 && StrLen(printline) = 0) ? 0.5 : 0.2))
 
-				If      	(A_Index > 1) && (StrLen(printline) > 0)
-					linespace := Floor(cFontSize * 0.2)
-				else if 	(A_Index > 1) && (StrLen(printline) = 0)
-					linespace := Floor(cFontSize * 0.5) 	; unsinnig?
+		  ; z.B. #2 erhöht die Schriftgröße um X-Punkte für den danach folgenden Text der gesamten Zeile
+			If RegExMatch(printline, "(?<=#)\-*\d+", plusSize)
+				printline := StrReplace(printline, "#" plusSize, "")
+			else
+				plusSize := 0
 
-				If RegExMatch(printline, "(?<=#)\-*\d+", plusSize)
-					printline := StrReplace(printline, "#" plusSize, "")
+		  ; Zeile als Static-Steuerelement hinzufügen
+			Gui, PraxTT: Font       	, % "s" (cFontSize + plusSize) " c" FntCol2
+			Gui, PraxTT: Add, Text	, % "x" MrgX " y+" linespace " Center BackgroundTrans", % printline
 
-				Gui, PraxTT: Font, % "s" (cFontSize + plusSize) " c" FntCol2, % Addendum.Default.Font
-				Gui, PraxTT: Add, Text, % "x" MrgX " y+" linespace " Center BackgroundTrans", % printline
+		  ; wenn cw größer als cwMax denn soll cwMax=cw sein, ansonsten gilt  cwMax=cwMax
+			ControlGetPos,,, cw,, % "Static" (A_Index + 1), % "ahk_id " PraxTThGui
+			cwMax	:= cw > cwMax ? cw : cwMax
 
-				ControlGetPos,,, cw,, % "Static" (A_Index + 1), % "ahk_id " PraxTThGui
-				cwMax	:= cw > cwMax ? cw : cwMax															;wenn cw größer als cwMax denn soll cwMax=cw sein, ansonsten gilt  cwMax=cwMax
 		}
 
-		Gui, PraxTT: Add, Text, % "x" MrgX " y+" cFontSize/4 " BackgroundTrans", % " "
-		Gui, PraxTT: Show, % "AutoSize Center NA Hide"
+		Gui, PraxTT: Add, Text 	, % "x" MrgX " y+" cFontSize/4 " BackgroundTrans", % " "
+		Gui, PraxTT: Show     	, % "AutoSize Center NoActivate Hide"
 
-	  ; ermitteln der Fenstergrößen und nachträgliches Zentrieren des Textes
+	  ; Zentrieren des Textes
 		Prax   	:= GetWindowSpot(PraxTThGui)
 		controls	:= GetControls(PraxTThGui)
 		Loop % controls.MaxIndex()
@@ -183,6 +185,7 @@
 	  ; Positionieren der Gui oberhalb der Taskbar
 		Prax	:= GetWindowSpot(PraxTThGui)
 		ov		:= ParentID ? GetWindowSpot(ParentID) : GetWindowSpot(AlbisWinID())
+
 	; Fenster im sichtbaren Monitorbereich positionieren
 		If !(ov.X < -30)
 			SetWindowPos(PraxTThGui, ov.X+Floor(ov.CW/2)-Floor(Prax.CW/2), ov.Y+ov.H-Prax.H-19, Prax.W, Prax.H)
@@ -191,25 +194,25 @@
 			SetWindowPos(PraxTThGui, Prax.X, stY-Prax.H-18, Prax.W, Prax.H)
 		}
 
-	  ; erkennt das ein Counter gewünscht ist, matched 'Warte bis zu 10s ...' , matched nicht 'Der Prozeß hat 13.66s gebraucht'
+	  ; erkennt das ein Counter gewünscht ist, matched zahl und ein unmittelbares 's' ...' , matched nicht 'Der Prozeß hat 13.66s gebraucht'
 		Prax	:= GetWindowSpot(PraxTThGui)
 		Gui, PraxTT: Font	, % "s" cFontSize*0.8 " c" FntCol2, % Addendum.Default.Font
 		Gui, PraxTT: Add	, Text, % "x5 y" Prax.H - 15 " vPraxTTCnt1 Center BackgroundTrans", % "---"
 		Gui, PraxTT: Add	, Text, % "x5 y" Prax.H - 15 " vPraxTTCnt2 Center BackgroundTrans", % "---"
 
-		If RegExMatch(TextMsg, "i)(?<=\s)\d+(?=s\s)", time) {
+		If RegExMatch(TextMsg, "i)(?<=\s)\d+(?=\s*s\s)", time) {
 			GuiControl, PraxTT:, PraxTTCnt1, % time "s"
 			GuiControl, PraxTT:, PraxTTCnt2, % time "s"
 		} else {
-			GuiControl, PraxTT:, PraxTTCnt1, % "---"
-			GuiControl, PraxTT:, PraxTTCnt2, % "---"
+			GuiControl, PraxTT:, PraxTTCnt1, % "   "
+			GuiControl, PraxTT:, PraxTTCnt2, % "   "
 		}
 
-		GuiControl, MoveDraw, % hProgress	, % "w" (Prax.CW+MrgX) " h" ( TitleH + 3 )
-		GuiControl, MoveDraw, % hTitle		, % "x"  Floor((Prax.CW+MrgX)//2)-Floor(TitleW//2)
+		GuiControl, MoveDraw, % hProgress	, % "w" (Prax.CW + MrgX) " h" ( TitleH + 3 )
+		GuiControl, MoveDraw, % hTitle		, % "x"  Floor((Prax.CW + MrgX)/2) - Floor(TitleW/2)
 
 	  ; Einblenden mit Animation wenn keine Teamviewerverbindung besteht
-		Gui, PraxTT: Show, % "AutoSize NA", % "PraxTT-Info"
+		Gui, PraxTT: Show, % "AutoSize NoActivate", % "PraxTT-Info"
 
 		If Addendum.PraxTTDebug
 			SciTEOutput("PraxTT: " StrReplace(TextMsg, "`n", " | "))
@@ -223,7 +226,7 @@
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	; SETTIMER SCHLIESST PRAXTT GUI
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-	  ; wenn lifeTime = 0 bleibt das Fenster bis es geschlossen wird mit einem leeren Argument PraxTT("","")
+	  ; wenn lifeTime = 0 bleibt die GUI solange sichtbar bis explizit PraxTT() (ohne Argumente oder PraxTT("", "0")) aufgerufen wurde
 		If lifetime
 			SetTimer, PraxTToff, % "-" (lifetime * 1000)
 	;}
@@ -231,7 +234,7 @@
 return controls.MaxIndex()
 
 PraxTTOff:																																									;{
-	SetTimer, PraxTTOff, Off
+	SetTimer, PraxTTOff, Delete
 	If !WinExist("ahk_class TV_Control") && !IsRemoteSession()
 		AnimateWindow(PraxTThGui, PraxTTDuration, BLEND)
 	Gui, PraxTT: Destroy
@@ -240,6 +243,20 @@ PraxTTOff:																																									;{
 return
 ;}
 }
+
+/* Hades
+		Loop, Parse, TextMsg, `n
+If      	(A_Index > 1) && (StrLen(printline) > 0)
+				linespace := Floor(cFontSize * 0.2)
+			else if 	(A_Index > 1) && (StrLen(printline) = 0)
+				linespace := Floor(cFontSize * 0.5) 	; unsinnig?
+
+If RegExMatch(printline, "(?<=#)\-*\d+", plusSize)
+				printline := StrReplace(printline, "#" plusSize, "")
+			else
+				plusSize := 0
+
+*/
 
 OSDTIP_Pop(P*) {                                                                                                       	;-- OSDTIP_Pop v0.55 by SKAN on D361/D36E @ tiny.cc/osdtip
 Local

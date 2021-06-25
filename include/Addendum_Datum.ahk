@@ -1,8 +1,8 @@
-﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
-;                                                            	Funktionen für die Berechnung/Umwandlung von Tagesdaten, Quartalsdaten
-;                                                            	by Ixiko started in September 2017 - last change 14.03.2021 - this file runs under Lexiko's GNU Licence
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                                                          	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
+;                                                         	Funktionen für die Berechnung/Umwandlung von Tagesdaten, Quartalsdaten
+;                                                          	by Ixiko started in September 2017 - last change 02.05.2021 - this file runs under Lexiko's GNU Licence
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; Datum berechnen
 AddToDate(Feld, val, timeunits) {                                                                           	;-- addiert Tage bzw. eine Anzahl von Monaten zu einem Datum hinzu
@@ -21,14 +21,14 @@ DateDiff(fnTimeUnits, fnStartDate, fnEndDate) {                                 
 
 	; declare local, global, static variables
 
-		; set default return value
+	; set default return value
 		TimeDifference := 0
 
-		; Convert date from german date format to englisch dateformat (only DD.MM.YYYY to YYYY.DD.MM)
-		fnStartDate:= ConvertGerDateToEng(fnStartDate)
-		fnEndDate:= ConvertGerDateToEng(fnEndDate)
+	; Convert date from german date format to englisch dateformat (only DD.MM.YYYY to YYYY.DD.MM)
+		fnStartDate	:= ConvertGerDateToEng(fnStartDate)
+		fnEndDate 	:= ConvertGerDateToEng(fnEndDate)
 
-		; validate parameters
+	; validate parameters
 		If fnTimeUnits not in YY,MM,DD,HH,MI,SS
 			Throw Exception("fnTimeUnits were not valid")
 
@@ -39,15 +39,13 @@ DateDiff(fnTimeUnits, fnStartDate, fnEndDate) {                                 
 			Throw Exception("fnEndDate was not a date")
 
 
-		; initialise variables
+	; initialise variables
 		DatePadding := "00000101000000"
-		StartDate := fnStartDate . SubStr(DatePadding, StrLen(fnStartDate)+1) ; normalise start date to 14 digits
-		EndDate   := fnEndDate . SubStr(DatePadding, StrLen(fnEndDate  )+1) ; normalise end   date to 14 digits
+		StartDate   	:= fnStartDate	SubStr(DatePadding, StrLen(fnStartDate)+1) ; normalise start date to 14 digits
+		EndDate    	:= fnEndDate 	SubStr(DatePadding, StrLen(fnEndDate  )+1) ; normalise end   date to 14 digits
 
-
-		; for day or time, use native function
-		If fnTimeUnits in DD,HH,MI,SS
-		{
+	; for day or time, use native function
+		If RegExMatch(fnTimeUnits, "i)(DD|HH|MI|SS)") 	{
 
 			TimeDifference := EndDate
 			TimeUnit := fnTimeUnits = "SS" ? "S"
@@ -60,23 +58,21 @@ DateDiff(fnTimeUnits, fnStartDate, fnEndDate) {                                 
 		}
 
 		; for year or month
-		FormatTime, StartYear , %StartDate%, yyyy
-		FormatTime, StartMonth, %StartDate%, MM
-		FormatTime, StartDay  , %StartDate%, dd
-		FormatTime, StartTime , %StartDate%, HHmmss
+		FormatTime, StartYear   	, %StartDate%, yyyy
+		FormatTime, StartMonth	, %StartDate%, MM
+		FormatTime, StartDay    	, %StartDate%, dd
+		FormatTime, StartTime   	, %StartDate%, HHmmss
 
-		FormatTime, EndYear , %EndDate%, yyyy
-		FormatTime, EndMonth, %EndDate%, MM
-		FormatTime, EndDay  , %EndDate%, dd
-		FormatTime, EndTime , %EndDate%, HHmmss
+		FormatTime, EndYear    	, %EndDate%, yyyy
+		FormatTime, EndMonth 	, %EndDate%, MM
+		FormatTime, EndDay      	, %EndDate%, dd
+		FormatTime, EndTime    	, %EndDate%, HHmmss
 
-		If fnTimeUnits in MM
-		{
+		If RegExMatch(fnTimeUnits, "MM") {
 
-			StartInMonths := (StartYear*12)+StartMonth
-			EndInMonths   := (EndYear  *12)+EndMonth
-
-			TimeDifference := EndInMonths-StartInMonths
+			StartInMonths	:= (StartYear*12)+StartMonth
+			EndInMonths  	:= (EndYear  *12)+EndMonth
+			TimeDifference	:= EndInMonths-StartInMonths
 
 			If (StartDate < EndDate)
 				If (EndDay < StartDay)
@@ -87,8 +83,8 @@ DateDiff(fnTimeUnits, fnStartDate, fnEndDate) {                                 
 					TimeDifference++
 		}
 
-		If fnTimeUnits in YY
-		{
+		If RegExMatch(fnTimeUnits, "YY") {
+
 			TimeDifference := EndYear-StartYear
 
 			If (StartDate < EndDate)
@@ -104,7 +100,16 @@ DateDiff(fnTimeUnits, fnStartDate, fnEndDate) {                                 
 
 
 	; return
-	Return TimeDifference
+Return TimeDifference
+}
+
+DaysBetween(FirstDate, LastDate) {                                                                        	;-- errechnet die Tage zwischen zwei Tagen
+
+	FirstDate	:= FirstDate	. (StrLen(FirstDate) = 14 ? ""	: SubStr("00000000000000", 1, StrLen(FirstDate)-13))
+	diff       	:= LastDate 	. (StrLen(LastDate) = 14 ? ""	: SubStr("00000000000000", 1, StrLen(LastDate)-13))
+	EnvSub, diff, % FirstDate, Days
+
+return diff
 }
 
 DaysInMonth(date:="") {                                                                                        	;-- errechnet die Anzahl der Tage des Monats
@@ -145,7 +150,7 @@ GetQuartalEx(Datum, Format:="QQYY") {                                           
 
 	; Funktionsbeschreibung:
 	; Datum: 	erlaubt ist "13.02.2017" oder "13.2.17" - in dieser Form der Übergabe müssen die Punkte im Übergabestring vorhanden sein
-	; 				oder "heute" - es wird das aktuelle Quartal berechnet
+	; 				oder "heute" auch "today" - es wird das aktuelle Quartal berechnet
 	; Format:	möglich ist auch QYYYY o. YYYYQ, für Ausgabereihenfolge und Anzahl der Zeichen z.B. 0118 o. 012018
 	;				oder YYYY-Q - das Zeichen zwischen den Zahlen wird der Trenner 2018-1
 
@@ -155,7 +160,7 @@ GetQuartalEx(Datum, Format:="QQYY") {                                           
 		LenY 	:= StrLen(cY1) > 0 	? StrLen(cY1) 	: StrLen(cY2)
 
 	; Monat und Jahr trennen
-		If InStr(Datum, "heute") {
+		If RegExMatch(Datum, "i)(heute|today)") {
 			Monat	:= A_MM
 			Jahr		:= LenY = 2 ? SubStr(A_YYYY, 3, 2) : A_YYYY ;die letzten zwei Zeichen
 		}
@@ -180,6 +185,7 @@ return Jahr . cT2 . QZ
 
 HowLong(Date1,Date2) {                                                                                        	;-- berechnet die Anzahl der Jahren, Monate und Tage zw. zwei Tagesdatums
 
+	; Format YYYYMMDD
 	; https://www.autohotkey.com/boards/viewtopic.php?t=54796
 
 	year1 := SubStr(Date1, 1, 4), 	month1 := SubStr(Date1, 5, 2), 	day1 := SubStr(Date1, 7, 2)
@@ -192,6 +198,21 @@ HowLong(Date1,Date2) {                                                          
 	D:= day2 - day1, 	M:= month2 - month1, 	Y := year2 - year1
 
 return {"years":Y, "months":M, "days":d}
+}
+
+Age(birthday, CalculationDate) {
+
+	; possible formats: d[d].M[M].YYYY or YYYY.M[M].d[d]
+
+	If RegExMatch(birthday, "^\s*(?<D>\d{1,2})\.(?<M>\d{1,2})\.(?<Y>\d{4})$", birth) || RegExMatch(birthday, "^\s*(?<Y>\d{4})[.\-](?<M>\d{1,2})[.\-](?<D>\d{1,2})$", birth)
+		birthday := birthY . SubStr("0" birthM, -1) . SubStr("0" birthD, -1)
+
+	If RegExMatch(CalculationDate, "^\s*(?<D>\d{1,2})\.(?<M>\d{1,2})\.(?<Y>\d{4})$", Calc) || RegExMatch(CalculationDate, "^\s*(?<Y>\d{4})[.\-](?<M>\d{1,2})[.\-](?<D>\d{1,2})$", Calc)
+		CalculationDate := CalcY . SubStr("0" CalcM, -1) . SubStr("0" CalcD, -1)
+
+	Age 	:= HowLong(birthday, CalculationDate)
+
+return Age.Years
 }
 
 leapyear(year) {                                                                                                    	;-- Schaltjahr
@@ -223,7 +244,7 @@ QuartalTage(Quartal) {                                                          
 	 */
 
 		If !IsObject(Quartal) && (Quartal != "aktuell")	{
-			throw Exception(A_ThisFunc " (" A_LineFile ") : Fehler beim Funktionsaufruf, der übergebene Parameter ist kein Objekt!")
+			throw Exception(A_ThisFunc " (" A_LineFile-1 ") : Fehler beim Funktionsaufruf, der übergebene Parameter ist kein Objekt!")
 			return 0
 		} else if (Quartal = "aktuell") {
 			Quartal := Object()
@@ -279,6 +300,7 @@ QuartalTage(Quartal) {                                                          
 
 		Quartal.Monat       	:= Object()
 		Quartal.MBeginn    	:= SubStr("0" (Quartal.Quartal - 1) * 3 + 1	, -1)                                                	; erster Monat
+		Quartal.MMitte       	:= SubStr("0" Quartal.MBeginn + 1            	, -1)                                                	; mittlerer Monat
 		Quartal.MEnde      	:= SubStr("0" Quartal.MBeginn + 2            	, -1)                                                	; letzter Monat
 		Quartal.TDBeginn	   	:= "01." SubStr("0" Quartal.MBeginn, -1) "." Quartal.Jahr                                    	; erster Tag im Quartal
 		Quartal.TDEnde       	:= DaysInMonth(Quartal.Jahr Quartal.MEnde) "." Quartal.MEnde "." Quartal.Jahr	; letzter Tag im Quartal
@@ -296,7 +318,7 @@ QuartalTage(Quartal) {                                                          
 		Quartal.Tage        	:= dsgesamt                                                                                                      	; Anzahl der Tage im Quartal
 		Quartal.Wochen      	:= wogesamt                                                                                                       	; Anzahl der Wochen im Quartal
 		Quartal.DBaseStart  	:= Quartal.Jahr Quartal.MBeginn "01"                                                                	; erster Tag im DBase-Format (yyyyMMdd)
-		Quartal.DBaseEnd   	:= Quartal.Jahr Quartal.MEnde Quartal.Monat.3.Tage                                      	; letzter Tag im DBase-Format (yyyyMMdd)
+		Quartal.DBaseEnd   	:= Quartal.Jahr Quartal.MEnde DaysInMonth(Quartal.Jahr Quartal.MEnde)          	; letzter Tag im DBase-Format (yyyyMMdd)
 
 return Quartal
 }
@@ -397,36 +419,95 @@ DateValidator(dateString, interpolateCentury:="") {                             
 return SubStr("0" dD, -1) "." SubStr("0" dM, -1) "." dY	; Rückgabe immer im Format dd.mm.yy oder dd.mm.yyyy
 }
 
-WeekDayNr(wday) {                                                                                              	;-- Wochentag als Zahl
+WeekDayNr(wday, short:=true) {                                                                              	;-- Wochentag als Zahl oder Kurzbezeichnung
 
 	; wday - Zahl oder Kurzname des Wochentages
+	; letzte Änderung: 05.04.2021
 
-	static WDays := ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"]
-	If RegExMatch(wday, "i)^[a-z]+$") {
+	static WDays := ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
+	If !RegExMatch(wday, "i)^[a-z]+$")
+		return short ? SubStr(WDays[wDay], 1, 2) : WDays[wDay]
+	else {
 		For wdNr, day in WDays
-			If (day = wday)
+			If RegExMatch(day, "i)^" wday)
 				return wdNr
-	} else {
-
-		return WDays[wDay]
 	}
 
 return
 }
 
-GetWeekday(dateStr, format:="dd.mm.YYYY") {                                                     	;-- Name des Wochentages vom übergebenen Datum
+DayOfWeek(dateStr, getDay:="short", format:="dd.MM.yyyy") {                              	;-- nutzt FormatTime anstatt eigene Berechnungen
 
-	; jNizM Funktion modifiziert
-	; festes Format wird vorausgesetzt!
+	retFormat := {"short":"ddd", "full":"dddd", "ddd":"ddd", "dddd":"dddd"}
 
-	dates := StrSplit(dateStr, ".")
-    d := dates.1, m := dates.2, y := dates.3
+	dPos 	:= RegExMatch(format, "(d+)"	, d)
+	mPos	:= RegExMatch(format, "M+" 	, m)
+	yPos   	:= RegExMatch(format, "y+"  	, y)
+	year  	:= SubStr(dateStr, yPos, StrLen(y))
+	month	:= SubStr("0" SubStr(dateStr, mPos, StrLen(m)), -1)
+	day   	:= SubStr("0" SubStr(dateStr, dPos, StrLen(d)), -1)
+
+	FormatTime, dayOweek, % year month day "000000", % retformat[getDay]
+
+return dayOweek
+}
+
+GetWeekday(dateStr, format:="dd.MM.yyyy", NameOfDay:=true ) {                          	;-- Name des Wochentages vom übergebenen Datum
+
+	; jNizM Funktion modifiziert (https://www.autohotkey.com/boards/viewtopic.php?t=3352)
+	; format Parameter ist funktionslos!
+	; letzte Änderung: 05.04.2021
+
+    d	:= StrSplit(dateStr, ".").1
+	m	:= StrSplit(dateStr, ".").2
+	y	:= StrSplit(dateStr, ".").3
     if (m < 3)  {
         m += 12
-        y -= 1
+        y 	-= 1
     }
-    wd := mod(d + (2 * m) + floor(6 * (m + 1) / 10) + y + floor(y / 4) - floor(y / 100) + floor(y / 400) + 1, 7) + 1
-    return WeekDayNr(wd)
+    wd := mod(d+(2*m)+floor(6*(m+1)/10)+y+floor(y/4)-floor(y/100) floor(y/400)+1, 7) ; + 1 -  bei mir beginnt die Woche am Montag (erster Arbeitstag)
+
+return NameOfDay ? WeekDayNr(wd) : wd
+}
+
+WeekOfYear(dateStr) {
+
+	timestamp	:= dateStr	. (StrLen(dateStr) = 14 ? ""	: SubStr("00000000000000", 1, StrLen(dateStr)-13))
+	FormatTime weekOfYear, % timestamp, YWeek
+
+return SubStr(weekOfYear, 5, 2)
+}
+
+DateAddEx(vDate, vDiff){
+
+	; from jeeswig - https://www.autohotkey.com/boards/viewtopic.php?t=59825
+	;vDiff expects 1 to 6 space-separated digit sequences (any non-spaces/non-digits are ignored)
+	;e.g. MsgBox, % JEE_DateAddFriendly(20010101, "3y")					;20040101000000
+	;e.g. MsgBox, % JEE_DateAddFriendly(20010101, "3y 3m 3d")			;20040404000000
+	;e.g. MsgBox, % JEE_DateAddFriendly(20010101, "3y 3m 3d 8h 8m 8s")	;20040404080808
+
+	local
+	static date := "date"
+	vDate := FormatTime(vDate, "yyyyMMddHHmmss")
+	vTemp := RegExReplace(vDiff, "[^\d ]") " 0 0 0 0 0"
+	oTemp := StrSplit(vTemp, " ")
+	vMonth := SubStr(vDate, 5, 2)
+	if (vMonth+oTemp.2 > 12)
+		vDate += (oTemp.2-12) * 100000000 + (oTemp.1+1) * 10000000000
+	else
+		vDate += oTemp.2 * 100000000 + oTemp.1 * 10000000000
+	Loop, 3
+		;if JEE_StrIsType(vDate, "date")
+		if vDate is %date%
+			break
+		else
+			vDate -= 1000000
+	return DateAdd(vDate, oTemp.3*86400+oTemp.4*3600+oTemp.5*60+oTemp.6, "S")
+}
+
+DateAdd(DateTime, Time, TimeUnits){
+	EnvAdd DateTime, %Time%, %TimeUnits%
+	return DateTime
 }
 
 
@@ -436,6 +517,12 @@ FormatSeconds(timestr, formatstring:="hh:mm:ss")  {                             
     atime += timestr, seconds
     FormatTime, hhmmss, % atime, % formatstring
     return hhmmss
+}
+
+FormatTime(YYYYMMDDHH24MISS:="", Format:=""){
+	local OutputVar
+	FormatTime OutputVar, %YYYYMMDDHH24MISS%, %Format%
+	return OutputVar
 }
 
 GetSeconds(timestr) {                                                                                            	;-- Sekunden berechnen von hhmmss
@@ -517,6 +604,53 @@ FormatDate(timestr, timeformat:="DMY", returnformat:="dd.MM.yyyy") {
 return formatedTime
 }
 
+FormatDateEx(datestr, dateformat:="DMY", returnformat:="dd.MM.yyyy") {
+
+		static rxMDate := {"D"	: "(?<D>\d{1,2})"
+								, 	"M"	: "(?<M>\d{1,2})"
+								, 	"Y"	: "(?<Y>\d{1,4})"}
+
+	; Delimeter erkennen z.B. ein Punkt oder minus
+		RegExMatch(datestr, "O)\w+(\D)\w+(\D)\w", dmtr)
+		For idx, interpunctation in dmtr
+			datestr := StrReplace(datestr, interpunctuation)
+
+	; dateformat korrigieren
+		dateformat := RegExReplace(dateformat, "i)[D]"	, "D")
+		dateformat := RegExReplace(dateformat, "i)[M]"	, "M")
+		dateformat := RegExReplace(dateformat, "i)[Y]" 	, "Y")
+
+	; RegExMatch String anhand dateformat zusammenstellen
+		TF	:= Object()
+		TF[InStr(dateformat, "D")]	:= "D"
+		TF[InStr(dateformat, "M")]	:= "M"
+		TF[InStr(dateformat, "Y")]	:= "Y"
+
+		rxMatch := rxMDate[TF.1] ".*?" rxMDate[TF.2] ".*?" rxMDate[TF.3]
+
+	; inkorrekte Jahreszahl - umwandeln abbrechen
+		If !RegExMatch(datestr, rxMatch, T) || (StrLen(TY) = 1) || (StrLen(TY) = 3)
+			return  ; "wrong dateformat"
+
+	; Anzahl der Ziffern des Jahres in returnformat berichtigen
+		RegExReplace(returnformat, "i)y", "", YearDigits)
+		If !(YearDigits = 4)
+			returnformat := RegExReplace(returnformat, "i)y+", "yyyy")
+
+	; Eingabedatum formatieren
+		TD 	:= SubStr("0" TD	, -1)
+		TM 	:= SubStr("0" TM	, -1)
+		If (StrLen(TY) = 2) {   ; wendet sich gegen Datumszahlen in der Zukunft!
+			YD	:= SubStr(A_YYYY, 3, 2) + 0
+			YT	:= SubStr(A_YYYY, 1, 2) + 0
+			TY 	:= (TY > YD ? YT-1 : YT) . TY
+		}
+
+	; Zeitstring formatieren
+		FormatTime, formatedDate, % TY TM TD "000000", % returnformat
+
+return formatedDate
+}
 
 ; Konvertierung
 ConvertGerDateToEng(dateStr) {                                                                             	;-- konvertiert das deutsche Datumsformat in das übliche englische Format

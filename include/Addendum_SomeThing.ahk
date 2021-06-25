@@ -805,6 +805,53 @@ ErrorBox(ErrorString, CallingScript:="", Screenshot:=false) {                   
 
 }
 
+KeyValueObjectFromLists2(keyList, valueList, delimiter:="`n"
+, IncludeKeys:="", KeyREx:="", IncludeValues:="", ValueREx:="") {                	;-- wird neue Funktion um z.B. zwei Listen aus WinGet zusammenzuführen
+
+	keyArr := valueArr:= Array()
+	merged := Object()
+
+	mustMatches:=0
+	mustMatches += (StrLen(IncludeKeys) > 0) 	? 1 : 0
+	mustMatches += (StrLen(IncludeValues) > 0)	? 1 : 0
+
+	keyArr		:= StrSplit(keyList	 , delimiter)
+	valueArr	:= StrSplit(valueList, delimiter)
+
+	Loop % keyArr.MaxIndex()	{
+
+		If (StrLen(KeyREx) = 0)
+			mkey:= keyArr[A_Index]
+		else
+			RegExMatch(keyArr[A_Index], KeyREx, mkey)
+
+		If (StrLen(ValueRex) = 0)
+			mval := valueArr[A_Index]
+		else
+			RegExMatch(valueArr[A_Index], ValueREx, mval)
+
+		matched:=0
+		If (StrLen(IncludeKeys) > 0) {
+			If mkey in %IncludeKeys%
+				matched := 1
+			else
+				matched := 1
+		}
+
+		If (StrLen(IncludeValues) > 0)
+			If mval in %IncludeValues%
+				matched += 1
+			else
+				matched += 1
+
+		If (matched > mustMatches)
+			merged[keyArr[A_Index]]:= valueArr[A_Index]
+
+	}
+
+return merged
+}
+
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum_Controls
@@ -2128,7 +2175,6 @@ return
 
 }
 
-
 ;CheckJournal() { ...
 For idx, pdf in ScanPool
 	If (pdf.name = pdfFile) {
@@ -2138,7 +2184,7 @@ For idx, pdf in ScanPool
 
 ;BefundIndex() { ....
 ScanPool.Push(GetPDFData(Addendum.BefundOrdner, filename))
-
+;{
 	; Originaldatei umbennen
 		FileMove, % Addendum.BefundOrdner "\" oldadmfile, % Addendum.BefundOrdner "\" (newadmfile := newadmfile "." FileExt), 1
 		If ErrorLevel {
@@ -2173,7 +2219,7 @@ ScanPool.Push(GetPDFData(Addendum.BefundOrdner, filename))
 				pdfPath  	:= docPath "\" filename
 				bupPath 	:= docPath "\Backup\" filename
 				txtPath   	:= docPath "\Text\" StrReplace(filename, ".pdf", ".txt")
-
+;}
 
 	; Autocomplete je nach Eingabefeld
 		If (gcNr = 31 && StrLen(RNE1) > 0 && RNE1old <> RNE1)  {
@@ -2340,6 +2386,141 @@ admGui_ACGHotkeys(status:="On")                               	{
 
 }
 
+admGui_Watcher()                                                         	{                	; Timerfunktion. Änderungen im Albisfenster werden leider nicht zuverlässig erkannt
+
+	global hadm
+
+	If !WinExist("ahk_class OptoAppClass") || !Addendum.AddendumGui
+		return
+
+	Addendum.AktiveAnzeige := AlbisGetActiveWindowType()
+	If RegExMatch(Addendum.AktiveAnzeige, "i)Karteikarte|Laborblatt|Biometriedaten") {
+		WinGet, winList, ControlList, % "ahk_id" AlbisMDIChildGetActive()
+		If InStr(winlist, "AutohotkeyGui1")
+			return
+		else
+			AddendumGui()
+	}
+
+}
+
+admGui_JournalHandler(chwnd="", EV="", EI="", EL="") 	{                 	; gLabel - Journal Tab
+
+		static EventInfo
+
+	; Default Listview, gewählter Dateiname
+		If (A_EventInfo = EventInfo)
+			return
+		EventInfo	:= A_EventInfo
+		;Journal.ListView()
+		admFile := Journal.GetSelected()
+
+		If IsObject(admFile)
+			GuiControl, adm: , admButton2, % "Importieren [" admFile.Count() "]"
+		else
+			GuiControl, adm: , admButton2, % "Importieren"
+
+	; Kontextmenu
+		If InStr(A_GuiEvent	, "RightClick") && (StrLen(admFile) > 0) && !IsObject(admFile)	{
+			Journal.ShowMenu(admFile)
+			return
+		}
+	; Spaltensortierung
+		else 	If 	InStr(A_GuiEvent	, "ColClick")    	{
+			If (EventInfo > 0)
+				admGui_Sort(EventInfo)
+			return
+		}
+	; Dokumente importieren
+		else 	If 	InStr(A_GuiControl, "admButton2")	{
+			EventInfo := ""
+			admGui_ImportJournalAll(admFile)
+			return
+		}
+	; Befundordner indizieren
+		else 	If	InStr(A_GuiControl, "admButton3") {
+			EventInfo := ""
+			admGui_Reload()
+			return
+		}
+	; OCR starten/abbbrechen
+		else 	If	InStr(A_GuiControl, "admButton4") {
+			EventInfo := ""
+			If Addendum.Thread["tessOCR"].ahkReady() {
+				MsgBox, 4	, Addendum für Albis on Windows, % "Soll die laufende Texterkennung`nabgebrochen werden?"
+				IfMsgBox, No
+					return
+				Addendum.Thread["tessOCR"].ahkTerminate[]
+				admGui_OCRButton("+OCR ausführen")
+				return
+			}
+			else {
+				admGui_OCRAllFiles()
+			}
+		}
+
+	; zurück wenn Datei nicht existiert
+		If !FileExist(Addendum.BefundOrdner "\" admFile) || IsObject(admFile)
+			return
+
+	; PDF/Bild-Programm aufrufen
+		EventInfo := ""
+		If Instr(A_GuiEvent	, "DoubleClick")
+			admGui_View(admFile)
+
+return
+}
+
+admGui_Sort_old(EventNr, LV_Init=false)                          	{               	; sortiert die Journalspalten und zeigt ein Symbol für die Sortierreihenfolge an
+
+		; Funktion wird gebraucht für die Wiederherstellung der letzten Sortierung und für das Sichern der Einstellungen bei Nutzerinteraktion
+		; LV_Init - nutzen um gespeicherte Sortierungseinstellung wiederherzustellen
+
+		global 	admHJournal
+		static 	JCol1Dir, JCol2Dir, LVSortStr, JColDir := []
+
+		admGui_Default("admJournal")
+
+		If LV_Init {
+
+			RegExMatch(Addendum.iWin.JournalSort, "\s*(\d)\s*(\d)", JSort)
+			EventNr := JSort1
+
+			If (JSort1 = 1) {
+				If (JSort2 = 1)
+					JCol1Dir := true
+			}
+			else {
+				If (JSort2 = 1)
+					JCol3Dir := true
+			}
+
+			If JCol1Dir
+				JCol3Dir := false
+
+			If JCol3Dir
+				JCol1Dir := false
+
+		}
+
+	; Sortierung je nach gewählter Spalte vornehmen
+	; Idee von: https://www.autohotkey.com/boards/viewtopic.php?t=68777
+		If      	(EventNr = 3) {    ; Spalte 3 (Eingangsdatuim) - sortiert wird nach der unsichtbaren Spalte 4 (Timestamp)
+
+			admGui_ColSort("admJournal", EventNr, (JCol3Dir := !JCol3Dir))
+			Addendum.iWin.JournalSort := EventNr " " (JCol2Dir ? "1":"0")
+
+		}
+		else If	(EventNr = 1) {
+
+			admGui_ColSort("admJournal", EventNr, (JCol1Dir := !JCol1Dir))
+			Addendum.iWin.JournalSort := EventNr " " (JCol1Dir ? "1":"0")
+
+		}
+
+
+}
+
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum_Ini.ahk
@@ -2470,8 +2651,252 @@ SetSystemCursor(Cursor := "") {										; function: SetSystemCursor() set custo
   }
 } ; https://msdn.microsoft.com/en-us/library/windows/desktop/ms648395(v=vs.85).aspx
 
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; Laborjournal
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+AlbisLaborJournal_new(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {       	;-- Laborwerte mit gewisser Überschreitung der Normgrenzen werden erfasst
+
+		static Lab
+
+		LabPat := Object()
+
+		If IsObject(Warnen) {
+			nieWarnen    	:= "(" StrReplace(Warnen.nie      	, ","	, "|") ")$"
+			immerWarnen 	:= "(" StrReplace(Warnen.immer 	, ","	, "|") ")$"
+			exklusivWarnen	:= "(" StrReplace(Warnen.exklusiv	, ","	, "|") ")$"
+		}
+
+	; Laborwertgrenzen laden oder berechnen                                                          	;{
+		If !IsObject(Lab) {
+			If !FileExist(adm.LabDBPath "\Laborwertgrenzen.json")
+				Lab := AlbisLaborwertGrenzen(adm.LabDBPath "\Laborwertgrenzen.json", Anzeige)
+			else
+				Lab := JSON.Load(FileOpen(adm.LabDBPath "\Laborwertgrenzen.json", "r", "UTF-8").Read())
+		}
+	;}
+
+	; Suchzeitraum                                                                                                  	;{
+		If !Von && !Bis {
+			Von 	:= A_YYYY A_MM A_DD
+			If (A_DDD = "Fr")
+				Von += -30, days
+			else
+				Von += -30, days
+
+			FormatTime, Von, % Von, yyyyMMdd
+			QJ 	:= A_YYYY . Ceil(A_MM/3)
+			VB  	:= "Von"
+		}
+		else {
+			VB := (Von && !Bis) ? "Von" : (!Von && Bis) ? "Bis" : "VonBis"
+			QJ := SubStr(Von, 1, 4) . Ceil(SubStr(Von, 5, 2)/3)   ; Quartalsjahr QQYYYY z.B. 012021
+		}
+
+	;}
+
+	; Laborbuchdaten laden                                                                                      	;{
+		;~ p := ["ANFNR", "STATUS"]
+		;~ s :=
+		;~ labbuch := GetDBFData(adm.AlbisDBPath "\LABBUCH.dbf",p,,s)
+	;}
 
 
+	; Albis: Datenbank laden und entsprechend des Datums die Leseposition vorrücken ;{
+		labDB := new DBASE(adm.AlbisDBPath "\LABBLATT.dbf", Anzeige)
+		labDB.OpenDBF()
+	;}
+
+	; Datenbank: Startposition berechnen ;{
+		startrecord := 0
+		If (VB = "Von") || (VB = "VonBis") {
+			startrecord := Lab.seeks[QJ] - 1
+			labDB._SeekToRecord(startrecord, 1)
+		}
+		LabJ.srchdrecords	:= SubStr("00000000" (labDB.records - startrecord), -5)
+		LabJ.records     	:= LabDB.records
+	;}
+
+	; filtert nach Datum und ab einer Überschreitung von der durchschnittlichen Abweichung von den Grenzwerten anhand
+	; der zuvor für jeden Laborwert berechneten durchschnittlichen prozentualen Überschreitung des Grenzwertes aus den
+	; Daten der LABBLATT.dbf [AlbisLaborwertGrenzen()]
+		while !(labDB.dbf.AtEOF) {
+
+			; eine Zeile lesen
+				data := labDB.ReadRecord(["PATNR", "ANFNR", "DATUM", "PARAM", "ERGEBNIS", "EINHEIT", "GI", "NORMWERT"])
+				UDatum := data.Datum
+
+			; Fortschritt                                                     	;{
+				If Anzeige && (Mod(A_Index, 3000) = 0)
+					ToolTip, % ConvertDBASEDate(UDatum) ": " PSU "," PSO "`n" SubStr("00000000" labDB.recordnr, -5) "/" LabJ.srchdrecords ;"`n" lfound
+			;}
+
+			; Datum prüfen                                             	;{
+				Switch VB {
+
+					Case "Von":
+						If (UDatum <= Von)
+							continue
+					Case "Bis":
+						If (UDatum => Bis)
+							continue
+					Case "VonBis":
+						If (UDatum < Von) || (UDatum > Bis)
+							continue
+
+				}
+			;}
+
+			; Kriterien prüfen                                           	;{
+				PNImmer := PNExklusiv := false
+				PN := data.PARAM                                            	; Parameter (Name)
+
+				If RegExMatch(PN, "(" nieWarnen ")")
+					continue
+				If RegExMatch(PN, "(" immerWarnen ")")
+					PNImmer := true
+				If RegExMatch(PN, "(" exklusivWarnen ")")
+					PNExklusiv := true
+				If !PNExklusiv && !PNImmer
+					If !InStr(data["GI"], "+")
+						continue
+				;}
+
+			; Strings lesbarer machen (oder auch nicht)    	;{
+				P	    	:= ""
+				PW   	:= StrReplace(data["ERGEBNIS"]	, ",", ".") 	; Wert
+				PE	    	:= data.EINHEIT				                    	; Einheit
+			;}
+
+			/* Beschreibung der Variablen
+
+					GWA	- Grenzwertabweichung in %
+
+					ONG	- Abweichung vom oberen Normgrenzwert in %
+					UNG	- Abweichung vom unteren Normgrenzwert in %
+
+					P        	- (P)arameter
+					P(N)    	- (N)ame
+					P(W)    	- (W)ert
+					P(E)    	- (E)inheit
+
+					P(SU)	- unterer Grenzwert aus dem Laborblatt
+					P(SO)	- oberer Grenzwert aus dem Laborblatt
+
+				# diese Daten werden vorher aus allen Einträgen der LABBLATT.dbf für alle Parameter berechnet
+
+					lab.param[PN].OD 	- durchschnittliche Abweichung vom oberen Grenzwert
+
+			*/
+
+			; Grenzwertüberschreitungen berechnen          	;{
+				If !PNExklusiv {           ; exklusiv Parameter werden immer gelistet
+
+					RegExMatch(data["NORMWERT"], "(?<V>[\<\>])*(?<SU>[\d,]+)\-*(?<SO>[\d,]+)*", P)
+					PSU  	:= StrReplace(PSU	, ",", ".")                                     	; unterer Grenzwert
+					PSO  	:= StrReplace(PSO, ",", ".")                                       	; oberer Grenzwert
+					PSO  	:= PSO ? PSO : PSU                                               	; wenn es nur einen Grenzwert gibt
+					ONG 	:= (PW >= PSO) 	? Round((PW*100)/PSO	, 2) 	: 0	; Grenzwertüberschreitung in %
+					UNG 	:= (PW <= PSU) 	? Round((PSU*100)/PW	, 2)	: 0	; Grenzwertunterschreitung in %
+
+				; weiter wenn keine Grenzwerte über- oder unterschritten wurden
+					If !(ONG && UNG)
+						continue
+
+				; berechnet die prozentuale Abweichung von der durchschnittlichen Grenzwertabweichung dieses Parameters
+					plus := (ONG > 0) ? Round((ONG*100)/lab.params[PN].OD) : (UNG > 0) ? Round((lab.params[PN].UD*100)/UNG) : 0
+
+				}
+			;}
+
+			; Datenobjekt erstellen                                    	;{
+				If (plus >= GWA || PNImmer || PNExklusiv) {
+
+						PatID 	:= data.PATNR
+						Datum 	:= data.Datum
+						AFNR	:= data.AFNR
+
+						If !IsObject(LabPat[Datum])
+							LabPat[Datum] := Object()
+						If !IsObject(LabPat[Datum][PatID])
+							LabPat[Datum][PatID] := Object()
+						If !IsObject(LabPat[Datum][PatID][PN])
+							LabPat[Datum][PatID][PN] := Object()
+						If !IsObject(LabPat[Datum][PatID].AFNR) 			; Anforderungsnummern und Teil oder Endbefund zusammen bringen
+							LabPat[Datum][PatID].AFNR := Object()
+
+						PW := RegExReplace(PW, "(\.[0-9]+[1-9])0+$", "$1")
+						LabPat[Datum][PatID][PN].PatID	:= PatID
+						LabPat[Datum][PatID][PN].AFNR	:= AFNR                                                                                                                                        	; Anforderungsnummer
+						LabPat[Datum][PatID][PN].CV  	:= PNImmer ? 1 : PNExklusiv ? 2 : 0                                                                                                	; CAVE-Wert für andere Textfarbe im Journal
+						LabPat[Datum][PatID][PN].PN  	:= PN                                                                                                                                           	; Parameter Name
+						LabPat[Datum][PatID][PN].PW  	:= RegExReplace(PW, "\.0+$")                                                                                                        	; Parameter Wert
+						LabPat[Datum][PatID][PN].PV		:= P ? StrReplace(P, ",", ".") : data.NORMWERT                                                                                  	; Parameter Normwert
+						LabPat[Datum][PatID][PN].PL 		:= (ONG > 0 ? "+" ONG	: (UNG > 0 ? "-" UNG : ""))                                                                      	; obere Normwertgrenze
+						LabPat[Datum][PatID][PN].PA		:= (ONG > 0 ? lab.params[PN].OD : (UNG > 0 ? lab.params[PN].UD : "" ))                                     	; durchschn. Abweichung vom Normwert [+/-] in %
+						LabPat[Datum][PatID][PN].PD		:= (ONG > 0 ? "+" ONG - lab.params[PN].OD : (UNG > 0 ? "-" UNG - lab.params[PN].UD : ""))  	; untere Normwertgrenze
+						LabPat[Datum][PatID][PN].PE		:= PE                                                                                                                                           		; Einheit
+
+					}
+			;}
+
+		}
+
+	; Lesezugriff beenden
+		labDB.CloseDBF()
+		LabDB := ""
+		ToolTip
+
+return LabPat
+}
+
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; Addendum_Mining.ahk
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+FindDocDate_GetMaxHits(datesObj)                              	{
+
+	retArr := Array()
+
+	maxdcount := 0
+	For didx, docdate in datesObj
+		maxdcount := docdate.dcount > maxdcount ? docdate.dcount : maxdcount
+
+	For KeyDate, docdate in datesObj
+		If (docdate.dcount = maxdcount)
+			retArr.Push(KeyDate)
+
+return retArr
+}
+
+FindName_BestHit(PatBuf) 													{
+
+	; höchste Trefferzahl ermitteln
+		maxHits := 0, equal := false, BestHits := Object()
+		For PatID, Pat in PatBuf
+			If (Pat.hits > maxHits)
+				maxHits := Pat.hits
+
+	; alle Namen mit gleicher Trefferanzahl werden behalten
+		For PatID, Pat in PatBuf
+			If (Pat.hits = maxHits)
+				BestHits[PatID] := {"Nn":Pat.Nn, "Vn":Pat.Vn, "Gd":Pat.Gd}
+
+return BestHits
+}
+
+FindDocOther(Text)                                                       	{                	;-- Kategorisierung von nicht Patientenbriefen
+
+	; Brief key-Parameter:
+	;		Stichworte 	- Wörter die den Brief definieren
+	;		Stichzahl    	- wieviele davon sind notwendig damit ein Treffer angerechnet wird
+	;		rxFilename	- RegExStrings um Details für den Dateinamen zu finden
+	Brief := {"Fortbildung"	:	{	"Stichworte"	: ["Einladung|Anmeldung|neues zur|Programm|LÄK", "Fortbildung|Online-Fortbildung"]
+											,	"Stichzahl" 	: 2
+											,	"rxFileName"	: [""]}
+				, "Rechnung"		:	{	"Stichworte"	: ["Rechnung vom", "Zahlungsaufforderung", "Verwendungszweck", "Rechnung", "Gesamtbetrag"]
+											,	"Stichzahl" 	: 2
+											,	"rxFileName"	: [""]}}
+
+}
 
 
 

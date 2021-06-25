@@ -51,7 +51,8 @@ PdfSaveAs(PdfFullFilePath,PDFViewerClass, PDFViewerHwnd) {                      
 
 		static foxitSaveAs    	:= "Speichern unter ahk_class #32770 ahk_exe FoxitReader.exe"
 		static sumatraSaveAs	:= "Speichern unter ahk_class #32770 ahk_exe SumatraPDF.exe"
-		static rxNotAllowed   	:= "[" Chr(0x20) "~#%&<>\?\/|\{\}\|\*]"
+		;static rxNotAllowed   	:= "[" Chr(0x20) "~#%&<>\?\/|\{\}\|\*]"
+		static rxNotAllowed   	:= "[~#%&\<\>\?\/|\{\}\|\*]"
 
 	; illegale Zeichen entfernen
 		PdfFullFilePath := RegExReplace(PdfFullFilePath, rxNotAllowed)

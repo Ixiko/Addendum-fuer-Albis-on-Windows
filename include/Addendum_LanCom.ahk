@@ -2,34 +2,45 @@
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                  Funktionsbibliothek für TCP - LAN Komunikation - benötigt class_TCP-UDP.ahk
 ;                                                                              	!diese Bibliothek enthält Funktionen für Einstellungen des Addendum Hauptskriptes!
-;                                                            	by Ixiko started in September 2017 - last change 21.08.2020 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 27.05.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 admStartServer() {
 
-		global DC_SERV := True
-		global DC_CLI := False
-		global admServer
+		;~ global DC_SERV 	:= True
+		;~ global DC_CLI  	:= False
+		global rmsgQueue
+		;global admServer
 
-	; admServer muss im aufrufenden Skript supergobal gemacht worden sein
-		rmsgQueue := Object()
+		SciTEOutput("LAN Port: " Addendum.LAN.admServer.ip)
 
-		admServer := new SocketTCP()
-		admServer.Bind(["addr_any", 1337])
+	; admServer muss im aufrufenden Skript gobal gemacht worden sein
+		rmsgQueue	:= Object()
+		admServer	:= new SocketTCP()
+
+		admServer.Bind(["addr_any", Addendum.LAN.admServer.Port])
 		admServer.Listen()
 		admServer.OnAccept := Func("admOnAccept")
 
 }
 
-admOnAccept() {
+admOnAccept(){
+		newTcp := admServer.accept()
+		newTcp.sendText("Hello Client!")
+		MsgBox, % newTcp.recvText()
+}
 
-		global admServer
+
+admOnAcceptX() {
+
+		;global admServer
 		global rmsgQueue
-		global DC_SERV
-		global DC_CLI
+		;~ global DC_SERV
+		;~ global DC_CLI
 
-		newTCP  	:= admServer.accept()
+		newTCP := admServer.accept()
 		newTCP.SendText("Successful Connection!")
+		SciTEOutput("received: " newTCP.RecvText())
 		/*
 		if IsObject(newTCP) {
 
@@ -51,8 +62,7 @@ admOnAccept() {
 		 */
 		;SciTEOutput("ProtocolID: " newTCP.ProtocolID ", newTCPType: " newTCP.SocketType)
 
-		rmsg  	:= StrSplit(newTCP.RecvText(), "|")
-		SciTEOutput(newTCP.RecvText())
+		rmsg	:= StrSplit(newTCP.RecvText(), "|")
 		SciTEOutput("recv: " rmsg.Count())
 
 		If IsFunc("adm" rmsg.1) {
@@ -95,7 +105,7 @@ admSendText(to, Text) {
 	global DC_CLI
 
 	x := new SocketTCP()
-	Connected := x.Connect([to, 1337])
+	Connected := x.Connect([to, 13337])
 	x.SendText(Text)
 	x.Disconnect()
 

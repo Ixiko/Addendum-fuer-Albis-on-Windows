@@ -1,9 +1,10 @@
 /**
  * Lib: class_JSON.ahk
  *     JSON lib for AutoHotkey
- *		- this is a modified version by Ixiko from original class made by cocobelgica
- *		- modifications base on my needs in handling json strings for my project "Addendum für Albis on Windows"
+ *		- this is a modified version by Ixiko from the original class made by cocobelgica
+ *		- modifications based on my needs in handling json strings for my project "Addendum für Albis on Windows"
  *		- generally there should be no problem to use my modifications in other cases
+ *		- JSON can be written in UTF-8 now
  * Version:
  *		v2.1.5 [28/01/2021]
  *			- added class JSONDATA for loading and saving data from or to harddisk

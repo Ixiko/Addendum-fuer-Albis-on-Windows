@@ -1,14 +1,15 @@
-﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
-;                                                                                 liest Informationen aus der Addendum.ini ein für das globale Objekt Addendum
-;                                                                              	!diese Bibliothek enthält Funktionen für Einstellungen des Addendum Hauptskriptes!
-;                                                            	by Ixiko started in September 2017 - last change 20.03.2021 - this file runs under Lexiko's GNU Licence
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                                      	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
+;                                                     liest Informationen aus der Addendum.ini ein für das globale Objekt Addendum
+;                                                  	!diese Bibliothek enthält Funktionen für Einstellungen des Addendum Hauptskriptes!
+;                                  	   by Ixiko started in September 2017 - last change 18.06.2021 - this file runs under Lexiko's GNU Licence
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 return
 admObjekte() {                                                                                       	;-- Addendum-Objekt erweitern
 
 		Addendum.AktuellerTag	    	:= A_DD            	; der aktuelle Tag
+		Addendum.Abrechnung	        	:= Object()          	; Daten zu Abrechnungsgebühren
  		Addendum.Chroniker            	:= Array()          	; Patient ID's der Chroniker
 		Addendum.Default                  	:= Object()       	; Addendum Font/Farbeinstellungen
 		Addendum.Drucker               	:= Object()          	; verschiedene Druckereinstellungen
@@ -34,18 +35,21 @@ admObjekte() {                                                                  
 		Addendum.UndoRedo             	:= Object()          	; Undo/Redo Textbuffer
 		Addendum.UndoRedo.List        	:= Array()           	; Undo/Redo Textbuffer
 		Addendum.Windows                	:= Object()        	; Fenstereinstellungen für andere Programme
-
+		Addendum.WZ                      	:= Object()       	; Wartezimmer Einstellungen
+		Addendum.CImpf                  	:= Object()       	; Corona Impfhelfer
 		Addendum.PraxTTDebug := false
 
 }
 
-admVerzeichnisse() {                                                                             	;-- Programm- und Datenverzeichnisse (!ALS ERSTES AUFRUFEN! nach admObjekte)
+admVerzeichnisse() {                                                                             	;-- Programm- und Datenverzeichnisse (!nach admObjekte aufrufen!)
 
 		Addendum.Dir                              	:= AddendumDir
 		Addendum.Ini                                 	:= AddendumDir "\Addendum.ini"
 
 		Addendum.DBPath                          	:= IniReadExt("Addendum" 	, "AddendumDBPath"     	)              	; Datenbankverzeichnis
+		Addendum.LogPath                          	:= IniReadExt("Addendum" 	, "AddendumLogPath"     	)              	; Logbücher-Verzeichnis
 		Addendum.BefundOrdner                	:= IniReadExt("ScanPool"     	, "BefundOrdner"            	)             	; BefundOrdner = Scan-Ordner für neue Befundzugänge
+		Addendum.ExportOrdner                	:= IniReadExt("ScanPool"    	, "ExportOrdner", Addendum.BefundOrdner "\Export")  ;### ÜBERPRÜFUNG ANLEGEN
 		Addendum.VideoOrdner                	:= IniReadExt("ScanPool"     	, "VideoOrdner"             	)             	; Video's z.B. aus Dicom CD's (CT Bilder u.a.)
 		Addendum.AlbisExe                         	:= IniReadExt("Albis"           	, "AlbisExe"                    	)             	; Pfad zum Albis-Stammverzeichnis
 		Addendum.DosisDokumentenPfad   	:= IniReadExt("Addendum" 	, "DosisDokumentenPfad"	)              	; MS Word Dateien mit eigenen Hinweisen zu Medikamentendosierungen
@@ -53,7 +57,6 @@ admVerzeichnisse() {                                                            
 		Addendum.TPPath	                        	:= Addendum.DBPath "\Tagesprotokolle\" A_YYYY                     	; Tagesprotokollverzeichnis
 		Addendum.TPFullPath                      	:= Addendum.TPPath "\" A_MM "-" A_MMMM "_TP.txt" 	               	; Name des aktuellen Tagesprotokolls
 
-		Addendum.ExportOrdner                	:= IniReadExt("ScanPool"   	, "ExportOrdner", Addendum.BefundOrdner "\Export")  ;### ÜBERPRÜFUNG ANLEGEN
 		Addendum.AdditionalData_Path       	:= AddendumDir "\include\Daten"
 
 
@@ -225,7 +228,12 @@ admFunktionen() {                                                               
 		Addendum.OCR.WatchFolder    	:= IniReadExt(compname	, "BefundOrdner_ueberwachen"       	, "ja"                 	)
 	; automatische Bestätigung bei "Möchten Sie diesen Eintrag wirklich löschen?"
 		Addendum.AutoDelete                	:= IniReadExt(compname	, "Eintrag_wirklich-loeschen"            	, "nein"                 	)
-
+	; Excel Helferlein
+		Addendum.CImpf.Helfer             	:= IniReadExt(compname	, "CoronaImpfhelfer"                      	, "nein"                 	)
+		If Addendum.CImpf.Helfer {
+			Addendum.CImpf.ScriptPath     	:= AddendumDir "\Module\Corona-Impfung"
+			Addendum.CImpf.ScriptName  	:= "Corona-ExcelDB.ahk"
+		}
 }
 
 admGesundheitsvorsorge() {                                                                    	;-- Abstände zwischen Untersuchungen minimales Alter
@@ -258,14 +266,16 @@ admInfoWindowSettings() {                                                       
 									,	"ReIndex"            	: false
 									,	"rowprcs"           	: 0
 									,	"Init"                    	: false
-									,	"AbrHelfer"        	: IniReadExt(compname, "Infofenster_Abrechnungshelfer"        	, "Ja")                    		; Abrechnungshelfer anzeigen
-									,	"WZKommentar"   	: IniReadExt(compname, "Infofenster_AutoWZ_Kommentar"        	, "Ja")
-									,	"AutoWZTrigger" 	: IniReadExt(compname, "Infofenster_AutoWZ_Trigger"               	, DefaultTrigger)
-									,	"ConfirmImport"   	: IniReadExt(compname, "Infofenster_Import_Einzelbestaetigung"	, "Ja")
-									,	"firstTab"           	: IniReadExt(compname, "Infofenster_aktuelles_Tab"                 	, "Patient")
-									,	"TProtDate"         	: IniReadExt(compname, "Infofenster_Tagesprotokoll_Datum"    	, "Heute")
-									,	"JournalSort"      	: IniReadExt(compname, "Infofenster_JournalSortierung"             	, "3 1 1")
-									,	"LBDrucker"       	: IniReadExt(compname, "Infofenster_Laborblatt_Drucker"          	, "")
+									,	"AbrHelfer"        	: IniReadExt(compname, "Infofenster_Abrechnungshelfer"                	, "Ja")                    		; Abrechnungshelfer anzeigen
+									,	"WZKommentar"   	: IniReadExt(compname, "Infofenster_AutoWZ_Kommentar"              	, "Ja")
+									,	"AutoWZTrigger" 	: IniReadExt(compname, "Infofenster_AutoWZ_Trigger"                     	, DefaultTrigger)
+									,	"ConfirmImport"   	: IniReadExt(compname, "Infofenster_Import_Einzelbestaetigung"      	, "Ja")
+									,	"firstTab"           	: IniReadExt(compname, "Infofenster_aktuelles_Tab"                         	, "Patient")
+									,	"TProtDate"         	: IniReadExt(compname, "Infofenster_Tagesprotokoll_Datum"            	, "Heute")
+									,	"JournalSort"      	: IniReadExt(compname, "Infofenster_JournalSortierung"                     	, "3 1 1")
+									,	"Debug"            	: IniReadExt(compname, "Infofenster_Debug"                                  	, "Nein")
+									,	"LBDrucker"       	: IniReadExt(compname, "Infofenster_Laborblatt_Drucker"                  	, "")
+									,	"LBAnm"             	: IniReadExt(compname, "Infofenster_Laborblatt_Anmerkung_drucken"	, "Nein")
 									,	"LVScanPool"        	: {"W"	: (match2 - 10)
 																	,	"R"	: IniReadExt(compname, "InfoFenster_BefundAnzahl", 7)}}
 
@@ -348,37 +358,68 @@ admTools() {                                                                    
 
 admLaborDaten() {                                                                                	;-- Laborabruf, Verarbeitung Laborwerte
 
+	; Laborabruf Prozeßschlüssel anlegen
 		Addendum.Labor.AbrufStatus	:= false
-		Addendum.Labor.AbrufDaten:= false
-		Addendum.Labor.AbrufVoll  	:= false
+		Addendum.Labor.AbrufDaten	:= false
+		Addendum.Labor.AbrufVoll    	:= false
 
-		                           AbrufZeiten      	:= IniReadExt("LaborAbruf"	, "LaborAbruf_Zeiten"           	    , ""            	)	; z.B. "06:00, 15:00, 19:00, 21:00"
-		Addendum.Labor.ExecuteOn       	:= IniReadExt("LaborAbruf"	, "OnlyRunOnClient"             	    , ""            	)  	; auf welchem/n Client/s der Laborabruf ausgeführt werden darf
-		Addendum.Labor.ExecuteFile       	:= IniReadExt("LaborAbruf"	, "Laborabruf_Extern"           	    , ""            	)  	; externes Programm das für den Abruf ausgeführt werden muss
-		Addendum.Labor.ExecuteScript     	:= IniReadExt("LaborAbruf"	, "Laborabruf_Skript"                	, ""            	)  	; Skript das den Abruf übernimmt
-		Addendum.Labor.ZeigeLabJournal	:= IniReadExt("LaborAbruf"	, "Laborabruf_ZeigeJournal"    	, "nein"        	)	; nach dem Ende des Laborabrufes das Laborbuch anzeigen lassen
-		Addendum.Labor.LbName         	:= IniReadExt("LaborAbruf"	, "LaborName"                     	    , ""            	)  	; falls sie mehrere Labore haben, tragen Sie das aktuelle hier ein
-		Addendum.Labor.Alarmgrenze     	:= IniReadExt("LaborAbruf"	, "Alarmgrenze"                    	    , "30%"      	)  	; Alarmierungsgrenze in Prozent oberhalb der Normgrenzen
-		Addendum.Labor.Laborkuerzel     	:= IniReadExt("LaborAbruf"	, "Aktenkuerzel"                    	    , "labor"    	)  	; Karteikartenkürzel um Informationen ablegen zu können
-		Addendum.Labor.LDTDirectory     	:= IniReadExt("LaborAbruf"	, "LDTDirectory"                       	, "C:\Labor"	)	; Verzeichnis in dem die heruntergeladenen LDT-Dateien zwischengespeichert werden
-		Addendum.Labor.Kennwort       	:= IniReadExt("LaborAbruf"	, "LaborKennwort"                 	    , ""            	)	; für order&entry per CGM-Channel
+	; Laborabrufzeiten z.B. "06:00, 15:00, 19:00, 21:00" , werden in ein Array umgewandelt
+		spos := 1
+		Addendum.Labor.AbrufZeiten    	:= Array()
+		while (spos := RegExMatch(IniReadExt("LaborAbruf", "LaborAbruf_Zeiten", ""), "(?<H>\d+)\:(?<M>\d+)", timer, spos)) {
+			spos += StrLen(timer)
+			Addendum.Labor.AbrufZeiten.Push("T" SubStr("00" timerH, -1) SubStr("00" timerM, -1) "00")
+		}
+
+	; auf welchem/n Client/s der Laborabruf ausgeführt werden darf
+		Addendum.Labor.ExecuteOn       	:= IniReadExt("LaborAbruf"	, "OnlyRunOnClient"         	    , ""            	)
+
+	; externes Programm das für den Abruf ausgeführt werden muss
+		Addendum.Labor.ExecuteFile       	:= IniReadExt("LaborAbruf"	, "Laborabruf_Extern"      	    , ""            	)
+
+	; Skript das den Abruf übernimmt
+		Addendum.Labor.ExecuteScript     	:= IniReadExt("LaborAbruf"	, "Laborabruf_Skript"             	, ""            	)
+
+	; nach dem Ende des Laborabrufes das Laborbuch anzeigen lassen
+		Addendum.Labor.ZeigeLabJournal	:= IniReadExt("LaborAbruf"	, "Laborabruf_ZeigeJournal"  	, "nein"        	)
+
+	; falls sie mehrere Labore haben, tragen Sie das aktuelle hier ein
+		Addendum.Labor.LbName         	:= IniReadExt("LaborAbruf"	, "LaborName"               	    , ""            	)
+
+	; Alarmierungsgrenze in Prozent oberhalb der Normgrenzen
+		Addendum.Labor.Alarmgrenze     	:= IniReadExt("LaborAbruf"	, "Alarmgrenze"             	    , "30%"      	)
+
+	; Karteikartenkürzel um Informationen ablegen zu können
+		Addendum.Labor.Laborkuerzel     	:= IniReadExt("LaborAbruf"	, "Aktenkuerzel"              	    , "labor"    	)
+
+	; Verzeichnis in dem die heruntergeladenen LDT-Dateien zwischengespeichert werden
+		Addendum.Labor.LDTDirectory     	:= IniReadExt("LaborAbruf"	, "LDTDirectory"                  	, "C:\Labor"	)
+
+	; für order&entry per CGM-Channel
+		Addendum.Labor.Kennwort       	:= IniReadExt("LaborAbruf"	, "LaborKennwort"            	    , ""            	)
 		If InStr(Addendum.Labor.Kennwort, "Error")
 			Addendum.Labor.Kennwort := ""
 
-	; Laborabrufzeiten umwandeln in HHMM Format
-		Addendum.Labor.AbrufZeiten := Array()
-		spos := 1
-		while (spos := RegExMatch(AbrufZeiten, "(?<H>\d+)\:(?<M>\d+)", timer, spos)) {
-			spos += StrLen(timer)
-			Addendum.Labor.AbrufZeiten.Push("T" SubStr("00" timerH, -1) SubStr("00" timerM, -1) "00") ; eine Null als erste Zahl wird von AHK leider entfernt
-		}
 
-		; ACHTUNG:
-		; hier werden die Einstellungen für eine Alarmierung über Ihren eigenen Telegram-Bot eingelesen! Denken Sie immer daran die Telegram Token und ChatID's vor dem
-		; Zugriff Fremder oder auch dem eigenen Personal zu schützen
-		Addendum.Labor.TGramOpt        	:= IniReadExt("LaborAbruf", "TGramOpt"           	    , "nein")	        	; die Nummer ihres Telegram Bots und + oder - Tel z.b. "1+Tel"
-		If !((Addendum.Labor.TGramOpt = false) || RegExMatch(Addendum.Labor.TGramOpt, "^\d+\+|\-Tel")) 	; die Werte müssen einen exakten Syntax haben, sonst wird die Telegram Option gelöscht!
-			IniWrite, % "nein", % Addendum.Ini, % "LaborAbruf", % "TGramOpt"
+	; -----------------------------------------------------------------------------------------------------------------------------------------------------------------
+	; 	ACHTUNG
+	; -----------------------------------------------------------------------------------------------------------------------------------------------------------------
+	; 	hier werden die Einstellungen für eine Alarmierung über Ihren eigenen Telegram-Bot eingelesen!
+	; 	Denken Sie immer daran die Telegram Token und ChatID's vor dem Zugriff Fremder oder auch dem eigenen Personal zu schützen
+	; -----------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+	; die Nummer ihres Telegram Bots und + oder - Tel z.b. "1+Tel"
+		If (Addendum.Labor.TGramMsg     	:= IniReadExt("LaborAbruf"	, "TGramVersand"                  	, "Nein"	        	)) {
+
+				Addendum.Labor.TGramOpt    	:= IniReadExt("LaborAbruf"	, "TGramOpt"                	    	, "+Tel -Crypt"  	)
+				Addendum.Labor.TGramBotNr 	:= IniReadExt("LaborAbruf"	, "TGramBotNr"             	    	, "1"      	    	)
+
+			; die Werte müssen einen exakten Syntax haben, sonst wird die Telegram Option gelöscht!
+				If !RegExMatch(Addendum.Labor.TGramOpt, "i)([\+\-][a-z]+)\V*([\+\-][a-z]+)") {
+					Addendum.Labor.TGramMsg := false
+					IniWrite, % "nein", % Addendum.Ini, % "LaborAbruf", % "TGramVersand"
+				}
+		}
 
 }
 
@@ -391,16 +432,31 @@ admLanProperties() {                                                            
 
 	; hält die in der ini gespeicherte IP zu jedem Client aktuell
 		CompIP 	:= A_IPAddress1
-		storedIP    	:= IniReadExt(compname, "IP")
+		storedIP   	:= IniReadExt(compname, "IP")
 		If (CompIP <> storedIP)
 			IniWrite, % CompIP, % Addendum.Ini, % compname, % "IP"
 
-	; liest die Namen aller Clients ein welche überwacht werden sollen oder welche miteinander kommunizieren dürfen
+	; liest die Namen aller Clients, die überwacht werden sollen oder die miteinander kommunizieren dürfen
 		For idx, clientName in StrSplit(IniReadExt("Computer", "Computer"), "|")
 			Addendum.LAN.Clients[clientName] := {	"computername"	: IniReadExt(clientName, "ComputerName")
-													                	,	"remoteShotDown"	: IniReadExt(clientName, "AutoShutDown")
+													                	,	"remoteShutdown"	: IniReadExt(clientName, "AutoShutDown")
 													                	,	"rdpPath"            	: IniReadExt(clientName, "rdpPath")
 													                	,	"IP"                    	: IniReadExt(clientName, "IP") }
+
+	; Addendum erhält die Fähigkeit im LAN Daten senden und empfangen zu können
+
+		ServerPC   	:= IniReadExt("Addendum", "Addendum_ServerPC"     	, "")
+		ServerPC   	:=  InStr(ServerPC, "ERROR") ? "" 	: ServerPC
+		If ServerPC && (ServerPC = compname)
+			Addendum.LAN.IamServer := true
+		else
+			Addendum.LAN.IamServer := false
+
+		Server	:= IniReadExt("Addendum", "Addendum_ServerAdresse", 0)
+		Server  	:= InStr(admServer, "ERROR") ? ""	: Server
+		RegExMatch(Server, "(?<adr>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\s*\:\s*(?<port>\d+)", tcp_)
+		If tcp_adr && tcp_port
+			Addendum.LAN.admServer := {"IP":tcp_adr, "Port":tcp_port}
 
 }
 
@@ -420,7 +476,7 @@ admMailAndHolidays() {                                                          
 
 }
 
-admMonitorInfo() {                                                                                  	;-- ermittelt die Anzahl der angeschlossenen Monitore und schreibt die Werte in die ini
+admMonitorInfo() {                                                                                  	;-- angeschlossenen Monitore
 
 	; Werte werden unter info des Infofenster angezeigt
 	; benötigt \include\Addendum_Screens.ahk
@@ -598,6 +654,15 @@ admSonstiges() {                                                                
 	; Verzögerung bis zum Schliessen des Dialoges "Patient hat in diesem Quartal seine Chipkarte..." (0 = keine Verzögerung)
 		Addendum.noChippie := IniReadExt(compname, "keineChipkarte", 3)
 
+	; Behördengebühren werden über die ini Datei verwaltet
+		Behoerdengebuehr := {"JVEG":"25.00", "DRV":"28.20", "BAfA":"32.50"}
+		Addendum.Abrechnung.JVEG 	:= IniReadExt(Addendum, "JVEG")
+		Addendum.Abrechnung.DRV  	:= IniReadExt(Addendum, "DRV")
+		Addendum.Abrechnung.BAfA  	:= IniReadExt(Addendum, "BAfA")
+		For Behoerde, Gebuehr in Addendum.Abrechnung
+			If !RegExMatch(Gebuehr, "\d+\.\d+")
+				Addendum.Abrechnung[Behoerde] := Behoerdengebuehr[Behoerde]
+
 }
 
 admStandard() {                                                                                    	;-- Einstellungen für Addendum - Fenster und Dialoge
@@ -650,12 +715,12 @@ admTelegramBots() {                                                             
 	BotNr := 1
 	Loop {
 
-			BotName	:= IniReadExt("Telegram", "Bot" BotNr)
-			If InStr(BotName, "Error") {
-					If (A_Index = 1)
-							BotNr := 0
-					break
-			}
+		BotName	:= IniReadExt("Telegram", "Bot" BotNr)
+		If InStr(BotName, "Error") {
+			If (A_Index = 1)
+				BotNr := 0
+			break
+		}
 
 			Addendum.Telegram.Push(ReadBots(BotName))
 			BotNr ++
@@ -668,7 +733,7 @@ admThreads() {                                                                  
 
 	; Skriptcode kann bei Änderungen der Flag-Einstellungen dynamisch hinzugeladen werden oder entladen werden
 	; geschrieben um RAM-Belegung zu sparen
-	; letzte Änderung: 11.10.2020
+	; letzte Änderung: 05.06.2021
 
 	; Toolbar-Thread starten oder beenden
 		If Addendum.ToolbarThread {
@@ -712,16 +777,28 @@ admThreads() {                                                                  
 	; Funktionsbibliothek für PDF OCR mit Tesseract
 		If (StrLen(Addendum.Threads.OCR) =0) {
 
-			threadFilePath := Addendum.Dir "\Include\Addendum_OCR.ahk"
-			If FileExist(threadFilePath)
-				Addendum.Threads.OCR := FileOpen(threadFilePath, "r").Read()
+			OCRThreadPath1 := Addendum.Dir "\Include\Addendum_OCR.ahk"
+			OCRThreadPath2 := Addendum.Dir "\Include\Addendum_Mining.ahk"
+
+			If FileExist(OCRThreadPath1)
+				Addendum.Threads.OCR :=	FileOpen(OCRThreadPath1, "r").Read()  "`n"
 			else
 				SciTEOutput("\Include\Addendum_OCR.ahk konnte nicht geladen werden.")
+
+			If FileExist(OCRThreadPath2)
+				Addendum.Threads.OCR .=	FileOpen(OCRThreadPath2, "r").Read()
+			else
+				SciTEOutput("\Include\Addendum_Mining.ahk konnte nicht geladen werden.")
 
 		}
 
 }
 
+admWartezimmer() {
+
+	Addendum.WZ.RemoveFast 	:= IniReadExt("Wartezimmer", "Schnell_Entfernen", "")
+
+}
 
 ; ---- HILFSFUNKTIONEN ----
 Sprechstunde(IniString) {                                                                          	;-- Sprechstundenzeiten

@@ -8,40 +8,11 @@
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;
 ;	 	Addendum für Albis on Windows
-;   	by Ixiko started in September 2017 - last change 28.03.2021 - this file runs under Lexiko's GNU Licence
+;   	by Ixiko started in September 2017 - last change 31.05.2021 - this file runs under Lexiko's GNU Licence
 ;
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
 return
-;----------------------------------------------------------------------------------------------------------------------------------------------
-; Namen extrahieren
-;----------------------------------------------------------------------------------------------------------------------------------------------
-ExtractNamesFromFileName(Pat) {					                      	;-- die Namen müssen die ersten zwei Worte im FileNamen der PDF-Datei sein
-
-	Name:=[]
-	;diese Funktion basiert auf der manuellen Erstellung des Dateinamens während des Scanvorganges, es ist sehr kompliziert dem Computer aus OCR Text nach Patientennamen zu durchsuchen
-
-	; Ermitteln des Patientennamen aus dem PDF-Dateinamen
-		;Pat:= RegExReplace(Pat, "\.|;|,", A_Space) 			;entferne alle Punkt, Komma und Semikolon
-		Pat:= StrReplace(Pat, "Dr.", " ")
-		Pat:= StrReplace(Pat, "Prof.", " ")
-		Pat:= StrReplace(Pat, ",", " ")				;(^,+|,+(?= )|,+$)	;
-		Pat:= StrReplace(Pat, ".", " ")				;(^,+|,+(?= )|,+$)	;
-		Pat:= StrReplace(Pat, ";", " ")				;\.|;|,
-		Pat:= RegExReplace(Pat, "^Frau\s", " ")
-		Pat:= RegExReplace(Pat, "\s*Frau\s", " ")
-		Pat:= RegExReplace(Pat, "^Herr\s", " ")
-		Pat:= RegExReplace(Pat, "\s*Herr\s", " ")
-	  ; entfernt alle aufeinander folgenden Spacezeichen! https://autohotkey.com/board/topic/26575-removing-redundant-spaces-code-required-for-regexreplace/
-		Pat:= RegExReplace(RegExReplace(Pat, "\s{2,}", ""),"(^\s*|\s*$)")
-		Pat:= StrSplit(Pat, A_Space)
-		Name[1]:= Pat[1] ", " Pat[2]
-		Name[2]:= Pat[2] ", " Pat[1]
-		Name[3]:= Pat[1]
-		Name[4]:= Pat[2]
-
-return Name
-}
 
 ;----------------------------------------------------------------------------------------------------------------------------------------------
 ; native PDF Funktionen
@@ -68,8 +39,16 @@ PDFGetPages(pdfFilePath , qpdfPath:="")                           	{            
 
 		fobj.Close()
 
+	; #### if there's no match, sometimes the PDF XREF table is encoded/compressed - qpdf will be used
+		If (StrLen(qpdfPath) > 0) {
+			qpdfPages := StdoutToVar(qpdfPath "\qpdf.exe --show-npages " q pdfFilePath q)
+			If RegExMatch(qpdfPages, "\d+", qpages)
+				return qpages
+		}
+
+	; sometimes it detects 3 million pages - so qpdf will be used in this case
 		If RegExMatch(pages, "\d+")
-			If (pages > 0)
+			If (pages > 0) && (pages < 1000)
 				return pages
 
 	; if there's no match, sometimes the PDF XREF table is encoded/compressed - qpdf will be used
@@ -307,10 +286,11 @@ IFilter(file, searchstring:="")                                             	{  
 return searchstring ? "" : Text
 }
 
+
 ;----------------------------------------------------------------------------------------------------------------------------------------------
 ; xpdf wrapper
 ;----------------------------------------------------------------------------------------------------------------------------------------------
-PdfToText(PdfPath, pages, enc="UTF-8", SaveToFile="") {                     	;-- using xpdf's pdftotext, function catches the stdout
+PdfToText(PdfPath, pages, enc="UTF-8", SaveToFile="")   	{                 	;-- using xpdf's pdftotext, function catches the stdout
 
 	; Link	: https://autohotkey.com/boards/viewtopic.php?t=15880&start=20
 	; By	: kon - 16.4.2016 modified from: Ixiko
@@ -336,7 +316,7 @@ PdfToText(PdfPath, pages, enc="UTF-8", SaveToFile="") {                     	;--
 return StdOutToVar(Addendum.XpdfPath "\pdftotext.exe" " -f " PageStart " -l " PageEnd " -bom -nopgbrk -nodiag -clip -layout -enc " q enc q " " q PdfPath q " " q SaveToFile q)			;-enc " encoding "  " " q "-" q -layout
 }
 
-PdfToPng(PdfPath, page=1, dpi=300, PreviewPath="") {	                	;-- using xpdf's pdftoPng
+PdfToPng(PdfPath, page=1, dpi=300, PreviewPath="")   	{	              	;-- using xpdf's pdftoPng
 
 	;Link: https://autohotkey.com/boards/viewtopic.php?t=15880&start=20
 	;original By: kon - 16.4.2016 modified from: Ixiko
@@ -357,7 +337,7 @@ PdfToPng(PdfPath, page=1, dpi=300, PreviewPath="") {	                	;-- using 
 return pngPath
 }
 
-PdfInfo(PdfPath, opt:="", lastpage:=1) {		                                         	;-- using xpdf's pdfinfo to get metadata and Pdf Info's
+PdfInfo(PdfPath, opt:="", lastpage:=1)                               	{	               	;-- using xpdf's pdfinfo to get metadata and Pdf Info's
 
 	; Description:    	function now returns an object (thx to swagfag for his help on RegExMatch)
 	;                       	a space char in keys will be replaced from "Page size" to "Pagesize"

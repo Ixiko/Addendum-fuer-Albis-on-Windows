@@ -26,11 +26,14 @@
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
 ;       Addendum_Calc started:           	13.01.2021
-;       Addendum_Calc last change:    	15.01.2021
+;       Addendum_Calc last change:    	16.04.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* 	MDRD
 
+		—————————————————————————————————————————————————————————
+		Deutsch
+		—————————————————————————————————————————————————————————
 		GFR (ml/min/1,73 m2) = 186 x (KreatininSerum, mg/dl)-1,154 x (Alter, Jahre)-0,203 x (0,742 bei Frauen)
 
 		gekürzte MDRD-Formel (Modification of Diet in Renal Disease) :
@@ -45,10 +48,31 @@
 						Quelle:
 			http://www.laborlexikon.de/Lexikon/Infoframe/k/Kreatinin-Clearance.htm
 
- */
 
-/*  	Berechnung der Körperoberfläche aus Gewicht und Körpergröße:
+		—————————————————————————————————————————————————————————
+		english
+		—————————————————————————————————————————————————————————
+		GFR (ml / min / 1.73 m2) = 186 x (creatinine serum, mg / dl) -1.154 x (age, years) -0.203 x (0.742 in women)
 
+		Abbreviated MDRD formula (Modification of Diet in Renal Disease):
+		GFR (ml / min / 1.73m2) = 186 x S-Krea ^ -1.154 x age ^ -0.203 [x 0.742 for women only] [x 1.21 for black patients]
+		Correction on body surface: divide GFR by KOF from nomogram!
+
+		long MDRD formula (more precisely as a short formula):
+		GFR (ml / min / 1.73m2) = 170 x S-Krea -0.999 x (urea / 2.144) -0.170 x (albumin / 10)
+		+0.318 x age -0.176 [x 0.742 for women only] [x 1.21 for black patients]
+		Correction on body surface: divide GFR by KOF from nomogram!
+
+		Source:
+		http://www.laborlexikon.de/Lexikon/Infoframe/k/Kreatinin-Clearance.htm
+
+*/
+
+/*  	Calculation of the body surface from weight and height:
+
+		—————————————————————————————————————————————————————————
+		Deutsch
+		—————————————————————————————————————————————————————————
 		-	nach DuBois, veröffentlicht 1916: Körperoberfläche [m²] = Gewicht[kg]^0,425 x Größe[cm]^0,725 x 0.007184
 		-	nach Mosteller, veröffentlicht 1897: Körperoberfläche [m²] = ((Gewicht[kg] x Größe[cm])/3600)^0,5
 
@@ -60,12 +84,68 @@
 															——————
 																  KOF
 
+		—————————————————————————————————————————————————————————
+		english
+		—————————————————————————————————————————————————————————
+		- according to DuBois, published 1916:  	body surface area [m²] = weight [kg] ^ 0.425 x height [cm] ^ 0.725 x 0.007184
+		- according to Mosteller, published 1897: 	body surface area [m²] = ((weight [kg] x height [cm]) / 3600) ^ 0.5
+
+		Correction of the body surface: when estimating the GFR according to Cockroft and Gault:
+		- 	the values calculated individually for the patient must be on 1.73 m2 using a nomogram
+			Body surface can be converted using the correction formula below
+		- 	Correction formula on KOF:
+			C-crea [ml / min. x 1.73 m2] = C-Krea x 1.73
+															——————
+																KOF
 
 */
 
+/* 	weitere Formeln
+
+		Quelle: https://www.uniklinikum-saarland.de/de/einrichtungen/kliniken_institute/zentrallabor/formeln_und_scores/gfr_kalkulator/
+
+		(*) Formel nach Grubb et al (Cystatin-C-basiert)
+			Formel: GFR[ml/min/1.73m2] = 130 * (S-CysC[mg/l])-1.069 * (Alter[Jahre])-0.117 - 7
+
+		(*) Cockcroft-Gault-Formel (Kreatinin-basiert)
+			Formel: GFR[ml/min] = (140 - Alter[Jahre]) * (S-Crea[mg/dl])-1 * (Gewicht[kg] * 72-1)
+			Korrekturfaktor: für Frauen * 0.85
+
+		(*) CKD-EPI-Formel (Kreatinin-basiert)
+			Formel: GFR[ml/min/1.73m2] = 141 * min(S-Crea[mg/dl]/κ, 1)α * max(S-Crea[mg/dl]/κ, 1)-1.209 * 0.993Alter[Jahre] * 1.018 [if female] * 1.159 [if black]
+			Korrekturfaktor: für Frauen * 1.018
+			Korrekturfaktor: für Schwarze * 1.159
+			κ is 0.7 for females and 0.9 for males,
+			α is -0.329 for females and -0.411 for males,
+			min(S-Crea/κ, 1) indicates the minimum of S-Crea/κ or 1,
+			max(S-Crea/κ, 1) indicates the maximum of S-Crea/κ or 1.
+
+		(*) CKD-EPI Formel (Cystatin-C-basiert)
+			Formel: GFR[ml/min/1.73m2] = 133 * min(S-CysC[mg/l]/0.8, 1)-0.499 * max(S-CysC[mg/l]/0.8, 1)-1.328 * 0.996Alter[Jahre]
+			Korrekturfaktor: für Frauen * 0.932
+			min(S-CysC/0.8, 1) indicates the minimum of S-CysC/0.8 or 1,
+			max(S-CysC/0.8, 1) indicates the maximum of S-CysC/0.8 or 1.
+
+		(*) CKD-EPI Formel (Kreatinin- und Cystatin-C-basiert)
+			Formel: GFR[ml/min/1.73m2] = 135 * min(S-Crea[mg/dl]/κ, 1)α * max(S-Crea[mg/dl]/κ, 1)-0.601 * min(S-CysC[mg/l]/0.8, 1)-0.375 * max(S-CysC[mg/l]/ 0.8, 1)-0.711 * 0.995Alter[Jahre]
+			Korrekturfaktor: für Frauen * 0.969
+			Korrekturfaktor: für Schwarze * 1.08
+			κ is 0.7 for females and 0.9 for males,
+			α is -0.248 for females and -0.207 for males,
+			min(S-Crea/κ, 1) indicates the minimum of S-Crea/κ or 1,
+			max(S-Crea/κ, 1) indicates the maximum of S-Crea/κ or 1,
+			min(S-CysC/0.8, 1) indicates the minimum of S-CysC/0.8 or 1,
+			max(S-CysC/0.8, 1) indicates the maximum of S-CysC/0.8 or 1.
+
+		(*) Mosteller RD. Simplified calculation of body-surface area. NEJM 1987; 317: 1098-9
+			Formel: KOF = Wurzel(Größe[cm] * Gewicht[kg] / 3600)
+
+*/
+
+
 class MDCalc {
 
-	BMI(weightkg, heightmeters) {                                                                        	;-- i never calculate the BMI, but maybe you!
+	BMI(weightkg, heightmeters) {                                                                        	;-- i never need the calculation of a BMI, but maybe you!
 		; https://github.com/jonjlee/schapp/blob/master/CalcFuns.ahk
 	return Round(weightkg / (heightmeters * heightmeters),1)
 	}
@@ -133,39 +213,42 @@ class MDCalc {
 
 	LabUnitsConverter(Lab, LabVal, Unit, Precision:=3, lang:="") {                        	;-- laboratory units converter
 
-		/* ⚕	Description of laboratory unit converting function
+		/* Description for LabUnitsConverter()
 
-			⊛ Parameters:
-				⚬ Lab    	= name of laboratory unit (can be english or german)
-				⚬ LabVal 	= value to convert
-				⚬ Unit   	= unit to convert from (can be SI or C)
-				⚬ Precision= how many decimal places should the conversion value have
-				⚬ lang   	= use this for a formatted output of the unit in another language
+			――――――――――――――――――――――――――――――――――――――――――――――――
+				⚕	laboratory unit converting function
+			――――――――――――――――――――――――――――――――――――――――――――――――
+				⊛ Parameters:
+					⚬ Lab    	= name of laboratory unit (can be english or german)
+					⚬ LabVal 	= value to convert
+					⚬ Unit   	= unit to convert from (can be Standard International Unit (SI) or Conventional Unit (C))
+					⚬ Precision= how many decimal places should the conversion value have (rounded)
+					⚬ lang   	= use this for a formatted output of the unit in another language
 
-			⊛ The conversion from Conventional unit to SI unit is done by multiplying it with the conversion factor (CF)
-				, from SI to convention unit by dividing
+				⊛ Conversion:
+					⚬ Conventional units to SI units:  	C unit is multiplied with the Conversion-Factor (CF)
+					⚬ SI units to Conventional units:  	SI unit is divided with CF
 
-			⊛ this table is used to get conversion factors:
-				https://accessmedicine.mhmedical.com/content.aspx?bookId=1069&sectionId=60775149
+				⊛ this table is used to get conversion factors:
+					https://accessmedicine.mhmedical.com/content.aspx?bookId=1069&sectionId=60775149
 
-
-		*/
-		/*     	Description Of CFactors Object Structure
-
-			⊛ indexed objects with conversion data for laboratory units
-				⚬ keys with fixed names are:
-					- SI	= Standard International Unit
-					- C	= Conventional Unit
-					- CF	= Conversion Factor
-				⚬ Key with names of laboratory values in German and English:
-					- The values contain the abbreviations of the language [en for English and de for German]
-					- There are also short names for the laboratory units avaible marked with an -s
+			 ――――――――――――――――――――――――――――――――――――――――――――――――
+			   ⚕	CFactors Object Structure
+			――――――――――――――――――――――――――――――――――――――――――――――――
+				⊛ indexed objects with conversion data for laboratory units
+					⚬ keys with fixed names are:
+						- SI	= Standard International Unit
+						- C	= Conventional Unit
+						- CF	= Conversion Factor
+					⚬ Key with names of laboratory values in German and English:
+						- The values contain the abbreviations of the language [en for English and de for German]
+						- There are also short names for the laboratory units avaible marked with an -s
 
 		*/
 
 		static CFactors := {1: {	"Kreatinin" 	: "de", "Krea"  	: "de-s",	"Creatinine"	: "eng", "SI" 	: "µmol/l" , "C" 	: "mg/dl", "CF" : 88.4}
 								,	 2: {	"Harnstoff"		: "de", "HST"   	: "de-s", "Urea"			: "eng", "SI"	: "mmol/l", "C"	: "mg/dl", "CF" : 0.357}
-								,	 3: {	"Harnstoff"		: "de", "HST"   	: "de-s", "Urea"			: "eng", "SI"	: "mmol/l", "C"	: "mg/dl", "CF" : 0.357}}
+								,	 3: {	"Glucose"		: "de", "Glucose": "de-s", "Glucose" 		: "eng", "SI"	: "mmol/l", "C"	: "mg/dl", "CF" : 0.0555}}
 
 		For CFIndex, oLab in CFactors
 			If oLab.haskey(Lab) {
@@ -182,7 +265,7 @@ class MDCalc {
 
 	}
 
-	CKD_EPI(Scr, Units, height, weight, age, sex, african:=false, precision:=2) {	   	;--
+	CKD_EPI(Scr, Units, height, weight, age, sex, african:=false, precision:=2) {	   	;-- eGFR (CKD-EPI-Formula)
 
 		/* ⚕	CKD-EPI-Formular for eGFR calculation
 
@@ -263,7 +346,7 @@ class MDCalc {
     return dose "mg (" mL "mL) q4h (" Round(dose/kg, 1) "mg/kg, " Round(suspConc*5, 1) "mg/5mL)"
 	}
 
-	ntproBNPcorrection(NTproBNP, eGFR) {                                                            	;--
+	ntproBNPcorrection(NTproBNP, eGFR) {                                                            	;-- no code until today
 
 		/*  ⚕	NT-pro-BNP-Korrektur
 
@@ -289,6 +372,21 @@ class MDCalc {
 
 	}
 
+	ConvertHbA1c(percent:="", mmolmol:="", precision:=2) {                                 	;-- converts HbA1c mmol/mol <--> mg/dl
+
+		; used formula:   HbA1c [mmol/mol] = (HbA1c [%] - 2,15) x 10,929
+		; https://www.bbraun.de/de/produkte-und-therapien/diabetes/omnitest/blutzuckerlangzeitwert-berechnen.html
+
+		If percent
+			converted := (percent - 2.15) * 10.929
+		else if mmolmol
+			converted := (mmolmol / 10.929) + 2.15
+
+		If precision
+			return Round(converted, precision)
+
+	return converted
+	}
 
 }
 

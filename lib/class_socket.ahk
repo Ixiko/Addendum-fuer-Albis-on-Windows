@@ -3,16 +3,20 @@
   static __eventMsg := 0x9987
 
   __New(s=-1)  {
-    static init
-    if (!init)    {
-      DllCall("LoadLibrary", "str", "ws2_32", "ptr")
-      VarSetCapacity(wsadata, 394+A_PtrSize)
-      DllCall("ws2_32\WSAStartup", "ushort", 0x0000, "ptr", &wsadata)
-      DllCall("ws2_32\WSAStartup", "ushort", NumGet(wsadata, 2, "ushort"), "ptr", &wsadata)
-      OnMessage(Socket.__eventMsg, "SocketEventProc")
-      init := 1
-    }
-    this.socket := s
+
+      static init
+
+      if (!init)    {
+        DllCall("LoadLibrary", "str", "ws2_32", "ptr")
+        VarSetCapacity(wsadata, 394+A_PtrSize)
+        DllCall("ws2_32\WSAStartup", "ushort", 0x0000, "ptr", &wsadata)
+        DllCall("ws2_32\WSAStartup", "ushort", NumGet(wsadata, 2, "ushort"), "ptr", &wsadata)
+        OnMessage(Socket.__eventMsg, "SocketEventProc")
+        init := 1
+      }
+
+      this.socket := s
+
   }
 
   __Delete()  {
@@ -20,6 +24,7 @@
   }
 
   __Get(k, v)  {
+
     if (k="size")
       return this.msgSize()
   }
@@ -28,47 +33,50 @@
 
     if ((this.socket!=-1) || (!(faddr := next := this.__getAddrInfo(host, port))))
       return 0
+
     while (next)    {
 
       sockaddrlen := NumGet(next+0, 16, "uint")
       sockaddr := NumGet(next+0, 16+(2*A_PtrSize), "ptr")
-      if ((this.socket := DllCall("ws2_32\socket", "int", NumGet(next+0, 4, "int"), "int", this.__socketType, "int", this.__protocolId, "ptr"))!=-1)
-      {
-        if ((r := DllCall("ws2_32\WSAConnect", "ptr", this.socket, "ptr", sockaddr, "uint", sockaddrlen, "ptr", 0, "ptr", 0, "ptr", 0, "ptr", 0, "int"))=0)
-        {
+      if ((this.socket := DllCall("ws2_32\socket", "int", NumGet(next+0, 4, "int"), "int", this.__socketType, "int", this.__protocolId, "ptr"))!=-1)      {
+        if ((r := DllCall("ws2_32\WSAConnect", "ptr", this.socket, "ptr", sockaddr, "uint", sockaddrlen, "ptr", 0, "ptr", 0, "ptr", 0, "ptr", 0, "int"))=0)      {
           DllCall("ws2_32\freeaddrinfo", "ptr", faddr)
           return Socket.__eventProcRegister(this, 0x21)
         }
         this.disconnect()
       }
       next := NumGet(next+0, 16+(3*A_PtrSize), "ptr")
+
     }
 
     this.lastError := DllCall("ws2_32\WSAGetLastError")
 
-    return 0
+  return 0
   }
 
   bind(host, port)  {
+
     if ((this.socket!=-1) || (!(faddr := next := this.__getAddrInfo(host, port))))
       return 0
-    while (next)
-    {
+
+    while (next)    {
+
       sockaddrlen := NumGet(next+0, 16, "uint")
       sockaddr := NumGet(next+0, 16+(2*A_PtrSize), "ptr")
-      if ((this.socket := DllCall("ws2_32\socket", "int", NumGet(next+0, 4, "int"), "int", this.__socketType, "int", this.__protocolId, "ptr"))!=-1)
-      {
-        if (DllCall("ws2_32\bind", "ptr", this.socket, "ptr", sockaddr, "uint", sockaddrlen, "int")=0)
-        {
+      if ((this.socket := DllCall("ws2_32\socket", "int", NumGet(next+0, 4, "int"), "int", this.__socketType, "int", this.__protocolId, "ptr"))!=-1)      {
+        if (DllCall("ws2_32\bind", "ptr", this.socket, "ptr", sockaddr, "uint", sockaddrlen, "int")=0)        {
           DllCall("ws2_32\freeaddrinfo", "ptr", faddr)
           return Socket.__eventProcRegister(this, 0x29)
         }
         this.disconnect()
       }
       next := NumGet(next+0, 16+(3*A_PtrSize), "ptr")
+
     }
+
     this.lastError := DllCall("ws2_32\WSAGetLastError")
-    return 0
+
+  return 0
   }
 
   listen(backlog=32)  {
@@ -76,13 +84,15 @@
   }
 
   accept()  {
-    if ((s := DllCall("ws2_32\accept", "ptr", this.socket, "ptr", 0, "int", 0, "ptr"))!=-1)
-    {
+
+    if ((s := DllCall("ws2_32\accept", "ptr", this.socket, "ptr", 0, "int", 0, "ptr")) != -1)    {
+
       newsock := new Socket(s)
-      newsock.__protocolId := this.__protocolId
-      newsock.__socketType := this.__socketType
+      newsock.__protocolId 	:= this.__protocolId
+      newsock.__socketType	:= this.__socketType
       Socket.__eventProcRegister(newsock, 0x21)
       return newsock
+
     }
     return 0
   }
@@ -182,23 +192,27 @@
 SocketEventProc(wParam, lParam, msg, hwnd) {
 
   global Socket
+
   static a := []
   Critical
+
   if (msg="register")
     return a
-  if (msg=Socket.__eventMsg)
-  {
+
+  if (msg=Socket.__eventMsg)  {
+
     if (!isobject(a[wParam]))
       return 0
+
     if ((lParam & 0xFFFF) = 1)
       return a[wParam].onRecv(a[wParam])
     else if ((lParam & 0xFFFF) = 8)
       return a[wParam].onAccept(a[wParam])
-    else if ((lParam & 0xFFFF) = 32)
-    {
+    else if ((lParam & 0xFFFF) = 32)   {
       a[wParam].socket := -1
-      return a[wParam].onDisconnect(a[wParam])
+    return a[wParam].onDisconnect(a[wParam])
     }
+
     return 0
   }
   return 0
@@ -234,4 +248,5 @@ class SocketUDP extends Socket {
 
     return 0
   }
+
 }

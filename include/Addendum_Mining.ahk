@@ -1,22 +1,18 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                         	** Addendum_Mining **
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;		Beschreibung:	    	einfachste Funktionen für Datenextraktionen aus Text
+;		Beschreibung:	    	Funktionen für Datamining aus Textdateien
+;										nutzt RegEx-Suchmuster um Daten innerhalb eines Textes zu finden
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; 		Inhalt:
 ;       Abhängigkeiten:		Addendum_Gui.ahk, Addendum.ahk
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_Calc started:    	17.03.2021
+;       Addendum_Calc started:    	17.06.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-FindDoc(Text) {
-
-
-}
-
-FindDocStrings() {
+FindDocStrings()                                                             	{                	;-- RegExStrings für alles
 
 	; ‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿
 	;
@@ -38,6 +34,7 @@ FindDocStrings() {
 	global rx               	:= 	"[;,:.\s]+"
 	global rx1               	:= 	"[;,:.\s]"
 	global ry               	:= 	"[,:.;\s\n\r\f]+"
+	global ryNL              	:= 	"[\s\n\r]+"
 	global rz               	:= 	"[.,;\s]+.*?"
 	global rs               	:= 	"\s+"
 	global rp1              	:= 	".*"
@@ -67,34 +64,38 @@ FindDocStrings() {
 	global rxGb2        	:= 	"(geboren\sam|geb\.\sam|geb\.*o*r*e*n*|Geburtsdatum|\*)"
 
 	global GName      	:= 	"Geb\.\sName|Geburtsname"
-	global rxAnrede     	:= 	"(Betrifft)"
+	global rxAnrede     	:= 	"(Betrifft)*"
 	global rxAnredeM   	:= 	"(Herrn*|Patient|Patienten)"
 	global rxAnredeF   	:= 	"(Frau|Patientin)"
+	global rxAnredeXL 	:=	"(Versicherter*|Betrifft|Herrn*|Patiente*n*|Frau|Patientin)"
 	global rxVorname  	:= 	"[VY]o(rn|m)ar*me"
 	global rxNachname	:= 	"([Nn]ach)*[Nn]ame"
 	global rxNameW    	:= 	"[Nn]ame[\w]*"
 
-	global RxNames     	:= [	rxAnrede    	. 	rx	. 	rxName1  .	rx  	.	rxGb1   . 	ry  .  rxDatum        	; 01	Betrifft: Marx, Karl, geb. am: 14.03.1818
-							    		,	rxAnrede   	.	rx	. 	rxName2	.	rx  	.	rxGb1   . 	ry                         	; 02
+	global RxNames     	:= [	rxAnredeXL  	. 	rx	. 	rxName1  .	rx  	.	rxGb1   . 	ry  .  rxDatum        	; 01	Betrifft: Marx, Karl, geb. am: 14.03.1818
+							    		,	rxAnredeXL  	.	rx	. 	rxName2	.	rx  	.	rxGb1   . 	ry                         	; 02
 							    		,	rxName1     	.	rx	.	rxGb1   	.	rs                          	.   rxDatum          	; 03
 							    		,	rxName2     	.	rx	.	rxGb1     	.	rs                             	.   rxDatum          	; 04
 							    		,	rxName1     	.	rx	.	rxGName	.	rp2	.	rxGb1 	.	rx	.	rxDatum        	; 05
 							    		,	rxName2     	.	rx	.	rxGName	.	rz  	.	rxGb1 	.	rx	.	rxDatum        	; 06	Müller-Wachtendonk, Marie-Luise, Geburtsname: Müller, geb. am 12.11.1964
 
-							    		,	rxAnrede   	. 	rx  .  rxName2                                                                 	; 07	Betrifft: Müller-Wachtendonk, Marie-Luise
+							    		,	rxAnredeXL   	. 	rx  .  ryNL      	.	rxName2                                            	; 07	Versicherte`nMüller-Wachtendonk, Marie-Luise
 							    		,	rxAnredeM 	. 	rx  .  rxName2                                                               	; 08	Herr Karl Marx o. Patient Marx, Karl
 							    		,	rxAnredeF 	. 	rx  .  rxName2                                                                 	; 09	Frau Marie-Luise Müller-Wachtendonk
 							    		,	rxAnredeM 	. 	rx  .  rxName2  .	rx 	.	rxGb2  	.	rx	.	rxDatum       	; 10	Patient Marx, Karl, * 14.03.1818
 							    		,	rxAnredeF 	. 	rx  .  rxName2  .	rx 	.	rxGb2  	.	rx	.	rxDatum       	; 11	Patientin Luxemburg, Rosa, * 05.03.1871
+							    		,	rxAnrede   	. 	rx  .  rxName2                                                                 	; 12	Betrifft: Müller-Wachtendonk, Marie-Luise
 
-							    		,	rxNameW		.	rx	.	rxName1                                                                 	; 12
-							    		,	rxNachname	. 	rx	. 	rxPerson2	.	".*?" 	.	rxVorname	. rx . rxPerson1     	; 13	Nachname: Karl, Versichtennummer: 12345678, Vorname: Marx
-							    		,	rxVorname	. 	rx	. 	rxPerson2	.	".*?"	.	rxNachname	. rx . rxPerson2     	; 14	Vorname: Marx, Versichtennummer: 12345678, Nachname: Karl
+							    		,	rxNameW		.	rx	.	rxName1                                                                 	; 13
+							    		,	rxNachname	. 	rx	. 	rxPerson2	.	".*?" 	.	rxVorname	. rx . rxPerson1     	; 14	Nachname: Karl, Versichertennummer: 12345678, Vorname: Marx
+							    		,	rxVorname	. 	rx	. 	rxPerson2	.	".*?"	.	rxNachname	. rx . rxPerson2     	; 15	Vorname: Marx, Versichertennummer: 12345678, Nachname: Karl
 
-							    		,	"^\s*" rxName2 "\s"]	                                                                              	; 15	^ Muster, Max  ....
+							    		,	"^\s*" rxName2 "\s"]	                                                                              	; 16	^ Muster, Max  ....
 
 	global RxNames2  	:= [	rxNachname	. 	rx	. 	rxPerson2                            										; 01 	Nachname: Müller(-Wachtendonk)*
 								    	,	rxVorname	. 	rx	.	rxPerson1]                          										; 02	Vorname: Marie(-Luise)*
+
+	global rxVNR          	:= [ "i)(VNR|Versicherten[\s\-]*N[ume]*r" . rx ")(?<VNR>[A-Z][\s\d]+)"]          	; 01  Versicherten-Nr. G 666 999 666
 
 	global	rxDates       	:= [	"(?<Tag>\d{1,2})[.,;](?<Monat>\d{1,2})[.,;]" rxYear3 "([^\d]|$)"           	; 01	12.11.64 o. 12.11.1964 o. 2.1.(19)*64
 								    	,	"i)(?<Tag>\d{1,2})" rx . rxMonths2 . rx . rxYear3 "([^\d]|$)"                  	; 02	12. November (19)64
@@ -116,7 +117,7 @@ FindDocStrings() {
 											.	"Labor(blatt)*\svom"
 										,	2:	"Behandlung|haben wir.*|sich"}
 
-	global rxBehandlung	:= [	"i)(" rxTags[2] ")\svom\s(?<Datum1>[\d.]+)\s*(bis\s*z*u*m*)\s*(?<Datum2>[\d.]+)"                	; 	1| (haben wir ...| sich) vom .... bis (zum) .....
+	global rxBehandlung	:= [	"i)(" rxTags[2] ")\s+vom\s+(?<Datum1>[\d.]+)\s+(bis\s*z*u*m*|\-)\s+(?<Datum2>[\d.]+)"                	; 	1| (haben wir ...| sich) vom .... bis (zum) .....
 										, 	"i)(" rxTags[2] ")\svom\s(?<Datum1>[\d.]+)\s*(\-)\s*(?<Datum2>[\d.]+)"]                                 	; 	2| (haben wir ...| sich) vom ..... - .......
 
 	global rxDokDatum	:=[	"i)\s*(" rxTags[1] ")" rx "(" rxWDay ")*[.,;\s]+(?<Datum1>\d+\.\d+\.\d+)"                                  	;   1| Erstellungszeitpunkt: Do, 02.01.2020
@@ -507,10 +508,8 @@ FindDocNames(Text, debug:=false)                                  	{            
 		For PatID, Pat in PatBuf
 			If (PatID = "Diff")
 				continue
-			else If (Pat.hits = maxHits) {
-				;SciTEOutput(" (" PatID ") " Pat.Nn ", " Pat.Vn ", hits: " Pat.hits)
+			else If (Pat.hits = maxHits)
 				BestHits[PatID] := {"Nn":Pat.Nn, "Vn":Pat.Vn, "Gd":Pat.Gd}
-			}
 	;}
 
 return BestHits
@@ -723,22 +722,166 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 return retDates
 }
 
-FindDocDate_GetMaxHits(datesObj)                              	{
+FindDocInhalt(Text)                                                         	{                	;-- Kategorisierung/Autonaming
 
-	retArr := Array()
+		description	:= Object()
+		workdescr 	:= Array()
+		bezeichner  	:= FileOpen(Addendum.DBPath "\Dictionary\Befundbezeichner.txt", "r", "UTF-8").Read()
+		bezeichner 	:= RegExReplace(bezeichner, "[\n\r]+([\n\r]+)", "$1")             ; leere Zeilen werden entfernt
+		descriptions  	:= StrSplit(bezeichner, "`n", "`r")
 
-	maxdcount := 0
-	For didx, docdate in datesObj
-		maxdcount := docdate.dcount > maxdcount ? docdate.dcount : maxdcount
+	; RegExReplace räumt auf und erstellt ein Arbeitsobjekt der Beschreibungen
+		For dNR, line in descriptions {
 
-	For KeyDate, docdate in datesObj
-		If (docdate.dcount = maxdcount)
-			retArr.Push(KeyDate)
+			line := RegExReplace(line, "Dr\.\s+", "Dr.")
+			line := RegExReplace(line, "([^\w])v\.", "$1")
+			line := RegExReplace(line, "[\(\)\!\~\$]", "")
+			line := RegExReplace(line, "\d[\-\/]\d+", "")
+			line := RegExReplace(line, "([A-Z])([A-ZÄÖÜ][a-z]{3,})", "$1 $2")
+			line := RegExReplace(line, "\s{2,}", " ")
+			descriptions[dNR] := line
 
-return retArr
+		; Wörter/Zahlen entfernen welche eher nicht im Text vorkommen werden
+			workline := RegExReplace(line     	, "(^|\s)\d+(\s|$)", " ")                     	; einzeln stehende Zahlen
+			workline := RegExReplace(workline, "(^|\s*)\d+\.\d+\.\d+(\s|$)*", " ") 	; Datumzahlen
+			workline := RegExReplace(workline, "([^\w])\-", "$1 ")                            	; einzeln stehende Minus Symbol
+			workline := RegExReplace(workline, "[\+\,]", " ")                                     	; Plus und Komma  immer
+			workline := RegExReplace(workline, "(^|\s)[a-zäöü]+", " ")                 	; Worte mit kleinem Anfangsbuchstaben  immer
+			workline := RegExReplace(workline, "(^|\s)v\.(\s|$)", " ")                       	; 'v.'
+			workline := RegExReplace(workline, "\s{2,}", " ")
+			workdescr[dNR] := workline
+
+		}
+
+	; Bezeichnungen auftrennen nach Wörtern und Wortpositionen - Reihenfolge und Häufigkeit erfassen
+		For dNr, line in workdescr {
+
+			For wordPos, word in StrSplit(line, " ") {
+
+				If (StrLen(word) = 0 || RegExMatch(word, "^(\-|[\d\.]+|\w+\.[a-z]+)$") || RegExMatch(word, "^[a-zäöü]"))
+					continue
+
+				If (wordPos = 1)  {
+					mainword := word
+					If !IsObject(description[word])
+						description[word] := {"__freq":1, "dNr":dNR}
+					else
+						description[word].__freq +=1
+				}
+				else if (wordPos > 1) {
+					If !description[mainword].hasKey(word)
+						description[mainword][word] := {"__freq":1, "pos":wordPos, "dNr":dNR}
+					else
+						description[mainword][word].__freq += 1
+
+				}
+
+			}
+
+		}
+
+	; Inhaltserkennung
+	; Schritt 1: grobe Zusammenstellung (ein Treffer reicht)
+		matches := {}
+		For firstword, nextwords in description {
+
+			submatches := {}
+			If InStr(Text, firstword) {
+
+				If !matches.hasKey("_" description[firstword].dNR)
+					matches["_" description[firstword].dNR] := 1
+				else
+					matches["_" description[firstword].dNR] += 1
+
+				For subword, obj in nextwords {
+
+					If !IsObject(obj)                                 ; Schlüssel wie __freq, dNR
+						continue
+					If InStr(Text, subword)
+						If !matches.hasKey("_" obj.dNR)
+							matches["_" obj.dNR] := 1
+						else
+							matches["_" obj.dNR] += 1
+				}
+
+			}
+
+		}
+
+	; Schritt 2: feinere Zusammenstellung (Vergleich der Wortreihenfolge in Text und Beschreibung)
+		validMatches := {}
+		For matchNr, freq in matches {
+
+			dNR          	:= StrReplace(matchNr, "_")
+			words         	:= StrSplit(workdescr[dNR], " ")
+			wordMatches	:= 0
+			posMatches  	:= 0
+			matchPos  	:= []
+
+		; Schritt 2a: ermittelt die Reihenfolge der Wörter im Text
+			For wPos, word in words {
+
+				If (TextPos := InStr(Text, word)) {
+
+					If (wPos = 1) {                                     ; erstes Wort ist die Hauptkategorie und wird als erste Position gesichert
+						wordMatches	+= 	1
+						posMatches	+= 	1
+						matchPos[1]      	:= word
+					} else {
+						wordMatches	+= 	1
+						matchPos[Textpos] := word
+					}
+
+				}
+
+			}
+
+		; Schritt 2b: 	vergleicht nun die Reihenfolge der Wörter im Text mit denen in der Beschreibung
+		;                	und zählt die Treffer für diese Bedingung
+			wPos := 0
+			breakFor := false
+			For TextPos, TextWord in matchPos {
+
+				wPos ++
+				If (wPos = 1)
+					continue
+				else if (wPos > words.MaxIndex())
+					break
+
+				Loop  {
+
+					If (TextWord = words[wPos]) {
+						posMatches += 1
+						break
+					}
+
+					wPos ++
+					if (wPos > words.MaxIndex()) {
+						breakFor := true
+						break
+					}
+
+				}
+
+				If breakFor
+					break
+
+			}
+
+			validMatches[matchNR] := {"words": words.MaxIndex(), "wordMatches":wordMatches, "posMatches":posMatches, "description": descriptions[dNR], "matchpos":matchpos}
+		}
+
+		;~ JSONData.Save(A_Temp "\tmp1.json", description	, true,, 1, "UTF-8")
+		JSONData.Save(A_Temp "\tmp2.json", matches      	, true,, 1, "UTF-8")
+		JSONData.Save(A_Temp "\tmp3.json", validMatches	, true,, 1, "UTF-8")
+
+		;~ Run % A_Temp "\tmp1.json"
+		Run % A_Temp "\tmp2.json"
+		Run % A_Temp "\tmp3.json"
+
 }
 
-FindDocSender(Text) 															{
+FindDocSender(Text) 															{               	;-- Absender erkennen (funktioniert nicht)
 
 	; Dr.Kardiotoid, medilog, Darwin, professional. 		    	- LZ-EKG
 	; Arztanfrage, (Muster 52), 											- Muster 52
@@ -772,37 +915,40 @@ FindDocPages(Text) 															{ 	         		;-- ermittelt die Zeilenzahl jed
 return DocPage
 }
 
-FindName_BestHit(PatBuf) 													{
+FindDocEmpfehlung(Text)                                             		{              	;-- Termine, Behandlungsempfehlungen extrahieren
 
-	; höchste Trefferzahl ermitteln
-		maxHits := 0, equal := false, BestHits := Object()
-		For PatID, Pat in PatBuf {
-			;SciTEOutput("  hitpoints:   `t`t" Pat.hits " - (" PatID ") " Pat.Nn ", " Pat.Vn)
-			If (Pat.hits > maxHits)
-				maxHits := Pat.hits
+	/*
+	Weiterbehandlung:
+	Wir empfehlen
+	 */
+	 static rxEmpfehlung := ["mi)Weiterbehandlung\s*\:*(?<Empfehlung>.+)?(Seite\s*\d*|[\p{L}\-])+\s*\:\s*[\n\r+])"
+										,"mi)([\n\r]+|\s)Wir empfehlen\s*\:*(?<Empfehlung>.+)?(Seite\s*\d*|[\p{L}\-]+\s*\:\s*[\n\r+])"]
+
+	For rxNR, rxStr in rxEmpfehlung
+		If RegExMatch(Text, rxStr, Text) {
+			TextEmpfehlung := RegExReplace(TextEmpfehlung, "[\n\r]+\s*[\n\r]+", "`n")
+			TextEmpfehlung := RegExReplace(TextEmpfehlung, "[\n\r]+", "`n")
+			break
 		}
 
-	; alle Namen mit gleicher Trefferanzahl werden behalten
-		For PatID, Pat in PatBuf
-			If (Pat.hits = maxHits)
-				BestHits[PatID] := {"Nn":Pat.Nn, "Vn":Pat.Vn, "Gd":Pat.Gd}
+	If (StrLen(TextEmpfehlung) > 0) {
 
-return BestHits
-}
+		tmpE := RegExReplace(TextEmpfehlung	, "[\n\r\f]", " ")
+		tmpE := RegExReplace(tmp                  	, "\s{2,}", " ")
+		tmpL := tmpP := ""
+		For idx, word in StrSplit(tmpE	, " ") {
+			If (StrLen(tmpL " " word) <= 70)
+				tmpL .= " " word
+			else {
+				tmpP .= "`n    " tmpL
+				tmpL := ""
+			}
+		}
 
-FindDocOther(Text)                                                       	{                	;-- Kategorisierung von nicht Patientenbriefen
+		SciTEOutput("  - Empfehlung gefunden:`n" tmpP)
+	}
 
-	; Brief key-Parameter:
-	;		Stichworte 	- Wörter die den Brief definieren
-	;		Stichzahl    	- wieviele davon sind notwendig damit ein Treffer angerechnet wird
-	;		rxFilename	- RegExStrings um Details für den Dateinamen zu finden
-	Brief := {"Fortbildung"	:	{	"Stichworte"	: ["Einladung|Anmeldung|neues zur|Programm|LÄK", "Fortbildung|Online-Fortbildung"]
-											,	"Stichzahl" 	: 2
-											,	"rxFileName"	: [""]}
-				, "Rechnung"		:	{	"Stichworte"	: ["Rechnung vom", "Zahlungsaufforderung", "Verwendungszweck", "Rechnung", "Gesamtbetrag"]
-											,	"Stichzahl" 	: 2
-											,	"rxFileName"	: [""]}}
-
+return TextEmpfehlung
 }
 
 GetTextDates(txt) 																{

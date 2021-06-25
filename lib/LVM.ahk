@@ -47,7 +47,7 @@ LVM_GetColOrder(h) {
 	Loop, % hdrC
 		result .= NumGet(&o, (A_Index - 1) * A_PtrSize) + 1 . ","
 	StringTrimRight, result, result, 1
-	Return result
+	Return SubStr(result, -1)
 }
 
 LVM_SetColOrder(h, c) {

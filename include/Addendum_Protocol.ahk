@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 23.02.2021 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 05.06.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -79,7 +79,8 @@ FehlerProtokoll(Exception, MsgToTelegram:= 1) {                                 
 		}
 
 	; save generated protocol
-		FileAppend, % towrite1 towrite2, % Addendum["AddendumDir"] "\logs'n'data\ErrorLogs\Fehlerprotokoll-" A_MM A_YYYY ".txt"
+		SciTEOutput(towrite1 towrite2)
+		FileAppend, % towrite1 towrite2, % Addendum.LogPath "\ErrorLogs\Fehlerprotokoll-" A_MM A_YYYY ".txt"
 
 
 return true

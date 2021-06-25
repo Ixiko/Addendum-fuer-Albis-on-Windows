@@ -3919,6 +3919,35 @@ InsertInteger(pInteger, ByRef pDest, pOffset = 0, pSize = 4) {
 
 ;}
 
+;----------------------------------------------------------------------------------------------------------------------------------------------
+; Namen extrahieren
+;----------------------------------------------------------------------------------------------------------------------------------------------
+ExtractNamesFromFileName(Pat) {					                      	;-- die Namen müssen die ersten zwei Worte im FileNamen der PDF-Datei sein
+
+	Name:=[]
+	;diese Funktion basiert auf der manuellen Erstellung des Dateinamens während des Scanvorganges, es ist sehr kompliziert dem Computer aus OCR Text nach Patientennamen zu durchsuchen
+
+	; Ermitteln des Patientennamen aus dem PDF-Dateinamen
+		;Pat:= RegExReplace(Pat, "\.|;|,", A_Space) 			;entferne alle Punkt, Komma und Semikolon
+		Pat:= StrReplace(Pat, "Dr.", " ")
+		Pat:= StrReplace(Pat, "Prof.", " ")
+		Pat:= StrReplace(Pat, ",", " ")				;(^,+|,+(?= )|,+$)	;
+		Pat:= StrReplace(Pat, ".", " ")				;(^,+|,+(?= )|,+$)	;
+		Pat:= StrReplace(Pat, ";", " ")				;\.|;|,
+		Pat:= RegExReplace(Pat, "^Frau\s", " ")
+		Pat:= RegExReplace(Pat, "\s*Frau\s", " ")
+		Pat:= RegExReplace(Pat, "^Herr\s", " ")
+		Pat:= RegExReplace(Pat, "\s*Herr\s", " ")
+	  ; entfernt alle aufeinander folgenden Spacezeichen! https://autohotkey.com/board/topic/26575-removing-redundant-spaces-code-required-for-regexreplace/
+		Pat:= RegExReplace(RegExReplace(Pat, "\s{2,}", ""),"(^\s*|\s*$)")
+		Pat:= StrSplit(Pat, A_Space)
+		Name[1]:= Pat[1] ", " Pat[2]
+		Name[2]:= Pat[2] ", " Pat[1]
+		Name[3]:= Pat[1]
+		Name[4]:= Pat[2]
+
+return Name
+}
 
 ;}
 

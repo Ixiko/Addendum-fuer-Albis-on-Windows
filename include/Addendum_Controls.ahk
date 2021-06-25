@@ -888,8 +888,8 @@ SetError(ErrorValue, ReturnValue) {                                             
 VerifiedClick(CName, WTitle="", WText="", WinID="", WaitClose=0) {              	;-- 4 verschiedene Methoden um auf ein Control zu klicken
 
 		tmm := A_TitleMatchMode, cd := A_ControlDelay, EL := 0
-		SetTitleMatchMode 2
-		SetControlDelay	 -1
+		SetTitleMatchMode	, 2
+		SetControlDelay		, -1
 		CoordMode, Mouse, Screen
 
 	; leeren des Fenster-Titel und Textes wenn ein Handle übergeben wurde
@@ -958,7 +958,7 @@ VerifiedCheck(CName, WTitle="", WText="", WinID="", CheckIt=true) {          	;-
 		If !RegExMatch(ButtonType, "Autocheckbox|Checkbox|Radio")	{
 			If (StrLen(CName) = 0)
 				ControlGetText, CName,, % WTitle
-			PraxTT("Fehler in der Funktion VerifiedCheck()`n`nDas angesprochene Steuerelement (" CName ")`nist keine Standard-Checkbox!", "5 0")
+			PraxTT("Fehler in der Funktion VerifiedCheck()`n`nDas angesprochene Steuerelement (" CName ")`nist keine Standard-Checkbox!", "2 0")
 			return 0
 		}
 
@@ -1338,50 +1338,4 @@ KeyValueObjectFromLists(keyList, valueList, delimiter:="`n"
 return merged
 }
 
-KeyValueObjectFromLists2(keyList, valueList, delimiter:="`n"
-, IncludeKeys:="", KeyREx:="", IncludeValues:="", ValueREx:="") {                	;-- wird neue Funktion um z.B. zwei Listen aus WinGet zusammenzuführen
-
-	keyArr := valueArr:= Array()
-	merged := Object()
-
-	mustMatches:=0
-	mustMatches += (StrLen(IncludeKeys) > 0) 	? 1 : 0
-	mustMatches += (StrLen(IncludeValues) > 0)	? 1 : 0
-
-	keyArr		:= StrSplit(keyList	 , delimiter)
-	valueArr	:= StrSplit(valueList, delimiter)
-
-	Loop % keyArr.MaxIndex()	{
-
-		If (StrLen(KeyREx) = 0)
-			mkey:= keyArr[A_Index]
-		else
-			RegExMatch(keyArr[A_Index], KeyREx, mkey)
-
-		If (StrLen(ValueRex) = 0)
-			mval := valueArr[A_Index]
-		else
-			RegExMatch(valueArr[A_Index], ValueREx, mval)
-
-		matched:=0
-		If (StrLen(IncludeKeys) > 0) {
-			If mkey in %IncludeKeys%
-				matched := 1
-			else
-				matched := 1
-		}
-
-		If (StrLen(IncludeValues) > 0)
-			If mval in %IncludeValues%
-				matched += 1
-			else
-				matched += 1
-
-		If (matched > mustMatches)
-			merged[keyArr[A_Index]]:= valueArr[A_Index]
-
-	}
-
-return merged
-}
 

@@ -1,7 +1,7 @@
 ![Addendum.png](assets/AddendumLogo2021.png)
 #### Extends the possibilities through surface analysis and manipulation
 
-### preRelease Version 1.53 vom 16.03.2021
+### preRelease Version 1.6 vom 12.04.2021
 lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.33+ Unicode 64bit*,
 geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
@@ -21,10 +21,10 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 ​		<u>Module mit Datenbankzugriff</u>:<br>
 
 - Laborjournal
-
 - Export von Patientendaten in einem Durchgang (Dokumente, Laborblatt, Karteikarte)
-
 - Abrechnungshelfer (ähnlich der Albis internen Funktionen) im Infofenster
+- Quicksearch - Inhalt der dBASE Datenbanken anzeigen oder gezielt durchsuchen
+- Abrechnungsassistent  
 
 ### &#10042; neue Erweiterungen für das Infofenster
 
@@ -156,6 +156,8 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ### &#9733; Laborimport
 - fast vollständig automatisierter Importvorgang neuer Laborwerte ins Laborblatt der Patienten
+
+&#9733; Laborimport
 
 ###  &#9733; Outlook Anhänge extrahieren
 
@@ -307,30 +309,18 @@ Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter ande
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![Abrechnungshelfer](Docs/Icons/Abrechnungshelfer.png) <u>Abrechnungshelfer</u> - optimieren Sie Ihre Abrechnung
+## ![Abrechnungshelfer](Docs/Icons/Abrechnungshelfer.png) <u>Abrechnungsassistent</u> 
 
-<b>mehr Statistiken, mehr Möglichkeiten der Automatisierung</b>
+<img src="Docs/Abrechnungsassistent.png" alt="Screenshot Abrechnungshelfer" style="zoom: 100%;" />
 
-<img src="Docs/Screenshot-Abrechnungshelfer.png" alt="Screenshot Abrechnungshelfer" style="zoom: 100%;" />
+- bietet Vorschläge zu bestimmten Abrechnungspositionen zu Patienten an
 
-Erstellen Sie ein Tagesprotokoll und nutzen Sie diese Modul um von der Compugroup nicht abgedeckte Regeln zu möglichen Abrechnungsziffern zu entwerfen oder nutzen Sie das Skript um Patienten bestimmten Gruppen zuzuordnen oder um eine erweiterte Statistik durchführen zu können
-<br>fertige Statistiken:
-
-- **freie Statistik** - mittels *RegEx* in Tagesprotokollen suchen (**!nur die Gui ist fertig!**)
-
-- **Patienten für die Vorsorgeliste suchen** - findet Patienten bei denen eine Vorsorgeuntersuchung (GVU und/oder Hautkrebsscreening durchgeführt werden kann)
-
-- **nach fehlenden GB Ziffern suchen** - erstellt eine Liste von Patienten bei denen der geriatrische Basiskomplex noch nicht abgerechnet wurde
-
-- **fehlende Chronikerziffern** - erstellt eine Liste von Patienten bei denen die Ziffern 03220 oder 03221 nicht abgerechnet wurden, obwohl dies in den Vorquartalen erfolgt war 
-
-- **neue Chroniker finden** - findet Patienten bei denen man die Ziffern 03220/03221 ansetzen kann. Das Skript nutzt dazu eine Liste von ICD-Schlüsselnummern des Bewertungsausschusses nach § 87 Absatz 1 SGB V, die nach Einschätzung der AG medizinische Grouperanpassung chronische Krankheiten kodieren.
-
-- **Dauerdiagnosenstatistik** - listet und zählt alle Dauerdiagnosen aus dem gewählten Tagesprotokoll, jede Diagnose beeinhaltet auch eine Liste der entsprechenden Patienten
+  
 
   
 
   <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
+
 
 ## ![Export](Docs/Icons/Export.png) <u>Dokument Exporter</u> (einfach exportieren)
 

@@ -6,6 +6,9 @@
 
 |     Datum      |  Teil   | Beschreibung                                                 |
 | :------------: | :-----: | :----------------------------------------------------------- |
+| **07.04.2021** | **F~**    | <u>**Addendum_DB**     	- 	**class AlbisDB()**<br></u>massive Erweiterung der Datenbankklasse um Funktionen, welche in Zukunft das Abrechnungshelferskript	ersetzen werden. Wesentlich umfangreichere Datenerfassung aufgrund der Auswertung der DBASE Datenbanken. Erste neue Funktion ist die Erstellung von Ziffernlisten für den Abrechnungsassistenten. **Addendum V1.56** |
+| **29.03.2021** | **F~**    | <u>**Addendum_Albis**     	- 	**AlbisRezeptHelfer()**<br></u>CGM hat die Steuerelemente neu nummeriert. RPA Funktion angepasst. |
+|                          | **F+**    | <u>**AlbisAusindisKorrigieren()**, **class PatientenDaten**<br></u>eine Klasse und eine Funktion für die Änderungen der Ausnahmeindikationen im Dialog Patient / Stammdaten /Personalien / weitere Informationen. Die Funktion automatisiert die Korrektur und/oder das Hinzufügen von EBM-Ziffern<br>-	**AlbisMDITabActive()** gibt den Namen (Text) eines MDI Childfensters zurück<br>-	**AlbisMDIChildTitle()** gibt die Nummer oder den Titel des aktiven Tab zurück<br>-	**AlbisWZKommentar()** automatisiert Wartezimmer - Kommentare eingeben/ändern<br>-	**AlbisWZTabSelect()** aktiviert ein bestimmtes Wartezimmer<br>-	**AlbisWZListe**() den Inhalt eines Wartezimmers auslesen und als Objekt zurückgeben |
 | **14.03.2020** | **F+** | <u>**Addendum_Datum**</u><br>- hat mehrere neue Funktionen erhalten |
 |  | **F+** | <u>**Addendum_Mining**</u><br>- Verbesserte Datumauswertung. Daten die Patienten Geburtstage sind werden aussortiert. |
 | **13.03.2020** | **F~** | **<u>Addendum_DBase</u>**<br>- **SearchExt()** - hat Callback Funktionalität erhalten, Fehlerbehebung beim Stringvergleich |

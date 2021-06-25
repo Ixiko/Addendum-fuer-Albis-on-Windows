@@ -358,9 +358,6 @@ class EBMDB {                                                     ; EBM Ziffernd
 
 }
 
-
-
-
 EBMdb_Create(StartQuartal="20094") {                                                                	;-- Neuerstellung: 	EBM Ziffernsammler für Hausärzte - Abrechnungshelfer
 
 	; erstellt im Moment die Daten immer neu, überschreibt somit alles

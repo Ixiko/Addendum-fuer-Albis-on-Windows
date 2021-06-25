@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=6.1, user-scalable=yes">
+<meta charset="utf-8">
+<title>Impfjournal</title>
+
+<!-- HEADER UND BODY -->
+<style>
+
+html, body {
+	margin: 		0;
+	padding: 		0;
+	font-family: 	sans-serif;
+}
+
+header	{
+	width:           	100%;
+	display:         	flex;
+	background:     	#6e6c6c;
+	font-family:     	Segoe UI;
+	margin:          	0;
+	padding:        	0;
+}
+
+.title-bar {
+	overflow: 	    	hidden;
+	font-family:    	Segoe UI;
+	flex-grow: 	     	1;
+	font-size:    		100%;
+}
+
+.title-txt {
+	font-family:     	Segoe Script;
+	color:		    	#D9D8D8;
+	margin-top:	    	2px;
+	vertical-align:  	center;
+}
+
+.title-btn {
+	padding: 			0.35em 1.0em;
+	cursor:          	pointer;
+	vertical-align: 	bottom;
+	font-family:    	Webdings;
+	font-size:       	11pt;
+}
+
+.title-btn:hover {
+  background: 			rgba(0, 0, 0, .2);
+}
+
+.title-btn-close:hover {
+  background: 			#dc3545;
+}
+
+.title-menu {
+	float:           	left;
+	cursor:        		pointer;
+	vertical-align:    	bottom;
+	font-family:       	Segoe Script;
+	font-size:     		10pt;
+	background:     	#999898;
+	padding-left:     	12px;
+	padding-right:   	12px;
+	margin-bottom: 		1px;
+	margin-top:      	3px;
+	border-radius:    	8px;
+	transition-timing-function: ease-in-out;
+}
+
+.title-menu-btn1 {
+	position: absolute;
+	left: 70px;
+}
+
+.title-menu-btn2 {
+	position: absolute;
+	left: 194px;
+}
+
+.title-menu-btn3 {
+	position: absolute;
+	left: 266px;
+}
+
+.title-menu-btn4 {
+	position:          	absolute;
+	left:             	400px;
+	font-size:        	7pt;
+	vertical-align:    	center;
+	text-align:       	center;
+	padding-top:      	0px;
+	padding-bottom:  	0px;
+	padding-left:      	6px;
+	padding-right:    	6px;
+	line-height:       	1.15;
+}
+
+.title-menu-active {
+	background-color: #70A0A6;
+}
+
+.title-menu:hover {
+  background: #AEACAC;
+}
+</style>
+
+<!-- TABLE  overflow: auto; -->
+<style>
+
+#impfungen {
+  font-family: Arial, Helvetica, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+  height: 100%;
+  font-size: 80%;
+}
+
+#impfungen td, #impfungen th {
+  border: 1px solid #ddd;
+  padding: 4px;
+}
+
+#impfungen tr:nth-child(even){background-color: #f2f2f2;}
+
+#impfungen tr:hover {background-color: #ddd;}
+
+#impfungen tr th {
+
+	position: 			sticky;
+	top: 				0; /* Don't forget this, required for the stickiness */
+	overflow-x:			auto;
+	font-weight:		normal;
+	padding-top: 		6px;
+	padding-bottom: 	6px;
+	text-align: 		center;
+	background-color: #4CAF50;
+	color: 				white;
+	box-shadow: 		0 2px 2px -1px rgba(0, 0, 0, 0.4);
+}
+
+
+#impfungen tbody tr {
+	flex: 1 auto;
+	word-wrap: break;
+	overflow-y: auto;
+	height: auto;
+	max-height: 800px;
+}
+
+</style>
+
+
+</head>
+
+<header id='Impfjournal_Header'>
+	<div class='title-bar' onmousedown='neutron.DragTitleBar()'>            </div>
+	<div class='title-menu title-menu-btn1' onclick='neutron.Menu_LabJournal()'>Laborjournal</div>
+	<div class='title-menu title-menu-btn2' onclick='neutron.Menu_LabJ_Suche()'>Suche</div>
+	<div class='title-menu title-menu-btn3' onclick='neutron.Menu_LabJ_Props()'>Einstellungen</div>
+	<div class='title-menu title-menu-btn4' onclick='ahk.LabJournal_Grenzen()'>Laborwertgrenzen<br>neu berechnen</div>
+	<div class='title-txt'>##02##</div>
+	<div class='title-btn' onclick='neutron.Minimize()'>0</div>
+	<div class='title-btn' onclick='neutron.Maximize()'>1</div>
+	<div class='title-btn title-btn-close' onclick='ahk.Journal_Close()'>r</div>
+</header>
+
+<body>
+

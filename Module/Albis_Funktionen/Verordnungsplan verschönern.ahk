@@ -85,6 +85,7 @@ global                                                         						DatumVom:= 
 								,	"Deutsch"              	: ""
 								,	"Dosiergel"            	: ""
 								,	"Dosieraeros"        	: ""
+								,	"dura\s*B*"             	: ""
 								,	"ED"                      	: ""
 								,	"Emra.Med"           	: ""
 								,	"Eurimpharm"        	: ""
@@ -122,6 +123,7 @@ global                                                         						DatumVom:= 
 								,	"Phar*m*a*"          	: ""
 								,	"Protect(\d+)"        	: " $1"
 								,	"[Rr]atio*p*h*a*r*m*"	: ""
+								,	"RET"                     	: ""
 								,	"Retard"                 	: ""
 								,	"Retardtable*t*t*e*n*"	: ""
 								,	"\bSANDOZ\b"         	: ""
@@ -132,10 +134,12 @@ global                                                         						DatumVom:= 
 								,	"Tabletten"             	: ""
 								,	"T[Aa][Hh]"            	: ""
 								,	"\bTAD\b"                	: ""
+								,	"teilbar"                 	: ""
 								,	"TEI"                      	: ""
 								,	"TEVA"                   	: ""
 								,	"TOP"                     	: ""
 								,	"Tro"                     	: ""
+								,	"UTA"                      	: ""
 								,	"Vital"                    	: ""
 								,	"Weichkaps*e*l*n*"	: ""
 								,	"\bWinthrop\b"        	: ""
@@ -275,7 +279,6 @@ global                                                         						DatumVom:= 
 					table.Cell(row, 4 + A_Index).Range.Text := ""
 
 				table.Rows(row).Cells.Merge
-				;table.Cell(row, 2).Merge(table.Cell(row, cols))  ; vorbereitung für anderes Layout
 				thisrow := table.Rows(row)
 				thisrow.Range.Font.Size := 10
 
@@ -296,14 +299,11 @@ global                                                         						DatumVom:= 
 		; HINWEISBEREICH ALS ERSTE ZEILE DER TABELLE EINSTELLEN (DURCH AUSSCHNEIDEN UND EINFÜGEN DER 1.ZEILE NACH DEN HINWEISEN)
 			table.Rows(1).Range.Cut
 			table.Rows(2).Range.Paste
-			;table.CellRows(1).Range.Cut
-			;table.Rows(2).Range.Paste
 
 		; STARTZEILE FÜR DIE ERSETZUNG IST JETZT DIE 3.ZEILE
 			startrow := 2
 
 		}
-
 
 ;}
 
@@ -374,9 +374,6 @@ global                                                         						DatumVom:= 
 				RegExMatch(Form, "(.*)\s(\(.*\))", FM)
 				FontSize := table.Cell(thisrow,3).Range.Font.Size
 				table.Cell(thisrow, 3).Range.Text := FM1 Chr(10) FM2
-				;SciTEOutput(StrLen(FM1) ", " StrLen(FM2))
-				;table.Cell(thisrow, 3).Range(StrLen(FM1), StrLen(FM2)).Font.Size	:= FontSize - 4
-
 			}
 
 		; MEDIKAMENT ANWENDUNG UND WIRKSTOFFE EINTRAGEN
@@ -477,9 +474,8 @@ GetCellText(tableObj, row, col) {
 
 		try
 			Text := table.Cell(row, col).Range.Text
-		catch
-		{
-			SciTEOutput(row ", " A_Index)
+		catch	{
+			;SciTEOutput(row ", " A_Index)
 			return "###"
 		}
 

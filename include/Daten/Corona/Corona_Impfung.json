@@ -1,89 +1,77 @@
 {
-	"Kostenträger": {
-		"Name" 	: "Landesamt für Soziales und Versorgung",
-		"Kurz"    	: "LASV",
-		"KT"        	: "83886",
-		"IK"        	: "100083886"
-	},
+    "Kostenträger": {
+        "Name": "Landesamt für Soziales und Versorgung",
+        "Kurz": "LASV",
+        "KT": "83886",
+        "IK": "100083886"
+    },
+    "SNR": {
+        "Impfleistung": {
+            "SNR": "90860",
+            "EUR": "27.00",
+            "Lang": "Impfleistung je Impfberechtigten"
+        },
+        "Wegegebühr": {
+            "SNR": "90862",
+            "EUR": "20.00",
+            "Lang": "Einmalige Wegegebühr je aufgesuchten Impfberechtigten in der Häuslichkeit / soziale Gemeinschaft"
+        },
+        "nur_Impfberatung": {
+            "SNR": "88322",
+            "EUR": "10.00",
+            "Lang": "Ausschließliche Impfberatung (§ 9 Abs.2) Einmalig je Impfberechtigten; die Beratung kann auch telefonisch oder per Videosprechstunde erfolgen.`n(Die ausschließliche Impfberatung (GOP 88322) ist im Krankheitsfall nicht neben den nachfolgenden Impfziffern abrechenbar.)"
+        },
+        "Besuch": {
+            "SNR": "88323",
+            "EUR": "35.00",
+            "Lang": "Besuch im Rahmen einer Corona- Schutzimpfung"
+        },
+        "Besuch_weitere": {
+            "SNR": "88324",
+            "EUR": "15.00",
+            "Lang": "Besuch einer weiteren Person in derselben sozialen Gemeinschaft oder Einrichtung"
+        }
+    },
+    "Diagnosen": {
+        "Impfung": {
+            "ICD": "U11.9",
+            "Text": "Notwendigkeit der Impfung gegen COVID-19, nicht näher bezeichnet"
+        },
+        "Nebenwirkung": {
+            "ICD": "U12.9!",
+            "Text": "Unerwünschte Nebenwirkungen bei der Anwendung von COVID-19-Impfstoffen, nicht näher bezeichnet"
+        }
+    },
+    "Impfstoffe": {
+        "1": {
+            "Hersteller": "BioNTech/Pfizer",
+            "Handelsname": "Comirnaty",
+            "SNR": "88331",
+            "REF": "XIMPFCORONA1"
+        },
+        "2": {
+            "Hersteller": "Moderna",
+            "Handelsname": "Covid-19 Vaccine Moderna",
+            "SNR": "88332",
+            "REF": "XIMPFCORONA2"
+        },
+        "3": {
+            "Hersteller": "AstraZeneca",
+            "Handelsname": "Covid-19 Vaccine AstraZeneca",
+            "SNR": "88333",
+            "REF": "XIMPFCORONA3"
+        },
+        "4": {
+            "Hersteller": "Johnson & Johnson",
+            "Handelsname": "Covid-19 Vaccine Johnson & Johnson",
+            "SNR": "88334",
+            "REF": "XIMPFCORONA4"
+        }
 
-	"SNR": {
-		"Impfleistung": {
-			"SNR"	: "90860",
-			"EUR"	: "27.00",
-			"Lang"	: "Impfleistung je Impfberechtigten"
-		},
-		"Wegegebühr": {
-			"SNR"	: "90862",
-			"EUR"	: "20.00",
-			"Lang"	: "Einmalige Wegegebühr je aufgesuchten Impfberechtigten in der Häuslichkeit / soziale Gemeinschaft"
-		},
-		"nur_Impfberatung": {
-			"SNR"	: "88322",
-			"EUR"	: "10.00",
-			"Lang"	: "Ausschließliche Impfberatung (§ 9 Abs.2) Einmalig je Impfberechtigten; die Beratung kann auch telefonisch oder per Videosprechstunde erfolgen.`n"
-						. "(Die ausschließliche Impfberatung (GOP 88322) ist im Krankheitsfall nicht neben den nachfolgenden Impfziffern abrechenbar.)"
-		},
-		"Besuch": {
-			"SNR"	: "88323",
-			"EUR"	: "35.00",
-			"Lang"	: "Besuch im Rahmen einer Corona- Schutzimpfung"
-		},
-		"Besuch_weitere": {
-			"SNR"	: "88324",
-			"EUR"	: "15.00",
-			"Lang"	: "Besuch einer weiteren Person in derselben sozialen Gemeinschaft oder Einrichtung"
-		}
-	},
-
-	"Diagnosen": {
-		"Impfung": {
-			"ICD"	: "U11.9",
-			"Text"	: "Notwendigkeit der Impfung gegen COVID-19, nicht näher bezeichnet"
-		},
-		"Nebenwirkung": {
-			"ICD"	: "U12.9!",
-			"Text"	: "Unerwünschte Nebenwirkungen bei der Anwendung von COVID-19-Impfstoffen, nicht näher bezeichnet"
-		}
-	},
-
-	"Impfstoffe": {
-		"1": {
-			"Hersteller"      	: "BioNTech/Pfizer",
-			"Handelsname"	: "Comirnaty",
-			"SNR"             	: "88331",
-			"REF"             	: "XIMPFCORONA1"
-		},
-		"2": {
-			"Hersteller"      	: "Moderna",
-			"Handelsname"	: "Covid-19 Vaccine Moderna",
-			"SNR"             	: "88332",
-			"REF"             	: "XIMPFCORONA2"
-		},
-		"3": {
-			"Hersteller"      	: "AstraZeneca",
-			"Handelsname"	: "Covid-19 Vaccine AstraZeneca",
-			"SNR"             	: "88333",
-			"REF"             	: "XIMPFCORONA3"
-		},
-		"4": {
-			"Hersteller"      	: "Johnson & Johnson",
-			"Handelsname"	: "Covid-19 Vaccine Johnson & Johnson",
-			"SNR"             	: "88334",
-			"REF"             	: "XIMPFCORONA4"
-		}
-
-	}
-
-	"Indikattionen": {
-		"Normal"   	: ["A","B"],
-		"Pflegeheim"	: ["G","H"],
-		"Beruf"        	: ["V","W"]
-	}
-
+    },
+    "Indikattionen": {
+        "Normal": ["A", "B"],
+        "Pflegeheim": ["G", "H"],
+        "Beruf": ["V", "W"]
+    }
 }
-
-
-
-
-
-

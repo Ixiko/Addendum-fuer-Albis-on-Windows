@@ -165,6 +165,17 @@ GetAddendumID() {                                                               
 return AddendumID
 }
 
+GetScriptID(scriptname) {                                                                                                       	;-- nur für Skripte mit eigener Message-Gui
+	Prev_DetectHiddenWindows := A_DetectHiddenWindows
+    Prev_TitleMatchMode := A_TitleMatchMode
+    DetectHiddenWindows On
+    SetTitleMatchMode 2
+	hwnd := WinExist("Addendum " StrReplace(ScriptName, ".ahk") " ahk_class AutoHotkeyGUI")
+	DetectHiddenWindows 	, % Prev_DetectHiddenWindows  	; Restore original setting for the caller.
+    SetTitleMatchMode     	, % Prev_TitleMatchMode           	; Same.
+return hwnd
+}
+
 ;______________________________________________________________________________________________________________________________________________
 ; INI (3)
 IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="", convert:=true) {                             	;-- eigene IniRead funktion für Addendum

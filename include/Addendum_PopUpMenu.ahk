@@ -15,9 +15,8 @@
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
 ;
-;       Addendum_PopUpMenu started: 20.06.2020 | last change: 07.03.2021
+;       Addendum_PopUpMenu started: 20.06.2020 | last change: 21.04.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Addendum_PopUpMenu(hWin, hMenu) {                                                                               	;-- fügt neue Menupunkte dem Rechtsklickmenu der Karteikarte hinzu
 
 		static ExtMenu, cmdGroups
@@ -52,13 +51,10 @@ Addendum_PopUpMenu(hWin, hMenu) {                                               
 
 			; ExtMenu wird für die Verarbeitung verändert
 				For key, arr in ExtMenu	{
-
 					tmpArr := Array()
 					For idx, val in arr
 						tmpArr.Push(const[val])
-
 					ExtMenu[key] := tmpArr
-
 				}
 
 		}
@@ -117,9 +113,9 @@ return
 Addendum_PopUpMenuItem(pm) {                                                                                         	;-- wertet den Nutzerklick aus
 
 	; Menu-Events in Prozessen welche nicht zum eigenen Programm/Skript gehören lassen sich systembedingt nur mittels "Code-Injection" abfangen.
-	; Dafür "injiziert" man fremden Code (z.B. eine DLL) in einen anderen Prozess.  Mit Autohotkey läßt sich dies per Boardmittel nicht bewerkstelligen.
+	; Dafür "injiziert" man fremden Code (z.B. eine DLL) in einen anderen Prozess.  Mit Autohotkey läßt sich dies mittels Boardmittel nicht bewerkstelligen.
 	; Diese Art von Code wird aus guten Gründen als Schadsoftware von Virenscanner bewertet. Da ich keinen Code verwenden möchte,
-	; den man nicht überprüfen kann, verwende ich hier eine einfache Methode auf Basis der Position des Mauszeigers.
+	; den man nicht überprüfen kann, verwende ich eine einfache Methode auf Basis der Position des Mauszeigers. Dies funktioniert in den allermeisten Fällen gut.
 	;
 	; cmdGroups:		- statische Variable, die verschiedene Aktenkürzel zu einer Aktionsausführung zusammenfasst
 	;
@@ -150,30 +146,26 @@ Addendum_PopUpMenuItem(pm) {                                                    
 				return
 
 	; für Formulare braucht es keine weiteren Funktionen
-		For idx, obj in cmdGroups
-		{
-				thisgroup := obj.group
-				If filter in %thisgroup%
-				{
-						If InStr(cmd, "open") {                    ; Formular bearbeiten - Öffnen per SendInput
+		For idx, obj in cmdGroups		{
 
-							SendInput, % obj.open
-							return
+			thisgroup := obj.group
+			If filter in %thisgroup%
+			{
+					If InStr(cmd, "open") {                    ; Formular bearbeiten - Öffnen per SendInput
+						SendInput, % obj.open
+						return
+					}
+					else if InStr(cmd, "print") {	        	; Formular drucken - Öffnen und simulierter Mausklick auf Drucken
+						SendInput, % obj.open
+						WinWait, % obj.WinTitle,, 6
+						VerifiedClick(obj.print, obj.WinTitle,,, true)
+						WinWait, % DiaUebernahme,, 3
+						If WinExist(DiaUebernahme)
+							VerifiedClick("Abbruch", DiaUebernahme,,, true)
+						return
 
-						}
-						else if InStr(cmd, "print") {	        	; Formular drucken - Öffnen und simulierter Mausklick auf Drucken
-
-							SendInput, % obj.open
-							WinWait, % obj.WinTitle,, 6
-							VerifiedClick(obj.print, obj.WinTitle,,, true)
-							WinWait, % DiaUebernahme,, 3
-							If WinExist(DiaUebernahme)
-								VerifiedClick("Abbruch", DiaUebernahme,,, true)
-
-							return
-
-						}
-				}
+					}
+			}
 		}
 
 		If IsFunc("admMenu_" filter)
@@ -199,9 +191,7 @@ admMenu_scan(cmd, pm) {                                                         
 	KKDatum := ""
 
 	If InStr(cmd, "show") {
-
-			SendInput, {F3}
-
+		SendInput, {F3}
 	}
 	else if InStr(cmd, "export1") {                                                                                              	; zum Exportieren in den Versandordner
 
@@ -222,33 +212,31 @@ admMenu_scan(cmd, pm) {                                                         
 			PatName      	:= StrReplace(AlbisCurrentPatient(), ", ", ",")
 			PatNamePath	:= Addendum.ExportOrdner "\" "(" PatID ") " PatName
 
+			SciTEOutput(PatNamePath)
+
 		; Export Ordner anlegen für diesen Patienten falls nicht vorhanden
-			If !(FileExist(PatNamePath) = "D")
+			If !InStr(FileExist(PatNamePath), "D")
 				FileCreateDir % PatNamePath
 
 		; Pdf (Dokument) Bezeichnung aus der Karteikarte holen
-			BlockInput, On                                                                                                            	; Nutzerinteraktion verhindern
+			BlockInput, On                                                                                                                            	; Nutzerinteraktion verhindern
 			AlbisActivate(1)
-			result := AlbisLeseDatumUndBezeichnung(pm.MouseX, pm.MouseY)                             	; holt sich das Zeilendatum und den eingetragenen Text
-			If !IsObject(result) {                                                                                                    	; Fehlerbehandlung
+			res := AlbisLeseDatumUndBezeichnung(pm.MouseX, pm.MouseY)                                                 	; holt sich das Zeilendatum und den eingetragenen Text
+			If !IsObject(res) {                                                                                                                        	; Fehlerbehandlung
 				BlockInput, Off
-				PraxTT("Der Karteikartentext konnte nicht ermittelt werden.`nDer Befundexport ist fehlgeschlagen", "3 0")
+				PraxTT(	"Der Karteikartentext konnte nicht ermittelt werden.`n"
+						. 	"Der Befundexport ist fehlgeschlagen!", "3 0")
 				SendInput, {Escape}
 				return
 			}
-			PdfTitel  	:= result.Text                                                                                              	; eventuell noch vorhandene pdf Endung aus dem Karteikartentext entfernen
-			KKDatum	:= result.Datum
-			KKDatum 	:= SubStr(KKDatum, 7, 4) "." SubStr(KKDatum, 4, 2) "." SubStr(KKDatum, 1, 2)	; Jahr.Monat.Tag - Befunde lassen sich im Explorer nach Datum sortieren
-			SendInput, {Escape}                                                                                                   	; Zeile wieder freigeben
+			SendInput, {Escape}                                                                                                                   	; Zeile wieder freigeben
 
 		; anderen Dateinamen geben, falls der Name schon vergeben wurde
-			PdfFullFilePath := PatNamePath "\" KKDatum "-" PdfTitel ".pdf"
-			while % FileExist(PdfFullFilePath) {
-				If RegExMatch(PdfFullFilePath, "\(\d+\)\.pdf")
-					PdfFullFilePath := RegExReplace(PdfFullFilePath, "\(\d+\)\.pdf$", "(" A_Index ").pdf")
-				else
-					PdfFullFilePath := RegExReplace(PdfFullFilePath, "\.pdf$", "(" A_Index ").pdf")
-			}
+			KKDatum       	:= SubStr(res.Datum, 7, 4) "." SubStr(res.Datum, 4, 2) "." SubStr(res.Datum, 1, 2)  	; Jahr.Monat.Tag - Befunde lassen sich im Explorer nach Datum sortieren
+			PdfFullFilePath 	:= PatNamePath "\" KKDatum "-" RegExReplace(res.Text, "\.pdf") ".pdf"           		 	; eventuell noch vorhandene pdf Endung aus dem Karteikartentext entfernen
+			while FileExist(PdfFullFilePath)                                                                                                       	; sucht einen noch nicht vorhandenen Dateinamen
+				PdfFullFilePath := RegExReplace(PdfFullFilePath, "\(*\d*\)*\.pdf$", "(" A_Index ").pdf")
+			SciTEOutput(PdfFullFilePath)
 
 		; Taste F3 an Albis senden um PDF-Datei mit dem in Albis hinterlegten PDF-Reader anzuzeigen
 		; die Shellhook-Prozedure im Addendum Hauptskript ruft die als Parameter übergebene Funktion auf
@@ -367,18 +355,15 @@ admMenu_medrp(cmd, MenuX, MenuY) {                                              
 
 ; ~~~~~ Windows Menu Funktionen ~~~~~~~
 Addendum_MenuAppendSeparator(hWin, hMenu) {                                                                	;-- fügt einen Separator ein
-
 	DllCall("AppendMenu", "Ptr", hMenu, "UInt", 0x800	, "UPtr", 0, "Str", "")
 	DllCall("DrawMenuBar", "Ptr", hWin)
-
 }
 
 Addendum_MenuAppendLabels(hWin, hMenu, labels) {                                                            	;-- fügt neue Menupunkte ein
 
 	; labels - Array
-
-		pm  	:= Array()
-		PatID := AlbisAktuellePatID()
+		pm  		:= Array()
+		PatID 	:= AlbisAktuellePatID()
 
 	; Patient ist nicht bei Telegram, dann wird der Menupunkt entfernt
 		If !oPat[PatID].tgChatID
@@ -391,7 +376,6 @@ Addendum_MenuAppendLabels(hWin, hMenu, labels) {                                
 	; Menupunkte werden dem Albis Kontextmenu hinzugefügt
 		Loop % labels.MaxIndex()
 			DllCall("AppendMenu", "Ptr", hMenu, "UInt", 0x0, "UPtr", (90000+A_Index-1), "Str", labels[A_Index].menutext)
-
 		DllCall("DrawMenuBar", "Ptr", hWin)
 
 	; virtuelles Menu wird erstellt
@@ -444,31 +428,6 @@ admMenu_PdfPrint(Param, PDFViewerClass, PDFViewerHwnd) {                        
 		PraxTT("", "off")                                                                                                	; Info-Anzeige aus
 		AlbisActivate(2)                                                                                               	; zurück zu Albis
 
-}
-
-; ~~~~~ Karteikartenfunktionen ~~~~~~~~~
-AlbisLeseDatumUndBezeichnung(MouseX, MouseY) {                                                                	;-- Mausposition abhängige Karteikarten Informationen erhalten
-
-		while (StrLen(KKDatum) = 0) {
-
-			MouseClick, Left, MouseX, MouseY                                                                     	; ein Mausklick setzt den Cursor
-			Sleep, 200
-
-			Content 	:= AlbisGetActiveControl("Content")
-			PdfTitel  	:= Content.RichEdit
-			KKDatum	:= Content.Edit2
-
-			If (StrLen(KKDatum) > 0)                                                                                      	; Datum konnte ausgelesen werden, dann Abbruch
-				break
-			If (A_Index > 4)
-				return ""
-
-		}
-
-		SendInput, {Escape}                                                                                               	; Karteikartenzeile freigeben
-		PdfTitel  	:= RegExReplace(PdfTitel, "\.*pdf$", "")                                                    	; eventuell noch vorhandene pdf Endung aus dem Karteikartentext entfernen
-
-return {"Text": PdfTitel, "Datum":KKDatum}
 }
 
 ; ~~~~~ zusätzliche Funktionen ~~~~~~~~~

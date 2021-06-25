@@ -97,12 +97,12 @@
 
 	;}
 
-	ngrams := RunCrazyNGrams("3,4,5", true)
+	;ngrams := RunCrazyNGrams("3,4,5", true)
 	;clean := RemoveDoublettes(medicalWords, othersWords)
 	;medicalWords 	:= clean.objA
 	;othersWords  	:= clean.objB
-	gosub AlbisPDFOdner
-	;gosub BefundOrdner
+	;gosub AlbisPDFOdner
+	gosub BefundOrdner
 	;ReIndexMedicalList()
 
 	DicGui()
@@ -242,13 +242,14 @@ ngramSyntaxValidator: ;{
 	Gui, ngram: Submit, NoHide
 	out := ngInput "`n"
 	Loop 3 {
+
 		NgramSize := 2+A_Index
 		Loop, % StrLen(ngInput) - (NgramSize - 1)  {
 
 			;If ngrams[NgramSize].haskey(sub := SubStr(ngInput, A_Index, NgramSize))
 			sub := SubStr(ngInput, A_Index, NgramSize)
-			If ngrams[NgramSize][sub].haskey("count")
-				out .= sub "`t+`n"
+			If ngrams[NgramSize].haskey(sub)
+				out .= sub "`t+ [" ngrams[NgramSize][sub].count "]`n"
 			else {
 				out .= sub "`t-`n"
 				Gui, ngram: Color, cFF4444
@@ -334,10 +335,17 @@ DicGui() {
 	}
 
 	Hotkey, IfWinActive, Wörterbucheditor ahk_class AutoHotkeyGUI
-	Hotkey, Enter, addToDic
+	Hotkey, Enter 	, addToDic
+	Hotkey, Space	, ClickWord
 	Hotkey, IfWinActive
 
 return
+
+ClickWord:
+
+return
+
+
 
 DIC_LV: ;{
 
@@ -354,7 +362,7 @@ DIC_LV: ;{
 		}
 
 	; ins gegenüberliegende Listview Steuerelement verschieben
-		If (A_GuiControlEvent = "DoubleClick") {
+		If (A_GuiControlEvent = "Normal") {
 
 			If (LvCtrl = "DIC_LVTXT") {
 
@@ -384,7 +392,7 @@ DIC_LV: ;{
 
 		}
 	; aus Medical nach Others verschieben
-		else If (A_GuiControlEvent = "R") {
+		else If (A_GuiControlEvent = "R") || (A_GuiControlEvent = "RightClick") {
 
 			If RegExMatch(rword.1, "Medizin\s+\[(?<count>\d+)\]", w) {
 
@@ -421,6 +429,8 @@ addToDic: ;{
 	;~ WBStats()
 	;~ LoadText()
 return ;}
+
+
 
 DIC_BTNS: ;{
 
@@ -466,7 +476,7 @@ addToDictionary() {
 				Medical[rword.2] += rword.3
 
 			For medWord, mWCount in Others
-				If (medword == rword.2) {
+				If (medword = rword.2) {
 					Others.Delete(medword)
 					break
 				}
@@ -484,10 +494,11 @@ addToDictionary() {
 				rword[A_Index] := rtxt
 			}
 
-			If !Others.haskey(rword.2)
-				Others[rword.2] := 1
-			else
-				Others[rword.2] += 1
+			If InStr(rword.1, "unbekannt")
+				If !Others.haskey(rword.2)
+					Others[rword.2] := 1
+				else
+					Others[rword.2] += 1
 		}
 		LV_Delete()
 
@@ -526,7 +537,7 @@ LoadText() {
 	; Worte anzeigen
 		Gui, Dic: ListView, DIC_LVTxt
 		For word, wdata in words {
-			col1 := (wdata.list = 1 ? "unbekannt" : wdata.list = 2 ? "Medizin [" wdata.listcount "]" : wdata.list = 3 ? "andere  [" wdata.listcount "]" : "ngram   [" wdata.count "]")
+			col1 := (wdata.list=1 ? "unbekannt" : wdata.list=2 ? "Medizin [" wdata.listcount "]" : wdata.list=3 ? "andere  [" wdata.listcount "]" : "ngram   [" wdata.count "]")
 			LV_Add("", col1 , word, wdata.count)
 		}
 		LV_ModifyCol(1, "SortDesc", "Sort")
@@ -705,9 +716,10 @@ CollectWords(filepath, debug:=false) {
 	ocrcorrection := {"rt":"h", "ri":"n", "x":"x", "x":"x", "x":"x"}
 
 	PNames    	:= Object()
-	MFreqLimit	:= 2
-	OFreqLimit 	:= 3
+	MFreqLimit	:= 1
+	OFreqLimit 	:= 2
 	spos          	:= 1
+
 	If RegExMatch(filePath, "\.txt$")
 		text          	:= FileOpen(filepath, "r", "UTF-8").Read()
 	else if RegExMatch(filePath, "\.pdf$") {
@@ -719,18 +731,23 @@ CollectWords(filepath, debug:=false) {
 	text := RegExReplace(text, "([a-zäöüß])([A-ZÄÖÜ][a-zäöü])", "$1 $2")
 	text := RegExReplace(text, "[\n\r\f]", " ")
 
+
 	tLen := StrLen(text)
+
 	while (spos := RegExMatch(text, "\s(?<Name>[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*)", P, spos)) {
 
-			takeword := 99
+			takeword := 1
 			ToolTip, % "Position: " spos "/" tLen, 900, 1
 			spos += StrLen(PName)
+
 		; wenn ein Wort in einem der beiden Wörterbücher vorkommt
 			if Medical.haskey(PName) {
 
 				Medical[PName] += 1
-				If (Medical[PName] <= MFreqLimit)
+				If (Medical[PName]+0 < MFreqLimit)
 					takeword := 0
+				else
+					takeword := 2
 
 			}
 			else if Others.haskey(PName) {
@@ -742,6 +759,8 @@ CollectWords(filepath, debug:=false) {
 					else
 						takeword := 4
 				}
+				else
+					takeword := 3
 
 			}
 
@@ -752,18 +771,20 @@ CollectWords(filepath, debug:=false) {
 			}
 
 		; ngram Evaluierung unbekannter Wörter
-			If !RegExMatch(takeword, "0|1|2|3|4")
-				If !ngramWordCheck(PName, 5)
-					takeword := 1            ; ngrams haben nicht funktioniert
-				else
-					takeword := 4			 ; bisher unbekannt
+			If (takeword = 99)
+					takeword := 1			 ; bisher unbekannt
+				;~ If ngramWordCheck(PName, 5)
+					;~ takeword := 1            ; ngrams haben nicht funktioniert
+				;~ else
 
+		tw3:= takeword
 		; zur Auswahl vorzustellende Wörter
 			If (takeword < 99)
+					;SciTEOutput(" :" PName ":, " takeword " (" tw "," tw2 "," tw3 ")")
 				If !PNames.haskey(PName)
 					PNames[PName] := {"count"    	: 1
 												, 	 "list"      	: takeword
-												, 	 "listcount"	: (takeword = 2 ? Medical[PName] : takeword = 3 ? Others[PName] : 0)}
+												, 	 "listcount"	: (takeword=2 ? Medical[PName] : takeword=3 ? Others[PName] : 0)}
 				else
 					PNames[PName].count += 1
 
@@ -782,8 +803,7 @@ ngramWordCheck(word, depth:=5) {
 	hits := 0
 	Loop, % Limit {
 		ngramLen := A_Index + 2
-
-If (StrLen(word) >= ngramLen) && ngramSyntaxValidate(word, ngramLen)
+		If (StrLen(word) >= ngramLen && ngramSyntaxValidate(word, ngramLen))
 			hits ++
 	}
 
