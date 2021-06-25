@@ -1,7 +1,7 @@
 ![Addendum.png](assets/AddendumLogo2021.png)
 #### Extends the possibilities through surface analysis and manipulation
 
-### preRelease Version 1.6 vom 12.04.2021
+### Release Version 1.62 vom 24.06.2021
 lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.33+ Unicode 64bit*,
 geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
@@ -21,10 +21,12 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 ​		<u>Module mit Datenbankzugriff</u>:<br>
 
 - Laborjournal
+- Laborabruf
 - Export von Patientendaten in einem Durchgang (Dokumente, Laborblatt, Karteikarte)
 - Abrechnungshelfer (ähnlich der Albis internen Funktionen) im Infofenster
 - Quicksearch - Inhalt der dBASE Datenbanken anzeigen oder gezielt durchsuchen
-- Abrechnungsassistent  
+- Abrechnungsassistent  - neue Version
+- Autonaming Assistent
 
 ### &#10042; neue Erweiterungen für das Infofenster
 
@@ -78,11 +80,12 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 ### &#9733; automatische Texterkennung für PDF Dateien
 
 - mit Tesseract erreiche ich eine bessere Erkennungsrate als mit meinem bisherigen Texterkennungsprogramm
-- neu hinzugefügte PDF Dateien werden automatisch in PDF-Text Dateien umgewandelt
+- neu in einen Ordner hinzugefügte PDF Dateien werden automatisch in PDF-Text Dateien umgewandelt
 
-### &#9733; automatische Kategorisierung von PDF Dateien
+### &#9733; automatische Kategorisierung (Autonaming) von PDF Dateien
 
 - findet im Text der PDF den Patientennamen, das Erstellungsdatum des Dokumentes oder den Zeitraum eines Krankenhausaufenthaltes. Aus diesen Informationen wird ein neuer Dateiname generiert.
+- das Autonaming wird nach jedem Texterkennungsvorgang durchgeführt, so daß die Dokumente sofort zuordenbar sind
 
 ###  &#9733; Unterstützung der PDF-Signierung 
 
@@ -101,7 +104,7 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
   - Einstellen des aktuellen **Tagesdatums**
   - **Addition** von einer **Woche** oder einem **Monat** in **Datumsfeldern**, anstatt nur einem Tag wie bisher 
   - **neuer Shift + F3 Kalender** zeigt mehrere Monate an 
-  - **Hotstrings** für die schnelle Eingabe von Abrechnungsziffern (EBM und GOÄ)
+  - **Hotstrings** für die schnelle Eingabe von Abrechnungsziffern (EBM und GOÄ, Diagnosen)
 
 ###  &#9733; erweitertes Kontextmenu 
 
@@ -157,8 +160,6 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 ### &#9733; Laborimport
 - fast vollständig automatisierter Importvorgang neuer Laborwerte ins Laborblatt der Patienten
 
-&#9733; Laborimport
-
 ###  &#9733; Outlook Anhänge extrahieren
 
 - Faxbefunde erreichen mich von der Fritzbox per EMail. Ein neues Skript extrahiert die als PDF angehängten Fax in den Befundordner. Durch die neue Hotfolder-Funktionalität wird dann sofort eine Texterkennung durchgeführt und anschliessend werden die Dateien kategorisiert.
@@ -170,6 +171,15 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 ###  &#9733; Listview-Inhalte kopieren
 
 - Sie brauchen den Inhalt des Wartezimmers, die Dauerdiagnosen, die Dauermedikamenten oder die Liste der Resistenztestung aus dem Laborblatt. Steuern Sie ihre Maus über das entsprechende Element und drücken Sie ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![c](Docs/Icons/shift_Left.png)+![c](Docs/Icons/Key-White-c.png) und Addendum kopiert nicht nur den Inhalt des Elementes sondern bereitet ihn auf damit sie ihn z.B. in ein Dokument per Paste einfügen können. 
+
+###  &#9733; QuickSearch
+visuelle Analyse und für die Suche von Daten in allen Albis (dBase) Datenbankdateien 
+
+- Anzeige von Daten und Suche in allen Datenbanken
+- Auslesen spezieller Informationen der Strukturen der Datenbanken
+- Inhalte der Datenbank können im .csv Format exportiert werden 
+
+
 
 [alle Änderungen in Addendum](Docs/Changes_Addendum_main.md)   |   [alle Änderungen in den Funktionsbibliotheken](Docs/Changes_Addendum_includes.md)
 
@@ -351,7 +361,7 @@ Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter ande
 
 **Die Automatisierung für den Abruf der Laborwerte**
 
-- der Abruf der Laborwerte ist teilautomatisiert und ins Addendum-Skript integriert (kommt leider mit bestimmten Situation nicht zurecht)
+- der Abruf der Laborwerte ist jetzt nahezu vollständig automatisiert 
 - Skript erkennt einzelne Abschnitte des Abrufs von Labordaten und übernimmt dann die immer wieder kehrenden Eingabetätigkeiten
 
 - erkannt werden:
