@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 29.03.2021 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 29.06.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
 return
@@ -74,7 +74,7 @@ Return Format("0x{:X}", NumGet(guiThreadInfo, 8+A_PtrSize, "Ptr"))
 GetFocusedControlHwnd(hwnd:="A") {
 	ControlGetFocus, FocusedControl	 , % (hwnd = "A") ? "A" : "ahk_id " hwnd
 	ControlGet    	 , FocusedControlId, Hwnd,, % FocusedControl, % (hwnd = "A") ? "A" : "ahk_id " hwnd
-return FocusedControlId
+return GetHex(FocusedControlId)
 }
 
 GetFocusedControlClassNN(hwnd:="A") {
@@ -265,7 +265,7 @@ GetHeaderInfo(hHeader) {                                                        
     Return HDInfo
 }
 
-Controls(Control="",cmd="",WinTitle="",HTxt=1,HWin=1,MMSpeed="slow") {   	;-- Universalfunktion für Steuerelemente
+Controls(Control="",cmd="",WinTitle="",HidT=1,HidW=1,MMSpeed="slow") {   	;-- Universalfunktion für Steuerelemente
 
 	;  ********	    ********		Function grows and thrives, watered at the 25.03.2021
 	; ***	     *    ***	    ***	dependencies: 	Function: ClientToScreen()
@@ -299,12 +299,14 @@ Controls(Control="",cmd="",WinTitle="",HTxt=1,HWin=1,MMSpeed="slow") {   	;-- Un
            	return 1
 		}
 
+		static HiddenTextStatus, HiddenWinStatus, MatchModeSpeedStatus, CoordModeWinStatus
+
 		HiddenTextStatus        	:= A_DetectHiddenText
 		HiddenWinStatus        	:= A_DetectHiddenWindows
 		MatchModeSpeedStatus	:= A_TitleMatchModeSpeed
 		CoordModeWinStatus	:= A_CoordModeMouse
-		DetectHiddenText      	, % HTxt=true 	? "On":"Off"
-		DetectHiddenWindows	, % HWin=true	? "On":"Off"
+		DetectHiddenText      	, % HidT	? "On":"Off"
+		DetectHiddenWindows	, % HidW	? "On":"Off"
 		SetTitleMatchMode    	, % MMSpeed
 		CoordMode              	, Mouse	, Screen
 		CoordMode              	, Pixel   	, Screen
@@ -423,7 +425,7 @@ Controls(Control="",cmd="",WinTitle="",HTxt=1,HWin=1,MMSpeed="slow") {   	;-- Un
 					return VerifiedClick(searchClass, WinTitle)		;searchClass must be the exact ClassNN in this case
 
 		}
-		else if RegExMatch(cmd	, "i)^\s*ControlCheck"         	)        	{   	; finds a control by its text or hwnd, returns ControlClassNN and/or HWND
+		else if RegExMatch(cmd	, "i)^\s*ControlCheck"         	)        	{   	; checkbox true or false
 
 			; possible commands are check, uncheck  ##### not working
 
@@ -696,9 +698,9 @@ ControlGetText(Control="", WTitle="", WText="", ExTitle="", ExText="") {        
 Return v
 }
 
-ControlGetFocus(hwnd) {                                                                                	;-- gibt das Handle des fokussierten Steuerelementes zurück
-	ControlGetFocus, FocusedControl, % "ahk_id " hwnd
-	ControlGet, FocusedControlId, Hwnd,, %FocusedControl%, % "ahk_id " hwnd
+ControlGetFocus(hWin) {                                                                                	;-- gibt das Handle des fokussierten Steuerelementes zurück
+	ControlGetFocus, FocusedControl, % "ahk_id " hWin
+	ControlGet, FocusedControlId, Hwnd,, %FocusedControl%, % "ahk_id " hWin
 return FocusedControlId
 }
 
@@ -1006,92 +1008,102 @@ VerifiedChoose(CName, WTitle, RxStrOrPos ) {                                    
 		If (StrLen(RxStrOrPos) = 0)
 			return 4
 
-	; ermittelt die Einträge im Steuerelement
+	; Inhalt der Listbox/Combobox auslesen
 		ControlGet, CtrlList, List,,, % "ahk_id " CHwnd
 		Items := StrSplit(CtrlList, "`n")
 
-	; Auswahl anhand der Positionsnummer setzen
-		If RegExMatch(RxStrOrPos, "^\d+$") {
-
-			;Abbruch wenn die Positionsnummer nicht existiert
-			If (Items.MaxIndex() < RxStrOrPos) || (RxStrOrPos <= 0)
+	; Stringposition im Steuerelement finden
+		If !RegExMatch(RxStrOrPos, "^\d+$") {
+			found := false
+			For idx, item in Items
+				If InStr(item, RxStrOrPos) {
+					found := true
+					RxStrOrPos := idx
+					break
+				}
+			If !found
 				return 5
-
-			Control, Choose, % RxStrOrPos,, % "ahk_id " CHwnd
-			return ErrorLevel ? 6 : 1
 		}
 
-	; Auswahl anhand des übergebenen String setzen
-		For idx, item in Items
-			If InStr(item, RxStrOrPos) {
-				Control, Choose, % idx,, % "ahk_id " CHwnd
-				return ErrorLevel ? 7 : 1
-			}
+	;Abbruch wenn die Positionsnummer nicht existiert
+		If (Items.MaxIndex() < RxStrOrPos) || (RxStrOrPos <= 0)
+			return 6
+
+	; Ändern des Steuerelementes
+		SendMessage, 0x014E, % RxStrOrPos-1,,, % "ahk_id " CHwnd  ; CB_SetCursel
+		return ErrorLevel ? 1 : 7
+
+		;~ Loop {
+				;Control, Choose, % RxStrOrPos,, % "ahk_id " CHwnd
+	;~ }
 
 return 0
 }
 
-VerifiedSetFocus(CName, WTitle:="", WText:="", WinID:="", activate:=true) {     	;-- setzt den Eingabefokus und überprüft das dieser auch gesetzt wurde
+VerifiedSetFocus(CName, WTitle:="", WText:="", WinID:="", activate:=false) { 	;-- setzt den Eingabefokus und überprüft das dieser auch gesetzt wurde
 
 	; Rückgabeparameter: 	erfolgreich - 	das Handle des Controls
 	;                                	erfolglos  	-	0
 
-		tmm:= A_TitleMatchMode, cd:=A_ControlDelay, idx := 0
-		SetTitleMatchMode, 2
-		SetControlDelay, -1
+		tmm:= A_TitleMatchMode, cd:=A_ControlDelay
+		SetTitleMatchMode	, 2
+		SetControlDelay    	, -1
 
 	; leeren des Fenster-Titel und Textes wenn ein Handle übergeben wurde
-		if (StrLen(WinID) > 0)
+		if WinID
 			WText := "", WTitle := "ahk_id " WinID
 		else if RegExMatch(WTitle, "i)^(0x[A-F\d]+|[\d]+)$")
 			WText := "", WinID := GetHex(WinTitle), WTitle := "ahk_id " WTitle
 
 		if activate {
-			WinActivate	 , % WTitle
-			WinWaitActive, % WTitle,, 1
+			WinActivate	 , % WTitle, % WText
+			WinWaitActive, % WTitle, % WText, 1
 		}
 
-	; Focus setzen und überprüfen das der Focus gesetzt wurde
+	; Focus setzen und überprüfen
+		res := true
 		If (StrLen(CName) > 0) {
 			while !InStr(GetFocusedControlClassNN(WinID), CName) {
                	If (A_Index > 1)
-					sleep, 200
-              	ControlFocus, % CName, % WTitle
-				idx ++
-                If (idx > 10)
+					sleep 70
+				else if (A_Index > 20) {
+					res := false
 					break
+				}
+              	ControlFocus, % CName, % WTitle
 			}
 		}
 		else {
 
-			while !(GetFocusedControlHwnd() = WinID) {
+			while (GetFocusedControlHwnd() <> WinID) {
 				If (A_Index > 1)
-                   	sleep, 200
-                ControlFocus,, % WTitle
-                idx ++
-                If (idx > 10)
+					sleep 70
+				else if (A_Index > 20) {
+					res := false
 					break
+				}
+                ControlFocus,, % WTitle
 			}
 		}
 
-		SetControlDelay, % cd
-		SetTitleMatchMode, % tmm
-		SciTEOutput("idx: " idx)
+		SetControlDelay    	, % cd
+		SetTitleMatchMode	, % tmm
 
-return idx = 0 ? 1 : 0
+return res ? GetFocusedControlHwnd() : 0
 }
 
 VerifiedSetText(CName="", NewText="", WTitle="", delay=100, WText="") {    	;-- erweiterte ControlSetText Funktion
 
 	; kontrolliert ob der Text tatsächlich eingefügt wurde und man kann noch eine Verzögerung übergeben
 	; delay = Zeit in ms zwischen den Versuchen
-		abb:= delay > 2000 ? 20 : Floor(2000//delay)	;damit wird höchsten 2 Sekunden versucht den Text in das Control einzutragen
+		abb:= delay > 2000 ? 20 : Floor(2000//delay)	; höchsten 2 Sekunden wird versucht Text in das Control einzutragen
+		delay -= 40
 
 	; leeren des Fenster-Titel und Textes wenn ein Handle übergeben wurde
 		If RegExMatch(WTitle, "^0x[\w]+$")
-			WTitle	:= RegExMatch(WTitle, "^0x[\w]+$")	? ("ahk_id " WTitle)	: (WTitle)
+			WTitle	:= RegExMatch(WTitle, "^0x[\w]+$")	? "ahk_id " WTitle	: WTitle
 		else if RegExMatch(WTitle, "^\d+$", digits)
-			WTitle	:= StrLen(WTitle) = StrLen(digits)     	? ("ahk_id " digits)  	: (WTitle)
+			WTitle	:= StrLen(WTitle) = StrLen(digits)     	? "ahk_id " digits 	: WTitle
 		else
 			WTitle:= "ahk_id " WinID := GetHex(WinExist(WTitle, WText))
 
@@ -1099,6 +1111,9 @@ VerifiedSetText(CName="", NewText="", WTitle="", delay=100, WText="") {    	;-- 
 		If (A_Index >= abb)
               return 0
 		ControlSetText, % CName, % NewText, % WTitle, % WText
+		sleep 40
+		If (ControlGetText(CName, WTitle, WText) = NewText)
+			return true
 		sleep % delay
 	} until (ControlGetText(CName, WTitle, WText) = NewText)
 

@@ -8,7 +8,7 @@
 ;       Abhängigkeiten:		Addendum_Gui.ahk, Addendum.ahk
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_Calc started:    	17.06.2021
+;       Addendum_Calc started:    	17.07.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -883,8 +883,12 @@ FindDocInhalt(Text)                                                         	{  
 
 FindDocSender(Text) 															{               	;-- Absender erkennen (funktioniert nicht)
 
+	Sender := []
 	; Dr.Kardiotoid, medilog, Darwin, professional. 		    	- LZ-EKG
 	; Arztanfrage, (Muster 52), 											- Muster 52
+	Sender.Push(["A,Landesamt,Soziales,Versorgung"																																, "LASV"
+							, "A,Abgabe,Befundberichtes"																																		, "Errinnerung"])
+		Sender.Push(["3,Entlassungsbrief,Anamnese,Diagnose,Aufnahmestatus,EKG,Chefarzt,Oberarzt,Facharzt,Stationsarzt,Assistenzarzt" 	, "Epikrise"])
 
 }
 
@@ -996,5 +1000,8 @@ GetTextDates(txt) 																{
 
 return dates
 }
+
+
+
 
 

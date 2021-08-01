@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                            	by Ixiko started in September 2017 - last change 27.02.2021 - this file runs under Lexiko's GNU Licence
+;                                            	by Ixiko started in September 2017 - last change 02.07.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -329,15 +329,15 @@ return 1
 }
 
 FilePathExist(path) {                                                                                                                 	;-- prüft ob ein Dateipfad vorhanden ist
-	If !InStr(FileExist(path "\"), "D")
-		return 0
-return 1
+	If InStr(FileExist(RTrim(path, "\") . "\"), "D")
+		return true
+return false
 }
 
 isFullFilePath(path) {                                                                                                               	;-- prüft Pfadstring auf die Angabe eines Laufwerkes
 	If RegExMatch(path, "[A-Z]\:\\")
-		return 1
-return 0
+		return true
+return false
 }
 
 GetAppImagePath(appname) {                                                                                                	;-- Installationspfad eines Programmes

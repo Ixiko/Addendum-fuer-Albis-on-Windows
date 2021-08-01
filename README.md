@@ -1,7 +1,7 @@
-![Addendum.png](assets/AddendumLogo2021.png)
+![Addendum.png](assets/Addendum Logo Flat Summer 2021.svg)
 #### Extends the possibilities through surface analysis and manipulation
 
-### Release Version 1.62 vom 24.06.2021
+### Release Version 1.63 vom 09.07.2021
 lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.33+ Unicode 64bit*,
 geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
@@ -24,27 +24,25 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 - Laborabruf
 - Export von Patientendaten in einem Durchgang (Dokumente, Laborblatt, Karteikarte)
 - Abrechnungshelfer (ähnlich der Albis internen Funktionen) im Infofenster
-- Quicksearch - Inhalt der dBASE Datenbanken anzeigen oder gezielt durchsuchen
+- Quicksearch - den Inhalt der dBASE Datenbanken anzeigen oder gezielt durchsuchen
 - Abrechnungsassistent  - neue Version
-- Autonaming Assistent
 
 ### &#10042; neue Erweiterungen für das Infofenster
 
 - automatische Texterkennung mit Tesseract (Hotfolder)      
-
 - automatische Kategorisierung von PDF-Dateien
-
 - Vereinfachung des manuellen Umbennens einer Datei mit Dateivorschau
+- Autonaming Assistent
 
 ### &#10042; weitere Funktionen
 
-- medizinische Berechnungen, Karteikartenexport (besser als das was die Compugroup anbietet!), automatischer Laborabruf,  Faxanhänge aus Outlook extrahieren, Albis reanimieren und ein bißchen mehr
+- medizinische Berechnungen, Karteikartenexport (besser als das was die Compugroup anbietet!), automatischer Laborabruf,  Faxanhänge aus Outlook extrahieren, Albis reanimieren (erkennt das Albis hängt) und ein bißchen mehr
 
 
 
 ![](Docs/TrennerExtraBreit.png)
 
-## ![Addendum.png](Docs/Icons/Addendum48x48.png) Addendum
+## ![Addendum.png](Docs/Icons/Addendum48x48.png)ddendum
 
 
 ### &#9733; PopupBlocker
@@ -85,7 +83,7 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 ### &#9733; automatische Kategorisierung (Autonaming) von PDF Dateien
 
 - findet im Text der PDF den Patientennamen, das Erstellungsdatum des Dokumentes oder den Zeitraum eines Krankenhausaufenthaltes. Aus diesen Informationen wird ein neuer Dateiname generiert.
-- das Autonaming wird nach jedem Texterkennungsvorgang durchgeführt, so daß die Dokumente sofort zuordenbar sind
+- Autonaming wird nach jedem Texterkennungsvorgang durchgeführt, so daß die Dokumente sofort zuordenbar sind
 
 ###  &#9733; Unterstützung der PDF-Signierung 
 
@@ -207,13 +205,13 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
 
 <br>
 
-## ![](Docs/Icons/Addendum.png) <u>Laborjournal</u>
+## ![](Docs/Icons/Addendum48x48.png) <u>Laborjournal</u>
 
 ![](Docs/Screenshot-Laborjournal.png) 
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![](Docs/Icons/Addendum.png) <u>Dauermedikamentenfenster</u>
+## ![](Docs/Icons/Addendum48x48.png) <u>Dauermedikamentenfenster</u>
 
 ![](Docs/Screenshot-Dauermedikamente.png) 
 
@@ -221,7 +219,7 @@ Auswahlmöglichkeit aus voreingestellten Kategorien (in Patienten verständliche
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![Addendum](Docs/Icons/Addendum.png) <u>neuer Shift+F3 Kalender</u>
+## ![Addendum](Docs/Icons/Addendum48x48.png) <u>neuer Shift+F3 Kalender</u>
 
 ![Menu-Suche](Docs/Screenshot-ShiftF3Kalender.png)
 
@@ -229,7 +227,7 @@ Auswahlmöglichkeit aus voreingestellten Kategorien (in Patienten verständliche
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![Addendum](Docs/Icons/Addendum.png) <u>Menu-Suche</u>
+## ![Addendum](Docs/Icons/Addendum48x48.png) <u>Menu-Suche</u>
 
 ![Menu-Suche](Docs/Screenshot-Menu_Suche.png)
 
@@ -334,26 +332,24 @@ Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter ande
 
 ## ![Export](Docs/Icons/Export.png) <u>Dokument Exporter</u> (einfach exportieren)
 
-***Skript ist auch ohne Addendum lauffähig***
+***Skript ist ohne Addendum.ahk ausführbar***
 
 ![Addendum_Export.ahk](Docs/Addendum_Exporter.gif)
 
+- **Eingabe** von **Nachname, Vorname, Geburtsdatum oder Patientennummer** 
+- alle mit den Suchkriterien übereinstimmenden Patienten werden angezeigt 
+- ein **Klick** auf einen Patienten und alle Dokumente des Patienten werden angezeigt 
+- **Häkchen setzen** für gezielten Export oder ***‘Alle Dokumente auswählen’*** für eine Komplettauswahl
+- ***‘Auswahl exportieren’*** kopiert die Dokumente in einen automatisch erzeugten Unterpfad des Basispfades
+-  Laborblatt und Karteikarte und Dokumente lassen sich 
 
+<img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-- **Eingabe** von **Nachname, Vorname, Geburtsdatum oder Patientennummer** wie aus dem Dialog ‘Patient öffnen’ in Albis gewöhnt in die Suche
-- es werden alle mit den Suchkriterien übereinstimmenden Patienten angezeigt (nutzt die PATIENT.dbf im albiswin\db Verzeichnis)
-- **ein Klick** auf einen Patienten und alle Dokumente des Patienten werden angezeigt (BEFUND.dbf und BEFTEXT.dbf werden verknüpft)
-  - **die Ausgabe** **kann** nach Dateiendungen und nach den Texten in den Karteikarten **gefiltert werden**
-  - angezeigt wird das Karteikartendatum, die Dateiendung und der Karteikartentext
-- im Feld ***‘Basispfad für den Dokumentenexport’*** kann der eigene Wunschpfad eingegeben werden
-- Wählen Sie die zu exportierenden Dokumente indem Sie ein **Häkchen setzen** oder drücken Sie auf ***‘Alle Dokumente auswählen’***
-- mit ***‘Ausgewählte exportieren’*** werden die Dokumente in einen **automatisch erzeugten Unterpfad des Basispfades kopiert** 
-  - die Bezeichnung des **Unterpfades** ergibt sich aus **Nr, Nachname, Vorname** des gewählten Patienten
-  - der **Dateiname wird aus Karteikartendatum und dem Karteikartentext** gebildet 
-  - die **Zeichen** im Karteikartentext **werden** so **angepasst** das sie den Konventionen für Windows-Datei-Namen entsprechen (nicht erlaubte Zeichen werden entfernt)
--  ist eine Datei bereits exportiert wird diese mit einem ‘**X**’ in der Dokumentenliste angezeigt, bei PDF-Dokumenten wird ein ‘**S**’ für durchsuchbare PDF-Datei (PDF-Text) und die Seitenzahl angezeigt
+## ![Addendum](Docs/Icons/Addendum48x48.png) <u>Labor Anzeigegruppen</u>
 
+- automatische Erweiterung der Fenstergröße und der Steuerelemente für mehr Übersicht
 
+![Labor Anzeigegruppen](Docs/LBAZGGNANI.svg)
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 

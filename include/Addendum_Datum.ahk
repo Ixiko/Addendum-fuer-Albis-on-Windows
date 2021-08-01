@@ -1,11 +1,11 @@
-﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;                                                          	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
-;                                                         	Funktionen für die Berechnung/Umwandlung von Tagesdaten, Quartalsdaten
-;                                                          	by Ixiko started in September 2017 - last change 02.05.2021 - this file runs under Lexiko's GNU Licence
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                           	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
+;                                             	Funktionen für die Berechnung/Umwandlung von Tagesdaten, Quartalsdaten
+;                               	by Ixiko started in September 2017 - last change 25.06.2021 - this file runs under Lexiko's GNU Licence
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; Datum berechnen
-AddToDate(Feld, val, timeunits) {                                                                           	;-- addiert Tage bzw. eine Anzahl von Monaten zu einem Datum hinzu
+AddToDate(Feld, val, timeunits) {                                                                       	;-- addiert Tage bzw. eine Anzahl von Monaten zu einem Datum hinzu
 
 	calcdate:= SubStr(Feld.Datum, 7, 4) . SubStr(Feld.Datum, 4, 2) . SubStr(Feld.Datum, 1, 2)
 	calcdate += val, %timeunits%
@@ -14,7 +14,7 @@ AddToDate(Feld, val, timeunits) {                                               
 
 }
 
-DateDiff(fnTimeUnits, fnStartDate, fnEndDate) {                                                        	;-- berechnet Tagesdifferenzen zwischen zwei Tagen
+DateDiff(fnTimeUnits, fnStartDate, fnEndDate) {                                                    	;-- berechnet Tagesdifferenzen zwischen zwei Tagen
 
 	; deutsches Datumsformat dd.MM.yyyy wird automatisch umgerechnet
 	; returns the difference between two timestamps in the specified units
@@ -103,7 +103,7 @@ DateDiff(fnTimeUnits, fnStartDate, fnEndDate) {                                 
 Return TimeDifference
 }
 
-DaysBetween(FirstDate, LastDate) {                                                                        	;-- errechnet die Tage zwischen zwei Tagen
+DaysBetween(FirstDate, LastDate) {                                                                    	;-- errechnet die Tage zwischen zwei Tagen
 
 	FirstDate	:= FirstDate	. (StrLen(FirstDate) = 14 ? ""	: SubStr("00000000000000", 1, StrLen(FirstDate)-13))
 	diff       	:= LastDate 	. (StrLen(LastDate) = 14 ? ""	: SubStr("00000000000000", 1, StrLen(LastDate)-13))
@@ -112,7 +112,7 @@ DaysBetween(FirstDate, LastDate) {                                              
 return diff
 }
 
-DaysInMonth(date:="") {                                                                                        	;-- errechnet die Anzahl der Tage des Monats
+DaysInMonth(date:="") {                                                                                    	;-- errechnet die Anzahl der Tage des Monats
     date := (date = "") ? (a_now) : (date)
     FormatTime, year  	, % date, yyyy
     FormatTime, month	, % date, MM
@@ -125,7 +125,7 @@ DaysInMonth(date:="") {                                                         
 return subStr(new_date, 7, 2)
 }
 
-GetQuartal(Datum, Trenner:="") {                                                                            	;-- berechnet zu welchem Quartal das übergebene Datum gehört
+GetQuartal(Datum, Trenner:="") {                                                                        	;-- berechnet zu welchem Quartal das übergebene Datum gehört
 
 	; Funktionsbeschreibung:
 	; Datum: 	erlaubt ist "13.02.2017" oder "13.2.17" - in dieser Form der Übergabe müssen die Punkte im Übergabestring vorhanden sein
@@ -146,10 +146,10 @@ GetQuartal(Datum, Trenner:="") {                                                
 return SubStr("0" . Ceil(Monat/3), -1) . Trenner . Jahr
 }
 
-GetQuartalEx(Datum, Format:="QQYY") {                                                                	;-- flexiblere Ausgabeformate als bei der GetQuartal Funktion
+GetQuartalEx(Datum, Format:="QQYY") {                                                            	;-- flexiblere Ein-/Ausgabeformate als bei der GetQuartal Funktion
 
 	; Funktionsbeschreibung:
-	; Datum: 	erlaubt ist "13.02.2017" oder "13.2.17" - in dieser Form der Übergabe müssen die Punkte im Übergabestring vorhanden sein
+	; Datum: 	erlaubt sind folgende Datenformate dd.MM.yyyy "13.02.2017" oder dd.M.yy "13.2.17" oder yyyyMMdd "20170213"
 	; 				oder "heute" auch "today" - es wird das aktuelle Quartal berechnet
 	; Format:	möglich ist auch QYYYY o. YYYYQ, für Ausgabereihenfolge und Anzahl der Zeichen z.B. 0118 o. 012018
 	;				oder YYYY-Q - das Zeichen zwischen den Zahlen wird der Trenner 2018-1
@@ -158,23 +158,29 @@ GetQuartalEx(Datum, Format:="QQYY") {                                           
 		RegExMatch(Format, "(?<Q1>Q+)(?<T1>[^QY]*)(?<Y1>Y+)|(?<Y2>Y+)(?<T2>[^QY]*)(?<Q2>Q+)", c)
 		LenQ 	:= StrLen(cQ1) > 0	? StrLen(cQ1)	: StrLen(cQ2)
 		LenY 	:= StrLen(cY1) > 0 	? StrLen(cY1) 	: StrLen(cY2)
+		If (LenQ>2)
+			throw A_ThisFunc ": Das Rückgabeformat für die Quartalszahl ist auf macimal 2 Zeichen begrenzt!"
 
 	; Monat und Jahr trennen
 		If RegExMatch(Datum, "i)(heute|today)") {
 			Monat	:= A_MM
 			Jahr		:= LenY = 2 ? SubStr(A_YYYY, 3, 2) : A_YYYY ;die letzten zwei Zeichen
 		}
+		else if RegExMatch(Datum, "^\d{8}$") {
+			Monat 	:= SubStr(Datum, 5, 2)
+			Jahr  	:= SubStr(Datum, 1, 4)
+		}
 		else {
 
 			 If !RegExMatch(Datum, "\d{1,2}\.*(?<Monat>\d{1,2})\.*(?<Jahr>\d{4})", D)
-				throw A_ThisFunc ": Ein falsches Datumsformat wurde übergeben!`nrichtig ist: D(1-2)[.]M(1-2)[.]YYYY(genau 4)"
+				throw A_ThisFunc ": Ein falsches Datumsformat wurde übergeben!`nrichtig ist: D(1-2)[.]M(1-2)[.]YYYY(2-4) oder yyyyMMdd"
 
 			Monat := DMonat
 			Jahr := (LenY = 2) ? SubStr(DJahr, 3, 2) : DJahr
 		}
 
 	; Quartalszahl erstellen
-		QZ := SubStr("0" . Ceil(Monat/3), -1*(LenQ-1))
+		QZ := SubStr("00" . Ceil(Monat/3), -1*(LenQ-1))
 
 	; Format QQYY
 		If (StrLen(CQ1) > 0)
@@ -183,7 +189,7 @@ GetQuartalEx(Datum, Format:="QQYY") {                                           
 return Jahr . cT2 . QZ
 }
 
-HowLong(Date1,Date2) {                                                                                        	;-- berechnet die Anzahl der Jahren, Monate und Tage zw. zwei Tagesdatums
+HowLong(Date1,Date2) {                                                                                    	;-- berechnet die Anzahl der Jahren, Monate und Tage zw. zwei Tagesdatums
 
 	; Format YYYYMMDD
 	; https://www.autohotkey.com/boards/viewtopic.php?t=54796
@@ -215,13 +221,13 @@ Age(birthday, CalculationDate) {
 return Age.Years
 }
 
-leapyear(year) {                                                                                                    	;-- Schaltjahr
+leapyear(year) {                                                                                                	;-- Schaltjahr
     if (Mod(year, 100) = 0)
         return (Mod(year, 400) = 0)
     return (Mod(year, 4) = 0)
 }
 
-QuartalTage(Quartal) {                                                                                            	;-- zur Berechnung von wichtigen Tagen eines Quartals im Jahr
+QuartalTage(Quartal) {                                                                                        	;-- zur Berechnung von wichtigen Tagen eines Quartals im Jahr
 
 	/*  Funktion zur Berechnung von wichtigen Tagen eines Quartals im Jahr
 
@@ -242,6 +248,8 @@ QuartalTage(Quartal) {                                                          
 			letzte Änderung: 14.03.2020
 
 	 */
+
+		;SciTEOutput("a: " Quartal.haskey(aktuell) ? Quartal.aktuell : Quartal.haskey(TDatum) ? Quartal.TDatum : Quartal)
 
 		If !IsObject(Quartal) && (Quartal != "aktuell")	{
 			throw Exception(A_ThisFunc " (" A_LineFile-1 ") : Fehler beim Funktionsaufruf, der übergebene Parameter ist kein Objekt!")
@@ -323,7 +331,7 @@ QuartalTage(Quartal) {                                                          
 return Quartal
 }
 
-Vorquartal(Datum, retFormat:="YYYYQ") {                                                              	;-- gibt einen formatierten String des Vorquartal zurück
+Vorquartal(Datum, retFormat:="YYYYQ") {                                                          	;-- gibt einen formatierten String des Vorquartal zurück
 
 	; Beschreibung
 	; Datum: 		Formatierung siehe Funktion QuartalTage()
@@ -346,7 +354,7 @@ Vorquartal(Datum, retFormat:="YYYYQ") {                                         
 return retStr
 }
 
-DateValidator(dateString, interpolateCentury:="") {                                             		;-- prüft String auf enthaltenes Datum
+DateValidator(dateString, interpolateCentury:="") {                                         		;-- prüft String auf enthaltenes Datum
 
 	/*  	DateValidator() by Ixiko 2021
 
@@ -419,7 +427,7 @@ DateValidator(dateString, interpolateCentury:="") {                             
 return SubStr("0" dD, -1) "." SubStr("0" dM, -1) "." dY	; Rückgabe immer im Format dd.mm.yy oder dd.mm.yyyy
 }
 
-WeekDayNr(wday, short:=true) {                                                                              	;-- Wochentag als Zahl oder Kurzbezeichnung
+WeekDayNr(wday, short:=true) {                                                                          	;-- Wochentag als Zahl oder Kurzbezeichnung
 
 	; wday - Zahl oder Kurzname des Wochentages
 	; letzte Änderung: 05.04.2021
@@ -436,7 +444,7 @@ WeekDayNr(wday, short:=true) {                                                  
 return
 }
 
-DayOfWeek(dateStr, getDay:="short", format:="dd.MM.yyyy") {                              	;-- nutzt FormatTime anstatt eigene Berechnungen
+DayOfWeek(dateStr, getDay:="short", format:="dd.MM.yyyy") {                          	;-- nutzt FormatTime anstatt eigene Berechnungen
 
 	retFormat := {"short":"ddd", "full":"dddd", "ddd":"ddd", "dddd":"dddd"}
 
@@ -452,7 +460,7 @@ DayOfWeek(dateStr, getDay:="short", format:="dd.MM.yyyy") {                     
 return dayOweek
 }
 
-GetWeekday(dateStr, format:="dd.MM.yyyy", NameOfDay:=true ) {                          	;-- Name des Wochentages vom übergebenen Datum
+GetWeekday(dateStr, format:="dd.MM.yyyy", NameOfDay:=true ) {                      	;-- Name des Wochentages vom übergebenen Datum
 
 	; jNizM Funktion modifiziert (https://www.autohotkey.com/boards/viewtopic.php?t=3352)
 	; format Parameter ist funktionslos!
@@ -512,7 +520,7 @@ DateAdd(DateTime, Time, TimeUnits){
 
 
 ; Zeit berechnen
-FormatSeconds(timestr, formatstring:="hh:mm:ss")  {                                              	;-- Sekunden in Stunden:Minuten:Sekunden umrechnungen
+FormatSeconds(timestr, formatstring:="hh:mm:ss")  {                                          	;-- Sekunden in Stunden:Minuten:Sekunden umrechnungen
     atime := A_YYYY A_MM A_DD "000000"
     atime += timestr, seconds
     FormatTime, hhmmss, % atime, % formatstring
@@ -525,13 +533,13 @@ FormatTime(YYYYMMDDHH24MISS:="", Format:=""){
 	return OutputVar
 }
 
-GetSeconds(timestr) {                                                                                            	;-- Sekunden berechnen von hhmmss
+GetSeconds(timestr) {                                                                                        	;-- Sekunden berechnen von hhmmss
 	; timestr format: hhmmss
 	timestr := SubStr("000000" timestr, -5)
 return (SubStr(timestr,1,2)*3600)+(SubStr(timestr,3,2)*60)+SubStr(timestr,5,2)
 }
 
-TimeFormatEx(sec, ShowSeconds:=true) {                                                                	;-- Sekunden in hh:mm:ss
+TimeFormatEx(sec, ShowSeconds:=true) {                                                            	;-- Sekunden in hh:mm:ss
 
 	H	:= SubStr("00" Floor(sec/3600), -1)
 	M	:= SubStr("00" Floor((sec-(H*3600))/60), -1)
@@ -540,7 +548,7 @@ TimeFormatEx(sec, ShowSeconds:=true) {                                          
 return H ":" M (ShowSeconds ? ":" S : "")
 }
 
-TimeDiff(time1, time2="now", output="m") {                                                           	;-- errechnet die Zeitdifferenz zwischen Zeit1 und Zeit2 (max. ein Tag Differenz!)
+TimeDiff(time1, time2="now", output="m") {                                                       	;-- errechnet die Zeitdifferenz zwischen Zeit1 und Zeit2 (max. ein Tag Differenz!)
 
 	; Ausgabe in Minuten (output="m") oder Sekunden (output="s")
 
@@ -653,36 +661,36 @@ return formatedDate
 }
 
 ; Konvertierung
-ConvertGerDateToEng(dateStr) {                                                                             	;-- konvertiert das deutsche Datumsformat in das übliche englische Format
+ConvertGerDateToEng(dateStr) {                                                                         	;-- konvertiert das deutsche Datumsformat in das übliche englische Format
 return SubStr(dateStr, 7, 4) . SubStr(dateStr, 4, 2) . SubStr(dateStr, 1, 2)
 }
 
-ConvertDBASEDate(DBASEDate) {                                                                            	;-- Datumskonvertierung von YYYYMMDD nach DD.MM.YYYY
+ConvertDBASEDate(DBASEDate) {                                                                        	;-- Datumskonvertierung von YYYYMMDD nach DD.MM.YYYY
 	return SubStr(DBaseDate, 7, 2) "." SubStr(DBaseDate, 5, 2) "." SubStr(DBaseDate, 1, 4)
 }
 
-ConvertToDBASEDate(Date) {                                                                                 	;-- Datumskonvertierung von DD.MM.YYYY nach YYYYMMDD
+ConvertToDBASEDate(Date) {                                                                             	;-- Datumskonvertierung von DD.MM.YYYY nach YYYYMMDD
 	RegExMatch(Date, "(?<D>\d+).(?<M>\d+).(?<Y>\d+)", t)
 	return tY . tM . tD
 }
 
 
 ; Stempel
-datestamp(nr:=1) {                                                                                                	;-- für Protokolle
+datestamp(nr:=1) {                                                                                            	;-- für Protokolle
 	If (nr = 1)
 		return (A_YYYY "-" A_MM "-" A_DD " " A_Hour ":" A_Min ":" A_Min)
 	else
 		return (A_Hour ":" A_Min ":" A_Sec)
 }
 
-TimeCode(DaT) {                                                                                                     	;-- für Addendum_Protokoll - true für [YYYY.MM.DD,] hh:mm:ss.ms
+TimeCode(DaT) {                                                                                                 	;-- für Addendum_Protokoll - true für [YYYY.MM.DD,] hh:mm:ss.ms
 	TC := (DaT ? (A_YYYY "." A_MM "." A_DD ", ") : ("")) . A_Hour ":" A_Min ":" A_Sec "." A_MSec
 return TC
 }
 
 
 ; sonstiges
-GetFileTime(filepath, WhichTime:="C", formatstring:="") {                                        	;-- formatiertes Datum aus der Dateierstellungszeit
+GetFileTime(filepath, WhichTime:="C", formatstring:="") {                                    	;-- formatiertes Datum aus der Dateierstellungszeit
 
 	FileGetTime, FTIME , % filepath, % WhichTime
 	FormatTime, RTIME, % FTIME, % (formatstring ? formatstring : "dd.MM.yyyy")

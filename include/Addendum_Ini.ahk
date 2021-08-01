@@ -186,48 +186,73 @@ admFunktionen() {                                                               
 	; automatische Positionierung von Albis ist an
 		tmp  := Trim(IniReadExt(compname, "AutoSize_Albis", "2k:nein,4k:nein" ))
 		Addendum.AlbisLocationChange  	:= RegExAutoPos(tmp)
+
 	; Größeneinstellung
 		Addendum.AlbisGroesse            	:= IniReadExt(compname	, "Position_Albis"                               	, "w1922 h1080"	)
+
 	; Automatisierung der GVU Formulare
 		Addendum.GVUAutomation			:= IniReadExt(compname	, "GVU_automatisieren"                    	, "nein"              	)
+
 	; Automatisierung PDF Signierung
 		Addendum.PDFSignieren   	    	:= IniReadExt(compname	, "FoxitPdfSignature_automatisieren" 	, "nein"              	)
+
 	; Tastaturkürzel zum Auslösen des Signaturvorganges
 		Addendum.PDFSignieren_Kuerzel	:= IniReadExt(compname	, "FoxitPdfSignature__Kuerzel" 	      	, "^Insert"            	)
+
 	; signiertes Dokument automatisch schliessen
 		Addendum.AutoCloseFoxitTab   	:= IniReadExt(compname	, "FoxitTabSchliessenNachSignierung"	, "Ja"                 	)
+
 	; zeitgesteuerter Laborabruf
 		Addendum.Labor.AbrufTimer         := IniReadExt(compname	, "Laborabruf_Timer"           	   	    	, "nein"              	)
+
 		If InStr(Addendum.Labor.AbrufTimer, "Error") || (StrLen(Addendum.Labor.AbrufTimer) = 0)
 			Addendum.Labor.AbrufTimer	:= false
+
 	; Laborabruf bei manuellem Start automatisieren
 		Addendum.Labor.AutoAbruf 		    := IniReadExt(compname	, "Laborabruf_automatisieren"         	, "nein"              	)
 		If InStr(Addendum.Labor.AutoAbruf, "Error") || (StrLen(Addendum.Labor.AutoAbruf) = 0)
 			Addendum.Labor.AutoAbruf	:= false
+
 	; Laborabruf bei manuellem Start automatisieren
 		Addendum.Labor.AutoImport		    := IniReadExt(compname	, "Laborimport_automatisieren"         	, "nein"              	)
 		If InStr(Addendum.Labor.AutoImport, "Error") || (StrLen(Addendum.Labor.AutoImport) = 0)
 			Addendum.Labor.AutoImport	:= false
+
 	; Infofenster das den Inhalt des Bildvorlagen-Ordners anzeigt
 		Addendum.AddendumGui          	:= IniReadExt(compname	, "Infofenster_anzeigen"                  	, "ja"                 	)
+
 	; Logbuch für Aktionen in der Karteikarte
 		Addendum.PatLog                      	:= IniReadExt(compname	, "Logbuch_Patienten"                     	, "ja"                 	)
+
 	; Hilfe beim Export von Dicom CD's im MicroDicom Programm
 		Addendum.mDicom                     	:= IniReadExt(compname	, "MicroDicomExport_automatisieren"	, "nein"                 	)
+
 	; PopUpMenu integrieren
 		Addendum.PopUpMenu              	:= IniReadExt(compname	, "PopUpMenu"                              	, "ja"                 	)
+
 	; die Addendum Toolbar starten
 		Addendum.ToolbarThread            	:= IniReadExt(compname	, "Toolbar_anzeigen"                         	, "nein"                 	)
+
 	; Schnellrezept integrieren
 		Addendum.Schnellrezept           	:= IniReadExt(compname	, "Schnellrezept"                              	, "ja"                 	)
+
 	; zeigt TrayTips
 		Addendum.ShowTrayTips           	:= IniReadExt(compname	, "TrayTips_zeigen"                            	, "nein"                 	)
+
 	; AutoOCR - Eintrag wird nur auf dem dazu berechtigten Client angezeigt
 		Addendum.OCR.AutoOCR            	:= IniReadExt("OCR"      	, "AutoOCR"                                  	, "nein"                 	)
+
 	; ermöglicht die sofortige Bearbeitung/Anzeige neuer Dateien
 		Addendum.OCR.WatchFolder    	:= IniReadExt(compname	, "BefundOrdner_ueberwachen"       	, "ja"                 	)
+
 	; automatische Bestätigung bei "Möchten Sie diesen Eintrag wirklich löschen?"
 		Addendum.AutoDelete                	:= IniReadExt(compname	, "Eintrag_wirklich-loeschen"            	, "nein"                 	)
+
+	; Boss PC Name (debugging features nur auf einem PC darstellen)
+		Addendum.IamTheBoss                	:= IniReadExt(compname	, "IamTheBoss"                                                           	)
+		If InStr(Addendum.IamTheBoss, "Error") || (StrLen(Addendum.IamTheBoss) = 0)
+			Addendum.IamTheBoss	:= false
+
 	; Excel Helferlein
 		Addendum.CImpf.Helfer             	:= IniReadExt(compname	, "CoronaImpfhelfer"                      	, "nein"                 	)
 		If Addendum.CImpf.Helfer {
@@ -654,14 +679,22 @@ admSonstiges() {                                                                
 	; Verzögerung bis zum Schliessen des Dialoges "Patient hat in diesem Quartal seine Chipkarte..." (0 = keine Verzögerung)
 		Addendum.noChippie := IniReadExt(compname, "keineChipkarte", 3)
 
-	; Behördengebühren werden über die ini Datei verwaltet
-		Behoerdengebuehr := {"JVEG":"25.00", "DRV":"28.20", "BAfA":"32.50"}
+	; Behördengebühren werden über die ini Datei verwaltet - besser anpassbar bei Änderung
+		Behoerdengebuehr := {"JVEG":"25.00", "DRV1":"28.20", "DRV2": "35.00", "BAfA":"32.50"}
 		Addendum.Abrechnung.JVEG 	:= IniReadExt(Addendum, "JVEG")
-		Addendum.Abrechnung.DRV  	:= IniReadExt(Addendum, "DRV")
+		Addendum.Abrechnung.DRV1  	:= IniReadExt(Addendum, "DRV1")
+		Addendum.Abrechnung.DRV2  	:= IniReadExt(Addendum, "DRV2")
 		Addendum.Abrechnung.BAfA  	:= IniReadExt(Addendum, "BAfA")
 		For Behoerde, Gebuehr in Addendum.Abrechnung
 			If !RegExMatch(Gebuehr, "\d+\.\d+")
 				Addendum.Abrechnung[Behoerde] := Behoerdengebuehr[Behoerde]
+
+	; Gebührenberechnung Coronaimpfung im Addendumskript
+		If ((Addendum.CImpf.CNRRun   	:= IniReadExt(compname, "COVID19_ImpfGebuehr_Skript", "Ja")) = true) {
+			Addendum.CImpf.CNRWin    	:= IniReadExt(compname, "COVID19_ImpfGebuehrfenster_Position")
+			If InStr(Addendum.CImpf.CNRWin, "ERROR")
+				Addendum.CImpf.CNRWin := ""
+		}
 
 }
 

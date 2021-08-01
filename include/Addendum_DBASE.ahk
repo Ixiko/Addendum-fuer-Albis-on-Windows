@@ -1,5 +1,5 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;																				     	Addendum_DBASE - V1.5 beta
+;																				     	Addendum_DBASE - V1.6
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;		Dies ist ein Klassenbibliothek für den nativen Zugriff (Dateiebene) auf dBASE Datenbanken für Albis (Compugroup).
 ;		Geschrieben in Autohotkey_H. Möglichweise auch mit Autohotkey_L verwendbar (nicht getestet).
@@ -36,7 +36,7 @@
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
 ;       Addendum_DBASE begonnen am:          	12.11.2020
-;       Addendum_DBASE letzte Änderung am: 	22.06.2021
+;       Addendum_DBASE letzte Änderung am: 	08.07.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
@@ -55,7 +55,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 			; ----------------------------------------------------------------------------------------------------------------------------------------;{
 				SplitPath, filepath,,dBASEPath,, baseName
 
-				this.headerrecordgap	:= 1                                            	; one byte after DBF Header, purpose?
+				this.headerrecordgap	:= 0                                            	; one byte after DBF Header, purpose?
 				this.baseName           	:= baseName
 				this.filepath                	:= filepath
 				this.dBASEPath             	:= dBASEPath
@@ -81,14 +81,14 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 				Switch this.baseName {
 
 					Case "BEFUND":
-						this.headerrecordgap	:= 1
+						this.headerrecordgap	:= 0
 						this.connected           	:= {	"DBFilePath"	: (this.dBASEPath "\BEFTEXTE.dbf")
 																 ,	"baseField"	: "TEXTDB"
 																 ,	"linkField"  	: "LFDNR"}
 								                				;~ , 	"FieldLinks"  	: ["TEXTDB", "LFDNR", "POS"]
 											                	;~ , 	"append"    	: ["INHALT", "TEXT"]}
 					Case "PATIENT":
-						this.headerrecordgap	:= 1
+						this.headerrecordgap	:= 0
 				}
 
 			; ――――――――――――――――――――――――――――――――――――――――――――――――
@@ -131,6 +131,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 				day                       	:= SubStr("00" day, -1)
 				this.lastupdateDate 	:= day "." month "." year
 				this.lastupdateEng 	:= year "." month "." day
+				this.lastupdatedBase 	:= year month day
 
 			  ; ――――――――――――――――――――――――――――――――――――――――――――――――
 			  ; Byte: [  4-7  ]	 	Number of records in the table. (Least significant byte first.)
@@ -345,11 +346,14 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 	  ; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 	  ; REGEX BASED SEARCH. 						| RETURNS THE WHOLE RECORDSET (ALL FIELDS AND VALUES)!
 	  ; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-		Search(pattern, startrecord=0, callbackFunc="") {
+		Search(pattern, startrecord=0, callbackFunc="", opt="") {
 
 		/* main description
 
 				- parameter: pattern is designed to use only RegEx for matching, use function SearchFields() for different search algorithms!
+
+									opt 		:  	ReturnDeleted=true, if you want to make the function return also the records with delete flag.
+													Default is false. No deleted records will be returned.
 
 		*/
 
@@ -366,16 +370,35 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 		*/
 
-		; Initializing vars
+		; Initializing vars, examining options ;{
 			static recordbuf, rxStr
 			VarSetCapacity(recordbuf	, this.lendataset, 0x20)
-			VarSetCapacity(matches		, this.maxBytes)
+			VarSetCapacity(matches	, this.maxBytes)
+			matches             	:= Object()                                 	; collects the findings
+			this.flagged       	:= 0
+			this.hits              	:= 0
+			this.uselastRxStr 	:= false
+			this.callbackFunc 	:= Func(callbackFunc)
+			this.breakrec 		:= "#"                                       	; this variable is used to help external processing of data
 
-			this.uselastRxStr := false
-			this.callbackFunc := Func(callbackFunc)
+		  ; checks opt parameters (opt is made for debugging)
+			If IsObject(opt) {
 
-			matches        	:= Object()                                 	; collects the findings
-			this.breakrec 	:= "#"                                       	; this variable is used to help external processing of data
+				If opt.SaveMatchingSets {
+					path := opt.MSetsPath
+					SplitPath, path, MSetfilename, MSetDir
+					If !InStr(MSetDir, "D")
+						throw A_ThisFunc ": " MSetDir "\ is not a directory."
+					else
+						MSets := FileOpen(opt.MSetsPath, "w", "UTF-8")
+				}
+
+				If !opt.haskey("ReturnDeleted")
+					opt.ReturnDeleted := false
+
+			}
+
+		;}
 
 		; Establish read access if not already done
 			If !IsObject(this.dbf) {
@@ -442,7 +465,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 			}
 
 		; for debugging
-			If (this.debug > 0)
+			If RegExMatch(this.debug, "i)\bRxStr\b")
 				SciTEOutput(A_ThisFunc " - RegExStr: " rxStr)
 
 		; seek if parameter is greater than zero
@@ -470,14 +493,26 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 				If !RegExMatch(set, rxStr)
 					continue
 
+			; saving whole datasets for debugging or other purposes
+				If opt.SaveMatchingSets
+					MSets.Write(set "`n")
+
 			; temp object collects dataset field data
-				If !this.headerrecordgap {
-					removed 	:= SubStr(set, 1,1)
-					set        	:= Substr(set, 2, StrLen(set)-1)
-				}
-				strobj                 	:= Object()
-				strobj["removed"]	:= InStr(removed, "*") ? true : false
-				strobj["recordNr"]	:= Floor((this.dbf.Tell() - this.headerlen) / this.lendataset)
+				strobj    	:= Object()
+				flagged  	:= SubStr(set, 1, 1)
+				strobj.removed	:= SubStr(set, 1, 1) = "*" ? true : false
+				set                 	:= Substr(set, 2, StrLen(set)-1)
+				strobj.recordNr	:= Floor((this.dbf.Tell() - this.headerlen) / this.lendataset)
+
+				;~ If strobj.removed
+				If Trim(flagged)
+					this.flagged ++
+
+			; continue with next record, if a delete flag was found, unless this was switched off
+				If strobj.removed && !opt.ReturnDeleted
+					continue
+
+			; assemble the data to a Key:Value object
 				For index, field in this.fields
 					If (StrLen(value := Trim(SubStr(set, field.start, field.len))) = 0)
 						continue
@@ -489,14 +524,16 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 				this.hits ++
 
 		  ; maximum array entries, store filepointer position for later use and return matches
-		    	If (this.lendataset * A_Index = this.maxbytes) {
-					this.filepos	:= this.dbf.Tell()                          	; last position of filepointer
-					this.breakrec	:= startrecord + A_Index          	; position of last read dataset
-					ToolTip
-					return matches
-				}
+		    	;~ If (this.lendataset * A_Index = this.maxbytes) {
+					;~ this.filepos	:= this.dbf.Tell()                          	; last position of filepointer
+					;~ this.breakrec	:= startrecord + A_Index          	; position of last read dataset
+					;~ ToolTip
+					;~ return matches
+				;~ }
 
 			}
+
+			;SciTEOutput("sets: " this.hits "`nwith remove flag: " this.flagged)
 
 		; file access is automatically terminated if the function established this independently
 			If this.nofileaccess {
@@ -504,6 +541,9 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 				this.nofileaccess := false
 				this.CloseDBF()
 			}
+
+		; close MSets fileaccess
+			MSets.Close()
 
 		; indicates that the end of the file has been reached
 			this.breakrec	:= "!"
@@ -513,6 +553,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 			If (StrLen(callbackFunc) > 0)
 				%callbackFunc%(setNR, this.records, this.slen, matches.MaxIndex())
 
+
 		return matches
 		}
 
@@ -521,142 +562,149 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 	  ; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 		SearchExt(pattern, outfields, startrecord=0, options="", callbackFunc="") {
 
-		/* Extended search
+			/* Extended search
 
-			- - - - - - - - - - - - - - - - - - - - - - - - - - - -
-			Date comparison / filter by date
-			- - - - - - - - - - - - - - - - - - - - - - - - - - - -
-			Comparison is possible with ranges or Instr() operations. One date can be compared with another
-			by only showing the dates that are greater, less or equal. This also works with pure numerical values.
-			Above calculation is only triggered by field names containing words like 'DATUM' or 'DATE'.
-			Using the field type instead of matching inside field name would be better in most cases, but is yet not implemented.
+				- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+				Date comparison / filter by date
+				- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+				Comparison is possible with ranges or Instr() operations. One date can be compared with another
+				by only showing the dates that are greater, less or equal. This also works with pure numerical values.
+				Above calculation is only triggered by field names containing words like 'DATUM' or 'DATE'.
+				Using the field type instead of matching inside field name would be better in most cases, but is yet not implemented.
 
-			- - - - - - - - - - - - - - - - - - - - - - - - - - - -
-			filter return values
-			- - - - - - - - - - - - - - - - - - - - - - - - - - - -
-			Outfields parameter is an array of field names you want to retrieve.
+				- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+				filter return values
+				- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+				Outfields parameter is an array of field names you want to retrieve.
 
-			- - - - - - - - - - - - - - - - - - - - - - - - - - - -
-			callbackFunc
-			- - - - - - - - - - - - - - - - - - - - - - - - - - - -
-			If you want to use this, make your function variadic like 'MyCallbackFunc(p*)'
-			4 value will be given to your callback function, with variadic mode you can shorten your code.
+				- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+				callbackFunc
+				- - - - - - - - - - - - - - - - - - - - - - - - - - - -
+				If you want to use this, make your function variadic like 'MyCallbackFunc(p*)'
+				4 value will be given to your callback function, with variadic mode you can shorten your code.
 
-		 */
+			 */
 
-			If !IsObject(pattern)
-				throw "Parameter: pattern must be an object"
+				If !IsObject(pattern)
+					throw "Parameter: pattern must be an object"
 
-		; initialize some vars
-			VarSetCapacity(matches	, this.maxBytes)
-			VarSetCapacity(recordbuf	, this.lendataset*100, 0x20)
+			; initialize some vars
+				VarSetCapacity(matches	, this.maxBytes)
+				VarSetCapacity(recordbuf	, this.lendataset*100, 0x20)
 
-			this.hits 	:= 0
-			matches 	:= Array()
+				this.hits 	:= 0
+				matches 	:= Array()
 
-		; establish read access if not already done
-			If !IsObject(this.dbf) {
-				this.nofileaccess := true
-				this.pos := this.OpenDBF()
-			}
-
-		; filepointer is set to the data record with the number from startrecord
-			If (startrecord > 0) {
-				this.dbf.Seek(this.lendataset * startrecord, 1)
-				this.filepos := this.dbf.Tell()
-			}
-
-		; prepare pattern operations
-			For pLabel, pCondition in pattern {
-
-				If RegExMatch(pLabel, "[A-Z]+(DATUM|DATE)") {
-					mObj:=Object()
-					RegExMatch(pCondition, "O)(?<cd1>[!><=]+)(?<date1>\d{8})(?<AO>[&|]+)*(?<cd2>[!><=]+)*(?<date2>\d{8})*", m)
-					Loop % m.Count()
-						mObj[m.Name(A_Index)] := m.Value(A_Index)
-					mObj.CCount := mObj.date1 && mObj.date2 ? 2 : 1
-					pattern[pLabel] := mObj
-				}
-				else If RegExMatch(pCondition, "^rx:(?<Str>.*)", rx) {
-					mObj:=Object()
-					mObj.rx := rxStr
-					pattern[pLabel] := mObj
+			; establish read access if not already done
+				If !IsObject(this.dbf) {
+					this.nofileaccess := true
+					this.pos := this.OpenDBF()
 				}
 
-			}
+			; filepointer is set to the data record with the number from startrecord
+				If (startrecord > 0) {
+					this.dbf.Seek(this.lendataset * startrecord, 1)
+					this.filepos := this.dbf.Tell()
+				}
 
-		; prepare dataset operation. Uses every field in the comparison process or
-		; only those that have been supplied with the pattern parameter
-			If !IsObject(outfields) && RegExMatch(outfields, "all fields")
-				outfields := ""
-			this.retSubs := this.BuildSubstringData(outfields)
+			; prepare pattern operations
+				For pLabel, pCondition in pattern {
 
-		; search loop
-			while (!this.dbf.AtEOF) {
+					If RegExMatch(pLabel, "[A-Z]+(DATUM|DATE)") {
+						mObj:=Object()
+						RegExMatch(pCondition, "O)(?<cd1>[!><=]+)(?<date1>\d{8})(?<AO>[&|]+)*(?<cd2>[!><=]+)*(?<date2>\d{8})*", m)
+						Loop % m.Count()
+							mObj[m.Name(A_Index)] := m.Value(A_Index)
+						mObj.CCount := mObj.date1 && mObj.date2 ? 2 : 1
+						pattern[pLabel] := mObj
+					}
+					else If RegExMatch(pCondition, "^rx:(?<Str>.*)", rx) {
+						mObj:=Object()
+						mObj.rx := rxStr
+						pattern[pLabel] := mObj
+					}
 
-				; reads one dataset from database
-					bytes	:= this.dbf.RawRead(recordbuf, this.lendataset)
-					set 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
+				}
 
-				; debug some actions
-					If (StrLen(callbackFunc) > 0) && (Mod(A_Index, this.ShowAt) = 0)
-						%callbackFunc%(A_Index, this.records, this.len, matches.Count())
+			; prepare dataset operation. Uses every field in the comparison process or
+			; only those that have been supplied with the pattern parameter
+				If !IsObject(outfields) && RegExMatch(outfields, "all fields")
+					outfields := ""
+				this.retSubs := this.BuildSubstringData(outfields)
 
-							;ToolTip, % "Get:`t" SubStr("00000000" A_Index + startrecord, this.slen) "/" this.maxRecs "`nmatches: "
+			; search loop
+				while (!this.dbf.AtEOF) {
 
-				; compare pattern field condition with dataset
-					pLabelHit := 0
-					For pLabel, pCondition in pattern {
+					; reads one dataset from database
+						bytes	:= this.dbf.RawRead(recordbuf, this.lendataset)
+						set 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
 
-						val := Trim(SubStr(set, this.dbfields[pLabel].start, this.dbfields[pLabel].len))
-						If RegExMatch(pLabel, "[A-Z]+(DATUM|DATE)") {
+					; debug some actions
+						If (StrLen(callbackFunc) > 0) && (Mod(A_Index, this.ShowAt) = 0)
+							%callbackFunc%(A_Index, this.records, this.len, matches.Count())
 
-							cdhits := 0
-							Loop % pCondition.CCount {
+								;ToolTip, % "Get:`t" SubStr("00000000" A_Index + startrecord, this.slen) "/" this.maxRecs "`nmatches: "
 
-								cdate   	:= pCondition["date" A_Index]
-								conds 	:= StrReplace(pCondition["cd" A_Index], "!")
-								negate 	:= InStr(pCondition["cd" A_Index], "!") ? false : true
-								cd	    	:= StrSplit(conds)
+					; compare pattern field condition with dataset
+						pLabelHit := 0
+						For pLabel, pCondition in pattern {
 
-								Loop % cd.Count() {
+							val := Trim(SubStr(set, this.dbfields[pLabel].start, this.dbfields[pLabel].len))
+							If RegExMatch(pLabel, "[A-Z]+(DATUM|DATE)") {
 
-									cda := cd[A_Index]
-									cdmatched := (cda="<" && val<cDate) ? true : (cda=">" && val>cDate) ? true : (cda="=" && val=cDate) ? true : false
-									If (!cdmatched && A_Index < cd.Count())
-										continue
-									else if cdmatched {
-										cdhits ++
-										break
+								cdhits := 0
+								Loop % pCondition.CCount {
+
+									cdate   	:= pCondition["date" A_Index]
+									conds 	:= StrReplace(pCondition["cd" A_Index], "!")
+									negate 	:= InStr(pCondition["cd" A_Index], "!") ? false : true
+									cd	    	:= StrSplit(conds)
+
+									Loop % cd.Count() {
+
+										cda := cd[A_Index]
+										cdmatched := (cda="<" && val<cDate) ? true : (cda=">" && val>cDate) ? true : (cda="=" && val=cDate) ? true : false
+										If (!cdmatched && A_Index < cd.Count())
+											continue
+										else if cdmatched {
+											cdhits ++
+											break
+										}
+
 									}
 
 								}
 
+								If (cdhits = pCondition.CCount)
+									pLabelHit ++
+								else
+									break
+
 							}
-
-							If (cdhits = pCondition.CCount)
+							else If IsObject(pCondition) {
+								If RegExMatch(val, pCondition.rx)
+									pLabelHit ++
+								else
+									break
+							}
+							else if (val = pCondition)
 								pLabelHit ++
 							else
 								break
 
 						}
-						else If IsObject(pCondition) {
-							If RegExMatch(val, pCondition.rx)
-								pLabelHit ++
-							else
-								break
-						}
-						else if (val = pCondition)
-							pLabelHit ++
-						else
-							break
 
-					}
+						If (pLabelHit = pattern.Count())
+							matches.Push(this.GetSubData(set, this.retSubs))
 
-					If (pLabelHit = pattern.Count())
-						matches.Push(this.GetSubData(set, this.retSubs))
+				}
 
-			}
+			; file access is automatically terminated if the function established this independently
+				If this.nofileaccess {
+					VarSetCapacity(recordbuf, 0)
+					this.nofileaccess := false
+					this.pos := this.CloseDBF()
+				}
 
 		return matches
 		}
@@ -664,73 +712,87 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 	  ; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 	  ; SIMPLE STRING COMPARE. 					| FOR FAST RESULTS
 	  ; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-		SearchFast(pattern, outfields, startrecord=0, options="") {
+		SearchFast(pattern, outfields, startrecord=0, options="", callbackFunc="") {
 
-		; comparison is possible with ranges or Instr() operations. One date can be compared with another
-		; by only showing the dates that are greater, less or equal. This also works with pure numerical values.
+			; comparison is possible with ranges or Instr() operations. One date can be compared with another
+			; by only showing the dates that are greater, less or equal. This also works with pure numerical values.
 
-			static matches, recordbuf, recordpos
+				static matches, recordbuf, recordpos
 
-			If !IsObject(pattern)
-				throw "Parameter: pattern must be an object"
+				If !IsObject(pattern)
+					throw "Parameter: pattern must be an object"
 
-		; processed only on first start or other option than "next"
-			If !RegExMatch(options, "i)next") {
+			; processed only on first start or other option than "next"
+				If !RegExMatch(options, "i)\bnext\b") {
 
-				; initialize some vars
-					VarSetCapacity(matches 	, this.maxBytes)
+					; initialize some vars
+						VarSetCapacity(matches 	, this.maxBytes)
 
-				; establish read access if not already done
-					If !IsObject(this.dbf) {
-						this.nofileaccess := true
-						this.filepos := this.OpenDBF()
-					}
-
-				; prepare dataset operation. Uses every field in the comparison process or
-				; only those that have been supplied with the pattern parameter
-					If !IsObject(outfields) && RegExMatch(outfields, "all fields")
-						outfields := ""
-					this.retSubs := this.BuildSubstringData(outfields)
-			}
-
-		; filepointer is set to the data record with the number from startrecord
-			this.dbf.Seek(this.recordsStart, 0)
-			If (startrecord > 0) {
-				this.dbf.Seek(this.lendataset * startrecord, 1)
-				this.filepos_start := this.dbf.Tell()
-			}
-			this.recordpos := startrecord
-			VarSetCapacity(recordbuf	, this.lendataset*100, 0x20)
-
-		; search loop
-			this.foundrecord := 0, this.hits := 0, matches := Array()
-			while (!this.dbf.AtEOF) {
-
-				; debug some actions
-					this.recordpos := StartRecord + A_Index
-					If (this.debug > 0) && (Mod(A_Index, this.ShowAt) = 0)
-						If (this.debug = 1)
-							ToolTip, % "Get:`t" SubStr("00000000" this.recordpos, this.slen) "/" this.maxRecs "`nmatches: " matches.Count()
-
-				; reads one dataset from database
-					bytes	:= this.dbf.RawRead(recordbuf, this.lendataset)
-					set 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
-
-				; compare pattern field condition with dataset
-					hits := 0
-					For fLabel, searchString in pattern {
-						val := Trim(SubStr(set, this.dbfields[fLabel].start, this.dbfields[fLabel].len))
-						If (val = searchString) {
-							hits ++
-							this.filepos_found := this.dbf.Tell()
-							this.foundrecord := this.recordpos
+					; establish read access if not already done
+						If !IsObject(this.dbf) {
+							this.nofileaccess := true
+							this.filepos := this.OpenDBF()
 						}
-					}
 
-					If (hits = pattern.Count())
-						matches.Push(this.GetSubData(set, this.retSubs))
+					; prepare dataset operation. Uses every field in the comparison process or
+					; only those that have been supplied with the pattern parameter
+						If !IsObject(outfields) && RegExMatch(outfields, "all fields")
+							outfields := ""
+						this.retSubs := this.BuildSubstringData(outfields)
+				}
 
-			}
+			; return data sets with delete flag, default is false
+				ReturnDeleted := RegExMatch(options, "i)return_Deleted_Records") ? true : false
+
+			; filepointer is set to the data record with the number from startrecord
+				this.dbf.Seek(this.recordsStart, 0)
+				If (startrecord > 0) {
+					this.dbf.Seek(this.lendataset * startrecord, 1)
+					this.filepos_start := this.dbf.Tell()
+				}
+				this.recordpos := startrecord
+				VarSetCapacity(recordbuf	, this.lendataset*100, 0x20)
+
+			; search loop
+				this.foundrecord := 0, this.hits := 0, matches := Array()
+				while (!this.dbf.AtEOF) {
+
+					; debug some actions
+						this.recordpos := StartRecord + A_Index
+						If (Mod(setNR := A_Index, this.ShowAt) = 0) {
+							If (this.debug = 1)
+								ToolTip, % "Search rx: " rxStr "`n" SubStr("00000000" A_Index, this.slen) "/" SubStr("00000000" this.records, this.slen)
+							If (StrLen(callbackFunc) > 0)
+								%callbackFunc%(setNR, this.records, this.slen, matches.MaxIndex())
+						}
+
+					; reads one dataset from database
+						bytes	:= this.dbf.RawRead(recordbuf, this.lendataset)
+						set 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
+						removed	:= SubStr(set, 1, 1) = "*" ? true : false
+						set          	:= Substr(set, 2, StrLen(set)-1)
+
+					; continue if returnDeleted is false
+						If !ReturnDeleted && removed
+							continue
+
+					; compare pattern field condition with dataset
+						hits := 0
+						For fLabel, searchString in pattern {
+							val := Trim(SubStr(set, this.dbfields[fLabel].start, this.dbfields[fLabel].len))
+							If (val = searchString) || RegExMatch(val, searchString){
+								hits ++
+								this.filepos_found 	:= this.dbf.Tell()
+								this.foundrecord 	:= this.recordpos
+							}
+						}
+
+						If (hits = pattern.Count()) {
+							matches.Push(this.GetSubData(set, this.retSubs))
+							matches[matches.MaxIndex()].removed := removed
+						}
+
+				}
 
 
 		return matches
@@ -739,46 +801,58 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 	  ; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 	  ; RETURN DATA FROM EVERY RECORD. 	| RETURNS CERTAIN FIELD NAMES AND ITS VALUES
 	  ; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-		GetFields(getfields) {
+		GetFields(getfields="", callbackFunc="") {
 
-		; the function returns the data of all records as key:val object
-		; you have to specify getfields as an array containing fieldnames
+			; the function returns the data of all records as key:val object
+			; you have to specify getfields as an array containing fieldnames
 
-		; prepares some variables
-			VarSetCapacity(recordbuf, this.lendataset, 0x20)
-			data	:= Object()
+			; prepares some variables
+				VarSetCapacity(recordbuf, this.lendataset, 0x20)
+				obj	:= Object()
 
-		; creates an array with data for substring function retreave only fields that should be returned
-			subs := this.BuildSubstringData(getfields)
-			If (subs.MaxIndex() = 0)                            	; returns here if all field names passed are unknown
-				return 2                                            	; "field label(s) unknown"
+			; creates an array with data for substring function retreave only fields that should be returned
+				subs := this.BuildSubstringData(getfields)
+				If (subs.MaxIndex() = 0)                            	; returns here if all field names passed are unknown
+					return 2                                            	; "field label(s) unknown"
 
-		; establish read access if not already done
-			If !IsObject(this.dbf) {
-				this.nofileaccess := true
-				this.pos := this.OpenDBF()
-			}
+			; establish read access if not already done
+				If !IsObject(this.dbf) {
+					this.nofileaccess := true
+					this.pos := this.OpenDBF()
+				}
 
-		; compile field data as an object
-			while (!this.dbf.AtEOF) {
+			; compile field data as an object
+				while (!this.dbf.AtEOF) {
 
-				; Tooltip progress view
-					If (this.debug > 0) && (Mod(A_Index, this.ShowAt) = 0)
-						If (this.debug > 0)
-							ToolTip, % "GetFields:`t" SubStr("00000000" A_Index, this.slen) "/" this.maxRecs "`ndatasets: " data.Count()
+					; progress view
+						If (this.debug > 0) && (Mod(A_Index, this.ShowAt) = 0) {
+							If (this.debug > 0)
+								ToolTip, % "GetFields:`t" SubStr("00000000" A_Index, this.slen) "/" this.maxRecs "`ndatasets: " data.Count()
+							If IsFunc(callbackFunc)
+								%callbackFunc%(A_Index, this.records, this.len, matches.Count())
+						}
 
-				; reads a data set raw mode and converts it to a readable text format
-					bytes	:= this.dbf.RawRead(recordbuf, this.lendataset)
-					set 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
+					; reads a data set raw mode and converts it to a readable text format
+						bytes     	:= this.dbf.RawRead(recordbuf, this.lendataset)
+						readset 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
+						set     		:= Substr(readset, 2, StrLen(readset)-1)
 
-				; push object to data array (object contains the requested field names, values and its specific recordnr)
-					data.Push(this.GetSubData(set, subs))
+					; push object to data array (object contains the requested field names, values and its specific recordnr)
+						obj.Push(this.GetSubData(set, subs))
 
-			}
+				}
 
-			ToolTip
+			; file access is automatically terminated if the function established this independently
+				If this.nofileaccess {
+					VarSetCapacity(recordbuf, 0)
+					this.nofileaccess := false
+					this.pos := this.CloseDBF()
+				}
 
-		return data
+				If (this.debug > 0)
+					ToolTip
+
+		return obj
 		}
 
 	  ; -------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -786,105 +860,122 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 	  ; -------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		ReadRecord(outfields="", callbackFunc="") {
 
-			global recordbuf
+			; you can set seekpos by
 
-			bytes	:= this.dbf.RawRead(recordbuf, this.lendataset)
-			set 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
-			this.recordnr := Floor((this.dbf.Tell() - this.headerlen) / this.lendataset)
+				global recordbuf
 
-			if this.debug && (Mod(this.recordnr, this.ShowAt) = 0) {
-				If (this.debug = 1)
-					ToolTip, % SubStr("00000000" this.recordnr, this.slen) "/" SubStr("00000000" this.records, this.slen)
-				If (StrLen(callbackFunc) > 0)
-					%callbackFunc%(setNR, this.records, this.slen, matches.MaxIndex())
-			}
+			; establish read access if not already done
+				If !IsObject(this.dbf) {
+					this.nofileaccess := true
+					this.pos := this.OpenDBF()
+				}
 
-			If !IsObject(outfields)
-				return set
+			; display progress
+				if (this.debug && Mod(this.recordnr, this.ShowAt) = 0) {
+					If RegExMatch(this.debug, "i)\bTT\b)")
+						ToolTip, % SubStr("00000000" this.recordnr, this.slen) "/" SubStr("00000000" this.records, this.slen)
+					If IsFunc(callbackFunc)  ;> 0)
+						%callbackFunc%(this.recordnr, this.records, this.slen, "---")
+				}
 
-			strobj := Object()
-			strobj["recordNr"] := this.recordnr
-			For index, fLabel in outfields
-				If (StrLen(txt := Trim(SubStr(set, this.dbfields[fLabel].start, this.dbfields[fLabel].len))) = 0)
-					continue
-				else
-					strobj[flabel] := txt
+			; reads one dataset
+				bytes		:= this.dbf.RawRead(recordbuf, this.lendataset)
+				readset	:= StrGet(&recordbuf, this.lendataset, this.encoding)
+				set 		:= Substr(readset, 2, StrLen(set)-1)
 
-			If (this.debug = 1)
-				ToolTip
+			; change class object filepointer position
+				this.recordnr	:= Floor((this.dbf.Tell() - this.headerlen) / this.lendataset)
+				this.filepos 	:= this.dbf.Tell()
 
-		return strobj
+			; return unparsed dataset
+				If !IsObject(outfields)
+					return set
+
+			; build key:value object
+				obj              	:= Object()
+				obj.removed	:= SubStr(readset, 1, 1) = "*" ? true : false
+				obj.recordNr	:= this.recordnr
+				For index, fLabel in outfields
+					obj[flabel] := Trim(SubStr(set, this.dbfields[fLabel].start, this.dbfields[fLabel].len))
+
+		return obj
 		}
 
 	  ; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 	  ; READS A BLOCK OF RECORDSETS		| RETURNS THE WHOLE RECORDSET
 	  ; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-		ReadBlock(NrOfSets, getfields:="", StartBlock=0, callbackFunc="") {
+		ReadBlock(NrOfSets, getfields:="", BlockNr=0, callbackFunc="") {
 
-		; the function returns the data of all records as key:val object
-		; you have to specify getfields as an array containing fieldnames
+			; function returns all data within a block* as key:val object
+			; getfields must be an array containing the names of the fields you want to retrieve
+			;	* 	A block is a consecutive number of records specified by the 'NrOfSets' parameter.
+			; 		'BlockNr' parameter specifies which block within the database is to be read.
 
-			static data, recordbuf
+				static recordbuf
 
-		; prepares some variables
-			If !IsObject(this.data) || IsObject(getfields)  {
+			; prepares some variables
+				If !IsObject(this.data) || IsObject(getfields)  {
 
-					VarSetCapacity(recordbuf, this.lendataset, 0x20)
-					this.getfields	:= getfields
+						VarSetCapacity(recordbuf, this.lendataset, 0x20)
+						this.getfields	:= getfields
 
-				; creates an array with data for substring function retreave only fields that should be returned
-					this.subs       	:= this.BuildSubstringData(getfields)
-					If (this.subs.MaxIndex() = 0)                               	; returns here if all field names passed are unknown
-						return 2                                                        	; "field label(s) unknown"
+					; creates an array with data for substring function retreave only fields that should be returned
+						this.subs      	:= this.BuildSubstringData(getfields)
+						If (this.subs.MaxIndex() = 0)                               	; returns here if all field names passed are unknown
+							return 2                                                        	; "field label(s) unknown"
 
-			}
-			this.data	:= Object()
+				}
+				this.matches	:= Object()
 
-		; establish read access if not already done
-			If !IsObject(this.dbf) {
-				this.nofileaccess := true
-				this.pos := this.OpenDBF()
-			}
-
-		; filepointer is set to the data record with the number from startrecord
-			this.StartRecord 	:= (StartBlock*NrOfSets)
-			this.Seekpos      	:= (this.lendataset * this.Startrecord)
-			this.dbf.Seek(this.seekpos, 1)
-			this.filepos := this.dbf.Tell()
-			;~ SciTEOutput("Block:      " StartBlock "*" NrOfSets " = " StartRecord "`n"
-							;~ . 	"seekPos:   " seekpos "`n"
-							;~ . 	"filepos:     " this.filepos "`n"
-							;~ . 	"lendataset: " this.lendataset "`n"
-							;~ . 	"headerLen: " this.headerlen "`n" )
-
-		; compile field data as an object
-			blockpos := 0
-			while (!this.dbf.AtEOF)  {
-
-				; reads a data set raw mode and converts it to a readable text format
-					bytes	:= this.dbf.RawRead(recordbuf, this.lendataset)
-					set 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
-					this.filepos := this.dbf.Tell()
-
-				; debugging and callback function to show progress
-				If (Mod(setNR := A_Index, this.ShowAt) = 0) {
-					If (this.debug = 1)
-						ToolTip, % "Search rx: " rxStr "`n" SubStr("00000000" A_Index, this.slen) "/" SubStr("00000000" this.records, this.slen)
-					If (StrLen(callbackFunc) > 0)
-						%callbackFunc%(blockpos, NrOfSets, this.slen, blockpos)
+			; establish read access if not already done
+				If !IsObject(this.dbf) {
+					this.nofileaccess := true
+					this.pos := this.OpenDBF()
 				}
 
-				; push object to data array (object contains the requested field names, values and its specific recordnr)
-					fields := this.GetSubData(set, this.subs)
-					;~ If (fields["id"] = -1) || fields["remove"]
-						;~ continue
-					this.data.Push(fields)
-					blockpos ++
-					If (blockpos = NrOfSets)
-						break
-			}
+			; filepointer is set to the data record with the number from startrecord
+				this.StartRecord 	:= (BlockNr*NrOfSets)
+				this.Seekpos      	:= (this.lendataset * this.Startrecord)
+				this.dbf.Seek(this.seekpos, 1)
+				this.filepos := this.dbf.Tell()
 
-		return this.data
+			; compile field data as an object
+				blockpos := 0
+				while (!this.dbf.AtEOF)  {
+
+					; reads a data set raw mode and converts it to a readable text format
+						bytes	:= this.dbf.RawRead(recordbuf, this.lendataset)
+						set 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
+
+						this.filepos := this.dbf.Tell()
+						removed	:= InStr(SubStr(set, 1, 1), "*") ? true : false
+						set        	:= Substr(set, 2, StrLen(set)-1)
+
+					; debugging and callback function to show progress
+					If (Mod(setNR := A_Index, this.ShowAt) = 0) {
+						If (this.debug = 1)
+							ToolTip, % "Search rx: " rxStr "`n" SubStr("00000000" A_Index, this.slen) "/" SubStr("00000000" this.records, this.slen)
+						If (StrLen(callbackFunc) > 0)
+							%callbackFunc%(blockpos, NrOfSets, this.slen, blockpos)
+					}
+
+					; push object to data array (object contains the requested field names, values and its specific recordnr)
+						fields := this.GetSubData(set, this.subs)
+						fields.removed := removed
+						this.matches.Push(fields)
+						blockpos ++
+						If (blockpos = NrOfSets)
+							break
+				}
+
+			; file access is automatically terminated if the function established this independently
+				If this.nofileaccess {
+					VarSetCapacity(recordbuf, 0)
+					this.nofileaccess := false
+					this.CloseDBF()
+				}
+
+		return this.matches
 		}
 
 	;}

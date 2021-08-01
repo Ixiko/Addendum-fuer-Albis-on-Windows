@@ -1,4 +1,4 @@
-﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                                        Tesseract - OCR (Multithreading Skript)
 ;
 ;      Funktion:   	PDF zu PDF-Text Umwandlung mit der Funktion tessOCRPdf
@@ -10,7 +10,7 @@
 ;
 ;	                    	Addendum für Albis on Windows
 ;                        	by Ixiko started in September 2017 - last change 02.04.2021 - this file runs under Lexiko's GNU Licence
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 tessOCRPdf(PDFName, params)                                         	{              	;-- tesseract Texterkennung -> erstellt eine durchsuchbare PDF Datei
 

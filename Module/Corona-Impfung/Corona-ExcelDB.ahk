@@ -51,6 +51,7 @@
 			Menu, Tray, Add, Warteliste prüfen, Warteliste_Korrektur
 			Menu, Tray, Add, Patient suchen, Patientsuchen
 
+
 		; startet die Windows Gdip Funktion
 		If !(pToken:=Gdip_Startup()) {
 			MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
@@ -183,8 +184,28 @@
 	;}
 
 
+;~ Func_IFLko 	:= Func("IF_ActiveLko")
+;~ Func_CNR	:= Func("Chargennummern")
+;~ Hotkey, IF	, % Func_IFLko
+;~ Hotkey, NumpadAdd	, % Func_CNR
+;~ Hotkey, ^LButton		, % Func_CNR
+;~ Hotkey, IF
 
 return
+IF_ActiveLko() {
+
+	global KK
+
+	If WinActive("ahk_class OptoAppClass")  {
+
+		kuerzel := AlbisGetActiveControl("contraction")
+		If (RegExMatch(kuerzel, "i)^lk\w") || StrLen(kuerzel) = 0 || InStr(AlbisGetActiveWindowType(), "Karteikarte"))
+			return true
+
+	}
+
+return false
+}
 
 Warteliste_Korrektur:               	;{
 
@@ -300,6 +321,10 @@ return ;}
 
 Impfliste_Korrektur:               	;{
 
+	; Impflinge Objekt leeren ohne löschen
+		Loop, % Impflinge.Count()
+			Impflinge.Pop()
+
 		Rows         	:= XL.UsedRows()
 		SheetName 	:=XL.xlSheetName
 		;SciTEOutput("maxRows: " XL.UsedRows() ", " SheetName)                              ; xlUp = -4162)
@@ -313,7 +338,6 @@ Impfliste_Korrektur:               	;{
 		Edit_Append(lBHEdit, " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -")
 		Edit_Append(lBHEdit, "aktive Tabelle: " SheetName)
 		Edit_Append(lBHEdit, " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -")
-
 
 	; Korrekturen, Daten sammeln, fehlende Patientendaten ergänzen
 		startTime := A_TickCount
@@ -669,6 +693,7 @@ Impfliste_Korrektur:               	;{
 	; speedup aus : 832 Zeilen in  Sekunden
 
 return  ;}
+
 
 ; --- Skriptfunktionen                	;{
 

@@ -10,9 +10,9 @@
 ;		Abhängigkeiten: 	-	siehe #includes
 ;
 ;	                    				Addendum für Albis on Windows
-;                        				by Ixiko started in September 2017 - last change 09.06.2021 - this file runs under Lexiko's GNU Licence
+;                        				by Ixiko started in September 2017 - last change 01.08.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;	Version 0.88
+;	Version 0.91
 
 	; Skripteinstellungen                                        	;{
 
@@ -30,21 +30,29 @@
 	;}
 
 	; Variablen                                                       	;{
-		global q:=Chr(0x22)
+
+		global q := Chr(0x22)
 		global DBFPatient, AlbisPath, AlbisDBPath, exportordner, AddendumDir, suchfeldeintragung, qpdfPath
 		global DXP, hDXP, DXP_Pat, DXPhPat, DXP_PLV, DXP_DLV, DXP_PE, DXP_SB, DXP_FF, DXP_AB, DXP_EB, DXP_FB, DXP_NR, DXP_NV
 		global FSize, edWidth
 		global docfilter_full, docfilter_checked, pdfViewer, imgViewer, docViewer
-		global PatDok := Object(), PREVID := Object()
-		global Addendum := Object()
-		global PatChoosed := false
-
+		global PatDok         	:= Object()
+		global PREVID         	:= Object()
+		global Addendum 	:= Object()
+		global PatChoosed 	:= false
+		global SumatraCMD, SumatraExist
 
 		RegExMatch(A_ScriptDir, ".*(?=\\Module)", AddendumDir)
 		Addendum.qpdfPath    	:= AddendumDir "\include\OCR\qpdf"
 		Addendum.AlbisDBPath	:= GetAlbisPath() "\db"
 
+	; Sumatra für Vorschau und den Druck von PDF Dokumenten
+		SumatraCMD := GetAppImagePath("SumatraPDF")
+		If (StrLen(SumatraCMD) > 0) && FileExist(SumatraCMD)
+			SumatraExist := true
+
 		Menu, Tray,  Icon, % AddendumDir "\assets\ModulIcons\DokExport.ico"
+
 	;}
 
 	; Albis Basispfad                                            	;{
@@ -68,6 +76,16 @@
 
 		IniRead, ini_yearsback       	, % A_ScriptDir "\admExporter.ini", DokExporter, exportJahre           	, % "2"
 
+		IniRead, Startdatum           	, % A_ScriptDir "\admExporter.ini", DokExporter, Startdatum             	, % "01.01.2010"
+
+		IniRead, kopiepreis            	, % A_ScriptDir "\admExporter.ini", DokExporter, kopiepreis             	, % "0.50€ ab 50 Seiten 0.15€"
+		If (StrLen(kopiepreis) = 0 || !RegExMatch(Kopiepreis, "i)^(?<Preis1>[\d\.\,]+).*?a*b*\s*(?<AbSeite>[\d]*)\s*(Seiten*)\s*(?<Preis2>[\d\.\,]*)", k))
+			kopiepreis := "0.50€ ab 50 Seiten 0.15€"
+
+		IniRead, LastPrinter            	, % A_ScriptDir "\admExporter.ini", DokExporter, DokumentDrucker   	, % ""
+		If InStr(LastPrinter, "ERROR")
+			LastPrinter := ""
+
 		IniRead, pdfViewer             	, % A_ScriptDir "\admExporter.ini", PREVIEWER, pdf                        		, % "SumatraPDF.exe "
 		If InStr(pdfViewer, "ERROR")
 			pdfViewer := ""
@@ -77,8 +95,7 @@
 			imgViewer := ""
 
 		IniRead, docViewer             	, % A_ScriptDir "\admExporter.ini", PREVIEWER, doc                         	, % "notepad.exe"
-		If InStr(docViewer, "ERROR")
-			docViewer := ""
+		docViewer := InStr(docViewer, "ERROR") ? "" : docViewer
 
 		IniRead, exportordner        	, % A_ScriptDir "\admExporter.ini", DokExporter, exportordner
 		If InStr(exportordner, "ERROR") || (StrLen(exportordner) = 0) {
@@ -92,6 +109,11 @@
 				exportordner := A_ScriptDir "\Dokumentexport"
 			}
 		}
+
+		; Exportfilter
+		IniRead, lastFilter, % A_ScriptDir "\admExporter.ini", DokExporter, Exportfilter
+		lastFilter := InStr(lastFilter, "ERROR") ? "" : lastFilter
+
 
 
 	;}
@@ -174,25 +196,26 @@
 
 		LVOptions := "Grid Count Checked AltSubmit Background" tcolor " hwndDXP_hDLV"
 		DocCols := "exp.|OCR|Seiten"
-		Gui, DXP: Add, ListView   	, % "xm y+3 w" DLVWidth " r20 vDXP_DLV	gDXP_Handler " LVOptions                      	, % "Datum|Art|Bezeichnung|exp.|OCR|Seiten|LFDNR"
+		Gui, DXP: Add, ListView   	, % "xm y+3 w" DLVWidth " r20 vDXP_DLV	gDXP_Handler " LVOptions                      	, % "Datum|Art|Bezeichnung|exp.|OCR|Seiten/Größe|LFDNR"
 		LV_ModifyCol(1, Round(DLVWidth/8) " Integer")
 		LV_ModifyCol(2, Round(DLVWidth/10) )
 		LV_ModifyCol(3, Round(DLVWidth/2))
 		LV_ModifyCol(4, "40 Center")
 		LV_ModifyCol(5, "40 Center")
-		LV_ModifyCol(6, "50 Center")
+		LV_ModifyCol(6, "90 Center")
 		LV_ModifyCol(7, "70 Center") ; Spalte für interne Nutzung
 	;}
 
 	;-: EINSTELLUNGEN/FILTER                           	;{
+
 		Gui, DXP: Font, % "s" FSize " q5 Italic"
-		Gui, DXP: Add, Text, % "x+10  BAckgroundTrans                                	vDXP_ET"                                              	, % "Basispfad für den Dokumentenexport"
+		Gui, DXP: Add, Text, % "x+10  BAckgroundTrans                                	vDXP_ET"                                             	, % "Basispfad für den Dokumentenexport "
 
 		PBWidth := 6 * (FSize-1) - 5
 		PEWidth := otWidth - DLVWidth - PBWidth - 15
 		Gui, DXP: Font, % "s" FSize-1 " q5 Normal"
-		Gui, DXP: Add, Edit           	, % "y+3  w" PEWidth "        						vDXP_PE " gdxp                                       	, % exportordner
-		Gui, DXP: Add, Button        	, % "x+5  w" PBWidth "       						vDXP_PB " gdxp                                      	, % "ändern"
+		Gui, DXP: Add, Edit           	, % "y+3  w" PEWidth "        						vDXP_PE " gdxp                                    	, % exportordner
+		Gui, DXP: Add, Button        	, % "x+5  w" PBWidth "       						vDXP_PB " gdxp                                   	, % "ändern"
 		GuiControlGet, cp, DXP: pos, DXP_PE
 
 		;-: Dateifilter
@@ -231,73 +254,144 @@
 		Gui, DXP: Font, % "s" FSize-1 " q5 Normal"
 		Gui, DXP: Add, Button        	, % "x" cpX " y" Y1 "	                            	vDXP_AB"									gdxp          	, % "Alle"
 		Gui, DXP: Add, Button        	, % "x+5           	                            	vDXP_KB"									gdxp          	, % "Keines"
-
-		;{
-		GuiControlGet, cp, DXP: pos, % "DXP_AB"
-		xtraOpt := " y" Y1+2 " w" Floor((FSize)*2.2) " h" cpH-4 " Number	"
-		;}
 		Gui, DXP: Add, Button        	, % "x+5           	                            	vDXP_LB"									gdxp          	, % "zurückliegende Jahre"
-		Gui, DXP: Add, Edit            	, % "x+2" xtraOpt "                            	vDXP_JB"      	                     		gdxp          	, % ini_yearsback
-
-		Gui, DXP: Add, Button        	, % "x" cpX " y+10 Center                     	vDXP_EA"									gdxp           	, % "000000 Dokumente exportieren"
-		Gui, DXP: Add, Button        	, % "y+10         	                            	vDXP_EP"									gdxp           	, % "Auswahl, Laborblatt und Karteikarte exportieren"
+		Gui, DXP: Add, Edit            	, % "x+2 yp+2 " xtraOpt "                     	vDXP_JB"      	                     		gdxp          	, % ini_yearsback
 
 		;{
-		GuiControl, DXP:          	, DXP_EA, % "Dokumente exportieren"
-		GuiControl, DXP: Disable	, DXP_EA
+		GuiControl, DXP: Disable        	, DXP_AB
+		GuiControl, DXP: Disable        	, DXP_KB
+		GuiControl, DXP: Disable        	, DXP_LB
+
+		GuiControlGet, cp, DXP: pos, % "DXP_AB"
+		awX := cpX
+		xtraOpt := " y" Y1+2 " w" Floor((FSize)*2.2) " h" cpH-4 " Number	"
+		for Item in ComObjGet( "winmgmts:" ).ExecQuery("Select * from Win32_Printer")
+			DDLPrinter .= !InStr(DDLPrinter, Item.Name) ? Item.Name "|" : ""
+		DDLPrinter := RTrim(DDLPrinter, "|")
+		;}
+
+		Gui, DXP: Add, Button        	, % "x" awX " y+10 Center                     	vDXP_EA"									gdxp           	, % "000 Dokumente exportieren"
+		Gui, DXP: Add, Button        	, % "x+10                                				vDXP_FB" 						    		gdxp         	, % "Exportpfad im Explorer öffnen"
+		Gui, DXP: Add, Button        	, % "x" awX " y+15                               	vDXP_EP"									gdxp           	, % "Auswahl, Laborblatt und Karteikarte exportieren"
+		Gui, DXP: Add, Button        	, % "x" awX " y+10 Center                     	vDXP_PRN"								gdxp           	, % "000 Dokumente drucken"
+		Gui, DXP: Add, DDL           	, % "x+10 r5                       	         		vDXP_PRD "                             	gdxp           	, % DDLPrinter                                                                    ; PRD = PrinterDevice
+		Gui, DXP: Add, Button        	, % "x" awX " y+15 Center                     	vDXP_ABR"								gdxp           	, % "000 Kopien abrechnen"
+		Gui, DXP: Add, Edit            	, % "x+2 w200 r1 " xtraOpt "              	vDXP_ABRP" 	                     		gdxp            	, % kopiepreis
+		Gui, DXP: Add, Text           	, % "x" awX " y+3 Right                        	vDXP_GOT"								gdxp           	, % "Gebührentext:"
+		Gui, DXP: Font, % "s" FSize-1 " q5 Normal"
+		Gui, DXP: Add, Edit            	, % "x+2 w200 r1 " xtraOpt " ReadOnly 	vDXP_GO hwndDXP_hGO"   		                	, % ""
+
+		;{
+		GuiControl, DXP:                    	, DXP_EA	, % "Dokumente exportieren"
+		GuiControl, DXP:                      	, DXP_PRN, % "Dokumente drucken"
+		GuiControl, DXP:                      	, DXP_ABR, % "Kopien abrechnen"
+		GuiControl, DXP: Disable        	, DXP_EA
+		GuiControl, DXP: Disable        	, DXP_EP
+		GuiControl, DXP: Disable        	, DXP_PRN
+		GuiControl, DXP: Disable        	, DXP_ABR
+		GuiControl, % "DXP: " (LastPrinter ? "ChooseString" : "Choose"), DXP_PRD, % (LastPrinter ? LastPrinter : 1)
+
+		GuiControlGet, cp, DXP: pos, % "DXP_EA"
+		GuiControl, DXP: Move  	, DXP_PRN, % "w"	cpW
+		GuiControl, DXP: Move  	, DXP_PRD, % "x"	cpX + cpW + 5 " w" cpW
+		GuiControl, DXP: Move  	, DXP_ABR, % "w"	cpW
+
+		GuiControlGet, dp, DXP: pos, % "DXP_ABR"
+		GuiControlGet, cp, DXP: pos, % "DXP_ABRP"
+		GuiControl, DXP: Move  	, DXP_ABRP, % "x" dpX + dpW + 5 " y" dpY+(dpH-cpH) " w" (ABRPw := cpW)
+
+		GuiControlGet, dp, DXP: pos, % "DXP_ABRP"
 		GuiControlGet, cp, DXP: pos, % "DXP_EP"
 		bpX := cpX+cpW+10
+		ABRPy := dpY
 		;}
 
 		Gui, DXP: Font, % "s" FSize-1 " q5 Normal"
-		Gui, DXP: Add, Text            	, % "x" bpX " y" cpY-(FSize)-12 " 	    		vDXP_VBT" 								gopts1         	, % "von - bis"
+		Gui, DXP: Add, Text            	, % "x" bpX " y" cpY-(FSize-1) "         	vDXP_VBT" 											gopts1 	, % "von - bis"
 		Gui, DXP: Font, % "s" FSize+1 " q5 Normal"
-		Gui, DXP: Add, Edit           	, % "y+5 w" (FSize-1)*20 " h" cpH "     	vDXP_VB   	hwndDXP_hVB"                         	, % "01.01.2010-" A_DD "." A_MM "." A_YYYY
+		Gui, DXP: Add, Edit           	, % "y+5 w" (FSize-1)*20 " h" cpH "     vDXP_VB   hwndDXP_hVB 	AltSubmit "    gopts1 	, % Startdatum "-" A_DD "." A_MM "." A_YYYY
+
+		Gui, DXP: Font, % "s" FSize-2 " q5 Normal"
+		Gui, DXP: Add, Text            	, % "x" dpX " y" dpY-FSize " w400 vDXP_ABRPT"                    	            			gopts1 	, % "Regel für den Kopiepreis (Preise in Euro angeben)"
 
 		;{
 		WinSet, ExStyle, 0x0 , % "ahk_id " DXP_hVB
+
+		; Datum verschieben
 		GuiControlGet, dp, DXP: pos, % "DXP_VBT"
-		rY1 := cpY + Floor((cpH/2-dpH/2)/2) - 2
-		GuiControl, DXP: Move, DXP_VB	, % "y" rY1
+		GuiControl, DXP: Move, DXP_VB, % "y" cpY + Floor((cpH/2-dpH/2)/2) - 2
+
+		; von - bis verschieben
 		GuiControlGet, ep, DXP: pos, % "DXP_VB"
-		rY2 := epY - dpH - 2
-		GuiControl, DXP: Move, DXP_VBT	, % "x" epX + Floor((cpW/2-dpW/2)/2) " y" rY2
-		X := epX+epW+10, W := docfX+docfW - X, H := cpH
+		GuiControl, DXP: Move, DXP_VBT	, % "x" epX + Floor((cpW/2-dpW/2)/2) " y" epY - dpH
+		X := epX+epW+10
+
+		; Druckerauswahl verschieben
+		GuiControlGet, cp, DXP: pos, % "DXP_PRN"
+		GuiControl, DXP: Move, DXP_PRD	, % "w" epX + epW  - cpW - cpX - 5 " y" cpY
+		GuiControl, DXP: Move, DXP_ABRP, % "w" epX + epW  - cpW - cpX - 5
+
+		; Dokument drucken Höhe anpassen
+		GuiControlGet, cp, DXP: pos, % "DXP_PRD"
+		GuiControl, DXP: Move, DXP_PRN	, % " h" cpH
+
+		; Kopiepreisbeschriftung verschieben
+		GuiControlGet, dp, DXP: pos, % "DXP_ABRPT"
+		GuiControl, DXP: Move, DXP_ABRPT, % "y" ABRPy - dpH " w" cpW
+
+		; Gebührentext verschieben
+		GuiControlGet, ep, DXP: pos, % "DXP_FF"
+		GuiControlGet, dp, DXP: pos, % "DXP_ABR"
+		GuiControlGet, cp, DXP: pos, % "DXP_ABRT"
+		GuiControl, DXP: Move, DXP_GOT, % "x" dpX " y" dpy+dpH+2 " w" dpW
+		WinSet, Style 	, 0x50000880, % "ahk_id" DXP_hGO
+		WinSet, ExStyle	, 0x00000000, % "ahk_id" DXP_hGO
+		GuiControl, DXP: Move, DXP_GO	, % "x" dpX+dpW+5 " y" dpy+dpH+1 " w" epX + epW - dpX - dpW - 5
+
+		W := docfX+docfW - X, H := cpH
+
+		; ersten Filter nehmen in diesem Fall
+		If !lastFilter
+			For lastfilter, INHALT in KKFilter
+				break
 		;}
 
 		Gui, DXP: Font, % "s" FSize-1 " q5 Normal"
-		Gui, DXP: Add, Text            	, % "x" X " y" Y1-10 " w" (FSize-1)*10 " 	vDXP_KKFT " 							gopts1         	, % "Karteikartenfilter"
+		Gui, DXP: Add, Text            	, % "x" X " y" Y1-10 " w" (FSize-1)*10 " vDXP_KKFT "					        			 	gopts1 	, % "Exportfilter"
 		Gui, DXP: Font, % "s" FSize+2 " q5 Normal"
-		Gui, DXP: Add, ListBox          	, % "x" X " y" Y1 " w" W " h" H " r1 			vDXP_KKF 	hwndDXP_hKKF "	gdxp           	, % DbFilter
+		Gui, DXP: Add, ListBox          	, % "x" X " y" Y1  " w" W  " r1 	         	vDXP_KKF hwndDXP_hKKF "   			 	gdxp    	, % DbFilter
 
 		;{
+		GuiControl, DXP: ChooseString, DXP_KKF, % lastFilter
 		WinSet, ExStyle, 0x0 , % "ahk_id " DXP_hKKF
-		GuiControl, DXP: Move, DXP_KKF	, % "h" cpH - 1
-		GuiControlGet, dp, DXP: pos, % "DXP_KKFT"
-		GuiControlGet, ep, DXP: pos, % "DXP_KKF"
+		GuiControl        	, DXP: Move	, DXP_KKF	, % "h" cpH - 1
+
+		GuiControlGet, dp, DXP: pos  	, % "DXP_KKFT"
+		GuiControlGet, ep, DXP: pos 	, % "DXP_KKF"
 		Y := epY - dpH - 2
-		GuiControl, DXP: Move, DXP_KKFT	, % "x" epX + Floor((epW/2-dpW/2)) " y" Y
+		GuiControl, DXP: Move, DXP_KKFT, % "x" epX + Floor((epW/2-dpW/2)) " y" Y
 		W := dpW+epW+10
+
 		;}
 
-		Gui, DXP: Font, % "s" FSize-1 " q5 Normal"
-		Gui, DXP: Add, Text            	, % "x" epX " y" epY+epH+3 " w" epW " 	vDXP_KKFIT " 			    			gopts1        	, % "[Filtername]"
 		Gui, DXP: Font, % "s" FSize " q5 Normal"
-		Gui, DXP: Add, Edit            	, % "x" epX " y+1"  " w" epW " h150 		vDXP_KKFI 	hwndDXP_hKKFI"                    	, %  KKFilter["*ohne*"].inhalt
+		Gui, DXP: Add, Edit            	, % "x" epX " y+1"  " w" epW " h150 		vDXP_KKFI 	hwndDXP_hKKFI"                    	, %  KKFilter[lastFilter].inhalt
 
 		;{
-		WinSet, Style 	, 0x50000904 , % "ahk_id " DXP_hKKFI
-		WinSet, ExStyle	, 0x00000000 , % "ahk_id " DXP_hKKFI
+		WinSet, Style 	, 0x50000904 	, % "ahk_id " DXP_hKKFI
+		WinSet, ExStyle	, 0x00000000 	, % "ahk_id " DXP_hKKFI
+		GuiControlGet	, dp, DXP: Pos	, % "DXP_DLV"
+		GuiControlGet	, cp, DXP: Pos	, % "DXP_EP"
 		;}
 
-		Gui, DXP: Font, % "s" FSize " q5 Normal"
-		Gui, DXP: Add, Button        	, % "x" cpX " y" cpY+cpH+26 " 				vDXP_FB" 						    		gdxp            	, % "Exportpfad im Explorer öffnen"
+		;~ Gui, DXP: Font, % "s" FSize " q5 Normal"
+		;~ Gui, DXP: Add, Button        	, % "x" cpX " y" dpY+dpH-cpH-2 " 				vDXP_FB" 						    		gdxp        	, % "Exportpfad im Explorer öffnen"
 	;}
 
 	;-: STATUS BAR                                               	;{
 		Gui, DXP: Font, % "s" FSize-1 " q5 Normal"
 		Gui, DXP: Add, StatusBar  	,                                                                                                                           	, % ""
-		Gui, DXP: Show, % "AutoSize", % "Dokumentexport"
+		Gui, DXP: Show, % "AutoSize", % "DocPrinz"
 
 		WinGetPos, wx, wy, ww, wh, % "ahk_id " hDXP
 		w := GetWindowSpot(hDXP)
@@ -313,6 +407,7 @@
 		sb2Width	:= 5*FSize
 		sb3Width	:= Round(ww/3.5)
 		sb4Width	:= ww - sb1Width - sb2Width - sb3Width
+
 		SB_SetParts(sb1Width, sb2Width, sb3Width, sb4Width )
 		SB_SetText("...warte auf Deine Eingabe", 1)
 		SB_SetText(AlbisPath " | " exportordner, 3)
@@ -320,20 +415,22 @@
 
 	;-: HOTKEY                                                    	;{
 		fn_EnterSearch := Func("DXPSearch").Bind("Hotkey")
-		Hotkey, IfWinActive, % "Dokumentexport ahk_class AutoHotkeyGUI"
+		Hotkey, IfWinActive, % "DocPrinz ahk_class AutoHotkeyGUI"
 		Hotkey, Enter, % fn_EnterSearch
 		Hotkey, IfWinActive
 	;}
 
 	;-: INTERSKRIPTKOMMUNIKATION                	;{
 		OnMessage(0x4A	, "Receive_WM_COPYDATA")
+		OnMessage(0x020A, "DXPGui_Extras")              	; WM_MouseWheel
+		OnMessage(0x0201, "DXPGui_Extras")				; WM_LButtonDown
 
 		;~ Gui, DXP: Submit, NoHide
 		GuiControlGet, KUERZEL, DXP:, DXP_KKF
 
 	;}
 
-return ;}
+return
 
 	; GUI LABELS                                                   	;{
 
@@ -350,7 +447,7 @@ DXP_Handler:                                                    	;{
 
 		Case "DXP_PLV":                                                	; Patienten Listview
 			If (A_GuiControlEvent = "Normal")
-				ZeigeDokumente(A_EventInfo)
+				Documents := Dokumente_Show(A_EventInfo)
 
 		Case "DXP_DLV":                                                	; Dokumenten Listview
 			If (A_GuiEvent = "DoubleClick")
@@ -362,38 +459,54 @@ DXP_Handler:                                                    	;{
 		; -- Auswählen --
 		Case "DXP_AB":                                                 	; Alle Befunde Button
 			LV_ChooseAll()
+			LV_CountCheckedDocs()
 
 		Case "DXP_KB":                                                 	; keine Befunde Button
 			LV_ChooseNone()
+			LV_CountCheckedDocs()
 
 		Case "DXP_LB":                                                    	; die letzten X Jahre Button
 			LV_ChooseLastYears(DXP_JB)
+			LV_CountCheckedDocs()
 
 		; --------------------------------------------------------------------------------------------------------------------------------------------------
 		; -- Export --
 		Case "DXP_EA":                                                 	; Auswahl exportieren Button
 			If PatChoosed
-				LVExport()
+				Dokumente_Export()
 
 		Case "DXP_EP":                                                 	; Karteikarte, Laborblatt u. Auswahl exportieren Button
 			If PatChoosed {
-				LVExport()
-				KarteikartenExport()
+				Dokumente_Export()
+				Karteikarte_Export()
 			}
+
+		; --------------------------------------------------------------------------------------------------------------------------------------------------
+		; -- Drucken --
+		Case "DXP_PRN":                                                 	; ausgewählte Dokumente drucken
+			If PatChoosed
+				Dokumente_Print()
 
 		; --------------------------------------------------------------------------------------------------------------------------------------------------
 		; -- Exportordner --
 		Case "DXP_FB":                                                  	; Exportpfad im Explorer öffnen
 			If PatChoosed
-				LVShowExplorer()
+				Dokumente_ShowWithExplorer()
 
 		Case "DXP_PB":                                                  	; Exportordner ändern
 			ChangeFolder()
 
 		; --------------------------------------------------------------------------------------------------------------------------------------------------
-		Case "DXP_KKF":
+		; -- Filter --
+		Case "DXP_KKF":                                                	; Karteikartenfilter
 			GuiControl, DXP:, DXP_KKFIT, % "[" DXP_KKF "]"
 			GuiControl, DXP:, DXP_KKFI	, % KKFilter[DXP_KKF].inhalt
+
+		; --------------------------------------------------------------------------------------------------------------------------------------------------
+		; -- Abrechnung --
+		Case "DXP_ABR":                                                	; Kopien abrechnen
+
+
 
 	}
 
@@ -415,26 +528,60 @@ DXPGuiEscape:                                                 	;{
 	; Sucheintragungen sichern
 	suchfeld := CB_GetEntries(DXPhPat)
 	If (suchfeldeintragung <> suchfeld)
-		IniWrite, % suchfeld, % A_ScriptDir "\admExporter.ini", DokExporter, suchfeldeintragung
+		IniWrite, % suchfeld	, % A_ScriptDir "\admExporter.ini", DokExporter, suchfeldeintragung
 
-	; exportordner
+	; Exportordner
 	GuiControlGet, export, DXP:, % "DXP_PE"
-	IF (exportordner <> export)
-		IniWrite, % export, % A_ScriptDir "\admExporter.ini", DokExporter, exportordner
+	If (exportordner <> export)
+		IniWrite, % export  	, % A_ScriptDir "\admExporter.ini", DokExporter, exportordner
 
 	; Dokumentbezeichner
 	GuiControlGet, docbez, DXP:, % "DXP_FF"
-	IF (docfilter_bezeichner <> docbez)
-		IniWrite, % docbez, % A_ScriptDir "\admExporter.ini", DokExporter, docfilter_bezeichner
+	If (docfilter_bezeichner <> docbez)
+		IniWrite, % docbez 	, % A_ScriptDir "\admExporter.ini", DokExporter, docfilter_bezeichner
 
+	; zurückliegende Jahre
 	Gui, DXP: Submit, Hide
-	IF (ini_yearsback <> DXP_JB)
-		IniWrite, % DXP_JB, % A_ScriptDir "\admExporter.ini", DokExporter, exportJahre_zurueckliegend
+	If (ini_yearsback <> DXP_JB)
+		IniWrite, % DXP_JB	, % A_ScriptDir "\admExporter.ini", DokExporter, exportJahre_zurueckliegend
 
+	; nur das erste Datum
+	RegExMatch(DXP_VB, "(?<datum2>\d\d\.\d\d\.\d\d\d\d)", Start)
+	If (Startdatum2 <> Startdatum)
+		IniWrite, % Startdatum2	, % A_ScriptDir "\admExporter.ini", DokExporter, Startdatum
+
+	; eingestellter Filter
+	If (lastFilter <> DXP_KKF)
+		IniWrite, % DXP_KKF	, % A_ScriptDir "\admExporter.ini", DokExporter, Exportfilter
+
+	; ausgewählter Drucker
+	If (LastPrinter <> DXP_PRD)
+		IniWrite, % DXP_PRD	, % A_ScriptDir "\admExporter.ini", DokExporter, DokumentDrucker
+
+	; Kopiepreis
+	If (kopiepreis <> DXP_ABRP)
+		IniWrite, % DXP_ABRP, % A_ScriptDir "\admExporter.ini", DokExporter, kopiepreis
+
+	If ReloadGui
+		Reload
 
 ExitApp ;}
 
 ;}
+
+DXPGui_Extras()                                                   	{
+
+	global DXP_hKKF, KKFilter, DXP, DXP_KKFI, hDXP
+
+	MouseGetPos, mx, my,, hControl, 2
+	If (hControl = DXP_hKKF) {
+		Sleep 100
+		SendMessage, 0x0201,,,,  % "ahk_id " hControl
+		Sleep 50
+		SendMessage, 0x0202,,,,  % "ahk_id " hControl
+	}
+
+}
 
 DimmerGui(show, DBASEFileName:="")             	{
 
@@ -462,12 +609,12 @@ DimmerGui(show, DBASEFileName:="")             	{
 	Gui, DMR: New    	, -Caption +LastFound + ToolWindow +hwndhDimmer +E0x4 +Parent%hDXP%
 	Gui, DMR: Color   	, Gray
 
-	Gui, DMR: Font	   	, s100 q5 bold italic cBlue, Calibri
-	Gui, DMR: Add    	, Text    	, % "x0   	y" Floor(DXPPos.CH/4) " w" DXPPos.CW " vDMR_SL1 Backgroundtrans Center"	, % "...Suche läuft"
+	Gui, DMR: Font	   	, s90 q5 bold italic cBlue, Calibri
+	Gui, DMR: Add    	, Text    	, % "x0 	y" Floor(DXPPos.CH/4) " w" DXPPos.CW " vDMR_SL1 Backgroundtrans Center" 	, % "...Suche läuft"
 
 	GuiControlGet, cp	, DMR: Pos	, DMR_SL1
 	Gui, DMR: Font	   	, s24 q5 bold cBlue
-	Gui, DMR: Add    	, Text    	, % "x0 y" cpY+cpH-35 " w" DXPPos.CW " vDMR_DBFN Center Backgroundtrans"            	, % DBASEFileName
+	Gui, DMR: Add    	, Text    	, % "x0 y" cpY+cpH-25 " w" DXPPos.CW " vDMR_DBFN Center Backgroundtrans"            	, % DBASEFileName
 
 	Gui, DMR: Font	   	, s28 q5 bold cDarkBlue
 	Gui, DMR: Add    	, Text    	, % "x0 y+15 Right vDMR_SL2 Backgroundtrans"                                                           	, % "0000000"
@@ -538,9 +685,9 @@ GetCheckedFilter()                                             	{
 	Gui, DXP: Default
 }
 
-LVShowExplorer()                                                 	{                       	;-- öffnet den Exportpfad in einem Explorer-Fenster
+Dokumente_ShowWithExplorer()                            	{                       	;-- öffnet den Exportpfad in einem Explorer-Fenster
 
-	Pat := LV_GetSelectedRow()
+	Pat := LV_GetPatient()
 	PatPath := exportordner "\(" Pat.NR ") " Pat.NAME ", " Pat.VORNAME "\"
 	Gui, DXP: Default
 
@@ -555,18 +702,20 @@ LVShowExplorer()                                                 	{             
 
 
 ;--- Dokumente auflisten        	;{
-ZeigeDokumente(row)                                                                                	{
+Dokumente_Show(row)                                                                          	{
 
-	;global DXP_FxF, DXP_PLV
 		global DPGS_init, PatChoosed, DXP, DXP_DLV
 		static outBezeichner
 
 		Gui, DXP: Default
 
 	; PATNR, NAME, VORNAME ermitteln
-		Pat := LV_GetSelectedRow()
-		If !RegExMatch(Pat.NR, "\d+")
+		Pat := LV_GetPatient()
+		If !RegExMatch(Pat.NR, "\d+") {
+			MsgBox, % (msg := "Patient auswählen um Dokumente anzeigen zulassen.")
+			SB_SetText(msg, 4)
 			return
+		}
 
 		PatChoosed := true, DPGS_init := true
 		DimmerGui("on")
@@ -579,7 +728,7 @@ ZeigeDokumente(row)                                                             
 		For index, ext in StrSplit(docfilter_full, ",") {
 			GuiControlGet, isChecked, DXP:, % "DXP_C" A_Index
 			If (isChecked = 1)
-				checkedext .= (A_Index=1?"":",") ext
+				checkedext .= (A_Index=1 ? "" : ",") ext
 		}
 
 	; Dokument Listview aktivieren
@@ -604,7 +753,7 @@ ZeigeDokumente(row)                                                             
 
 	; Dokumente aus den Datenbanken ermitteln
 		If !IsObject(PatDok[Pat.NR])
-			PatDok[Pat.NR] := DBDokumente(Pat.NR, checkedext)
+			PatDok[Pat.NR] := Dokumente_GetFromDB(Pat.NR, checkedext)
 
 	; anhand der Filter anzeigen
 		Gui, DMR: Default
@@ -613,7 +762,7 @@ ZeigeDokumente(row)                                                             
 		GuiControl, DMR: , DMR_DBFN	, % "der gefunden Dokumente sind gelistet"
 
 		PatPath := exportordner "\(" Pat.NR ") " Pat.NAME ", " Pat.VORNAME
-		lvdocNr := AllPages := exportedPages := 0
+		lvdocNr := AllPages := ExportedDocs := exportedPages := 0
 		For lfdnr, file in PatDok[Pat.NR] {
 
 				DimmerPGS(lvdocNr ++, DokMax, StrLen(DokMax))
@@ -631,41 +780,59 @@ ZeigeDokumente(row)                                                             
 
 		; Daten zu den Dokumenten zusammenstellen
 			RegExMatch(file.filename, "i)\.(?<xt>[a-z]+)$", e)
-			exported    	:= searchable := ""
-			pages       	:= 0
-			datum 	    	:= SubStr(file.datum, 7, 2) "." SubStr(file.datum, 5, 2) "."SubStr(file.datum, 1, 4)
-			docPath    	:= PatPath "\" file.datum " - " file.Bezeichnung "." file.ext
-			originalPath 	:= AlbisPath "\Briefe\" file.filename
-			docExist     	:= false
+			datum 	        	:= SubStr(file.datum, 7, 2) "." SubStr(file.datum, 5, 2) "." SubStr(file.datum, 1, 4)
+			docPath        	:= PatPath "\" file.datum " - " file.Bezeichnung "." file.ext
+			originalPath     	:= AlbisPath "\Briefe\" file.filename
+			exported        	:= searchable := ""
+			docExist         	:= false
+			pages           	:= 0
+			fileSize           	:= 0
 
 		  ; Exportstatus
 			If FileExist(docPath) {
 				exported	:= "Ja"
 				docExist  	:= true
 				viewPath 	:= docPath
+				ExportedDocs += 1
 			} else if FileExist(originalPath) {
-				exported	:= "-"
+				exported	:= ""
 				docExist 	:= true
 				viewPath 	:= originalPath
 			}
 
-		  ; Dokument ist durchsuchbar und Seitenzahl
+		  ; Dokumenteigenschaften: durchsuchbar (OCR oder Text) und Seitenzahl, wenn Seitenzahl nicht verfügbar dann Dateigröße
 				If (docExist && RegExMatch(file.ext,"i)pdf")) {
 					searchable 	:= PDFisSearchable(viewPath) ? "Ja" : ""
 					pages       	:= PDFGetPages(viewPath, Addendum.qpdfPath)
+					pages         	:= pages > 0 ? pages : pages
 				}
 				else If docExist && RegExMatch(file.ext,"i)(txt|doc|docx|odt|xml)") {
 					searchable	:= "Ja"
+					If RegExMatch(file.ext,"i)(doc|docx|odt)") {
+						SplitPath, originalPath, sourcename, sourcepath
+						fex    	:= Filexpro(originalPath,, "System.Document.PageCount")
+						pages	:= fex["System.Document.PageCount"]
+					}
+				}
+				else If docExist && RegExMatch(file.ext,"i)(txt|jpg|png|avi|wmi|wmv|mp3)") {
+					FileGetSize, FSize, % originalPath, K
+					fileSize     	:= FSize >= 1024 ? Round(FSize/1024, 1) " MB" : FSize " KB"
 				}
 
 		; Eintragen in die Listview
 				Gui, DXP: Default
 				Gui, DXP: ListView, DXP_DLV
-				LV_Add((!exported ? "Check" : ""), datum, ext, file.Bezeichnung, exported, searchable, (pages = 0 ? "" : pages), LFDNR)
+				LV_Add(""	, datum
+								, ext
+								, file.Bezeichnung (!docExist ? " (Datei fehlt!)" : "")
+								, exported
+								, searchable
+								, (pages ? pages : filesize)
+								, LFDNR)
 
 				AllPages += pages
 				If (exported = "Ja")
-					exportedPages += pages
+					ExportedPages 	+= pages
 
 		}
 
@@ -674,13 +841,17 @@ ZeigeDokumente(row)                                                             
 			LV_ModifyCol()
 			LV_ModifyCol(4, "40")
 			LV_ModifyCol(5, "40")
-			LV_ModifyCol(6, "50")
+			LV_ModifyCol(6, "90")
 			LV_ModifyCol(7, "70")
+			GuiControl, DXP: Enable, DXP_AB
+			GuiControl, DXP: Enable, DXP_KB
+			GuiControl, DXP: Enable, DXP_LB
+			GuiControl, DXP: Enable, DXP_EP
 		}
 
 	; neuen Statustest setzen
-		DokumentInfo := (PatDok[Pat.NR].Count() > 0 ? PatDok[Pat.NR].Count() : "keine") " Dokumente"
-		DokumentInfo .= (PatDok[Pat.NR].Count() > 0 ? " , Gesamtseitenzahl: " AllPages ", exportierte Dokumente:" exportedPages : "")
+		DokumentInfo := (PatDok[Pat.NR].Count() > 0 ? PatDok[Pat.NR].Count() " Dokumente, exportiert: " ExportedDocs : "keine Dokumente")
+		DokumentInfo .= (PatDok[Pat.NR].Count() > 0 ? "| Seiten gesamt: " AllPages ", exportiert: " ExportedPages : "")
 		SB_SetText(DokumentInfo)
 		SB_SetText("", 2)
 		SB_SetText("PatNR: " Pat.NR, 3)
@@ -689,9 +860,10 @@ ZeigeDokumente(row)                                                             
 	; Overlay-Gui ausschalten
 		DimmerGui("off")
 
+return PATDok
 }
 
-DBDokumente(PATNR, dokext="pdf,jpg,gif,png,wav,avi,mov,doc,docx") 	{
+Dokumente_GetFromDB(PATNR, dokext="pdf,jpg,gif,png,wav,avi,mov,doc,docx") 	{
 
 		global DPGS_init, DBASEFileName
 
@@ -753,7 +925,6 @@ DBDokumente(PATNR, dokext="pdf,jpg,gif,png,wav,avi,mov,doc,docx") 	{
 			else
 				INHALT := "unbenannt"
 
-
 			; doppelte Dateinamen finden und aktuellen Dateinamen mittels Zähler eindeutig machen
 				filecount := 0
 				For tmpLFDNR, file in ftoex {
@@ -762,23 +933,22 @@ DBDokumente(PATNR, dokext="pdf,jpg,gif,png,wav,avi,mov,doc,docx") 	{
 						filecount := filecounter ? filecounter+1 : 1
 				}
 				INHALT .= (filecount ? " - " filecount : INHALT = "unbenannt" ? "- 1" : "")
-				;SciTEOutput(SubStr("00" i, -1) ": " INHALT)
-
-			ftoex[m.TEXTDB].Bezeichnung :=  INHALT	; TEXTDB = LFDNR
+				ftoex[m.TEXTDB].Bezeichnung :=  INHALT	; TEXTDB = LFDNR
 
 		}
 
 return ftoex
 }
-
-
 ;}
 
 ;--- Dokumente exportieren    	;{
-LVExport() {                                                                                                           	;-- exportiert ausgewählte Dokumente
+Dokumente_Export()                                                                         	{	;-- exportiert ausgewählte Dokumente
 
-		Pat        	:= LV_GetSelectedRow()
-		dokument := Array()
+		global PATDok
+
+	; Patient
+		Pat            	:= LV_GetPatient()
+		dokumente 	:= Array()
 
 	; Listview default machen
 		Gui, DXP: Default
@@ -788,23 +958,25 @@ LVExport() {                                                                    
 		row := 0
 		while (row := LV_GetNext(row, "C")) {
 			LV_GetText(LFDNR, row, 7)
-			dokument[A_Index] := PatDok[Pat.NR][LFDNR]
+			dokumente.Push(PatDok[Pat.NR][LFDNR])
+			;~ SciTEOutput(LFDNR "|" PatDok[Pat.NR][LFDNR])
 		}
 
 	; Exportvorgang ausführen
-		If (dokument.Count() = 0) {
-			SB_SetText("KEINE EXPORTAUSWAHL GETROFFEN!", 1)
+		If (dokumente.Count() = 0) {
+			msg := "KEINE EXPORTAUSWAHL GETROFFEN!"
+			SB_SetText(msg, 4)
+			MsgBox, % msg
 			return 0
 		}
 
-		filesLeft :=Dokumentexport(Pat.NR, Pat.NAME ", " Pat.VORNAME, dokument, exportordner)
+		filesLeft :=Dokumente_Filecopy(Pat.NR, Pat.NAME ", " Pat.VORNAME, dokumente, exportordner)
 		PraxTT("Dateien exportiert. Rest " filesLeft, "3 0")
-
 
 return filesLeft = 0 ? 1 : -1*filesLeft
 }
 
-Dokumentexport(PATNR, PATName, dokument, exportPath) {                                     	;-- kopiert die ausgewählten Dokumente aus albiswin/briefe in den Exportordner
+Dokumente_Filecopy(PATNR, PATName, dokument, exportPath)         	{	;-- kopiert die ausgewählten Dokumente aus albiswin/briefe in den Exportordner
 
 		global AlbisPath, exportordner
 
@@ -822,32 +994,161 @@ Dokumentexport(PATNR, PATName, dokument, exportPath) {                          
 	; Dateien kopieren
 		For row, file in dokument {
 			exportFile := PatPath "\" file.datum " - " file.Bezeichnung "." file.ext
-			If FileExist(exportFile)
+			If FileExist(exportFile) {
+				Dokumente_Uncheck(file.Bezeichnung)
 				continue
+			}
 			FileCopy, % AlbisPath "\Briefe\" file.filename, % exportFile, 1
+			If !ErrorLevel {
+				copynr ++
+				Dokumente_Uncheck(file.Bezeichnung)
+				SB_SetText(copynr " von " dokument.Count() " Dateien exportiert.")
+			}
 			SB_SetText(AlbisPath "\Briefe\" file.filename, 1)
 			SB_SetText(PatPath "\" file.datum " - " file.Bezeichnung "." file.ext, 4)
 			SB_SetText(ErrorLevel, 2)
-			If !ErrorLevel {
-				copynr ++
-				SB_SetText(copynr " von " dokument.Count() " Dateien exportiert.")
-				LV_Modify(row, "-Check")
-			}
 		}
 
 return dokument.Count() - copynr
 }
 
-KarteikartenExport() {                                                                                               	;-- Tagesprotokoll und Laborblatt werden exportiert
+Dokumente_Print()                                                                            	{
 
-		global DXP_VB, DXP_KKF
+	; PatDok ist globales Objekt
+	; Sumatra PDFReader wird für das Drucken von PDF Dateien übr die console benötigt
+
+	;MsgBox, 0x4, DocPrinz, Möchten Sie die Vorschaufunktion benutzen?`n`n(PDF Dateien werden mit dem Sumatra PDFReader dagestellt.)
+
+	; Variablen
+		global SecureGOText
+		row := checkedRows := pages := 0
+		files := Array()
+
+	; Drucker
+		Gui, DXP: Submit, NoHide
+		GuiControlGet, Printer, DXP: , DXP_PRD
+		RegExMatch(DXP_ABR, "\d+" docCount)
+		GuiControl, DXP: Disable, DXP_DLV
+		SecureGOText := true
+
+	; Patient
+		Pat := LV_GetPatient()
+
+	; abgehakte Einträge einsammeln
+		Gui, DXP: ListView, DXP_DLV
+		Loop % LV_GetCount() {
+
+			If !(row := LV_GetNext(row, "Checked"))
+				break
+
+			checkedRows ++
+
+			LV_GetText(LFDNR, row, 7)
+			LV_GetText(pagecount, row, 6)
+			pages += (RegExMatch(pagecount, "^\d+$") ? pagecount : 1)  ; Pauschal werden reine Bilddateien als einseitig angenommen
+
+			If PATDok[Pat.NR][LFDNR].print {
+
+				MsgBox, 0x4, DocPrinz, % PATDok[Pat.NR][LFDNR].Bezeichnung "`nwurde schon gedruckt. Soll das Dokument erneut gedruckt werden?"
+				IfMsgBox, No
+					continue
+
+			}
+
+			filepath := AlbisPath "\Briefe\" PATDok[Pat.NR][LFDNR].filename
+			RegExMatch(filepath, "\.(?<ext>[a-z]+)$", file)
+
+			Switch fileext {
+
+				Case "pdf":
+					If (Print_Pdf(filepath, Printer) = 1) {
+						PATDok[Pat.NR][LFDNR].print := true
+
+					}
+
+			}
+
+		}
+
+	; Gebührentext erstellen
+		GOText := pages > 0 ? AlbisKopiekosten(DXP_ABRP, pages, true) : ""                                ; gibt nur den Gebührentext zurück
+		GuiControl, DXP:, DXP_GO, % (IsObject(GOText) ? GOText.1 (GOText.2 ? "-" GOText.2 : "") : "")
+
+	; Listview aktivieren
+		GuiControl, DXP: Enable, DXP_DLV
+
+		SecureGOText := false
+}
+
+Print_Pdf(filepath:="", Printer:="")                                                    	{	;-- Pdf per Sumatra PDFReader commandline Aufruf ausdrucken
+
+	global SumatraCMD, SumatraExist
+	static smtracmdline
+
+	If  !smtracmdline
+		smtracmdline := " -print-to " q "#printer#" q " -print-settings " q "duplex" q " -exit-when-done " ; Dateiname
+
+	If !SumatraCMD {
+		SumatraCMD := GetAppImagePath("SumatraPDF")
+		If (StrLen(SumatraCMD) > 0) && FileExist(SumatraCMD)
+			SumatraExist := true
+	}
+
+	If SumatraCMD {
+
+		stdoutCMD := SumatraCMD . StrReplace(smtracmdline, "#printer#", Printer) " " q . filepath . q
+		;SciTEOutput(stdoutCMD)
+		If (stdout := StdoutToVar(stdoutCMD))
+			SciTEOutput(stdout)
+
+	}
+
+return stdout ? stdout : 1
+}
+
+Dokumente_Abrechnung()                                                               	{	;-- Gebührentext erstellen und eintragen
+
+	global DXP_GO
+
+	Gui, DXP: Submit, NoHide
+	If (StrLen(Trim(DXP_GO)) = 0)
+		return
+	Clipboard := DXP_GO
+	ClipWait, 1
+
+
+
+}
+
+Dokumente_Uncheck(filedescription)                                                 	{	;-- Haken entfernen
+
+		Gui, DXP: Default
+		Gui, DXP: ListView, DXP_DLV
+		Loop % LV_GetCount() {
+
+			LV_GetText(txt, A_Index, 3)
+			If (txt = filedescription) {
+				row := A_Index
+				LV_Modify(row, "-Check")
+				LV_Modify(row, "Col4", "Ja")
+				return row
+			}
+
+		}
+
+return 0
+}
+
+Karteikarte_Export()                                                                       	{	;-- Tagesprotokoll und Laborblatt werden exportiert
+
+		global DXP_VB, DXP_KKF, DXP_PLV
 
 		Gui, DXP: Default
 		Gui, DXP: ListView, DXP_PLV
 		Gui, DXP: Submit, NoHide
 
 	; Patienten Nummer bekommen
-		Pat := LV_GetSelectedRow()
+		Pat := LV_GetPatient()
 		If !RegExMatch(Pat.NR, "^\d+$")
 			return
 
@@ -856,7 +1157,6 @@ KarteikartenExport() {                                                          
 			PraxTT(A_ScriptName "`n" A_ThisFunc "`nDer Patientenexportpfad konnte nicht angelegt werden", "3 1")
 			return 0
 		}
-		KKFilePath	:= PatPath "\Karteikartenauszug von " Pat.NAME ", " Pat.VORNAME
 
 	; Karteikarte des Patienten öffnen
 		AlbisAkteOeffnen(Pat.NAME ", " Pat.VORNAME, Pat.NR)
@@ -867,7 +1167,7 @@ KarteikartenExport() {                                                          
 		; Werte exportieren
 			If !FileExist(PatPath "\Laborkarte von " Pat.NAME ", " Pat.VORNAME) {
 				PraxTT("Laborwerte werden exportiert.", "20 1")
-				LBlattRes := LaborblattExport(Pat.NAME ", " Pat.VORNAME, PatPath)
+				LBlattRes := Laborblatt_Export(Pat.NAME ", " Pat.VORNAME, PatPath)
 			}
 			else {
 				PraxTT("Laborwerte wurden bereits exportiert.", "3 1")
@@ -878,19 +1178,27 @@ KarteikartenExport() {                                                          
 	; TAGESPROTOKOLL EXPORTIEREN (Karteikarte!)
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 		; Tagesprotokoll für Patient erstellen
+			MsgBox, 0x4, Weiter?, % "Kürzel: " DXP_KKF
+			IfMsgBox, No
+				return
+
 			PraxTT("Karteikarteneinträge werden exportiert.", "20 1")
-			options := {	"Periode"	: DXP_VB
-							, 	"Patienten"	: "aktiver_Patient"
-							, 	"Kuerzel" 	: DXP_KKF
-							, 	"Cave"   	: false}
-							SciTEOutput("Kürzel: " DXP_KKF)
-			TProtRes := AlbisErstelleTagesprotokoll(options,, false)
-			If (TProtRes := !RegExMatch(TProtRes, "i)[A-Z]\:\\") ? 1 : 0) {
+			TProtRes := AlbisErstelleTagesprotokoll({"Periode"	                                    	: DXP_VB
+																	, 	"Patienten"                                      	: "aktiver_Patient"
+																	,	"Filter"                                            	: DXP_KKF
+																	,	"Cave"                                           	: false
+																	,	"Hinweis_bei_fehlender_Diagnose"   	: false
+																	,	"Sortierung_nach_Namen"             	: false}
+																	, 	false)
+			;SciTEOutput("Kürzel: " DXP_KKF)
+
+			If (!RegExMatch(TProtRes, "i)[A-Z]\:\\") ? 1 : 0) {
 
 				; Tagesprotokoll aktivieren
 					AlbisMDIChildActivate("Tagesprotokoll")
 
 				; Protokoll über Drucken speichen
+					KKFilePath	:= PatPath "\Karteikartenauszug von " Pat.NAME ", " Pat.VORNAME
 					If FileExist(KKFilepath ".pdf")
 						FileDelete, % KKFilepath ".pdf"
 					TProtRes := AlbisSaveAsPDF(KKFilePath)
@@ -906,32 +1214,35 @@ KarteikartenExport() {                                                          
 return  {"Patient":Pat.NAME ", " Pat.VORNAME " (" Pat.NR ")", "TP": TProtRes, "LB": LBlattRes}
 }
 
-LaborblattExport(name, PatPath, Printer="", Spalten="Alles")                 	{                	;-- automatisiert den Laborblattexport
+Laborblatt_Export(name, PatPath, Printer="", Spalten="Alles")             	{ 	;-- automatisiert den Laborblattexport
 
 		static AlbisViewType
 
 		AlbisViewType	:= AlbisGetActiveWindowType(true)
 		savePath       	:= PatPath "\Laborkarte von " name
-		Printer            	:= Printer ? Printer : "Microsoft Print to PDF"
-		Spalten         	:= Spalten ? Spalten : "Alles"
+		Printer            	:= StrLen(Printer) 	> 0 ? Printer 	: "Microsoft Print to PDF"
+		Spalten         	:= StrLen(Spalten)	> 0 ? Spalten 	: "Alles"
 
 		If FileExist(savePath ".pdf")
 			FileDelete, % savePath ".pdf"
 
 	; Aufruf der Automatisierungsfunktion
 		res := AlbisLaborblattExport(Spalten, savePath, Printer)
-		If (res = 0) || (res > 1) {
-			PraxTT("Der Export der Laborwerte ist fehlgeschlagen.`nFehlercode: " res, "4 1")
-			return 0
-		}
 
 	; ursprüngliche Ansicht wiederherstellen
 		If (AlbisViewType <> AlbisGetActiveWindowType(true))
 			AlbisKarteikartenAnsicht(AlbisViewType)
 
+	; Fehlercodeanzeige
+		If (res = 0) || (res > 1) {
+			PraxTT("Der Export der Laborwerte ist fehlgeschlagen.`nFehlercode: " res, "4 1")
+			return 0
+		}
+
+return 1
 }
 
-CreatePatPath(PATNR, PATName, exportPath:="") {                                                   	;-- legt den Patientenexportpfad an
+CreatePatPath(PATNR, PATName, exportPath:="")                             	{ 	;-- legt den Patientenexportpfad an
 
 	If !exportPath
 		exportPath := ExportOrdner
@@ -946,11 +1257,10 @@ CreatePatPath(PATNR, PATName, exportPath:="") {                                 
 return PatPath
 }
 
-
 ;}
 
 ;--- Patientensuche                 	;{
-DXPSearch(callfrom) {                                                 	;-- für Interskript-Kommunikation (Fernsteuerung,Abfrage durch andere Skripte)
+DXPSearch(callfrom)                                                                       	{	;-- für Interskript-Kommunikation (Fernsteuerung,Abfrage durch andere Skripte)
 
 		global DXP, DXP_Pat, DXP_DLV, DXP_PLV
 
@@ -1019,7 +1329,7 @@ DXPSearch(callfrom) {                                                 	;-- für 
 return
 }
 
-DBASEGetPatID(searchstr, debug=false) {                     	;-- sucht in der PATIENT.DBF
+DBASEGetPatID(searchstr, debug=false)                                         	{	;-- sucht in der PATIENT.DBF
 
 	static DBFPatient
 
@@ -1114,13 +1424,13 @@ DBASEGetPatID(searchstr, debug=false) {                     	;-- sucht in der PA
 	;-----------------------------------------------------------------------------------------------
 	; Nachname (Wort mit Bindestrich, auch zwei Worte mit Leerzeichen)
 	;-----------------------------------------------------------------------------------------------
-		else If RegExMatch(searchstr, "i)^[a-zßäöü\p{L}\-]+\s*,*$")
+		else If RegExMatch(searchstr, "i)^[a-zßäöü\p{L}\-\s]+\s*,*$")
 			spattern := {"NAME" : ("rx:" searchstr ".*?[^\d]")}         ; findet sonst auch Straßennamen
 
 	;-----------------------------------------------------------------------------------------------
 	; Nachname, Vorname (wie oben beschrieben)
 	;-----------------------------------------------------------------------------------------------
-		else If RegExMatch(searchstr, "i)^(?<nn>[a-zßäöü\p{L}\-]+)\s*,\s*(?<vn>[a-zßäöü\p{L}\-]+)$", s)
+		else If RegExMatch(searchstr, "i)^(?<nn>[a-zßäöü\p{L}\-\s]+)\s*,\s*(?<vn>[a-zßäöü\p{L}\-\s]+)$", s)
 			spattern := {"NAME" : ("rx:.*?" snn), "VORNAME": ("rx:.*?" svn)}
 
 	;-----------------------------------------------------------------------------------------------
@@ -1132,7 +1442,7 @@ DBASEGetPatID(searchstr, debug=false) {                     	;-- sucht in der PA
 	;-----------------------------------------------------------------------------------------------
 	; Straße Hausnummer (anstatt einer Nummer ein Sternchen verwenden)
 	;-----------------------------------------------------------------------------------------------
-		else If RegExMatch(searchstr, "i)^(?<streetn>[a-zßäöü-]+)\s(?<streetnr>\*|[\da-z]+)$", s) {
+		else If RegExMatch(searchstr, "i)^(?<streetn>[a-zßäöü\p{L}\-\s]+)\s+(?<streetnr>\*|[\da-z]+)$", s) {
 			If !InStr(sstreetnr, "*")
 				spattern := {"STRASSE" : ("rx:.*?" sstreetn), "HAUSNUMMER" : ("rx:.*?" sstreetnr)}
 			else
@@ -1142,13 +1452,13 @@ DBASEGetPatID(searchstr, debug=false) {                     	;-- sucht in der PA
 	;-----------------------------------------------------------------------------------------------
 	; Patienten Nr (nur Zahleneingabe)
 	;-----------------------------------------------------------------------------------------------
-		else If RegExMatch(searchstr, "i)^\d+$")
+		else If RegExMatch(searchstr, "^\d+$")
 			spattern := {"NR" : searchstr}
 
 	;-----------------------------------------------------------------------------------------------
 	; Arbeit (A:)
 	;-----------------------------------------------------------------------------------------------
-		else If RegExMatch(searchstr, "i)^A\s*\:\s*(?<Arbeit>.*)$", s)
+		else If RegExMatch(searchstr, "^A[\s\:]+(?<Arbeit>.*)$", s)
 			spattern := {"ARBEIT" : ("rx:.*?" sArbeit)}
 
 	;-----------------------------------------------------------------------------------------------
@@ -1174,7 +1484,7 @@ return matches
 ;}
 
 ;--- Extra Funktion                 	;{
-Antragzaehler() {
+Antragzaehler()                                                                             	{
 
 	antragfilter:= ["i)lageso", "^Au\s|$", "Anfrage", "Antrag", ",ausgefüllt", "MDK Anfrage", "Bericht medizinisch.*Dienst", "Auszahlschein", "Bericht.*lebens.*versich", "Bescheinigung.*Versicherung"
 						, "Befundbericht.*REHA", "Antrag.*Rente", "Erinnerung.*DRV", "RLV.*Anfrage", "REHA.*Antrag", "Landesamt.*Versorgung", "Landesamt.*Sozial", "Ärztliches Attest", "zahlschein"
@@ -1183,6 +1493,96 @@ Antragzaehler() {
 
 
 }
+
+Filexpro( sFile := "", Kind := "", P* )                                                 	{	;-- v.90 By SKAN on D1CC @ goo.gl/jyXFo9
+Local
+Static xDetails
+
+	If ( sFile = "" )   {                                                           ;   Deinit static variable
+        xDetails := ""
+        Return
+    }
+
+  fex := {}, _FileExt := ""
+
+  Loop, Files, % RTrim(sfile,"\*/."), DF
+    {
+        If not FileExist( sFile:=A_LoopFileLongPath )
+          {
+              Return
+          }
+
+        SplitPath, sFile, _FileExt, _Dir, _Ext, _File, _Drv
+
+        If ( p[p.length()] = "xInfo" )                          ;  Last parameter is xInfo
+          {
+              p.Pop()                                           ;         Delete parameter
+              fex.SetCapacity(11)                               ; Make room for Extra info
+              fex["_Attrib"]    := A_LoopFileAttrib
+              fex["_Dir"]       := _Dir
+              fex["_Drv"]       := _Drv
+              fex["_Ext"]       := _Ext
+              fex["_File"]      := _File
+              fex["_File.Ext"]  := _FileExt
+              fex["_FilePath"]  := sFile
+              fex["_FileSize"]  := A_LoopFileSize
+              fex["_FileTimeA"] := A_LoopFileTimeAccessed
+              fex["_FileTimeC"] := A_LoopFileTimeCreated
+              fex["_FileTimeM"] := A_LoopFileTimeModified
+          }
+        Break
+    }
+
+  If Not ( _FileExt )                                   ;    Filepath not resolved
+    {
+        Return
+    }
+
+
+  objShl := ComObjCreate("Shell.Application")
+  objDir := objShl.NameSpace(_Dir)
+  objItm := objDir.ParseName(_FileExt)
+
+  If ( VarSetCapacity(xDetails) = 0 )                           ;     Init static variable
+    {
+        i:=-1,  xDetails:={},  xDetails.SetCapacity(309)
+
+        While ( i++ < 309 )
+          {
+            xDetails[ objDir.GetDetailsOf(0,i) ] := i
+          }
+
+        xDetails.Delete("")
+    }
+
+  If ( Kind and Kind <> objDir.GetDetailsOf(objItm,11) )        ;  File isn't desired kind
+    {
+        Return
+    }
+
+  i:=0,  nParams:=p.Count(),  fex.SetCapacity(nParams + 11)
+
+  While ( i++ < nParams )
+    {
+        Prop := p[i]
+
+        If ( (Dot:=InStr(Prop,".")) and (Prop:=(Dot=1 ? "System":"") . Prop) )
+          {
+              fex[Prop] := objItm.ExtendedProperty(Prop)
+              Continue
+          }
+
+        If ( PropNum := xDetails[Prop] ) > -1
+          {
+              fex[Prop] := ObjDir.GetDetailsOf(objItm,PropNum)
+              Continue
+          }
+    }
+
+  fex.SetCapacity(-1)
+Return fex
+
+} ;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ;}
 
@@ -1245,9 +1645,6 @@ LV_ChooseAll() {
 	Loop, % LV_GetCount()
 		LV_Modify(A_Index, "Check")
 
-	GuiControl, DXP: Enable, DXP_EA
-	GuiControl, DXP:, DXP_EA, % LV_GetCount() " Dokumente exportieren"
-
 }
 
 LV_ChooseNone() {
@@ -1255,9 +1652,6 @@ LV_ChooseNone() {
 	Gui, DXP: ListView, DXP_DLV
 	Loop, % LV_GetCount()
 		LV_Modify(A_Index, "-Check")
-
-	GuiControl, DXP: Disable, DXP_EA
-	GuiControl, DXP:, DXP_EA, % "Dokumente exportieren"
 
 }
 
@@ -1275,12 +1669,9 @@ LV_ChooseLastYears(yearsback:=2) {
 		}
 	}
 
-	GuiControl, DXP: Enable, DXP_EA
-	GuiControl, DXP:, DXP_EA, % iamchecked " Dokument" (iamchecked>1 ? "e": "") " exportieren"
-
 }
 
-LV_GetSelectedRow(LVName:="DXP_PLV") {
+LV_GetPatient(LVName:="DXP_PLV") {
 
 	global DXP
 
@@ -1300,24 +1691,38 @@ return {"NR":PATNR, "NAME":NAME , "VORNAME":VORNAME}
 
 LV_CountCheckedDocs() {
 
-		global DXP, DXP_LV, DXP_EA
+		global DXP, DXP_DLV, DXP_EA, DXP_ABRP, DXP_PRN, DXP_ABR
+		global SecureGOText
 
+		Gui, DXP: Submit, NoHide
 		Gui, DXP: ListView, DXP_DLV
 
 	; abgehakte Einträge zählen
-		row := checkedRows := 0
+		row := checkedRows := pages := 0
 		Loop % LV_GetCount() {
+
 			If !(row := LV_GetNext(row, "Checked"))
 				break
 			checkedRows ++
+			LV_GetText(pagecount, row, 6)
+			pages += (RegExMatch(pagecount, "^\d+$") ? pagecount : 1)  ; Pauschal werden reine Bilddateien als einseitig angenommen
+
 		}
 
-		If (checkedRows > 0)
-			GuiControl, DXP: Enable, DXP_EA
-		else
-			GuiControl, DXP: Disable, DXP_EA
+		Dokumentzahl 	:= (checkedRows = 0 ? "" : checkedRows) " Dokument" (checkedRows=1 ? " ": "e ")
 
-		GuiControl, DXP:, DXP_EA, % (checkedRows = 0 ? "" : checkedRows) " Dokument" (checkedRows=1 ? "": "e") " exportieren"
+		GuiControl, % "DXP: " (checkedRows 	? "Enable" : "Disable"), DXP_EA
+		GuiControl, % "DXP: " (checkedRows 	? "Enable" : "Disable"), DXP_PRN
+		GuiControl, % "DXP: " (pages         	? "Enable" : "Disable"), DXP_ABR
+
+		GuiControl, DXP:, DXP_EA 	, % Dokumentzahl "exportieren"
+		GuiControl, DXP:, DXP_PRN	, % Dokumentzahl "drucken"
+		GuiControl, DXP:, DXP_ABR  	, % (pages = 0 ? "" : pages) " Kopie" (pages=1 ? " ": "n ") "abrechnen"
+
+		If !SecureGOText {
+			GOText := pages > 0 ? AlbisKopiekosten(DXP_ABRP, pages, true) : ""                                ; gibt nur den Gebührentext zurück
+			GuiControl, DXP:, DXP_GO  	, % (IsObject(GOText) ? GOText.1 (GOText.2 ? "-" GOText.2 : "") : "")
+		}
 
 }
 
@@ -1677,21 +2082,10 @@ SciTEOutput(Text:="", Clear=false, LineBreak=true, Exit=false) {                
 
 ;---- Hades                            	;{
 
-	;~ items := StrSplit(cbList, "`n")
-	;~ For i, item in items
-		;~ If (StrLen(item) > 0)
-			;~ cbitems .= item (items.Count() = i ? "" : "|")
-
-;return cbitems
-
-		; add new item to list,
-		;~ If !itemfound {
-		;~ cbitems.InsertAt(1, newitem)									; add item at beginning
-		;~ If (cbitems.Length() > maxItems)							; remove items from list
-			;~ cbitems.Pop()
-		;~ }
-			;cbitems.Delete(maxItems+1, cbitems.Length())
 
 ;}
 
-^!#::Reload
+^!#::
+ReloadGui := true
+gosub DXPGuiClose
+return

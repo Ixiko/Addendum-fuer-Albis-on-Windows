@@ -1,4 +1,4 @@
-﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;               															⚫      INFOFENSTER		⚫
 ;
 ;      Funktionen:   	▫ Verwaltung/Bearbeitung (Texterkennung/Kategorisierung) gescannter Post vor dem Import in die Patientenkartei
@@ -14,8 +14,8 @@
 ;
 ;
 ;	                    	Addendum für Albis on Windows
-;                        	by Ixiko started in September 2017 - letzte Änderung 25.06.2021 - this file runs under Lexiko's GNU Licence
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                        	by Ixiko started in September 2017 - letzte Änderung 12.07.2021 - this file runs under Lexiko's GNU Licence
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
 
 ; Infofenster
@@ -28,21 +28,30 @@ AddendumGui(admShow="", admGuiDebug="false")                         	{
 
 		static admWidth, admHeight, admTabNames, admLVPatOpt, admLVJournalOpt, admLVTProtokoll ;, DDLPrinter
 		static ImportChecks := 0
+		static admTags
 
 		local MObj, MNr, cpx, cpy, cpw, cph
 		local APos, SPos, mox, moy, moWin, moCtrl, regExt, Aktiv, Pat, nfo, res
 		local ClientName, LanClients, ClientIP, onlineclient, OffLineIndex, InfoText, found, YPlus, Y
+
+		If WinExist("AddendumGui ahk_class AutohotkeyGui") {
+			SciTEOutput("Infofenster vorhanden.")
+			RedrawWindow(hadm)
+			return
+		}
 
 		If !Addendum.iWin.Init {
 
 			; Befunde (Klassen-Objekt) - Dateihandler für alle Dateizugriffe auf den Befundordner
 				Befunde.options(false)
 
+				Addendum.iWin.Init            	:= 1
 				Addendum.iWin.FilesStack 	:= []
 				Addendum.iWin.OCRStack 	:= []
 				Addendum.iWin.RowColors	:= false
 				Addendum.iWin.Imports     	:= 0
 				Addendum.iWin.ImportsLast 	:= -1
+				Addendum.iWin.Check      	:= 0
 				Addendum.iWin.ReCheck   	:= 0
 				Addendum.iWin.paint        	:= 0
 				Addendum.ImportFromPat   	:= false           	; Import aus Patient Tab läuft
@@ -52,12 +61,18 @@ AddendumGui(admShow="", admGuiDebug="false")                         	{
 				func_admGui       	:= Func("AddendumGui")
 				factor                	:= A_ScreenDPI / 96
 
+				admTags            	:= {	"positive"	: "Karteikarte|Laborblatt|Biometriedaten|Rechnungsliste"
+											   ,	"negative"	: "Abrechnung|Privatabrechnung|Überweisung"}
+
 				admTabNames  	:= "Patient|Journal|Protokoll|Extras|Netzwerk|Info"
 				admLVPatOpt    	:= " r" (Addendum.iWin.LVScanPool.r)
 				admBGColor    	:= "BackgroundF0F0F0 "
-				admLVPatOpt    	.= " gadm_Reports vadmReports   	 HWNDadmHReports     AltSubmit -Hdr ReadOnly LV0x10020 0x5001804B " admBGColor
-				admLVJournalOpt	:= " gadm_Journal vadmJournal 	 HWNDadmHJournal 	 AltSubmit                        LV0x10020 0x50210049 -E0x200 " admBGColor
-				admLVTProtokoll 	:= " gadm_TProtLV vadmTProtokoll HWNDadmHTProtokoll AltSubmit        ReadOnly  LV0x10020 0x50210049 -E0x200 " admBGColor
+				admLVPatOpt    	.= " gadm_Reports vadmReports   	 HWNDadmHReports     AltSubmit -Hdr ReadOnly LV0x10020"
+											. 	 " 0x5001804B " admBGColor
+				admLVJournalOpt	:= " gadm_Journal vadmJournal 	 HWNDadmHJournal 	 AltSubmit                        LV0x10020"
+											.	 " 0x50210049 -E0x200 " admBGColor
+				admLVTProtokoll 	:= " gadm_TProtLV vadmTProtokoll HWNDadmHTProtokoll AltSubmit        ReadOnly  LV0x10020"
+											.	 " 0x50210049 -E0x200 " admBGColor
 
 			;----------------------------------------------------------------------------------------------------------------------------------------------
 			; Druckerliste anlegen
@@ -180,30 +195,34 @@ AddendumGui(admShow="", admGuiDebug="false")                         	{
 	; Abbruch des Selbstaufrufes der Funktion
 	;  ( Albis wurde beendet oder es wurden mehr als 9 Versuche gebraucht um die Gui zu integrieren )
 		If !WinExist("ahk_class OptoAppClass") || (Addendum.iWin.ReCheck > 9) {
-			Addendum.iWin.ReCheck := Addendum.iWin.lastPatID := 0
+
 			admGui_Destroy()
 			If (Addendum.iWin.ReCheck > 9) {
 				SetTimer, % func_admGui, Off
 				TrayTip, AddendumGui, % "Die Integration des Infofenster ist fehlgeschlagen.", 2
 			}
+			Addendum.iWin.ReCheck := Addendum.iWin.paint := Addendum.iWin.Check := Addendum.iWin.lastPatID := 0
 			return
+
 		}
 
 	; Position innerhalb des Albisfenster für die Integration finden
 		Aktiv          	:= Addendum.AktiveAnzeige := AlbisGetActiveWindowType()
 		res                := Controls("", "Reset", "")
-		hMDIFrame	:= Controls("AfxMDIFrame1401"	, "ID", AlbisMDIChildGetActive())     	; AlbisMDIChildGetActive(): Steuerelement-ID im aktiven Fenster
+		hMDIFrame	:= Controls("AfxMDIFrame1401"	, "ID", AlbisMDIChildGetActive())     	; AlbisMDIChildGetActive(): Steuerelement-ID
+																																		; im aktiven Fenster
 		hStamm		:= Controls("#327701"             	, "ID", hMDIFrame)                        	; Stammdaten Steuerelement-ID
-		If (!RegExMatch(Aktiv, "i)(Karteikarte|Laborblatt|Biometriedaten|Rechnungsliste)", winType) || !hMDIFrame || !hStamm) {
-			SetTimer, % func_admGui, -1000
+		Addendum.iWin.Check ++
+		If (!RegExMatch(Aktiv, "i)(" Tags.positive ")", winType) || !hMDIFrame || !hStamm) {   	; || RegExMatch(Aktiv, "i)(" Tags.negative ")")
 			Addendum.iWin.lastPatID := 0
 			Addendum.iWin.ReCheck ++
 			If Addendum.iWin.debug {
 				SciTEOutput( "admGui ReCheck: " Addendum.iWin.ReCheck "|"
-							.	   (wintype 		? "" : "Kontext inkorrekt|")
+							.	   (wintype 		? "" : "Kontext inkorrekt [" wintype "] |")
 							.	   (hMDIFrame 	? "" : "hMDIFrame ist leer|")
 							. 	   (hStamm 		? "" : "hStamm ist leer"))
 			}
+			SetTimer, % func_admGui, -1000
 			return
 		}
 
@@ -212,7 +231,7 @@ AddendumGui(admShow="", admGuiDebug="false")                         	{
 	;---------------------------------------------------------------------------------------------------------------------------------------------
 	; Gui zeichnen
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-	If (Addendum.iWin.lastPatID <> (Addendum.iWin.PatID := AlbisAktuellePatID() )) {
+	If (Addendum.iWin.lastPatID <> (Addendum.iWin.PatID := AlbisAktuellePatID())) {
 
 			Addendum.iWin.lastPatID := Addendum.iWin.PatID
 
@@ -226,7 +245,7 @@ AddendumGui(admShow="", admGuiDebug="false")                         	{
 			Addendum.iWin.X	         	:= APos.CW - Addendum.iWin.W ; ClientWidth passt besser!
 			Addendum.iWin.H          	:= admHeight := SPos.CH
 			admWidth                     	:= Addendum.iWin.W
-			Addendum.iWin.lastPatID	:= AlbisAktuellePatID()
+			;~ Addendum.iWin.lastPatID	:= AlbisAktuellePatID()    ; warum nochmal?
 		;}
 
 		; der Albisinfobereich (Stammdaten, Dauerdiagnosen, Dauermedikamente) wird für das Einfügen der Gui verkleinert ;{
@@ -458,7 +477,7 @@ AddendumGui(admShow="", admGuiDebug="false")                         	{
 
 		;}
 
-		;-: Tab5 :-Netzwerk                       	;{
+		;-: Tab5 :- Netzwerk                       	;{
 			Gui, adm: Tab  	, 5
 
 			dposX := 40, dposY := 60, cMaxW := 0
@@ -525,7 +544,7 @@ AddendumGui(admShow="", admGuiDebug="false")                         	{
 			Gui, adm: Add  	, Text, % "x10 y+" YPlus " w" tw " hwndadmHMT", % "☀ Monitor"
 
 			GuiControlGet, cp, adm: Pos, % admHMT
-			cpy -= 10
+			cpy -= 1
 
 			Loop, % Addendum.Monitor.Count() {
 				Gui, adm: Font	, % "s" fs+12 " Normal"
@@ -549,12 +568,18 @@ AddendumGui(admShow="", admGuiDebug="false")                         	{
 			Gui, adm: Font  	, % "s" fs " bold c172842"
 			Gui, adm: Add  	, Text, % "x10 y+" YPlus " w" tw      	, % "🔄 Infofenster"
 			Gui, adm: Font  	, % "s" fs " Normal"
-			Gui, adm: Add  	, Text, % "x+5 w100 vadmIWInit"	, % Addendum.iWin.paint " : " Addendum.iWin.Init
+			Gui, adm: Add  	, Text, % "x+5 w100 vadmIWInit"	, % "[" Addendum.iWin.paint ":" Addendum.iWin.Init ":0]"
+
+		;}
+
+		;-: Tab7 :- Einstellungen                  	;{
 
 		;}
 
 		Gui, adm: Tab
 
+		admGui_ShowTab(Addendum.iWin.firstTab, admHTab)
+		Addendum.iWin.paint ++
 	}
 	;}
 
@@ -564,7 +589,7 @@ AddendumGui(admShow="", admGuiDebug="false")                         	{
 		; MDIFrame handle gehört dem aktuellen AfxMDIFrame Steuerelement ?
 			Controls("Reset")
 			If !InStr(Controls("", "ControlFind, " hMDIFrame ",, return class", AlbisMDIChildGetActive()), "AfxMDIFrame1401")
-				hMDIFrame	:= Controls("AfxMDIFrame1401", "ID", AlbisMDIChildGetActive())
+				hMDIFrame := Controls("AfxMDIFrame1401", "ID", AlbisMDIChildGetActive())
 				; evtl. das MDIFrame auf WS_Clipsiblings 0x400000 setzen
 
 		; Gui dem aktuellen AfxMidiFrame als Child zuordnen
@@ -573,7 +598,8 @@ AddendumGui(admShow="", admGuiDebug="false")                         	{
 			WinSet, ExStyle 	, 0x0802009C	, % "ahk_id " hadm  ; evtl. +MDIChildWindow 0x40 und/oder AppWindow 0x80000
 
 		; Fenster anzeigen
-			Gui, adm: Show, % "x" Addendum.iWin.X " y" Addendum.iWin.Y " w" Addendum.iWin.W  " h" Addendum.iWin.H " NA " admShow, AddendumGui
+			Gui, adm: Show, % "x" Addendum.iWin.X " y" Addendum.iWin.Y " w" Addendum.iWin.W  " h" Addendum.iWin.H
+									. 	 " NoActivate " admShow, AddendumGui
 
 		; Neuzeichnen der Gui abwarten
 			Sleep 300
@@ -590,22 +616,24 @@ AddendumGui(admShow="", admGuiDebug="false")                         	{
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	; Tabs / Listviews mit Daten befüllen
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-
 		; Inhalte auffrischen und anzeigen
-			Addendum.iWin.ReCheck := 0
 			Addendum.iWin.Init ++
-			GuiControl, adm:, admIWInit, % Addendum.iWin.paint " : " Addendum.iWin.Init
+			GuiControl, adm:, admIWInit, % "[P" Addendum.iWin.paint ":I" Addendum.iWin.Init ":R"Addendum.iWin.ReCheck "]"
+			Addendum.iWin.Check := Addendum.iWin.ReCheck := 0
 			admGui_Journal( (!Addendum.iWin.Init ? true : false) )
 			If !Addendum.ImportFromJrnl {
-				res := admGui_ShowTab(Addendum.iWin.firstTab, admHTab)
+				admGui_ShowTab(Addendum.iWin.firstTab, admHTab)
 				admGui_CountDown()
 				admGui_TProtokoll(Addendum.iWin.TProtDate, 0, compname)
 				PatDocs := admGui_Reports()
 			}
+			else
+				admGui_ShowTab("Journal", admHTab)
+
 	;}
 
 	; Journalimport bei Bedarf fortsetzen
-		Journal.SetImportStatus(Addendum.ImportFromJrnl)
+		Journal.ShowImportStatus(Addendum.ImportFromJrnl)
 		If Addendum.ImportFromJrnl {
 			;SetTimer, adm_ImportRunCheck, -1000
 			nil := 0
@@ -712,10 +740,16 @@ return ;}
 adm_Tabs:                                                                                        	;{ Tab Handler
 
 	If (A_GuiEvent = "Normal") {
+
 		; aktueller Tab ist Info, Countdown auffrischen
-			SendMessage, 0x130B,,,, % "ahk_id " admHTab
+			SendMessage, 0x130B,,,, % "ahk_id " admHTab 	; TCM_GETCURSEL
 			If (ErrorLevel = 5)  ; Info Tab angewählt
 				admGui_CountDown()
+
+		; sichern der aktuellen Tab-Ansicht
+			GuiControlGet, admTabName, adm:, admTabs
+			Addendum.iWin.firstTab := admTabName
+
 	}
 
 return ;}
@@ -926,7 +960,7 @@ adm_TProtLV:                                                                    
 
 return ;}
 
-adm_GuiDropFiles:                                                                             	;{ nicht erkannte Dokumente einfach in das Posteingangfenster ziehen!
+adm_GuiDropFiles:                                                                             	;{ Dokumente per Drag-Drop hinzufügen
 
 		PatName 	:= AlbisCurrentPatient()
 
@@ -1067,7 +1101,7 @@ admGui_ShowTab(TabName, hTab="")                          	{               	; ei
 	; TCM_SETCURFOCUS (0x1330)	: TAB wählen
 		SendMessage, 0x1330, % TabToShow,,, % "ahk_id " hTab
 
-	; TCM_GETCURSEL (0x130B)     	: ausgewählten TAB ermitteln
+	; TCM_GETCURSEL (0x130B)     	: gewählten TAB ermitteln
 		SendMessage, 0x130B,,,, % "ahk_id " hTab
 		CurrentTab := ErrorLevel
 		For CurrentTabName, tabnr in admGuiTabs
@@ -1539,7 +1573,7 @@ admGui_InfoText(TabTitel)                                             	{        
 
 	If (TabTitel = "Journal") || (TabTitel = "Patient")	{
 		Journal.InfoText()
-		Journal.SetImportStatus(false)
+		Journal.ShowImportStatus(false)
 	}
 	else If InStr(TabTitel, "TProtokoll") 	{
 		InfoText := "[" compname "] [" TProtokoll.MaxIndex() " Patienten]"
@@ -1562,8 +1596,8 @@ admGui_CM(MenuName)                                               	{            
 		If RegExMatch(MenuName, "^J")
 			admGui_Default("admJournal")
 
-		rowSel  	:= Journal.getNext(1, admFile)
 		blockthis 	:= false
+		rowSel  	:= Journal.getNext(1, admFile)
 		For key, inprogress in Addendum.iWin.FilesStack
 			If (inprogress = admFile) {
 				blockthis := true
@@ -1638,13 +1672,14 @@ admGui_CM(MenuName)                                               	{            
 					Sleep 1000
 				}
 				else                                                                                 	{
-					MsgBox, 4	, Addendum für Albis on Windows, %	">> OCR Text vorhanden <<`n" admFile "`n"
-																						. 	"Bei erneuter Ausführung werden die bisherigen Textdaten gelöscht.`n"
-																						.	"Dennoch ausführen?"
+					MsgBox, 4	, Addendum für Albis on Windows
+									, %	">> OCR Text vorhanden <<`n" admFile "`n"
+										. 	"Bei erneuter Ausführung werden die bisherigen Textdaten gelöscht.`n"
+										.	"Dennoch ausführen?"
 					IfMsgBox, No
 						return
 					PraxTT("Die Texterkennung der Datei < " admFile " > wird jetzt ausgeführt.", "1 0")
-					Sleep 1000
+					Sleep 500
 				}
 
 			; OCR Vorgang anzeigen
@@ -1712,7 +1747,7 @@ return
 ;}
 
 ; -------- Autonaming                                                                         	;{
-admCM_JRecog(admFile)                                              	{              	; Kontextmenu: JRecog - eine Dateibezeichnung aus dem PDF Text erstellen
+admCM_JRecog(admFile)                                              	{              	; Kontextmenu: JRecog - Dateibezeichnung aus PDF Text erstellen
 
 	; Pfade
 		pdfPath	:= Addendum.Befundordner "\" admFile
@@ -1795,7 +1830,7 @@ admCM_JRecog(admFile)                                              	{           
 return
 }
 
-admCM_JRecogAll(files:="")                                            	{                	; Kontextmenu: automatisiert die Benennung einer bis aller unbenannten PDF-Dateien
+admCM_JRecogAll(files:="")                                            	{                	; Kontextmenu: automatisiert die Benennung von PDF-Dateien
 
 	; letzte Änderung 17.06.2021:	kann mit Parameter gestartet werden, files sollte eine Array mit Dateinamen aus ihrem Befundordner sein
 	;                                             	geplant automatisches Umbenennen nach dem Tesseract die Texterkennung beendet hat
@@ -1853,7 +1888,7 @@ admCM_JRecogAll(files:="")                                            	{        
 			Gui, Recog: Add    	, Text	, x+2 vRecogCounter                                            	, % prefix "1/" RecognitionDocs.Count()
 			Gui, Recog: Font   	, % "s8 cWhite"                                                                  	, % Addendum.Default.Font
 			Gui, Recog: Add    	, Button, x2 y+5 vRecogCancel gRecogHandler                    	, % "Abbruch"
-			Gui, Recog: Show    	, % "AutoSize Hide"                                                            	, % "Addendum Autonaming"
+			Gui, Recog: Show    	, % "AutoSize Hide NoActivate"                                             	, % "Addendum Autonaming"
 
 			aw:= GetWindowSpot(AlbisWinID())
 			rw	:= GetWindowSpot(admHRecog)
@@ -2059,7 +2094,9 @@ admGui_TPSuche()                                                                
 
 }
 
-admGui_LaborblattDruck(Printer, Druckspalten, PrintAnnotation)	{        	; automatisiert den Laborblattdruck, stellt vorherige Ansicht wieder her
+admGui_LaborblattDruck(Printer, Druckspalten, PrintAnnotation)	{        	; automatisiert den Laborblattdruck
+
+		; automatisiert den Laborblattdruck und stellt die vorherige Ansicht wieder her
 
 		static AlbisViewType
 
@@ -2088,12 +2125,12 @@ class Journal                                                                 	{
 		;					die Listview des Journal ist als Standard festgelegt, vor dem Bearbeiten der Listview des Patient TAB muss
 		; 					die Standard Listvieweinstellungen der Gui über Default("admReports")
 
-		GetCount()                          	{        	; Anzahl der Tabellenzeilen
+		GetCount()                              	{        	; Anzahl der Tabellenzeilen
 			this.Default()
 		return LV_GetCount()
 		}
 
-		GetNext(rLV:=0, LVNI:=2)   	{        	; findet die nächste ausgewählte Zeile
+		GetNext(rLV:=0, LVNI:=2)       	{        	; findet die nächste ausgewählte Zeile
 			global admJournal, adm, admHTab, admHJournal, admHReports
 			; rLV = 1 based index of the starting row for the flag search. Omit or 0 to find first occurance specified flags.
 			; LVNI_ALL := 0x0, LVNI_FOCUSED := 0x1, LVNI_SELECTED := 0x2
@@ -2102,7 +2139,7 @@ class Journal                                                                 	{
 		return DllCall("SendMessage", "uint", hLV, "uint", 4108, "uint", rLV-1, "uint", LVNI) + 1
 		}
 
-		GetRow(fname, col:=1)        	{         	; Zeilennummer mit diesem Dateinamen
+		GetRow(fname, col:=1)            	{         	; Zeilennummer mit diesem Dateinamen
 
 			row := 0
 			this.Default()
@@ -2117,7 +2154,7 @@ class Journal                                                                 	{
 		return row
 		}
 
-		GetSelected(col:=1)             	{        	; alle ausgewählten Zeilen auslesen
+		GetSelected(col:=1)                 	{        	; alle ausgewählten Zeilen auslesen
 
 			row 		:= 0
 			JFiles	:= Array()
@@ -2137,13 +2174,13 @@ class Journal                                                                 	{
 
 		}
 
-		GetText(row, col:=1)            	{        	; Text einer Zeile, Spalte auslesen
+		GetText(row, col:=1)                	{        	; Text einer Zeile, Spalte auslesen
 			this.Default()
 			LV_GetText(rText, row, col)
 		return rText
 		}
 
-		SelectRow(row)                   	{      	; eine Zeile auswählen
+		SelectRow(row)                       	{      	; eine Zeile auswählen
 
 				global adm, admJournal, admReports, hadm
 
@@ -2165,7 +2202,7 @@ class Journal                                                                 	{
 
 		}
 
-		Remove(fname:="", rLV:="")  {        	; entfernt eine Datei aus der Listview
+		Remove(fname:="", rLV:="")      {        	; entfernt eine Datei aus der Listview
 
 			; ein Dateiname oder eine Zeilennummer können übergeben werden
 			global admJournal, adm, admHTab, admHJournal
@@ -2182,7 +2219,7 @@ class Journal                                                                 	{
 		return res
 		}
 
-		Replace(sourcefile, targetfile)	{         	; Dateinamen ändern
+		Replace(sourcefile, targetfile)    	{         	; Dateinamen ändern
 
 			this.Default()
 			this.RedrawLV(false)
@@ -2203,7 +2240,7 @@ class Journal                                                                 	{
 		return row		; 0 = nichts ersetzt
 		}
 
-		ShowMenu(admFileObj)    	{        	; Kontextmenu anzeigen
+		ShowMenu(admFileObj)        	{        	; Kontextmenu anzeigen
 
 			MouseGetPos, mx, my, mWin, mCtrl, 2
 			If IsObject(admFileObj)
@@ -2214,7 +2251,7 @@ class Journal                                                                 	{
 		return
 		}
 
-		SetImportStatus(ImportRuns)  	{         	; Interaktionskontrolle der 'Importieren' Steuerelemente
+		ShowImportStatus(ImportRuns)  	{         	; Interaktionskontrolle der 'Importieren' Steuerelemente
 
 			global admButton2, admButton1, adm, hadm, PatDocs
 
@@ -2236,7 +2273,7 @@ class Journal                                                                 	{
 
 		}
 
-		InfoText()                              	{         	; Infotext (Journal/Patient) wird aufgefrischt
+		InfoText()                                  	{         	; Infotext (Journal/Patient) wird aufgefrischt
 
 			global admButton1, adm, hadm, admJournalTitle, admPatientTitle
 
@@ -2252,7 +2289,7 @@ class Journal                                                                 	{
 
 		}
 
-		Default(LVName="")            	{        	; Gui und Listview Default machen
+		Default(LVName="")                	{        	; Gui und Listview Default machen
 			global admJournal, adm, admHTab, admHJournal, admReports
 			static tabs := {"admJournal":"Journal", "admReports":"Patient"}, hLV := {"admJournal":"admHJournal", "admReports":"admHReports"}
 			this.DefaultLV 	:= LVName ? LVName : this.DefaultLV ? this.DefaultLV : "admJournal"
@@ -2262,14 +2299,14 @@ class Journal                                                                 	{
 			Gui, adm: ListView, % this.DefaultLV
 		}
 
-		Focus()                                	{        	; das Listview erhält den Eingabefokus
+		Focus()                                    	{        	; das Listview erhält den Eingabefokus
 			global admJournal, adm, admHTab, admHJournal
 			this.Default()
 			GuiControl, adm: Focus, % this.DefaultLV
 		return ErrorLevel
 		}
 
-		gLabel(register)                 	{       	; g-Label bereitstellen oder abschalten
+		gLabel(register)                     	{       	; g-Label bereitstellen oder abschalten
 
 			global adm, admJournal, hadm
 
@@ -2280,12 +2317,12 @@ class Journal                                                                 	{
 
 		}
 
-		ListView(LVName)                	{        	; nur das Listview Default machen
+		ListView(LVName)                    	{        	; nur das Listview Default machen
 			global admJournal, adm, admHTab, admHJournal, admReports
 			Gui, adm: ListView, % (LVName ? LVName : "admJournal")
 		}
 
-		RedrawLV(rdw)                     	{      	; Listview neuzeichnen an oder aus
+		RedrawLV(rdw)                         	{      	; Listview neuzeichnen an oder aus
 			global admJournal, adm, admHTab, admHJournal, hadm
 			GuiControl, % "adm: " (rdw?"+":"-") "Redraw", % this.DefaultLV
 			EL := ErrorLevel
@@ -2294,7 +2331,7 @@ class Journal                                                                 	{
 		return EL
 		}
 
-		Show()                               	{        	; zeigt den Journal Tab an
+		Show()                                   	{        	; zeigt den Journal Tab an
 			global admHTab
 		return admGui_ShowTab(this.DefaultTab, admHTab)
 		}
@@ -2726,7 +2763,7 @@ class PDFpool                                                                 	{
 		return docNames
 		}
 
-		GetNoOCRFiles()                                                      	{ 	; PDF Dateien ohne Texterkennung
+		GetNoOCRFiles()                                                     	{ 	; PDF Dateien ohne Texterkennung
 			noOCR := Array()
 			For idx, pdf in ScanPool
 				If !pdf.isSearchable {
@@ -2803,9 +2840,9 @@ class PDFpool                                                                 	{
 		}
 
 		FileTime(fullfilepath)                                               	{
-			FileGetTime	, timeStamp 	, % fullfilepath, C
+			FileGetTime	, TimeStamp 	, % fullfilepath, C
 			FormatTime	, FileTime     	, % timeStamp, dd.MM.yyyy
-		return {"FileTime" : FileTime, "timeStamp":timeStamp}
+		return {"FileTime" : FileTime, "timeStamp": TimeStamp}
 		}
 
 		FileMeta(path, fname )                                           	{
@@ -2884,27 +2921,24 @@ admGui_Rename(filename, prompt="", newfilename="") 	{               	; Dialog f�
 			} else {
 				BefundBezeichner 	:= []
 				Dateinamen 	:= FileOpen(BEZPath, "r", "UTF-8").Read()
-				Dateinamen 	:= RegExReplace(Dateinamen, "(\n\r){2,}", "")
-				Dateinamen 	:= RegExReplace(Dateinamen, "[\n\r]+$", "")
+				;~ Dateinamen 	:= RegExReplace(Dateinamen, "[\n\r]{2,}", "")
+				;~ Dateinamen 	:= RegExReplace(Dateinamen, "[\n\r]+$", "")
 				Sort, Dateinamen, U
-				Dateinamen 	:= RegExReplace(Dateinamen, "[\n\r]+", "|")
-				For idx, bez in StrSplit(StrReplace(Dateinamen, "||", "|"), "|")
-					BefundBezeichner.Push(bez)
+				;~ Dateinamen 	:= RegExReplace(Dateinamen, "[\n\r]+", "|")
+				For idx, bez in StrSplit(Dateinamen, "`n", "`r")
+					If (StrLen(bez) > 0)
+						BefundBezeichner.Push(bez)
 			}
 		}
 	;}
 
 	; Namen aus der Datenbank erhalten                                 	;{
-		;If !IsObject(names)
 		names := admDB.GetNamesArray()
 	;}
 
 	; Vorbereitung: Dokument zerlegen
-		If Instr(prompt, "Aufteilen") {
-			title    	:= "Dokument zerlegen"
-			fileout	:= ""
-		}
-
+		If Instr(prompt, "Aufteilen")
+			title := "Dokument zerlegen", fileout := ""
 	; Vorbereitung: Dokument umbenennen
 		else {
 
@@ -3169,8 +3203,8 @@ RNProceed:                                       	;{   Datei wird umbenannt, PDF
 			For idx, beschreibung in BefundBezeichner
 				Dateinamen .= beschreibung "`n"
 			Sort, Dateinamen, U
-			GuiControl, RN:, RNDBG, % BefundBezeichner.MaxIndex() "`n" names.MaxIndex()
-			Dateinamen := RegExReplace(Dateinamen, "[\n\r]+", "`n`r")
+			GuiControl, RN:, RNDBG, % BefundBezeichner.MaxIndex() . "`n" . names.MaxIndex()
+			Dateinamen := RegExReplace(Dateinamen, "[\n\r]{2,}", "`n")
 			FileOpen(BEZPath, "w", "UTF-8").Write(Dateinamen)
 		}
 	;}
@@ -3200,7 +3234,6 @@ RNGuiBeenden:                                   	;{   weitere Dateien umbenennen
 			LV_Modify(row	, "Focus")
 			LV_Modify(row	, "Select")
 
-
 			LV_GetText(lvFilename, row, 1)
 			If !string.isFullNamed(lvFilename)
 				break
@@ -3222,9 +3255,10 @@ RNGuiClose:                                      	;{   Fenster definitiv schlies
 RNGuiEscape:
 
 	; PDF Previewer beenden
-		If (oPV.Previewer = "Sumatra")
+		If (oPV.Previewer = "Sumatra") {
 			oPV := SumatraClose(oPV.PID, oPV.ID)
-		oPV := ""
+			oPV := ""
+		}
 
 	; Gui beenden
 		Gui, RN: Destroy
@@ -3570,7 +3604,7 @@ admGui_ImportJournalAll(files="")                                    	{         
 		static NoImports    	:= 0
 
 	; Import Button inaktiv schalten
-		Journal.SetImportStatus(Addendum.ImportFromJrnl := true)
+		Journal.ShowImportStatus(Addendum.ImportFromJrnl := true)
 		Journal.Default()
 
 	; Dokumente ohne Personennamen werden ignoriert
@@ -3668,7 +3702,7 @@ admGui_ImportJournalAll(files="")                                    	{         
 
 	; Importieren Steuerelemente aktivieren, Infotexte ändern
 		Journal.SelectRow(0)
-		Journal.SetImportStatus(Addendum.ImportFromJrnl := false)
+		Journal.ShowImportStatus(Addendum.ImportFromJrnl := false)
 		Journal.InfoText()
 
 return
@@ -3853,13 +3887,13 @@ admGui_SaveStatus()                                                      	{     
 
 	; bei Bedarf in der ini speichern
 		If (Addendum.iWin.firstTab     	<> admTabs)
-			IniWrite, % admTabs     	, % Addendum.Ini, % compname, % "Infofenster_aktuelles_Tab"
+			IniWrite, % admTabs      	, % Addendum.Ini, % compname, % "Infofenster_aktuelles_Tab"
 		If (Addendum.iWin.JournalSort 	<> JournalSort)
-			IniWrite, % JournalSort  	, % Addendum.Ini, % compname, % "Infofenster_JournalSortierung"
+			IniWrite, % JournalSort   	, % Addendum.Ini, % compname, % "Infofenster_JournalSortierung"
 		If (Addendum.iWin.TProtDate 	<> ProtokollTag)
-			IniWrite, % ProtokollTag	, % Addendum.Ini, % compname, % "Infofenster_Tagesprotokoll_Datum"
+			IniWrite, % ProtokollTag 	, % Addendum.Ini, % compname, % "Infofenster_Tagesprotokoll_Datum"
 		If (Addendum.iWin.LBDrucker <> admLBDPD)
-				IniWrite, % admLBDPD, % Addendum.Ini, % compname, % "Infofenster_Laborblatt_Drucker"
+				IniWrite, % admLBDPD	, % Addendum.Ini, % compname, % "Infofenster_Laborblatt_Drucker"
 		If (Addendum.iWin.LBAnm       	<> admLBCk)
 			IniWrite, % (admLBCk ? "Ja" : "Nein")	, % Addendum.Ini, % compname, % "Infofenster_Laborblatt_Anmerkung_drucken"
 
@@ -3874,7 +3908,12 @@ admGui_SaveStatus()                                                      	{     
 ;}
 
 ; -------- Callback Funktionen                                                             	;{
-admGui_CheckJournal(pdffile, ThreadID)                          	{                	; Ausführung jedesmal nach erfolgreicher Erstellung einer PDF durch TesseractOCR()
+admGui_CheckJournal(pdffile, ThreadID)                          	{                	; Hilfsfunktion für tesseract OCR und Gui Anzeige
+
+		; Ausführung jedesmal nach erfolgreicher Erstellung einer PDF durch TesseractOCR()
+		; Aufgaben: 	1. Start der Autonaming Funktionen
+		;               	2. ScanPool-Objekt auffrischen
+		;					nach Abschluß den OCR Vorgang per IPC-Nachricht fortsetzen
 
 		global 	admHJournal
 		static	 	AutonamingRunning := false
@@ -3892,15 +3931,15 @@ admGui_CheckJournal(pdffile, ThreadID)                          	{              
 		For idx, inprogress in OCRStack {
 
 			For newNr, newfilename in newfilenames {
-				fileIsProcessed := false
+				FileIsProcessed := false
 				If (inprogress = pdfFile) {
-					fileIsProcessed := true
+					FileIsProcessed := true
 					break
 				}
 			}
 
 			If !FileIsProcessed
-				Addendum.iWin.FilesStack.Push(inprogress)
+				Addendum.iWin.FilesStack.InsertAt(1, inprogress)
 
 		}
 
@@ -3913,7 +3952,7 @@ admGui_CheckJournal(pdffile, ThreadID)                          	{              
 
 }
 
-admGui_FolderWatch(path, changes)                              	{                	; wird aufgerufen wenn neue PDF-Dateien im Befundordner vorhanden sind
+admGui_FolderWatch(path, changes)                              	{                	; überwacht den Befundordner
 
 	/* Beschreibung
 
@@ -4132,7 +4171,7 @@ TesseractOCR(files)                                                         	{  
 		SetTitleMatchMode 2
 
 		global hOCR
-		global threadcontrol
+		global threadcontrol               	; global flag - Thread externe Funktion (Addendum.ahk)
 		global q := Chr(0x22)              	; q := "
 
 		###files
@@ -4156,7 +4195,7 @@ TesseractOCR(files)                                                         	{  
 		else {
 			filesmax := 1
 			threadcontrol := true
-			SciteOutPut(" ")
+			SciTEOutput("``n> Bearbeite " 1 "/" 1 ": [" pdffile "]")
 			pdfText := tessOCRPdf(files, settings)
 			Send_WM_CopyData("OCR_processed|" files "|" hOCR, settings.ScriptID)
 			While threadcontrol
@@ -4200,27 +4239,37 @@ TesseractOCR(files)                                                         	{  
 
 admGui_OCRAllFiles()                                                      	{               	; Texterkennung aller unbearbeiteten PDF-Dateien
 
-	static noOCR
+		static noOCR
 
-	If Addendum.OCR.AutoOCR && (Addendum.OCR.Client = compname) && Addendum.Thread["tessOCR"].ahkReady() {
-		Addendum.OCR.RestartAutoOCR := true
-		admGui_OCRButton("+OCR abbrechen")
-		return
-	}
+	; Gui Button ändern
+		If Addendum.OCR.AutoOCR && (Addendum.OCR.Client = compname) && Addendum.Thread["tessOCR"].ahkReady() {
+			Addendum.OCR.RestartAutoOCR := true
+			admGui_OCRButton("+OCR abbrechen")
+			return
+		}
 
-	noOCR := pdfpool.GetNoOCRFiles()
-	If (noOCR.MaxIndex() > 0) {
+	; Dateinamen ohne Texterkennung ermitteln. Dateinamen in FileStack ablegen
+		noOCR := pdfpool.GetNoOCRFiles()
+		If (noOCR.MaxIndex() > 0) {
 
-		For key, filename in noOCR
-			Addendum.iWin.FilesStack.Push(filename)
+			For key, filename in noOCR {
+				Instack := false
+				For fstack, fstackname in Addendum.iWin.FilesStack
+					If (filename = fstackname) {
+						Instack := true
+						break
+					}
+				If !Instack
+					Addendum.iWin.FilesStack.InsertAt(1, filename)
+			}
 
-		admGui_OCRButton("+OCR abbrechen")
-		Addendum.OCR.RestartAutoOCR := false
-		TesseractOCR(noOCR)
+			admGui_OCRButton("+OCR abbrechen")
+			Addendum.OCR.RestartAutoOCR := false
+			TesseractOCR(noOCR)
 
-	}
-	else
-		admGui_OCRButton("-OCR ausführen")
+		}
+		else
+			admGui_OCRButton("-OCR ausführen")
 
 return
 }

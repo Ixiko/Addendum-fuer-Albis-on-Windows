@@ -1,20 +1,26 @@
-﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;                                 	Addendum Quicksearch  - - geschrieben zur visuellen Analyse und Untersuchung von dBase Datenbankdateien (Albis on Windows)
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                                 	Addendum Quicksearch  - - geschrieben zur visuellen Analyse und Untersuchung von dBase Datenbankdateien
 ;
 ;
 ;
-;      Funktionen:           	- Anzeige von Daten und Suche in allen Datenbanken
-;									- auslesen spezieller Informationen der Strukturen der Datenbanken
-;									- Inhalte der Datenbank können im .csv Format exportiert werden
+;      Funktionen:           	- Anzeige von Datenbankinhalten und Suche in allen Datenbanken
+;                               	- Anzeige vorhandener Feldnamen (Tabellenkopf/Spaltennamen) mit maximaler Zeichenlänge und Zeichentyp
+;                                	- Tabellenspalten lassen sich aus- und wieder einblenden
+;									- das veränderte Tabellenlayout (inkl. Spaltenbreite) wird nach Skriptstart oder nach einem Tabellenwechsel wiederhergestellt
+;									- Patientennamen werden bei einem einfachen Klick auf einen Datensatz angezeigt
+;									- Karteikarten werden nach einem Doppelklick in Albis geöffnet
+;									- verknüpfte Daten werden nach einem einfachen Klick angezeigt (unterstützt derzeit nur Daten aus BEFTEXTE.dbf)
+;									- Suchergebnisse und verbundene Daten können exportiert werden
+;									- die eingebenen Suchparameter können mit einer Bezeichnung gespeichert werden, um sie erneut verwenden zu können
 ;
-;		Hinweis:				alpha Version, Nutzung auf eigenes Risiko!
+;		Hinweis:				beta Version, Nutzung auf eigenes Risiko!
 ;
 ;		Abhängigkeiten:	siehe includes
 ;
 ;	                    			Addendum für Albis on Windows
 ;                        			by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;									begin: 02.04.2021,	last change 24.06.2021
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;									begin: 02.04.2021,	last change 30.07.2021
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /*  Notizen
 
 	PATEXTRA - POS:  	EMail 				                    			= 93, 7
@@ -34,11 +40,14 @@
 	#KeyHistory, Off
 
 	SetBatchLines                  	, -1
-	ListLines                        	, On
+	ListLines                        	, Off
 	SetWinDelay                    	, -1
 	SetControlDelay            	, -1
 	AutoTrim                       	, On
 	FileEncoding                 	, UTF-8
+
+	Menu, Tray, Icon, % "hIcon: " Create_QuickSearch_ICO()
+
 ;}
 
 ; Variablen Albis Datenbankpfad / Addendum Verzeichnis      	;{
@@ -59,7 +68,8 @@
 	adm.compname	:= StrReplace(A_ComputerName, "-")                                                                 	; der Name des Computer auf dem das Skript läuft
 
   ; Nutzereinstellungen werden beim Erstellen des Objektes automatisch geladen
-	Props := new Quicksearch_Properties(A_ScriptDir "\resources\Quicksearch_UserProperties.json")
+	;Props := new Quicksearch_Properties(A_ScriptDir "\resources\Quicksearch_UserProperties.json")
+	Props := new Quicksearch_Properties(adm.DBPath "\QuickSearch\resources\Quicksearch_UserProperties.json")
 
   ; Patientendaten laden
 	filter   	:= ["NR", "PRIVAT", "GESCHL", "NAME", "VORNAME", "GEBURT",  "PLZ", "ORT"
@@ -67,8 +77,6 @@
 	PatDB 	:= ReadPatientDBF(adm.AlbisDBPath,,, "allData")
 ;}
 
-	;~ SciTEOutput(" - - - - - - - - - - - - - - - - - ")
-	;~ SciTEOutput("PatDB: " PatDB.Count())
 	QuickSearch_Gui()
 
 return
@@ -78,106 +86,139 @@ return
 Esc::ExitApp
 #IfWinActive
 
-Quicksearch(dbname, SearchString) {
+Quicksearch(dbname, SearchString)                                                                   	{	; Datenbanksuche + Gui Anzeige
 
-		; {"KUERZEL": "lko"}, ["DATUM", "PATNR", "INHALT"]
-		; (COVID|COVIPC|Sars|Covid|Cov\-)
-		global dbfiles, dbfdata
+		global dbfiles, dbfdata, InCellEdit
+
+	; Gui-Daten
+		Gui, QS: Default
+		Gui, QS: Submit, NoHide
+		GuiControl, QS:, QST4, % ""
+
+	; InCell Edit stoppen
+		InCellEdit.OnMessage(false)
+
 		pattern := Object()
-
 		For idx, line in StrSplit(SearchString, "`n") {
-			RegExMatch(Trim(line), "(?<field>.*)?\=(?<rx>.*)$", m)
-			If mrx
-				pattern[mfield] := "rx:" mrx
-			t .= mfield " = " pattern[mfield] "`n"
+			RegExMatch(Trim(line), "(?<field>.*)?\s*\=\s*(?<rx>.*)$", m)
+			If mrx {
+				;pattern[mfield] := "rx:" mrx
+				pattern[mfield] := mrx
+				t .= mfield " = " pattern[mfield] "`n"
+			}
 		}
-
-		;SciTEOutput("`npattern: " pattern.count() "`n" t)
 
 		dbf       	:= new DBASE(adm.AlbisDBPath "\" dbname ".dbf", 2)
 		filepos   	:= dbf.OpenDBF()
-		dbfdata  	:= dbf.Search(pattern, 0, "QuickSearch_Progress")
+		dbfdata  	:= dbf.SearchFast(pattern, "all fields", 0	, 		{ "SaveMatchingSets"    	: false
+																							,  "MSetsPath"               	: A_Temp "\QuickSearch_" dbname ".txt"
+																							, "ReturnDeleted"          	: QSDBRView }
+																		         			, "QuickSearch_Progress")
 		filepos   	:= dbf.CloseDBF()
 
+	; Suchergebnis im Props Objekt ablegen (kann auf Festplatte gespeichert werden)
 		Gui, QS: ListView, QSDBR
 		LV_Delete()
 
 	; Spalten zusammenstellen
+		equalIDs := Object()
 		For rowNr, set in dbfdata {
+
+			; weiter wenn gelöschte Datensätze nicht angezeigt werden sollen
+				If !Props.ShowRemovedSets() && set.removed
+					continue
 
 			; Spalten zusammenstellen
 				cols := Object()
-				For flabel, value in set {
+				For flabel, val in set {
 					If Props.isVisible(fLabel) {
-						If (dbname = "BEFUND") && RegExMatch(flabel, "(INHALT|KUERZEL)") && StrLen(value) = 0
+
+						If (dbname = "BEFUND") && RegExMatch(flabel, "i)(INHALT|KUERZEL)") && StrLen(val) = 0
 							continue
-						cols[Props.HeaderVirtualPos(flabel)] := value
+
+						If RegExMatch(flabel, "i)" Props.DateLabels) && (dbname <> "CAVE")
+							val := RegExMatch(val, "\d{8}") ? ConvertDBASEDate(val) : val
+						else if RegExMatch(flabel, "i)" Props.DateLabels) && (dbname = "CAVE")
+							val := RegExMatch(val, "\d{8}") ? SubStr(val, 1, 2) "." SubStr(val, 3, 2) "." SubStr(val, 5, 4) : val
+						else if RegExMatch(flabel, "i)DATETIME")
+							FormatTime, val, % val, dd.MM.yyyy HH:mm
+						else if RegExMatch(flabel, "i)VERSART")
+							val := Props.VERSART[val]
+						else if RegExMatch(flabel, "i)PATNR")
+							equalIDs[val] := !equalIDs.haskey(val) ? 1 : equalIDs[val] + 1
+
+						cols[Props.HeaderVirtualPos(flabel)] := val
+
 					}
-					If (flabel = "removed")
-						removed := value
+
 				}
 
-				If removed
-					cols[1] := "*" cols[1]
-
 			; Zeile hinzufügen
+				cols.1 := set.removed ? "*" cols.1 : cols.1
 				LV_Add("", cols*)
+
 		}
 
 		ColTyp := Array()
 		DataType 	:= {"N":"Integer", "D":"Integer", "C":"Text", "L":"Text", "M":"Text"}
 		For idx, flabel in Props.Labels()
-			If Props.isVisible(fLabel) {
-				ftype := DataType[(Props.HeaderField(flabel, "type"))]
-				LV_ModifyCol(idx, fType)
-			}
+			If Props.isVisible(fLabel)
+				LV_ModifyCol( idx, DataType[Props.HeaderField(flabel, "type")] )
 
-		;~ JSONData.Save(A_Temp "\Quicksearch.json", matches, true,, 2, "UTF-8")
-		;~ Run, % A_Temp "\Quicksearch.json"
+		GuiControl, QS:, QST4, % equalIDs.Count()
+		InCellEdit.OnMessage(true)
 
+		;~ JSONData.Save(A_Temp "\test.json", equalIDs, true,, 1, "UTF-8")
+		;~ Run, % A_Temp "\test.json"
 
 }
 
-QuickSearch_Gui() {
+QuickSearch_Gui()                                                                                             	{	; Gui + Handler
 
 	;-: VARIABLEN                                              	;{
 
 	  ; GUI
-		global 	hQS, QSDB, QSDBFL, QSDBS, QSDBR, QSPGS, QSPGST, QST1, QST2, QST3, QST4
+		global 	hQS, QSDB, QSDBFL, QSDBS, QSDBR, QSPGS, QSPGST
+		global 	QST1, QST1a, QST2, QST2a, QST3, QST3a, QST4, QST4a, QST5, QSTGB1, QSTGB2, QSTGB3
 		global	QSMinKB      	, QSMaxKB    		, QSFilter                                       	; Eingabefelder
 		global	QSMinKBText	, QSMaxKBText		, QSFilterText                                  	; Textfelder
 		global 	QShDB         	, QShDBFL    		, QShDBR                                         ; hwnd
 		global	QSFeldWahlT	, QSFeldWahl		, QSFeldAlle			, QSFeldKeine     	, QSFelderT
 		global	QSSearch			, QSSaveRes			, QSSaveAs			, QSSaveSearch	, QSQuit			, QSReload                	; Buttons
 		global 	QSBlockNR		, QSBlockSize		, QSLBlock			, QSNBlock
-		global 	QSEXTRANFO 	, QSEXTRAS		, QSXTRT
-		global 	BlockNr			, BlockSize		    	, lastBlockSize		, lastBlockNr			, dbfRecords
+		global 	QSEXTRANFO 	, QSEXTRAS	    	, QSXTRT          	, QSDBSSave    	, QSDBSParam	, QSDBName
+		global	QSDBRView  	, QSDBRPatView
+		global 	BlockNr			, BlockSize		    	, lastBlockSize		, lastBlockNr			, dbfRecords  	, lastSavePath
 		global 	QSmrgX			, QSmrgY				, QSLvX, QSLvY, QSLvW, QSLvH
+		global	InCellEdit
 		global 	ReloadGui := false
-
 
 	  ; ANDERES
 		global dbfiles, DBColW, DBFilesW, dbname
 
-		static	QSBlockNRBez, QSEXTRASx
-		static EventInfo, empty := "- - - - - - -"
-		static FSize            	:= (A_ScreenHeight > 1080 ? 9 : 9)
-		static gcolor          	:= "805D3C"
-		;static tcolor           	:= "E4E4C4"
-		static tcolor           	:= "FFE1C4"
-		static DBFieldW    	 	:= 550
-		static DBSearchW   	:= 300
-		static GFR              	:= " gQuickSearch_DBFilter "
-		static gQSDBFields	:= ""
-		static BGT              	:= " BackgroundTrans "
-		static ASM              	:= " AltSubmit "
-		static ColorTitles     	:= " cWhite"
-		static ColorData      	:= " cBlack"
-				 DBFilesW   	  	:= 310
+		static	QSBlockNRBez, QSEXTRASx, QSReloadw
+		static	EventInfo, empty := "- - - - - - -"
+		static	FSize            	:= (A_ScreenHeight > 1080 ? 9 : 8)
+		static	gcolor          	:= "5f5f50"
+		static	tcolor           	:= "DDDDBB"
+		static	DBField
+		static	DBSearchW   	:= 300
+				DBFilesW   	  	:= 310
+		static	GFR              	:= " gQuickSearch_DBFilter "
+		static	gQSDBFields		:= ""
+		static	BGT              	:= " BackgroundTrans "
+		static	ASM              	:= " AltSubmit "
+		static	ColorTitles     	:= " cWhite"
+		static	ColorData      	:= " cBlack"
 
 		BlockNr := 0
 		dbstructsPath := A_ScriptDir "\resources\AlbisDBase_Structs.json"
 
+		; Datenbank Tabelle
+		DBColW  		:= [80, 65, 80, 75]
+		LVWidth1  	:= 20                                  ; Rand der Listview
+		For idx, colWidth in DBColW
+			LVWidth1 += colWidth
 
 		If !FileExist(dbstructsPath) {
 			dbfiles  	:= DBASEStructs(adm.AlbisDBPath)
@@ -194,6 +235,7 @@ QuickSearch_Gui() {
 		IniRead, lastdbname 	, % adm.Ini, % "QuickSearch", % "lastDB"
 		IniRead, lastS        	, % adm.Ini, % "QuickSearch", % "lastSearch"
 		IniRead, ExtrasStatus 	, % adm.Ini, % "QuickSearch", % "Extras"
+		IniRead, lastSavePath	, % adm.Ini, % "QuickSearch", % "lastSavePath"  	, % ""
 
 
 		RegExMatch(WinSize, "i)w(?<W>\d+)\s*h(?<H>\d+)", GClient)
@@ -210,7 +252,9 @@ QuickSearch_Gui() {
 		Gui, QS: Color  	, % "c" gcolor , % "c" tcolor
 		Gui, QS: Margin	, 5, 5
 
-	;-: SPALTE 1: DATENBANKEN                       	;{
+	;-: ZEILE 1: AUSWAHL / SUCHE                 	;{
+
+	;-: FELD 1: DATENBANKEN                       	;{
 
 		; - Filter -
 		Gui, QS: Font	, % "s" FSize-1 " q5 Normal" ColorTitles, Futura Bk Bt
@@ -219,61 +263,68 @@ QuickSearch_Gui() {
 		Gui, QS: Add	, Text        	, % "x+10 	 " BGT "             	vQSFilterText"                                                                	, % "DB-Filter"
 
 		; - Felder -
-		Gui, QS: Add	, GroupBox  	, % "x+10 w50 h10                           	vQSFeldWahlT"                                                    	, % "Felder wählen"
+		Gui, QS: Add	, GroupBox  	, % "x+10 w50 h10                                                                               	vQSFeldWahlT"	, % "Felder wählen"
 
 		Gui, QS: Font	, % "s" FSize " q5 Normal" ColorData
-		Gui, QS: Add	, Edit           	, % "xm y+4 	w" FSize*8 	" Number	 " BGT "    	" GFR " -E0x200 vQSMinKB "                  	, % QSMinKB
-		Gui, QS: Add	, Edit           	, % "x+5    	w" FSize*8 	" Number	 " BGT "    	" GFR " -E0x200 vQSMaxKB "                 	, % QSMaxKB
-		Gui, QS: Add	, Edit           	, % "x+5    	w" FSize*20	"           	 " BGT ASM GFR " -E0x200 vQSFilter  hwndhEdit  "     	, % QSFilter
-		Edit_SetMargin(hEdit, 4, 1, 4, 4)
+		Gui, QS: Add	, Edit           	, % "xm y+4 	w" FSize*8 	" Number  	" BGT "    	" GFR " -E0x200        	vQSMinKB	"  	, % QSMinKB
+		Gui, QS: Add	, Edit           	, % "x+5    	w" FSize*8 	" Number  	" BGT "    	" GFR " -E0x200        	vQSMaxKB	"  	, % QSMaxKB
 
-		Gui, QS: Add	, Button        	, % "x+10                                     	 " BGT "                                          	vQSFeldAlle" 	, % "Alle"
-		Gui, QS: Add	, Button        	, % "x+10                                       	 " BGT "                                          	vQSFeldKeine"	, % "Keine"
+		; - Datenbank Filter/Name -
+		GuiControlGet, cp, QS:Pos	, QSMaxKB
+		QSFilterW := LVWidth1 + 5 - cpX - cpW - 5
+		Gui, QS: Add	, Edit           	, % "x+5    	w" QSFilterW	" hwndhEdit	" BGT ASM GFR " -E0x200         	vQSFilter   	" 	, % QSFilter
 
-		Gui, QS: Font	, % "s" FSize+2 " q5 Italic" ColorTitles
-		Gui, QS: Add	, Text        	, % "x+15 ym+10 " BGT "    Center                                                        vQSFelderT  "    	, % "anzuzeigende Felder auswählen"
+		Gui, QS: Add	, Button        	, % "x+9                                        	 " BGT "                                          	vQSFeldAlle	"	, % "Alle"
+		Gui, QS: Add	, Button        	, % "x+5                                       	 " BGT "                                          	vQSFeldKeine"	, % "Keine"
+
+		Gui, QS: Font	, % "s" FSize+3 " q5 Italic" ColorTitles
+		Gui, QS: Add	, Text        	, % "x+15 ym+10 " BGT "    Center                                                            vQSFelderT 	"  	, % "akt. Datenbank:"
+
+		Gui, QS: Font	, % "s" FSize+6 " q5 Bold " ColorTitles
+		Gui, QS: Add	, Text        	, % "x+15  ym+5 w200    " BGT "    Center                                                 vQSDBName" 	, % (lastdbname ? "[" lastdbname ".dbf]")
+
 
 		; - Filter Elemente versetzen -
-		GuiControlGet, cp, QS:Pos, QSMinKBText
-		GuiControlGet, dp, QS:Pos, QSMinKB
-		GuiControl, QS: Move, QSMinKBText	, % "x" dpX + Floor((dpW/2) - (cpW/2))
-		GuiControl, QS: Move, QSMinKB   	, % " h" cpH + 2
+		GuiControlGet, cp, QS:Pos	, QSMinKBText
+		GuiControlGet, dp, QS:Pos	, QSMinKB
+		GuiControl, QS: Move        	, QSMinKBText	, % "x" dpX + Floor((dpW/2) - (cpW/2))
+		GuiControl, QS: Move        	, QSMinKB       	, % " h" cpH + 2
 
-		GuiControlGet, cp, QS:Pos, QSMaxKBText
-		GuiControlGet, dp, QS:Pos, QSMaxKB
-		GuiControl, QS: Move, QSMaxKBText, % "x" Floor(dpX + (dpW//2 - cpW//2))
-		GuiControl, QS: Move, QSMaxKB   	, % " h" cpH + 2
+		GuiControlGet, cp, QS:Pos	, QSMaxKBText
+		GuiControlGet, dp, QS:Pos	, QSMaxKB
+		GuiControl, QS: Move        	, QSMaxKBText	, % "x" Floor(dpX + (dpW//2 - cpW//2))
+		GuiControl, QS: Move        	, QSMaxKB   	, % " h" cpH + 2
 
-		GuiControlGet, cp, QS:Pos, QSFilterText
-		GuiControlGet, dp, QS:Pos, QSFilter
-		GuiControl, QS: Move, QSFilterText	, % "x" Floor(dpX + (dpW/2 - cpW/2))
-		GuiControl, QS: Move, QSFilter     	, % " h" cpH + 2
+		GuiControlGet, cp, QS:Pos	, QSFilterText
+		GuiControlGet, dp, QS:Pos	, QSFilter
+		GuiControl, QS: Move        	, QSFilterText	, % "x" Floor(dpX + (dpW/2 - cpW/2))
+		GuiControl, QS: Move        	, QSFilter         	, % " h" cpH + 2
 
-		GuiControl, QS: Move, QSFeldAlle   	, % " h" cpH + 2
-		GuiControl, QS: Move, QSFeldKeine 	, % " h" cpH + 2
+		GuiControl, QS: Move        	, QSFeldAlle   	, % " h" cpH + 2
+		GuiControl, QS: Move        	, QSFeldKeine 	, % " h" cpH + 2
 
 
 		; - Felder wählen versetzen -
 		gbY := cpY-1,	gpmrg := 2
 		GuiControlGet, cp, QS:Pos, QSFeldAlle
 		GuiControlGet, dp, QS:Pos, QSFeldKeine
-		GuiControl, QS: Move, QSFeldWahlT, % "x" cpX-2*gpmrg " y" gbY " w" (dpX+dpW-cpX+4*gpmrg) " h" cpW+5*gpmrg
+		GuiControl, QS: Move, QSFeldWahlT, % "x" cpX-2*gpmrg " y" gbY " w" (dpX+dpW-cpX+4*gpmrg) " h" cpH+10*gpmrg    ; ist die Groupbox
 
 		; - Datenbankauswahl
-		LVOptions1 := "-E0x200 vQSDB HWNDQShDB gQS_Handler AltSubmit -Multi Grid"
+		LVOptions1 	:= "-E0x200 vQSDB HWNDQShDB gQS_Handler AltSubmit -Multi Grid"
 		GuiControlGet, cp, QS:Pos, QSMinKB
 		GuiControlGet, dp, QS:Pos, QSFilter
-		mrgX := cpX, DBFilesW := dpX+dpW-mrgX, GCol2X := dpX+dpW+5
+		mrgX := cpX, DBFilesW := dpX+dpW-mrgX, DBFieldX := dpX+dpW+5
 
+		lp 	        	:= GetWindowSpot(QShDB)
 		Gui, QS: Font	, % "s" FSize " q5 Normal" ColorData
-		Gui, QS: Add	, ListView    	, % "xm				 y+5 	w" DBFilesW 	" r16  " LVOptions1            	, % "Datenbank|records|Größe|letzte Änderung"
+		Gui, QS: Add	, ListView    	, % "xm				 y+2 	w" LVWidth1 	" r16  " LVOptions1                                               	, % "Datenbank|Records|Größe|Änderung"
 
 		; - Datenbanken anzeigen
 		QuickSearch_DBFilter()
 
-		lp := GetWindowSpot(QShDB)
-		DBColW   	:= [95,65,75]
-		DBColW.4 	:= lp.CW - DBColW.1 - DBColW.2 - DBColW.3
+		; - Spaltenbreite einrichten
+		;      DBColW.4 	:= lp.CW - DBColW.1 - DBColW.2 - DBColW.3
 		Gui, QS: ListView, QSDB
 		LV_ModifyCol()
 		LV_ModifyCol(1, DBColW.1)
@@ -281,45 +332,63 @@ QuickSearch_Gui() {
 		LV_ModifyCol(3, DBColW.3 " Right Integer")
 		LV_ModifyCol(4, DBColW.4 " Left")
 		LV_ModifyCol(2, "SortDesc")
+
 	;}
 
-	;-: SPALTE 2: FELDINFOs                           	;{
+	;-: FELD 2: DATENBANKFELDER                   	;{
 		GuiControlGet, cp, QS:Pos, QSDB
-		LVOptions2	:= " vQSDBFL gQuickSearch_DBFields HWNDQShDBFL -Readonly -E0x200 -LV0x18 AltSubmit -Multi Grid Checked"
+		LVOptions2	    	:= " -Readonly -E0x200 -LV0x18 AltSubmit -Multi Grid Checked vQSDBFL HWNDQShDBFL gQuickSearch_DBFields"
+		LVColumnSizes2 	:= ["38 Right Integer", "85 Text", "31 Center", "45 Center", "45 Center", "230 Text"]
+		DBFieldW            	:= 0
+		For colNr, colOption in LVColumnSizes2 {
+			RegExMatch(colOption, "\d+", colWidth)
+			DBFieldW += colWidth
+		}
+		DBFieldW += 20
 
-		Gui, QS: Font	, % "s" FSize-1 " q5 Normal" ColorData
-		Gui, QS: Add	, ListView    	, % "x" GCol2X " y" cpY " w" DBFieldW	" h" cpH " " LVOptions2   	, % "Nr|Feldname|Type|Länge|Nr.DB|Suchparameter"
+		Gui, QS: Font	, % "s" FSize " q5 Normal" ColorData
+		Gui, QS: Add	, ListView    	, % "x" DBFieldX " y" cpY " w" DBFieldW	" h" cpH " " LVOptions2   	, % "Nr|Feldname|Typ|Länge|Nr.DB|Suchparameter"
 
 		; Größenanpassung
 		Gui, QS: Show, Hide
 		Gui, QS: ListView, QSDBFL
-		For colNr, colOption in ["40 Right Integer", "105 Text", "40 Center", "45 Center", "45 Center", "250 Text"]
+		For colNr, colOption in LVColumnSizes2
 			LV_ModifyCol(colNr, colOption)
 
 		; letzte Spalte editierbar machen
-		QSICEFI := New LV_InCellEdit(QShDBFL)
-		QSICEFI.SetColumns(6)
+		InCellEdit := New LV_InCellEdit(QShDBFL)
+		InCellEdit.SetColumns(6)
 
 		GuiControlGet, dp, QS:Pos, QSDBFL
 		GCol3X 	:= dpX+dpW+5
 	;}
 
-	;-: SPALTE 3: DATENBANKSUCHE                 	;{
+	;-: FELD 3: DATENBANKSUCHE                 	;{
 		GuiControlGet, cp, QS:Pos, QSFelderT
 		GuiControlGet, dp, QS:Pos, QSFeldWahlT
 		Gui, QS: Font	, % "s" FSize+2 " q5 Italic" ColorTitles, Futura Bk Bt
-		Gui, QS: Add	, Text        	, % "x+15 y" cpY " w" DBSearchW " " BGT "    Center                                                           "	, % "RegEx Suche"
+		Gui, QS: Add	, Text        	, % "x" GCol3X " y" cpY " w" DBSearchW " " BGT                                                       	, % "RegEx Suche"
 
 		GuiControlGet, cp, QS:Pos, QSDB
 		GuiControlGet, dp, QS:Pos, QSDBFL
+		opt := " -E0x200 vQSDBS HWNDQShDBS gQS_Handler"
 		Gui, QS: Font	, % "s" FSize " q5 Normal" ColorData
-		Gui, QS: Add	, Edit         	, % "x" dpX+dpW+5 " y" dpY 	" w" DBSearchW " h" dpH " -E0x200 vQSDBS gQS_Handler" 	, % lastS
+		Gui, QS: Add	, Edit         	, % "x" dpX+dpW+5 " y" dpY 	" w" DBSearchW " h" dpH . opt                                    	, % ""
+
+		Gui, QS: Font	, % "s" FSize-1 " q5 Normal" ColorData
+		Gui, QS: Add	, Button        	, % " y+2 vQSDBSSave  h" FSize-1+2 "	gQS_Handler"                                           	, % "Speichern"
+		GuiControlGet, cp, QS:Pos, QSDBSSave
+		GuiControlGet, dp, QS:Pos, QSDBS
+
+		Gui, QS: Font	, % "s" FSize+1 " q5 Normal" ColorData
+		Gui, QS: Add	, ComboBox 	, % " x+1 y" cpY " w" dpW-cpW-2+100 " h" FSize " r8 vQSDBSParam 	gQS_Handler"  	, % ""
+
 	;}
 
-	;-: SPALTE 4: ZUSÄTZLICHE INFO'S            	;{
+	;-: FELD 4: ZUSÄTZLICHE INFO'S                	;{
 		GuiControlGet	, cp              	, QS: Pos	, QSFelderT
-		Gui, QS: Font	, % "s" FSize+2 " q5 Italic" ColorTitles, Futura Bk Bt
-		Gui, QS: Add	, Checkbox  	, % "x+5  y" cpY " w400 " BGT "                           vQSXTRT gQS_Handler"                        	, % "verknüpfte Daten"
+		Gui, QS: Font	, % "s" FSize+2 " q5 Italic" ColorTitles
+		Gui, QS: Add	, Checkbox  	, % "x" dpX+dpW+5 "  y" cpY " w400 " BGT " vQSXTRT gQS_Handler" 	, % "verknüpfte Daten"
 
 		GuiControlGet	, cp           	, QS: Pos	, QSXTRT
 		GuiControl    	, QS: Move	, QSXTRT	, % "y" dpY - cpY - 5   	; Position anpassen
@@ -330,72 +399,114 @@ QuickSearch_Gui() {
 		Gui, QS: Add	, Edit         	, % "x" cpX " y" dpY " w400 h" cpH " -E0x200 Center vQSEXTRANFO"
 
 		GuiControlGet	, ep           	, QS: Pos	, QSEXTRANFO
-		Gui, QS: Font	, % "s" FSize-1 " q5 Normal" ColorData
+		Gui, QS: Font	, % "s" FSize " q5 Normal" ColorData
 		Gui, QS: Add	, Edit         	, % "y+1w400 h" dpH-epH-1 " -E0x200 vQSEXTRAS"
 
 		GuiControl, % "QS:" (ExtrasStatus ? "Enable" : "Disable"), % "QSEXTRANFO"
 		GuiControl, % "QS:" (ExtrasStatus ? "Enable" : "Disable"), % "QSEXTRAS"
 
-		GuiControlGet, dp            	, QS: Pos	, QSEXTRAS
-		QSEXTRASx := dpX
-		GuiW := dpX+dpW-5
+	;}
 
 	;}
 
 	;-: ZEILE 2: BEFEHLE                                    	;{
+
+		GuiControlGet, dp, QS: Pos , QSEXTRAS
+		QSEXTRASx 	:= dpX, GuiW := dpX + dpW-5
+		row1H       	:= dpY + dpH
+		GuiControlGet, dp, QS: Pos , QSDBSSave
+		row2Y         	:= dpY + dpH
+
+		;-: FELD 1: INFO'S                                  	;{
 		Gui, QS: Font	, % "s" FSize+1 " q5" ColorTitles, Futura Md Bt
-		Gui, QS: Add	, Text        	, % "xm 	y+2 	 " BGT "   "			                                                    	, % "Position:"
-		Gui, QS: Add	, Text        	, % "x+5       	 " BGT "   vQST1"                                                   	, % empty "              "
 
-		Gui, QS: Add	, Text        	, % "x+20       	 " BGT "  "				                                                	, % "Datensätze:"
-		Gui, QS: Add	, Text        	, % "x+5       	 " BGT "   vQST2"                                                     	, % empty "   "
+		Gui, QS: Add	, GroupBox	, % "xm     	y" row1H-6  " w100 h50" 	 "  vQSTGB1"
 
-		Gui, QS: Add	, Text        	, % "x+20       	 " BGT "  "				                                                	, % "Treffer:"
-		Gui, QS: Add	, Text        	, % "x+5       	 " BGT "   vQST3"                                                    	, % empty "         "
+		Gui, QS: Add	, Text        	, % "xm+3  	y" (row1H+3)       BGT " vQST1a"                              	, % "Position:"
+		Gui, QS: Add	, Text        	, % "x+2                            	 " BGT " vQST1"                                	, % empty "   "
 
-        Gui, QS: Add	, Text        	, % "x+40       	 " BGT "  "				                                                	, % "ausgewählter Patient:"
-		Gui, QS: Add	, Text        	, % "x+5 w350 	 " BGT "   vQST4"                                                    	, % ""
+		Gui, QS: Add	, Text        	, % "xm+3  	y+1                	 " BGT " vQST2a"                              	, % "Datensätze:"
+		Gui, QS: Add	, Text        	, % "x+2                           	 " BGT " vQST2"                                	, % empty "   "
 
-		; - Progress -
-		Gui, QS: Add	, Progress     	, % "xm  	y+2 w" GuiW " vQSPGS"			                                		, % 0
+		GuiControlGet, cp, QS: Pos , QST2
+		GuiControlGet, dp, QS: Pos , QST2a
+		col2X := dpW + cpW + 20, InfoH := dpH+cpH+12
+		GuiControl, QS: Move, QST1a  	, % "w" 	dpW
+		GuiControl, QS: Move, QST1    	, % "x" 	dpX+dpW+2
+		GuiControl, QS: Move, QSTGB1	, % "w" 	dpW+cpW+6 " h" InfoH
+
+		; - - - - -
+
+		Gui, QS: Add	, GroupBox	, % "x" col2X      " y" row1H-6  " w100 h" InfoH "  vQSTGB2"
+
+		Gui, QS: Add	, Text        	, % "x" col2X+3 " y" (row1H+3)	   BGT " vQST3a"                   	, % "Treffer gesamt:"
+		Gui, QS: Add	, Text        	, % "x+2                               	 " BGT " vQST3"                        	, % empty " "
+
+		Gui, QS: Add	, Text        	, % "x" col2X+3 " y+1             	 " BGT " vQST4a"                      	, % "PatNR:"
+		Gui, QS: Add	, Text        	, % "x+2                               	 " BGT " vQST4"                     	, % empty " "
+
+		GuiControlGet, cp, QS: Pos , QST2
+		GuiControlGet, dp, QS: Pos , QST3a
+		col2X := dpW + cpW + 20
+		GuiControl, QS: Move, QST4a  	, % "w" 	dpW
+		GuiControl, QS: Move, QST4    	, % "x" 	dpX+dpW+2
+		GuiControl, QS: Move, QSTGB2	, % "w" 	LVWidth1-dpX+mrgX+3
+
+		; - - - - -
+
+		Gui, QS: Add	, GroupBox	, % "x" DBFieldX     	" y" row1H-6  " w" DBFieldW " h" InfoH "  vQSTGB3"
+        Gui, QS: Add	, Text        	, % "x" DBFieldX+3  	" y" row1H+3        		BGT " "                 	, % "ausgewählter Patient:"
+		Gui, QS: Add	, Text        	, % "x" DBFieldX+3 	" y+1 w" DBFieldW-6		BGT " vQST5"       	, % ""
+
+
+		;}
+
+		;-: FELD 2: PROGRESS                              	;{
+		Gui, QS: Add	, Progress     	, % "xm  	y+3 w" GuiW " vQSPGS"			                                		, % 0
 		GuiControlGet, cp, QS: Pos, QSPGS
-		Gui, QS: Add	, Text        	, % "x" cpX " y" cpY " w" cpW " h" cpH "  " BGT "   Center vQSPGST"
+		Gui, QS: Add	, Text        	, % "x" cpX " y" cpY " w" cpW " h" cpH "  " BGT "   Center vQSPGST", % "+*~"
+		;}
 
-		; - Buttons -
-		Gui, QS: Add	, Button        	, % "      	y+5         	vQSSearch                                          	gQS_Handler "	, % "Suchen"
+		;-: FELD 3: BEFEHLE                               	;{
+		BtnH := cpH-8
+		Gui, QS: Add	, Button        	, % "      	y+2              	vQSSearch                       	gQS_Handler "	, % "Suchen"
 
-		Gui, QS: Add	, Button        	, % "x+10		          	vQSSaveRes                                        	gQS_Handler "	, % "Suche speichern als"
+		Gui, QS: Add	, Button        	, % "x+10		                	vQSSaveRes                    	gQS_Handler "	, % "Suche speichern als"
 
-		Gui, QS: Font	, % "s" FSize+3 " q5" ColorData, Futura Md Bt
-		GuiControlGet, cp, QS: Pos, QSSaveRes
-		Gui, QS: Add	, DDL         	, % "x+2 h" cpH "      	vQSSaveAs r5                                      	gQS_Handler "	, % ".csv (Tab)|.csv (;)|.csv (Leerzeichen)"
-		GuiControl, QS: Choose, QSSaveAs, 1
+		Gui, QS: Font	, % "s" FSize+3 " q5" ColorData
+		GuiControlGet	, cp, QS: Pos, QSSaveRes
+		Gui, QS: Add	, DDL         	, % "x+2 h" cpH " w115   	vQSSaveAs r5                 	gQS_Handler "	, % ".csv (;)|.csv (Tab)|.csv (,)"
+		GuiControl    	, QS: Choose, QSSaveAs, 1
 
-		Gui, QS: Font	, % "s" FSize+1 " q5" ColorData, Futura Md Bt
-		Gui, QS: Add	, Button        	, % "x+20		          	vQSSaveSearch                                 	gQS_Handler "	, % "Sucheinstellungen speichern"
+		Gui, QS: Font	, % "s" FSize+1 " q5" ColorData
+		Gui, QS: Add	, Button        	, % "x+20		          	vQSLBlock                             	gQS_Handler "	, % "⏪ vorheriger Block"
 
-		Gui, QS: Add	, Button        	, % "x+20		          	vQSLBlock                                         	gQS_Handler "	, % "<< vorheriger Block"
+		Gui, QS: Font	, % "s" FSize-2 " q5" ColorTitles
+		GuiControlGet	, cp, QS: Pos, QSLBlock
+		Gui, QS: Add	, Text         	, % "x" cpX+cpW+5 " y" cpY-3 "	vQSBlockNrBez " BGT                     	, % "Block Nr|Größe"
 
-		Gui, QS: Font	, % "s" FSize-2 " q5" ColorTitles, Futura Md Bt
-		GuiControlGet, cp, QS: Pos, QSLBlock
-		Gui, QS: Add	, Text         	, % "x" cpX+cpW+5 " y" cpY-4 "	vQSBlockNrBez"                                        	, % "Block Nr|Größe"
+		Gui, QS: Font	, % "s" FSize-1 " q5" ColorData
+		Gui, QS: Add	, Edit         	, % "y+0 w" FSize*4 " vQSBlockNR Number              	gQS_Handler "	, % BlockNr
+		Gui, QS: Add	, Edit         	, % "x+0 w" FSize*6 " vQSBlockSize Number				gQS_Handler "	, % BlockSize
 
-		Gui, QS: Font	, % "s" FSize-1 " q5" ColorData, Futura Md Bt
-		Gui, QS: Add	, Edit         	, % "y+0 w" FSize*4 " vQSBlockNR Number 							gQS_Handler "	, % BlockNr
-		Gui, QS: Add	, Edit         	, % "x+0 w" FSize*6 " vQSBlockSize Number 							gQS_Handler "	, % BlockSize
+		Gui, QS: Font	, % "s" FSize+1 " q5" ColorData
+		Gui, QS: Add	, Button        	, % "x+5 y" cpY "	  	vQSNBlock                             	gQS_Handler "	, % "nächster Block ⏩"
 
-		Gui, QS: Font	, % "s" FSize+1 " q5" ColorData, Futura Md Bt
-		Gui, QS: Add	, Button        	, % "x+5 y" cpY "	  	vQSNBlock                                         	gQS_Handler "	, % "nächster Block >>"
+		Gui, QS: Font	, % "s" FSize-1 " q5" ColorTitles
+		Gui, QS: Add	, Checkbox  	, % "x+10  y" cpY " " 	BGT "          	vQSDBRView     	gQS_Handler" 	, % "gelöschte Datensätze anzeigen"
+		Gui, QS: Add	, Checkbox  	, % "y+3 "             	BGT "          	vQSDBRPatView   	gQS_Handler" 	, % "PATNR mit Namen ersetzen"
 
-		Gui, QS: Add	, Button        	, % "x+150	   	      	vQSReload                                        	gQS_Handler "	, % "Reload"
-		Gui, QS: Add	, Button        	, % "x+50	              	vQSQuit                                           	gQS_Handler "	, % "Beenden"
+		Gui, QS: Font	, % "s" FSize+1 " q5" ColorData
+		Gui, QS: Add	, Button        	, % "x+250 y" cpY "              	      	vQSReload          	gQS_Handler "	, % "Reload"
+		;}
 
 	;}
 
-	;-: ZEILE 3: Ausgabelistview                          	;{
+	;-: ZEILE 3: AUSGABE                                	;{
 		Gui, QS: Show, %  WinSize " Hide", Quicksearch
 
-		GuiControlGet, cp, QS: Pos, QSSearch
+		GuiControlGet, cp, QS: Pos, QSReload
+		QSReloadw	:= cpW
 		LVOptions3 	:= "vQSDBR gQS_Handler HWNDQShDBR -E0x200 -LV0x10 AltSubmit -Multi Grid"
 		wqs  	    	:= GetWindowSpot(hQS)
 		LvH           	:= wqs.CH - cpY - cpH
@@ -418,25 +529,26 @@ QuickSearch_Gui() {
 		QSmrgX 	:= wqs.W - Lv.W
 		QSmrgY 	:= cpY + cpH + 10
 
-		WinMove, % "ahk_id " hQS,,,, % wqs.W+1, % wqs.H+1
-		WinMove, % "ahk_id " hQS,,,, % wqs.W, % wqs.H
+		WinMove, % "ahk_id " hQS,,,, % wqs.W+1	, % wqs.H+1
+		WinMove, % "ahk_id " hQS,,,, % wqs.W   	, % wqs.H
 	;}
 
 	; lädt die zuletzt benutzte Datenbank
-	If lastdbname {
-		BlockInput, On
-		QuickSearch_ListFields(dbname := lastdbname)
-		BlockInput, Off
-	}
+		If lastdbname {
+			BlockInput, On
+			QuickSearch_ListFields(dbname := lastdbname)
+			BlockInput, Off
+		}
 
 	; Hotkeys
-	fn_QSHK := Func("QuickSearch_Hotkeys")
-	Hotkey, IfWinActive, Quicksearch ahk_class AutoHotkeyGUI
-	Hotkey, Left   	, 	% fn_QSHK
-	Hotkey, Right 	, 	% fn_QSHK
-	Hotkey, Enter 	, 	% fn_QSHK
-	Hotkey, TAB  	, 	% fn_QSHK
-	Hotkey, IfWinActive
+		fn_QSHK := Func("QuickSearch_Hotkeys")
+		Hotkey, IfWinActive, Quicksearch ahk_class AutoHotkeyGUI
+		Hotkey, Left               	, 	% fn_QSHK
+		Hotkey, Right             	, 	% fn_QSHK
+		Hotkey, Enter             	, 	% fn_QSHK
+		Hotkey, NumpadEnter 	, 	% fn_QSHK
+		Hotkey, TAB              	, 	% fn_QSHK
+		Hotkey, IfWinActive
 
 
 return
@@ -457,9 +569,7 @@ QS_Handler: 	;{
 				return
 			EventInfo := A_EventInfo
 			If Instr(A_GuiEvent	, "DoubleClick") {
-
 					Last_tblRow := 0
-
 				; Datenbankname lesen
 					Gui, QS: ListView, QSDB
 					LV_GetText(dbname, EventInfo, 1)
@@ -468,6 +578,7 @@ QS_Handler: 	;{
 		;}
 
 		Case "QSDBR":                             	;{     Datentabelle
+
 			       If (A_GuiEvent = "ColClick"                  	)	{
 				colHDR := A_EventInfo
 				MouseGetPos, mx, my
@@ -476,7 +587,7 @@ QS_Handler: 	;{
 			}
 			else if (A_GuiEvent = "DoubleClick"            	) 	{
 
-				If !WinExist("ahk_class OptoAppClass")
+				If !WinExist("ahk_class OptoAppClass") || !A_EventInfo
 					return
 
 				If (Pcol := Props.PatIDColumn()) {
@@ -484,16 +595,7 @@ QS_Handler: 	;{
 					LV_GetText(PatID, A_EventInfo, Pcol)
 					PatID    	:= StrReplace(PatID, "*")
 					PatName 	:= PatDB[PatID].NAME ", " PatDB[PatID].VORNAME
-					MsgBox	, 0x2024
-								, Quicksearch - Quickclick
-								, % "Soll die Karteikarte des Patienten:`n" PatName
-								. 	 ", *" ConvertDBASEDate(PatDB[PatID].GEBURT)
-								.	 "`nin Albis angezeigt werden?", 10
-					IfMsgBox, No
-						return
-					IfMsgBox, TimeOut
-						return
-					GuiControl, QS:, QST4, % PatDB[PatID].NAME ", " PatDB[PatID].VORNAME
+					GuiControl, QS:, QST5, % PatDB[PatID].NAME ", " PatDB[PatID].VORNAME
 					AlbisAkteOeffnen(PatName, PatID)
 				}
 
@@ -501,7 +603,8 @@ QS_Handler: 	;{
 			else if RegExMatch(A_GuiEvent, "(Normal|I)"	)  	{
 
 				tblRow := A_EventInfo
-				If (Last_tblRow = tblRow)
+
+				If (!tblRow || Last_tblRow = tblRow)
 					return
 				Last_tblRow := tblRow
 
@@ -510,7 +613,8 @@ QS_Handler: 	;{
 					Gui, QS: ListView, QSDBR
 					LV_GetText(PatID, tblRow, Pcol)
 					PatID := StrReplace(PatID, "*")
-					GuiControl, QS:, QST4, % "[" PatID "] " PatDB[PatID].NAME ", " PatDB[PatID].VORNAME " *" PatDB[PatID].GEBURT
+					GuiControl, QS:, QST5, % "[" PatID "] " PatDB[PatID].NAME ", " PatDB[PatID].VORNAME
+														.	" *" ConvertDBASEDate(PatDB[PatID].GEBURT)
 				}
 
 			 ; verlinkte Daten aus anderer Datenbank anzeigen (wenn Häkchen bei verknüpfte Daten gesetzt ist)
@@ -520,18 +624,17 @@ QS_Handler: 	;{
 			}
 		;}
 
-		Case "QSLBlock":                        	;{
+		Case "QSLBlock":                        	;{   	vorheriger Datenblock
 			QuickSearch_ListFields(dbname, 2)
 		;}
 
-		Case "QSNBlock":                     	;{
+		Case "QSNBlock":                     	;{    	nächster Datenblock
 			QuickSearch_ListFields(dbname, 1)
 		;}
 
 		Case "QSSearch": 	                    	;{     Datenbanksuche
 			If !dbname
 				return
-			Gui, QS: Submit, NoHide
 			Quicksearch(dbname, QSDBS)
 		;}
 
@@ -545,6 +648,40 @@ QS_Handler: 	;{
 		Case "QSXTRT":                         	;{ 	verknüpfte Daten aktivieren/deaktivieren
 			GuiControl, % "QS:" (ExtrasStatus ? "Enable" : "Disable")	, % "QSEXTRANFO"
 			GuiControl, % "QS: Enable" (QSXTRT ? "1" : "0")          	, % "QSEXTRAS"
+		;}
+
+		Case "QSDBSSave":                     	;{ 	Suchparameterliste speichern
+			If !dbname
+				return
+			Quicksearch_SaveSearch(dbname, QSDBSParam, QSDBS)
+		;}
+
+		Case "QSDBSParam":                	;{ 	neue Parameterliste wurde ausgewählt
+
+			;SciTEOutput("`n - - - - - - - - - - - label: " QSDBSParam "`n" Props.SParams_GetParams(QSDBSParam))
+			Props.SParams_CBSet(QSDBSParam)
+
+		;}
+
+		Case "QSFeldAlle":                     	;{ 	Alle/Keine Spalten der Datenbank anzeigen
+		Case "QSFeldKein":
+
+			checkAll := A_GuiControl = "QSFeldAlle" ? true : false
+			Gui, QS: ListView, QSDB
+			Loop % LV_GetCount()
+				LV_Modify(A_Index, (!checkAll ? "-":"") "Check")
+
+		;}
+
+		Case "QSDBRView":                     	;{ 	Props Object Einstellung ändern
+
+			Props.ShowRemovedSets(QSDBRView)
+
+		;}
+
+		Case "QSDBRPatview":                 	;{ 	PATNR durch Patientennamen ersetzen
+			Props.ShowPatNames(QSDBRPatView)
+
 		;}
 
 	}
@@ -570,13 +707,12 @@ QSGuiSize:    	;{
 	Critical, Off	; erst Critical Off soll Critical On dann schneller machen oder zuverlässiger machen (hab vergessen woher ich das habe)
 	if (A_EventInfo = 1), return
 	Critical
-	QSW := A_GuiWidth, QSH:= A_GuiHeight
-	QSEXTRASw := QSW-QSEXTRASx-5
-
+	QSW := A_GuiWidth, QSH:= A_GuiHeight, QSEXTRASw := QSW-QSEXTRASx-5
 	GuiControl, QS: MoveDraw	, QSDBR       	, % "w" QSW-10 " h" QSH-QSmrgY
-	GuiControl, QS: MoveDraw	, QSPGR       	, % "w" QSW-10
+	GuiControl, QS: MoveDraw	, QSPGS       	, % "w" QSW-10
 	GuiControl, QS: MoveDraw	, QSEXTRANFO	, % "w" (QSEXTRASw < 300 ? 300 : QSEXTRASw)
 	GuiControl, QS: MoveDraw	, QSEXTRAS   	, % "w" (QSEXTRASw < 300 ? 300 : QSEXTRASw)
+	GuiControl, QS: MoveDraw	, QSReload      	, % "x" QSW-QSReloadw-5
 	GuiControl, QS: +Redraw 	, QSDBR
 	WinSet, Redraw,, % "ahk_id " QShDBR
 
@@ -586,7 +722,7 @@ return ;}
 
 QuickSearch_GuiSave()                                                                                     	{	; Fenstereinstellung speichern
 
-	global hQS, QSDB, QSDBFL, QSDBS, QSDBR, QSPGS, QST1, QST2, QST3, QSXTRT
+	global hQS, QSDB, QSDBFL, QSDBS, QSDBR, QSPGS, QST1, QST2, QST3, QSXTRT, QSDBRView
 	global QSMinKB, QSMaxKB, QSFilter, BlockSize, winSize, dbname
 
 	Gui, QS: Default
@@ -594,15 +730,16 @@ QuickSearch_GuiSave()                                                           
 	Gui, QS: Submit, NoHide
 
 	wqs  	:= GetWindowSpot(hQS)
+	winSize :=  "x" wqs.X " y" wqs.Y " w" wqs.CW " h" wqs.CH
 	lastS 	:= RegExReplace(QSDBS, "[\r\n]+", "|")
 
 	IniWrite, % QSMinKB 	, % adm.Ini, % "QuickSearch", % "QSMinKB"
 	IniWrite, % QSMaxKB	, % adm.Ini, % "QuickSearch", % "QSMaxKB"
 	IniWrite, % QSFilter   	, % adm.Ini, % "QuickSearch", % "QSFilter"
 	IniWrite, % BlockSize    	, % adm.Ini, % "QuickSearch", % "QSBlockSize"
-	IniWrite, % winSize    	, % adm.Ini, % "QuickSearch", % "x" wqs.X " y" wqs.Y " w" wqs.CW " h" wqs.CH
+	IniWrite, % winSize    	, % adm.Ini, % "QuickSearch", % "winSize"
 	IniWrite, % dbname    	, % adm.Ini, % "QuickSearch", % "lastDB"
-	IniWrite, % lastS        	, % adm.Ini, % "QuickSearch", % "lastSearch"
+	IniWrite, % lastS         	, % adm.Ini, % "QuickSearch", % "lastSearch"
 	IniWrite, % QSXTRT    	, % adm.Ini, % "QuickSearch", % "Extras"
 
 	If !Props.SaveProperties()
@@ -611,7 +748,7 @@ QuickSearch_GuiSave()                                                           
 return
 }
 
-QuickSearch_Hotkeys()                                                                                      	{
+QuickSearch_Hotkeys()                                                                                      	{	; Hotkey Kontexthandler
 
 	global dbname, QS, QSDBS, QSBlockNr, QSBlockSize
 
@@ -624,6 +761,7 @@ QuickSearch_Hotkeys()                                                           
 	Gui, QS: Default
 	Gui, QS: Submit, NoHide
 	GuiControlGet, gfocus, QS: FocusV
+	;SciTEOutput("Focus: " gfocus ", " thisHotkey)
 
 	Switch thisHotkey {
 
@@ -633,9 +771,10 @@ QuickSearch_Hotkeys()                                                           
 			else if RegExMatch(gfocus, "i)QSDBS")
 				SendInput, {Down}
 			else
-				SendInput, {Enter}
+				SendInput, {TAB}
 
 		Case "Enter":
+		Case "NumPadEnter":
 			If RegExMatch(gfocus, "i)(QSBlockNr|QSBlockSize)")
 				QuickSearch_ListFields(dbname, 3)
 			else if RegExMatch(gfocus, "i)QSDBS")
@@ -671,25 +810,146 @@ QuickSearch_Progress(index, maxIndex, len, matchcount)                          
 
 }
 
-QuickSearch_Extras(tblRow)                                                                               	{	; verknüpfte Daten aus anderer Datenbank laden
+QuickSearch_Extras(tblRow, TEXTDB:=0, TEXTDate:=0)                                         	{	; verknüpfte Daten aus anderer Datenbank laden
 
-		If (Props.dbname <> "BEFUND" || !Props.isVisible("TEXTDB")) {
-			SciTEOutput("TEXTDB is visible: " Props.isVisible("TEXTDB"))
+		static DBIndex, dbf
+
+		If (!Props.isVisible("TEXTDB")) {
+			;SciTEOutput("TEXTDB is visible: " Props.isVisible("TEXTDB") "," Props.HeaderVirtualPos("TEXTDB"))
 			return
 		}
 
+	; TEXTDB = LFDNR in BEFTEXTE
 		Gui, QS: ListView, QSDBR
-		LV_GetText(TEXTDB, tblRow, Props.HeaderVirtualPos("TEXTDB"))
-		If (TEXTDB = 0)
-			return
+		If !TEXTDB {
+			LV_GetText(TEXTDB, tblRow, Props.HeaderVirtualPos("TEXTDB"))
+			If !TEXTDB
+				return
+		} else
+			SaveFeature := true
+		If !TEXTDate
+			LV_GetText(TEXTDate, tblRow, Props.HeaderVirtualPos("DATUM"))
 
-		dbf       	:= new DBASE(adm.AlbisDBPath "\BEFTEXTE.dbf", 1)
-		records		:= dbfRecords := dbf.records
+	; BEFTEXTE.dbf indizieren oder Index laden
+		If !IsObject(DBIndex) {
+
+			DBIndex     	:= {"Quartal":{}, "LFDNR":{}}
+			DbIndexFile1	:= adm.DBPath "\DBase\DBIndex_BEFTEXTE.json"
+			DbIndexFile2	:= adm.DBPath "\DBase\DBIndex_BEFTEXTE_LFDNR-Sort.json"
+			dbf           	:= new DBASE(adm.AlbisDBPath "\BEFTEXTE.dbf", 2)
+
+			If FileExist(DbIndexFile1) && FileExist(DbIndexFile2) {
+				DBIndex.Quartal	:= JSONData.Load(DbIndexFile1, "", "UTF-8")
+				DBIndex.LFDNR 	:= JSONData.Load(DbIndexFile2, "", "UTF-8")
+			}
+
+		  ; Indizierung wird auch ausgeführt wenn die letzte Indizierung mehr als 30 Tage her ist
+			today := A_YYYY A_MM A_DD
+			IndexFromDay := today - 30
+			IndexStartRecord := DBIndex.Quartal.LastIndex && (DBIndex.Quartal.LastIndex < IndexFromDay) ? DBIndex.Quartal.LastRecord : 0
+
+		  ; jetzt indizieren
+			If !FileExist(DbIndexFile1) || !FileExist(DbIndexFile2) || IndexStartRecord {
+
+				; Hinweisfenster wird eingeblendet ;{
+					global hQS, hQSi, QSDBS, QShDBS
+					static QSiT, QSi
+					op := GetWindowSpot(QShDBS)
+					Gui, QSi: new, -Caption +ToolWindow  HWNDhQSi -DPIScale +Owner%hQS% ; +AlwaysOnTop
+					Gui, QSi: Color, c000000
+					Gui, QSi: Font, s26 q5 bold, Futura Bk Bt
+					Gui, QSi: Add, Text, % "x0 y0 w" op.CW " cDarkRed Center vQSiT", % "Indexerstellung`nbitte warten...."
+					GuiControlGet, cp, QSi: Pos, QSiT
+					GuiControl, QSi: Move, QSiT, % "y" Floor(op.CH/2)-Floor(cpH)
+					Gui, QSi: Show, % "x" op.X " y" op.Y " w" op.CW " h" op.CH " NoActivate", QuickSearch...Indexer
+					WinSet, Trans, 200, % "ahk_id " hQSi
+				;}
+
+				; Indexer erstellt zwei Index Objekte, eines mit Zuordnung zu LFDNR und das andere zum Quartal ;{
+
+						dbf.ShowAt	:= 100                                                                       ; für Fortschrittsanzeige
+						records  		:= dbfRecords := dbf.records
+						LFDNRsteps  	:= records < 1200 ? Floor(records/100) : 1200
+						filepos       	:= dbf.OpenDBF()
+
+					; Index ergänzen wenn letzter Index länger als einen Monat her ist
+						If IndexStartRecord
+							dbf._SeekToRecord(IndexStartRecord)
+
+					; indizieren
+						Loop % (records - IndexStartRecord) {
+
+							;~ If (Mod(A_Index, 100) = 0)
+								;~ QuickSearch_Progress(A_Index, records, StrLen(records), matchcount)
+
+							set := dbf.ReadRecord(["PATNR", "DATUM", "LFDNR", "POS", "TEXT"], "QuickSearch_Progress")
+
+						  ; nach Datum/Quartal indizieren
+							Quartal := GetQuartalEx(set.DATUM, "YYYYQQ")
+							If (LastQuartal <> Quartal) {
+								LastQuartal := Quartal
+								If !DBIndex.Quartal.haskey(Quartal)
+									DBIndex.Quartal[Quartal] := [dbf.recordnr, dbf.filepos]       	; Datensatz Nummer im Objekt als Einsprungpunkt sichern
+							}
+
+						  ; nach LFDNR indizieren
+							If (Mod(A_Index, LFDNRsteps) = 0) {
+								If !DBIndex.LFDNR.haskey(set.LFDNR)
+									DBIndex.LFDNR[set.LFDNR] := [dbf.recordnr, dbf.filepos]         	; Datensatz Nummer im Objekt als Einsprungpunkt sichern
+							}
+
+						}
+				;}
+
+				QuickSearch_Progress(records, records, StrLen(records), DBIndex.Quartal.Count()-3 "+" DBIndex.LFDNR.Count())
+
+				DBIndex.Quartal.LastIndex  	:= dbf.lastupdatedBase
+				DBIndex.Quartal.LastRecord 	:= dbf.records
+				DBIndex.Quartal.LastFilePos 	:= dbf.filepos
+
+				filepos := dbf.CloseDBF()
+
+				JSONData.Save(DbIndexFile1, DBIndex.Quartal	, true,, 1, "UTF-8")
+				JSONData.Save(DbIndexFile2, DBIndex.LFDNR	, true,, 1, "UTF-8")
+
+			}
+
+			Gui, QSi: Destroy
+		}
+
+	; Vorbereitung Daten auslesen
+		If !IsObject(dbf)
+			dbf      	:= new DBASE(adm.AlbisDBPath "\BEFTEXTE.dbf", 2)
+		records 	:= dbfRecords := dbf.records
 		steps      	:= records/100
 		filepos   	:= dbf.OpenDBF()
 
+	; filepointer in Richtung TEXTDB Eintrag versetzen
+		IndexStartRecord := 0
+		If TEXTDB {
+			lastrecData 	:= [1, filepos]
+			LFDNRPos 	:= 0
+			For LFDNR, recData in DBIndex.LFDNR {
+				LFDNRPos ++
+				If (LFDNR >= TEXTDB)
+					break
+				If (LFDNRPos < DBIndex.LFDNR.Count())
+					lastrecData := recData
+			}
+			IndexStartRecord := lastrecData.1
+		}
+		else If TEXTDate {
+			Quartal := GetQuartalEx(TEXTDate, "YYYYQQ")
+			IndexStartRecord := DBIndex.Quartal[Quartal]
+		}
+
+	; filepointer wird gesetzt
+		dbf._SeekToRecord(IndexStartRecord)
+
+	; TEXTDB Eintrag finden und Daten zusammen stellen
 		found := false
-		Loop % records {
+		Loop % (records-IndexStartRecord) {
+
 			set := dbf.ReadRecord(["PATNR", "DATUM", "LFDNR", "POS", "TEXT"])
 			If (TEXTDB = set.LFDNR) {
 				found := true
@@ -699,27 +959,37 @@ QuickSearch_Extras(tblRow)                                                      
 			else If (found && TEXTDB <> set.LFDNR) {
 				break
 			}
-			If (Mod(A_Index, 100) = 0)
+
+			If !SaveFeature && (Mod(A_Index, 100) = 0)
 				QuickSearch_Progress(A_Index, records, StrLen(records), matchcount)
 		}
 
 		filepos   	:= dbf.CloseDBF()
-		extrahead	:=  extraLines " Zeile" (extraLines = 1 ? "" : "n")
-							. " aus BEFTEXT.dbf für TEXTDB Eintrag: " TEXTDB
+		If !SaveFeature
+			QuickSearch_Progress(records, records, StrLen(records), "---")
 
-		GuiControl, QS:, QSEXTRANFO	, % extrahead
-		GuiControl, QS:, QSEXTRAS   	, % extra
+	; Daten ausgeben
+		If !SaveFeature {
+			extrahead	:=  extraLines " Zeile" (extraLines = 1 ? "" : "n")
+								. " aus BEFTEXT.dbf für TEXTDB Eintrag: " TEXTDB
 
+			GuiControl, QS:, QSEXTRANFO	, % extrahead
+			GuiControl, QS:, QSEXTRAS   	, % extra
+		}
+
+return extra
 }
 
 QuickSearch_ListFields(dbname, step:=0)                                                             	{ 	; erstellt die Ausgabetabelle
 
-		global	 QS, QSDBS, QSBlockNr, QSBlockSize, QSPGS, QSPGST
+		global	QS, QSDBS, QSBlockNr, QSBlockSize, QSPGS, QSPGST, QSDBSParam, QSDBRView
 		global 	dbfiles, empty, dbfdata
 		global 	BlockNr, BlockSize, lastBlockNr, lastBlockSize, dbfRecords
 		static 	lastdbname
 
 		Gui, QS: Submit, NoHide
+		GuiControl, QS:, QST4, % ""
+		InCellEdit.OnMessage(false)
 
 	; neue Datenbank soll abgerufen werden
 		If (dbname <> lastdbname) {
@@ -732,15 +1002,19 @@ QuickSearch_ListFields(dbname, step:=0)                                         
 			Props.LVColumnSizes()                                                                       	; Spalten wie bei letzter Anzeige wiederherstellen
 		}
 
+	; Blockgröße berechnen                                        	;{
 		BlockNr 	:= QSBlockNr
 		BlockSize 	:= QSBlockSize
-
 
 		If (StrLen(BlockSize) 	= 0	|| !RegExMatch(BlockSize	, "^\d+$"))
 			BlockSize := lastBlockSize
 		If !RegExMatch(BlockNr	, "^\d+$")
 			BlockNr := lastBlockNr
+	;}
 
+	; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
+	; erstmalige Anzeige
+	; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 		If      	(step = 0) {     	; erste Anzeige
 
 			; Einstellungsobjekt anlegen                              	;{
@@ -750,46 +1024,61 @@ QuickSearch_ListFields(dbname, step:=0)                                         
 				}
 			;}
 
+			; Namen der ausgewählten Datenbank anzeigen
+				GuiControl, QS:, QSDBName, % "[" dbname ".dbf]"
+
+			; Datenbanksuche - Parameter/Auswahl
+				Props.SParams_CBSet(Props.SParams.lastLabel)
+
+			; Gui Inhalte zurücksetzen
+				GuiControl, QS:, QSEXTRASNFO	, % ""                   	; Zusatzinfos leeren
+				GuiControl, QS:, QSEXTRAS       	, % ""                  	; Zusatzinfos leeren
+				GuiControl, QS:, QST5              	, % ""                  	; ausgewählten Eintrag leeren
+
+			; BlockNr auf Null setzten
+				BlockNr := lastBlockNr := 0
+
 			; Ausgabelistview erstellen                              	;{
 
 				LV_DeleteCols("QS", "QSDBR")                           	; Spalten entfernen
 
 				thisColPos := 1
-				For colNr, label in Props.Labels()
-					If Props.isVisible(label) {
+				For colNr, flabel in Props.Labels()
+					If Props.isVisible(flabel) && (flabel <> removed) {
 
 						Gui, QS: ListView, QSDBR
 
 						dtype 	:= Props.DataType(flabel)
-						width 	:= Props.HeaderField(label, "width")
-						width	:= !width ? "AutoHDR" : width
+						width 	:= Props.HeaderField(flabel, "width")
+						width	:= RegExReplace(width, "i)[a-z]+")
+						;width	:= (!width || width > 600) ? (thisColPos = 1 ? "Auto" :  "AutoHdr") : width
 
-						If (thisColPos = 1)
-							LV_ModifyCol(thisColPos, width " " dtype, label)
+						If (thisColPos = 1) {
+							LV_ModifyCol(thisColPos, (!width ? "100":width) " " dtype, flabel)
+						}
 						else
-							LV_InsertCol(thisColPos	, width " " dtype, label)
+							LV_InsertCol(thisColPos	 , (!width ? "AutoHdr":width) " " dtype, flabel)
 
-						LV_ModifyCol(thisColPos, width)
-						Props.HeaderSetVirtualPos(label, thisColPos)
+						;LV_ModifyCol(thisColPos, width)
+						Props.HeaderSetVirtualPos(flabel, thisColPos)
 						thisColPos ++
 
 					}
+
 			;}
 
 			; Datenbankfelderinfo's anzeigen                     	;{
 				Gui, QS: ListView, QSDBFL
 				LV_Delete()
 
-				For colNr, label in Props.Labels() {
-					field := Props.HeaderField(label)
-					LV_Add(Props.isVisible(Label)?"Check":"", field.col, field.name, field.Type, field.len, field.pos)
-					t .= label "=`n"
+				For colNr, flabel in Props.Labels() {
+					field := Props.HeaderField(flabel)
+					LV_Add(Props.isVisible(flabel)?"Check":"", field.col, field.name, field.Type, field.len, field.pos)
 				}
 
 			;}
 
 			; Statistik                                                          	;{
-				GuiControl, QS:, QSDBS, % t
 				GuiControl, QS:, QST1	, % empty
 				GuiControl, QS:, QST2	, % dbfiles[dbname].records
 				GuiControl, QS:, QST3	, % empty
@@ -803,13 +1092,21 @@ QuickSearch_ListFields(dbname, step:=0)                                         
 		else if 	(step = 3)    		; manuell eingegebener Anzeigeblock
 			BlockNr := (BlockNR*BlockSize >= dbfiles[dbname].records) ? Floor(dbfRecords/BlockSize) : BlockNr
 
-		GuiControl, QS:, QSBlockNR 	, % BlockNr
-		GuiControl, QS:, QSBlockSize	, % BlockSize
-
 		lastBlockSize	:= BlockSize
 		lastBlockNr	:= BlockNr
 
-	; Daten aus Albis Datenbank lesen                  	;{
+	; Checkbox - gelöschte Datensätze anzeigen - einstellen
+		If (Props.dbname = "WZIMMER") {
+			SRS := Props.ShowRemovedSets()
+			Props.ShowRemovedSets(true)
+		}
+
+	; 	Controls anpassen
+		GuiControl, QS:, QSDBRView	, % Props.ShowRemovedSets()
+		GuiControl, QS:, QSBlockNR 	, % BlockNr
+		GuiControl, QS:, QSBlockSize	, % BlockSize
+
+	; Daten aus Albis Datenbank lesen                      	;{
 		GuiControl, QS:, QSPGST, % "lade Block " BlockNr " ..."
 		dbf       	:= new DBASE(adm.AlbisDBPath "\" dbname ".dbf", 2)
 		records		:= dbfRecords := dbf.records
@@ -820,42 +1117,63 @@ QuickSearch_ListFields(dbname, step:=0)                                         
 		QuickSearch_Progress(BlockNr*BlockSize+1 "-" (BlockNr+1)*BlockSize, records, 0, dbfdata.Count())
 	;}
 
-	; Vorschau der Daten im Ergebnisfenster          	;{
+	; Ausgabe der Daten im Ergebnisfenster             	;{
 		Gui, QS: Default
 		Gui, QS: ListView, QSDBR
 		LV_Delete()
 		GuiControl, QS: -Redraw, QSDBR
+		equalIDs := {}
 
 		For rowNr, set in dbfdata {
 
+			; weiter wenn gelöschte Datensätze nicht angezeigt werden sollen
+				If (!Props.ShowRemovedSets() && set.removed)
+					continue
+
 			; Spalten zusammenstellen
 				cols := Object()
-				For flabel, value in set {
+				For flabel, val in set {
 
 					If Props.isVisible(fLabel) {
-						If (flabel = "removed") {
-							value := value = 1 ? "*" : ""
-						} else if (flabel = "ID") {
-							If (value = -1) {
-								cols[Props.HeaderVirtualPos("removed")] := "*"
-								continue
-							}
-						}
-						cols[Props.HeaderVirtualPos(flabel)] := value
+
+						If RegExMatch(flabel, "i)" Props.DateLabels)
+							If  (dbname <> "CAVE")
+								val := RegExMatch(val, "\d{8}") ? ConvertDBASEDate(val) : val
+							else
+								val := RegExMatch(val, "\d{8}") ? SubStr(val, 1, 2) "." SubStr(val, 3, 2) "." SubStr(val, 5, 4) : val
+						else if RegExMatch(flabel, "i)DATETIME")
+							FormatTime, val, % val, dd.MM.yyyy HH:mm
+						else if RegExMatch(flabel, "i)VERSART")
+							val := Props.VERSART[val]
+						else if RegExMatch(flabel, "i)PATNR")
+							equalIDs[val] := !equalIDs.haskey(val) ? 1 : equalIDs[val] + 1
+
+						cols[Props.HeaderVirtualPos(flabel)] := val
 					}
 
 				}
 
 			; Zeile hinzufügen
+				cols.1 := set.removed ? "*" cols.1 : cols.1
 				LV_Add("", cols*)
 
 		}
 
+		;~ JSONData.Save(A_Temp "\test.json", equalIDs, true,, 1, "UTF-8")
+		;~ Run, % A_Temp "\test.json"
+
 		GuiControl, QS: +Redraw, QSDBR
+		GuiControl, QS:, QST4, % equalIDs.Count()
+
+		If (Props.dbname = "WZIMMER")
+			Props.ShowRemovedSets(SRS)
+
+		InCellEdit.OnMessage(true)
+
 
 	;}
 
-
+; 21233 22801 20916
 }
 
 QuickSearch_DBFields(GChwnd:="", GuiEvent:="", EventInfo:="", ErrLevel:="")    	{	; Eventhandler DBFields
@@ -863,8 +1181,9 @@ QuickSearch_DBFields(GChwnd:="", GuiEvent:="", EventInfo:="", ErrLevel:="")    	
 		global dbfiles, dbname, dbfdata, QShDBFL, QShDBR
 		static DataType 	:= {"N":"Integer", "D":"Integer", "C":"Text", "L":"Text", "M":"Text"}
 		static evTime := 0
+		static lastClickTime, ClicksMeasured
 
-		/*
+		/*  GuiEvent Bechreibung
 			A: Eine Zeile wurde aktiviert, was standardmäßig geschieht, wenn sie doppelt angeklickt wurde. Die Variable A_EventInfo enthält die Nummer der Zeile.
 			C: Die ListView hat die Mauserfassung freigegeben.
 			E: Der Benutzer hat begonnen, das erste Feld einer Zeile zu editieren (der Benutzer kann das Feld nur editieren, wenn -ReadOnly in den Optionen der ListView vorhanden ist).
@@ -893,13 +1212,7 @@ QuickSearch_DBFields(GChwnd:="", GuiEvent:="", EventInfo:="", ErrLevel:="")    	
 			s (kleines S): Der Benutzer hat aufgehört, in der ListView zu scrollen.
 		*/
 
-		Critical
-		;~ If (GuiEvent = "K")
-			;~ SciTEOutput(GuiEvent "," EventInfo ", " ErrLevel)
-		;~ else
-		;~ If GuiEvent = "I"
-			;~ SciTEOutput((A_TickCount - evTime < 200 ? "" : "`n") "GEvent: " GuiEvent "`t| EInfo: " EventInfo "`t|EL:" ErrLevel)
-			;~ evTime := A_TickCount
+		;Critical
 
 	; Checkboxstatus hat sich geändert
 		If RegExMatch(GuiEvent . EventInfo, "(K32|C0)") {
@@ -909,8 +1222,11 @@ QuickSearch_DBFields(GChwnd:="", GuiEvent:="", EventInfo:="", ErrLevel:="")    	
 			GuiControl, QS: -g, QSDBFL
 
 		  ; zeilenweises Auslesen des Checkboxstatus
-			Loop % LV_GetCount() {
+			FieldCount 	:= 0
+			FieldRows  	:= LV_GetCount()
+			Loop % FieldRows {
 
+				FieldCount  	++
 				dbfieldsRow	:= A_Index
 				ischecked  	:= LV_RowIsChecked(QShDBFL, dbfieldsRow)   ; Checkboxstatus
 				flabel         	:= Props.HeaderLabel(dbfieldsRow)
@@ -996,40 +1312,123 @@ QuickSearch_DBFilter(GChwnd:="", GuiEvent:="", EventInfo:="", ErrLevel:="")     
 
 }
 
-QuickSearch_SaveResults(format:="csv (Tab)")                                                    	{	; Ausgabetabelle speichern
+Quicksearch_SaveSearch(dbname, textlabel, SearchString)                                   	{	; Suchparameter sichern
+
+		global dbfiles, dbfdata
+
+	; zurück bei leerer Bezeichnung
+		If !textlabel {
+			MsgBox, Geben Sie zunächst eine Beschreibung für die Suche ein!
+			return
+		}
+
+	; Suchparameter-String übergeben und sichern
+		If Props.SParams.Haskey(textlabel) {
+
+			If params {
+				MsgBox, 0x4, QuickSearch, % "Die Beschreibung:`n<<" textlabel ">>`nist schon vergeben.`nSoll diese überschrieben werden?"
+				IfMsgBox, No
+					return
+			}
+			else {
+				MsgBox, 0x4, QuickSearch, %	"Es sind keine Suchparameter zum Speichern eingegeben worden`n"
+															. 	"und die Beschreibung:`n<<" textlabel ">>`nist schon vergeben.`n"
+															. 	"JA      zum Entfernen der Suche aus Quicksearch.`n"
+															. 	"NEIN um die bisherige Suche zu behalten!"
+				IfMsgBox, No
+					return
+			}
+
+		}
+
+	; prüft ob eine leere Parameterkette übergeben wurde und erstellt einen neuen String (nur Parameter mit Werten)
+		For idx, line in StrSplit(SearchString, "`n") {
+			RegExMatch(Trim(line), "(?<field>.*)?\=(?<rx>.*)$", m)
+			If mrx
+				params .= (idx > 1 ? "##" : "") mfield "=" mrx
+		}
+		params := LTrim(params, "##")
+
+	; Speichern
+		Props.SParams.lastLabel := textlabel
+		Props.SParams[textlabel] := params
+		Props.SParams_Save()
+
+	; Combobox anpassen
+		GuiControl, QS:, QSDBSParam	, % "|" Props.SParams_GetLabels()                        	; Combobox befüllen ("|" am Anfang ersetzt die Liste)
+		GuiControl, QS: ChooseString	, QSDBSParam, % textlabel                                	; zuletzt angezeigte Suche vorwählen
+
+}
+
+QuickSearch_SaveResults(format:="csv (Tab)", lastSavePath:="")                            	{	; Ausgabetabelle speichern
 
 		global QS, QSDBR, QShDBR
 
-		FileSelectFile, filesavepath,, % A_ScriptDir, Dateiverzeichnis und Dateinamen wählen, *.csv
+		Gui, QS: Default
+		Gui, QS: ListView, QSDBR
+		Gui, QS: Submit, NoHide
 
-		filesavepath .=  ".csv"
-		DelimiterChar := A_Tab
+		If !(rows := LV_GetCount())
+			return
+
+		RegExMatch(format, "(?<Ext>\w+)\s+\((?<Delim>[\w,;\|]+)", File)
+		DelimiterChar := FileDelim = "Tab" ? A_Tab : FileDelim
+
+		FileSelectFile, filesavepath,, % (lastSavePath ? lastSavePath : A_ScriptDir), Dateiverzeichnis und Dateinamen wählen, % "*." FileExt
+		SplitPath, filesavepath, outname, outdir
+		If !filesavepath || (StrLen(outname) = 0)
+			return
+
+	; als letzten aufgerufenen Dateipfad sichern
+		IniWrite, % outdir, % adm.Ini, % "QuickSearch", % "lastSavePath"
 
 		table         	:= ""
 		tableheader 	:= LV_GetHeader(QShDBR, "QS", "QSDBR")
+		TEXTDBCol  	:= 0
 
-		For col, label in tableheader.nr
+	; Überschriftenzeile erstellen, "TEXTDB" Spalte registrieren
+		For col, label in tableheader.nr {
 			table .= (col > 1 ? DelimiterChar : "") label
-		table .= "`n"
-		maxCols := col
-
-		Gui, QS: Default
-		Gui, QS: ListView, QSDBR
-
-		Loop, % LV_GetCount() {
-			row := A_Index
-			Loop % maxCols {
-				col := A_Index
-				LV_GetText(cell, row, col)
-				table .= cell (col < maxCols ? DelimiterChar : "`n")
-			}
+			If QSXTRT && (label = "TEXTDB")
+				TEXTDBCol := col
 		}
 
+	; TEXTDB Überschrift hinzufügen wenn vorhanden
+		If TEXTDBCol
+			table .= DelimiterChar "TEXTDB Inhalt"
+		table .= "`n"
+
+	; sichert auch Daten aus der BEFTEXT.dbf wenn es eine Spalte TEXTDB gibt
+		maxCols	:= col
+		steps     	:= rows >= 100 ? Floor(rows/100) : 1
+		Loop, % rows {
+
+			Gui, QS: ListView, QSDBR
+
+			row := A_Index
+			If (Mod(A_Index, steps) = 0)
+				QuickSearch_Progress(A_Index, rows, StrLen(rows), "---")
+
+			TEXTDBContent := ""
+			Loop % maxCols {
+
+				col := A_Index
+				LV_GetText(cell, row, col)
+				If (col = TEXTDBCol) && (cell > 0)
+					TEXTDBContent := QuickSearch_Extras(row, cell)
+				table .= cell (col < maxCols ? DelimiterChar : TEXTDBContent ? DelimiterChar TEXTDBContent "`n" : "`n")
+
+			}
+
+		}
+		QuickSearch_Progress(rows, rows, StrLen(rows), "---")
+
+	; Tabelle in eine Datei speichern
 		FileOpen(filesavepath, "w", "UTF-8").Write(table)
-		FileGetSize, fsize, % filesavepath
-		If FileExist(filesavepath)
-			MsgBox, % "Die Datei wurde gespeichert.`nDateigröße: " FSize " kb"
-		else
+		If FileExist(filesavepath) {
+			FileGetSize, FSize, % filesavepath
+			MsgBox, % "Die Datei wurde gespeichert.`nDatensätze: " rows "`nDateigröße: " (FSize > 1024 ? Round(FSize/1024, 1) " MB" : FSize " kb")
+		} else
 			MsgBox, Die Datei wurde nicht gespeichert!
 
 }
@@ -1042,17 +1441,29 @@ class Quicksearch_Properties                                                    
 			this.FileDir     	:= outFileDir
 			this.FileName 	:= outFileNameNoExt ".json"
 			this.FilePath     	:= this.FileDir "\" this.FileName
+			this.DataPath		:= RegExReplace(this.FileDir, "\\.*$", "")
 
-			If FilePathCreate(this.FileDir) && FileExist(this.FilePath)
-				this.qs := this.LoadProperties()
-			else
-				this.qs := Object()
+			If FilePathCreate(this.DataPath)
+				If FilePathCreate(this.FileDir) && FileExist(this.FilePath)
+					this.qs := this.LoadProperties()
+				else
+					this.qs := Object()
+
+			this.VERSART   	:= ["Mitglied", "2", "Angehöriger", "4", "Rentner"]
+			this.DateLabels	:= "(STAT_VON|STAT_BIS|DATUM|EINLESTAG|AUS2DAT|GUELTIG|GUELTVON|GUELTVON2|GUELTBIS|"
+										. "GUELTBIS2|GEBURT|VERSBEG|GEBDATBIS|GEBDATVON|LAST_B_FR|LAST_B_TO|PATGRFROM|PATGRTO|"
+										. "PATIENTVON|PATIENTBIS|AUFNAME|ENDE|VALIDFROM|AUSSTDAT|DATSPEIC|VALIDUNTIL|GUELT_VON|GUELT_BIS|"
+										. "PRDATE|BEZAHLTAM|STORNODATE)|MAHNDATE"
 
 		}
 
 		WorkDB(dbname, dbfields)                  	{	; Arbeitsdatenbank festlegen und Tabellen-Informationen hinzufügen
 
 			this.dbname := dbname
+
+		; Dateipfad der Suchparameterdatei und Suchparameter laden
+			this.SParamsPath  	:= this.FileDir "\QuickSearch-Suche_" this.dbname ".json"
+			this.SParams        	:= this.SParams_Load()
 
 		; Klasse wurde initialisiert?
 			If !IsObject(this.qs)                            	{
@@ -1076,7 +1487,7 @@ class Quicksearch_Properties                                                    
 				For label, field in dbfields {
 
 					; der Name des Patienten wird bei vorhandenen Labeln wie "PATNR" oder "NR" angezeigt
-						If RegExMatch(label, "i)(PATNR|NR)")
+						If RegExMatch(label, "i)^(PATNR|NR)$")
 							this.qs[this.dbname].PatID := label
 
 					If !this.qs[this.dbname].header.enum.haskey(field.pos)
@@ -1113,6 +1524,17 @@ class Quicksearch_Properties                                                    
 
 			}
 
+		; gelöschte Datensätze anzeigen
+			If !this.qs[this.dbname].haskey(ShowRemovedSets)
+				this.qs[this.dbname].ShowRemovedSets := false
+
+		; Default labels anlegen für Datenbanksuche anlegen
+		; Default Parameter anlegen
+			this.SParamsDefaults := ""
+			For idx, label in this.Labels()
+				this.SParamsDefaults .= label "=`n"
+			this.SParamsDefaults := RTrim(this.SParamsDefaults, "`n")
+
 		return 1
 		}
 
@@ -1127,8 +1549,8 @@ class Quicksearch_Properties                                                    
 
 		}
 
-
-	; Teil-Objekte zurückgeben
+	; ------------------------------------------------------------------------------------
+	; Teil-Objekte zurückgeben                                                               	;{
 		HeaderField(label, param:="")              	{	; alle Daten eines Feldes (Spaltenüberschriften)
 			If !param
 				return this.qs[this.dbname].header.text[label]
@@ -1151,9 +1573,10 @@ class Quicksearch_Properties                                                    
 					arr[field.pos] := field.Label
 		return arr
 		}
+	;}
 
-
-	; Tabelleninformationen erhalten/ändern, virtuelle Tabelle ändern
+	; ------------------------------------------------------------------------------------
+	; Tabelleninformationen erhalten/ändern, virtuelle Tabelle ändern       ;{
 		HeaderCount()                                     	{	; Anzahl aller Spalten
 		return this.qs[this.dbname].header.enum.Count()
 		}
@@ -1180,18 +1603,20 @@ class Quicksearch_Properties                                                    
 			LV_Modify(this.HeaderPos(label),, colpos)
 		}
 
-		HeaderSetVisible(label, VHDRPos)        	{	; virtuelle Spalte ein- oder ausblenden und alle virtuellen Positionen rechts daneben sichtbarer Spalten verschieben
+		HeaderSetVisible(label, VHDRPos)        	{	; virtuelle Spalte ein- oder ausblenden
 
 			this.qs[this.dbname].header.text[label].visible := !VHDRPos ? false : true
 			this.HeaderSetVirtualPos(label, VHDRPos)
 
 			hdrPos := this.HeaderPos(label)                                                           	;
-			Loop, % this.HeaderCount() - hdrPos {	    		                                	; alle rechts davon sichtbaren virtuellen Tabellenfelder um eine Position nach rechts oder links verschieben
+			Loop, % this.HeaderCount() - hdrPos {	    		                                	; alle rechts davon sichtbaren virtuellen Tabellenfelder um eine
+																														; Position nach rechts oder links verschieben
 				nlabel := this.HeaderLabel(hdrPos+A_Index-1)	                              	; Bezeichnung finden
 				If (nlabel <> label) && this.isVisible(nlabel) {                                  	; ist es eine sichtbare Spalte
 					nPos	:= this.HeaderVirtualPos(nlabel) + (VHDRPos ? 1 : -1)			; wird die Position um 1 (nach rechts oder links) versetzt
 					this.HeaderSetVirtualPos(nlabel, nPos)	                                   		; und zwar jetzt
 				}
+
 			}
 
 		}
@@ -1203,7 +1628,7 @@ class Quicksearch_Properties                                                    
 			PatIDLabel := this.qs[this.dbname].PatID
 			If !PatIDLabel && !PatIDCol {
 				For colNr, label in this.Labels()
-					If RegExMatch(label, "i)(PATNR|NR)") {
+					If RegExMatch(label, "i)^(PATNR|NR)$") {
 						PatIDLabel 	:= this.qs[this.dbname].PatID := label
 						PatIDCol   	:= true
 						break
@@ -1220,9 +1645,10 @@ class Quicksearch_Properties                                                    
 
 		return false
 		}
+	;}
 
-
-	; virtuelle Tabelle
+	; ------------------------------------------------------------------------------------
+	; virtuelle Tabelle                                                                              	;{
 		VirtualView(label, view)                       	{	; virtuelle Spalte anzeigen oder ausblenden
 
 			; Ausblenden
@@ -1261,9 +1687,10 @@ class Quicksearch_Properties                                                    
 			For colLabel, colWidth in LVHeader.width
 				this.HeaderSetVirtualWidth(colLabel, colWidth)
 		}
+	;}
 
-
-	; Tabelleneinstellungen laden oder speichern
+	; ------------------------------------------------------------------------------------
+	; Tabelleneinstellungen laden oder speichern                                     	;{
 		LoadProperties()                                  	{	; Objekt laden
 			If !this.FilePath || !FileExist(this.FilePath) {
 				throw A_ThisFunc ": Einstellungsdatei <" this.FileName "> ist nicht im `n"
@@ -1275,25 +1702,153 @@ class Quicksearch_Properties                                                    
 
 		SaveProperties(saveColWidth:=true)    	{	; Objekt speichern
 
-			If !this.FilePath
-				If !FilePathCreate(this.FileDir) {
-					throw A_ThisFunc ": Speicherpfad für das Sichern der Einstellungen konnte nicht angelegt werden.`n"
-							. "Ordner: " this.FileDir
-					return
-				}
+			global QSDBRView
+
+			; Dateipfad anlegen
+				If !this.FilePath
+					If !FilePathCreate(this.FileDir) {
+						throw A_ThisFunc ": Speicherpfad für das Sichern der Einstellungen konnte nicht angelegt werden.`n"
+								. "Ordner: " this.FileDir
+						return
+					}
 
 			; Spaltenbreite speichern
 				If saveColWidth && this.hLV
 					this.LVColumnSizes()
 
-			JSONData.Save(this.FilePath, this.qs, true,, 1, "UTF-8")
+			; Checkbox - gelöschte Datensätze anzeigen
+				Gui, QS: Submit, NoHide
+				this.qs[this.dbname].ShowRemovedSets := QSDBRView
+
+			; Objekt speichern
+				JSONData.Save(this.FilePath, this.qs, true,, 1, "UTF-8")
 
 		return FileExist(this.FilePath) ? 1 : 0
 		}
 
+		ShowRemovedSets(show:="")                	{	; Einstellung letzte Datensätze anzeigen
+			If (StrLen(show) > 0)
+				this.qs[this.dbname].ShowRemovedSets := show
+			else
+				return this.qs[this.dbname].ShowRemovedSets
+		}
+
+		ShowPatNames(show:="")                  	{	; anstatt einer Nummer (PATNR), Patientennamen anzeigen
+
+			global QSDBR, QS
+
+		  ; gibt die Einstellung zurück
+			If (StrLen(show) = 0)
+				return this.qs[this.dbname].ShowPatNames
+
+		  ; neue Einstellung speichern
+			this.qs[this.dbname].ShowPatNames := show
+
+		  ; welche Spaltennummer hat PATNR derzeit
+			PatNRCol := this.PatIDColumn()
+
+			Gui, QS: Default
+			Gui, QS: ListView, QSDBR
+
+			Loop % LV_GetCount() {
+
+				LV_GetText(PatID, A_Index, PatNRCol)
+				if show {
+					LV_Modify(A_Index, 	"Col" PatNRCol, PatDB[PatID].name
+												.	", " 	PatDB[PatID].VORNAME
+												;. 	" *" 	ConvertDBASEDate(PatDB[PatID].GEBURT)
+												.	" [" PatID "]")
+				} else {
+					RegExMatch(PatID, "\[(?<NR>\d+)\]", Pat)
+					LV_Modify(A_Index, "Col" PatNRCol, PatNR)
+				}
+
+			}
+
+			If Show
+				LV_ModifyCol(PatNRCol, "Left Auto")
+			else
+				LV_ModifyCol(PatNRCol, "Right AutoHDR")
+
+			SciTEOutput(PatNRCol)
+		}
+	;}
+
+	; ------------------------------------------------------------------------------------
+	; Suchparameter-Handler der aktuellen Tabelle                              	;{
+		SParams_Load()                                   	{	; gesicherte Suchparameter laden
+
+			; Funktion wird bei jedem WorkDB() Aufruf ausgeführt. Die Suchparamenter müssen deshalb nicht extra geladen werden.
+
+			If !InStr(FileExist(this.FileDir), "D") {
+				throw A_ThisFunc ": Speicherordner <" this.FileDir "> ist nicht vorhanden."
+				return
+			}
+			If FileExist(this.SParamsPath)
+				SParams := JSONData.Load(this.SParamsPath, "", "UTF-8")
+			else
+				SParams := Object()
+
+		return SParams
+		}
+
+		SParams_Save(delObject:=false)	       	{
+
+			If !InStr(FileExist(this.FileDir), "D")  {
+				throw A_ThisFunc ": Speicherordner <" this.FileDir "> ist nicht vorhanden."
+				return
+			}
+
+			If (this.SParams.Count() > 0)
+				JSONData.Save(this.SParamsPath, this.SParams, true,, 1, "UTF-8")
+
+			If delObject
+				this.SParams := "", this.SParamsPath := ""
+
+		}
+
+		SParams_GetLabels()                           	{	; Textbezeichnungen für Combobox erstellen
+
+			If (this.SParams.Count() > 0)
+				For label, params in this.SParams {
+					If (label = "lastLabel")
+						continue
+					labels .= label "|"
+				}
+			else
+				labels := this.SLabels
+
+		return RTrim(labels, "|")
+		}
+
+		SParams_GetParams(TextLabel)           	{	; Parameter für Ausgabe in Edit-Control umwandeln
+
+			If TextLabel && this.SParams.haskey(TextLabel)
+				return RegExReplace(this.SParams[TextLabel], "[#]{2}", "`n")
+			else
+				return this.SParamsDefaults
+
+		}
+
+		SParams_CBSet(TextLabel)              		{	; Combobox befüllen, Suchparameter anzeigen
+
+			global QS, QSBDS, QSDBSParam
+
+			Gui, QS: Default
+			Gui, QS: Submit, NoHide
+
+			If (QSDBSParam <> TextLabel) {
+				GuiControl, QS:                     	, QSDBSParam	, % "|" this.SParams_GetLabels()              	; Combobox befüllen ("|" am Anfang ersetzt die Liste)
+				GuiControl, QS:  ChooseString	, QSDBSParam	, % TextLabel                                            	; zuletzt angezeigte Suche vorwählen
+			}
+
+			GuiControl	, QS:                       	, QSDBS        	, % this.SParams_GetParams(TextLabel)  	; und anzeigen
+
+		}
+	;}
 
 	; +++++++++ PRIVATE FUNKTIONEN ++++++++++++
-		CheckLabel(label, FuncName) {
+		CheckLabel(label, FuncName)            	{
 			return
 			If (StrLen(label) = 0)
 				return 0
@@ -1304,7 +1859,7 @@ class Quicksearch_Properties                                                    
 		return 1
 		}
 
-		CheckBool(bool, FuncName, param) {
+		CheckBool(bool, FuncName, param)  	{
 			If !(bool=0 || bool=1) {
 				throw FuncName ": Parameter [" param "] darf nur 1 oder 0 sein!"
 				return 0
@@ -1319,39 +1874,11 @@ QSFormat(timestamp)                                                             
 return timeformated
 }
 
-DBFiles_FieldFromPos(pos)                                                                                 	{
-	global dbfiles, dbname
-	For flabel, field in dbfiles[dbname].dbfields
-		If (field.pos = pos)
-			break
-return flabel
-}
-
-DBFiles_PosFromField(field)                                                                               	{
-global dbfiles, dbname
-return dbfiles[dbname].dbfields[field].pos
-}
-
-Edit_SetMargin(hEdit, mLeft:=0, mTop:=0, mRight:=0, mBottom:=0) {
-	VarSetCapacity(RECT, 16, 0 )
-
-	; SendMessage, 0xB2,, &RECT,, ahk_id %hEdit% ; EM_GETMARGIN
-	DllCall("GetClientRect", "ptr", hEdit, "ptr", &RECT)
-	right  := NumGet(RECT, 8, "Int")
-	; bottom := NumGet(RECT, 12, "Int")
-
-	static dpi := A_ScreenDPI / 96
-	NumPut(0     + Ceil(mLeft*dpi) , RECT, 0, "Int")
-	NumPut(0     + Ceil(mTop*dpi)  , RECT, 4, "Int")
-	NumPut(right - Ceil(mRight*dpi), RECT, 8, "Int")
-	; NumPut(bottom - mBottom, RECT, 12, "Int")
-	SendMessage, 0xB3, 0x0, &RECT,, ahk_id %hEdit% ; EM_SETMARGIN
-}
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Listview Funktionen
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
-LV_DeleteCols(GuiName, LVName, ColRange:="All" )                                        	{
+LV_DeleteCols(GuiName, LVName, ColRange:="All" )                                         	{
 
 	Gui, % GuiName ": ListView", % LVName
 	resultCols := LV_GetCount("Column")
@@ -1384,7 +1911,7 @@ LV_GetHeader(hLV, GuiName, LVName)                                              
 return LVHeader
 }
 
-LV_ColumnGetSize(hLV, colNr:=0)                                                                    	{	; Pixelbreite des Listviewsteuerelementes erhalten
+LV_ColumnGetSize(hLV, colNr:=0)                                                                     	{	; Pixelbreite des Listviewsteuerelementes erhalten
 
 	If (colNr > 0)
 		return LVM_GetColWidth(hLV, c)
@@ -1432,7 +1959,7 @@ LVM_GetColWidth(hLV, c)                                                         
 Return DllCall("SendMessage", "uint", hLV, "uint", 4125, "uint", c-1, "uint", 0) ; LVM_GETCOLUMNWIDTH
 }
 
-LVM_SetColWidth(hLV, cLV, wLV=-1)                                                                 	{
+LVM_SetColWidth(hLV, cLV, wLV=-1)                                                                  	{
 	; hLV = ListView handle.
 	; cLV = 1 based column index to get width of.
 	; wLV = New width of the column in pixels. Defaults to -1. The following values are supported in report-view mode:
@@ -1441,6 +1968,59 @@ LVM_SetColWidth(hLV, cLV, wLV=-1)                                               
 	Return DllCall("SendMessage", "uint", hLV, "uint", 4126, "uint", cLV-1, "int", wLV) ; LVM_SETCOLUMNWIDTH
 }
 ;}
+
+
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; andere Funktionen
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
+Edit_SetMargin(hEdit, mLeft:=0, mTop:=0, mRight:=0, mBottom:=0) {
+	VarSetCapacity(RECT, 16, 0 )
+
+	; SendMessage, 0xB2,, &RECT,, ahk_id %hEdit% ; EM_GETMARGIN
+	DllCall("GetClientRect", "ptr", hEdit, "ptr", &RECT)
+	right  := NumGet(RECT, 8, "Int")
+	; bottom := NumGet(RECT, 12, "Int")
+
+	static dpi := A_ScreenDPI / 96
+	NumPut(0     + Ceil(mLeft*dpi) , RECT, 0, "Int")
+	NumPut(0     + Ceil(mTop*dpi)  , RECT, 4, "Int")
+	NumPut(right - Ceil(mRight*dpi), RECT, 8, "Int")
+	; NumPut(bottom - mBottom, RECT, 12, "Int")
+	SendMessage, 0xB3, 0x0, &RECT,, ahk_id %hEdit% ; EM_SETMARGIN
+}
+
+Create_QuickSearch_ICO(NewHandle := False) {
+	Static hBitmap := Create_QuickSearch_ICO()
+	If (NewHandle)
+	   hBitmap := 0
+	If (hBitmap)
+	   Return hBitmap
+	VarSetCapacity(B64, 5096 << !!A_IsUnicode)
+	B64 := "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"
+	If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", 0, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+	   Return False
+	VarSetCapacity(Dec, DecLen, 0)
+	If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", &Dec, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+	   Return False
+	hData := DllCall("Kernel32.dll\GlobalAlloc", "UInt", 2, "UPtr", DecLen, "UPtr")
+	pData := DllCall("Kernel32.dll\GlobalLock", "Ptr", hData, "UPtr")
+	DllCall("Kernel32.dll\RtlMoveMemory", "Ptr", pData, "Ptr", &Dec, "UPtr", DecLen)
+	DllCall("Kernel32.dll\GlobalUnlock", "Ptr", hData)
+	DllCall("Ole32.dll\CreateStreamOnHGlobal", "Ptr", hData, "Int", True, "PtrP", pStream)
+	hGdip := DllCall("Kernel32.dll\LoadLibrary", "Str", "Gdiplus.dll", "UPtr")
+	VarSetCapacity(SI, 16, 0), NumPut(1, SI, 0, "UChar")
+	DllCall("Gdiplus.dll\GdiplusStartup", "PtrP", pToken, "Ptr", &SI, "Ptr", 0)
+	DllCall("Gdiplus.dll\GdipCreateBitmapFromStream",  "Ptr", pStream, "PtrP", pBitmap)
+	DllCall("Gdiplus.dll\GdipCreateHICONFromBitmap", "Ptr", pBitmap, "PtrP", hBitmap, "UInt", 0)
+	DllCall("Gdiplus.dll\GdipDisposeImage", "Ptr", pBitmap)
+	DllCall("Gdiplus.dll\GdiplusShutdown", "Ptr", pToken)
+	DllCall("Kernel32.dll\FreeLibrary", "Ptr", hGdip)
+	DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
+Return hBitmap
+}
+
+;}
+
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Includes

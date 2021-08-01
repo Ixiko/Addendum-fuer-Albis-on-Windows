@@ -287,6 +287,10 @@
         "ingredient": "Digitoxin",
         "use": "Herzrhythmus"
     },
+    "Dociton": {
+        "ingredient": "Propanolol",
+        "use": "Tremor"
+    },
     "Dorzocomp": {
         "ingredient": "Dorzolamid",
         "use": "grüner Star"
@@ -475,6 +479,10 @@
         "ingredient": "Insulin Isophan (human)",
         "use": "Diabetes"
     },
+    "Huminsulin Bas": {
+        "ingredient": "Insulin Isophan (human)",
+        "use": "Diabetes"
+    },
     "Humira": {
         "ingredient": "Adalimumab",
         "use": "Rheuma"
@@ -487,6 +495,10 @@
         "ingredient": "Chlortalidon",
         "use": "Blutdruck (Wassertbl.)"
     },
+    "Ibuprofen": {
+        "ingredient": "Ibuprofen",
+        "use": "Schmerzen"
+    },
     "Imraldi": {
         "ingredient": "Adalimumab",
         "use": "Rheuma"
@@ -497,6 +509,10 @@
     },
     "Insuman Basal": {
         "ingredient": "Insulin Isophan (human)",
+        "use": "Diabetes"
+    },
+    "Insuman Rapid": {
+        "ingredient": "Insulin Normal",
         "use": "Diabetes"
     },
     "Janumet": {
@@ -743,6 +759,10 @@
         "ingredient": "Insulin aspart",
         "use": "Diabetes"
     },
+    "Oekolp Ovula": {
+        "ingredient": "",
+        "use": ""
+    },
     "Olanzapin": {
         "ingredient": "Olanzapin",
         "use": "Psyche"
@@ -854,6 +874,10 @@
     "Ramipril Comp": {
         "ingredient": "Ramipril/Hydrochlorothiazid",
         "use": "Hypertonie"
+    },
+    "Ramipril Ph": {
+        "ingredient": "Ramipril",
+        "use": "Bluthochdruck"
     },
     "Ramipril/Amlo": {
         "ingredient": "Ramipril und Amlodipin",
@@ -1072,6 +1096,10 @@
         "ingredient": "Indacaterol und Glycopyrronium bromid",
         "use": "COPD"
     },
+    "Vaginal supp": {
+        "ingredient": "",
+        "use": ""
+    },
     "Valoron N": {
         "ingredient": "Tilidin und Naloxon",
         "use": "Schmerzen"
@@ -1079,6 +1107,10 @@
     "Valsartan": {
         "ingredient": "Valsartan",
         "use": "Blutdruck"
+    },
+    "Valsartanzentiva Co": {
+        "ingredient": "Valsartan und Hydrochlorothiazid",
+        "use": "Bluthochdruck"
     },
     "Velmetia": {
         "ingredient": "Metformin und Sitagliptin",

@@ -1,7 +1,7 @@
 ﻿{
 	"1":{
-		"Beschreibung": "Kompressionsstr\u00fcmpfe verordnen",
-		"Bezeichner": "Kompressionsstr\u00fcmpfe, L\u00e4nge: Unterschenkel, Fußspitze: geschlossen",
+		"Beschreibung": "Kompressionsstrümpfe verordnen",
+		"Bezeichner": "Kompressionsstrümpfe, L\u00e4nge: Unterschenkel, Fußspitze: geschlossen",
 		"Medikamente": [
 			"Paar Kompressionsstr\u00fcmpfe KKL 2",
 			"Unterschenkellang mit geschlossener Fu\u00dfspitze",
@@ -240,5 +240,28 @@
 			"",
 			""
 		]
+	},
+	"12":{
+		"Beschreibung": "Einlagen Weichbettung lang u. Suppinationskeil na. Maß",
+		"Bezeichner": "Einlagen - weich lang, Suppinationskeil na. Maß",
+		"Medikamente": [
+			"Paar Bettungseinlagen mit langsohliger Weichbettung und ",
+			"Supinationskeilen nach Maß",
+			"Diagnose: Senk-Spreizfuß, Metatarsalgie",
+			"",
+			"",
+			""
+		],
+		"Optionen": "",
+		"RezeptTyp": "Hilfsmittel",
+		"Zusaetze": [
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		]
 	}
+
 }

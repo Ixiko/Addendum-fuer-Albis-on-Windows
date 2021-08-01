@@ -1,14 +1,14 @@
-﻿;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
-;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 27.09.2020 - this file runs under Lexiko's GNU Licence
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
+;                                                              	!diese Bibliothek wird von fast allen Skripten benötigt!
+;                             	by Ixiko started in September 2017 - last change 09.07.2021 - this file runs under Lexiko's GNU Licence
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-;	MONITOR / SCREEN                                                                                                                                                                                                                             	(06)
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; GetMonitorIndexFromWindow          	GetMonitorAt                            	screenDims                                    	MonitorScreenShot                        	DPIFactor
-; DPI
-; ____________________________________________________________________________________________________________________________________________________________
+;	MONITOR / SCREEN                                                                                                                                                                    	(07)
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; (01) GetMonitorIndexFromWindow   	(02) GetMonitorAt                         	(03) screenDims                              	(04) MonitorScreenShot
+; (05) TaskbarHeight                          	(06) DPIFactor                                	(07) DPI
+; __________________________________________________________________________________________________________________________
 
 GetMonitorIndexFromWindow(windowHandle) {
 
@@ -43,7 +43,7 @@ GetMonitorIndexFromWindow(windowHandle) {
 return monitorIndex
 }
 
-GetMonitorAt(Lx, Ly, Ldefault:=1) {                                                        	                                    	;-- Get the index of the monitor containing the specified x and y co-ordinates.
+GetMonitorAt(Lx, Ly, Ldefault:=1) {                                               	;-- get  index of the monitor containing the specified x and y co-ordinates.
 
 	; https://autohotkey.com/board/topic/19990-windowpad-window-moving-tool/page-2
 	; letzte Änderung: 27.09.2020
@@ -51,22 +51,22 @@ GetMonitorAt(Lx, Ly, Ldefault:=1) {                                             
     SysGet, Lm, MonitorCount
     Loop % Lm {   ; Check if the window is on this monitor.
 
-        SysGet, Mon, Monitor, %A_Index%
+        SysGet, Mon, Monitor, % A_Index
         if (Lx >= MonLeft && Lx <= MonRight && Ly >= MonTop && Ly <= MonBottom)
             return A_Index
 
     }
 
-return Ldefault
+return LDefault
 }
 
-ScreenDims(MonNr:=1) {	                                                                                        		    			;-- returns a key:value pair of width screen dimensions (only for primary monitor)
+ScreenDims(MonNr:=1) {	                                                       		;-- returns a key:value pair of screen dimensions
 
 	Sysget, MonitorInfo, Monitor, % MonNr
 	X	:= MonitorInfoLeft
 	Y	:= MonitorInfoTop
-	W	:= MonitorInfoRight - MonitorInfoLeft
-	H 	:= MonitorInfoBottom - MonitorInfoTop
+	W	:= MonitorInfoRight   	- MonitorInfoLeft
+	H 	:= MonitorInfoBottom 	- MonitorInfoTop
 
 	DPI    	:= A_ScreenDPI
 	Orient	:= (W>H)?"L":"P"
@@ -76,42 +76,51 @@ ScreenDims(MonNr:=1) {	                                                         
  return {X:X, Y:Y, W:W, H:H, DPI:DPI, OR:Orient, yEdge:yEdge, yBorder:yBorder}
 }
 
-MonitorScreenShot(MonNr, ScriptName:="", Path:="") {                                                                     	;-- erstellt einen Screenshot von einem Monitor
+MonitorScreenShot(MonNr, ScriptName:="", Path:="") {              	;-- erstellt einen Screenshot von einem Monitor
 
 	; use "All" if you like to get all screens
-	; letzte Änderung: 27.09.2020
+	; letzte Änderung: 30.06.2021
 
 	static raster := 0x40000000 + 0x00CC0020 ; get layered windows
 
-	If !RegExMatch(MonNr, "^\s*(?<Nr>\d+)\s*$", Mon) {
-		throw % "Wrong value in parameter 'MonNr'. Only integer is aloud."
+	If !RegExMatch(MonNr, "^\s*(?<Nr>(\d+))\s*$", Mon) {
 		return 0
 	}
 
 	MSSpToken := Gdip_Startup()
 
-	;Monitorgröße bestimmen
-	If MonNr in 1,2
-	{
-		Sysget, MonitorInfo, Monitor, % MonNr
-		sX 	:= MonitorInfoLeft
-		sY 	:= MonitorInfoTop
-		sW 	:= MonitorInfoRight    	- MonitorInfoLeft
-		sH 	:= MonitorInfoBottom 	- MonitorInfoTop
-		screen:= sX . "|" . sY . "|" . sW . "|" . sH
-	} else if (MonNr = "All") {
+	; Anzahl der Monitore bestimmen
+		SysGet, MonCount, MonitorCount
+		If RegExMatch(MonNr, "i)^\s*(?<Nr>\d+)|(All)\s*$", p)
+			If (pNr = 0)
+				throw "Wrong value in parameter 'MonNr'.`nA zero MonitorIndex is not aloud."
+			else If (pNr > MonCount)
+				throw "Wrong value in parameter 'MonNr'.`nMonitorIndex is exceeds MonitorCount."
 
-	}
+	; Screenshot's erstellen
+		Loop % MonCount {
 
-	Zeitstempel:=  TimeCode(1)
-	outfile := Path "\Screenshot_" ScriptName "_" ZeitStempel ".jpg"
+			If (A_Index = MonNr || MonNr = "All") {
 
-	pBitmap := Gdip_BitmapFromScreen(screen,raster)
-	Gdip_SetBitmapToClipboard(pBitmap)
-	Gdip_SaveBitmapToFile(pBitmap, outfile)
-	Gdip_DisposeImage(pBitmap)
+				outfile := A_Now "_Screenshot_MonNr_" A_Index ".jpg"
+				Sysget, Mon, Monitor, % A_Index
+				pBitmap := Gdip_BitmapFromScreen(MonLeft "|" MonTop "|"	MonRight-MonLeft "|" MonBottom-MonTop, raster)
+				Gdip_SetBitmapToClipboard(pBitmap)
+				Gdip_SaveBitmapToFile(pBitmap, Path "\" outfile)
+				Gdip_DisposeImage(pBitmap)
+
+			}
+
+		}
+
 	Gdip_Shutdown(MSSpToken)
 
+}
+
+TaskbarHeight(MonNr:=1) {                                                       	;-- Höhe der Taskbar zurück (Monitorspez. ist noch nicht programmiert)
+	hMSTaskList := WinExist("ahk_class MSTaskListWClass1")
+	TaskList := GetWindowSpot(hMSTaskList)
+return TaskList.H
 }
 
 DPIFactor() {
