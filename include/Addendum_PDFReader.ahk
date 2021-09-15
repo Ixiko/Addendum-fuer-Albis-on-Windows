@@ -2,19 +2,21 @@
 ;     	Addendum_PDFReader
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;		Verwendung:	    	-	RPA Funktionen PDF Anzeigeprogramme für
-;	                                   	1. Sumatra PDF V3.1 und V.2
+;	                                   	1. Sumatra PDF V3.1,3.2 und 3.3
 ;	                                  	2. FoxitReader ab V9+
 ;
 ;
+;		Abhängigkeiten:	-	GettAppImagePath
+;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_StackifyGui last change:    	11.03.2021
+;       Addendum_StackifyGui last change:    	08.08.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
 
 ; -------------------------------------------------------------
 ; SUMATRA/FOXIT Universell
 ; -------------------------------------------------------------
-PdfPrint(Printer, PDFViewerClass, PDFViewerHwnd) {                                                       	;-- Pdf-Datei ausdrucken automatisiert
+PdfPrint(Printer, PDFViewerClass, PDFViewerHwnd) {                      	;-- Pdf-Datei ausdrucken
 
 	; Funktion bedient den Druckvorgang auf einem Hardwaredrucker
 	; auch für virtuelle Druckertreiber z.B. Fax, PDF-Druckertreiber geeignet
@@ -47,7 +49,7 @@ PdfPrint(Printer, PDFViewerClass, PDFViewerHwnd) {                              
 return PdfPages
 }
 
-PdfSaveAs(PdfFullFilePath,PDFViewerClass, PDFViewerHwnd) {                                        	;-- Callback Funktion für Befundexporte (_scan)
+PdfSaveAs(PdfFullFilePath,PDFViewerClass, PDFViewerHwnd) {       	;-- Callback Funktion für Befundexporte (_scan)
 
 		static foxitSaveAs    	:= "Speichern unter ahk_class #32770 ahk_exe FoxitReader.exe"
 		static sumatraSaveAs	:= "Speichern unter ahk_class #32770 ahk_exe SumatraPDF.exe"
@@ -94,7 +96,7 @@ return FExists
 ; -------------------------------------------------------------
 ; SUMATRA PDF
 ; -------------------------------------------------------------
-SumatraInvoke(command, SumatraID="") {                                                                     	;-- wm_command wrapper for SumatraPDF V3.1 & 3.2
+SumatraInvoke(command, SumatraID="") {                                  	;-- wm_command wrapper for SumatraPDF V3.1-3.3
 
 	/* DESCRIPTION of FUNCTION:  SumatraInvoke()
 
@@ -283,6 +285,84 @@ SumatraInvoke(command, SumatraID="") {                                          
 												,	"MuiDebugPaint":                     	626  	; Debug
 												,	"AnnotationFromSelection":      	628  	; Debug
 												,	"DownloadSymbols":                 	630}  	; Debug
+			SumatraCmds["3.3"] := { 	"NewWindow":                      	230  	; File
+												, 	"Open":                                 	220  	; File
+												,	"Close":                                 	204  	; File
+												,	"ShowInFolder":                        	207  	; File
+												,	"SaveAs":                               	205  	; File
+												,	"Rename":                              	208  	; File
+												,	"Print":                                   	206  	; File
+												,	"SendMail":                           	212  	; File
+												,	"Properties":                           	213  	; File
+												,	"OpenLast1":                         	362  	; File
+												,	"OpenLast2":                         	363  	; File
+												,	"OpenLast3":                         	364  	; File
+												,	"Exit":                                    	209  	; File
+												,	"SinglePage":                         	215  	; View
+												,	"DoublePage":                       	216  	; View
+												,	"BookView":                           	217  	; View
+												,	"ShowPagesContinuously":     	218  	; View
+												,	"MangaMode":                       	219  	; View
+												,	"RotateLeft":                              	220  	; View
+												,	"RotateRight":                            	221  	; View
+												,	"Presentation":                        	224  	; View
+												,	"Fullscreen":                          	223  	; View
+												,	"Bookmark":                          	000  	; View - do not use! empty call!
+												,	"ShowToolbar":                      	225  	; View
+												,	"SelectAll":                             	446  	; View
+												,	"CopyAll":                              	442  	; View
+												,	"NextPage":                           	235  	; GoTo
+												,	"PreviousPage":                      	236  	; GoTo
+												,	"FirstPage":                            	464  	; GoTo
+												,	"LastPage":                            	466  	; GoTo
+												,	"GotoPage":                          	468  	; GoTo
+												,	"Back":                                  	596  	; GoTo
+												,	"Forward":                             	598  	; GoTo
+												,	"Find":                                   	245  	; GoTo
+												,	"FindNext":                             	243  	; Toolbar
+												,	"FindPrevious":                          	244  	; Toolbar
+												,	"MatchCase":                          	476  	; Toolbar
+												,	"FitWithContinuously":               	3026	; Toolbar
+												,	"FitASinglePage":                    	3027	; Toolbar
+												,	"ZoomIn":                               	269  	; Toolbar
+												,	"ZoomOut":                            	270   	; Toolbar
+												,	"FitPage":                              	251  	; Zoom
+												,	"ActualSize":                          	252  	; Zoom
+												,	"FitWidth":                             	271  	; Zoom
+												,	"FitContent":                          	272  	; Zoom
+												,	"CustomZoom":                     	268  	; Zoom
+												,	"Zoom6400":                        	254  	; Zoom
+												,	"Zoom3200":                        	255  	; Zoom
+												,	"Zoom1600":                        	256  	; Zoom
+												,	"Zoom800":                          	257  	; Zoom
+												,	"Zoom400":                          	258  	; Zoom
+												,	"Zoom200":                          	259  	; Zoom
+												,	"Zoom150":                          	260  	; Zoom
+												,	"Zoom125":                          	261  	; Zoom
+												,	"Zoom100":                          	262  	; Zoom
+												,	"Zoom50":                            	263  	; Zoom
+												,	"Zoom25":                            	264  	; Zoom
+												,	"Zoom12.5":                          	265  	; Zoom
+												,	"Zoom8.33":                          	266  	; Zoom
+												,	"AddPageToFavorites":           	600  	; Favorites
+												,	"RemovePageFromFavorites": 	602  	; Favorites
+												,	"ShowCloseFavorites":               	604  	; Favorites
+												,	"CurrentFileFavorite1":           	700  	; Favorites
+												,	"CurrentFileFavorite2":           	701  	; Favorites -> I think this will be increased with every page added to favorites
+												,	"ChangeLanguage":               	588  	; Settings
+												,	"Options":                             	586  	; Settings
+												,	"AdvancedOptions":               	632  	; Settings
+												,	"VisitWebsite":                        	582  	; Help
+												,	"Manual":                              	592  	; Help
+												,	"CheckForUpdates":               	590  	; Help
+												,	"About":                                	584  	; Help
+												,	"HighlightLinks":                       	616  	; Debug
+												,	"ToggleEBookUI":                     	624  	; Debug
+												,	"MuiDebugPaint":                     	626  	; Debug
+												,	"MuiDebugPaint":                     	626  	; Debug
+												,	"AnnotationFromSelection":      	628  	; Debug
+												,	"DownloadSymbols":                 	630}  	; Debug
+
 		}
 
 	; ---------------------------------------------------------------------------------------------------------------------
@@ -338,13 +418,13 @@ SumatraInvoke(command, SumatraID="") {                                          
 
 }
 
-SumatraClose(PID, ID="") {                                                                                               	;-- beendet einen Sumatra Prozeß
+Sumatra_Close(PID, ID="") {                                                         	;-- beendet einen Sumatra Prozeß
 	Process, Close, % PID
 	If !ErrorLevel
 		SumatraInvoke("Exit", ID)
 }
 
-Sumatra_GetPages(SumatraID="") {                                                                                	;-- aktuelle und maximale Seiten des aktuellen Dokumentes ermitteln
+Sumatra_GetPages(SumatraID="") {                                             	;-- aktuelle und maximale Seiten des aktuellen Dokumentes ermitteln
 
 	If !SumatraID
 		SumatraID := WinExist("ahk_class SUMATRA_PDF_FRAME")
@@ -356,32 +436,83 @@ Sumatra_GetPages(SumatraID="") {                                                
 return {"disp":PageDisp, "max":PageMax}
 }
 
-Sumatra_Show(filepath) {                                                                                                	;--	 ein Dokument mit Sumatra anzeigen
+Sumatra_PrintPDF(filepath:="", Printer:="")  {                              	;-- Pdf per commandline drucken
 
-	SumatraCMD := GetAppImagePath("SumatraPDF")
+	global SumatraCMD, SumatraExist
+	static smtracmdline
 
-	IF !WinExist("ahk_class SUMATRA_PDF_FRAME")
-		cmdline := q SumatraCMD q " -new-window -view " q "single page" q " -zoom " q "fit page" q " " q filePath q
-	else
-		cmdline := q SumatraCMD q " -view " q "single page" q " -zoom " q "fit page" q " " q filePath q
+	If  !smtracmdline
+		smtracmdline := "-print-to " q "#printer#" q " -print-settings " q "duplex" q " -exit-when-done " ; Dateiname
 
-	Run, % cmdline,, Hide UseErrorLevel, PIDSumatra
-	WinWait, % "ahk_class SUMATRA_PDF_FRAME",, 6
-	WinWaitActive, % "ahk_class SUMATRA_PDF_FRAME",, 6
-	hSumatra := WinExist("A")
+	If !SumatraCMD {
+		SumatraCMD := GetAppImagePath("SumatraPDF")
+		If (StrLen(SumatraCMD) > 0) && FileExist(SumatraCMD)
+			SumatraExist := true
+	}
 
-	SumatraInvoke("ShowToolbar", hSumatra)
-	Sleep 300
-	SumatraInvoke("SinglePage", hSumatra)
-	Sleep 300
-	SumatraInvoke("FitPage", hSumatra)
+	If SumatraCMD {
 
-	s := GetWindowSpot(hSumatra)
+		stdoutCMD := SumatraCMD " " StrReplace(smtracmdline, "#printer#", Printer) " " q . filepath . q
+		If (stdout := StdoutToVar(stdoutCMD))
+			SciTEOutput(stdout)
 
-return {"viewer": "SumatraPDF", "AR":sw/sh, "ID":hSumatra, "PID":PIDSumatra, "x":s.X, "y":s.Y, "w":s.W, "h":s.H}
+	}
+
+return stdout ? stdout : 1
 }
 
-Sumatra_ToPrint(SumatraID="", Printer="") {                                                                     	;-- Druck Dialoghandler - Ausdruck auf übergebenen Drucker
+Sumatra_Show(filepath, winParams:="") {                                      	;--	 Dokument mit Sumatra anzeigen
+
+	static SumatraCMD
+	static cmdl1 := q "-new-window -view " q "single page" q " -zoom " q "fit page" q
+	static cmdl2 := q "-view " q "single page" q " -zoom " q "fit page" q
+
+	If !SumatraCMD
+		SumatraCMD := GetAppImagePath("SumatraPDF")
+
+	IF !(hSumatra := WinExist("ahk_class SUMATRA_PDF_FRAME")) {
+
+		cmdline := q SumatraCMD q " " (winParams ? winParams : cmdl1) " " q filePath q
+		Run, % cmdline,,  UseErrorLevel, PIDSumatra  ; Hide
+
+		WinWait, % "ahk_class SUMATRA_PDF_FRAME",, 6
+		hSumatra := WinExist("ahk_class SUMATRA_PDF_FRAME")
+		WinGet, SumatraPID	, PID	, % "ahk_id " hSumatra
+		WinWaitActive, % "ahk_class SUMATRA_PDF_FRAME",, 6
+
+	}
+	else {
+
+		WinGet      	, SumatraPID, PID	, % "ahk_id " hSumatra
+		WinGetTitle	, smtraTitleO	     	,  % "ahk_id " hSumatra
+		smtraTitle := smtraTitleO
+
+	  ; Datei per DDE Befehl laden lassen
+		SumatraDDE(hSumatra, "OpenFile", filepath, 0, 0, 0)
+
+	  ; Änderung des Fenstertitel abwarten
+		while (smtraTitle = smtraTitleO) {
+			WinGetTitle, smtraTitle, % "ahk_id " hSumatra
+			If (A_Index > 100)
+				return 0
+			Sleep 50
+		}
+
+	}
+
+	ControlGet, hSumatraCnvs, HWND,, SUMATRA_PDF_CANVAS1, % "ahk_id " hSumatra
+	s	:= GetWindowSpot(hSumatra)
+	c	:= GetWindowSpot(hSumatraCnvs)
+
+	; Einrichten der Ansicht
+	SumatraDDE(hSumatra, "SetView", filepath, "single page", "-1") 	; -1 = fit page
+	;~ SumatraInvoke("ShowToolbar", hSumatra)
+
+
+return {"viewer": "SumatraPDF", "AR":c.CW/c.CH, "ID":hSumatra, "PID":SumatraPID, "x":s.X, "y":s.Y, "w":s.W, "h":s.H}
+}
+
+Sumatra_ToPrint(SumatraID="", Printer="") {                                 	;-- Druck Dialoghandler - Ausdruck auf übergebenen Drucker
 
 		; druckt das aktuell angezeigte Dokument
 		; abhängige Biblitheken: LV_ExtListView.ahk
@@ -422,7 +553,7 @@ Sumatra_ToPrint(SumatraID="", Printer="") {                                     
 return {"DialogID":hSumatraPrint, "ItemNr":ItemNr}                                 	; für Erfolgskontrolle und eventuelle weitere Abarbeitungen
 }
 
-SumatraDDE(hSumatra, cmd, params*) {                                                                  			;-- Befehle an Sumatra per DDE schicken
+SumatraDDE(hSumatra, cmd, params*) {                                  		;-- Befehle an Sumatra per DDE schicken
 
 	/*  DESCRIPTION
 
@@ -493,32 +624,32 @@ SumatraDDE(hSumatra, cmd, params*) {                                            
 
 		static dwData := 0x44646557
 
-		lpData := { 	"OpenFile"         	: ("[Open(""p1"",p2,p3,p4)]")
-														; p1=filepath, p2=sourcefilepath, p3=1 for focus, p4=1 for force refresh
+														; p1=filepath, p2=newwindow, p3=1 for focus, p4=1 for force refresh
+		lpData := { 	"OpenFile"         	: ("[Open(""_p1"",_p2,_p3,_p4)]")
 
 														; [p1=filepath,] p2=sourcefilepath, p3=line, p4=column[, p5=1 for new window, p6=1 to set focus]
-						,	"ForwardSearch" 	: ("[ForwardSearch(""p1"",""p2"",p3,p4,p5,p6)]")
+						,	"ForwardSearch" 	: ("[ForwardSearch(""_p1"",""_p2"",_p3,_p4,_p5,_p6)]")
 
 														; p1=filepath, p2=destination name
-						,	"GotoNamedDest"	: ("[GotoNamedDest(""p1"",""p2"")]")
+						,	"GotoNamedDest"	: ("[GotoNamedDest(""_p1"",""_p2"")]")
 
 														; p1=filepath, p2=PageNr
-						,	"GotoPage"        	: ("[GotoPage(""p1"",p2)]")
+						,	"GotoPage"        	: ("[GotoPage(""_p1"",_p2)]")
 
 														; p1=filepath, p2=view mode, p3=zoom level [, p4=scrollX, p5=scrollY>]
-						,	"SetView"           	: ("[SetView(""p1"",""p2"",p3,p4,p5)]")}
+						,	"SetView"           	: ("[SetView(""_p1"",""_p2"",_p3,_p4,_p5)]")}
 
 		For index, param in params
-			lpData[cmd] := StrReplace(lpData[cmd], "p" index, param)
+			lpData[cmd] := StrReplace(lpData[cmd], "_p" index, param)
 
-		lpData[cmd] := RegExReplace(lpData[cmd], ",*\""*\s*p\d\s*\""*\,*")
+		lpData[cmd] := RegExReplace(lpData[cmd], ",""*_p\d""*")
 
 		;SciTEOutput(" " lpData[cmd])
 
 return Send_WM_COPYDATA_EX(hSumatra, dwData, lpData[cmd])
 }
 
-Send_WM_COPYDATA_EX(hWin, dwData, lpData) 	{                                                      	;-- für die Kommunikation mit Sumatra und SumatraDDE()
+Send_WM_COPYDATA_EX(hWin, dwData, lpData) 	{                     	;-- für die Kommunikation zwischen Sumatra und Autohotkey Skripten
 
 	VarSetCapacity(COPYDATASTRUCT, 3*A_PtrSize, 0)
     cbData := (StrLen(lpData) + 1) * (A_IsUnicode ? 2 : 1)
@@ -534,7 +665,7 @@ return ErrorLevel == "FAIL" ? false : true
 ; -------------------------------------------------------------
 ; FOXITREADER
 ; -------------------------------------------------------------
-FoxitInvoke(command, FoxitID="") {		                                                                        	;-- wm_command wrapper for FoxitReader Version:  9.1
+FoxitInvoke(command, FoxitID="") {		                                      	;-- wm_command wrapper for FoxitReader Version:  9.1
 
 		/* DESCRIPTION of FUNCTION:  FoxitInvoke() by Ixiko (version 11.07.2020)
 
@@ -759,7 +890,7 @@ FoxitInvoke(command, FoxitID="") {		                                            
 		return FoxitCommands[command]
 }
 
-FoxitReader_GetPages(FoxitID="") {                                                                                	;-- aktuelle und maximale Seiten des aktuellen Dokumentes ermitteln
+FoxitReader_GetPages(FoxitID="") {                                              	;-- aktuelle und maximale Seiten des aktuellen Dokumentes ermitteln
 
 	; letzte Änderung 18.10.2020
 
@@ -796,7 +927,7 @@ FoxitReader_GetPages(FoxitID="") {                                              
 return {"disp":1, "max":1} ; wenigsten eine 1 zurückgeben wenn nichts ermittelt werden konnte
 }
 
-FoxitReader_ToPrint(FoxitID="", Printer="") {                                                                     	;-- Druck Dialoghandler - Ausdruck auf übergebenen Drucker
+FoxitReader_ToPrint(FoxitID="", Printer="") {                                 	;-- Druck Dialoghandler - Ausdruck auf übergebenen Drucker
 
 		static foxitprint    	:= "i)[(Print)|(Drucken)]+ ahk_class i)#32770 ahk_exe i)FoxitReader.exe"
 
@@ -820,7 +951,7 @@ FoxitReader_ToPrint(FoxitID="", Printer="") {                                   
 return {"DialogID":hFoxitPrint, "ItemNr":ItemNr}                                   	; für Erfolgskontrolle und eventuelle weitere Abarbeitungen
 }
 
-FoxitReader_SignaturSetzen(FoxitID="") {	                                                            			;-- ruft Signatur setzen auf und zeichnet eine Signatur in die linke obere Ecke des Dokumentes
+FoxitReader_SignaturSetzen(FoxitID="") {                                		;-- zeichnet eine Signatur in die linke obere Ecke des Dokumentes
 
 		; letzte Änderung: 19.09.2020
 
@@ -869,7 +1000,7 @@ FoxitReader_SignaturSetzen(FoxitID="") {	                                       
 			hDocWnd 	:= Controls("FoxitDocWnd", "hwnd", hDocTab)
 			DocWnd      	:= GetWindowSpot(hDocWnd)
 
-			SciTEOutput("DocWnd handle: " hDocWnd " x" DocWnd.X  " y" DocWnd.Y " w" DocWnd.W " h" DocWnd.H )
+			;SciTEOutput("DocWnd handle: " hDocWnd " x" DocWnd.X  " y" DocWnd.Y " w" DocWnd.W " h" DocWnd.H )
 		;}
 
 		;----------------------------------------------------------------------------------------------------------------------------------------------
@@ -915,7 +1046,7 @@ FoxitReader_SignaturSetzen(FoxitID="") {	                                       
 				;Y += H//2
 				Comment := ok.1.5
 				;MouseMove, % X, % Y, 0
-				SciTEOutput("SBereich: x" X " y" Y " w" (X + Addendum.PDF.SignatureWidth) " h" (Y + Addendum.PDF.SignatureHeight))
+				;SciTEOutput("SBereich: x" X " y" Y " w" (X + Addendum.PDF.SignatureWidth) " h" (Y + Addendum.PDF.SignatureHeight))
 				MouseMove, % X, % Y
 				;MouseClickDrag, Left, % X, % Y, % (X + Addendum.PDF.SignatureWidth), % (Y + Addendum.PDF.SignatureHeight), 0
 				SciTEOutput(">" tryCount ":->" X ", " Y)
@@ -948,7 +1079,7 @@ FoxitReader_SignaturSetzen(FoxitID="") {	                                       
 return 1
 }
 
-FoxitReader_SignDoc(hDokSig) {		                                     	                      		        	;-- Bearbeiten des 'Dokument signieren' (Sign Document) Dialoges
+FoxitReader_SignDoc(hDokSig) {		                       	                	;-- Bearbeiten des 'Dokument signieren' (Sign Document) Dialoges
 
 		; letzte Änderung: 05.03.2021
 
@@ -1022,14 +1153,18 @@ FoxitReader_SignDoc(hDokSig) {		                                     	          
 			Addendum.PDF.SignaturePages += PdfPages.Max
 			IniWrite, % Addendum.PDF.SignatureCount	, % AddendumDir "\Addendum.ini", % "ScanPool", % "SignatureCount"
 			IniWrite, % Addendum.PDF.SignaturePages	, % AddendumDir "\Addendum.ini", % "ScanPool", % "SignaturePages"
+
+			foxitPos     	:= GetWindowSpot(WinExist("ahk_class classFoxitReader"))
+			foxitAFXPos 	:= Controls("AfxFrameOrView140su1", "ControlPos", "ahk_class classFoxitReader")
+
 			ToolTip, %	"Signature Nr: "   	Addendum.PDF.SignatureCount
 						. 	"`nSeitenzahl: " 	PdfPages.Max
-						. 	"`nges. Seiten: " 	Addendum.PDF.SignaturePages , 1000, 1, 10
+						. 	"`nges. Seiten: " 	Addendum.PDF.SignaturePages , foxitPos.X+foxitAFXPos.X, foxitPos.Y+foxitAFXPos.Y, 10
 
 	;}
 
 	; Dateidialog Routinen starten
-		SetTimer, PDFNotRecentlySigned		, -3000
+		SetTimer, PDFNotRecentlySigned		, -5000
 		PraxTT("'", "off")
 
 return
@@ -1053,7 +1188,7 @@ PDFNotRecentlySigned: ;{
 return ;}
 }
 
-FoxitReader_GetPDFPath() {                                                                                            	;-- den aktuellen Dokumentenpfad im 'Speichern unter' Dialog auslesen
+FoxitReader_GetPDFPath() {                                                         	;-- den aktuellen Dokumentenpfad im 'Speichern unter' Dialog auslesen
 
 	foxitSaveAs := "Speichern unter ahk_class #32770 ahk_exe FoxitReader.exe"
 	If WinExist(foxitSaveAs) {
@@ -1067,7 +1202,7 @@ FoxitReader_GetPDFPath() {                                                      
 return ""
 }
 
-JEE_StrUtf8BytesToText(vUtf8) {                                                                                        	;-- wandelt UTF8Bytes in Text (ini Dateien)
+JEE_StrUtf8BytesToText(vUtf8) {                                                    	;-- wandelt UTF8Bytes in Text (ini Dateien)
 	if A_IsUnicode	{
 		VarSetCapacity(vUtf8X, StrPut(vUtf8, "CP0"))
 		StrPut(vUtf8, &vUtf8X, "CP0")

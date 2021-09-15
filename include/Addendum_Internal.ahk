@@ -1,11 +1,11 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                            	by Ixiko started in September 2017 - last change 02.07.2021 - this file runs under Lexiko's GNU Licence
+;                                            	by Ixiko started in September 2017 - last change 09.09.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; FUNKTIONEN  	|                                                 	|                                                 	|                                                 	|                                             	(23)
+; FUNKTIONEN  	|                                                 	|                                                 	|                                                 	|                                             	(24)
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; Umwandeln:		|	GetHex                                    	GetDec
 ; WinEventhook: 	|	SetWinEventHook                     	UnhookWinEvent
@@ -15,7 +15,7 @@
 ; MsgBox:				|	KurzePause	                          	Weitermachen
 ; Dateien:				|	FileIsLocked                             	FilePathCreate						    	FilePathExist                               	isFullFilePath
 ;								GetAppImagePath						GetAppsInfo
-; Sonstiges:			|	IsRemoteSession
+; Sonstiges:			|	IsRemoteSession                     	HasVal
 ;______________________________________________________________________________________________________________________________________________
 ; UMWANDELN (2)
 GetHex(hwnd) {                                                                                                                    	;-- Umwandlung Dezimal nach Hexadezimal
@@ -180,26 +180,25 @@ return hwnd
 ; INI (3)
 IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="", convert:=true) {                             	;-- eigene IniRead funktion für Addendum
 
-	; beim ersten Aufruf der Funktion !nur! Übergabe des ini Pfades mit dem Parameter SectionOrFullFilePath
+	; beim ersten Aufruf der Funktion nur den Pfad und Namen zur ini Datei übergeben!
 	; die Funktion behandelt einen geschriebenen Wert der "ja" oder "nein" ist, als Wahrheitswert, also true oder false
 	; UTF-16 in UTF-8 Zeichen-Konvertierung
-	; Der Pfad in Addendum.Dir wird einer anderen Variable übergeben. Brauche dann nicht immer ein globales Addendum-Objekt
-	; letzte Änderung: 31.01.2021
+	; letzte Änderung: 09.09.2021
 
 		static admDir
 		static WorkIni
 
 	; Arbeitsini Datei wird erkannt wenn der übergebene Parameter einen Pfad ist
-		If RegExMatch(SectionOrFullFilePath, "^[A-Z]\:.*\\")	{
+		If RegExMatch(SectionOrFullFilePath, "^([A-Z]:\\|\\\\[A-Z]{2,}).*")	{
 			If !FileExist(SectionOrFullFilePath)	{
-				MsgBox,, % "Addendum für AlbisOnWindows", % "Die .ini Datei existiert nicht!`n`n" WorkIni "`n`nDas Skript wird jetzt beendet.", 10
+				MsgBox, 0x1024
+							, % "Addendum für AlbisOnWindows"
+							, % "Die .ini Datei existiert nicht!`n`n" WorkIni "`n`nDas Skript wird jetzt beendet."
+							, 10
 				ExitApp
 			}
-			WorkIni := SectionOrFullFilePath
-			If RegExMatch(WorkIni, "[A-Z]\:.*?AlbisOnWindows", rxDir)
-				admDir := rxDir
-			else
-				admDir := Addendum.Dir
+			WorkIni	:= SectionOrFullFilePath
+			admDir	:= RegExMatch(WorkIni, "^([A-Z]:\\|\\\\[A-Z]{2,}).*?AlbisOnWindows", rxDir) ? rxDir : Addendum.Dir
 			return WorkIni
 		}
 
@@ -218,7 +217,7 @@ IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="", convert:=true) {   
 
 	; Bearbeiten des Wertes vor Rückgabe
 		If InStr(OutPutVar, "ERROR")
-			If (StrLen(DefaultValue) > 0) { ; Defaultwert vorhanden, dann diesen Schreiben und Zurückgeben
+			If DefaultValue  { ; Defaultwert vorhanden, dann diesen Schreiben und Zurückgeben
 				OutPutVar := DefaultValue
 				IniWrite, % DefaultValue, % WorkIni, % SectionOrFullFilePath, % key
 				If ErrorLevel
@@ -419,6 +418,14 @@ IsRemoteSession() {                                                             
 return false
 }
 
+HasVal(haystack, needle) {
+    for index, value in haystack
+        if (value = needle)
+            return index
+    if !(IsObject(haystack))
+        throw Exception("Bad haystack!", -1, haystack)
+    return 0
+}
 
 
 

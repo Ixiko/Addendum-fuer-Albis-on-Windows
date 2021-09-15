@@ -11,7 +11,7 @@
 ;									- Karteikarten werden nach einem Doppelklick in Albis geöffnet
 ;									- verknüpfte Daten werden nach einem einfachen Klick angezeigt (unterstützt derzeit nur Daten aus BEFTEXTE.dbf)
 ;									- Suchergebnisse und verbundene Daten können exportiert werden
-;									- die eingebenen Suchparameter können mit einer Bezeichnung gespeichert werden, um sie erneut verwenden zu können
+;									- eingebene Suchparameter können mit einer Bezeichnung zur geöffneten Datenbank gespeichert werden.
 ;
 ;		Hinweis:				beta Version, Nutzung auf eigenes Risiko!
 ;
@@ -19,7 +19,7 @@
 ;
 ;	                    			Addendum für Albis on Windows
 ;                        			by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;									begin: 02.04.2021,	last change 30.07.2021
+;									begin: 02.04.2021,	last change 15.09.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /*  Notizen
 
@@ -98,23 +98,27 @@ Quicksearch(dbname, SearchString)                                               
 	; InCell Edit stoppen
 		InCellEdit.OnMessage(false)
 
+	; RegEx Suchstrings erstellen
 		pattern := Object()
 		For idx, line in StrSplit(SearchString, "`n") {
 			RegExMatch(Trim(line), "(?<field>.*)?\s*\=\s*(?<rx>.*)$", m)
 			If mrx {
-				;pattern[mfield] := "rx:" mrx
 				pattern[mfield] := mrx
 				t .= mfield " = " pattern[mfield] "`n"
 			}
 		}
 
+	; Datenbanksuche starten
 		dbf       	:= new DBASE(adm.AlbisDBPath "\" dbname ".dbf", 2)
 		filepos   	:= dbf.OpenDBF()
-		dbfdata  	:= dbf.SearchFast(pattern, "all fields", 0	, 		{ "SaveMatchingSets"    	: false
-																							,  "MSetsPath"               	: A_Temp "\QuickSearch_" dbname ".txt"
-																							, "ReturnDeleted"          	: QSDBRView }
-																		         			, "QuickSearch_Progress")
+		dbfdata  	:= dbf.SearchFast(pattern, "all fields", 0	,{"SaveMatchingSets"    	: false
+																					,  "MSetsPath"               	: A_Temp "\QuickSearch_" dbname ".txt"
+																					, "ReturnDeleted"          	: QSDBRView }
+																					, "QuickSearch_Progress")
 		filepos   	:= dbf.CloseDBF()
+
+	; Balken auf 100%
+		GuiControl, QS:, QSPGS	, 100
 
 	; Suchergebnis im Props Objekt ablegen (kann auf Festplatte gespeichert werden)
 		Gui, QS: ListView, QSDBR
@@ -122,6 +126,7 @@ Quicksearch(dbname, SearchString)                                               
 
 	; Spalten zusammenstellen
 		equalIDs := Object()
+		ShowPatNames := Props.ShowPatNames()
 		For rowNr, set in dbfdata {
 
 			; weiter wenn gelöschte Datensätze nicht angezeigt werden sollen
@@ -130,28 +135,44 @@ Quicksearch(dbname, SearchString)                                               
 
 			; Spalten zusammenstellen
 				cols := Object()
+				noRowData := false
 				For flabel, val in set {
 					If Props.isVisible(fLabel) {
 
-						If (dbname = "BEFUND") && RegExMatch(flabel, "i)(INHALT|KUERZEL)") && StrLen(val) = 0
-							continue
+						If (dbname = "BEFUND")
+							If (RegExMatch(flabel, "i)(INHALT|KUERZEL)") && StrLen(val) = 0) {      	; Feldnamen (Inhalt,Kuerzel) ohne Wert nicht anzeigen
+								noRowData := true
+								break
+							}
 
-						If RegExMatch(flabel, "i)" Props.DateLabels) && (dbname <> "CAVE")
+						If  (dbname <> "CAVE"  && RegExMatch(flabel, "i)" Props.DateLabels))                                      	; Datumsformat ändern
 							val := RegExMatch(val, "\d{8}") ? ConvertDBASEDate(val) : val
-						else if RegExMatch(flabel, "i)" Props.DateLabels) && (dbname = "CAVE")
-							val := RegExMatch(val, "\d{8}") ? SubStr(val, 1, 2) "." SubStr(val, 3, 2) "." SubStr(val, 5, 4) : val
-						else if RegExMatch(flabel, "i)DATETIME")
-							FormatTime, val, % val, dd.MM.yyyy HH:mm
-						else if RegExMatch(flabel, "i)VERSART")
-							val := Props.VERSART[val]
-						else if RegExMatch(flabel, "i)PATNR")
-							equalIDs[val] := !equalIDs.haskey(val) ? 1 : equalIDs[val] + 1
 
-						cols[Props.HeaderVirtualPos(flabel)] := val
+						else if (dbname = "CAVE" && RegExMatch(flabel, "i)" Props.DateLabels))                                     	; Datumsformat ändern
+							val := RegExMatch(val, "\d{8}") ? SubStr(val, 1, 2) "." SubStr(val, 3, 2) "." SubStr(val, 5, 4) : val
+
+						else if RegExMatch(flabel, "i)DATETIME")                                                                                    	; Datumsformat ändern
+							FormatTime, val, % val, dd.MM.yyyy HH:mm
+
+						else if RegExMatch(flabel, "i)VERSART")                                                                                     	; Versicherungsart lesbar darstellen
+							val := Props.VERSART[val]
+
+						else if RegExMatch(flabel, "i)PATNR") {                                                                                      	; zählt und vergleicht eingesammelte PATNR
+							equalIDs[val] := !equalIDs.haskey(val) ? 1 : equalIDs[val] + 1
+							If ShowPatNames
+								val := PatDB[val].name ", " PatDB[val].vorname " [" val "]"
+						}
+
+						cols[Props.HeaderVirtualPos(flabel)] := val                                                                              	; ausgelesene Werte einer Spalte zuordnen
 
 					}
 
 				}
+
+
+			; keine anzeigbaren Daten
+				If noRowData
+					continue
 
 			; Zeile hinzufügen
 				cols.1 := set.removed ? "*" cols.1 : cols.1
@@ -159,13 +180,17 @@ Quicksearch(dbname, SearchString)                                               
 
 		}
 
+	; Ausrichtung in den Spalten nach dem Format in der Datenbank einstellen
 		ColTyp := Array()
 		DataType 	:= {"N":"Integer", "D":"Integer", "C":"Text", "L":"Text", "M":"Text"}
 		For idx, flabel in Props.Labels()
 			If Props.isVisible(fLabel)
 				LV_ModifyCol( idx, DataType[Props.HeaderField(flabel, "type")] )
 
+	; die Anzahl verschiedener Patienten einblenden
 		GuiControl, QS:, QST4, % equalIDs.Count()
+
+	; Suchparameter eingaben wieder ermöglichen
 		InCellEdit.OnMessage(true)
 
 		;~ JSONData.Save(A_Temp "\test.json", equalIDs, true,, 1, "UTF-8")
@@ -442,7 +467,7 @@ QuickSearch_Gui()                                                               
 		Gui, QS: Add	, Text        	, % "x" col2X+3 " y" (row1H+3)	   BGT " vQST3a"                   	, % "Treffer gesamt:"
 		Gui, QS: Add	, Text        	, % "x+2                               	 " BGT " vQST3"                        	, % empty " "
 
-		Gui, QS: Add	, Text        	, % "x" col2X+3 " y+1             	 " BGT " vQST4a"                      	, % "PatNR:"
+		Gui, QS: Add	, Text        	, % "x" col2X+3 " y+1             	 " BGT " vQST4a"                      	, % "versch. PATNR:"
 		Gui, QS: Add	, Text        	, % "x+2                               	 " BGT " vQST4"                     	, % empty " "
 
 		GuiControlGet, cp, QS: Pos , QST2
@@ -494,7 +519,7 @@ QuickSearch_Gui()                                                               
 
 		Gui, QS: Font	, % "s" FSize-1 " q5" ColorTitles
 		Gui, QS: Add	, Checkbox  	, % "x+10  y" cpY " " 	BGT "          	vQSDBRView     	gQS_Handler" 	, % "gelöschte Datensätze anzeigen"
-		Gui, QS: Add	, Checkbox  	, % "y+3 "             	BGT "          	vQSDBRPatView   	gQS_Handler" 	, % "PATNR mit Namen ersetzen"
+		Gui, QS: Add	, Checkbox  	, % "y+2 "             	BGT "          	vQSDBRPatView   	gQS_Handler" 	, % "PATNR mit Namen ersetzen"
 
 		Gui, QS: Font	, % "s" FSize+1 " q5" ColorData
 		Gui, QS: Add	, Button        	, % "x+250 y" cpY "              	      	vQSReload          	gQS_Handler "	, % "Reload"
@@ -557,6 +582,8 @@ QS_Handler: 	;{
 
 	Gui, QS: Submit, NoHide
 
+	Critical
+
 	Switch A_GuiControl	{
 
 		Case "QSReload":                      	;{     Skript neu laden
@@ -585,6 +612,7 @@ QS_Handler: 	;{
 				ToolTip, % colHDR, % mx, % my-10, 6
 				SetTimer, QSColTipOff, -3000
 			}
+		 ; Karteikartenaufruf
 			else if (A_GuiEvent = "DoubleClick"            	) 	{
 
 				If !WinExist("ahk_class OptoAppClass") || !A_EventInfo
@@ -592,14 +620,20 @@ QS_Handler: 	;{
 
 				If (Pcol := Props.PatIDColumn()) {
 					Gui, QS: ListView, QSDBR
-					LV_GetText(PatID, A_EventInfo, Pcol)
-					PatID    	:= StrReplace(PatID, "*")
-					PatName 	:= PatDB[PatID].NAME ", " PatDB[PatID].VORNAME
-					GuiControl, QS:, QST5, % PatDB[PatID].NAME ", " PatDB[PatID].VORNAME
-					AlbisAkteOeffnen(PatName, PatID)
+					LV_GetText(PatCell, A_EventInfo, Pcol)
+					If Props.ShowPatNames() {
+						RegExMatch(PatCell, "\[\d+", Patnr)
+						PatNr := SubStr(PatNR, 2, StrLen(PatNR)-1)
+					} else
+						PatNR    	:= StrReplace(PatCell, "*")
+
+					PatName 	:= PatDB[PatNR].NAME ", " PatDB[PatNR].VORNAME
+					GuiControl, QS:, QST5, % PatName
+					AlbisAkteOeffnen(PatName, PatNR)
 				}
 
 			}
+		; Patientenname und bei Bedarf den Inhalt der TEXTDB anzeigen
 			else if RegExMatch(A_GuiEvent, "(Normal|I)"	)  	{
 
 				tblRow := A_EventInfo
@@ -1051,15 +1085,12 @@ QuickSearch_ListFields(dbname, step:=0)                                         
 						dtype 	:= Props.DataType(flabel)
 						width 	:= Props.HeaderField(flabel, "width")
 						width	:= RegExReplace(width, "i)[a-z]+")
-						;width	:= (!width || width > 600) ? (thisColPos = 1 ? "Auto" :  "AutoHdr") : width
 
-						If (thisColPos = 1) {
+						If (thisColPos = 1)
 							LV_ModifyCol(thisColPos, (!width ? "100":width) " " dtype, flabel)
-						}
 						else
 							LV_InsertCol(thisColPos	 , (!width ? "AutoHdr":width) " " dtype, flabel)
 
-						;LV_ModifyCol(thisColPos, width)
 						Props.HeaderSetVirtualPos(flabel, thisColPos)
 						thisColPos ++
 
@@ -1117,13 +1148,30 @@ QuickSearch_ListFields(dbname, step:=0)                                         
 		QuickSearch_Progress(BlockNr*BlockSize+1 "-" (BlockNr+1)*BlockSize, records, 0, dbfdata.Count())
 	;}
 
-	; Ausgabe der Daten im Ergebnisfenster             	;{
+	; Defaults setzen                                                   	;{
 		Gui, QS: Default
 		Gui, QS: ListView, QSDBR
-		LV_Delete()
 		GuiControl, QS: -Redraw, QSDBR
-		equalIDs := {}
+		LV_Delete()
+	;}
 
+	; 'PATNR mit Namen ersetzen' Zustand setzen     	;{
+		ShowPatNames := Props.ShowPatNames()
+		PatIDColumn  	:= Props.PatIDColumn()
+
+		GuiControl,% "QS:", % "QSDBRPatView", % ShowPatNames
+		GuiControl, % "QS: " (!PatIDColumn ? "Disable" : "Enable")	, % "QSDBRPatView"
+
+		If PatIDColumn && ShowPatNames                                                                   	; Ausrichtung des Spalteninhaltes
+			LV_ModifyCol(PatIDColumn, "Left Auto")
+		else
+			LV_ModifyCol(PatIDColumn, "Right")
+
+		;~ SciTEOutput("Props.PatIDColumn(): " PatIDColumn ", " ShowPatNames)
+	;}
+
+	; Ausgabe der Daten im Ergebnisfenster             	;{
+		equalIDs := {}
 		For rowNr, set in dbfdata {
 
 			; weiter wenn gelöschte Datensätze nicht angezeigt werden sollen
@@ -1132,9 +1180,16 @@ QuickSearch_ListFields(dbname, step:=0)                                         
 
 			; Spalten zusammenstellen
 				cols := Object()
+				noRowData := false
 				For flabel, val in set {
 
 					If Props.isVisible(fLabel) {
+
+						If (dbname = "BEFUND")
+							If (RegExMatch(flabel, "i)(INHALT|KUERZEL)") && StrLen(val) = 0) {      	; Feldnamen (Inhalt,Kuerzel) ohne Wert nicht anzeigen
+								noRowData := true
+								break
+							}
 
 						If RegExMatch(flabel, "i)" Props.DateLabels)
 							If  (dbname <> "CAVE")
@@ -1145,22 +1200,32 @@ QuickSearch_ListFields(dbname, step:=0)                                         
 							FormatTime, val, % val, dd.MM.yyyy HH:mm
 						else if RegExMatch(flabel, "i)VERSART")
 							val := Props.VERSART[val]
-						else if RegExMatch(flabel, "i)PATNR")
+						else if RegExMatch(flabel, "i)PATNR") {                                                                                      	; zählt und vergleicht eingesammelte PATNR
 							equalIDs[val] := !equalIDs.haskey(val) ? 1 : equalIDs[val] + 1
+							If ShowPatNames
+								val := PatDB[val].name ", " PatDB[val].vorname " [" val "]"
+						}
 
 						cols[Props.HeaderVirtualPos(flabel)] := val
 					}
 
 				}
 
+			; keine anzeigbaren Daten
+				If noRowData
+					continue
+
 			; Zeile hinzufügen
-				cols.1 := set.removed ? "*" cols.1 : cols.1
+				cols.1 := (set.removed ? "*" : "") cols.1
 				LV_Add("", cols*)
 
 		}
 
 		;~ JSONData.Save(A_Temp "\test.json", equalIDs, true,, 1, "UTF-8")
 		;~ Run, % A_Temp "\test.json"
+
+		If PatIDColumn && ShowPatNames                                                                   	; Ausrichtung des Spalteninhaltes
+			LV_ModifyCol(PatIDColumn, "AutoHDR")
 
 		GuiControl, QS: +Redraw, QSDBR
 		GuiControl, QS:, QST4, % equalIDs.Count()
@@ -1173,7 +1238,6 @@ QuickSearch_ListFields(dbname, step:=0)                                         
 
 	;}
 
-; 21233 22801 20916
 }
 
 QuickSearch_DBFields(GChwnd:="", GuiEvent:="", EventInfo:="", ErrLevel:="")    	{	; Eventhandler DBFields
@@ -1736,10 +1800,20 @@ class Quicksearch_Properties                                                    
 		ShowPatNames(show:="")                  	{	; anstatt einer Nummer (PATNR), Patientennamen anzeigen
 
 			global QSDBR, QS
+			static Firstrun := true
+
+			If (Firstrun && StrLen(show) = 0) {
+				FirstRun := false, show := 0
+				return this.qs[this.dbname].ShowPatNames
+			}
 
 		  ; gibt die Einstellung zurück
 			If (StrLen(show) = 0)
 				return this.qs[this.dbname].ShowPatNames
+
+		  ; Defaults einstellen
+			Gui, QS: Default
+			Gui, QS: ListView, QSDBR
 
 		  ; neue Einstellung speichern
 			this.qs[this.dbname].ShowPatNames := show
@@ -1747,19 +1821,14 @@ class Quicksearch_Properties                                                    
 		  ; welche Spaltennummer hat PATNR derzeit
 			PatNRCol := this.PatIDColumn()
 
-			Gui, QS: Default
-			Gui, QS: ListView, QSDBR
-
+		  ; Wertanzeige in der PATNR Spalte ändern
 			Loop % LV_GetCount() {
 
 				LV_GetText(PatID, A_Index, PatNRCol)
 				if show {
-					LV_Modify(A_Index, 	"Col" PatNRCol, PatDB[PatID].name
-												.	", " 	PatDB[PatID].VORNAME
-												;. 	" *" 	ConvertDBASEDate(PatDB[PatID].GEBURT)
-												.	" [" PatID "]")
+					LV_Modify(A_Index, 	"Col" PatNRCol, PatDB[PatID].name ", " PatDB[PatID].VORNAME " [" PatID "]")
 				} else {
-					RegExMatch(PatID, "\[(?<NR>\d+)\]", Pat)
+					RegExMatch(PatID, "\[(?<NR>\d+)", Pat)
 					LV_Modify(A_Index, "Col" PatNRCol, PatNR)
 				}
 
@@ -1770,7 +1839,7 @@ class Quicksearch_Properties                                                    
 			else
 				LV_ModifyCol(PatNRCol, "Right AutoHDR")
 
-			SciTEOutput(PatNRCol)
+
 		}
 	;}
 
@@ -2041,7 +2110,7 @@ Return hBitmap
 #Include %A_ScriptDir%\..\..\lib\acc.ahk
 #Include %A_ScriptDir%\..\..\lib\class_JSON.ahk
 #Include %A_ScriptDir%\..\..\lib\class_LV_InCellEdit.ahk
-#Include %A_ScriptDir%\..\..\lib\class_Neutron.ahk
+;~ #Include %A_ScriptDir%\..\..\lib\class_Neutron.ahk
 #include %A_ScriptDir%\..\..\lib\GDIP_All.ahk
 #Include %A_ScriptDir%\..\..\lib\ini.ahk
 #include %A_ScriptDir%\..\..\lib\RemoteBuf.ahk

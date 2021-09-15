@@ -1,6 +1,6 @@
 ﻿PraxTT(Textmsg:="", Params:="3 0 B") {						 												;--Tooltip Ersatz im Addendum/Nutzer Design mit off-Timer Feature
 
-	/* FUNKTIONSBESCHREIBUNG,  last change: 16.02.2021
+	/* PraxTT - ToolTip Ersatz für Addendum
 	   *
 		*	Textmsg: 	Inhalt der Nachricht
 		*	Param	: 	ein mit Space zu trennender String für verschiedene Parameter

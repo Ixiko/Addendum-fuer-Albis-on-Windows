@@ -66,7 +66,9 @@ Menu, Tray, Add, Beenden, CloseVerlauf
 
 ;{	3. ein paar Variablen werden definiert oder aus der Ini geladen | a few variables are defined or loaded from the Ini
 
-Indipendent = 0								;dies ist die Variable für die 2 Skriptmodi - Abhängig von Addendum für AlbisOnWindows oder als standalone Version nur zum DICOM Format umwandeln
+Indipendent = 0								; dies ist die Variable für die 2 Skriptmodi -
+														; -	abhängig von Addendum für AlbisOnWindows oder
+														; -	standalone Version nur zum DICOM Format umwandeln
 CompName:=A_ComputerName
 D2Aini = %A_ScriptDir%\Dicom2Albis.ini
 SysGet, Mon1, MonitorWorkArea

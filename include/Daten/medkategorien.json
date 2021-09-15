@@ -1,8 +1,4 @@
 ﻿{
-    "": {
-        "ingredient": "",
-        "use": ""
-    },
     "Abasaglar": {
         "ingredient": "Insulin Glargin",
         "use": "Diabetes"
@@ -18,6 +14,10 @@
     "Aldactone": {
         "ingredient": "Spironolacton",
         "use": "Blutdruck/Wassertabl."
+    },
+    "Alendronat": {
+        "ingredient": "Alendronsäure",
+        "use": "Osteoporose"
     },
     "Alfacalcidol": {
         "ingredient": "Alfacalcidol",
@@ -43,7 +43,7 @@
         "ingredient": "Amiodaron",
         "use": "Herzrhythmus"
     },
-    "Amlodigamma Top": {
+    "Amlodigamma": {
         "ingredient": "Amlodipin",
         "use": "Bluthochdruck"
     },
@@ -51,17 +51,17 @@
         "ingredient": "Amlodipin",
         "use": "Blutdruck"
     },
-    "Amlodipin Axcount": {
-        "ingredient": "Amlodipin",
-        "use": "bluthochdruck"
-    },
     "Amlodipin Besilat": {
         "ingredient": "Amlodipin",
         "use": "Bluthochdruck"
     },
-    "Amlodipin dura": {
-        "ingredient": "Amlodipin",
-        "use": "Blutdruck"
+    "Amlodipin HEXAL": {
+        "ingredient": "Amlodipin/Valsartan",
+        "use": "Bluthochdruck"
+    },
+    "Amlodipin/Vals": {
+        "ingredient": "Amlodipin und Valsartan",
+        "use": "Bluthochdruck"
     },
     "Amlodipin/Valsa": {
         "ingredient": "Valsartan und Amlodipin",
@@ -95,13 +95,17 @@
         "ingredient": "Atorvastatin",
         "use": "Cholesterin"
     },
-    "Atorvastatin Basics": {
-        "ingredient": "Atorvastin",
+    "Atorvastatin ar": {
+        "ingredient": "Atorvastatin",
         "use": "Cholesterin"
     },
     "Atozet": {
         "ingredient": "Atorvastatin und Ezetimib",
         "use": "Cholesterin"
+    },
+    "Axura": {
+        "ingredient": "Memantine",
+        "use": "Demenz"
     },
     "Azithromycin": {
         "ingredient": "Azithromycin",
@@ -159,17 +163,13 @@
         "ingredient": "Bisoprolol",
         "use": "Blutdruck/Herzrhythmus"
     },
-    "Bisoprolol Accord": {
-        "ingredient": "Bisoprolol",
-        "use": "Herz"
-    },
-    "Bisoprolol Rat": {
-        "ingredient": "Bisoprolol",
-        "use": "Bluthochdruck"
-    },
     "Blopress": {
         "ingredient": "Candesartan",
         "use": "Blutdruck"
+    },
+    "Brilique": {
+        "ingredient": "Ticagrelor",
+        "use": "KHK/Stent"
     },
     "Brimica Genuair": {
         "ingredient": "Formoterol und Aclidinium bromid",
@@ -178,6 +178,10 @@
     "Budesonid": {
         "ingredient": "Budesonid",
         "use": "Asthma/COPD"
+    },
+    "Calcicare D3 KTA": {
+        "ingredient": "Calcium + Vitamin D3",
+        "use": "Osteoporose"
     },
     "Camlostar": {
         "ingredient": "Candesartan und Amlodipin",
@@ -247,6 +251,10 @@
         "ingredient": "Citalopram",
         "use": "Stimmung"
     },
+    "Clexane": {
+        "ingredient": "Enoxaparin",
+        "use": "Thromboseprophylaxe"
+    },
     "Clonid": {
         "ingredient": "Clonidin-Hcl",
         "use": "Auge"
@@ -271,6 +279,10 @@
         "ingredient": "Duloxetin",
         "use": "Psyche"
     },
+    "Daxas": {
+        "ingredient": "Roflumilast",
+        "use": "COPD"
+    },
     "Decoderm": {
         "ingredient": "Flupredniden",
         "use": "Haut/Kortison"
@@ -283,6 +295,10 @@
         "ingredient": "Dexametason und Ciprofloxacin",
         "use": "Auge/Antibiotikum/Infektion"
     },
+    "Diclofenac": {
+        "ingredient": "Diclofenac, Natriumsalz",
+        "use": "Sonnenlichtschaden der Haut"
+    },
     "Digitoxin": {
         "ingredient": "Digitoxin",
         "use": "Herzrhythmus"
@@ -294,6 +310,10 @@
     "Dorzocomp": {
         "ingredient": "Dorzolamid",
         "use": "grüner Star"
+    },
+    "Dosierung": {
+        "ingredient": "Oxycodon/Naloxon",
+        "use": "Schmerzen"
     },
     "Doxazosin": {
         "ingredient": "Doxazosin",
@@ -355,10 +375,6 @@
         "ingredient": "Ezetimib",
         "use": "Cholesterin"
     },
-    "Ezetimib Micro": {
-        "ingredient": "Ezetimib",
-        "use": "Cholesterin"
-    },
     "Ezetimib/Simva": {
         "ingredient": "Ezetimib und Simvastatin",
         "use": "Cholesterin"
@@ -395,6 +411,10 @@
         "ingredient": "Finasterid",
         "use": "Prostata"
     },
+    "Finasterid-HEXAL": {
+        "ingredient": "Finasterid",
+        "use": "Prostata"
+    },
     "Fluoxetin": {
         "ingredient": "Fluoxetin",
         "use": "Stimmung"
@@ -406,6 +426,14 @@
     "Folsaeure": {
         "ingredient": "Folsäure",
         "use": "Folsäure Mangelzustände"
+    },
+    "Folsan": {
+        "ingredient": "Folsäure",
+        "use": "Folsäuremangel"
+    },
+    "Folverlan": {
+        "ingredient": "Folsäure",
+        "use": "Folsäuremangel"
     },
     "Formoterol": {
         "ingredient": "Formoterol",
@@ -555,11 +583,7 @@
         "ingredient": "Levothyroxin",
         "use": "Schilddrüse"
     },
-    "L-Thyroxin sto": {
-        "ingredient": "L-Thyroxin",
-        "use": "Schilddrüse"
-    },
-    "Lamotrigin Acis": {
+    "Lamotrigin": {
         "ingredient": "Lamotrigin",
         "use": "Epilepsie"
     },
@@ -691,10 +715,6 @@
         "ingredient": "Metoprolol",
         "use": "Blutdruck"
     },
-    "Metoprololsu dura": {
-        "ingredient": "Metoprolol",
-        "use": "Hypertonie"
-    },
     "Metoprololsuc": {
         "ingredient": "Metoprolol",
         "use": "Blutdruck"
@@ -715,6 +735,10 @@
         "ingredient": "Mirtazapin",
         "use": "Stimmung"
     },
+    "Mirtazapin arma": {
+        "ingredient": "Mirtazapin",
+        "use": "Psyche/Schlaf"
+    },
     "Morphin": {
         "ingredient": "Morphin",
         "use": "Schmerzen"
@@ -722,6 +746,10 @@
     "Movicol": {
         "ingredient": "Macrogol",
         "use": "Stuhlgang"
+    },
+    "Movicol Beutel": {
+        "ingredient": "Macrogol",
+        "use": "Verstopfung "
     },
     "Moxonidin": {
         "ingredient": "Moxonidin",
@@ -734,6 +762,10 @@
     "Nebilet": {
         "ingredient": "Nebivolol",
         "use": "Blutdruck"
+    },
+    "Nebivolol": {
+        "ingredient": "Nebivolol",
+        "use": "Blutdruck/Puls"
     },
     "Nifedipin": {
         "ingredient": "Nifedipin",
@@ -751,9 +783,9 @@
         "ingredient": "Metamizol",
         "use": "Schmerzen"
     },
-    "Novaminsulfon Rat": {
-        "ingredient": "Metamizol",
-        "use": "Schmerzen"
+    "Novopulmon": {
+        "ingredient": "Budesonid",
+        "use": "Asthma"
     },
     "Novorapid Flexpen": {
         "ingredient": "Insulin aspart",
@@ -791,6 +823,10 @@
         "ingredient": "Oxycodon-Hydrochlorid",
         "use": "Schmerzen/Morphin-BTM"
     },
+    "Oxycodon Comp": {
+        "ingredient": "Oxycodon/Naloxon",
+        "use": "Schmerzen"
+    },
     "Oxycodon/Naloxon": {
         "ingredient": "Oxycodon und Naloxon",
         "use": "Schmerzen [Morphin]"
@@ -814,6 +850,10 @@
     "Pantoprazol": {
         "ingredient": "Pantoprazol",
         "use": "Magen"
+    },
+    "Pantoprazol arma": {
+        "ingredient": "Pantoprazol",
+        "use": "Magensäure"
     },
     "Pantozol": {
         "ingredient": "Pantoprazol",
@@ -867,6 +907,10 @@
         "ingredient": "Ramipril",
         "use": "Bluthochdruck"
     },
+    "Ramiplus": {
+        "ingredient": "Ramipril",
+        "use": "Bluthochdruck"
+    },
     "Ramipril": {
         "ingredient": "Ramipril",
         "use": "Blutdruck"
@@ -875,9 +919,9 @@
         "ingredient": "Ramipril/Hydrochlorothiazid",
         "use": "Hypertonie"
     },
-    "Ramipril Ph": {
+    "Ramipril HEXAL": {
         "ingredient": "Ramipril",
-        "use": "Bluthochdruck"
+        "use": "Hypertonie"
     },
     "Ramipril/Amlo": {
         "ingredient": "Ramipril und Amlodipin",
@@ -906,10 +950,6 @@
     "Risperidon": {
         "ingredient": "Risperidon",
         "use": "Stimmung"
-    },
-    "Risperidon Atid": {
-        "ingredient": "Risperidon",
-        "use": "Schlafstörung"
     },
     "Rivotril": {
         "ingredient": "Clonazepam",
@@ -957,11 +997,7 @@
         "ingredient": "Brinzolamid und Brimonidin",
         "use": "grüner Star"
     },
-    "Simva Basics": {
-        "ingredient": "Simvastatin",
-        "use": "Cholesterin"
-    },
-    "Simva sto": {
+    "Simvabeta": {
         "ingredient": "Simvastatin",
         "use": "Cholesterin"
     },
@@ -1018,6 +1054,10 @@
         "use": "adjuvante Therapie bei Brustkrebs"
     },
     "Tamsulosin": {
+        "ingredient": "Tamsulosin",
+        "use": "Prostata"
+    },
+    "Tamsulosin HEXAL": {
         "ingredient": "Tamsulosin",
         "use": "Prostata"
     },

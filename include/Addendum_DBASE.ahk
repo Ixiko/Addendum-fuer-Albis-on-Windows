@@ -350,7 +350,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 		/* main description
 
-				- parameter: pattern is designed to use only RegEx for matching, use function SearchFields() for different search algorithms!
+				- parameter: pattern	: 	is designed to be used only with RegEx for matching, use function SearchFields() for a different search algorithms!
 
 									opt 		:  	ReturnDeleted=true, if you want to make the function return also the records with delete flag.
 													Default is false. No deleted records will be returned.
@@ -411,7 +411,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 			; build regexstring routine
 				this.hits	:= 0                                            	; hits counter
-				rxStr := "i)^\s*", rxPre := 0
+				rxStr := "i)^\**\s*", rxPre := 0
 				For fieldIndex, field in this.fields
 					If pattern.haskey(field.label) {
 

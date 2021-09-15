@@ -17,7 +17,7 @@
 ;		Abhängigkeiten:	siehe includes
 ;
 ;	                    			Addendum für Albis on Windows
-;                        			by Ixiko started in September 2017 - last change 10.07.2021 - this file runs under Lexiko's GNU Licence
+;                        			by Ixiko started in September 2017 - last change 04.09.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; Einstellungen
@@ -214,7 +214,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 
 			startrecord := Lab.seeks.HasKey(QJ) ? Lab.seeks[QJ] : Lab.seeks[Lab.seeks.MaxIndex()]
 			res := labDB._SeekToRecord(startrecord, 1)
-			SciTEOutput("startrecord: " startrecord)
+			;~ SciTEOutput("startrecord: " startrecord)
 
 		}
 	;}
@@ -590,26 +590,22 @@ LaborJournal(LabPat, Anzeige=true) {
 	;}
 
 	; HTML Vorbereitungen 	                              	;{
-		static TDC     	:= "<TD style='text-align:Right; border-right:1px'>"                                                      	;
+		static TDC     	:= "<TD style='text-align:Right; border-right:1px'>"                                                        	;
 		static TDJ      	:= "<TD style='text-align:Justify; border-right:1px'>"
-		static TDL      	:= "<TD style='text-align:Left'>"                                                                                   	; Textausrichtung links
-		static TDL1     	:= "<TD style='text-align:Left; border-left:0px solid'>"                                                  	; Textausrichtung links kein Rand links
-		static TDLR1     	:= "<TD style='text-align:Left; border-right:0px solid; border-left:0px solid'>"                	; Textausrichtung links, kein Rand rechts
-		static TDR      	:= "<TD style='text-align:Right; border-right:0px solid border-left:1px solid'>"                	; Textausrichtung rechts
-		static TDR1     	:= "<TD style='text-align:Right; border-right:0px solid'>"                                              	; Textausrichtung rechts, kein Rand rechts
-		static TDR2a     	:= "<TD style='text-align:Right; border-right:1px'>"
-		static TDR2b     	:= "<TD style='text-align:Right; border-right:1px; border-top:0px;border-bottom:0px'>" 	; Tooltip
-		static TDR3      	:= "<TD class='tooltip' data-tooltip='##' style='text-align:Right'>"                                 	; Param
+		static TDL      	:= "<TD style='text-align:Left'>"                                                                                                 	; Textausrichtung links
+		static TDL1     	:= "<TD style='text-align:Left; border-left:0px solid; '>"                                                                 	; Textausrichtung links kein Rand links
+		static TDLR1     	:= "<TD style='text-align:Left; border-right:0px solid; border-left:0px solid; '>"                               	; Textausrichtung links, kein Rand rechts
+		static TDR      	:= "<TD style='text-align:Right; border-right:0px solid border-left:1px solid; '>"                           	; Textausrichtung rechts
+		static TDR1     	:= "<TD style='text-align:Right; border-right:0px solid; '>"                                                            	; Textausrichtung rechts, kein Rand rechts
+		static TDR2a     	:= "<TD style='text-align:Right; border-right:1px; '>"
+		static TDR2b     	:= "<TD style='text-align:Right; border-right:1px; border-top:0px; border-bottom:0px; '>"             	; Tooltip
+		static TDR3      	:= "<TD class='tooltip' data-tooltip='##' style='text-align:Right; '>"                                              	; Param
 
-		static cCol     	:= ["color: Red", "color: BlueViolet", "color: DarkTeal"]
-		static FWeight	:= ["font-weight: bold", "font-weight: bold", "font-weight: bold; font-family: sans-serif"]
-
-		If !IsObject(cColW) {
-			cColW := []
-			For i, htmlcolor in cCol
-				cColW[i] := ";" cCol[i] ";" FWeight[i]
-		}
-
+		static cColW    	:= ["color:Red; font-weight:bold"
+									, "color:BlueViolet; font-weight:bold"
+									, "color:DarkTeal; font-weight:bold; font-family: sans-serif"
+									, "color:Blue;	font-weight:normal"
+									, "color:FireBrick; font-weight:normal"]
 
 	; HTML Seitendaten
 		htmlheader := FileOpen(A_ScriptDir "\assets\LaborjournalN.html", "r", "UTF-8").Read()
@@ -633,6 +629,7 @@ LaborJournal(LabPat, Anzeige=true) {
 				</tr>
 
 			<div style='overflow-y: scroll;'>
+
 		)
 
 		For lineNr, line in StrSplit(htmlbody, "`n", "`r")
@@ -655,96 +652,99 @@ LaborJournal(LabPat, Anzeige=true) {
 	; ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 		For idx, Datum in sortDatum {
 
-				If (DatumLast <> Datum)
-					UDatum := ConvertDBASEDate(Datum)
+			If (DatumLast <> Datum)
+				UDatum := ConvertDBASEDate(Datum)
 
-			; ―――――――――――――――――――――――――――――――――――――――――――――――――――――
-			; Ausgabe der Werte nach Patient
-			; ―――――――――――――――――――――――――――――――――――――――――――――――――――――
-				For PatID, parameter in LabPat[Datum] {
+		; ―――――――――――――――――――――――――――――――――――――――――――――――――――――
+		; Ausgabe der Werte nach Patient
+		; ―――――――――――――――――――――――――――――――――――――――――――――――――――――
+			For PatID, parameter in LabPat[Datum] {
 
-					If (PatIDLast <> PatID) || (DatumLast <> Datum) {                            	; der Patient wird nur einmal pro Tag angezeigt
-						Patient  	:= PatDB[PatID].NAME ", " PatDB[PatID].VORNAME
-						PatGeburt	:= ConvertDBASEDate(PatDB[PatID].GEBURT)
-						ANFNR  	:= RTrim(parameter["ANFNR"], ", ")
-						PatIDLast	:= PatID
-						trIDf      	:= !trIDf                                                                        	; Pat. hat sich geändert, alternierende Farbänderung
+				If (PatIDLast <> PatID) || (DatumLast <> Datum) {                            	; Patientenname wird nur einmal pro Tag angezeigt
+					Patient  	:= PatDB[PatID].NAME ", " PatDB[PatID].VORNAME
+					PatGeburt	:= ConvertDBASEDate(PatDB[PatID].GEBURT)
+					ANFNR  	:= RTrim(parameter["ANFNR"], ", ")
+					PatIDLast	:= PatID
+					trIDf      	:= !trIDf                                                                        	; alternierende Änderung der Hintergrundfarbe
+				}
+
+			; ―――――――――――――――――――――――――――――――――――――――――――――――――――
+			; Parameter Objekt (PN) - Erstellung der Datenzeilen
+			; ―――――――――――――――――――――――――――――――――――――――――――――――――――
+				For key, PN in parameter {
+
+				  ; ist PN leer, einfach ignorieren
+					If !IsObject(PN)
+						continue
+
+				  ;  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+				  ; Tabelle  ‧  ‧  ‧ 	einzelne Zellen vorbereiten (CSS Styles den Tabellenfelder zuordnen)
+				  ;  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+
+				  ; temporäre Variablen
+					TDPATBUTTONS 	:= (Patient  	? (trIdf ? " class='table-btn1'" : " class='table-btn2'") " onclick='ahk.LabJournal_KarteiKarte(event)'" : "")
+					TDR4	            	:= StrReplace(TDR3, "##", PN.PB)         ; Beschreibung des Laborparameter
+					html_ID              	:= PatID "_" Patient
+
+				  ; Datum                                      Hintergrund=Farbe1        Farbe2
+					TRDAT    	:= "<TR" (UDatum 	? (trIdf ? " id='td1a'" : " id='td2a'") : (trIdf ? " id='td1b'" : " id='td2b'") ) ">"
+					TDRDX		:= UDatum ? TDR2a : TDR2b
+				  ; ID
+					TDPATNR 	:= RTrim(TDLR1, ">") TDPATBUTTONS "; id='" html_ID "'>"
+				  ; Patientenname
+					TDPAT     	:= RTrim(TDLR1, ">")  TDPATBUTTONS "; id='" html_ID "'>"
+				  ; Parameter Name                             PN.CV = CAVE
+					TDR1X     	:= PN.CV = 0 ? TDR4 	: (PN.CV = 1 ? StrReplace(TDR4, "'>"	, cColW.1 "'>")	: StrReplace(TDR4 	, "'>", cColW.2 "'>"))
+				  ; Parameter Wert
+					TDR2X     	:= PN.CV = 0
+									? 	(PN.PL 	> 0 ? StrReplace(TDR, "'>", cColW.5 "'>") : StrReplace(TDR, "'>", cColW.4 "'>"))
+									: 	(PN.CV = 1 ? StrReplace(TDR, "'>", cColW.1 "'>") : StrReplace(TDR, "'>", cColW.2 "'>"))
+				  ; Parameter Normwerte
+					TDR3X     	:= PN.CV = 0 ? TDR1	: (PN.CV = 1 ? StrReplace(TDR1, "'>"	, cColW.1 "'>")	: StrReplace(TDR1	, "'>", cColW.2 "'>"))
+				  ; Parameter Einheit
+					TDL1X     	:= PN.CV = 0 ? TDL1	: (PN.CV = 1 ? StrReplace(TDL1	, "'>"	, cColW.1 "'>")	: StrReplace(TDL1	, "'>", cColW.2 "'>"))
+				  ; Parameter Lage (Hinweiszeichen)
+					TDCX      	:= PN.CV = 0 ? TDC 	: (PN.CV = 1 ? StrReplace(TDC	, "'>"	, cColW.1 "'>")	: StrReplace(TDC 	, "'>", cColW.2 "'>"))
+
+				; Abweichung oberhalb der Norm und PN.CV (CAVE) negativ (CV - wenn wahr dann andere Farbkennzeichnung)
+					If (PN.PL > 250 && !PN.CV) {
+						TDRX      	:= StrReplace(TDR 	, ">"	, " " cColW.3 "'>")
+						TDR1X     	:= StrReplace(TDR1	, ">"	, " " cColW.3 "'>")
+						TDCX      	:= StrReplace(TDC	, ">"	, " " cColW.3 "'>")
+						TDL1X     	:= StrReplace(TDL1	, ">"	, " " cColW.3 "'>")
 					}
 
-				; ―――――――――――――――――――――――――――――――――――――――――――――――――――
-				; Parameter Objekt (PN) - Erstellung der Datenzeilen
-				; ―――――――――――――――――――――――――――――――――――――――――――――――――――
- 					For key, PN in parameter {
-
-					  ; ist PN leer, einfach ignorieren
-						If !IsObject(PN)
-							continue
-
-					  ;  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
-					  ; Tabelle  ‧  ‧  ‧ 	einzelne Zellen vorbereiten (HTML CSS Styles den Tabellenfelder zuordnen)
-					  ;  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
-
-						; temporäre Variablen
-						TDPATBUTTONS 	:= (Patient  	? (trIdf ? " class='table-btn1'" : " class='table-btn2'") " onclick='ahk.LabJournal_KarteiKarte(event)'" : "")
-						TDR4	            	:= StrReplace(TDR3, "##", PN.PB)         ; Laborparameterbeschreibung
-						html_ID              	:= PatID "_" Patient
-
-					  ; Datum                                                     Farbe1        Farbe2
-						TRDAT    	:= "<TR" (UDatum 	? (trIdf ? " id='td1a'" : " id='td2a'") : (trIdf ? " id='td1b'" : " id='td2b'") ) ">"
-						TDRDX		:= UDatum ? TDR2a : TDR2b
-					  ; ID
-						TDPATNR 	:= RTrim(TDLR1, ">") TDPATBUTTONS "; id='" html_ID "'>"
-					  ; Patientenname
-						TDPAT     	:= RTrim(TDLR1, ">")  TDPATBUTTONS "; id='" html_ID "'>"
-					  ; Parameter Name                             PN.CV = CAVE
-						TDR1X     	:= PN.CV = 0 ? TDR4 	: (PN.CV = 1 ? StrReplace(TDR4, "'>", cColW.1 "'>") : StrReplace(TDR4 	, "'>", cColW.2 "'>"))
-					  ; Parameter Wert
-						TDR2X     	:= PN.CV = 0 ? TDR 	: (PN.CV = 1 ? StrReplace(TDR 	, "'>", cColW.1 "'>") : StrReplace(TDR  	, "'>", cColW.2 "'>"))
-					  ; Parameter Normwerte
-						TDR3X     	:= PN.CV = 0 ? TDR1	: (PN.CV = 1 ? StrReplace(TDR1, "'>", cColW.1 "'>") : StrReplace(TDR1	, "'>", cColW.2 "'>"))
-					  ; Parameter Einheit
-						TDL1X     	:= PN.CV = 0 ? TDL1	: (PN.CV = 1 ? StrReplace(TDL1	, "'>", cColW.1 "'>") : StrReplace(TDL1	, "'>", cColW.2 "'>"))
-					  ; Parameter Lage (Hinweiszeichen)
-						TDCX      	:= PN.CV = 0 ? TDC 	: (PN.CV = 1 ? StrReplace(TDC	, "'>", cColW.1 "'>") : StrReplace(TDC 	, "'>", cColW.2 "'>"))
-
-					; Abweichung oberhalb der Norm und PN.CV (CAVE) negativ (CV - wenn wahr dann andere Farbkennzeichnung)
-						If (PN.PL > 250 && !PN.CV) {
-							TDRX      	:= StrReplace(TDR 	, ">"	, " " cColW.3 "'>")
-							TDR1X     	:= StrReplace(TDR1	, ">"	, " " cColW.3 "'>")
-							TDCX      	:= StrReplace(TDC	, ">"	, " " cColW.3 "'>")
-							TDL1X     	:= StrReplace(TDL1	, ">"	, " " cColW.3 "'>")
-						}
-
-						If PN.PA {
-							RegExMatch(PN.PV, "(?<V>[\<\>])*(?<SU>[\d.]+)\-*(?<SO>[\d.]+)*", P)
-							PSM  	:= PSO ? PSO : PSU
-							PA     	:= RegExReplace(Round(PN.PA * (PSM/100), 1), "\.0+$")
-						}
-
-						PE         	:= Trim(PN.PE)	? PN.PE : "" ;" - - - - -"
-						tbDatum	:= UDatum ? SubStr(UDatum, 1, 6) : ""
-
-						html .= "`t" TRDAT "`n"
-								.  	"`t`t "	TDRDX  	. 	tbDatum                             	"</TD>`n"	; Abnahmedatum                	[Datum]
-								. 	"`t`t "	TDPATNR	. 	(PatID ? "[" PatID "]" : "")         	"</TD>`n"	; Patientennummer                [Patient]
-								. 	"`t`t "	TDPAT     	.	Patient             	                  	"</TD>`n"	; Patientenname                    [Patient]
-								. 	"`t`t "	TDPAT     	.	PatGeburt        	                  	"</TD>`n"	; Patientengeburtstag           	[Patient]
-								. 	"`t`t "	TDRDX     	.	ANFNR          	                  	"</TD>`n"	; Anforderungsnummer       	[Patient]
-								. 	"`t`t "	TDR1X     	.	PN.PN                                 	"</TD>`n"	; Parameter Name              	[Param]
-								. 	"`t`t "	TDR2X    	.	PN.PW                               	"</TD>`n"	; Parameter Wert               	[Wert]
-								.	"`t`t "	TDR3X    	.	PN.PV			                     	"</TD>`n"	; Parameter Normwerte        	[Normalwerte]
-								.	"`t`t "	TDL1X     	.	PE                                       	"</TD>`n"	; Parameter Einheit                [      ]
-								. 	"`t`t "	TDCX    	.	(PN.PL	? PN.PL "x" 	: "")     	"</TD>`n"	; Parameter Lage                   [+/-]
-								. 	"`t`t "	TDR       	.	(PA   	? PA " " PE  	: "") 		"</TD>`n"	; Parameter Abweichung     	[⍉ Abw.]
-								. 	"`t</TR>`n`n"
-
-						PE := PA := UDatum := PatID := Patient := PatGeburt := ANFNR := ""
-
+				; Parameterabweichung
+					If PN.PA {
+						RegExMatch(PN.PV, "(?<V>[\<\>])*(?<SU>[\d.]+)\-*(?<SO>[\d.]+)*", P)
+						PSM  	:= PSO ? PSO : PSU
+						PA     	:= RegExReplace(Round(PN.PA * (PSM/100), 1), "\.0+$")
 					}
+
+					PE         	:= Trim(PN.PE)	? PN.PE : "" ;" - - - - -"
+					tbDatum	:= UDatum ? SubStr(UDatum, 1, 6) : ""
+
+					html .= "`t"   	TRDAT                                                                  "`n"
+							.  	"`t`t "	TDRDX  	. 	tbDatum                             	"</TD>`n"	; Abnahmedatum                	[Datum]
+							. 	"`t`t "	TDPATNR	. 	(PatID ? "[" PatID "]" : "")         	"</TD>`n"	; Patientennummer                [Patient]
+							. 	"`t`t "	TDPAT     	.	Patient             	                  	"</TD>`n"	; Patientenname                    [Patient]
+							. 	"`t`t "	TDPAT     	.	PatGeburt        	                  	"</TD>`n"	; Patientengeburtstag           	[Patient]
+							. 	"`t`t "	TDRDX     	.	ANFNR          	                  	"</TD>`n"	; Anforderungsnummer       	[Patient]
+							. 	"`t`t "	TDR2X     	.	PN.PN                                 	"</TD>`n"	; Parameter Name              	[Param]
+							. 	"`t`t "	TDR2X    	.	PN.PW                               	"</TD>`n"	; Parameter Wert               	[Wert]
+							.	"`t`t "	TDR3X    	.	PN.PV			                     	"</TD>`n"	; Parameter Normwerte        	[Normalwerte]
+							.	"`t`t "	TDL1X     	.	PE                                       	"</TD>`n"	; Parameter Einheit                [      ]
+							. 	"`t`t "	TDCX    	.	(PN.PL	? PN.PL "x" 	: "")     	"</TD>`n"	; Parameter Lage                   [+/-]
+							. 	"`t`t "	TDR       	.	(PA   	? PA " " PE  	: "") 		"</TD>`n"	; Parameter Abweichung     	[⍉ Abw.]
+							. 	"`t</TR>`n`n"
+
+					PE := PA := UDatum := PatID := Patient := PatGeburt := ANFNR := ""
 
 				}
 
-				DatumLast := Datum
+			}
+
+			DatumLast := Datum
 
 		}
 
@@ -856,6 +856,15 @@ LabJournal_Close(event) {
 
 LabJournal_Grenzen(event) {
 AlbisLaborwertGrenzen(adm.LabDBPath)
+}
+
+Menu_LabJournal(event) {                                                                  	; im Moment nur Reload
+
+	global hLJ
+
+	SaveGuiPos(hLJ)
+	Reload
+
 }
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -11,7 +11,7 @@
 ;                                           	|                                          	|                                          	|                                          	|
 ; ▹PatDb                                 	PatDir                                    	class admDB
 
-; ▹ReadGVUListe                   	IstChronischKrank           	    	InChronicList                  	    	IstGeriatrischerPatient
+; ▹ReadGVUListe                   	IstChronischKrank           	    	IstGeriatrischerPatient
 
 ; ▹class AlbisDb						DBASEStructs                       		GetDBFData
 ; 	 Leistungskomplexe             	ReadPatientDBF			         		ReadDBASEIndex                     	Convert_IfapDB_Wirkstoffe
@@ -103,7 +103,7 @@ class admDB                                                                 	{  
 		return PatData
 		}
 
-	; speichert von Daten
+	; speichert Daten
 		SavePatDB(PatData, PatDBPath:="" ) {
 
 			If !RegExMatch(PatDBPath, "\.json$")
@@ -174,28 +174,30 @@ class admDB                                                                 	{  
 	; Patienten ID Suche per String-Similarity Funktion
 		StringSimilarityID(name1, name2, diffmin=0.09) {
 
-			PatIDArr	:= Object()
-			minDiff 	:= 100
-			NVname 	:= RegExReplace(name1 . name2, "[\s]")
-			VNname 	:= RegExReplace(name2 . name1, "[\s]")
+			; oPat:	muss im aufrufenden Skript global gemacht sein
 
-			For PatID, Pat in oPat 		{
+				PatIDArr	:= Object()
+				minDiff 	:= 100
+				NVname 	:= RegExReplace(name1 . name2, "[\s]")
+				VNname 	:= RegExReplace(name2 . name1, "[\s]")
 
-				If InStr(PatID, "MaxPat")
-					break
+				For PatID, Pat in oPat 		{
 
-				DbName	:= RegExReplace(Pat.Nn Pat.Vn, "[\s]")
-				DiffA     	:= StrDiff(DBName, NVname)
-				DiffB     	:= StrDiff(DbName, VNname)
-				Diff        	:= DiffA <= DiffB ? DiffA : DiffB
+					If InStr(PatID, "MaxPat")
+						break
 
-				If (Diff <= diffmin)
-					PatIDArr.Push(PatID)
+					DbName	:= RegExReplace(Pat.Nn Pat.Vn, "[\s]")
+					DiffA     	:= StrDiff(DBName, NVname)
+					DiffB     	:= StrDiff(DbName, VNname)
+					Diff        	:= DiffA <= DiffB ? DiffA : DiffB
 
-				If (Diff < minDiff)
-					minDiff	:= Diff, bestDiff := PatID, bestNn := Pat.Nn, bestVn := Pat.Vn, bestGd := Pat.Gd
+					If (Diff <= diffmin)
+						PatIDArr.Push(PatID)
 
-			}
+					If (Diff < minDiff)
+						minDiff	:= Diff, bestDiff := PatID, bestNn := Pat.Nn, bestVn := Pat.Vn, bestGd := Pat.Gd
+
+				}
 
 		return PatIDArr
 		}
@@ -306,154 +308,6 @@ IstChronischKrank(PatID)    	{
 			return true
 
 return false
-}
-
-InChronicList() {                                                                                	;-- Neuaufnahme in Chroniker Liste
-
-		GruppenName := "Chroniker"
-
-		PatID := AlbisAktuellePatID()
-
-		For key, ChronikerID in Addendum.Chroniker
-			If (PatID = ChronikerID)
-				return
-
-	; Nutzer abfragen ob Pat. aufgenommen werden soll
-		hinweis := "Pat: " oPat[PatID].Nn ", " oPat[PatID].Vn ", geb. am: " oPc[PatID].Gd "`n"
-		hinweis .= "ist nicht als Chroniker vermerkt.`nMöchten Sie automatisch alle Eintragungen`ninnerhalb von Albis vornehmen lassen?"
-
-		MsgBox, 0x1024, Addendum für Albis on Windows, % hinweis, 10
-		IfMsgBox, Yes
-		If (PatID = AlbisAktuellePatID())		{
-				ChronCb	:= false
-				Indikation	:= false
-				PatGruppe:= false
-
-			; Ziffer der Liste hinzufügen und in die Datei speichern
-				Addendum.Chroniker.Push(PatID)
-				FileAppend, % PatID "`n", % Addendum.DBPath "\DB_Chroniker.txt"
-
-			; Patientengruppierung vornehmen  ;{
-
-				failed := false
-
-				Albismenu("34362", "Patientengruppen für ahk_class #32770")
-				ControlGet, result, List, , % "SysListView321", % "Patientengruppen für ahk_class #32770"
-
-				If !InStr(result, GruppenName) {
-
-							PraxTT("Patient ist nicht der Chronikergruppe zugeordnet", "3 2")
-
-						; click auf NEU
-							VerifiedClick("Button2", "Patientengruppen für ahk_class #32770")
-							Sleep, 300
-							WinWait, % "Patientengruppen ahk_class #32770",, 2
-
-						; Click hat funktioniert
-							If WinExist("Patientengruppen ahk_class #32770") {
-
-								; vorhandene Gruppeneinträge auslesen und Position der Chronikergruppe finden
-									hwnd := WinExist("Patientengruppen ahk_class #32770")
-									ControlGet, result, List, , % "Listbox1", % "ahk_id " hwnd
-
-									Loop, Parse, result, `n
-										If InStr(A_LoopField, GruppenName) {
-											ListboxRow := A_Index
-											break
-										}
-
-									If (ListBoxRow > 0) 	{
-
-										; den Listboxeintrag mit der Chronikergruppe auswählen
-											VerifiedChoose("Listbox1", "ahk_id " hwnd, ListBoxRow)
-											VerifiedClick("Button1",  "ahk_id " hwnd)
-
-											PatGruppe := true
-
-									} else
-											failed := true
-
-							} else
-    								failed := true
-
-				}
-
-			; Fenster 'Patientengruppe für' schließen
-				If WinExist("Patientengruppen für ahk_class #32770") {
-
-						If failed {
-
-						; drückt auf Abbrechen
-							VerifiedClick("Button7", "Patientengruppen für ahk_class #32770", "", "", true)
-							Sleep 200
-							If WinExist("Patientengruppen für ahk_class #32770")
-								WinClose, % "Patientengruppen für ahk_class #32770"
-
-						} else {
-
-						; OK - Button
-							VerifiedClick("Button1", "Patientengruppen für ahk_class #32770", "", "", true)
-
-						}
-
-				}
-
-			;}
-
-			; Chroniker Häkchen setzen und bei Ausnahmeindikation (weitere Informationen) diese Ziffer hinzufügen ;{
-
-				failed        	:= false
-				hPersonalien := Albismenu("32774", "Daten von ahk_class #32770") ; Menu 'Personalien'
-
-				If hPersonalien {
-
-						If VerifiedCheck("Chroniker"                      	, "ahk_id " hPersonalien)
-							ChronCb := true
-
-					; weitere Information für nächsten Dialog drücken
-						  VerifiedClick("Weitere In&formationen..."	, "ahk_id " hPersonalien)
-						WinWait, % "ahk_class #32770", % "Adresse des", 2
-
-						If (hInformationen := WinExist("ahk_class #32770 ahk_exe albis", "Ausnahmeindikation")) {
-
-							; Feldinhalt wird ausgelesen, bei fehlender Eintragung wird die Ziffer hinzugefügt
-								ControlGetText, ctext, Edit14, % "ahk_id " hInformationen
-								If !InStr(ctext, "03220") {
-
-										ctext := LTrim(ctext "-03220", "-")
-
-										If VerifiedSetText("Edit14", cText, "ahk_class #32770", 200, "Ausnahmeindikation")
-											indikation := true
-
-										ControlFocus	, 					  % "Edit14", % "ahk_id " hInformationen
-										ControlSend	, % "{Enter}"	, % "Edit14", % "ahk_id " hInformationen
-
-								}
-
-							; Fenster schliessen falls noch geöffnet
-								If WinExist("ahk_class #32770", "Ausnahmeindikation") {
-									ControlClick, Ok	, % "ahk_id " hInformationen
-									WinWaitClose		, % "ahk_id " hInformationen,, 2
-								}
-
-						}
-
-						; Fenster "Daten von " schliessen
-							If WinExist("Daten von", "Anrede")
-								VerifiedClick("Button30", "ahk_id " hPersonalien)
-				}
-
-			;}
-
-				processed := "1. Chronikergruppe     : " (PatGruppe 	? "hinzugefügt" 	: "nicht hinzugefügt") "`n"
-				processed .= "2. Chronikerhäkchen   : " (ChronCb 	? "gesetzt"     	: "nicht gesetzt") "`n"
-				processed .= "2. Ausnahmeindikation: " (indikation 	? "Lk eingefügt"	: "Lk nicht eingefügt") "`n"
-				PraxTT("Eingruppierung abgeschlossen.`n" processed, "6 3")
-
-		}
-
-	; PraxTT("Pat. konnte keiner Gruppe zugeordnet werden.`nSetze Funktion mit anderen Eintragungen fort!", "3 3")
-	;PraxTT("Pat. konnte keiner Gruppe zugeordnet werden.`nSetze Funktion mit anderen Eintragungen fort!", "3 3")
 }
 
 IstGeriatrischerPatient(PatID)	{

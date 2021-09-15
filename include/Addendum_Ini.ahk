@@ -2,7 +2,7 @@
 ;                                      	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                     liest Informationen aus der Addendum.ini ein für das globale Objekt Addendum
 ;                                                  	!diese Bibliothek enthält Funktionen für Einstellungen des Addendum Hauptskriptes!
-;                                  	   by Ixiko started in September 2017 - last change 18.06.2021 - this file runs under Lexiko's GNU Licence
+;                                  	   by Ixiko started in September 2017 - last change 09.09.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 return
@@ -17,6 +17,7 @@ admObjekte() {                                                                  
 		Addendum.Hooks                  	:= Object()       	; enthält Adressen der Callbacks der Hookprozeduren und anderes
 		Addendum.Kosten                  	:= Object()        	; hinterlegte Preise für Hotstringausgaben bei Privatabrechnungen
 		Addendum.Labor	    	        	:= Object()			; Laborabruf und andere Daten für Laborprozesse
+		Addendum.Laborjournal        	:= Object()			; Laborjournal AutoAnzeige
 		Addendum.LAN	                    	:= Object()			; LAN Kommunikationseinstellungen
 		Addendum.LAN.Clients          	:= Object()          	; LAN Netzwerkgeräte Einstellungen
 		Addendum.Module                  	:= Object()        	; Addendum Skriptmodule
@@ -279,6 +280,7 @@ admPIDHandles() {                                                               
 
 admInfoWindowSettings() {                                                                      	;-- AddendumGui/Infofenster
 
+	; Position des Addendumfenster in Albis
 		tmp1 := IniReadExt(compname, "InfoFenster_Position", "y2 w400 h340")
 		RegExMatch(tmp1, "y\s*(\d+)\s*w\s*(\d+)\s*h\s*(\d+)", match)
 
@@ -291,7 +293,7 @@ admInfoWindowSettings() {                                                       
 									,	"ReIndex"            	: false
 									,	"rowprcs"           	: 0
 									,	"Init"                    	: false
-									,	"AbrHelfer"        	: IniReadExt(compname, "Infofenster_Abrechnungshelfer"                	, "Ja")                    		; Abrechnungshelfer anzeigen
+									,	"AbrHelfer"        	: IniReadExt(compname, "Infofenster_Abrechnungshelfer"                	, "Ja")    ; Abrechnungshelfer anzeigen
 									,	"WZKommentar"   	: IniReadExt(compname, "Infofenster_AutoWZ_Kommentar"              	, "Ja")
 									,	"AutoWZTrigger" 	: IniReadExt(compname, "Infofenster_AutoWZ_Trigger"                     	, DefaultTrigger)
 									,	"ConfirmImport"   	: IniReadExt(compname, "Infofenster_Import_Einzelbestaetigung"      	, "Ja")
@@ -384,7 +386,7 @@ admTools() {                                                                    
 admLaborDaten() {                                                                                	;-- Laborabruf, Verarbeitung Laborwerte
 
 	; Laborabruf Prozeßschlüssel anlegen
-		Addendum.Labor.AbrufStatus	:= false
+		Addendum.Labor.AbrufStatus 	:= false
 		Addendum.Labor.AbrufDaten	:= false
 		Addendum.Labor.AbrufVoll    	:= false
 
@@ -448,6 +450,17 @@ admLaborDaten() {                                                               
 
 }
 
+admLaborJournal() {                                                                              	;-- geplantes Anzeigen des Laborjournal
+
+	Addendum.Laborjournal.SheduledView 	:= IniReadExt(compname, "Laborjournal_AutoAnzeige"   	,  "Nein"            	)
+	Addendum.Laborjournal.StartTime     	:= IniReadExt(compname, "Laborjournal_Startzeit"           	,  "---"                	)
+
+	For key, val in Addendum.Laborjournal
+		If (val = "ERROR" || val = "---")
+			Addendum.Laborjournal[key] := ""
+
+}
+
 admLanProperties() {                                                                              	;-- Netzwerkeinstellungen / Client PC Namen / IP-Adressen
 
 	; prüft auf den korrekt gesetzten Computernamen
@@ -490,12 +503,6 @@ admMailAndHolidays() {                                                          
 	Loop
 		If !InStr((tmp :=  IniReadExt("Allgemeines", "EMail" A_Index)), "ERROR")
 			Addendum.Praxis.Email.Push(tmp)
-		else
-			break
-
-	Loop
-		If !InStr((tmp :=  IniReadExt("Allgemeines", "Urlaub" A_Index)), "ERROR")
-			Addendum.Praxis.Urlaub.Push(tmp)
 		else
 			break
 
@@ -593,17 +600,23 @@ admPraxisDaten() {                                                              
 	Addendum.Praxis.Strasse           	:= IniReadExt("Allgemeines", "Strasse")
 	Addendum.Praxis.PLZ                	:= IniReadExt("Allgemeines", "PLZ")
 	Addendum.Praxis.Ort                	:= IniReadExt("Allgemeines", "Ort")
-	Addendum.Praxis.KVStempel         	:= IniReadExt("Allgemeines", "KVStempel")            ; genutzt für Textersetzung
-	Addendum.Praxis.MailStempel      	:= IniReadExt("Allgemeines", "MailStempel")          ; genutzt für Textersetzung
-	Addendum.Praxis.Sprechstunde    	:= Sprechstunde(IniReadExt("Allgemeines", "Sprechstunde"))
+	Addendum.Praxis.KVStempel         	:= IniReadExt("Allgemeines", "KVStempel")                            	; genutzt für Textersetzung
+	Addendum.Praxis.MailStempel      	:= IniReadExt("Allgemeines", "MailStempel")                           	; genutzt für Textersetzung
+	Addendum.Praxis.Sprechstunde    	:= Sprechstunde(IniReadExt("Allgemeines", "Sprechstunde")) 	; wandelt den Ini-String um
 	RegExMatch(Addendum.Praxis.Sprechstunde[A_DDDD], "(\d+)\:(\d+)$", Uhr)
 	Addendum.Praxis.TagesEnde     	:= ((Uhr1*3600) + (Uhr2*60)) * 1000	; ms von 0 Uhr bis zum Ende der Sprechstunde - für Shutdown Timer
 
+  ; freie Tage und Praxisurlaub werden aus der ini gelesen
+	Urlaub	:= IniReadExt("Allgemeines", "Urlaub")
+	If (StrLen(Urlaub) > 0 && Urlaub <> "ERROR")
+		Addendum.Praxis.Urlaub := vacation.ConvertDateString(Urlaub)
+
+  ; Praxisärzte einlesen (!noch ohne Funktion!)
 	Addendum.Praxis.Arzt := Array()
 	Loop {
 
-		Arzt := IniReadExt("Allgemeines", "Arzt" A_Index "Name")
-		Fach := IniReadExt("Allgemeines", "Arzt" A_Index "Abrechnung")
+		Arzt	:= IniReadExt("Allgemeines", "Arzt" A_Index "Name")
+		Fach	:= IniReadExt("Allgemeines", "Arzt" A_Index "Abrechnung")
 
 		If InStr(Arzt, "Error") || (Arzt = "") {
 			Arzt := Addendum.Praxis.Name
@@ -626,6 +639,99 @@ admPraxisDaten() {                                                              
 	If (StandardArzt > 0)
 		Addendum.Praxis.StandardArzt := StandardArzt
 
+}
+
+class vacation {                     ;-- eine Funktionsklasse zur Abfrage des Praxisurlaub
+
+	; benötigt Addendum.Praxis.Urlaub als globales Objekt
+	; vollständiger Funktionsumfang ist noch nicht programmiert
+	; bisherige Funktionen:    1. 	Ini-String mit den Daten wird in ein Array überführt, die Urlaubstage können mit relativ freier Schreibweise in der Ini-Datei eingetragen sein
+	;                                       	einzelne Tage    	:  	in der Form 01.01.2022 auch als 1.1.22
+	;                                           Datumsbereiche	:	05.06.2022-06.06.2022 oder 05.06.-06.06.2022 oder 5.-6.6.22
+	;                                        	zwingend zur Unterscheidung sind die Punkte und das Minuszeichen
+	;
+	; letzte Änderung: 08.09.2021
+
+	ConvertDateString(holidays:="") 	{                                                   	;-- Ini-String
+
+		  ; Urlaubszeiten mit einem Datum in der Vergangenheit werden aussortiert. Die Daten werden umgewandelt.
+			rxUrlaub := "((?<StartDD>\d{1,2})\.(?<StartMM>\d{1,2})*(\.*(?<StartYY>\d{2,4})*))"
+						.   "-*((?<EndDD>\d{1,2})*\.*(?<EndMM>\d{1,2})*\.*(?<EndYY>\d{2,4})*)"	; 12.08.-19.08.2020 oder nur 12.08.-19.08.
+			spos := 1, AToday := A_YYYY . A_MM . A_DD, AYearT := SubStr(A_YYYY, 1, 2)
+			vacations := Array()
+
+		  ; Abbruch wenn, nichts oder ein falsche String übergeben wurde
+			If !holidays || !RegExMatch(holidays, rxUrlaub)
+				return
+
+		 ; Datum für Datum extrahieren
+			while (spos := RegExMatch(holidays, rxUrlaub, PX, spos)) {
+
+			  ; Stringposition weiterrücken
+				spos  	+= StrLen(PX)
+
+			 ; eine zweistellige Jahreszahl auf eine vierstellige Zahl ändern
+				PXStartYY	:= StrLen(PXStartYY) = 2 	? AYearT . PXStartYY 	: PXStartYY
+				PXEndYY	:= StrLen(PXEndYY) = 2	? AYearT . PXEndYY 	: PXEndYY
+
+			  ; Monate und Tage 2-stellig auffüllen
+				PXStartMM	:= SubStr("00" PXStartMM, -1)
+				PXStartDD 	:= SubStr("00" PXStartDD, -1)
+				PXEndMM   	:= SubStr("00" PXEndMM, -1)
+				PXEndDD   	:= SubStr("00" PXEndDD, -1)
+
+			  ; die Formatierung wird auf YYYYMMDD geändert
+				AYearS	:= (!PXStartYY && !PXEndYY) ? A_YYYY : PXStartYY ? PXStartYY : PXEndYY ? PXEndYY   ; Jahr
+				ADayS	:= AYearS . PXStartMM . PXStartDD
+				AYearE	:= (!PXStartYY && !PXEndYY) ? A_YYYY : PXStartYY ? PXStartYY : PXEndYY ? PXEndYY   ; Jahr
+				ADayE	:= (PXEndMM && PXEndDD) ? AYearE . PXEndMM . PXEndDD : ""
+
+			  ; ein Datumsbereich wird anders hinterlegt, als ein einzelner freier Tag
+				If (ADayS && ADayE && !this.PeriodExists(ADayS, ADayE))
+					vacations.Push({"IsPeriod":true	, "firstday":ADayS, "lastday":ADayE})
+				else If (ADayS && !ADayE && !this.PeriodExists(ADayS))
+					vacations.Push({"IsPeriod":false	, "day":ADayS})
+
+				;~ SciTEOutput("(" A_LineNumber "): " "(" PX ") " ADayS "; " ADayE)
+			}
+
+			;~ SciTEOutput("(" A_LineNumber "): Anzahl eingetragener Urlaube: " Addendum.Praxis.Urlaub.Count())
+
+	return vacations
+	}
+
+	PeriodExists(firstday, lastday:="")	{                                                   	;-- Datum oder Datumsbereich suchen
+
+		If !firstday && !lastday
+			return false
+
+		For hdNR, holidays in Addendum.Praxis.Urlaub
+			If (firstday && lastDate) {
+				If (firstday = holidays.firstday && lastday = holidays.lastday)
+					return hdNR
+			}
+			else {
+				If (!holiday.IsPeriod && firstday = holidays.day)
+					return hdNR
+			}
+
+	return false
+	}
+
+	DateIsHoliday(datestring)           	{                                                   	;-- ermittelt ob ein übergebenes Datum innerhalb eines Praxisurlaub liegt
+
+	  ; automatisch 4-stelliges Jahresformat (funktioniert bis 2099)
+		If RegExMatch(datestring, "(?<D>\d{1,2})\.(?<M>\d{1,2})\.(?<Y>(\d{2}|\d{4}))", t)
+			datestring := SubStr(SubStr(A_YYYY, 1, 2) . tY, -2) . tM . tD
+
+		For hdNR, holidays in Addendum.Praxis.Urlaub
+			If holidays.IsPeriod && (datestring >= holidays.firstday && datestring <= holidays.lastday)
+				return hdNR
+			else if (!holidays.IsPeriod && datestring = holidays.Day)
+				return hdNR
+
+	return false
+	}
 
 }
 
@@ -681,10 +787,10 @@ admSonstiges() {                                                                
 
 	; Behördengebühren werden über die ini Datei verwaltet - besser anpassbar bei Änderung
 		Behoerdengebuehr := {"JVEG":"25.00", "DRV1":"28.20", "DRV2": "35.00", "BAfA":"32.50"}
-		Addendum.Abrechnung.JVEG 	:= IniReadExt(Addendum, "JVEG")
-		Addendum.Abrechnung.DRV1  	:= IniReadExt(Addendum, "DRV1")
-		Addendum.Abrechnung.DRV2  	:= IniReadExt(Addendum, "DRV2")
-		Addendum.Abrechnung.BAfA  	:= IniReadExt(Addendum, "BAfA")
+		Addendum.Abrechnung.JVEG 	:= IniReadExt("Addendum", "JVEG")
+		Addendum.Abrechnung.DRV1  	:= IniReadExt("Addendum", "DRV1")
+		Addendum.Abrechnung.DRV2  	:= IniReadExt("Addendum", "DRV2")
+		Addendum.Abrechnung.BAfA  	:= IniReadExt("Addendum", "BAfA")
 		For Behoerde, Gebuehr in Addendum.Abrechnung
 			If !RegExMatch(Gebuehr, "\d+\.\d+")
 				Addendum.Abrechnung[Behoerde] := Behoerdengebuehr[Behoerde]
@@ -772,25 +878,25 @@ admThreads() {                                                                  
 		If Addendum.ToolbarThread {
 
 			threadFilePath := Addendum.Dir "\Module\Addendum\threads\AddendumToolbar.ahk"
-			If FileExist(threadFilePath) {                                                                                                                	; Skriptdatei vorhanden:
+			If FileExist(threadFilePath) {                                                                                                           	; Skriptdatei vorhanden:
 
-				Addendum.Threads.Toolbar  	:= FileOpen(threadFilePath,"r").Read()                                                    ; Skriptdatei laden
-				If !Addendum.Thread["Toolbar"].ahkReady() {                                                                                  	; Toolbar-Thread ist nicht gestartet?
-					If !(Addendum.Thread["Toolbar"] := AHKThread(Addendum.Threads.Toolbar)) {                            	; Toolbar-Thread starten, wenn nicht startbar dann
-						Addendum.ToolbarThread := false                                                                                        	; das erneute Aufrufen des Threads unterbinden
-						PraxTT("Die Addendum Toolbar konnte nicht gestartet werden.", "3 3")			    			    	    	; Information an den Nutzer
-						throw Exception("Der Toolbar-Thread konnte nicht gestartet werden.",	-1, threadFilePath)           	; Fehlerausgabe
+				Addendum.Threads.Toolbar  	:= FileOpen(threadFilePath,"r").Read()                                       	; Skriptdatei laden
+				If !Addendum.Thread["Toolbar"].ahkReady() {                                                                            	; Toolbar-Thread ist nicht gestartet?
+					If !(Addendum.Thread["Toolbar"] := AHKThread(Addendum.Threads.Toolbar)) {                     	; Toolbar-Thread starten
+						Addendum.ToolbarThread := false                                                                                 	; erneutes Aufrufen des Threads unterbinden
+						PraxTT("Die Addendum Toolbar konnte nicht gestartet werden.", "3 3")			    			    	; Information an den Nutzer
+						throw Exception("Der Toolbar-Thread konnte nicht gestartet werden.",	-1, threadFilePath)    	; Fehlerausgabe
 					}
 				}
 
-			} else {                                                                                                                                                	; Skriptdatei nicht vorhanden:
+			} else {                                                                                                                                       	; Skriptdatei nicht vorhanden:
 
-				Addendum.ToolbarThread := false                                                                                                	; das erneute Aufrufen des Threads unterbinden
+				Addendum.ToolbarThread := false                                                                                        	; erneutes Aufrufen des Threads unterbinden
 				failpath := StrReplace(threadFilePath, Addendum.Dir)
 				failpath	:= StrReplace(failPath, "\AddendumToolbar.ahk")
-				PraxTT(	"Die Datei: AddendumToolbar.ahk ist nicht vorhanden.`n"                                                    	; Information zum Fehler für den Nutzer
+				PraxTT(	"Die Datei: AddendumToolbar.ahk ist nicht vorhanden.`n"                                            	; Information zum Fehler für den Nutzer
 						. 	"Verzeichnis: " failpath, "3 3")
-				throw Exception("Die Datei: AddendumToolbar.ahk ist nicht vorhanden.",	-1, failPath)                        	; Fehlerausgabe
+				throw Exception("Die Datei: AddendumToolbar.ahk ist nicht vorhanden.",	-1, failPath)                  	; Fehlerausgabe
 
 			}
 
@@ -798,11 +904,11 @@ admThreads() {                                                                  
 
 		If !Addendum.ToolbarThread {
 
-			If Addendum.Thread["Toolbar"].ahkReady() {                                                                                    	; prüft ob der Thread noch läuft
+			If Addendum.Thread["Toolbar"].ahkReady() {                                                                                	; prüft ob der Thread noch läuft
 				Addendum.Thread["Toolbar"].ahkTerminate()
 				Addendum.Thread["Toolbar"] := ""
 			}
-			If (StrLen(Addendum.Threads.Toolbar) > 0)                                                                                      	; Variable die den Skriptcode enthält leeren
+			If (StrLen(Addendum.Threads.Toolbar) > 0)                                                                                 	; Variable die den Skriptcode enthält leeren
 				Addendum.Threads.Toolbar := ""
 
 		}

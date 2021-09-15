@@ -1,11 +1,10 @@
-﻿;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
-;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 22.03.2021 - this file runs under Lexiko's GNU Licence
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                          	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
+;                          	by Ixiko started in September 2017 - last change 22.03.2021 - this file runs under Lexiko's GNU Licence
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ;	2 Funktionen für die automatische Erkennung einer eingelegten DICOM Daten CD
-WM_DEVICECHANGE( wParam, lParam) {                                                        	;--erkennt ob ein einlegen einer CD statt gefunden hat und gibt auch das Laufwerk aus - global drv
+WM_DEVICECHANGE(wParam, lParam) {                                              	;-- erkennt das Einlegen einer CD
 
 	 /*
 		When wParam is DBT_DEVICEARRIVAL lParam will be a pointer to a structure identifying the
@@ -43,7 +42,7 @@ WM_DEVICECHANGE( wParam, lParam) {                                              
 Return TRUE
 }
 
-DriveData(Drv) {                                                                                          		;--was wurde eingelegt. Identifiziert das Laufwerk und die Art des Mediums
+DriveData(Drv) {                                                                               		;-- identifiziert das Laufwerk und die Art des Mediums
 
 	; letzte Änderung 22.03.2021 - Skriptstil modernisiert
 
@@ -90,17 +89,17 @@ DriveData(Drv) {                                                                
 	; Dateizugriff nicht erhalten
 		if (status <> "stopped") {
 			PraxTT(DriveNotificationTitle "`nZugriff auf den CD Inhalt nicht möglich`n", "3 3")
-			return 0
+			return ""
 		}
 
 	; schaut nach ob auf dem neu angemeldeten Medium die Datei DICOMDIR enthalten ist
 		If !FileExist(dicomfile) {
 			PraxTT("Abbruch`nDie eingelegte CD enthält keine DICOM Daten.", "2 1")
-			return 0
+			return ""
 		}
 
 	; Konvertierung starten
-		PraxTT("Konvertierung`nKonvertiere die DICOMDIR-Datei nach " A_Temp, "2 10"
+		PraxTT("Konvertierung`nKonvertiere die DICOMDIR-Datei nach " A_Temp, "2 10")
 		RunWait, % Addendum.Dir "\lib\dcm2xml.exe " q cmdline q , , Min
 
 	; Abbruch des Programmes wenn das Erstellen der DICOM.txt im Temp-Ordner fehlschlägt
@@ -109,7 +108,7 @@ DriveData(Drv) {                                                                
 					. 	"im " A_Temp "-Ordner ist fehlgeschlagen.`n"
 					. 	"Die automatische Umwandlungsroutine für DICOM-CD Inhalte`n"
 					. 	"wird nicht weiter ausgeführt.", "2 1")
-			return 0
+			return ""
         }
 		PraxTT("Konvertierung`nKonvertierung nach " A_Temp " beendet.", "2 2")
 
@@ -121,7 +120,7 @@ DriveData(Drv) {                                                                
 			}
 
 	; Einstellung für RegRead je nachdem welche AutohotkeyExe gewählt wurde 32bit oder 64bit, sonst kann die Registry nicht gelesen werden
-		SetRegView, % (A_PtrSize = 8 ? 64 : 32
+		SetRegView, % (A_PtrSize = 8 ? 64 : 32)
 
 	; Skript ausführen
 		Run, % "Autohotkey.exe " q "/f " q Addendum.Dir "\Module\Albis_Funktionen\DICOM2Albis\Dicom2Albis.ahk " q " " q device q

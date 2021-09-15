@@ -562,16 +562,17 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 
 			; prüft ob die Daten Geburtstage sind
 				For PatID, Pat in names {
-					If (Pat.Gd = DDatum1)
-						Datum1 := ""
-					If (Pat.Gd = DDatum2)
-						Datum2 := ""
-					If (StrLen(DDatum1 DDatum2) = 0)
+					DDatum1 := Pat.Gd = DDatum1 ? "" : DDatum1
+					DDatum2 := Pat.Gd = DDatum2 ? "" : DDatum2
+					If (StrLen(DDatum1 . DDatum2) = 0)
 						break
 				}
+
 				If (StrLen(DDatum1 DDatum2) = 0)
 					continue
-				If (StrLen(DDatum1) = 0) && (StrLen(DDatum2) > 0)
+
+				;If (StrLen(DDatum1) = 0) && (StrLen(DDatum2) > 0)
+				If (DDatum1 && DDatum2)
 					DDatum1 := DDatum2, DDatum2 := ""
 
 			; Datumstring(s) speichern
@@ -583,12 +584,15 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 				If !DocDates.Behandlung.HasKey(saveDate)
 					DocDates.Behandlung[saveDate] := {"fLine":[LNr], "dcount":1}
 				else {
-					For DDIdx, fLineNr in DocDates.Behandlung[saveDate].fline
+
+					For DDIndex, fLineNr in DocDates.Behandlung[saveDate].fline
 						If (fLineNr = LNr)
 							continue
+
 					savedLNr := LNr
 					DocDates.Behandlung[saveDate].fLine.Push(LNr)
 					DocDates.Behandlung[saveDate].dcount += 1
+
 				}
 			}
 		}
@@ -638,8 +642,7 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 	; es wurde kein Behandlungs- noch Erstellungsdatum gefunden
 		If (DocDates.Behandlung.Count() = 0) && (DocDates.Dokument.Count() = 0) {
 
-			DocPages	:= FindDocPages(Text)
-			PageNr 	:= 1
+			DocPages	:= FindDocPages(Text), PageNr := 1
 
 			If debug
 				SciTEOutput("  keine Daten gefunden`n  Seiten: " DocPages)

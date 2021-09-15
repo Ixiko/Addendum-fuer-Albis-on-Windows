@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . .
 ; . . . . . .                                                                  	VERORDNUNGSPLAN VERSCHÖNERN
-global                                                         						DatumVom:= "03.03.2021"
+global                                                         						DatumVom:= "09.09.2021"
 ; . . . . . .
 ; . . . . . .                      ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . . .                             BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -18,7 +18,7 @@ global                                                         						DatumVom:= 
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 
-/* VBA-SKRIPT DIREKT ÜBER MICROSOFT WORD STARTEN
+/* VBA-SKRIPT: AUTOHOTKEY SKRIPT AUS MICROSOFT WORD STARTEN
 
 	so kann man das AHK Skript direkt in Word starten wenn man diesen VB-Code als Makro in die Normal.dot kopiert.
 	!Skriptpfad anpassen!
@@ -64,6 +64,8 @@ global                                                         						DatumVom:= 
 								, 	"\-*1\s*A"              	: ""
 								, 	"Ab[Zz]"                 	: ""
 								, 	"Acino"                  	: ""
+								, 	"Acis"                     	: ""
+								, 	"Accord"                  	: ""
 								, 	"Actavis"                  	: ""
 								, 	"AL"                       	: ""
 								, 	"Ari"                      	: ""
@@ -73,9 +75,13 @@ global                                                         						DatumVom:= 
 								,	"Augentropfen"      	: ""
 								, 	"Aurobindo"           	: ""
 								, 	"Arzne"                  	: ""
+								, 	"Atid"                    	: ""
+								,	"Aventis*"                 	: ""
 								, 	"\bAWD\b"               	: ""
+								,	"Axcount"                  	: ""
 								,	"Axico"                  	: ""
 								,	"Axicorp\s*P"          	: ""
+								, 	"Basics"                  	: ""
 								, 	"BAYER|Bayer"       	: ""
 								, 	"Becat"                  	: ""
 								, 	"beta"                    	: ""
@@ -85,6 +91,7 @@ global                                                         						DatumVom:= 
 								,	"Deutsch"              	: ""
 								,	"Dosiergel"            	: ""
 								,	"Dosieraeros"        	: ""
+								,	"dura"                      	: ""
 								,	"dura\s*B*"             	: ""
 								,	"ED"                      	: ""
 								,	"Emra.Med"           	: ""
@@ -92,6 +99,7 @@ global                                                         						DatumVom:= 
 								,	"Fair.Med"             	: ""
 								,	"Fertigspritze"        	: ""
 								,	"Filmtabl*e*t*t*e*n*"	: ""
+								,	"Fs"                        	: ""
 								,	"GALEN"                	: ""
 								,	"Glenmark"           	: ""
 								,	"GmbH*"               	: ""
@@ -99,7 +107,8 @@ global                                                         						DatumVom:= 
 								,	"Henning"              	: ""
 								,	"Hennig"                	: ""
 								,	"Heum*a*n*n*"         	: ""
-								,	"\-*HEXAL"               	: ""
+								,	"(\-|\s)HEXAL"          	: ""
+								,	"HEXAL"                   	: ""
 								,	"Hkp"                    	: ""
 								,	"Huebe"                	: ""
 								,	"Inject"                     	: ""
@@ -109,6 +118,8 @@ global                                                         						DatumVom:= 
 								,	"KwikPen"              	: ""
 								,	"Lomapharm"         	: ""
 								,	"Lichten(\d+)"           	: " $1"
+								,	"Lich"                      	: ""
+								,	"Micro"                     	: ""
 								,	"Mili"                     	: ""
 								,	"Milinda"               	: ""
 								,	"Msr"                     	: ""
@@ -121,25 +132,27 @@ global                                                         						DatumVom:= 
 								,	"Pen\s"                  	: ""
 								,	"Penf*i*l*l*"               	: ""
 								,	"Phar*m*a*"          	: ""
+								,	"Ph"                          	: ""
 								,	"Protect(\d+)"        	: " $1"
+								,	"Rat"                      	: ""
 								,	"[Rr]atio*p*h*a*r*m*"	: ""
-								,	"RET"                     	: ""
 								,	"Retard"                 	: ""
-								,	"Retardtable*t*t*e*n*"	: ""
+								,	"\bSanofi\b"          	: ""
 								,	"\bSANDOZ\b"         	: ""
 								,	"Sta(\d)"                 	: " $1"
 								,	"STADA|Stada"      	: ""
 								,	"\ssto"                   	: ""
+								,	"sto"                       	: ""
 								,	"Tabl\W"                  	: ""
 								,	"Tabletten"             	: ""
 								,	"T[Aa][Hh]"            	: ""
 								,	"\bTAD\b"                	: ""
 								,	"teilbar"                 	: ""
-								,	"TEI"                      	: ""
+;								,	"TEI"                      	: ""
 								,	"TEVA"                   	: ""
-								,	"TOP"                     	: ""
+								,	"(TOP|Top)"             	: ""
 								,	"Tro"                     	: ""
-								,	"UTA"                      	: ""
+;								,	"UTA"                      	: ""
 								,	"Vital"                    	: ""
 								,	"Weichkaps*e*l*n*"	: ""
 								,	"\bWinthrop\b"        	: ""
@@ -261,7 +274,7 @@ global                                                         						DatumVom:= 
 			cell.Range.Font.Bold      	:= true
 			cell.Range.Font.italic      	:= true
 			cell.Range.Font.underline	:= true
-			cell.Range.Text              	:= "!!! Bekannte Allergie oder Nebenwirkungen in der Anamnese bei folgenden Medikamenten: "
+			cell.Range.Text              	:= "!!! Allergien oder Nebenwirkungen gegen folgende Medikamenten: "
 
 			Loop % (rows - 2) {                                                    	; Ende der Hinweise finden
 				rowAllergieLast := A_Index + 2
@@ -294,7 +307,7 @@ global                                                         						DatumVom:= 
 
 		; ALLE HINWEISZEILEN WERDEN ZU EINER EINZIGEN ZELLE VERBUNDEN, DIESE ZELLE ERHÄLT EINEN ETWAS DUNKLEREN HINTERGRUND
 			table.Cell(2,1).Merge(table.Cell(rowAllergieLast-1,1))
-			table.Cell(2,1).Shading.BackgroundPatternColor := -603930625
+			table.Cell(2,1).Shading.BackgroundPatternColor :=  0xDDDDDD ; 0xBBGGRR (Blue Green Red)
 
 		; HINWEISBEREICH ALS ERSTE ZEILE DER TABELLE EINSTELLEN (DURCH AUSSCHNEIDEN UND EINFÜGEN DER 1.ZEILE NACH DEN HINWEISEN)
 			table.Rows(1).Range.Cut

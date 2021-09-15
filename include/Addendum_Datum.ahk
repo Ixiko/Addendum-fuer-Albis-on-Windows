@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                           	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                             	Funktionen für die Berechnung/Umwandlung von Tagesdaten, Quartalsdaten
-;                               	by Ixiko started in September 2017 - last change 25.06.2021 - this file runs under Lexiko's GNU Licence
+;                               	by Ixiko started in September 2017 - last change 14.09.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; Datum berechnen
@@ -189,7 +189,7 @@ GetQuartalEx(Datum, Format:="QQYY") {                                           
 return Jahr . cT2 . QZ
 }
 
-HowLong(Date1,Date2) {                                                                                    	;-- berechnet die Anzahl der Jahren, Monate und Tage zw. zwei Tagesdatums
+HowLong(Date1,Date2) {                                                                                    	;-- berechnet die Anzahl der Jahre, Monate u. Tage zw. zwei Tagen
 
 	; Format YYYYMMDD
 	; https://www.autohotkey.com/boards/viewtopic.php?t=54796
@@ -206,7 +206,7 @@ HowLong(Date1,Date2) {                                                          
 return {"years":Y, "months":M, "days":d}
 }
 
-Age(birthday, CalculationDate) {
+Age(birthday, CalculationDate) {                                                                         	;-- Lebensalter berechnen
 
 	; possible formats: d[d].M[M].YYYY or YYYY.M[M].d[d]
 
@@ -460,22 +460,27 @@ DayOfWeek(dateStr, getDay:="short", format:="dd.MM.yyyy") {                     
 return dayOweek
 }
 
-GetWeekday(dateStr, format:="dd.MM.yyyy", NameOfDay:=true ) {                      	;-- Name des Wochentages vom übergebenen Datum
+GetWeekday(dateStr, format="dd.MM.yyyy", NameOfDay=true, getDay="full" ) {  	;-- Name des Wochentages vom übergebenen Datum
 
 	; jNizM Funktion modifiziert (https://www.autohotkey.com/boards/viewtopic.php?t=3352)
-	; format Parameter ist funktionslos!
-	; letzte Änderung: 05.04.2021
+	; letzte Änderung: 14.09.2021
 
-    d	:= StrSplit(dateStr, ".").1
-	m	:= StrSplit(dateStr, ".").2
-	y	:= StrSplit(dateStr, ".").3
+	dPos 	:= RegExMatch(format, "d+"	, d)
+	mPos	:= RegExMatch(format, "M+"	, m)
+	yPos  	:= RegExMatch(format, "y+"	, y)
+
+	d	:= SubStr("0" SubStr(dateStr, dPos, StrLen(d)), -1)
+	m	:= SubStr("0" SubStr(dateStr, mPos, StrLen(m)), -1)
+	y 	:= SubStr(dateStr, yPos, StrLen(y))
+
+
     if (m < 3)  {
         m += 12
         y 	-= 1
     }
-    wd := mod(d+(2*m)+floor(6*(m+1)/10)+y+floor(y/4)-floor(y/100) floor(y/400)+1, 7) ; + 1 -  bei mir beginnt die Woche am Montag (erster Arbeitstag)
+    wd := mod(d+(2*m)+floor(6*(m+1)/10)+y+floor(y/4)-floor(y/100) floor(y/400)+1, 7) + 1 ; + 1 -  bei mir beginnt die Woche am Montag (erster Arbeitstag)
 
-return NameOfDay ? WeekDayNr(wd) : wd
+return NameOfDay ? WeekDayNr(wd, full) : wd
 }
 
 WeekOfYear(dateStr) {
@@ -496,26 +501,30 @@ DateAddEx(vDate, vDiff){
 
 	local
 	static date := "date"
-	vDate := FormatTime(vDate, "yyyyMMddHHmmss")
-	vTemp := RegExReplace(vDiff, "[^\d ]") " 0 0 0 0 0"
-	oTemp := StrSplit(vTemp, " ")
-	vMonth := SubStr(vDate, 5, 2)
+
+	vDate 	:= FormatTime(vDate, "yyyyMMddHHmmss")
+	vTemp	:= RegExReplace(vDiff, "[^\d ]") " 0 0 0 0 0"
+	oTemp	:= StrSplit(vTemp, " ")
+	vMonth	:= SubStr(vDate, 5, 2)
+
 	if (vMonth+oTemp.2 > 12)
 		vDate += (oTemp.2-12) * 100000000 + (oTemp.1+1) * 10000000000
 	else
 		vDate += oTemp.2 * 100000000 + oTemp.1 * 10000000000
+
 	Loop, 3
 		;if JEE_StrIsType(vDate, "date")
 		if vDate is %date%
 			break
 		else
 			vDate -= 1000000
-	return DateAdd(vDate, oTemp.3*86400+oTemp.4*3600+oTemp.5*60+oTemp.6, "S")
+
+return DateAdd(vDate, oTemp.3*86400+oTemp.4*3600+oTemp.5*60+oTemp.6, "S")
 }
 
 DateAdd(DateTime, Time, TimeUnits){
 	EnvAdd DateTime, %Time%, %TimeUnits%
-	return DateTime
+return DateTime
 }
 
 
@@ -548,7 +557,7 @@ TimeFormatEx(sec, ShowSeconds:=true) {                                          
 return H ":" M (ShowSeconds ? ":" S : "")
 }
 
-TimeDiff(time1, time2="now", output="m") {                                                       	;-- errechnet die Zeitdifferenz zwischen Zeit1 und Zeit2 (max. ein Tag Differenz!)
+TimeDiff(time1, time2="now", output="m") {                                                       	;-- Zeitdifferenz zwischen Zeit1 und Zeit2 (max. ein Tag Differenz!)
 
 	; Ausgabe in Minuten (output="m") oder Sekunden (output="s")
 
@@ -661,7 +670,7 @@ return formatedDate
 }
 
 ; Konvertierung
-ConvertGerDateToEng(dateStr) {                                                                         	;-- konvertiert das deutsche Datumsformat in das übliche englische Format
+ConvertGerDateToEng(dateStr) {                                                                         	;-- konvertiert vom deutschen ins englische Datumsformat
 return SubStr(dateStr, 7, 4) . SubStr(dateStr, 4, 2) . SubStr(dateStr, 1, 2)
 }
 
@@ -671,7 +680,7 @@ ConvertDBASEDate(DBASEDate) {                                                   
 
 ConvertToDBASEDate(Date) {                                                                             	;-- Datumskonvertierung von DD.MM.YYYY nach YYYYMMDD
 	RegExMatch(Date, "(?<D>\d+).(?<M>\d+).(?<Y>\d+)", t)
-	return tY . tM . tD
+return tY . tM . tD
 }
 
 

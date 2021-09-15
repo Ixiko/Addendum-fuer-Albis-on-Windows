@@ -17,6 +17,7 @@ return
 ; LVM_GetNext                                   	LV_MouseGetCellPos							LV_Select                                        	LV_SortArrow									LV_FindRow
 ; CaretPos
 ;_________________________________________________________________________________________________________________________________________________________
+return
 GetClassName(hwnd) {                                                                                 	;-- returns HWND's class name without its instance number, e.g. "Edit" or "SysListView32"
 		;https://autohotkey.com/board/topic/45515-remap-hjkl-to-act-like-left-up-down-right-arrow-keys/#entry283368
 	VarSetCapacity( buff, 256, 0 )
@@ -887,11 +888,11 @@ SetError(ErrorValue, ReturnValue) {                                             
 ;}
 
 ;\/\/\/\ Funktionen prüfen die erfolgreiche Durchführung ihrer Interaktion mit Steuerelementen /\/\/\/
-VerifiedClick(CName, WTitle="", WText="", WinID="", WaitClose=0) {              	;-- 4 verschiedene Methoden um auf ein Control zu klicken
+VerifiedClick(CName, WTitle="", WText="", WinID="", WaitClose=false) {         	;-- 4 verschiedene Methoden um auf ein Control zu klicken
 
 		tmm := A_TitleMatchMode, cd := A_ControlDelay, EL := 0
-		SetTitleMatchMode	, 2
-		SetControlDelay		, -1
+		SetControlDelay	, 0
+		SetTitleMatchMode, 2
 		CoordMode, Mouse, Screen
 
 	; leeren des Fenster-Titel und Textes wenn ein Handle übergeben wurde
@@ -922,7 +923,7 @@ VerifiedClick(CName, WTitle="", WText="", WinID="", WaitClose=0) {              
 			}
 		}
 
-		If (WaitClose > 0) {
+		If WaitClose {
 			WinWaitClose, % WTitle, % WText, % WaitClose
 			EL := ErrorLevel                                                                                ; Zeitlimit überschritten = 1, sonst 0
 		}

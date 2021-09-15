@@ -252,16 +252,16 @@
 				; ansonsten Laborblattübertragung (LaborImport - nutzt ein anderes Logfile) starten
 					amsg .= datestamp(2) "|" adm.scriptname "`t - warte auf Dialog ' Laborbuch übertragen '`n"
 					if adm.Labor.AutoImport && adm.Labor.AbrufStatus && !adm.Labor.AutoAbruf  {
-						writeStr := "|" A_ThisFunc "()`t- Labordatenimport nicht möglich! AutoAbruf ist in Addendum ausgeschaltet!"
+						writeStr := "|Laborabruf`t- Labordatenimport nicht möglich! AutoAbruf ist in Addendum ausgeschaltet!"
 						FileAppend, % (amsg .= datestamp(2) "|" writeStr "`n"), % adm.LogFilePath
 					} else {
 						result	:= AlbisLaborAlleUebertragen()
-						writeStr := "|" A_ThisFunc "()`t- Laborbuch 'alle übertragen' ausgeführt [" result "]"
+						writeStr := "|Laborabruf`t- Laborbuch 'alle übertragen' ausgeführt [" result "]"
 						FileAppend, % (amsg .= datestamp(2) "|" writeStr "`n"), % adm.LogFilePath
 					}
 
 			} else {
-				writeStr := "|" A_ThisFunc "()`t- Aufruf des Laborbuch fehlgeschlagen. Labordatenimport musste abgebrochen werden.`n"
+				writeStr := "|Laborabruf`t- Aufruf des Laborbuch fehlgeschlagen. Labordatenimport musste abgebrochen werden.`n"
 				FileAppend, % (amsg .= datestamp(2) "|" writeStr "`n"), % adm.LogFilePath
 			}
 

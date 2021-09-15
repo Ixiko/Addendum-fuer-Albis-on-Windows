@@ -1,11 +1,12 @@
-![Addendum.png](assets/Addendum Logo Flat Summer 2021.svg)
+![Addendum.svg](assets/AddendumLogo2021-2.svg)
 #### Extends the possibilities through surface analysis and manipulation
 
-### Release Version 1.63 vom 09.07.2021
+### Release Version 1.64 vom 15.09.2021
 lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.33+ Unicode 64bit*,
 geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ![Trenner](Docs/TrennerExtraBreit.png)
+
 ### DIES IST KEINE OFFIZIELLE ERWEITERUNG FÜR ALBIS!
 ##### Der Hersteller der Praxissoftware Albis*, die Compugroup AG, hat mit dieser Software nichts zu tun, geschweige denn, wurde diese offiziell durch die CompuGroup AG legitimiert!
 ###### * Arztinformationssystem (AIS), Arztsoftware, Praxissoftware, Praxisverwaltungssoftware, Praxisverwaltungssystem (PVS), Praxismanagementsoftware oder Ordinationsmanagementsoftware
@@ -77,13 +78,13 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ### &#9733; automatische Texterkennung für PDF Dateien
 
-- mit Tesseract erreiche ich eine bessere Erkennungsrate als mit meinem bisherigen Texterkennungsprogramm
+- Tesseract erreiche ich eine bessere Erkennungsrate als mit meinem bisherigen Texterkennungsprogramm
 - neu in einen Ordner hinzugefügte PDF Dateien werden automatisch in PDF-Text Dateien umgewandelt
 
 ### &#9733; automatische Kategorisierung (Autonaming) von PDF Dateien
 
-- findet im Text der PDF den Patientennamen, das Erstellungsdatum des Dokumentes oder den Zeitraum eines Krankenhausaufenthaltes. Aus diesen Informationen wird ein neuer Dateiname generiert.
-- Autonaming wird nach jedem Texterkennungsvorgang durchgeführt, so daß die Dokumente sofort zuordenbar sind
+- Erkennung von Patientennamen und Erstellungsdatum des Dokumentes bzw. des Zeitraums eines Krankenhausaufenthaltes. Aus diesen Informationen wird ein neuer Dateiname generiert.
+- Autonaming wird im Anschluß an eine abgeschlossene Texterkennungsvorgang ausgeführt
 
 ###  &#9733; Unterstützung der PDF-Signierung 
 
@@ -133,7 +134,7 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ###  &#9733; RPA-Funktionsbibliothek
 
-- **118 Funktionen** zur Steuerung von Albis für die Entwicklung eigener Skripte  
+- **>120 Funktionen** zur Steuerung von Albis für die Entwicklung eigener Skripte  
 
 ###  &#9733; native DBASE-Klasse		
 
@@ -149,7 +150,8 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ###  &#9733; Laborjournal
 
-- schnelle Übersicht auffälliger Laborwerte der letzten Werk*tage (\*neu seit V1.53) 
+- schnelle Übersicht auffälliger Laborwerte der letzten Werktage 
+- konfigurierbare Ausnahmen für einzelne Laborwerte
 
 ###  &#9733; Laborabruf
 
@@ -205,7 +207,7 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
 
 <br>
 
-## ![](Docs/Icons/Addendum48x48.png) <u>Laborjournal</u>
+## ![](Docs/Icons/Addendum.png) <u>Laborjournal</u>
 
 ![](Docs/Screenshot-Laborjournal.png) 
 

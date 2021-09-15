@@ -304,7 +304,6 @@ class MDCalc {
 			────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 					adapted from python: https://github.com/gyonmyon/Glomerular_Filtration_Rate/blob/master/gfr.py
 
-
 		 */
 
 		female  	:= (sex = "f"	)	? 1.018 : 1
