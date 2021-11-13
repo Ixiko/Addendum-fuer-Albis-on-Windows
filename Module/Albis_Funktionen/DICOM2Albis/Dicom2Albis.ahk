@@ -42,7 +42,7 @@ and a program for converting continuous shooting (MRI, CT) into avi - I recommen
 ;dies ist die interne Modulbezeichnung - this is the internal module name
 ModulShort:= "A1", D2A_Version:= "V1.00" ;kleinste Veränderungen gemacht, Fehler ist noch nicht behoben
 
-;{										1. Scriptablaufeinstellungen (#NoEnV, #Persistant ......) | Script settings
+;{	1. Scriptablaufeinstellungen (#NoEnV, #Persistant ......) | Script settings
 #NoEnv
 SetTitleMatchMode, 2
 DetectHiddenWindows, On
@@ -55,17 +55,20 @@ OnExit, CloseVerlauf
 hIBitmap:= Create_Dicom2Albis_ico(true)
 Menu Tray, Icon, hIcon:  %hIBitmap%
 Menu, Tray, NoStandard
+Menu, Tray, Add, Variablen zeigen, ShowSkriptVars
+Menu, Tray, Add, neu starten, SkriptReload
 Menu, Tray, Add, Beenden, CloseVerlauf
 ;}
 
-;{										2. Includebereich und OnExit-Anweisung (#include libs/***.ahk) | Include area and OnExit statement
-#Include %A_ScriptDir%\..\..\..\include\gdip_all.ahk
-#Include %A_ScriptDir%\..\..\..\include\AddendumFunctions.ahk
+;{	2. Includebereich und OnExit-Anweisung (#include libs/***.ahk) | Include area and OnExit statement
+
 ;}
 
-;{										3. ein paar Variablen werden definiert oder aus der Ini geladen | a few variables are defined or loaded from the Ini
+;{	3. ein paar Variablen werden definiert oder aus der Ini geladen | a few variables are defined or loaded from the Ini
 
-Indipendent = 0								;dies ist die Variable für die 2 Skriptmodi - Abhängig von Addendum für AlbisOnWindows oder als standalone Version nur zum DICOM Format umwandeln
+Indipendent = 0								; dies ist die Variable für die 2 Skriptmodi -
+														; -	abhängig von Addendum für AlbisOnWindows oder
+														; -	standalone Version nur zum DICOM Format umwandeln
 CompName:=A_ComputerName
 D2Aini = %A_ScriptDir%\Dicom2Albis.ini
 SysGet, Mon1, MonitorWorkArea
@@ -74,14 +77,13 @@ decission = 0									;Entscheidungsflag
 param = %1%
 
 ;{ ;1													; einlesen der .ini Daten
-		if (A_PtrSize = 8) { 						;Einstellung für RegRead je nachdem welche AutohotkeyExe gewählt wurde 32bit oder 64bit, sonst kann die Registry nicht gelesen werden
-					SetRegView, 64
-				} else if (A_PtrSize = 4) {
-						SetRegView, 32
-					}
+		global AddendumDir
+		AddendumDir := RegReadUniCode64("HKEY_LOCAL_MACHINE", "SOFTWARE\Addendum für AlbisOnWindows", "ApplicationDir")
+		AlbisWinID := AlbisWinID()
+		If !AlbisWinID
+			AlbisIsClosed:=1
 
-
-			RegRead, AddendumDir, HKEY_LOCAL_MACHINE, SOFTWARE\Addendum für AlbisOnWindows, ApplicationDir
+		scriptPID := DllCall("GetCurrentProcessId")
 
 		;{  -------------------------------------------					Ini - Read 				-------------------------------------------
 	IniRead:
@@ -185,7 +187,7 @@ If !FileExist(file) {				;prüfen ob das Logo vorhanden ist
 
 ;}
 
-;{ 									4. wenn keine CD vorhanden ist abbrechen oder warten bis die CD bereit ist | if there is no CD, stop or wait until the CD is ready
+;{ 4. wenn keine CD vorhanden ist abbrechen oder warten bis die CD bereit ist | if there is no CD, stop or wait until the CD is ready
 
 CDWait:
 If !FileExist(dicomfile) and param="" {								;prüft ob eine CD mit DICOM-Dateien eingelegt ist
@@ -197,20 +199,20 @@ If !FileExist(dicomfile) and param="" {								;prüft ob eine CD mit DICOM-Date
 	}
 ;}
 
-;{                                  	5. Anzeigen des Logobildes - Hwnd Variable(AC2ID) und hdc Variabel(GGhdc) | Display the logo image
+;{ 5. Anzeigen des Logobildes - Hwnd Variable(AC2ID) und hdc Variabel(GGhdc) | Display the logo image
 GdiGui:=PIC_GUI(20, file, Gdix, Gdiy, Gdiw, Gdih)
 AC2ID:= GdiGui[1]
 GGhdc:= GdiGui[2]
 
 ;}
 
-;{										6. Gosub-Routine zur Verlaufs-Gui und Start des Programmablaufes | gosub routine for history gui and start of the program
+;{ 6. Gosub-Routine zur Verlaufs-Gui und Start des Programmablaufes | gosub routine for history gui and start of the program
 gosub, VerlaufGui
 
 gosub, CopyDicom
 ;}
 
-;{										7. HOTKEY BEREICH ------------------------------------------------------------------------------------------
+;{ 7. HOTKEY BEREICH ------------------------------------------------------------------------------------------
 ^+ü::
 		ListVars
 		return
@@ -225,8 +227,8 @@ Return
 ;________________________________ENDE AUTOEXECUTE__________________________________________________
 
 CopyDicom:
-;										8. enthält sämtliche Routinen zum Auslesen der DicomCD, Erstellen der Dateinamen, Umwandeln der Dicombilddateien
-;{ 									    Contains all the routines for reading the DicomCD, creating the filenames, converting the Dicom image files
+; 8. enthält sämtliche Routinen zum Auslesen der DicomCD, Erstellen der Dateinamen, Umwandeln der Dicombilddateien
+;{ Contains all the routines for reading the DicomCD, creating the filenames, converting the Dicom image files
 											;und Funktionen zum Einsortieren in die Patientenakte, + Animationen  ## Serien werden hier nicht in avi oder wmv umgewandelt
 											;and functions for sorting into the patient file, Animations ## series are not converted into avi or wmv here
 
@@ -444,7 +446,7 @@ MsgBox , 0x40030 ,Albis2Dicom, Fertig mit Einsortieren!
 ExitApp
 ;}
 
-;{ 									9. SplashText - Kontrollanzeige bei ALBIS Neustart
+;{ 9. SplashText - Kontrollanzeige bei ALBIS Neustart
 SplashTextAus:
 	SplashTextOff
 	ToolTip, , , , %TTnum%
@@ -455,7 +457,7 @@ return
 ;}
 
 VerlaufGui:
-;{ 								 10. Gui für Skriptverlauf
+;{ 10. Gui für Skriptverlauf
 
 	Gui, AC1:NEW
 	Gui, AC1:Font, S10 CDefault, Futura Bk Bt
@@ -523,7 +525,7 @@ AC1GuiClose:
 
 ;}
 
-;{ 								 11.Abschluß Animation - Resource GDI(AC2ID) freigeben und Dicom2Albis Beenden (ONEXIT ROUTINE)
+;{ 11.Abschluß Animation - Resource GDI(AC2ID) freigeben und Dicom2Albis Beenden (ONEXIT ROUTINE)
 CloseVerlauf:
 	If (decission=2)
 			ExitApp
@@ -531,22 +533,20 @@ CloseVerlauf:
 	;Verlaufs Gui beenden
 	WinGetPos, wax, way, waw, wah, ahk_id %AC1h%
 	position:= wax . "," . way . "," . waw . "," . wah
-	if wax<>"" and way<>"" and waw<>"" and wah<>""
-		{
-			If (wax >-1 and way >-1)
-					IniWrite, %position%, %AddendumDir%\Addendum.ini, Dicom2Albis, Gui
+	if (wax<>"" && way<>"" && waw<>"" && wah<>"") {
+		If (wax >-1 and way >-1)
+			IniWrite, %position%, %AddendumDir%\Addendum.ini, Dicom2Albis, Gui
 									}
 	If (picsconverted>0) {																							;wenn schon Bilder erstellt nachfragen, ob diese gelöscht werden sollen
 		Function_Eject(Drv)
 		MsgBox, 4, Dicom2Albis, Möchten Sie die umgewandelten Bilder behalten?
 		IfMsgBox, No
-			{
-				Loop, %dicomindex%
-				{
-					FileDelete, % dicom_img%A_Index%
-						}
-							}
-								}
+		{
+			Loop, % dicomindex
+				FileDelete, % dicom_img%A_Index%
+
+		}
+	}
 
 	x:= Gdix
 	maxMove:=  Mon1Right - x - 50
@@ -555,23 +555,22 @@ CloseVerlauf:
 	SleepTime:= maxMove//MovingTime
 	trans:= 255
 
-	Loop, %maxMove%
-	{
+	Loop, % maxMove	{
 		x +=1
 		UpdateLayeredWindow(AC2ID, GGhdc, x, y , GDIw, GDIh, trans)
-		Sleep, %SleepTime%
+		Sleep, % SleepTime
 		trans:=  trans - TransStep < 0 ? trans =0 : trans - TransStep
 	}
 
 	Gui, AC1:Hide
-	WinHide, ahk_id %AC2ID%
+	WinHide, % "ahk_id " AC2ID
 		sleep, 500
 	Gdip_Shutdown(AC2ID)
 	Gui, AC1:Destroy
 
 	If (decission = 1) {																								 ;return um zur AVI Serienumwandlung zurückzukehren
-			decission = 2
-			return
+		decission := 2
+		return
 	}
 
 	Function_Eject(drv)
@@ -582,55 +581,53 @@ ExitApp
 
 ;####### THE END ** THE END ** THE END ** THE END ** THE END ** THE END ** THE END ** THE END ** THE END ** THE END ** THE END ** THE END ** THE END #############
 
-
+;{ 12.Umwandeln von Serienbildern in ein Videoformat mittels mDicom.exe -
 DICOM2AVI:
-;{									12.Umwandeln von Serienbildern in ein Videoformat mittels mDicom.exe -
 ;											dont change position of this label to above
 
 	Loop {
 
 		WinGetActiveTitle, aTitle
-		  If Instr(aTitle, "MicroDicom") {
-					hMicroDicom:=WinExist("A")
-					break
-				}
-			sleep, 300
-				If (A_Index> 50) {
-							MsgBox, 0x1000, Dicom2Albis, Das MicoDicom Tool konnte nicht gestartet werden.`nDicom2Albis wird jetzt beendet, 10
-							ExitApp
-						}
+		If Instr(aTitle, "MicroDicom") {
+			hMicroDicom:=WinExist("A")
+			break
 		}
+		sleep, 300
+		If (A_Index> 50) {
+			MsgBox, 0x1000, Dicom2Albis, Das MicoDicom Tool konnte nicht gestartet werden.`nDicom2Albis wird jetzt beendet, 10
+			ExitApp
+		}
+	}
 
 	sleep, 5000
 	;WinMenuSelectItem, ahk_class Afx:ToolBar:40000000:8:10005:1010,, 1&, 1&
 
-	SendInput, {LControl Down}{Alt Down}v
+	SendInput, {LControl Down}v{Alt Down}
 	SendInput, {LControl Up}{Alt Up}
 
-	WinWait, Export to video ahk_class #32770, 6
-		WinWaitActive, Export to video ahk_class #32770, 6
+	WinWait        	, Export to video ahk_class #32770, 6
+	WinWaitActive	, Export to video ahk_class #32770, 6
 
-	hExportVideo:=WinExist("Export to video ahk_class #32770")
+	hExportVideo := WinExist("Export to video ahk_class #32770")
 
-	ControlSetText, Edit1, M:\Befunde\Filme, ahk_id %hExportVideo%
-	ControlSetText, Edit2, % dicom_Modality "_" dicom_PatName "_" dicom_GebDatum "_" dicom_UDatum, ahk_id %hExportVideo%
-	Control, ChooseString, Current patient, ComboBox1, ahk_id %hExportVideo%
-	Control, Check, , Button4, , ahk_id %hExportVideo%
-	Control, Check, , Button7, , ahk_id %hExportVideo%
-	ControlSetText, Edit3, 25, ahk_id %hExportVideo%
-	ControlSetText, Edit4, 100, ahk_id %hExportVideo%
-	Control, Check, , Button12, , ahk_id %hExportVideo%
-	Control, Check, , Button19, , ahk_id %hExportVideo%
-	ControlClick, Button20,  ahk_id %hExportVideo%
+	ControlSetText, Edit1, M:\Befunde\Filme, % "ahk_id " hExportVideo
+	ControlSetText, Edit2, % dicom_Modality "_" dicom_PatName "_" dicom_GebDatum "_" dicom_UDatum, % "ahk_id " hExportVideo
+	Control, ChooseString, Current patient, ComboBox1, % "ahk_id " hExportVideo
+	Control, Check,, Button4,   	, % "ahk_id " hExportVideo
+	Control, Check,, Button7,   	, % "ahk_id " hExportVideo
+	ControlSetText, Edit3, 25   	, % "ahk_id " hExportVideo
+	ControlSetText, Edit4, 100 	, % "ahk_id " hExportVideo
+	Control, Check,, Button12, 	, % "ahk_id " hExportVideo
+	Control, Check,, Button19, 	, % "ahk_id " hExportVideo
+	ControlClick, Button20      	, % "ahk_id " hExportVideo
 
-	Pause, Toggle
-	WinWaitClose,  ahk_id %hExportVideo%
+	WinWaitClose,  % "ahk_id " hExportVideo
 		WinClose, MicroDicom - free DICOM
 
 return
 ;}
 
-;{									13. Funktionen | functions
+;{ 13. Funktionen | functions
 StrX( H,  BS="",BO=0,BT=1, ES="",EO=0, ET=1,  ByRef N="" ) {
  ;    | by Skan | 19-Nov-2009  Auto-Parser for XML / HTML by SKAN
 /*
@@ -709,7 +706,7 @@ ImageTextOverlay(imgInput, imgOutput, Text, Options, Font) {
 
 }
 
-FileGetDetail(FilePath, Index) { ; Bestimmte Dateieigenschaft per Index abrufen
+FileGetDetail(FilePath, Index) {                                                           	; Bestimmte Dateieigenschaft per Index abrufen
    Static MaxDetails := 350
    SplitPath, FilePath, FileName , FileDir
    If (FileDir = "")
@@ -720,7 +717,7 @@ FileGetDetail(FilePath, Index) { ; Bestimmte Dateieigenschaft per Index abrufen
    Return Folder.GetDetailsOf(Item, Index)
 }
 
-FileGetDetails(FilePath) { ; Array der konkreten Dateieigenschaften erstellen
+FileGetDetails(FilePath) {                                                                   	; Array der konkreten Dateieigenschaften erstellen
    Static MaxDetails := 350
    Shell := ComObjCreate("Shell.Application")
    Details := []
@@ -736,7 +733,7 @@ FileGetDetails(FilePath) { ; Array der konkreten Dateieigenschaften erstellen
    Return Details
 }
 
-GetDetails() { ; Array der möglichen Dateieigenschaften erstellen
+GetDetails() {                                                                                    	; Array der möglichen Dateieigenschaften erstellen
    Static MaxDetails := 350
    Shell := ComObjCreate("Shell.Application")
    Details := []
@@ -751,18 +748,17 @@ GetDetails() { ; Array der möglichen Dateieigenschaften erstellen
 }
 
 Function_Eject(Drive) {
-	Try
-	{
+	Try 	{
 
 		hVolume := DllCall("CreateFile"
 		    , Str, "\\.\" . Drive
-		    , UInt, 0x80000000 | 0x40000000  ; GENERIC_READ | GENERIC_WRITE
-		    , UInt, 0x1 | 0x2  ; FILE_SHARE_READ | FILE_SHARE_WRITE
+		    , UInt, 0x80000000 | 0x40000000  	; GENERIC_READ | GENERIC_WRITE
+		    , UInt, 0x1 | 0x2 	                           	; FILE_SHARE_READ | FILE_SHARE_WRITE
 		    , UInt, 0
-		    , UInt, 0x3  ; OPEN_EXISTING
+		    , UInt, 0x3                                     	; OPEN_EXISTING
 		    , UInt, 0, UInt, 0)
-		if hVolume <> -1
-		{
+
+		if (hVolume <> -1) 		{
 		    DllCall("DeviceIoControl"
 		        , UInt, hVolume
 		        , UInt, 0x2D4808   ; IOCTL_STORAGE_EJECT_MEDIA
@@ -770,13 +766,9 @@ Function_Eject(Drive) {
 		        , UIntP, dwBytesReturned  ; Unused.
 		        , UInt, 0)
 		    DllCall("CloseHandle", UInt, hVolume)
-
 		}
-
-		Return 1
-	}
-	Catch
-	{
+	Return 1
+	} Catch 	{
 
 		Return 0
 	}
@@ -871,6 +863,23 @@ DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Pt
 Return hBitmap
 }
 
+ShowSkriptVars: ;{
+	ListVars
+return
+;}
+
+SkriptReload: ;{
+
+	Script:= A_ScriptDir "\" A_ScriptName
+	scriptPID := DllCall("GetCurrentProcessId")
+	run,  Autohotkey.exe /f "%AddendumDir%\include\RestartScript.ahk" "%Script%" "2" "%A_ScriptHwnd%" "%scriptPID%"
+
+return
+;}
 ;}
 PraxTTOff:
 return
+
+
+#Include %A_ScriptDir%\..\..\..\include\gdip_all.ahk
+#Include %A_ScriptDir%\..\..\..\include\AddendumFunctions.ahk

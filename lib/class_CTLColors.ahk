@@ -1,80 +1,83 @@
-﻿; =========================================================================================
-; AHK 1.1 +
-; =========================================================================================
-; Function:        Helper object to color controls on WM_CTLCOLOR... notifications.
-;                    	Supported controls are: Checkbox, ComboBox, DropDownList, Edit, ListBox, Radio, Text.
-;                    	Checkboxes and Radios accept background colors only due to design.
+﻿Class CTLCOLORS {
 
-; Namespace:	CTLCOLORS
-; AHK version:	1.1.11.01
-; Language:   	English
-; Version:      	0.9.01.00/2012-04-05/just me
-;                    	0.9.02.00/2013-06-26/just me  -  fixed to run on Win 7 x64
-;                    	0.9.03.00/2013-06-27/just me  -  added support for disabled edit controls
-;
-; How to use:   	To register a control for coloring call
-;                       CTLCOLORS.Attach()
-;                       passing up to three parameters:
-;                       Hwnd        - Hwnd of the GUI control                                   		(Integer)
-;                       BkColor     - HTML color name, 6-digit hex value ("RRGGBB")      (String)
-;                                     		or "" for default color
+   ; =========================================================================================
+   ; AHK 1.1 +
+   ; =========================================================================================
+   ; Function:        Helper object to color controls on WM_CTLCOLOR... notifications.
+   ;                    	Supported controls are: Checkbox, ComboBox, DropDownList, Edit, ListBox, Radio, Text.
+   ;                    	Checkboxes and Radios accept background colors only due to design.
 
-;                       ------------- Optional -------------------------------------------------------------------------
-;                       TextColor   - HTML color name, 6-digit hex value ("RRGGBB")             (String)
-;                                     		or "" for default color
+   ; Namespace:	CTLCOLORS
+   ; AHK version:	1.1.11.01
+   ; Language:   	English
+   ; Version:      	0.9.01.00/2012-04-05/just me
+   ;                    	0.9.02.00/2013-06-26/just me  -  fixed to run on Win 7 x64
+   ;                    	0.9.03.00/2013-06-27/just me  -  added support for disabled edit controls
+   ;
+   ; How to use:   	To register a control for coloring call
+   ;                       CTLCOLORS.Attach()
+   ;                       passing up to three parameters:
+   ;                       Hwnd        - Hwnd of the GUI control                                   		(Integer)
+   ;                       BkColor     - HTML color name, 6-digit hex value ("RRGGBB")      (String)
+   ;                                     		or "" for default color
 
-;                    	If both BkColor and TextColor are "" the control will not be added and the call returns False.
-;
-;                    	To change the colors for a registered control call
-;                       CTLCOLORS.Change()
-;                    	passing up to three parameters:
-;                       Hwnd        - see above
-;                       BkColor     - see above
-;                       ------------- Optional -------------------------------------------------------------------------
-;                       TextColor   - see above
-;                    	Both BkColor and TextColor may be "" to reset them to default colors.
-;                    	If the control is not registered yet, CTLCOLORS.Attach() is called internally.
-;
-;                    	To unregister a control from coloring call
-;                       CTLCOLORS.Detach()
-;                    	passing one parameter:
-;                       Hwnd      - see above
-;
-;                    	To stop all coloring and free the resources call
-;                       CTLCOLORS.Free()
-;                    	It's a good idea to insert this call into the scripts exit-routine.
-;
-;                    	To check if a control is already registered call
-;                       CTLCOLORS.IsAttached()
-;                    	passing one parameter:
-;                       Hwnd      - see above
-;
-;                    	To get a control's Hwnd use either the option "HwndOutputVar" with "Gui, Add" or the command
-;                    	"GuiControlGet" with sub-command "Hwnd".
-;
-;                    	Properties/methods/functions declared as PRIVATE must not be set/called by the script!
-;
-; Special features:
-;                    	On the first call for a specific control class the function registers the CTLCOLORS_OnMessage()
-;                    	function as message handler for WM_CTLCOLOR messages of this class(es).
-;
-;                    	Buttons (Checkboxes and Radios) do not make use of the TextColor to draw the text, instead of
-;                    	that they use it to draw the focus rectangle.
-;
-;                    	After displaying the GUI per "Gui, Show" you have to execute "WinSet, Redraw" once.
-;                    	It's no bad idea to do it using a GuiSize label, because it avoids rare problems when restoring
-;                    	a minimized window:
-;                       GuiSize:
-;                          If (A_EventInfo != 1) {
-;                             Gui, %A_Gui%:+LastFound
-;                             WinSet, ReDraw
-;                          }
-;                       Return
-; =================================================================================
-; This software is provided 'as-is', without any express or implied warranty.
-; In no event will the authors be held liable for any damages arising from the use of this software.
-; =================================================================================
-Class CTLCOLORS {
+   ;                       ------------- Optional -------------------------------------------------------------------------
+   ;                       TextColor   - HTML color name, 6-digit hex value ("RRGGBB")             (String)
+   ;                                     		or "" for default color
+
+   ;                    	If both BkColor and TextColor are "" the control will not be added and the call returns False.
+   ;
+   ;                    	To change the colors for a registered control call
+   ;                       CTLCOLORS.Change()
+   ;                    	passing up to three parameters:
+   ;                       Hwnd        - see above
+   ;                       BkColor     - see above
+   ;                       ------------- Optional -------------------------------------------------------------------------
+   ;                       TextColor   - see above
+   ;                    	Both BkColor and TextColor may be "" to reset them to default colors.
+   ;                    	If the control is not registered yet, CTLCOLORS.Attach() is called internally.
+   ;
+   ;                    	To unregister a control from coloring call
+   ;                       CTLCOLORS.Detach()
+   ;                    	passing one parameter:
+   ;                       Hwnd      - see above
+   ;
+   ;                    	To stop all coloring and free the resources call
+   ;                       CTLCOLORS.Free()
+   ;                    	It's a good idea to insert this call into the scripts exit-routine.
+   ;
+   ;                    	To check if a control is already registered call
+   ;                       CTLCOLORS.IsAttached()
+   ;                    	passing one parameter:
+   ;                       Hwnd      - see above
+   ;
+   ;                    	To get a control's Hwnd use either the option "HwndOutputVar" with "Gui, Add" or the command
+   ;                    	"GuiControlGet" with sub-command "Hwnd".
+   ;
+   ;                    	Properties/methods/functions declared as PRIVATE must not be set/called by the script!
+   ;
+   ; Special features:
+   ;                    	On the first call for a specific control class the function registers the CTLCOLORS_OnMessage()
+   ;                    	function as message handler for WM_CTLCOLOR messages of this class(es).
+   ;
+   ;                    	Buttons (Checkboxes and Radios) do not make use of the TextColor to draw the text, instead of
+   ;                    	that they use it to draw the focus rectangle.
+   ;
+   ;                    	After displaying the GUI per "Gui, Show" you have to execute "WinSet, Redraw" once.
+   ;                    	It's no bad idea to do it using a GuiSize label, because it avoids rare problems when restoring
+   ;                    	a minimized window:
+   ;                       GuiSize:
+   ;                          If (A_EventInfo != 1) {
+   ;                             Gui, %A_Gui%:+LastFound
+   ;                             WinSet, ReDraw
+   ;                          }
+   ;                       Return
+   ; =================================================================================
+   ; This software is provided 'as-is', without any express or implied warranty.
+   ; In no event will the authors be held liable for any damages arising from the use of this software.
+   ; =================================================================================
+
+
    ; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    ; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    ; PRIVATE Properties and Methods ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -175,13 +178,13 @@ Class CTLCOLORS {
       ; Names of supported classes
       Static ClassNames := {Button: "", ComboBox: "", Edit: "", ListBox: "", Static: ""}
       ; Button styles
-      Static BS_CHECKBOX := 0x2
-           , BS_RADIOBUTTON := 0x8
+      Static	BS_CHECKBOX := 0x2
+           ,  	BS_RADIOBUTTON := 0x8
       ; Editstyles
       Static ES_READONLY := 0x800
       ; Default class background colors
-      Static COLOR_3DFACE := 15
-           , COLOR_WINDOW := 5
+      Static	COLOR_3DFACE := 15
+           , 	COLOR_WINDOW := 5
       ; Initialize default background colors on first call -------------------------------------------------------------
       If (This.SYSCOLORS.Edit = "") {
          This.SYSCOLORS.Static := DllCall("User32.dll\GetSysColor", "Int", COLOR_3DFACE, "UInt")
@@ -342,11 +345,11 @@ Class CTLCOLORS {
       Return This.Attached.HasKey(Hwnd)
    }
 }
-; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 ; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ; PRIVATE Functions ++++++++++++++++++++++++++++++++++++++++++++++++++
 ; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 ; ============================================================
 ; PRIVATE FUNCTION CTLCOLORS_OnMessage
 ; This function is destined to handle CTLCOLOR messages. There's no reason to call it manually!

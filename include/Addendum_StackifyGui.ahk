@@ -1,35 +1,210 @@
-﻿StackifyGui() {
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;     	Addendum_StackifyGui - V0.1 alpha
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;		Verwendung:	   	-	Multi Debug-Consolenklasse für Kontrollausgaben für Addendum
+;
+; 		Beschreibung:       -	kann als eigener Thread per AutohotkeyH betrieben oder als eigenständiges Skript betrieben werden
+;									-	Datenaustausch erfolgt über Autohotkey COM Variante von Lexikos
+;
+;
+;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
+;       Addendum_StackifyGui started:         	09.12.2020
+;       Addendum_StackifyGui last change:    	09.12.2020
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	global
 
-	stackifyIsMinimized:= false
-	userWantsExitApp:= false
-	width:= 550
-	x:= 1400, y:= 100
+   debugv := new StackifyGui("debugv")
 
-	Gui, Sfy: New, -Caption +ToolWindow -DPISCale AlwaysOnTop -MinimizeBox -Border HWNDhStacker Resize
-	Gui, Sfy: Margin, 0, 0
-	Gui, Sfy: Color, c5151B7
-	Gui, Sfy: Font, s5 cWhite
-	Gui, Sfy: Add, Button, % "x" width-40 " y2 gStackifyMin vStackifyMin hwndhStackifyMin", _
-	Gui, Sfy: Add, Button, % "x" width-20 " y2 gStackifyQuit vStackifyQuit hwndhStackifyQuit", X
-	Gui, Sfy: Font, s10 cWhite
-	Gui, Sfy: Add, Edit, % "x0 w" width " r50 -Border -VScroll vStackify hwndhStackifyEdit"
-	Gui, Sfy: Add, Text, % "x0 y2 BackgroundTrans", % GetHex(hStackifyEdit) "                                    "
-	CtlColors.Attach(hStackifyEdit      	, "111177", "FFFFFF")
-	Gui, Sfy: Show, % "x" x " y" y " Hide NA", Stackify
+   for name, obj in StackifyGui.GetActiveObjects()
+         list .= name " -- " ComObjType(obj, "Name") "`n"
+   MsgBox % list
 
-	WinSet, ExStyle	, 0x00000000 	, % "ahk_id " hStackifyEdit
-	WinSet, Style   	, +0x100      	, % "ahk_id " hStackifyEdit
 
-	Gui, Sfy: Show, NoActivate
 
-	WinSet, Transparent, off 	, % "ahk_id " hStacker
-	WinSet, Transparent, 180	, % "ahk_id " hStacker
 
-	OnMessage(0x0201, "WM_LBUTTONDOWN")
+return
+ExitApp
 
-return hStackifyEdit
+class StackifyGui   {
+
+      __New(GuiName, Options="Font:s10 q5, Calibri ", SizePosition="Auto", COMIntegration=true) {
+
+            global
+
+          this.stackifyIsMinimized:= false
+          This.userWantsExitApp:= false
+          This.width:= 550
+          This.x:= 1400, This.y:= 100
+          This.dbgV := Array()
+
+          Gui, Sfy: New, -Caption +ToolWindow -DPISCale AlwaysOnTop -MinimizeBox -Border HWNDhStacker Resize
+          Gui, Sfy: Margin, 0, 0
+          Gui, Sfy: Color, c5151B7
+          Gui, Sfy: Font, s7 cWhite
+          Gui, Sfy: Add, Button, % "x" width-40 " y2 gStackifyMin vStackifyMin hwndhStackifyMin", _
+          Gui, Sfy: Add, Button, % "x" width-20 " y2 gStackifyQuit vStackifyQuit hwndhStackifyQuit", X
+          Gui, Sfy: Font, s10 cWhite
+          Gui, Sfy: Add, Edit, % "x0 w" width " r50 -Border -VScroll vStackify hwndhStackifyEdit"
+          Gui, Sfy: Add, Text, % "x0 y2 BackgroundTrans", % Format("0x{:x}", hStackifyEdit) "                                    "
+          CtlColors.Attach(hStackifyEdit      	, "111177", "FFFFFF")
+          Gui, Sfy: Show, % "x" x " y" y " Hide NA", Stackify
+
+          WinSet, ExStyle	, 0x00000000 	, % "ahk_id " hStackifyEdit
+          WinSet, Style   	, +0x100      	, % "ahk_id " hStackifyEdit
+
+          Gui, Sfy: Show, NoActivate
+
+          WinSet, Transparent, off 	, % "ahk_id " hStacker
+          WinSet, Transparent, 180	, % "ahk_id " hStacker
+
+         OnMessage(0x0201, "WM_LBUTTONDOWN")
+
+         this.ObjRegisterActive(this, "{6B39CAA1-A320-4CB0-8DB4-352AA81E460E}")
+         this.OnExit("Revoke")
+
+      }
+
+      Revoke() {
+         ; This "revokes" the object, preventing any new clients from connecting
+         ; to it, but doesn't disconnect any clients that are already connected.
+         ; In practice, it's quite unnecessary to do this on exit.
+         this.ObjRegisterActive(This, "")
+      return
+      }
+
+      AddDebugView(DbgVName, DbgTitle, Options) {
+
+         viewfound := false
+         For dbgIndex, obj in This.dbgV {
+               If (obj.name = DbgVName) {
+                     viewfound := true
+                     break
+               }
+         }
+
+         If !viewfound {
+
+             this.dbgV.Push{"name": DbgVName, "title":Tile, "options":Options}
+
+         }
+
+      }
+
+
+       class StackifyObject {
+                ; Simple message-passing example.
+                Message(Data) {
+                    MsgBox Received message: %Data%
+                    return 42
+                }
+                ; "Worker thread" example.
+                static WorkQueue := []
+                BeginWork(WorkOrder) {
+                    this.WorkQueue.Insert(WorkOrder)
+                    SetTimer Work, -100
+                    return
+                    Work:
+                    ActiveObject.Work()
+                    return
+                }
+                Work() {
+                    work := this.WorkQueue.Remove(1)
+                    ; Pretend we're working.
+                    Sleep 5000
+                    ; Tell the boss we're finished.
+                    work.Complete(this)
+                }
+                Quit() {
+                    MsgBox Quit was called.
+                    DetectHiddenWindows On  ; WM_CLOSE=0x10
+                    PostMessage 0x10,,,, ahk_id %A_ScriptHwnd%
+                    ; Now return, so the client's call to Quit() succeeds.
+                }
+      }
+
+
+
+      ObjRegisterActive(Object, CLSID, Flags:=0) {
+
+       /*
+          ObjRegisterActive(Object, CLSID, Flags:=0)
+
+              Registers an object as the active object for a given class ID.
+              Requires AutoHotkey v1.1.17+; may crash earlier versions.
+
+          Object:
+                  Any AutoHotkey object.
+          CLSID:
+                  A GUID or ProgID of your own making.
+                  Pass an empty string to revoke (unregister) the object.
+          Flags:
+                  One of the following values:
+                    0 (ACTIVEOBJECT_STRONG)
+                    1 (ACTIVEOBJECT_WEAK)
+                  Defaults to 0.
+
+          Related:
+              http://goo.gl/KJS4Dp - RegisterActiveObject
+              http://goo.gl/no6XAS - ProgID
+              http://goo.gl/obfmDc - CreateGUID()
+
+      */
+
+          static cookieJar := {}
+          if (!CLSID) {
+              if (cookie := cookieJar.Remove(Object)) != ""
+                  DllCall("oleaut32\RevokeActiveObject", "uint", cookie, "ptr", 0)
+              return
+          }
+          if cookieJar[Object]
+              throw Exception("Object is already registered", -1)
+          VarSetCapacity(_clsid, 16, 0)
+          if (hr := DllCall("ole32\CLSIDFromString", "wstr", CLSID, "ptr", &_clsid)) < 0
+              throw Exception("Invalid CLSID", -1, CLSID)
+          hr := DllCall("oleaut32\RegisterActiveObject"
+              , "ptr", &Object, "ptr", &_clsid, "uint", Flags, "uint*", cookie
+              , "uint")
+          if hr < 0
+              throw Exception(format("Error 0x{:x}", hr), -1)
+          cookieJar[Object] := cookie
+      }
+
+      ; http://ahkscript.org/boards/viewtopic.php?f=6&t=6494
+      GetActiveObjects(Prefix:="", CaseSensitive:=false) {                                ; GetActiveObjects v1.0 by Lexikos
+          objects := {}
+          DllCall("ole32\CoGetMalloc", "uint", 1, "ptr*", malloc) ; malloc: IMalloc
+          DllCall("ole32\CreateBindCtx", "uint", 0, "ptr*", bindCtx) ; bindCtx: IBindCtx
+          DllCall(NumGet(NumGet(bindCtx+0)+8*A_PtrSize), "ptr", bindCtx, "ptr*", rot) ; rot: IRunningObjectTable
+          DllCall(NumGet(NumGet(rot+0)+9*A_PtrSize), "ptr", rot, "ptr*", enum) ; enum: IEnumMoniker
+          while DllCall(NumGet(NumGet(enum+0)+3*A_PtrSize), "ptr", enum, "uint", 1, "ptr*", mon, "ptr", 0) = 0 ; mon: IMoniker
+          {
+              DllCall(NumGet(NumGet(mon+0)+20*A_PtrSize), "ptr", mon, "ptr", bindCtx, "ptr", 0, "ptr*", pname) ; GetDisplayName
+              name := StrGet(pname, "UTF-16")
+              DllCall(NumGet(NumGet(malloc+0)+5*A_PtrSize), "ptr", malloc, "ptr", pname) ; Free
+              if InStr(name, Prefix, CaseSensitive) = 1 {
+                  DllCall(NumGet(NumGet(rot+0)+6*A_PtrSize), "ptr", rot, "ptr", mon, "ptr*", punk) ; GetObject
+                  ; Wrap the pointer as IDispatch if available, otherwise as IUnknown.
+                  if (pdsp := ComObjQuery(punk, "{00020400-0000-0000-C000-000000000046}"))
+                      obj := ComObject(9, pdsp, 1), ObjRelease(punk)
+                  else
+                      obj := ComObject(13, punk, 1)
+                  ; Store it in the return array by suffix.
+                  objects[SubStr(name, StrLen(Prefix) + 1)] := obj
+              }
+              ObjRelease(mon)
+          }
+          ObjRelease(enum)
+          ObjRelease(rot)
+          ObjRelease(bindCtx)
+          ObjRelease(malloc)
+          return objects
+      }
+
+
+}
+
+
+
 
 StackifyMin:
 	stackifyIsMinimized:= true
@@ -50,7 +225,7 @@ SfyGuiSize:
 	Critical, Off
 
 return
-}
+
 
 WM_LBUTTONDOWN(wP, lP) {
 PostMessage, 0xA1, 2
@@ -71,8 +246,8 @@ Notify(msg) {
 	str := SubStr("00000" StackifyLine, -4) " " msg "`r`n"
 
 	;If !WinExist("Stackify ahk_class AutohotkeyGUI")
-	If !hStacker
-		StackifyGui()
+	;~ If !hStacker
+		;~ StackifyGui()
 
 	Edit_prepend(hStackifyEdit, str)
 
@@ -94,9 +269,9 @@ DllCall( "SendMessage", UInt,hEdit, UInt,0xB1	, UInt,0 	, UInt,0 ) ; EM_SETSEL
 }
 
 Class CtlColors {
-   ; ===================================================================================================================
+   ; ========================================================
    ; Class variables
-   ; ===================================================================================================================
+   ; ========================================================
    ; Registered Controls
    Static Attached := {}
    ; OnMessage Handlers
@@ -117,9 +292,9 @@ Class CtlColors {
    Static ErrorMsg := ""
    ; Class initialization
    Static InitClass := CtlColors.ClassInit()
-   ; ===================================================================================================================
+   ; ===========================================================
    ; Constructor / Destructor
-   ; ===================================================================================================================
+   ;===========================================================
    __New() { ; You must not instantiate this class!
       If (This.InitClass == "!DONE!") { ; external call after class initialization
          This["!Access_Denied!"] := True
@@ -132,16 +307,16 @@ Class CtlColors {
          Return
       This.Free() ; free GDI resources
    }
-   ; ===================================================================================================================
+   ; ===============================================================
    ; ClassInit       Internal creation of a new instance to ensure that __Delete() will be called.
-   ; ===================================================================================================================
+   ; ===============================================================
    ClassInit() {
       CtlColors := New CtlColors
       Return "!DONE!"
    }
-   ; ===================================================================================================================
+   ; ===============================================================
    ; CheckBkColor    Internal check for parameter BkColor.
-   ; ===================================================================================================================
+   ; ===============================================================
    CheckBkColor(ByRef BkColor, Class) {
       This.ErrorMsg := ""
       If (BkColor != "") && !This.HTML.HasKey(BkColor) && !RegExMatch(BkColor, "^[[:xdigit:]]{6}$") {
@@ -153,9 +328,9 @@ Class CtlColors {
               :  "0x" . SubStr(BkColor, 5, 2) . SubStr(BkColor, 3, 2) . SubStr(BkColor, 1, 2)
       Return True
    }
-   ; ===================================================================================================================
+   ; ===============================================================
    ; CheckTxColor    Internal check for parameter TxColor.
-   ; ===================================================================================================================
+   ; ===============================================================
    CheckTxColor(ByRef TxColor) {
       This.ErrorMsg := ""
       If (TxColor != "") && !This.HTML.HasKey(TxColor) && !RegExMatch(TxColor, "i)^[[:xdigit:]]{6}$") {
@@ -167,7 +342,7 @@ Class CtlColors {
               :  "0x" . SubStr(TxColor, 5, 2) . SubStr(TxColor, 3, 2) . SubStr(TxColor, 1, 2)
       Return True
    }
-   ; ===================================================================================================================
+   ; ===============================================================
    ; Attach          Registers a control for coloring.
    ; Parameters:     HWND        - HWND of the GUI control
    ;                 BkColor     - HTML color name, 6-digit hexadecimal RGB value, or "" for default color
@@ -175,7 +350,7 @@ Class CtlColors {
    ;                 TxColor     - HTML color name, 6-digit hexadecimal RGB value, or "" for default color
    ; Return values:  On success  - True
    ;                 On failure  - False, CtlColors.ErrorMsg contains additional informations
-   ; ===================================================================================================================
+   ; ===============================================================
    Attach(HWND, BkColor, TxColor := "") {
       ; Names of supported classes
       Static ClassNames := {Button: "", ComboBox: "", Edit: "", ListBox: "", Static: ""}
@@ -257,7 +432,7 @@ Class CtlColors {
       This.ErrorMsg := ""
       Return True
    }
-   ; ===================================================================================================================
+   ; ===============================================================
    ; Change          Change control colors.
    ; Parameters:     HWND        - HWND of the GUI control
    ;                 BkColor     - HTML color name, 6-digit hexadecimal RGB value, or "" for default color
@@ -266,7 +441,7 @@ Class CtlColors {
    ; Return values:  On success  - True
    ;                 On failure  - False, CtlColors.ErrorMsg contains additional informations
    ; Remarks:        If the control isn't registered yet, Add() is called instead internally.
-   ; ===================================================================================================================
+   ; ===============================================================
    Change(HWND, BkColor, TxColor := "") {
       ; Check HWND -----------------------------------------------------------------------------------------------------
       This.ErrorMsg := ""
@@ -303,12 +478,12 @@ Class CtlColors {
       DllCall("User32.dll\InvalidateRect", "Ptr", HWND, "Ptr", 0, "Int", 1)
       Return True
    }
-   ; ===================================================================================================================
+   ; ===============================================================
    ; Detach          Stop control coloring.
    ; Parameters:     HWND        - HWND of the GUI control
    ; Return values:  On success  - True
    ;                 On failure  - False, CtlColors.ErrorMsg contains additional informations
-   ; ===================================================================================================================
+   ; ===============================================================
    Detach(HWND) {
       This.ErrorMsg := ""
       HWND += 0
@@ -331,10 +506,10 @@ Class CtlColors {
       This.ErrorMsg := "Control " . HWND . " is not registered!"
       Return False
    }
-   ; ===================================================================================================================
+   ; ===============================================================
    ; Free            Stop coloring for all controls and free resources.
    ; Return values:  Always True.
-   ; ===================================================================================================================
+   ; ===============================================================
    Free() {
       For K, V In This.Attached
          If (V.Brush) && (V.Brush <> This.NullBrush)
@@ -347,12 +522,12 @@ Class CtlColors {
       This.Attached := {}
       Return True
    }
-   ; ===================================================================================================================
+   ; ===============================================================
    ; IsAttached      Check if the control is registered for coloring.
    ; Parameters:     HWND        - HWND of the GUI control
    ; Return values:  On success  - True
    ;                 On failure  - False
-   ; ===================================================================================================================
+   ; ===============================================================
    IsAttached(HWND) {
       Return This.Attached.HasKey(HWND)
    }
@@ -371,3 +546,6 @@ CtlColors_OnMessage(HDC, HWND) {
       Return CTL.Brush
    }
 }
+
+
+

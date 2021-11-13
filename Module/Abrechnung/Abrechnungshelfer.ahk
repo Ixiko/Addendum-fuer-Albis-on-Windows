@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . .                                                                                                                                                          	. . . . . . . . . .
 ; . . . . . . . . .                                                 	ADDENDUM  ABRECHNUNGSHELFER                                            	. . . . . . . . . .
-											                			 Version:="0.98" , vom:="06.07.2020"
+											                			 Version:="0.98a" , vom:="01.02.2021"
 ; . . . . . . . . .                                                                                                                                                         	. . . . . . . . . .
 ; . . . . . . . . .  ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"	. . . . . . . . . .
 ; . . . . . . . . .         BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE         	. . . . . . . . . .
@@ -52,76 +52,82 @@
 	DetectHiddenWindows	, On
 
 	Menu, Tray, Icon, % "hIcon: " Create_Abrechnungshelfer_ico(true)
+
+	; DPI-Skalierung einschalten
+	Result := DllCall("User32\SetProcessDpiAwarenessContext", "UInt" , -1)
 ;}
 
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; VARIABLEN
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------;{
 	; Addendum Stamm- und Datenverzeichnis auslesen (hat nichts mit den Albisverzeichnissen zu tun!)
-	global AddendumDir        	:= FileOpen("C:\albiswin.loc\AddendumDir","r").Read()
-	global AddendumDbPath	:= GetAddendumDbPath()
-	global AddendumID      	:= GetAddendumID()
-	global TagesprotokollPfad
-	global AlbisWorkDir
-	global Statistik               	:= Object()
-	global QData     	        	:= Object()
-	global RegExMining        	:= Object()
-	global PatDB                  	:= Object()
-	global RegExFind           	:= Array()
+	global 	AddendumDir
+				RegExMatch(A_ScriptDir, ".*(?=\\Module)", AddendumDir)
+	global 	AlbisWorkDir
+	global 	TagesprotokollPfad
+	global 	AddendumDbPath 	:= GetAddendumDbPath()
+	global 	AddendumID          	:= GetAddendumID()
+	global 	Statistik                   	:= Object()
+	global 	QData     	            	:= Object()
+	global 	RegExMining            	:= Object()
+	global 	PatDB                      	:= Object()
+	global 	RegExFind               	:= Array()
+	global 	compname             	:= StrReplace(A_ComputerName, "-")                    	; der Name des Computer auf dem das Skript läuft
 
 ;}
 
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------
-; EINSTELLUNGEN AUS DER ADDENDUM.INI EINLESEN UND VARIABLEN DEFINIEREN
+; EINSTELLUNGEN AUS DER ADDENDUM.INI HOLEN UND VARIABLEN DEFINIEREN
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------;{
 
 	; Gui Einstellungen
 		IniRead, BgColor       	, % AddendumDir "\Addendum.ini", Abrechnungshelfer	, HgFarbe
 		If InStr(BgColor, "Error") {
-				IniRead, BgColor, % AddendumDir . "\Addendum.ini", Addendum, DefaultBgColor
-				IniWrite, % BgColor,  % AddendumDir . "\Addendum.ini", Abrechnungshelfer, HgFarbe
+			IniRead, BgColor    	, % AddendumDir "\Addendum.ini", Addendum          	, DefaultBgColor
+			IniWrite, % BgColor	, % AddendumDir "\Addendum.ini", Abrechnungshelfer	, HgFarbe
 		}
 
 		IniRead, BgColor2     	, % AddendumDir "\Addendum.ini", Abrechnungshelfer	, HgFarbe2
 		If InStr(BgColor2, "Error") {
-				IniRead, BgColor2, % AddendumDir . "\Addendum.ini", Addendum, DefaultBgColor2
-				IniWrite, % BgColor2,  % AddendumDir . "\Addendum.ini", Abrechnungshelfer, HgFarbe2
+			IniRead, BgColor2 	, % AddendumDir "\Addendum.ini", Addendum          	, DefaultBgColor2
+			IniWrite, % BgColor2	, % AddendumDir "\Addendum.ini", Abrechnungshelfer	, HgFarbe2
 		}
 
 		IniRead, FontColor    	, % AddendumDir "\Addendum.ini", Abrechnungshelfer	, FontFarbe
 		If InStr(FontColor, "Error") {
-				IniRead, FontColor, % AddendumDir . "\Addendum.ini", Addendum, DefaultFntColor
-				IniWrite, % FontColor,  % AddendumDir . "\Addendum.ini", Abrechnungshelfer, FontFarbe
+			IniRead, FontColor	, % AddendumDir "\Addendum.ini", Addendum          	, DefaultFntColor
+			IniWrite, % FontColor, % AddendumDir "\Addendum.ini", Abrechnungshelfer	, FontFarbe
 		}
 
 		IniRead, FontSize       	, % AddendumDir "\Addendum.ini", Abrechnungshelfer	, FontGroesse
 		If InStr(FontSize, "Error") {
-				IniRead, FontSize, % AddendumDir . "\Addendum.ini", Addendum, StandardFontSize
-				IniWrite, % Fontsize,  % AddendumDir . "\Addendum.ini", Abrechnungshelfer, FontGroesse
+			IniRead, FontSize		, % AddendumDir "\Addendum.ini", Addendum          	, StandardFontSize
+			IniWrite, % Fontsize	, % AddendumDir "\Addendum.ini", Abrechnungshelfer	, FontGroesse
 		}
 
-		IniRead, Font             	, % AddendumDir "\Addendum.ini", Abrechnungshelfer	, Schriftart
+		IniRead, Font                	, % AddendumDir "\Addendum.ini", Abrechnungshelfer	, Schriftart
 		If InStr(Font, "Error") {
-				IniRead, Font, % AddendumDir . "\Addendum.ini", Addendum, StandardFont
-				IniWrite, % Font,  % AddendumDir . "\Addendum.ini", Abrechnungshelfer, Schriftart
+			IniRead, Font          	, % AddendumDir "\Addendum.ini", Addendum          	, StandardFont
+			IniWrite, % Font        	, % AddendumDir "\Addendum.ini", Abrechnungshelfer	, Schriftart
 		}
 
 		IniRead, AlbisWorkDir	, % AddendumDir "\Addendum.ini", Albis                    	, AlbisWorkDir
 		If InStr(AlbisWorkDir, "Error") {
-				;IniRead, Font, % AddendumDir . "\Addendum.ini", Addendum, StandardFont
-				;IniWrite, % Font,  % AddendumDir . "\Addendum.ini", Addendum, Abrechnungshelfer-Schriftart
+			;IniRead, Font, % AddendumDir . "\Addendum.ini", Addendum, StandardFont
+			;IniWrite, % Font,  % AddendumDir . "\Addendum.ini", Addendum, Abrechnungshelfer-Schriftart
 		}
 
-		IniRead, Fensterposition	,  % AddendumDir "\Addendum.ini", Abrechnungshelfer	, Fensterposition
+		IniRead, Fensterposition	,  % AddendumDir "\Addendum.ini", % compname, % "Abrechnungshelfer_Position"
 		If InStr(Fensterposition, "Error") {
-				guiPos:= "AutoSize"
+			guiPos:= "AutoSize"
 		}	else	{
-				pos:= StrSplit(Fensterposition, "|")
-				If pos.1 + pos.3 > A_ScreenWidth
-					pos.1:= Floor(A_ScreenWidth/2) - Floor(pos.3/2)
-				If pos.2 + pos.4 > A_ScreenHeight
-					pos.2:= Floor(A_ScreenHeight/2) - Floor(pos.4/2)
-				guiPos:= "x" pos.1 " y" pos.2 " w" pos.3 " h" pos.4
+			factor := A_ScreenDPI / 96
+			pos := StrSplit(Fensterposition, "|")
+			If (pos.1 + pos.3 > A_ScreenWidth)
+				pos.1 := Floor((A_ScreenWidth/2)  - (pos.3/2) * factor)
+			If (pos.2 + pos.4 > A_ScreenHeight)
+				pos.2 := Floor((A_ScreenHeight/2) - (pos.4/2) * factor)
+			guiPos := "x" pos.1 " y" pos.2 " w" Round(pos.3 * factor) " h" Round(pos.4 * factor)
 		}
 
 		IniRead, lTprotfile    		, % AddendumDir "\Addendum.ini", Abrechnungshelfer	,  letzte_Tagesprotokolldatei
@@ -192,6 +198,10 @@
 							, "label"             	: "M15"
 							, "Parameter"     	: false
 							, "Beschreibung"	: "sucht die Namen der Fachgruppen heraus."})
+		Makro.push({"DispName" 	: "17. Rezepte- und Medikamentenstatistik"
+							, "label"             	: "M18"
+							, "Parameter"     	: false
+							, "Beschreibung"	: "kleine Rezeptstatistik der gewählten Quartale"})
 		;Makro.push({"DispName": "", "label":""})
 
 	 ; verschieden Datenobjekte
@@ -206,7 +216,6 @@
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; ALLE AUSWERTBAREN TAGESPROTOKOLLDATEIEN IM TAGESPROTOKOLLPFAD ERMITTELN
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-	Tagesprotokolle	:= Object()
 	Tagesprotokolle	:= ReadTPDir(TagesprotokollPfad, "*_TP-AbrH", "txt", "R")
 
 ;}
@@ -338,7 +347,7 @@
 
 		; Info-Bereich (Progress Texte)
 		global txtLines	:= 14
-
+		;MsgBox, % screenDims(1).DPI / 96
 		; Default Breiten bestimmter Steuerelemente
         wMW	:= 320 	; Breite des Makroauswahl-Elementes (listview)
         wProto	:= 150 	; Breite des Protokollauswahl-Elementes (treeview)
@@ -349,13 +358,12 @@
 
 		; Berechnung der Breite des Auswertungselementes und x Position der Infogruppe
 		If InStr(guipos, "AutoSize") {
-				wAusw	:= 330                                             	; Breite des Auswertung-Elementes (edit)
-				xInfo  	:= wMW + 5 + wProto + 5 + wAusw	; x Position der Infogruppe
+			wAusw	:= 330                                             	; Breite des Auswertung-Elementes (edit)
+			xInfo  	:= wMW + 5 + wProto + 5 + wAusw	; x Position der Infogruppe
 		} 	else 	{
-				RegExMatch(guipos, "i)\sw(?<W>\d+)", rxTP)
-				RegExMatch(guipos, "i)\sh(?<H>\d+)", rxTP)
-				xInfo 	:= rxTPW - wInfo - xMargin
-				wAusw	:= xInfo - wMinus - wProto - 5 - wMW - 5 - 2 * xMargin
+			RegExMatch(guipos, "i)\sw(?<W>\d+)\s+h(?<H>\d+)"	, rxTP)
+			xInfo 	:= rxTPW - wInfo - xMargin
+			wAusw	:= xInfo - wMinus - wProto - 5 - wMW - 5 - 2 * xMargin
 		}
 
 		; Format der Variable aktQuartal: [QQJJ] z.B. 0319
@@ -366,22 +374,22 @@
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	;  GUI                                                                                                                                                                      ;{
-		Gui, rxTP: New, +OwnDialogs +HWNDhAbrH -DPIScale +Resize +MinSize%MinW%x%MinH%  ; +AlwaysOnTop
+		Gui, rxTP: New, +OwnDialogs HWNDhAbrH +MinSize%MinW%x%MinH%  ; +AlwaysOnTop +Resize -DPIScale
 		Gui, rxTP: Margin, % xMargin, % yMargin
 		Gui, rxTP: Color, % "c" BgColor
 
-		Gui, rxTP: Font, % "s" (FontSize + 6) " c" FontColor " q5", % Font
-		Gui, rxTP: Add, Text, % "xm+5 ym w" (wMW + 5 + wProto + 5 + wAusw +5 ) " BackgroundTrans Center +0x200 vT1", % "Wähle links das gewünschte Makro und rechts die auszuwertenden Quartale"
-		Gui, rxTP: Add, Progress, % "xm y" CPoser("rxTP", "T1", "B4") " w" (wMW + 5 + wProto + 5 + wAusw ) " h" 22 " c" BgColor2 " vrxPrg1 HWNDhrxTPPrg1", % 100
+		Gui, rxTP: Font, % DPI("s" (FontSize + 3) " c" FontColor " q5"), % Font
+		Gui, rxTP: Add, Text, % DPI("xm+5 ym w" (wMW + 5 + wProto + 5 + wAusw +5 ) " BackgroundTrans Center +0x200 vT1"), % "Wähle links das gewünschte Makro und rechts die auszuwertenden Quartale"
+		Gui, rxTP: Add, Progress, % DPI("xm y" CPoser("rxTP", "T1", "B4") " w" (wMW + 5 + wProto + 5 + wAusw ) " h" 22 " c" BgColor2 " vrxPrg1 HWNDhrxTPPrg1"), % 100
 
-		Gui, rxTP: Font, % "s" (FontSize - 2) " c" FontColor " q5 Normal", % Font
-		Gui, rxTP: Add, Text, % "x" CPoser("rxTP", "rxPrg1", "E-30") " y3"  " BackgroundTrans Right +Wrap vT1a", % "aktuelles`nQuartal"
-		Gui, rxTP: Font, % "s" (FontSize + 3) " c" FontColor " q5", % Font
-		Gui, rxTP: Add, Text, % "x" CPoser("rxTP", "T1a", "R8") " y" CPoser("rxTP", "T1a", "T5") " BackgroundTrans Center +0x200 vaktQ", % SubStr(aktQuartal,1,2) "/" SubStr(aktQuartal,3,2)
+		Gui, rxTP: Font, % DPI("s" (FontSize - 2) " c" FontColor " q5 Normal"), % Font
+		Gui, rxTP: Add, Text, % DPI("x" CPoser("rxTP", "rxPrg1", "E-30") " y3 BackgroundTrans Right +Wrap vT1a"), % "aktuelles`nQuartal"
+		Gui, rxTP: Font, % DPI("s" (FontSize + 3) " c" FontColor " q5"), % Font
+		Gui, rxTP: Add, Text, % DPI("x" CPoser("rxTP", "T1a", "R8") " y" CPoser("rxTP", "T1a", "T5") " BackgroundTrans Center +0x200 vaktQ"), % SubStr(aktQuartal,1,2) "/" SubStr(aktQuartal,3,2)
 
 	; testweise zur Größenbestimmung, danach werden diese gelöscht
-		Gui, rxTP: Font, % "s" (FontSize - 2)	 " Normal cBlack q5" 	, % Font
-		Gui, rxTp: Add, Button, % "xm ym grxToggleProtokolle vProtokollButton"	, % "alle"
+		Gui, rxTP: Font, % DPI("s" (FontSize - 2)	 " Normal cBlack q5")	, % Font
+		Gui, rxTp: Add, Button, % "xm ym grxToggleProtokolle vProtokollButton"	, % " alle "
 		Gui, rxTp: Add, Button, % "xm ym grxToggleExpand     vExpandButton"  	, % "Aufklappen"
 		GuiControlGet, ProtokollButton	, rxTP: Pos, ProtokollButton
 		GuiControlGet, ExpandButton	, rxTP: Pos, ExpandButton
@@ -402,15 +410,16 @@
 		Gui, rxTP: Add, Treeview, % "x" CPoser("rxTP", "Makrowahl", "R5") " y" CPoser("rxTP", "rxPrg1", "B2") " w" wProto " h" (hMPA - ButtonsH - 10) " vProtokolle grxProtokoll AltSubmit Checked HWNDhProtokolle"
 		;SetExplorerTheme(hProtokolle)
 		TVNum:= 0
-		For index, protokoll in Tagesprotokolle
-		{
-				Jahr  	:= protokoll.Jahr
-				Quartal	:= protokoll.Quartal
+		For index, protokoll in Tagesprotokolle		{
 
-				If !TPTV[Jahr]
-					TPTV[Jahr] := TV_Add(Jahr,, "bold")
+			Jahr  	:= protokoll.Jahr
+			Quartal	:= protokoll.Quartal
 
-				TPTV[Jahr][Quartal]:= TV_Add("Quartal " Quartal, TPTV[Jahr])
+			If !TPTV[Jahr]
+				TPTV[Jahr] := TV_Add(Jahr,, "bold")
+
+			TPTV[Jahr][Quartal]:= TV_Add("Quartal " Quartal, TPTV[Jahr])
+
 		}
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
@@ -419,38 +428,38 @@
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	;  BESCHRIFTUNG
-		Gui, rxTP: Font, % "s" FontSize +1  " Bold cBlack q5", % Font
-		Gui, rxTP: Add, Text, % "x" CPoser("rxTP", "Makrowahl"  	, "L0")   	" y" CPoser("rxTP", "rxPrg1", "T2") " w" wMW  " BackgroundTrans Center vT" txtLines + 3 	, % "Auswertungsmakro's"
-		Gui, rxTP: Add, Text, % "x" CPoser("rxTP", "Protokolle"   	, "L0")   	" y" CPoser("rxTP", "rxPrg1", "T2") " w" wProto " BackgroundTrans Center vT" txtLines + 4	, % "Tagesprotokolle"
-		Gui, rxTP: Add, Text, % "x" CPoser("rxTP", "Auswertungen", "L0") 	" y" CPoser("rxTP", "rxPrg1", "T2") " w" wAusw " BackgroundTrans Center vT" txtLines + 5	, % "Informationen"
+		Gui, rxTP: Font, % DPI("s" FontSize +1  " Bold cBlack q5"), % Font
+		Gui, rxTP: Add, Text, % DPI("x" CPoser("rxTP", "Makrowahl"  	, "L0")   	" y" CPoser("rxTP", "rxPrg1", "T2") " w" wMW  	" BackgroundTrans Center vT" txtLines + 3)	, % "Auswertungsmakro's"
+		Gui, rxTP: Add, Text, % DPI("x" CPoser("rxTP", "Protokolle"   	, "L0")   	" y" CPoser("rxTP", "rxPrg1", "T2") " w" wProto	" BackgroundTrans Center vT" txtLines + 4)	, % "Tagesprotokolle"
+		Gui, rxTP: Add, Text, % DPI("x" CPoser("rxTP", "Auswertungen", "L0") 	" y" CPoser("rxTP", "rxPrg1", "T2") " w" wAusw	" BackgroundTrans Center vT" txtLines + 5)	, % "Informationen"
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	;  START BUTTON (vMakroButton, vAQButton, vReloadButton)
 		Gui, rxTP: Font, % "s" (FontSize)  	 " Normal cBlack q5"   	, % Font
-		Gui, rxTp: Add, Button, % "xm                                             y" CPoser("rxTP", "Makrowahl"    	, "B5") " gRunMacro  vMakroButton"                                	, % "Makro starten"
+		Gui, rxTp: Add, Button, % "xm                                             y" CPoser("rxTP", "Makrowahl"    	, "B5") " gRunMacro  vMakroButton"                                    	, % "Makro starten"
 		Gui, rxTP: Font, % "s" (FontSize - 2)	 " Normal cBlack q5" 	, % Font
 		GuiControl, rxTp: Move, ProtokollButton	, % "x" CPoser("rxTP", "Protokolle" , "L0") " y" CPoser("rxTP", "Makrowahl"    	, "B5")
 		GuiControl, rxTp: Move, ExpandButton	, % "x" CPoser("rxTP", "Protokolle" , "L0") " y" CPoser("rxTP", "ProtokollButton" 	, "B5")
-		Gui, rxTp: Add, Button, % "x" CPoser("rxTP", "ProtokollButton", "R5")    " y" CPoser("rxTP", "ProtokollButton", "T0")  	" grxAktuellesQuartal    vakQButton"        	, % "akt.Quartal"
+		Gui, rxTp: Add, Button, % "x" CPoser("rxTP", "ProtokollButton", "R5")    " y" CPoser("rxTP", "ProtokollButton", "T0")  	" grxAktuellesQuartal    vakQButton"            	, % "akt.Quartal"
 		Gui, rxTP: Font, % "s" (FontSize)       " Normal cBlack q5"    	, % Font
-		Gui, rxTp: Add, Button, % "x+910                                                      y" CPoser("rxTP", "Makrowahl", "B5")      	" grxTPReload        	vReloadButton"         	, % "Reload Skript"
+		Gui, rxTp: Add, Button, % "x+910                                                      y" CPoser("rxTP", "Makrowahl", "B5")      	" grxTPReload        	vReloadButton"             	, % "Reload Skript"
 		GuiControlGet, RLBtn            	, rxTP: Pos, ReloadButton
 
 		;Gui, rxTp: Add, Button, % "xm y" CPoser("rxTP", "Makrowahl", "B10") " gRestartMacro"	, % "letztes Makro wiederholen"
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	;  VORSCHAUBEREICH (Fortschritt-Info-Bereich (Progress Texte)) (vrxGroup1)
-		Gui, rxTP: Font, % "s" FontSize " Normal cWhite q5", % Font
+		Gui, rxTP: Font, % DPI("s" FontSize " Normal cWhite q5"), % Font
 		AuswRechts := CPoser("rxTP", "Auswertungen", "R5")
 		emptyLine := " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
-		Gui, rxTP: Add, Text, % "x" AuswRechts " y" CPoser("rxTP", "T1", "B36") " w" (wInfo-15 ) " BackgroundTrans +0x200 vT3"                                       	, % emptyLine
+		Gui, rxTP: Add, Text, % DPI("x" AuswRechts " y" CPoser("rxTP", "T1", "B36") " w" (wInfo-15 ) " BackgroundTrans +0x200 vT3")                                               	, % emptyLine
 		Loop, % (txtLines - 1)
-				Gui, rxTP: Add, Text, % "x" AuswRechts " y" CPoser("rxTP", "T" (A_Index+2), "B0") " w" (wInfo-15) " BackgroundTrans +0x200 vT" (A_Index+3)	, % emptyLine
-		Gui, rxTp: Add, GroupBox, % "x" (AuswRechts - 10) " y" CPoser("rxTP", "T1", "B20") " h" CPoser("rxTP", "T" txtLines-1 , "B10")  " w" wInfo + 5 " +0x00008000 vrxGroup1"
+		Gui, rxTP: Add, Text, % DPI("x" AuswRechts " y" CPoser("rxTP", "T" (A_Index+2), "B0") " w" (wInfo-15) " BackgroundTrans +0x200 vT" (A_Index+3))                	, % emptyLine
+		Gui, rxTp: Add, GroupBox, % DPI("x" (AuswRechts - 10) " y" CPoser("rxTP", "T1", "B20") " h" CPoser("rxTP", "T" txtLines-1 , "B10")  " w" wInfo + 5 " +0x00008000 vrxGroup1")
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	;  ANZEIGEN UND CONTROLS AUTOMATISCH SETZEN/ÄNDERN/POSITIONIEREN
-		Gui, rxTP: Show, % guipos " Hide", Abrechnungshelfer - Addendum für Albis on Windows
+		Gui, rxTP: Show, % DPI(guipos) " Hide", Abrechnungshelfer - Addendum für Albis on Windows
 
 		WinGetPos,			,			, GuiW	 , GuiH	, % "ahk_id " hAbrH
 		WinGetPos, AlbisX	, AlbisY	, AlbisW , AlbisH, % "ahk_class OptoAppClass"
@@ -464,10 +473,11 @@
 		;DllCall("UxTheme.dll\SetWindowTheme", "Ptr", hrxTPPrg1, "WStr", "Telegram", "WStr", "")
 		WinSet, ExStyle, -0x20000, % "ahk_id " hrxTPPrg1
 
-		Gui, rxTP: Show, % guipos " Hide AutoSize"	, Abrechnungshelfer - Addendum für Albis on Windows
+		Gui, rxTP: Show, % DPI(guipos) " Hide"    	, Abrechnungshelfer - Addendum für Albis on Windows
 
 		GuiControlGet, ExpandButton , rxTP: Pos, ExpandButton
-		GuiH := CPoser("rxTP", "ExpandButton", "B" yMargin), m := GetWindowSpot(hAbrH)
+		GuiH	:= CPoser("rxTP", "ExpandButton", "B" yMargin)
+		m     	:= GetWindowSpot(hAbrH)
 		SetWindowPos(hAbrH, m.X, m.Y, m.W, GuiH)
 		Gui, rxTP: Show, , Abrechnungshelfer - Addendum für Albis on Windows
 
@@ -487,6 +497,7 @@
 
 	; für die Interskript-Kommunikation (Datentausch)
 		OnMessage(0x4a, "Receive_WM_COPYDATA")
+
 
 		gosub, rxToggleProtokolle
 
@@ -585,13 +596,12 @@ rxToggleExpand:   	;{                                                           
 	else
 		GuiControl, rxTp:, ExpandButton, % "Ausklappen"
 
-	Loop, % TV_GetCount()
-	{
-			If TVExpand && TV_GetChild(TVID)
-				TV_Modify(TVID, "Expand")
-			else if !TVExpand && TV_GetChild(TVID)
-				TV_Modify(TVID, "-Expand")
-			TVID := TV_GetNext(TVID)
+	Loop, % TV_GetCount()	{
+		If TVExpand && TV_GetChild(TVID)
+			TV_Modify(TVID, "Expand")
+		else if !TVExpand && TV_GetChild(TVID)
+			TV_Modify(TVID, "-Expand")
+		TVID := TV_GetNext(TVID)
 	}
 
 	Protokolle:= ProtokollAuswahl("rxTP", "Protokolle")
@@ -601,7 +611,9 @@ return ;}
 
 rxTPReload:           	;{                                                                                  	das Abrechnungshelferskript neu starten
 	a:= GetWindowSpot(hAbrH)
-	IniWrite, % a.X "|" a.Y "|" a.CW-21 "|" a.CH,  % AddendumDir . "\Addendum.ini", Abrechnungshelfer, Fensterposition
+	factor := (96 / screenDims(1).DPI)
+	a:= GetWindowSpot(hAbrH)
+	IniWrite, % a.X "|" a.Y "|" a.CW - 21 "|" a.CH,  % AddendumDir "\Addendum.ini", % compname, Abrechnungshelfer_Position
 	Reload
 return ;}
 
@@ -664,8 +676,8 @@ RunMacro:            	;{                                                        
 	GuiControl, rxTP:, T15, % "Anzahl ausgewählter Protokolle: " 	(Protokolle.MaxIndex() >=1 ? Protokolle.MaxIndex() : "0")
 	GuiControl, rxTP:, T16, % "erstes ausgewähltes Protokoll: "  	Protokolle[1]
 
-	If Makro[Makrowahl].Parameter
-	{
+	If Makro[Makrowahl].Parameter {
+
 		If !Protokolle.MaxIndex()
 				return
 			/*
@@ -678,7 +690,7 @@ RunMacro:            	;{                                                        
 		 */
 	}
 
-	IniWrite, % Makrowahl  	, % AddendumDir . "\Addendum.ini", Abrechnungshelfer,  letzte_Makrofunktion
+	IniWrite, % Makrowahl  	, % AddendumDir "\Addendum.ini", Abrechnungshelfer,  letzte_Makrofunktion
 	gosub % Makro[Makrowahl].Label
 
 return ;}
@@ -698,17 +710,17 @@ rxTpGuiSize:          	;{                                                       
 	GuiControl, rxTP: -Redraw, Makrowahl
 	GuiControl, rxTP: -Redraw, Protokolle
 	Loop, % txtLines + 1
-		GuiControl, rxTP: Move, % "T" (A_Index + 1 ), % "x" prevX
-	GuiControl, rxTP: Move, rxGroup1            	, % "x"	prevX - 10
-	GuiControl, rxTP: Move, rxPrg1                 	, % "w"	prevX - xMargin - 21
-	GuiControl, rxTP: Move, Makrowahl        	, % "h"	hAusw
-	GuiControl, rxTP: Move, Protokolle         	, % "h" 	hAusw
-	GuiControl, rxTP: Move, Auswertungen    	, % "w" 	wAusw " h" hAusw
-	GuiControl, rxTP: Move, MakroButton     	, % "y" 	(MBy := CPoser("rxTP", "Makrowahl"  	  , "B5"))
-	GuiControl, rxTP: Move, ProtokollButton 	, % "x" 	CPoser("rxTP", "Protokolle"    	  , "L0")	" y" MBy
-	GuiControl, rxTP: Move, ExpandButton    	, % "x" 	CPoser("rxTP", "ProtokollButton", "L0")	" y" CPoser("rxTP", "ProtokollButton"	, "B5")
-	GuiControl, rxTP: Move, akQButton        	, % "x" 	CPoser("rxTP", "ProtokollButton", "R5")	" y" MBy
-	GuiControl, rxTP: Move, ReloadButton    	, % "x" 	(rxTPW - RLBtnW - xMargin - 5)         	" y" MBy
+		GuiControl, rxTP: Move, % "T" (A_Index + 1 ), % DPI("x" prevX)
+	GuiControl, rxTP: Move, rxGroup1            	, % DPI("x" 	prevX - 10)
+	GuiControl, rxTP: Move, rxPrg1                 	, % DPI("w"	prevX - xMargin - 21)
+	GuiControl, rxTP: Move, Makrowahl        	, % DPI("h" 	hAusw)
+	GuiControl, rxTP: Move, Protokolle         	, % DPI("h" 	hAusw)
+	GuiControl, rxTP: Move, Auswertungen    	, % DPI("w" 	wAusw " h" hAusw)
+	GuiControl, rxTP: Move, MakroButton     	, % DPI("y" 	(MBy := CPoser("rxTP", "Makrowahl"  	  , "B5")))
+	GuiControl, rxTP: Move, ProtokollButton 	, % DPI("x" 	CPoser("rxTP", "Protokolle"    	  , "L0")	" y" MBy)
+	GuiControl, rxTP: Move, ExpandButton    	, % DPI("x" 	CPoser("rxTP", "ProtokollButton", "L0")	" y" CPoser("rxTP", "ProtokollButton"	, "B5"))
+	GuiControl, rxTP: Move, akQButton        	, % DPI("x" 	CPoser("rxTP", "ProtokollButton", "R5")	" y" MBy)
+	GuiControl, rxTP: Move, ReloadButton    	, % DPI("x" 	(rxTPW - RLBtnW - xMargin - 5)         	" y" MBy)
 	;GuiControl, rxTP: Move, % "T" txtLines+5	, % "w" 	wAusw
 	Critical, Off
 	SetTimer, rxTPGuiRedraw, -100
@@ -725,8 +737,9 @@ return ;}
 rxTPGuiClose:       	;{                                                                                 	Speichern von Einstellungen wenn der Abrechnungshelfer beendet wird
 rxTPGuiEscape:
 	;WinGetPos, GuiX, GuiY, GuiW, GuiH, % "ahk_id " hAbrH
+	factor := (96 / screenDims(1).DPI)
 	a:= GetWindowSpot(hAbrH)
-	IniWrite, % a.X "|" a.Y "|" a.CW-21 "|" a.CH,  % AddendumDir . "\Addendum.ini", Abrechnungshelfer, Fensterposition
+	IniWrite, % a.X "|" a.Y "|" a.CW - 21 "|" a.CH,  % AddendumDir "\Addendum.ini", % compname, Abrechnungshelfer_Position
 ExitApp ;}
 
 ;}
@@ -865,20 +878,19 @@ return TvE
 
 ProtokollAuswahl(GuiName, TreeViewName) {                                               	;-- erstellt ein Object das alle ausgewählten Protokolle enthält
 
-	TP:= Object()
+	TP := Object()
 	Gui, % GuiName ": Default"
 	Gui, % GuiName ": TreeView", % TreeViewName
 
 	; first element in treeview
 	TVID	 := TV_GetNext()
-	while, % TVID:= TV_GetNext(TVID, "C")
-	{
-			If !TV_GetChild(TVID) {
-					TV_GetText(ChildText	 ,	TVID)
-					TV_GetText(ParentText, 	TV_GetParent(TVID))
-					RegExMatch(ChildText, "Quartal\s+\d(?<Nr>\d)", Q)
-					TP.Push(ParentText "-" QNr)
-			}
+	while % (TVID := TV_GetNext(TVID, "C")) 	{
+		If !TV_GetChild(TVID) {
+				TV_GetText(ChildText	 ,	TVID)
+				TV_GetText(ParentText, 	TV_GetParent(TVID))
+				RegExMatch(ChildText, "Quartal\s+\d(?<Nr>\d)", Q)
+				TP.Push(ParentText "-" QNr)
+		}
 	}
 
 return TP
@@ -985,45 +997,39 @@ CalendarOK: 				                                                                
 	Gui, newCal: Submit
 	Gui, newCal: Destroy
 
-	If !InStr(MyCalendar,"-")                                                                                                 	; just in case we remove MULTI option
-	{
-			FormatTime, CalendarM1, %MyCalendar%, dd.MM.yyyy
-			CalendarM2:= CalendarM1
+	If !InStr(MyCalendar,"-")  {                                                                                               	; just in case we remove MULTI option
+		FormatTime, CalendarM1, %MyCalendar%, dd.MM.yyyy
+		CalendarM2:= CalendarM1
 	}
-	Else
-	{
-			 FormatTime, CalendarM1, % StrSplit(MyCalendar,"-").1, dd.MM.yyyy
-			 FormatTime, CalendarM2, % StrSplit(MyCalendar,"-").2, dd.MM.yyyy
+	Else	{
+		 FormatTime, CalendarM1, % StrSplit(MyCalendar,"-").1, dd.MM.yyyy
+		 FormatTime, CalendarM2, % StrSplit(MyCalendar,"-").2, dd.MM.yyyy
 	}
 
-	If InStr(FormularT, "Muster 1a") && (CalendarM1 != CalendarM2)
-	{
-			ControlSetText, Edit1, %CalendarM1%, % "ahk_id " feldB.hWin
-			ControlSetText, Edit2, %CalendarM2%, % "ahk_id " feldB.hWin
+	If InStr(FormularT, "Muster 1a") && (CalendarM1 != CalendarM2)	{
+		ControlSetText, Edit1, %CalendarM1%, % "ahk_id " feldB.hWin
+		ControlSetText, Edit2, %CalendarM2%, % "ahk_id " feldB.hWin
 	}
-	else If (InStr(FormularT, "Muster 12a") || InStr(FormularT, "Muster 21")) && (CalendarM1 != CalendarM2)
-	{
-			ControlSetText, Edit6, %CalendarM1%, % "ahk_id " feldB.hWin
-			ControlSetText, Edit7, %CalendarM2%, % "ahk_id " feldB.hWin
+	else If (InStr(FormularT, "Muster 12a") || InStr(FormularT, "Muster 21")) && (CalendarM1 != CalendarM2)	{
+		ControlSetText, Edit6, %CalendarM1%, % "ahk_id " feldB.hWin
+		ControlSetText, Edit7, %CalendarM2%, % "ahk_id " feldB.hWin
 	}
-	else if InStr(FormularT, "Muster 20") && (CalendarM1 != CalendarM2)
-	{
-			editgroup   	:= []
-			editgroup[1]	:= [3,4]
-			editgroup[2]	:= [7,8]
-			editgroup[3]	:= [11,12]
-			editgroup[4]	:= [15,16]
-			Loop, % editgroup.MaxIndex()
-				If (feldB.classnn = editgroup[A_Index, 1]) || (feldB.classnn = editgroup[A_Index, 2])
-				{
-						ControlSetText, % "Edit" editgroup[A_Index, 1] 	 , %CalendarM1%, % "ahk_id " feldB.hWin
-						ControlSetText, % "Edit" editgroup[A_Index, 2] 	 , %CalendarM2%, % "ahk_id " feldB.hWin
-						ControlSetText, % "Edit" editgroup[A_Index+1, 1] , %CalendarM1%, % "ahk_id " feldB.hWin
-						break
-				}
+	else if InStr(FormularT, "Muster 20") && (CalendarM1 != CalendarM2)	{
+		editgroup   	:= []
+		editgroup[1]	:= [3,4]
+		editgroup[2]	:= [7,8]
+		editgroup[3]	:= [11,12]
+		editgroup[4]	:= [15,16]
+		Loop, % editgroup.MaxIndex()
+			If (feldB.classnn = editgroup[A_Index, 1]) || (feldB.classnn = editgroup[A_Index, 2])	{
+				ControlSetText, % "Edit" editgroup[A_Index, 1] 	 , %CalendarM1%, % "ahk_id " feldB.hWin
+				ControlSetText, % "Edit" editgroup[A_Index, 2] 	 , %CalendarM2%, % "ahk_id " feldB.hWin
+				ControlSetText, % "Edit" editgroup[A_Index+1, 1] , %CalendarM1%, % "ahk_id " feldB.hWin
+				break
+			}
 	}
 	else
-			ControlSetText,, %CalendarM1%, % "ahk_id " feldB.hwnd
+		ControlSetText,, %CalendarM1%, % "ahk_id " feldB.hwnd
 
 	CalendarM1:=CalendarM2:=0
 
@@ -1075,18 +1081,17 @@ M1:                                                  	;	Tagesprotokoll konvertie
 
 	; Dateidialog anzeigen
 		FileSelectFile, tprotfile,, % TagesprotokollPfad, Tagesprotoll auswählen ;{
-		If StrLen(tprotFile) = 0
-		{
-				MsgBox,, Addendum für Albis on Windows - Abrechnungshelfer,
-				(LTrim
-				Es wurde keine Datei ausgewählt!
-				Die Konvertierung wird abgebrochen!
-				), 3
-				GuiControl,rxTP:, T3, % "Es wurde keine Datei zum Konvertieren ausgewählt."
-				return
+		If (StrLen(tprotFile) = 0)		{
+			MsgBox,, Addendum für Albis on Windows - Abrechnungshelfer,
+			(LTrim
+			Es wurde keine Datei ausgewählt!
+			Die Konvertierung wird abgebrochen!
+			), 3
+			GuiControl,rxTP:, T3, % "Es wurde keine Datei zum Konvertieren ausgewählt."
+			return
 		}
 		SplitPath, tprotfile, tprotfilename,,, tprotfilenameNoExt
-		FileRead, tpfile, % tprotfile
+		tpFile := FileOpen(tprotfile, "r").Read()
 
 		If !InStr(tpfile, "\HTagesprotokoll") {
 			MsgBox, 262144 , % "Addendum - " A_ScriptName,
@@ -1135,18 +1140,19 @@ M2:                                                  	;	freie Statistik         
 		regExFound	:= 0
 		ind				:= 0
 		Patidx			:= 0
+		; dia = \{F\d+\.* | - lko = 351\d\d
 
-		GuiFreieStatistik()
+		;GuiFreieStatistik()
+		InputBox, rxStr, Abrechnungshelfer, Hier eingeben wonach Sie suchen:,, 600, 300
 
 
 		return
-	;~ ; im Moment noch eingeschränkte Suchfunktion, sobald einmalig die Suche erfolgreich war wird mit dem nächsten Patienten weiter gemacht!!
-		;~ IniRead, tpfilepath,  % AddendumDir . "\Addendum.ini", Abrechnungshelfer, letzte_Tagesprotokolldatei
-		;~ If InStr(tpfilepath, "Error") or !tpfilepath
-		;~ {
-					;~ FileSelectFile, tpfilepath,, % AddendumDir . "\Tagesprotokolle\" . A_YYYY, Tagesprotokoll auswählen
-					;~ IniWrite, % tpfilepath,  % AddendumDir . "\Addendum.ini", Abrechnungshelfer, letzte_Tagesprotokolldatei
-		;~ }
+	; im Moment noch eingeschränkte Suchfunktion, sobald einmalig die Suche erfolgreich war wird mit dem nächsten Patienten weiter gemacht!!
+		IniRead, tpfilepath,  % AddendumDir "\Addendum.ini", Abrechnungshelfer, letzte_Tagesprotokolldatei
+		If InStr(tpfilepath, "Error") || !tpfilepath {
+			FileSelectFile, tpfilepath,, % AddendumDir "\Tagesprotokolle\" A_YYYY, Tagesprotokoll auswählen
+			IniWrite, % tpfilepath,  % AddendumDir "\Addendum.ini", Abrechnungshelfer, letzte_Tagesprotokolldatei
+		}
 
 	; Tagesprotokoll wird eingelesen
 		FileRead, tpfile, % tpfilepath
@@ -1168,34 +1174,36 @@ M2:                                                  	;	freie Statistik         
 	;If FileExist(AddendumDir . "\Tagesprotokolle\" . A_YYYY . "\AbrH-freieStatistik.txt")
 	;		FileDelete, % AddendumDir . "\Tagesprotokolle\" . A_YYYY . "\AbrH-freieStatistik.txt"
 
-	File:= FileOpen(AddendumDir . "\Tagesprotokolle\" . A_YYYY . "\AbrH-freieStatistik.txt", "w")
+	File := FileOpen(AddendumDir "\Tagesprotokolle\" A_YYYY "\AbrH-freieStatistik.txt", "w")
 	File.Write("Ergebnisse für: " Suchmuster ", Datum: " A_DD . "." . A_MM . "." A_YYYY . ", " . A_Hour . ":" . A_Min . "`n")
 
 	Loop, Parse, tpfile, `n
 	{
-				If RegExMatch(A_LoopField, RegExFind[1], PatID)
-				{
-							;MsgBox, % PatIDStored ", " PatID
-							If (regExFound = 2) and (A_Index > 1)
-									File.Write("kein Treffer bei Patient: " . PatIDStored . ";" . PatName . ";" . PatBirth . "`n")
+				If RegExMatch(A_LoopField, RegExFind[1], PatID) 				{
 
-							PatIDStored:= PatID
-							RegExMatch(A_LoopField, RegExFind[3], PatName)
-							RegExMatch(A_LoopField, RegExFind[4], PatBirth)
-							regExFound:= 0
-							PatIdx ++
-							GuiControl,, T3, % "akt. Patient   : " PatName
-							GuiControl,, T4, % "Patientenzahl: " PatIdx
-							continue
+						;MsgBox, % PatIDStored ", " PatID
+						If (regExFound = 2) and (A_Index > 1)
+							File.Write("kein Treffer bei Patient: " . PatIDStored . ";" . PatName . ";" . PatBirth . "`n")
+
+						PatIDStored:= PatID
+						RegExMatch(A_LoopField, RegExFind[3], PatName)
+						RegExMatch(A_LoopField, RegExFind[4], PatBirth)
+						regExFound:= 0
+						PatIdx ++
+						GuiControl,, T3, % "akt. Patient   : " PatName
+						GuiControl,, T4, % "Patientenzahl: " PatIdx
+						continue
+
 				}
 
-				If !regExFound and RegExMatch(A_LoopField, regExStr, fdummy)					;"i)lko.*0322"
-				{
-							regExFound:= 1
-							ind++
-							GuiControl,, T5, % "Treffer       : " PatName
-							GuiControl,, T6, % "Trefferzahl : " ind
-							File.Write(PatIDStored . ";" . PatName . ";" . PatBirth . "`n")
+				If !regExFound and RegExMatch(A_LoopField, regExStr, fdummy)	{				;"i)lko.*0322"
+
+					regExFound:= 1
+					ind++
+					GuiControl,, T5, % "Treffer       : " PatName
+					GuiControl,, T6, % "Trefferzahl : " ind
+					File.Write(PatIDStored . ";" . PatName . ";" . PatBirth . "`n")
+
 				}
 
 
@@ -1303,8 +1311,6 @@ GuiFreieStatistik() {
 	Duration 		:= 500                             	; Duration of Animation in milliseconds
 	AnimateWindow(hFsk, Duration, FADE_SHOW) ;}
 
-
-
 	OnMessage(0x201, "FSK_LBUTTONDOWN")
 
 	;Gui, ▲▼▲►◄
@@ -1320,42 +1326,40 @@ FSKGuiInteraction: ;{
 		Gui, FSk: Submit, NoHide
 		Fc := A_GuiControl
 
-
 		If RegExMatch(Fcl, "\w+CB(\d+)", used) {
 
-				ctrls:= StrSplit(oFsK.Controls[used1])
-				GuiControlGet, ischecked, FSk:, Fcl
-				If isChecked
-					Option:= "Enable"
-				else
-					Option:= "Disable"
-				Loop, % ctrls.MaxIndex()
-					GuiControl, % "FSk: " Option, % ctrls[A_Index]
+			ctrls:= StrSplit(oFsK.Controls[used1])
+			GuiControlGet, ischecked, FSk:, Fcl
+			If isChecked
+				Option:= "Enable"
+			else
+				Option:= "Disable"
+			Loop, % ctrls.MaxIndex()
+				GuiControl, % "FSk: " Option, % ctrls[A_Index]
 
 		}
 
 		If InStr(Fc, "Mehr") && (InStr(A_GuiEvent, "S") || InStr(A_GuiEvent, "Normal")) 		{
-				Gui, Fsk: Default
-				GuiControlGet, pl, Fsk:Pos, Mehr
-				GuiControlGet, pr, Fsk:Pos, FskPrg1
-				GuiControlGet, pS, Fsk:Pos, FSKStarten
-				GuiControlGet, pA, Fsk:Pos, FskAuswahl
-				GuiControlGet, pT, Fsk:Pos, FskTSE
-				WinGetPos, wx, wy, ww, wh, % "ahk_id " hFsk
-				Loop
-				{
-						schub := A_Index * 2.6
-						;DllCall("Sleep","UInt", 1)
-						GuiControl, Fsk: MoveDraw, Mehr                      	, % "y" plY + schub
-						GuiControl, Fsk: MoveDraw, FskPrg1                  	, % "y" prY + schub
-						GuiControl, Fsk: MoveDraw, FskStarten                	, % "y" pSY + schub
-						GuiControl, Fsk: MoveDraw, FskSpeichern           	, % "y" pSY + schub
-						GuiControl, Fsk: MoveDraw, FskAbbruch            	, % "y" pSY + schub
-						GuiControl, Fsk: MoveDraw, FskAuswahl            	, % "y" pAY + schub
-						GuiControl, Fsk: MoveDraw, FskTSE	, % "y" pTY + schub
-						Gui, Fsk: Show, % "AutoSize"
-				} until schub >=35
-				WinSet, Redraw,, % "ahk_id " hFsk
+			Gui, Fsk: Default
+			GuiControlGet, pl, Fsk:Pos, Mehr
+			GuiControlGet, pr, Fsk:Pos, FskPrg1
+			GuiControlGet, pS, Fsk:Pos, FSKStarten
+			GuiControlGet, pA, Fsk:Pos, FskAuswahl
+			GuiControlGet, pT, Fsk:Pos, FskTSE
+			WinGetPos, wx, wy, ww, wh, % "ahk_id " hFsk
+			Loop 	{
+				schub := A_Index * 2.6
+				;DllCall("Sleep","UInt", 1)
+				GuiControl, Fsk: MoveDraw, Mehr                      	, % "y" plY + schub
+				GuiControl, Fsk: MoveDraw, FskPrg1                  	, % "y" prY + schub
+				GuiControl, Fsk: MoveDraw, FskStarten                	, % "y" pSY + schub
+				GuiControl, Fsk: MoveDraw, FskSpeichern           	, % "y" pSY + schub
+				GuiControl, Fsk: MoveDraw, FskAbbruch            	, % "y" pSY + schub
+				GuiControl, Fsk: MoveDraw, FskAuswahl            	, % "y" pAY + schub
+				GuiControl, Fsk: MoveDraw, FskTSE	, % "y" pTY + schub
+				Gui, Fsk: Show, % "AutoSize"
+			} until schub >=35
+			WinSet, Redraw,, % "ahk_id " hFsk
 		}
 
 return ;}
@@ -1364,9 +1368,8 @@ return ;}
 
 FSK_LBUTTONDOWN(wparam, lparam, msg, hWMLbd) {				;-- Klick mit der li. Maustaste verschiebt das Fenster
 	 global hFsk, hFskPrgUS
-	;if (GetHex(hWMLbd) = GetHex(hFsk))
 	if (hWMLbd in %hFsk%,%hFskPrgUS%)
-			PostMessage, 0xA1, 2,,, A 					; WM_NCLBUTTONDOWN
+		PostMessage, 0xA1, 2,,, A 					; WM_NCLBUTTONDOWN
 return
 }
 
@@ -1375,39 +1378,38 @@ MouseMove(lParam,wParam){
 	static thisTime:= 0
 	global hFsk, Fsk, Mehr, FskStarten, FskSpeichern, FskAbbruch, FskTSE, FskPrg1
 
-	If (A_GuiControl="Mehr") && (thisTime = 0) {
+	If (A_GuiControl="Mehr") && (thisTime = 0)
+		thisTime:= A_TickCount
 
-			thisTime:= A_TickCount
-	}
+	;ToolTip, % A_GuiEvent
 
-		;ToolTip, % A_GuiEvent
+	If (thisTime > 0 )
+		If (A_TickCount - thisTime > 1500)		{
 
-		If (thisTime > 0 )
-			If (A_TickCount - thisTime > 1500)
-			{
-				Gui, Fsk: Default
-				GuiControlGet, pl, Fsk:Pos, Mehr
-				GuiControlGet, pr, Fsk:Pos, FskPrg1
-				GuiControlGet, pS, Fsk:Pos, FSKStarten
-				GuiControlGet, pA, Fsk:Pos, FskAuswahl
-				GuiControlGet, pT, Fsk:Pos, FskTSE
-				WinGetPos, wx, wy, ww, wh, % "ahk_id " hFsk
-				thisTime:= 0
-				Loop, 34
-				{
-						;DllCall("Sleep","UInt", 1)
-						GuiControl, Fsk: MoveDraw, Mehr                      	, % "y" plY + A_Index
-						GuiControl, Fsk: MoveDraw, FskPrg1                  	, % "y" prY + A_Index
-						GuiControl, Fsk: MoveDraw, FskStarten                	, % "y" pSY + A_Index
-						GuiControl, Fsk: MoveDraw, FskSpeichern           	, % "y" pSY + A_Index
-						GuiControl, Fsk: MoveDraw, FskAbbruch            	, % "y" pSY + A_Index
-						GuiControl, Fsk: MoveDraw, FskAuswahl            	, % "y" pAY + A_Index
-						GuiControl, Fsk: MoveDraw, FskTSE	, % "y" pTY + A_Index
-						Gui, Fsk: Show, % "AutoSize"
-				}
-				WinSet, Redraw,, % "ahk_id " hFsk
+			Gui, Fsk: Default
+			GuiControlGet, pl, Fsk:Pos, Mehr
+			GuiControlGet, pr, Fsk:Pos, FskPrg1
+			GuiControlGet, pS, Fsk:Pos, FSKStarten
+			GuiControlGet, pA, Fsk:Pos, FskAuswahl
+			GuiControlGet, pT, Fsk:Pos, FskTSE
+			WinGetPos, wx, wy, ww, wh, % "ahk_id " hFsk
+			thisTime:= 0
 
+			Loop 34	{
+				;DllCall("Sleep","UInt", 1)
+				GuiControl, Fsk: MoveDraw, Mehr                      	, % "y" plY + A_Index
+				GuiControl, Fsk: MoveDraw, FskPrg1                  	, % "y" prY + A_Index
+				GuiControl, Fsk: MoveDraw, FskStarten                	, % "y" pSY + A_Index
+				GuiControl, Fsk: MoveDraw, FskSpeichern           	, % "y" pSY + A_Index
+				GuiControl, Fsk: MoveDraw, FskAbbruch            	, % "y" pSY + A_Index
+				GuiControl, Fsk: MoveDraw, FskAuswahl            	, % "y" pAY + A_Index
+				GuiControl, Fsk: MoveDraw, FskTSE	, % "y" pTY + A_Index
+				Gui, Fsk: Show, % "AutoSize"
 			}
+
+			WinSet, Redraw,, % "ahk_id " hFsk
+
+		}
 
 
 	;else
@@ -1421,16 +1423,16 @@ M3:                                                  	;	Pat. für GVU suchen    
 	;---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	; VARIABLEN
 	;-------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-		StarteAbPatient  	:= 0                                          	; ab welchem Patient die Suche begonnen oder fortgesetzt werden soll
+		StarteAbPatient  	:= 0                                             	; ab welchem Patient die Suche begonnen oder fortgesetzt werden soll
 		MinGVUAbstand	:= 36                                              	; Angabe in Monate (hat sich geändert am 01.01.2020 auf 36 Monate - leider)
 		MinAlter            	:= 35                                            	; einmalig bis zum 35.LJ
 		MinAlterIntervall	:= 35
-		qname                	:= "0120"
-		maxMonth         	:= "01"
+		qname                	:= "0420"
+		maxMonth         	:= "12"
 		maxYear           	:= "17"
 		QYear              	:= "20" SubStr(qname, 3, 2)
 		LastQMonth      	:= (SubStr(qname, 1, 2) - 1) * 3 + 1 + 2
-		LastQDay          	:= days_in_month( QYear LastQMonth ) "." SubStr("0" LastQMonth, -1) "." QYear
+		LastQDay          	:= DaysInMonth( QYear LastQMonth ) "." SubStr("0" LastQMonth, -1) "." QYear
 
 		tpfilesDir            	:= AddendumDir "\Tagesprotokolle"
 		tprotfile             	:= Tagesprotokollpfad "\" QYear "-" SubStr(qname,2,1) "_TP-AbrH.txt"
@@ -1462,7 +1464,7 @@ M3:                                                  	;	Pat. für GVU suchen    
 		FileRead, tprot, % tprotfile
 
 	; ermitteln der Zeilen- und Patientenanzahl in der Datei
-		TP:= TPMax(tprot)
+		TP := TPMax(tprot)
 	;}
 
 	;---------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1474,41 +1476,44 @@ M3:                                                  	;	Pat. für GVU suchen    
 
 			; ========================================
 			; =============   Patienten-ID erkennen    ============= ;{
-				If RegExMatch(A_LoopField, RegExFind[1], PatID)
-				{
+				If RegExMatch(A_LoopField, RegExFind[1], PatID)	{
+
 						GuiControl, rxTP: , T10	, % "Patienten bearbeitet : " SubStr("0000" PatIndex, -3) "/" SubStr("0000" TP.Patients, -3)
 
 					; vor Wechsel zu anderem Patienten: prüfen welche Daten zum bisherigen Patienten vorhanden sind
-						If (PatIndex >= StarteAbPatient)
-						{
+						If (PatIndex >= StarteAbPatient)			{
+
 								Gui, rxTP: Default
 								GuiControl, rxTP: , T7 	, % "aktuelle Patienten-ID: " PatIDStored ", Alter: " ageStored
 								GuiControl, rxTP: , T8 	, % "Schein vorhanden    : " (ScheinVorhanden = true ? "Ja" : "Nein")
 								GuiControl, rxTP: , T9 	, % "letzte GVU               : " ((StrLen(year) > 0) ? (SubStr("0" month, -1) "/" SubStr("0" year, -1)) : ("--/--"))
 								letzteGVU := StrLen(year) > 0 ? (SubStr("0" month, -1) "/" SubStr("0" year, -1)) : (0)
-								If (PatID <> PatIDStored)
-								{
-										If ScheinVorhanden
-										{
-												If GVUStored && (ageStored > MinAlterIntervall)
-												{
-														GVUAbstand:= (maxMonth + maxYear * 12) - (month + year * 12)
-														If (GVUAbstand >= MinGVUAbstand)
-														{
-																For PatientenID, Patient in PatDB
-																	If (PatientenID = PatIDStored)
-																	{
-																			Anzeige:= "(" PatIDStored ") " Patient.Nn ", " Patient.Vn " (" Patient.Gt "), " Patient.Gd " (" ageStored " Jahre), letzte GVU: " letzteGVU
- 																			break
-																	}
-															; Daten werden in ein Objekt geschrieben
-																Vorsorgen.Push({"PatID":PatIDStored, "Alter":ageStored, "Name":Anzeige , "letzteGVU": letzteGVU})
-																GuiControl, rxTP: , T11 	, % "Vorschläge: " Vorsorgen.MaxIndex()
-														}
-												}
-												;else if (ageStored >= MinAlter)
-												;		gosub GVUPatientVorschlag
+
+								If (PatID <> PatIDStored) && ScheinVorhanden	{
+
+										If GVUStored && (ageStored > MinAlterIntervall) {
+
+											GVUAbstand:= (maxMonth + maxYear * 12) - (month + year * 12)
+
+											If (GVUAbstand >= MinGVUAbstand)	{
+
+												For PatientenID, Patient in PatDB
+													If (PatientenID = PatIDStored)	{
+														Anzeige:= "(" PatIDStored ") " Patient.Nn ", " Patient.Vn " (" Patient.Gt "), " Patient.Gd " (" ageStored " Jahre), letzte GVU: " letzteGVU
+														break
+													}
+
+											  ; Daten werden in ein Objekt geschrieben
+												Vorsorgen.Push({"PatID":PatIDStored, "Alter":ageStored, "Name":Anzeige , "letzteGVU": letzteGVU})
+												GuiControl, rxTP: , T11 	, % "Vorschläge: " Vorsorgen.MaxIndex()
+
+											}
+
 										}
+										;else if (ageStored >= MinAlter)
+										;		gosub GVUPatientVorschlag
+
+
 								}
 
 							; Patientenalter ausrechnen
@@ -1524,12 +1529,10 @@ M3:                                                  	;	Pat. für GVU suchen    
 						}
 
 					; Patienten-ID sichern, Patienten-Index erhöhen, Variablen zurücksetzen
-						PatIDStored	:= PatID
-						ageStored		:= age
-						PatIndex		++
-						GoNextPatient:= false
-						GVU:= GVUStored:= month:= year := ""
+						PatIDStored := PatID, ageStored := age, GoNextPatient:= false, GVU := GVUStored:= month:= year := ""
 						GVUNaechsteZeile:= ScheinVorhanden := false
+						PatIndex		++
+
 				}
 				else if GoNextPatient
 						continue
@@ -1539,24 +1542,18 @@ M3:                                                  	;	Pat. für GVU suchen    
 			; ========================================
 			; ========   findet cave von! Eintragung GVU/HKS......   ======== ;{
 				If !GoNextPatient
-					If RegExMatch(A_LoopField, "i)G[VU]+.H[KS]+.[KVU]*\s*") || GVUNaechsteZeile
-					{
-							If !RegExMatch(A_LoopField, "i)G[VU]+.H[KS]+.[KVU]*\s*(\d+).(\d+)") && !GVUNaechsteZeile
-							{
-									GVUNaechsteZeile:= true
-									GVUAlles:= A_LoopField
-									continue
-							}
+					If RegExMatch(A_LoopField, "i)G[VU]+.H[KS]+.[KVU]*\s*") || GVUNaechsteZeile		{
 
-							GVUAlles.= A_LoopField
-							If RegExMatch(GVUAlles, "i)G[VU]+.H[KS]+.[KVU]*\s*(\d+).(\d+)", match)
-							{
-									GVUStored 	:= match
-									month        	:= SubStr("0" match1, -1)
-									year          	:= SubStr("0" match2, -1)
-									GVUAlles := ""
-									GVUNaechsteZeile:= false
-							}
+						If !RegExMatch(A_LoopField, "i)G[VU]+.H[KS]+.[KVU]*\s*(\d+).(\d+)") && !GVUNaechsteZeile {
+							GVUNaechsteZeile := true, GVUAlles := A_LoopField
+							continue
+						}
+
+						GVUAlles .= A_LoopField
+
+						If RegExMatch(GVUAlles, "i)G[VU]+.H[KS]+.[KVU]*\s*(\d+).(\d+)", match)
+							GVUStored := match, month := SubStr("0" match1, -1), year := SubStr("0" match2, -1), GVUAlles := "", GVUNaechsteZeile := false
+
 					}
 			;}
 
@@ -1576,8 +1573,7 @@ return
 
 GVUPatientVorschlag(PatID, Vorsorgen) {
 
-		If AlbisAkteOeffnen(PatID)
-		{
+		If AlbisAkteOeffnen(PatID)		{
 				MsgBox, 262148, % "Addendum - " A_ScriptName, % "Patient in die GVU Liste aufnehmen?`nID: " PatIDStored "`nlQ: " GVUAlles "`nQ:  " month "/" year "`n`nOk für nächsten Patienten!"
 				AlbisAkteSchliessen(PatIDStored)
 			; Vorsorgeliste wird aufgefrischt
@@ -1681,57 +1677,71 @@ M4:                                                  	;	fehlende geriatrische Ba
 		Last_Birth			:= ""
 	;}
 
-	; PatientenIDs der geriatrischen Patienten einlesen (Dateipfad: logs'n'data\_DB\geriatrische_Patienten.txt) 	;{
-		If !FileExist(AddendumDbPath . "\DB_Geriatrisch.txt") 		{
+		;SciTEOutput("PNr: " Protokolle[1])
+		If       	(Protokolle.MaxIndex() > 1) {
+			MsgBox, 1, Addendum für Albis on Windows, Hier bitte nur ein Protokoll zur Auswertung auswählen!
+			return
+		}
+		else If	(Protokolle.MaxIndex() = 0) {
+			MsgBox, 1, Addendum für Albis on Windows, Ein Protokoll zur Auswertung auswählen!
+			return
+		}
 
-				MsgBox,
-				(LTrim
-					Es wurde noch keine Datenbankdatei für geriatrische Patienten erstellt.
-					Schritt 1:
-					Die Erstellung einer solchen Datei benötigt ein oder mehrere Tagesprotokolle.
-					Zunächst brauchen wir möglichst einen sehr langen Zeitraum 1-2 Jahre oder mehr.
-					Albis braucht mehrere Stunden für ein Tagesprotokoll von circa 2 Jahren!
-					Erstellen Sie das Protokoll z.B. nach der Sprechstunde.
-					Schritt 2:
-					Starten Sie das Abrechnungshelfer-Skript und drücken dort auf folgenden Button:
-					"                                 nur ein Tagesprotoll parsen                                            "
-					Schritt 3:
-					drücken Sie nach dem Parsen auf den Button:
-					"                                         freieStatistik                                                           "
-					sie ....... #### muss ich noch weiter schreiben
-				)
-				return
+		For idx, protokoll in Tagesprotokolle
+			If InStr(protokoll.filename, Protokolle[1])
+				break
+
+		tprotfile := TagesprotokollPfad "\" protokoll.filename
+
+	; PatientenIDs der geriatrischen Patienten einlesen (Dateipfad: logs'n'data\_DB\geriatrische_Patienten.txt) 	;{
+		If !FileExist(AddendumDbPath "\DB_Geriatrisch.txt") 		{
+
+			MsgBox,
+			(LTrim
+				Es wurde noch keine Datenbankdatei für geriatrische Patienten erstellt.
+				Schritt 1:
+				Die Erstellung einer solchen Datei benötigt ein oder mehrere Tagesprotokolle.
+				Zunächst brauchen wir möglichst einen sehr langen Zeitraum 1-2 Jahre oder mehr.
+				Albis braucht mehrere Stunden für ein Tagesprotokoll von circa 2 Jahren!
+				Erstellen Sie das Protokoll z.B. nach der Sprechstunde.
+				Schritt 2:
+				Starten Sie das Abrechnungshelfer-Skript und drücken dort auf folgenden Button:
+				"                                 nur ein Tagesprotoll parsen                                            "
+				Schritt 3:
+				drücken Sie nach dem Parsen auf den Button:
+				"                                         freieStatistik                                                           "
+				sie ....... #### muss ich noch weiter schreiben
+			)
+			return
 
 		} else {
 
-				FileRead, tmpVar, % AddendumDbPath "\DB_Geriatrisch.txt"
-				Loop, Parse, tmpVar, `n, `r
-				{
-						RegExMatch(A_LoopField, "^\d+", tID)
-						gb[A_Index] := tID
-				}
+			FileRead, tmpVar, % AddendumDbPath "\DB_Geriatrisch.txt"
+			Loop, Parse, tmpVar, `n, `r
+			{
+				RegExMatch(A_LoopField, "^\d+", tID)
+				gb[A_Index] := tID
+			}
 
-				GuiControl,, T2, % "Insgesamt " Gb.MaxIndex() " geriatrische Patienten sind in der Datenbank."
+			GuiControl,, T2, % "Insgesamt " Gb.MaxIndex() " geriatrische Patienten sind in der Datenbank."
 
-			;leeren der Variablen
-				VarSetCapacity(tmpVar, 0)
-				VarSetCapacity(tID, 0)
+		;leeren der Variablen
+			VarSetCapacity(tmpVar, 0)
+			VarSetCapacity(tID, 0)
 
 		}
 	;}
 
 	; Einlesen des zu untersuchenden Tagesprotokolles																					;{
 
-		FileOutExt   	:= StrReplace(Tagesprotokolle[protokollNr].filename, ".txt", "")
+		FileOutExt   	:= StrReplace(protokoll.filename, ".txt", "")
 		gbfehlend 	:= AlbisListenPfad "\" FileOutExt "_fehlende-geriatr.Ziffern.txt"
 		gbProtokoll 	:= AlbisListenPfad "\" FileOutExt "_GB-Protokoll.txt"
 
 		If FileExist(gbfehlend) {
-
-				MsgBox, 4, Addendum für Albis on Windows, Das ausgewählte Protokoll wurde schon ausgewertet!`nSoll die Auswertung wiederholt werden?
-				IfMsgBox, No
-					goto fehlendeGBZiffer_Bearbeiten
-
+			MsgBox, 4, Addendum für Albis on Windows, Das ausgewählte Protokoll wurde schon ausgewertet!`nSoll die Auswertung wiederholt werden?
+			IfMsgBox, No
+				goto fehlendeGBZiffer_Bearbeiten
 		}
 
 		FileAlbis		:= FileOpen(gbfehlend  	, "w", "CP1252")
@@ -1745,64 +1755,50 @@ M4:                                                  	;	fehlende geriatrische Ba
 		Loop, Parse, tprot, `n, `r
 		{
 			;Patientenbereich gefunden
-				If RegExMatch(A_LoopField, RegExFind[1], PatID)
-				{
+				If RegExMatch(A_LoopField, RegExFind[1], PatID) {
+
 					; Name und Geburtsdatum
 						RegExMatch(A_LoopField, RegExFind[3], PatName)
 						RegExMatch(A_LoopField, RegExFind[4], PatBirth)
 
 					; prüft wenn keine GB-Ziffer gefunden wurde ob der Patient in der Liste der geriatrischen Patienten eingetragen ist
-						If (GBFound = 0) && (PatIndex > 0)
-						{
-								If inArr(Gb, PatIDStored)
-								{
-											noGbIndex++
-											noGB[noGbIndex]:= PatIDStored
-											name:= StrSplit(Last_Name, ",")
-											GuiControl, rxTP:, T6, % "Patient       : " Last_Name " ohne 03360 oder 03362"
-											GuiControl, rxTP:, T7, % "fehlend bei: " noGbIndex
-											FileAlbis.Write("\N+00000" . PatIDStored . "  " . PatIDStored . " | " . name[1] . SubStr("                                   ", 1, 20-StrLen(name[1])) . " | " . name[2] . "`n")
-									}
+						If      	(GBFound = 0) && (PatIndex > 0)	{
+
+							If inArr(Gb, PatIDStored)	{
+								noGbIndex ++, noGB[noGbIndex] := PatIDStored, name := StrSplit(Last_Name, ",")
+								GuiControl, rxTP:, T6, % "Patient       : " Last_Name " ohne 03360 oder 03362"
+								GuiControl, rxTP:, T7, % "fehlend bei: " noGbIndex
+								FileAlbis.Write("\N+00000" . PatIDStored . "  " . PatIDStored . " | " . name[1] . SubStr("                                   ", 1, 20-StrLen(name[1])) . " | " . name[2] . "`n")
+							}
+
 						}
-						else If (GBFound = 1) && (PatIndex > 0)
-						{
-								If !inArr(Gb, PatIDStored)
-								{
-											GB.Push(PatIDStored)
-											GBIndex:= GB.MaxIndex()
-											newGBIndex ++
-											name:= StrSplit(Last_Name, ",")
-											FileAppend, % PatIDStored ";" Last_Name ";" Last_Birth, % AddendumDbPath . "\DB_Geriatrisch.txt"	;sichern des neuen Patienten
-											GuiControl, rxTP:, T3, % "Insgesamt " Gb.MaxIndex() " geriatrische Patienten sind in der Datenbank."
-											GuiControl, rxTP:, T6, % "Patient       : " Last_Name " neu aufgenommen als geriatrischer Pat."
-											GuiControl, rxTP:, T7, % ""
-									}
+						else If	(GBFound = 1) && (PatIndex > 0)	{
+
+							If !inArr(Gb, PatIDStored)		{
+								GB.Push(PatIDStored)
+								GBIndex := GB.MaxIndex(), newGBIndex ++, name := StrSplit(Last_Name, ",")
+								FileAppend, % PatIDStored ";" Last_Name ";" Last_Birth, % AddendumDbPath . "\DB_Geriatrisch.txt"	;sichern des neuen Patienten
+								GuiControl, rxTP:, T3, % "Insgesamt " Gb.MaxIndex() " geriatrische Patienten sind in der Datenbank."
+								GuiControl, rxTP:, T6, % "Patient       : " Last_Name " neu aufgenommen als geriatrischer Pat."
+								GuiControl, rxTP:, T7, % ""
+							}
+
 						}
 
 					; dies ist nur für die Protokolldatei
-						If (PatIndex > 0)
-						{
-									inDB			:= inArr(Gb, PatIDStored)
-									inDBText 	:= "geriatrischer Patient: " inDB
-									If inDB
-									{
-										GbText	:=  "GB-Komplex: " GBFound
-										actGeriatrisch ++
-									}
-									else
-									{
-										GbText	:= GBFound = 1 	? "GB-Komplex: 1" : ""
-									}
+						If (PatIndex > 0)	{
 
-									FileProt.Write(PatIDStored . " | " . inDBText . " | " . GbText . " | " . PatZeile . "`n")
+							inDB	:= inArr(Gb, PatIDStored), inDBText := "geriatrischer Patient: " inDB
+							If inDB
+								GbText	:=  "GB-Komplex: " GBFound, actGeriatrisch ++
+							else
+								GbText	:= GBFound = 1 	? "GB-Komplex: 1" : ""
+
+							FileProt.Write(PatIDStored " | " inDBText " | " GbText " | " PatZeile "`n")
+
 						}
 
-						PatIDStored	:= PatID
-						Last_Name	:= PatName
-						Last_Birth  	:= PatBirth
-						PatZeile			:= A_LoopField
-						GBFound  	:= 0
-						PatIndex ++
+						PatIDStored := PatID, Last_Name := PatName, Last_Birth := PatBirth, PatZeile := A_LoopField, GBFound := 0, PatIndex ++
 						GuiControl, rxTP:, T4, % "akt. Patient   : " PatName " (" PatID ")"
 						GuiControl, rxTP:, T5, % "Patientenzahl: " PatIndex
 						continue
@@ -1810,21 +1806,22 @@ M4:                                                  	;	fehlende geriatrische Ba
 
 			; Sucht die Ziffer 03360 oder 03362
 				If !GBFound && RegExMatch(A_LoopField, "i).*lko.*0336")
-							GBFound:= 1
-			}
+					GBFound:= 1
 
-			FileAlbis.Close()
-			FileProt.Close()
+		}
 
-			GuiControl,, T3, % "Insgesamt " Gb.MaxIndex() " geriatrische Patienten sind in der Datenbank."
-			GuiControl,, T4, % actGeriatrisch " geriatrische Patienten fanden sich in der untersuchten Datei."
-			GuiControl,, T5, % StrReplace(tprotfile, AddendumDir)
-			GuiControl,, T6, % " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
-			GuiControl,, T7, % "Bei " (noGbIndex=0 ? "KEINEM" : noGbIndex) " der Patienten fehlten ein oder zwei Ziffern."
-			GuiControl,, T8, % (newGBIndex=0 ? "Keine neuen" : newGBIndex=1 ? " 1 neuer": newGBIndex " neue") " geriatr.Pat. für die Datenbank."
-			GuiControl,, T9, % "Die Ausgabedateien wurden geschrieben."
+		FileAlbis.Close()
+		FileProt.Close()
 
-			;SavePatList(GB, FullFilePath, BackupPath:="")
+		GuiControl,, T3, % "Insgesamt " Gb.MaxIndex() " geriatrische Patienten sind in der Datenbank."
+		GuiControl,, T4, % actGeriatrisch " geriatrische Patienten fanden sich in der untersuchten Datei."
+		GuiControl,, T5, % StrReplace(tprotfile, AddendumDir)
+		GuiControl,, T6, % " - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
+		GuiControl,, T7, % "Bei " (noGbIndex=0 ? "KEINEM" : noGbIndex) " der Patienten fehlten ein oder zwei Ziffern."
+		GuiControl,, T8, % (newGBIndex=0 ? "Keine neuen" : newGBIndex=1 ? " 1 neuer": newGBIndex " neue") " geriatr.Pat. für die Datenbank."
+		GuiControl,, T9, % "Die Ausgabedateien wurden geschrieben."
+
+		;SavePatList(GB, FullFilePath, BackupPath:="")
 
 
 	;}
@@ -1839,10 +1836,10 @@ M4:                                                  	;	fehlende geriatrische Ba
 			;	AlbisGBZiffernEintragen(gbfehlend)
 			Loop % noGb.MaxIndex()	{
 
-					AlbisAkteOeffnen(noGB[A_Index])
-					MsgBox, 4, Addendum für Albis on Windows, Drücke auf 'Ja' um den nächsten Patienten zu bearbeiten`noder auf 'Nein' um den Vorgang abzubrechen.
-					IfMsgBox, No
-						break
+				AlbisAkteOeffnen(noGB[A_Index])
+				MsgBox, 4, Addendum für Albis on Windows, Drücke auf 'Ja' um den nächsten Patienten zu bearbeiten`noder auf 'Nein' um den Vorgang abzubrechen.
+				IfMsgBox, No
+					break
 
 			}
 			return
@@ -1872,17 +1869,15 @@ M5:                                                  	;	Ziffern Statistik erstel
 					FullFilePath        	:= TagesprotokollPfad "\Auswertungen\20" Jahr "-" A_Index "_Ziffernstatistik.txt"
 
 					If !FileExist(FullFilePath) {
-						Quartal.aktuell	:= "0" A_Index  Jahr
+						Quartal.Aktuell	:= "0" . A_Index . Jahr
 						Quartal         	:= QuartalTage(Quartal)
-						Zeitraum       	:= Quartal.ErsterTag "," Quartal.LetzterTag
-						savedAs         	:= AlbisErstelleZiffernStatistik("", Zeitraum, "", "", FullFilePath)
+						savedAs         	:= AlbisErstelleZiffernStatistik("", Quartal.TDBeginn "," Quartal.TDEnde, "", "", FullFilePath)
 					}
 			}
 
 	}
 
 	MsgBox, 4, % A_ScriptName, Soll die erstellte Datei gleich kovertiert werden?
-
 	If MsgBox, No
 		return
 
@@ -1898,8 +1893,7 @@ M6:                                                  	;	Ziffern Statistik konver
 	Statistikfile 	:= TagesprotokollPfad "\Auswertungen\20" SubStr(Quartal,3,2) "-" SubStr(Quartal,2,1) "_Ziffernstatistik.txt"
 
 	ZFStats[Quartal]:= Object()
-	If !FileExist(Statistikfile)
-	{
+	If !FileExist(Statistikfile)	{
 			SplitPath, Statistikfile, outFileName
 			MsgBox, 1, % A_ScriptName, % "Eine Auswertungsdatei mit dem Name:`n" outFileName "`nexistiert nicht. Der Vorgang wird abgebrochen", 5
 			return
@@ -1909,12 +1903,10 @@ M6:                                                  	;	Ziffern Statistik konver
 	;MsgBox, % Statistikfile "`n" StrLen(statistik)
 	Loop, Parse, statistik, `n, `r
 	{
-			If RegExMatch(A_LoopField, RegExZSData, stat)
-			{
+			If RegExMatch(A_LoopField, RegExZSData, stat)			{
 					GuiControl,rxTP: , T5, % "Nr: " A_Index " - " statGoNr
 					statGoNr:= "#" statGoNr
-					If ZFStats[Quartal].HasKey(statGoNr)
-					{
+					If ZFStats[Quartal].HasKey(statGoNr)					{
 							ZFStats[Quartal][statGoNr].Anzahl      	:= +statAnzahl
 							ZFStats[Quartal][statGoNr].Punkte      	:= +statPunkte
 							ZFStats[Quartal][statGoNr].Euro         	:= +statEuro
@@ -1922,8 +1914,7 @@ M6:                                                  	;	Ziffern Statistik konver
 							ZFStats[Quartal][statGoNr].Fachgruppe	:= +statFachgruppe
 							ZFStats[Quartal][statGoNr].Abweichung	:= +statAbweichung
 					}
-					else
-					{
+					else					{
 							ZFStats[Quartal][statGoNr] := Object()
 							ZFStats[Quartal][statGoNr] := {"Anzahl":statAnzahl, "Punkte":statPunkte, "Euro":statEuro, "Prozent":statProzent, "Fachgruppe":statFachgruppe, "Abweichung":statAbweichung, "Leistungstext": statLeistungstext}
 					}
@@ -1935,13 +1926,13 @@ M6:                                                  	;	Ziffern Statistik konver
 
 	line:= Quartal "`n"
 	For Quartal, Ziffer in ZFStats
-		For GoNr, Data in Ziffer
-		{
-			line.= GoNr ";" SubStr("00000" Data.Anzahl, -3) ";" SubStr("00000" Data.Punkte, -4) ";" SubStr("00000" Data.Euro, -4) ";" SubStr("00000" Data.Prozent, -3) ";" SubStr("00000" Data.Fachgruppe, -3) ";" SubStr("00000" Data.Abweichung, -3) ";" Data.Leistungstext "`n"
+		For GoNr, Data in Ziffer		{
+			line .= GoNr ";" SubStr("00000" Data.Anzahl, -3) ";" SubStr("00000" Data.Punkte, -4) ";" SubStr("00000" Data.Euro, -4) ";" SubStr("00000" Data.Prozent, -3) ";" SubStr("00000" Data.Fachgruppe, -3) ";" SubStr("00000" Data.Abweichung, -3) ";" Data.Leistungstext "`n"
 			GuiControl,rxTP: , T6, % "Data.Anzahl: " Data.Anzahl
 		}
-	FileDelete, % TagesprotokollPfad "\" Quartal "-ZF.csv"
-	FileAppend, % line, % TagesprotokollPfad "\" Quartal "-ZF.csv"
+
+	FileDelete          	, % TagesprotokollPfad "\" Quartal "-ZF.csv"
+	FileAppend, % line	, % TagesprotokollPfad "\" Quartal "-ZF.csv"
 
 
 return
@@ -1955,12 +1946,17 @@ M7:                                                  	;	Ziffern Statistiken zusa
 	ZfStatFolder:=  "M:\Praxis\Skripte\Skripte Neu\Addendum für AlbisOnWindows\logs'n'data\_DB\Ziffernstatistik\"
 
 	ZfStDatei:= []
-	ZfStDatei[1]:= "Ziffernstatistik_1801.txt"
-	ZfStDatei[2]:= "Ziffernstatistik_1802.txt"
-	ZfStDatei[3]:= "Ziffernstatistik_1803.txt"
-	ZfStDatei[4]:= "Ziffernstatistik_1804.txt"
-	ZfStDatei[5]:= "Ziffernstatistik_1901.txt"
-	ZfStDatei[6]:= "Ziffernstatistik_1902.txt"
+	ZfStDatei[1]:= 	"Ziffernstatistik_1801.txt"
+	ZfStDatei[2]:= 	"Ziffernstatistik_1802.txt"
+	ZfStDatei[3]:= 	"Ziffernstatistik_1803.txt"
+	ZfStDatei[4]:= 	"Ziffernstatistik_1804.txt"
+	ZfStDatei[5]:= 	"Ziffernstatistik_1901.txt"
+	ZfStDatei[6]:= 	"Ziffernstatistik_1902.txt"
+	ZfStDatei[7]:= 	"Ziffernstatistik_1903.txt"
+	ZfStDatei[8]:= 	"Ziffernstatistik_1904.txt"
+	ZfStDatei[9]:= 	"Ziffernstatistik_2001.txt"
+	ZfStDatei[10]:= "Ziffernstatistik_2002.txt"
+	ZfStDatei[11]:= "Ziffernstatistik_2003.txt"
 
 	Loop, % ZfStDatei.MaxIndex()
 	{
@@ -2006,11 +2002,26 @@ M8:                                                  	;	fehlende Chroniker Ziffe
 		noGbIndex	:= newGBIndex := regExFound := regExIdx := PatIndex := PatIdx := ziff1 := ziff2 := lkoDa := actChroniker := 0
 		Arbeitsfrei 	:= ""
 
-		; Dateipfade
+		;SciTEOutput("PNr: " Protokolle[1])
+		If (Protokolle.MaxIndex() > 1) {
+			MsgBox, 1, Addendum für Albis on Windows, Hier bitte nur ein Protokoll zur Auswertung auswählen!
+			return
+		}
+		else If (Protokolle.MaxIndex() = 0) {
+			MsgBox, 1, Addendum für Albis on Windows, Ein Protokoll zur Auswertung auswählen!
+			return
+		}
+
+		For idx, protokoll in Tagesprotokolle
+			If InStr(protokoll.filename, Protokolle[1])
+				break
+
+	; Dateipfade
 		TpFileName	:= Protokolle[1] "_TP-AbrH"
-		gbfehlend 	:= AlbisListenPfad     	"\" TpFileName . "_fehlende-ChronikerZiffer.txt"
-		gbProtokoll 	:= AlbisListenPfad     	"\" TpFileName . "_Chroniker-Protokoll.txt"
-		gbMakro   	:= TagesprotokollPfad 	"\" TpFileName . "_Chroniker-Automation.txt"
+		Tprotfile     	:= TagesprotokollPfad "\" protokoll.filename
+		gbfehlend 	:= AlbisListenPfad     	"\" TpFileName "_fehlende-ChronikerZiffer.txt"
+		gbProtokoll 	:= AlbisListenPfad     	"\" TpFileName "_Chroniker-Protokoll.txt"
+		gbMakro   	:= TagesprotokollPfad 	"\" TpFileName "_Chroniker-Automation.txt"
 
 		GuiControl, rxTP: , T14, % "File       : " TpFileName
 
@@ -2046,8 +2057,10 @@ M8:                                                  	;	fehlende Chroniker Ziffe
 		Chroniker	:= ChronikerListe(AddendumDbPath "\DB_Chroniker.txt")                	; Patienten-IDs der als Chroniker vermerkten Patienten lesen
 		PatDB   	:= ReadPatientDatabase(AddendumDir "\logs'n'data\_DB")                	; Patienten-Datenbank einlesen
 
+		GuiControl, rxTP: , T13, % "bek. Chroniker: " chroniker.MaxIndex()
+
 		If FileExist(AddendumDbPath "Praxisschließtage.txt") {
-			IniRead, Arbeitsfrei, % AddendumDbPath "Praxisschließtage.txt", % Protokoll[1]
+			IniRead, Arbeitsfrei, % AddendumDbPath "\Praxisschließtage.txt", % Protokoll[1]
 		}
 
 	;}
@@ -2090,7 +2103,7 @@ M8:                                                  	;	fehlende Chroniker Ziffe
 					noGB.Push({	"bearbeitet"        	: data[1]
 									, 	"PatID"              	: data[2]
 									, 	"PatName"         	: data[3]
-									, 	"Behandlungstage"	: data[4]
+									, 	"Behandlungstage": data[4]
 									, 	"Ziff1"                	: data[5]
 									, 	"Ziff2"                	: data[6]})
 
@@ -2111,80 +2124,78 @@ M8:                                                  	;	fehlende Chroniker Ziffe
 			; Patienten ID gefunden
 				If RegExMatch(A_LoopField, RegExFind[1], PatID) {
 
-					; Daten des vorherigen Patienten werden gespeichert
-						If !regExFound && (PatIndex > 0) && inDB && lkoDa 	{         	; fehlende Chronikerziffer, Pat. ist gelistet in der Chronikerdatei
+				; Daten des vorherigen Patienten werden gespeichert
+					If !regExFound && (PatIndex > 0) && inDB && lkoDa 	{         	; fehlende Chronikerziffer, Pat. ist gelistet in der Chronikerdatei
 
-							; verhindert das Überschreiben von Daten
-								For index, data in noGB
-									  If (data.PatID = PatIDStored) {
-											inNoGB := true
-											break
-									  }
+						; verhindert das Überschreiben von Daten
+							inNoGB := false
+							For index, data in noGB
+								  If (data.PatID = PatIDStored) {
+										inNoGB := true
+										break
+								  }
 
-							; Hinzufügen eines neuen Patienten
-								If !inNoGB {
+						; Hinzufügen eines neuen Patienten
+							If !inNoGB {
 
-									noGbIndex++
+								noGbIndex++
+								ziff := RTrim( ((ziff1 = 0 ? "03220," : "") . (ziff2 = 0 ? "03221" : "")), ",")
+								noGB.Push({	"PatID"               	: PatIDStored
+												, 	"PatName"         	: PatName
+												, 	"Behandlungstage": RTrim(BehTage, ";")
+												, 	"Ziff1"                	: ziff1
+												, 	"Ziff2"                	: ziff2})
 
-									ziff := RTrim( (ziff1 = 0 ? "03220," : "") (ziff2 = 0 ? "03221" : ""), ",")
+								IniWrite, % "0|" PatIDStored "|" PatName "|" RTrim(BehTage, ";") "|" Ziff1 "|" Ziff2, % gbMakro , % "patient" noGbIndex
 
-									noGB.Push({	"PatID"               	: PatIDStored
-													, 	"PatName"         	: PatName
-													, 	"Behandlungstage"	: RTrim(BehTage, ";")
-													, 	"Ziff1"                	: ziff1
-													, 	"Ziff2"                	: ziff2})
+								FileAlbis.Write(	"\N+00000" PatIDStored "  " PatIDStored " | "
+														. StrSplit(PatName, ",").1
+														. SubStr("                                   ", 1, 20 - StrLen(StrSplit(PatName, ",").1))
+														. "`t | " StrSplit(PatName, ",").2
+														. " | fehlend: " ziff "`n")
 
-									IniWrite, % "0|" PatIDStored "|" PatName "|" RTrim(BehTage, ";") "|" Ziff1 "|" Ziff2, % gbMakro , % "patient" noGbIndex
+								GuiControl,, T5, % "Patient       : " PatName " ohne " ziff
+								GuiControl,, T6, % "fehlend bei: " noGbIndex
 
-									FileAlbis.Write(	"\N+00000" PatIDStored "  " PatIDStored " | "
-															. StrSplit(PatName, ",").1
-															. SubStr("                                   ", 1, 20 - StrLen(StrSplit(PatName, ",").1))
-															. "`t | " StrSplit(PatName, ",").2
-															. " | fehlend: " ziff "`n")
+							}
 
-									GuiControl,, T5, % "Patient       : " PatName " ohne " ziff
-									GuiControl,, T6, % "fehlend bei: " noGbIndex
+					}
+					else if regExFound && (PatIndex > 0) && !inDB && lkoDa { 	; Chronikerziffer(n) ist vorhanden, Pat. ist aber noch nicht als Chroniker vermerkt
 
-								}
+						newGBIndex++
+						FileAppend, % PatIDStored ";" PatName ";" PatBirth "`n",  % AddendumDbPath "\DB_Chroniker.txt", UTF-8
 
-						}
-						else if regExFound && (PatIndex > 0) && !inDB && lkoDa { 	; Chronikerziffer(n) ist vorhanden, Pat. ist aber noch nicht als Chroniker vermerkt
+					}
 
-								newGBIndex++
-								FileAppend, % PatIDStored ";" PatName ";" PatBirth "`n",  % AddendumDbPath "\DB_Chroniker.txt", UTF-8
+				; zeigt die Gesamtzahl aller Patienten des Quartals. Patienten ohne Gebührennummer werden nicht gezählt
+					If lkoDa {
+						GuiControl,, T3, % "akt. Patient   : " PatName
+						GuiControl,, T4, % "Patientenzahl: " PatIndex++
+					}
 
-						}
+				; Daten des aktuellen Patienten werden gesichert, Variablen werden zurückgesetzt
+					PatIDStored	:= PatID
+					If (inDB := inArr(Chroniker, PatIDStored))
+						actChroniker++
 
-					; zeigt die Gesamtzahl aller Patienten des Quartals. Patienten ohne Gebührennummer werden nicht gezählt
-						If lkoDa {
-							GuiControl,, T3, % "akt. Patient   : " PatName
-							GuiControl,, T4, % "Patientenzahl: " PatIndex++
-						}
+				; der Name des Patienten und sein Geburtsdatum stehen in derselben Zeile wie die Patienten ID
+					RegExMatch(A_LoopField, RegExFind[3], PatName)
+					RegExMatch(A_LoopField, RegExFind[4], PatBirth)
 
-					; Daten des aktuellen Patienten werden gesichert, Variablen werden zurückgesetzt
-						PatIDStored	:= PatID
-						If (inDB := inArr(Gb, PatIDStored))
-							actChroniker++
+				; Variablen zurücksetzen
+					lkoDa := ziff1 := ziff2 := 0
+					BehTagLast := BehTage := "", ziff := ""
 
-						; der Name des Patienten und sein Geburtsdatum stehen in derselben Zeile wie die Patienten ID
-						RegExMatch(A_LoopField, RegExFind[3], PatName)
-						RegExMatch(A_LoopField, RegExFind[4], PatBirth)
-
-						; Variablen zurücksetzen
-							lkoDa := ziff1 := ziff2 := 0
-							BehTagLast := BehTage := ""
-							ziff := ""
-
-							continue
+					continue
 				}
 
 			; behandlungsrelevante Karteikartenkürzel erkannt, Tagesdatum wird als Behandlungsdatum aufgenommen
 				If RegExMatch(A_LoopField, "\sanam|AISC|bef|bem|bild|dia|fau|fausw|fhp|fhv13|fhv18|fkb|fkh|füb|fvap|labor|lko|lle|medrp|medp|medis|medh|info|spiro\s") 	{
 
-						If RegExMatch(A_LoopField, "^\d\d\.\d\d\.\d\d\d\d", BehDatum) 	; Behandlungsdatum gefunden
-								BehTage .= BehDatum ";", BehTagLast := BehDatum
-						If RegExMatch(A_LoopField, "\s(lko)\s")                                         	; abgerechnete Leistungen gefunden
-								lkoDa := 1
+					If RegExMatch(A_LoopField, "^\d\d\.\d\d\.\d\d\d\d", BehDatum) 	; Behandlungsdatum gefunden
+							BehTage .= BehDatum ";", BehTagLast := BehDatum
+					If RegExMatch(A_LoopField, "\s(lko)\s")                                         	; abgerechnete Leistungen gefunden
+							lkoDa := 1
 
 				}
 
@@ -2196,7 +2207,7 @@ M8:                                                  	;	fehlende Chroniker Ziffe
 
 			; Zähler für vollständigen Chronikerkomplex
 				If regExFound && (ziff1 = 1) && (ziff2 = 1)
-						GuiControl,, T7, % "gefunden: " (regExIdx++)
+					GuiControl,, T7, % "03220 & 03221 Zähler: " (regExIdx++)
 
 		}
 
@@ -2306,7 +2317,7 @@ M9:                                                  	;	neue Chroniker finden   
 				If RegExMatch(A_LoopField, RegExFind[8], dummy)  {                          	; Untersuchen von Diagnosen auf Vorkommen einer Chroniker ICD
 
 					Diagnosen := RegExGetAll(A_LoopField, RegExFind[8], "ICD") 	; gibt ein Array mit allen ICD-Codes der Zeile zurück
-					SciTEOutput(Diagnosen.MaxIndex())
+					;SciTEOutput(Diagnosen.MaxIndex())
 					For index, ICDCode in Diagnosen
 						If inArr(CICD, ICDCode) {
 
@@ -2339,10 +2350,9 @@ M10:                                                	;	Tagesprotokolle erstellen
 	PQuartal:="", Prepend:= ""
 	statistics:= Object()
 
-	If !WinExist("ahk_class OptoAppClass")
-	{
-			MsgBox, 1, Addendum - Abrechnungshelfer, Auf diesem Rechner ist Albis nicht gestartet!`NDas gewählte Makro kann nicht ausgeführt werden!
-			return
+	If !WinExist("ahk_class OptoAppClass")	{
+		MsgBox, 1, Addendum - Abrechnungshelfer, Auf diesem Rechner ist Albis nicht gestartet!`NDas gewählte Makro kann nicht ausgeführt werden!
+		return
 	}
 
 	QuartalsEingabe:
@@ -2350,9 +2360,9 @@ M10:                                                	;	Tagesprotokolle erstellen
 	InputBox, Quartal, Addendum für Albis on Windows,
 			(LTrim
 			%Prepend% Geben Sie ein
-			als einzelnes Quartal`t: 03/18 o. 0318 o. 318,
-			als Quartalsbereich `t: 01/17-04/19 o. 0117-0419,
-			als Datumsbereich  `t: 18.01.2019-20.3.2019
+			als einzelnes Quartal: 03/18 o. 0318 o. 318,
+			als Quartalsbereich: `t01/17-04/19 o. 0117-0419,
+			als Datumsbereich:  `t18.01.2019-20.3.2019
 			alle oder *              `t: Erstellung aller Abrechnungsquartale
 			),,,,,,,, % PQuartal
 	If ErrorLevel
@@ -2360,80 +2370,82 @@ M10:                                                	;	Tagesprotokolle erstellen
 
 	If RegExMatch(Quartal, "i)\*|(\salle\s)") {
 
-			Loop, 10
-			{
+			Loop 10		{
 
-					LoopJahr:= SubStr("00" 9+A_Index, -1)
+				LoopJahr:= SubStr("00" 9+A_Index, -1)
+				Loop 4 				{
 
-					Loop, 4
-					{
-							PQuartal       	:= ""
-							Prepend        	:= ""
-							LoopQuartal 	:= SubStr("00" A_Index, -1)
-							Quartal         	:= LoopQuartal LoopJahr
-							protokollDatei	:= TagesprotokollPfad "\20" LoopJahr "-" A_Index "_TP-AbrH.txt"
+					PQuartal       	:= ""
+					Prepend        	:= ""
+					LoopQuartal 	:= SubStr("00" A_Index, -1)
+					Quartal         	:= LoopQuartal LoopJahr
+					protokollDatei	:= TagesprotokollPfad "\20" LoopJahr "-" A_Index "_TP-AbrH.txt"
 
-							If !FileExist(protokollDatei)
-							{
-								; Einlesen und konvertieren eines Protokolles
-									Startzeit 	:= A_TickCount
-									newTPFile	:= AlbisErstelleTagesprotokoll(Quartal, TagesprotokollPfad, 1)
-									newTPText	:= RegExParseTPFile(newTPFile, TagesprotokollPfad, RegExTP, true)
+					If !FileExist(protokollDatei) 	{
 
-								; Listviewinhalt auffrischen, wenn eine Datei erfolgreich erstellt werden konnte
-									If (StrLen(newTPText) > 0)
-									{
-											Erstellungszeit:= A_TickCount - Startzeit
-											FileAppend, % Quartal ";Erstellungszeit: " Erstellungszeit "`n", % TagesprotokollPfad "\Statistiken_und_Fehler.log"
-											statistics.Push({"Quartal": quartal, "Erstellungszeit": Erstellungszeit})
-											Tagesprotokolle:= ReadTPDir(TagesprotokollPfad, "*_TP-AbrH", "txt", "R")
-											UpdateTagesProtokolle(Tagesprotokolle)
-											WinActivate, % "ahk_id " hAbrH
-									}
-									else
-									{
-											FileAppend, % Quartal ";Rückgabe leer. Protokoll konnte nicht konvertiert werden.`n" , % TagesprotokollPfad "\Statistiken_und_Fehler.log"
-											PraxTT("Protokolldatei: 20" LoopJahr "-" A_Index " konnte nicht konvertiert werden.`nFahre mit dem nächsten Quartal fort.", "2 1")
-											Sleep, 1000
-									}
+						; Einlesen und konvertieren eines Protokolles
+							Startzeit 	:= A_TickCount
+							newTPFile	:= AlbisErstelleTagesprotokoll(Quartal, TagesprotokollPfad, 1)
+							newTPText	:= RegExParseTPFile(newTPFile, TagesprotokollPfad, RegExTP, true)
+
+						; Listviewinhalt auffrischen, wenn eine Datei erfolgreich erstellt werden konnte
+							If (StrLen(newTPText) > 0) 	{
+
+								Erstellungszeit:= A_TickCount - Startzeit
+								FileAppend, % Quartal ";Erstellungszeit: " Erstellungszeit "`n", % TagesprotokollPfad "\Statistiken_und_Fehler.log"
+								statistics.Push({"Quartal": quartal, "Erstellungszeit": Erstellungszeit})
+								Tagesprotokolle:= ReadTPDir(TagesprotokollPfad, "*_TP-AbrH", "txt", "R")
+								UpdateTagesProtokolle(Tagesprotokolle)
+								WinActivate, % "ahk_id " hAbrH
+
 							}
-							else
-							{
-									PraxTT("Protokolldatei: 20" LoopJahr "-" A_Index " ist vorhanden.`nFahre mit dem nächsten Quartal fort.", "1 1")
-									;Sleep, 1000
+							else	{
+
+								FileAppend, % Quartal ";Rückgabe leer. Protokoll konnte nicht konvertiert werden.`n" , % TagesprotokollPfad "\Statistiken_und_Fehler.log"
+								PraxTT("Protokolldatei: 20" LoopJahr "-" A_Index " konnte nicht konvertiert werden.`nFahre mit dem nächsten Quartal fort.", "2 1")
+								Sleep, 1000
 							}
 					}
+					else 	{
+
+							PraxTT("Protokolldatei: 20" LoopJahr "-" A_Index " ist vorhanden.`nFahre mit dem nächsten Quartal fort.", "1 1")
+							;Sleep, 1000
+
+					}
+				}
 			}
 	}
-	else
-	{
+	else {
 
-			Startzeit         	:= A_TickCount
-			gosub M10A
-			EndZeit         	:= A_TickCount
-			Erstellungszeit	:= (EndZeit-Startzeit)/1000
-			GuiControl,rxTP: , T14, % "Quartal: " Quartal " ,Erstellungstzeit: " Erstellungszeit "s"
-			statistics.Push({"Quartal": quartal, "Erstellungszeit": Erstellungszeit})
+		Startzeit         	:= A_TickCount
+		gosub M10A
+		EndZeit         	:= A_TickCount
+		Erstellungszeit	:= (EndZeit - Startzeit)/1000
+		;FormatTime, EZeit, Erstellungszeit,
+		GuiControl,rxTP: , T14, % "Quartal: " Quartal " , Erstellungszeit: " Erstellungszeit "s"
+		statistics.Push({"Quartal": quartal, "Erstellungszeit": Erstellungszeit})
+
 	}
 
 return
 
 M10A: ;{
 
-	PQuartal	:= RegExReplace(Quartal, " ")
-	PQuartal:= StrReplace(PQuartal, "/")
-	PQuartal:= StrReplace(PQuartal, " ")
-	If RegExMatch(PQuartal, "^\d{3,4}$")
-	{
+	PQuartal := RegExReplace(Quartal, "\s*")
+	PQuartal := StrReplace(PQuartal, "/")
+	;PQuartal := StrReplace(PQuartal, " ")
+	If      	RegExMatch(PQuartal, "^\d{3,4}$")	{
+
 			QNr := SubStr(PQuartal, StrLen(PQuartal) - 2, 1)
 			If QNr not in 1,2,3,4
 			{
 				prepend:="! UNGÜLTIGE QUARTALSZAHL ! - es sind nur Ziffern von 1-4 erlaubt!`n"
 				goto Quartalseingabe
 			}
+
 	}
-	else if RegExMatch(PQuartal, "^(\d{3,4})\-(\d{3,4})$", Q)
-	{
+	else if	RegExMatch(PQuartal, "^(\d{3,4})\-(\d{3,4})$", Q)	{
+
 			QNr1 := SubStr(Q1, StrLen(Q1) - 2, 1)
 			QNr2 := SubStr(Q2, StrLen(Q2) - 2, 1)
 			If QNr1 not in 1,2,3,4
@@ -2446,22 +2458,27 @@ M10A: ;{
 				prepend:="! UNGÜLTIGE QUARTALSZAHL ! - es sind nur Ziffern von 1-4 erlaubt!`n"
 				goto Quartalseingabe
 			}
+
 	}
-	else
-	{
+	else	{
+
 			prepend:="! KEIN GÜLTIGES FORMAT !`n"
 			goto Quartalseingabe
+
 	}
 
-
 	newTPFile := AlbisErstelleTagesprotokoll(Quartal, TagesprotokollPfad, 1)
+	If (newTPFile = "invoke error") {
+		MsgBox, 0x40000, Tagesprotokoll erstellen, Ups, da ist was schief gegangen....
+		return
+	}
+
 	RegExParseTPFile(newTPFile, TagesprotokollPfad, RegExTP, true)
 
   ; Listviewinhalt auffrischen
 	Tagesprotokolle:= ReadTPDir(TagesprotokollPfad, "*_TP-AbrH", "txt", "R")
 	UpdateTagesProtokolle(Tagesprotokolle)
 
-	;MsgBox,, Addendum für Albis on Windows, Es wurde ein neues Tagesprotokoll für Auswertungen hinzugefügt.
 
 	WinActivate, % "ahk_id " hAbrH
 
@@ -2597,8 +2614,8 @@ M12:                                                	;	Gesamtdaten-Querverweise 
 	PatID	:= ""
 	PatAll	:= 0
 
-	For tprotIndex, tprot in Tagesprotokolle
-	{
+	For tprotIndex, tprot in Tagesprotokolle 	{
+
 			fileread, tp, % tprot.path "\" tprot.filename
 			NoExt:= StrReplace(tprot.filename, ".txt", "")
 			GuiControl,rxTP:, T3, % "Datei: " NoExt
@@ -2607,8 +2624,8 @@ M12:                                                	;	Gesamtdaten-Querverweise 
 			Loop, Parse, tp, `n, `r
 			{
 					tpZeile:= A_Index
-					If RegExMatch(A_LoopField, RegExFind[1], ID)
-					{
+					If RegExMatch(A_LoopField, RegExFind[1], ID) 					{
+
 							If !IsObject(qv[ID])
 								PatAll ++
 
@@ -2616,11 +2633,12 @@ M12:                                                	;	Gesamtdaten-Querverweise 
 							GuiControl,rxTP:, T6, % "PatID: " ID
 							GuiControl,rxTP:, T7, % "Start: " tpZeile
 
-							If (PatID <> ID) && (StrLen(PatID) != 0)
-							{
+							If (PatID <> ID) && (StrLen(PatID) != 0) 							{
+
 									qv[PatID][NoExt].End:= tpZeile - 1
 									GuiControl,rxTP:, T8, % "PatID last: " PatID
 									GuiControl,rxTP:, T9, % "Ende: " tpZeile - 2
+
 							}
 
 							PatID:= ID
@@ -2634,23 +2652,24 @@ M12:                                                	;	Gesamtdaten-Querverweise 
 			qv[PatID][NoExt].End:= tpZeile - 2
 	}
 
-	q:= Chr(0x22)
-	qvFile:= FileOpen(AddendumDbPath "\querverweise.json", "w", "UTF-8")
+	q := Chr(0x22)
+	qvFile := FileOpen(AddendumDbPath "\querverweise.json", "w", "UTF-8")
 
-	PatAllLen:= StrLen(PatAll) - 1
+	PatAllLen := StrLen(PatAll) - 1
 
-	For PatID, obj in qv
-	{
+	For PatID, obj in qv	{
+
 			GuiControl,rxTP:, T10, % "Speichere PatID: " SubStr("00000" PatID, -4) " (" SubStr("000000" A_Index, -1*PatAllLen) "/" PatAll ")"
 			qvFile.WriteLine(q SubStr("00000" PatID, -4) q ":{")
 
-			t:=""
-			For tprotfile, Data in obj
-			{
+			t := ""
+			For tprotfile, Data in obj 			{
+
 					t.= "`t" q tprotfile q ":[`n"
 					t.= "`t`t" q "Start" q ":" Data.Start ",`n"
 					t.= "`t`t" q "End"  q ":" Data.End "`n"
 					t.= "`t`t],`n"
+
 			}
 			qvFile.WriteLine(RTrim(t, ",`n"))
 
@@ -2680,75 +2699,275 @@ M13:                                                 	;	zähle alle Überweisung
 	Gui, rxS: New, +HWNDhrxS -DPIScale +MinSize1200x530 +Resize   ; +AlwaysOnTop
 	Gui, rxS: Margin, 5, 5
 	Gui, rxS: Color, % "cFFFFAA"
-	Gui, rxS: Font, % "s" 14 " cBlack" " q5", % Font
+	Gui, rxS: Font, % "s" 14 " cBlack bold" " q5", % Font
 	Gui, rxS: Add, Text, % "xm ym w1200 Center", % "PFERDE-RENNEN - Fachgruppenüberweisungen"
-	Gui, rxS: Font, % "s" 11 " cBlack" " q5", % Font
-	Gui, rxS: Add, Text, % "y-10 w1200 Center", % "--------------------------------------------------------------------------------------------------------------------"
+	Gui, rxS: Font, % "s" 11 " cBlack bold" " q5", % Font
+	Gui, rxS: Add, Text, % "y+-5 w1200 BackgroundTrans Center", % "--------------------------------------------------------------------------------------------------------------------"
 	Gui, rxS: Font, % "s" 8 " cBlack" " q5", % Font
-	Gui, rxS: Show, % "x30 y30 w1200 h1600", % "Fachgruppen-Rennen"
+	Gui, rxS: Show, % "x30 y20 w1500 h1000", % "Fachgruppen-Rennen"
+	Gui, rxS: Font, % "s" 9 " cBlack normal" " q5", % Font
 
-	For index, protokoll in Tagesprotokolle
-	{
-			Jahr  	:= protokoll.Jahr
-			Quartal	:= protokoll.Quartal "/" Jahr
-			TPFullPath:= protokoll.path "\" protokoll.filename
-			FileRead, tpDatei, % TPFullPath
-			;ToolTip, % TPFullPath ",   " StrLen(tpDatei)
-			Gui, rxTP: Default
-			GuiControl,, T3, % "Quartal: " Quartal
-			Loop, Parse, tpDatei, `n, `r
-			{
-					;If RegExMatch(A_LoopField, RegExFind[1], PatID) {
-							;If !IsObject(Ueberweisungen.Pat[Quartal])
-					;		Ueberweisungen.Pat := {"Quartal":
-					; }
+	For index, protokoll in Tagesprotokolle 	{
 
-					If RegExMatch(A_LoopField, "\s*füb\s+([A-Za-zÄÖÜäöüß]+)\s", FG)
-					{
+		Jahr  	:= protokoll.Jahr
+		Quartal	:= protokoll.Quartal "/" Jahr
+		TPFullPath:= protokoll.path "\" protokoll.filename
+		FileRead, tpDatei, % TPFullPath
+		;ToolTip, % TPFullPath ",   " StrLen(tpDatei)
+		Gui, rxTP: Default
+		GuiControl,, T3, % "Quartal: " Quartal
+		Loop, Parse, tpDatei, `n, `r
+		{
+			;If RegExMatch(A_LoopField, RegExFind[1], PatID) {
+					;If !IsObject(Ueberweisungen.Pat[Quartal])
+			;		Ueberweisungen.Pat := {"Quartal":
+			; }
 
-							FG1:= Trim(FG1)
+			If RegExMatch(A_LoopField, "^\s+füb\s+([\w\sÄÖÜäöüß\-\.]+),*|\(|$", FG)	{
+
+					FG2:= Trim(FG1)
+					FG1:= Trim(StrReplace(FG2, ".", " "))
+					FG1:= Trim(StrReplace(FG1, "-", " "))
+					FG1:= RegExReplace(FG1, "i)^FA\s+fü*r*", "")
+					FG1:= RegExReplace(FG1, "i)^Facharzt\s+fü*r*", "")
+					FG1:= RegExReplace(FG1, "i)^Arzt\s+fü*r*", "")
+					FG1:= RegExReplace(FG1, "Diagnostik", "")
+					FG1:= RegExReplace(FG1, "ambulante\s*", "")
+					FG1:= RegExReplace(FG1, "Poliklinik\s*", "")
+					FG1:= RegExReplace(FG1, "Allge*m[ie]*n"                             	, "Allgemein")
+					FG1:= RegExReplace(FG1, ".*Allgemeinm.*"                          	, "Allgemeinmedizin")
+					FG1:= RegExReplace(FG1, ".*Allge*meinar.*"                        	, "Allgemeinmedizin")
+					FG1:= RegExReplace(FG1, ".*Hausar.*"                               	, "Allgemeinmedizin")
+					FG1:= RegExReplace(FG1, "Allerlogie"                                	, "Allergologie")
+					FG1:= RegExReplace(FG1, ".*Allerg.*"                                	, "Allergologie")
+					FG1:= RegExReplace(FG1, ".*Allegie.*"                                	, "Allergologie")
+					FG1:= RegExReplace(FG1, ".*Augenarzt.*"                         	, "Augenheilkunde")
+					FG1:= RegExReplace(FG1, ".*A*Auge*n.*"                          	, "Augenheilkunde")
+					FG1:= RegExReplace(FG1, "^Chr*iru.*"                             	, "Chirurgie")
+					FG1:= RegExReplace(FG1, "Chirurige"                               	, "Chirurgie")
+					FG1:= RegExReplace(FG1, "i).*Allgemeinch.*"                     	, "Chirurgie")
+					FG1:= RegExReplace(FG1, "i).*Fußch.*"                              	, "Chirurgie")
+					FG1:= RegExReplace(FG1, "i).*Unfallch.*"                           	, "Chirurgie")
+					FG1:= RegExReplace(FG1, "i).*Handch.*"                           	, "Chirurgie")
+					FG1:= RegExReplace(FG1, "i).*Handsprech.*"                        	, "Chirurgie")
+					FG1:= RegExReplace(FG1, "i).*metabolische\sChi.*"              	, "Chirurgie")
+					FG1:= RegExReplace(FG1, "i).*chirurgische\sAmb.*"              	, "Chirurgie")
+					FG1:= RegExReplace(FG1, ".*MIC.*"                                  	, "Chirurgie")
+					FG1:= RegExReplace(FG1, "i).*Neuroch.*"                          	, "Chirurgie/Neurochirugie")
+					FG1:= RegExReplace(FG1, "i).*Neuch.*"                             	, "Chirurgie/Neurochirugie")
+					FG1:= RegExReplace(FG1, ".*MKG.*"                                 	, "Chirurgie/MKG")
+					FG1:= RegExReplace(FG1, "i).*Gesichtsch.*"                          	, "Chirurgie/MKG")
+					FG1:= RegExReplace(FG1, "i).*Kieferch.*"                              	, "Chirurgie/MKG")
+					FG1:= RegExReplace(FG1, "i).*Kinderch.*"                            	, "Chirurgie/Kinder")
+					FG1:= RegExReplace(FG1, "i).*plastisch*"                            	, "Chirurgie/plastische Chirurgie")
+					FG1:= RegExReplace(FG1, "i)Diabetolo*gi*e"                        	, "Diabetologie")
+					FG1:= RegExReplace(FG1, "i).*Dia*be*t.*"                             	, "Diabetologie")
+					FG1:= RegExReplace(FG1, "i).*Daibet.*"                              	, "Diabetologie")
+					FG1:= RegExReplace(FG1, "i).*Fußamb.*"                             	, "Diabetologie")
+					FG1:= RegExReplace(FG1, "i).*Gefäßch.*"                          	, "Chirurgie/Gefäßchirurgie")
+					FG1:= RegExReplace(FG1, "i).*Gefäßambulanz.*"                	, "Chirurgie/Gefäßchirurgie")
+					FG1:= RegExReplace(FG1, "i).*Gefch.*"                              	, "Chirurgie/Gefäßchirurgie")
+					FG1:= RegExReplace(FG1, "i).*sensor*mot.*"                         	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Aortenspre.*"                          	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Add*ipositas.*"                       	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Bauchz.*"                            	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Darmkrebsz.*"                        	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Darmsp.*"                           	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*DRK\s+Kr.*"                          	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*für\s+seltene\s+Erkr.*"          	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Ventil.*"                              	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Lipid.*"                               	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Mukov.*"                              	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Naturheil.*"                            	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Urtikaria.*"                           	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Leberz.*"                             	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Brustz.*"                              	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Fachamb.*"                            	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Ernährungs.*"                         	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Infektions.*"                           	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Leberz.*"                             	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Immunolog.*"                         	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Muskelerkran.*"                      	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Tran*splantation.*"                 	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Transfusions.*"                    	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i).*Zentrum f Gefäßm.*"              	, "Fachzentren")
+					FG1:= RegExReplace(FG1, "i)Gyn[äa]koogie"                        	, "Gynäkologie")
+					FG1:= RegExReplace(FG1, "i)Gyn$"                                    	, "Gynäkologie")
+					FG1:= RegExReplace(FG1, "i)Gyn\s+.*"                                	, "Gynäkologie")
+					FG1:= RegExReplace(FG1, "i).*Gyn[äaö]kol.*"                      	, "Gynäkologie")
+					FG1:= RegExReplace(FG1, "i).*Beckenbo.*"                          	, "Gynäkologie")
+					FG1:= RegExReplace(FG1, "i).*Kinderw.*"                           	, "Gynäkologie")
+					FG1:= RegExReplace(FG1, "i).*Haut.*"                               	, "Dermatologie")
+					FG1:= RegExReplace(FG1, "i).*Dermat.*"                              	, "Dermatologie")
+					FG1:= RegExReplace(FG1, "i).*HNO.*"                               	, "HNO")
+					FG1:= RegExReplace(FG1, "i).*Phoniat.*"                              	, "HNO")
+					FG1:= RegExReplace(FG1, "i).*Humangen.*"                         	, "Humangenetik")
+					FG1:= RegExReplace(FG1, "i).*Genetik.*"                           	, "Humangenetik")
+					FG1:= RegExReplace(FG1, "i)Internist"                                	, "Innere Medizin")
+					FG1:= RegExReplace(FG1, "i)^\s*Innere$"                        	, "Innere Medizin")
+					FG1:= RegExReplace(FG1, "i).*Innere M.*"                         	, "Innere Medizin")
+					FG1:= RegExReplace(FG1, "i).*Ka*rdi*ol.*"                           	, "Innere Medizin/Kardiologie")
+					FG1:= RegExReplace(FG1, "i).*Herz.*"                                 	, "Innere Medizin/Kardiologie")
+					FG1:= RegExReplace(FG1, "i).*Schrittm.*"                              	, "Innere Medizin/Kardiologie")
+					FG1:= RegExReplace(FG1, "i).*Defisp.*"                               	, "Innere Medizin/Kardiologie")
+					FG1:= RegExReplace(FG1, "i).*Rhythmus.*"                           	, "Innere Medizin/Kardiologie")
+					FG1:= RegExReplace(FG1, "i).*Endokr.*"                            	, "Innere Medizin/Endokrinologie")
+					FG1:= RegExReplace(FG1, "i).*Gastroe*n*t*e*r*o*.*"             	, "Innere Medizin/Gastroenterologie")
+					FG1:= RegExReplace(FG1, "i).*Endosk.*"                            	, "Innere Medizin/Gastroenterologie")
+					FG1:= RegExReplace(FG1, "i).*Gastrent.*"                          	, "Innere Medizin/Gastroenterologie")
+					FG1:= RegExReplace(FG1, "i).*Hepato.*"                             	, "Innere Medizin/Gastroenterologie")
+					FG1:= RegExReplace(FG1, "i).*H[äae]*m[ao]*to.*"                 	, "Innere Medizin/Hämatologie und Onkologie")
+					FG1:= RegExReplace(FG1, "i).*Onkol.*"                             	, "Innere Medizin/Hämatologie und Onkologie")
+					FG1:= RegExReplace(FG1, "i).*Tumorsp.*"                             	, "Innere Medizin/Hämatologie und Onkologie")
+					FG1:= RegExReplace(FG1, "i).*Hämostase.*"                         	, "Innere Medizin/Hämostaseologie")
+					FG1:= RegExReplace(FG1, "i).*Gerr*inn*u.*"                         	, "Innere Medizin/Hämostaseologie")
+					FG1:= RegExReplace(FG1, "i).*Nefro.*"                              	, "Innere Medizin/Nephrologie")
+					FG1:= RegExReplace(FG1, "i).*Niere.*"                              	, "Innere Medizin/Nephrologie")
+					FG1:= RegExReplace(FG1, "i).*Nephro.*"                              	, "Innere Medizin/Nephrologie")
+					FG1:= RegExReplace(FG1, "i).*Pneumologi*e.*"                     	, "Innere Medizin/Pulmologie")
+					FG1:= RegExReplace(FG1, "i).*Pul*o*molo.*"                         	, "Innere Medizin/Pulmologie")
+					FG1:= RegExReplace(FG1, "i).*Lungen.*"                            	, "Innere Medizin/Pulmologie")
+					FG1:= RegExReplace(FG1, "i).*Rh*eumat.*"                        	, "Innere Medizin/Rheumatologie")
+					FG1:= RegExReplace(FG1, "i).*Rh*eumak.*"                        	, "Innere Medizin/Rheumatologie")
+					FG1:= RegExReplace(FG1, "i).*Schlaf.*"                              	, "Innere Medizin/Schlafmedizin")
+					FG1:= RegExReplace(FG1, "i).*Somnog.*"                             	, "Innere Medizin/Schlafmedizin")
+					FG1:= RegExReplace(FG1, "i).*Somnol.*"                             	, "Innere Medizin/Schlafmedizin")
+					FG1:= RegExReplace(FG1, "i).*Labor.*"                              	, "Labormedizin")
+					FG1:= RegExReplace(FG1, "i).*Epileps.*"                            	, "Neurologie")
+					FG1:= RegExReplace(FG1, "i).*Neu*ru*o*logi*e*.*"                	, "Neurologie")
+					FG1:= RegExReplace(FG1, "i).*Neuropraxis.*"                    	, "Neurologie")
+					FG1:= RegExReplace(FG1, "i).*Demenz.*"                          	, "Neurologie")
+					FG1:= RegExReplace(FG1, ".*EMG.*"                                  	, "Neurologie")
+					FG1:= RegExReplace(FG1, "i).*Neurolo.*"                            	, "Neurologie")
+					FG1:= RegExReplace(FG1, "i).*MS.*(Z*C*entrum|Beratung|Ambulanz).*", "Neurologie")
+					FG1:= RegExReplace(FG1, "i).*Nukle*a*.*"                            	, "Neurologie")
+					FG1:= RegExReplace(FG1, "^PT.*"                                    	, "Psychiatrie")
+					FG1:= RegExReplace(FG1, "i)^PIA\s*.*"                                	, "Psychiatrie")
+					FG1:= RegExReplace(FG1, "i).*Psychi*o*at.*"                       	, "Psychiatrie")
+					FG1:= RegExReplace(FG1, ".*KJP.*"                                   	, "Kinder und Jugend Psychiatrie")
+					FG1:= RegExReplace(FG1, "i).*Kinderar.*"                             	, "Pädiatrie")
+					FG1:= RegExReplace(FG1, "i).*Kinderh.*"                              	, "Pädiatrie")
+					FG1:= RegExReplace(FG1, "i).*Kinderkl.*"                             	, "Pädiatrie")
+					FG1:= RegExReplace(FG1, "i).*Neuropä.*"                            	, "Pädiatrie")
+					FG1:= RegExReplace(FG1, ".*SPZ.*"                                    	, "Pädiatrie")
+					FG1:= RegExReplace(FG1, "i).*Path*ol.*"                            	, "Pathologie")
+					FG1:= RegExReplace(FG1, "i).*Patolo.*"                             	, "Pathologie")
+					FG1:= RegExReplace(FG1, "i).*Physiothera.*"                         	, "Physikalische Rehabiliative Medizin")
+					FG1:= RegExReplace(FG1, "i).*Ph*ysia*ka.*"                          	, "Physikalische Rehabiliative Medizin")
+					FG1:= RegExReplace(FG1, "i).*Rehabilit.*"                          	, "Physikalische Rehabiliative Medizin")
+					FG1:= RegExReplace(FG1, "i).*Proktol.*"                            	, "Proktologie")
+					FG1:= RegExReplace(FG1, "i).*Ph*s*ychot.*"                          	, "Psychotherapie")
+					FG1:= RegExReplace(FG1, "i).*Psycholog.*"                           	, "Psychotherapie")
+					FG1:= RegExReplace(FG1, "i).*Ps*ychot.*"                           	, "Psychotherapie")
+					FG1:= RegExReplace(FG1, "i).*Psyscho.*"                           	, "Psychotherapie")
+					FG1:= RegExReplace(FG1, "i).*Physchol.*"                           	, "Psychotherapie")
+					FG1:= RegExReplace(FG1, "i).*Pscholo.*"                           	, "Psychotherapie")
+					FG1:= RegExReplace(FG1, "i).*Ul*rolo.*"                               	, "Urologie")
+					FG1:= RegExReplace(FG1, "UIrologie"                               	, "Urologie")
+					FG1:= RegExReplace(FG1, "i).*Ortho*i*pädi*e*.*"                  	, "Orthopädie")
+					FG1:= RegExReplace(FG1, "i).*Schulter.*"                            	, "Orthopädie")
+					FG1:= RegExReplace(FG1, "i).*Gelenk.*"                            	, "Orthopädie")
+					FG1:= RegExReplace(FG1, "i).*Knies.*"                               	, "Orthopädie")
+					FG1:= RegExReplace(FG1, "i).*Wirbelsäulen.*"                   	, "Orthopädie")
+					FG1:= RegExReplace(FG1, "i)WS\s*Zentrum"                        	, "Orthopädie")
+					FG1:= RegExReplace(FG1, "i).*Radiologi.*"                          	, "Radiologie")
+					FG1:= RegExReplace(FG1, "i).*Radoplogi.*"                          	, "Radiologie")
+					FG1:= RegExReplace(FG1, ".*MRT.*"                                    	, "Radiologie")
+					FG1:= RegExReplace(FG1, ".*PET.*"                                    	, "Radiologie")
+					FG1:= RegExReplace(FG1, "i).*Mammo.*"                             	, "Radiologie")
+					FG1:= RegExReplace(FG1, "i).*Röntg.*"                              	, "Radiologie")
+					FG1:= RegExReplace(FG1, "i).*Neurora.*"                             	, "Radiologie")
+					FG1:= RegExReplace(FG1, "i).*Schmerz.*"                            	, "Schmerztherapie")
+					FG1:= RegExReplace(FG1, "i)^Merz.*"                              	, "Schmerztherapie")
+					FG1:= RegExReplace(FG1, "i).*Str*ah*l*en.*"                         	, "Strahlentherapie")
+					FG1:= RegExReplace(FG1, "i).*Charr*ite.*"                           	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Charit.*"                               	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Chrit.*"                                 	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Charite\s*AOZ.*"                  	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Chiropraktiker.*"                   	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Chirotherapie.*"                   	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Dr\s*Müller.*"                        	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Fuß.*"                                    	, "sonstige")
+					FG1:= RegExReplace(FG1, ".*PRM.*"                                    	, "sonstige")
+					FG1:= RegExReplace(FG1, ".*BFW.*"                                     	, "sonstige")
+					FG1:= RegExReplace(FG1, ".*MVZ.*"                                     	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Hennigsdorf.*"                      	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Podi*ologie.*"                        	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Hellios\s*KH\s*Buch.*"            	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Khs\s*Buch.*"                         	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Urlaubsort.*"                         	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Pflegeheim.*"                         	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*1\s*Hilfe.*"                          	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Maria\s*Heims.*"                   	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Rettungsstelle.*"                   	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Weaning.*"                         	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Wening.*"                           	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Rheinische.*"                         	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Dresden.*"                          	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Ergoth.*"                             	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Sportar.*"                             	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Sportmed.*"                          	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Sonogra.*"                             	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Sono\sAbd.*"                        	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*ungezielt.*"                         	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*unbestimmt.*"                        	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Ultrascha.*"                           	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Gercke.*"                            	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Unfallkran.*"                          	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Behring.*"                           	, "sonstige")
+					FG1:= RegExReplace(FG1, "i).*Psychosom.*"                         	, "sonstige")
+					If StrLen(FG1) = 0
+						continue
+					vFG := StrReplace(FG1, "/", "")
+					vFG := StrReplace(vFG, " ", "")
+					Gui, rxS: Default
+					;ToolTip, % "FG2: " FG2 "`nFG1: " FG1 "`nvFG: " vFG
+
+					If !Ueberweisungen.Fachgruppen.HasKey(vFG)					{
+
+							Ueberweisungen.Fachgruppen[vFG] := 1
 							Gui, rxS: Default
-							If !Ueberweisungen.Fachgruppen.HasKey(FG1)
-							{
-									Ueberweisungen.Fachgruppen[FG1] := 1
-									Gui, rxS: Default
-									If (FGMax = 0) {
-										Gui, rxS: Add, Text, % "xm y+30 w100 ", % FG1
-									} else {
-										Gui, rxS: Add, Text, % "xm w100 ", % FG1
-									}
-									Gui, rxS: Add, Progress, % "x+5 w" qw " h8 cBlue v" FG1, 1
-							    	FGMax ++
+							If (FGMax = 0) {
+								Gui, rxS: Add, Text, % "xm y+20 w260 ", % FG1
 							} else {
-									Ueberweisungen.Fachgruppen[FG1] += 1
+								Gui, rxS: Add, Text, % "xm w260 ", % FG1
 							}
+							Gui, rxS: Add, Text, % "x+5 cBlue Right vU" vFG, % "       1"
+							Gui, rxS: Add, Progress, % "x+5 w" qw " h9 cBlue v" vFG, 1
+							FGMax ++
 
-							Ueberweisungen.Fachgruppen[Max] := Ueberweisungen.Fachgruppen[FG1] > Ueberweisungen.Fachgruppen[Max] ? Ueberweisungen.Fachgruppen[FG1] : Ueberweisungen.Fachgruppen[Max]
-							Ueberweisungen.alle += 1
-							alle += 1
+					} else {
+							UZ := Ueberweisungen.Fachgruppen[vFG] += 1
+							vonHundert:= Floor(UZ*100/(qw*fk))
 
-							If (Ueberweisungen.Fachgruppen[Max] > (qw*fk)) {
-								fk ++
-							}
-
-							For FG, Ubw in Ueberweisungen.Fachgruppen 	{
-								vonHundert:= Floor(Ubw/(qw*fk)) * 100
-								GuiControl, rxS:, FG, % vonHundert
-							}
-
-							Gui, rxTP: Default
-							GuiControl,, T4, % "verschiedene Fachgruppen: " FGMax
-							GuiControl,, T5, % "Überweisungen insgamt    : " alle
+							GuiControl, rxS:, % "U" vFG	, % UZ ;SubStr("0000" UZ, -4)
+							GuiControl, rxS:, % vFG     	, % vonHundert
 					}
 
+					Ueberweisungen.Fachgruppen[Max] := Ueberweisungen.Fachgruppen[vFG] > Ueberweisungen.Fachgruppen[Max] ? Ueberweisungen.Fachgruppen[vFG] : Ueberweisungen.Fachgruppen[Max]
+					Ueberweisungen.alle += 1
+					alle += 1
+
+					If (Ueberweisungen.Fachgruppen[Max] > (qw*fk))
+						fk ++
+
+					;~ For FG, Ubw in Ueberweisungen.Fachgruppen 	{
+						;~ vonHundert:= Floor(Ubw/(qw*fk)) * 100
+						;~ vFG := RegExReplace(FG, "\s", "")
+						;~ GuiControl, rxS:, % vFG, % vonHundert
+					;~ }
+
+					Gui, rxTP: Default
+					GuiControl,, T4, % "verschiedene Fachgruppen: " FGMax
+					GuiControl,, T5, % "Überweisungen insgamt    : " alle
 			}
+
+		}
 	}
 
-
+	FileDelete, % A_ScriptDir "\Fachgruppen.txt"
 	For FG, Ubw in Ueberweisungen.Fachgruppen
-	{
-			FileAppend, % FG "`t: " Ubw "`n", % A_ScriptDir "\Fachgruppen.txt"
-	}
+		FileAppend, % FG "`t: " Ubw "`n", % A_ScriptDir "\Fachgruppen.txt"
 
 return ;}
 M14:                                                 	;	Kürzelliste und Nutzerkategorisierung      	;{
@@ -2769,13 +2988,13 @@ M14:                                                 	;	Kürzelliste und Nutzerk
 	GuiControl, rxTP: , T3	, % "Ermitteln aller Aktenkürzel und Hinzufügen zur Kürzelliste"
 	GuiControl, rxTP: , T4	, % "<><><><><><><><><><><><><><><>"
 
-	Loop, 10
-	{
+	Loop, 10	{
+
 			JahrIndex	:= A_Index - 1
 			QJahr   	:= "20" (10 + JahrIndex)
 
-			Loop, 4
-			{
+			Loop, 4			{
+
 					ExamQuartals ++
 
 					aktQuartal:= SubStr("0" A_Index, -1) (10 + JahrIndex)
@@ -2784,8 +3003,7 @@ M14:                                                 	;	Kürzelliste und Nutzerk
 					QData   	:= TPObject(aktQuartal, PatIDFilter, false, false)
 					QKuerzel	:= QuartalsKuerzel_ermitteln(QData)
 
-					For Albiskuerzel, val in QKuerzel
-					{
+					For Albiskuerzel, val in QKuerzel			{
 						;	GuiControl, rxTP: , T7	, % "akutelles Kürzel: " Albiskuerzel
 						;	Sleep, 500
 						If !KuerzelListe.HasKey(Albiskuerzel)
@@ -2809,19 +3027,17 @@ M15:                                                	;	Fachgruppenthesaurus erst
 	FGMax 	:= 0
 	FgTv := []
 
-	If FileExist(A_ScriptDir "\data\Fachgruppen_Thesaurus.json")
-	{
+	If FileExist(A_ScriptDir "\data\Fachgruppen_Thesaurus.json")	{
+
 			Fachgruppen	:= Object()	; child Object Fachgruppen inklusive Zählung (gesamt und Quartal, Jahr)
 			Fachgruppen	:= new JSONFile(A_ScriptDir "\data\Fachgruppen_Thesaurus.json")
 
 			Gui, FGT: New
 			Gui, FGT: Add, TreeView	, % "xm ym w250 h900 gFachgruppenwahl vFachgruppen"
-			For FgID, Fachname in Fachgruppen.Object().IDName
-			{
+			For FgID, Fachname in Fachgruppen.Object().IDName			{
 					If !isObject(FgID)
 						FgTv[FgID]	:= TV_Add(Fachname)
-					else
-					{
+					else					{
 						FgTv[FgID]	:= TV_Add(Fachname.FG)
 						FgTv[FgID]	:= []
 						For FgSubID, Subspezialisierung in Fachname.FgID.Object(	)
@@ -2829,16 +3045,15 @@ M15:                                                	;	Fachgruppenthesaurus erst
 					}
 			}
 
-			For ThWort, FgID in Fachgruppen.Object().Thesaurus
-			{
+			For ThWort, FgID in Fachgruppen.Object().Thesaurus			{
 
 			}
+
 			Gui, FGT: Add, Button, % "x+5  ym gStoreName"    	, % "<"
 			Gui, FGT: Add, Button, % "y+5       gRemoveName"	, % ">"
 			Gui, FGT: Add, ListView, % "x+5 ym w300 h900 gFachbezeichner vFachbezeichner" , % "in den Tagesprotokollen verwendete Bezeichnungen"
 
-			If FileExist(TagesprotokollPfad "\Fachgruppenbezeichner.txt")
-			{
+			If FileExist(TagesprotokollPfad "\Fachgruppenbezeichner.txt")			{
 					FileRead, t, % TagesprotokollPfad "\Fachgruppenbezeichner.txt"
 					Loop, Parse, t, `n, `r
 					{
@@ -2856,16 +3071,14 @@ M15:                                                	;	Fachgruppenthesaurus erst
 			}
 			Gui, FGT: Show, AutoSize, Fachgruppen Thesaurus
 	}
-	else
-	{
+	else	{
 			MsgBox, % "Addendum - " A_ScriptName, % "Datei: '\data\Fachgruppen_Thesaurus.json' ist nicht vorhanden.`nDas Makro kann nicht ausgeführt werden."
 			return
 	}
 
 
 	return
-	For index, protokoll in Tagesprotokolle
-	{
+	For index, protokoll in Tagesprotokolle	{
 			Jahr      	:= protokoll.Jahr
 			Quartal	:= protokoll.Quartal "/" Jahr
 			TPFullPath:= protokoll.path "\" protokoll.filename
@@ -2875,15 +3088,12 @@ M15:                                                	;	Fachgruppenthesaurus erst
 			l:=""
 			Loop, Parse, tpDatei, `n, `r
 			{
-					If RegExMatch(A_LoopField, "\s*füb\s+([A-Za-zÄÖÜäöüß\s\/\.]+)[\,\(]", FG)
-					{
+					If RegExMatch(A_LoopField, "\s*füb\s+([A-Za-zÄÖÜäöüß\s\/\.]+)[\,\(]", FG)					{
 
 							FG:= StrReplace(Trim(FG1), " ", "-")
 							l.= FG1 "`n"
 							If !Fachgruppen.HasKey(FG)
-							{
 									Fachgruppen[FG] := 0
-							}
 
 							Fachgruppen[FG] += 1
 
@@ -2926,46 +3136,37 @@ return ;}
 M16:                                                	;	Praxisstatistiken                                     	;{
 
 	ZiffernFilter	:= ["0300[1-5]", "03040"]
-	global PatIDFilter	:= "1,2,17844" ; diese Patienten ID's werden ignoriert
+	PatIDFilter 	:= "1,2,17844" ; diese Patienten ID's werden ignoriert
 
-	Statistik["AU"]	:= Object()
-	Statistik["AU"]["Bescheinigungen"]           	:=	0
-	Statistik["AU"]["Erstbescheinigungen"]     	:=	0
-	Statistik["AU"]["Folgebescheinigungen"]   	:=	0
-	Statistik["AU"]["Dauer_Alle"]                  	:=	0
-	Statistik["AU"]["Patienten"]                      	:=	0
-	Statistik["AU"]["Schein_Quote"]               	:=	0
-	Statistik["AU"]["Patientenzahl"]                	:=	0
+	Statistik["AU"]	                                    	:= Object()
+	Statistik["AU"]["Bescheinigungen"]           	:= 0
+	Statistik["AU"]["Erstbescheinigungen"]     	:= 0
+	Statistik["AU"]["Folgebescheinigungen"]   	:= 0
+	Statistik["AU"]["Dauer_Alle"]                  	:= 0
+	Statistik["AU"]["Patienten"]                      	:= 0
+	Statistik["AU"]["Schein_Quote"]               	:= 0
+	Statistik["AU"]["Patientenzahl"]                	:= 0
 
-	Loop 10 { ; 10 Jahre
+	Loop 11 {                                                                 	; 11 Jahre
 
 		JahrIndex	:= A_Index - 1
 		QJahr   	:= "20" (10 + JahrIndex)
 
 		Loop, 4 {
 
-				aktQuartal:= SubStr("0" A_Index, -1) (10 + JahrIndex)
-
 				; AHK-Objekt zur Auswertung erstellen und anschliessend im JSON Format speichern
-					QData      	:= TPObject(aktQuartal, PatIDFilter, false)
+					aktQuartal 	:= SubStr("0" A_Index, -1) (10 + JahrIndex)
 					QDFilePath	:= TagesprotokollPfad "\Quartalsdaten_" QJahr "-" SubStr("0" A_Index, -1) ".json"
-					;If !FileExist(QDFilePath)
-						bytes    	:= SerDes(QData, QDFilePath, 3)
-
-				; Fortschrittsanzeige
-					Gui, rxTP: default
-					GuiControl, rxTP: , T3	, % "statistische Auswertung: AU-Bescheinigungen (" aktQuartal ") "
-					GuiControl, rxTP: , T4	, % ""
-					GuiControl, rxTP: , T5	, % ""
-					GuiControl, rxTP: , T6	, % ""
-					GuiControl, rxTP: , T7 	, % ""
-					GuiControl, rxTP: , T8 	, % ""
-					GuiControl, rxTP: , T9 	, % ""
+					If !FileExist(TagesprotokollPfad "\" QuartalZuProtokollname(aktQuartal)) ;|| FileExist(QDFilePath)    	; Fortsetzen wenn Quartal nicht existiert oder schon konvertiert wurde
+						continue
+					QData      	:=	TPObject2(aktQuartal, PatIDFilter, false)
+					bytes         	:=	SerDes(QData, QDFilePath, 3)
+					bytesSum 	  +=	bytes
 
 				; Anlegen eines neuen Quartal-Objektes
-					NodeName:= QJahr "[" A_Index "]"
+					NodeName := QJahr "[" A_Index "]"
 					If !IsObject(Statistik[(NodeName)])
-						Statistik[(NodeName)]:= {AU:{}, Labor:{}, Rezepte:{}, Ueberweisungen:{}}
+						Statistik[(NodeName)] := {AU:{}, Labor:{}, Rezepte:{}, Ueberweisungen:{}}
 
 				; Aufruf der Funktion zur statistischen Auswertung von AU-Bescheinigungen
 					AU_Statistik(QData, aktQuartal)
@@ -2973,10 +3174,10 @@ M16:                                                	;	Praxisstatistiken        
 
 	}
 
-	bytes	     	:= SerDes(Statistik, TagesprotokollPfad "\Auswertungen\AU Statistiken 2010-2019.json", 3)
-	GuiControl, rxTP: , T3	, % "Auswertung der AU-Statistiken der Jahre 2010-2019"
-	GuiControl, rxTP: , T4	, % "sind in den Tagesprotokollpfad \Auswertungen geschrieben"
-	GuiControl, rxTP: , T5	, % "worden. Es wurden " bytes " bytes im JSON-Format gesichert."
+	;bytes	     	:= SerDes(Statistik, TagesprotokollPfad "\Auswertungen\AU Statistiken 2010-2019.json", 3)
+	GuiControl, rxTP: , T3	, % "Auswertung der AU-Statistiken der Jahre 2010-2020 sind in den"
+	GuiControl, rxTP: , T4	, % "Tagesprotokollpfad \Auswertungen geschrieben worden."
+	GuiControl, rxTP: , T5	, % "Insgesamt " bytesSum " bytes im JSON-Format wurden geschrieben."
 
 
 
@@ -2984,7 +3185,70 @@ return ;}
 M17:                                                  	;	Kürzel zählen                                        	;{
 
 return ;}
+M18:                                                	;	Rezepte zählen                                         	;{
 
+	Rezepte		:= Object()
+	Rezepte.medrp  	:= Object()
+	Rezepte.medhm 	:= Object()
+	Rezepte.medp    	:= Object()
+	Rezepte.medbm	:= Object()
+
+	rxRezept 	:= "^(?<Datum>\d{2}\.\d{2}\.\d{4})*\s*(?<Art>medrp|medhm|medp|medbm)\s*(?<Med>[A-Za-z\s]+)"
+	RzZaehler	:= 0
+	RzMedrp	:= 0
+	RzMedhm	:= 0
+	RzMedp	:= 0
+	RzMedbm	:= 0
+	RzLast   	:= ""
+	medrp  	:= []
+	medhm 	:= []
+	medp    	:= []
+    medbm 	:= []
+
+	For index, protokoll in Tagesprotokolle 	{
+
+		Jahr  	:= protokoll.Jahr
+		Quartal	:= protokoll.Quartal "/" Jahr
+		TPFullPath:= protokoll.path "\" protokoll.filename
+		tpfile := FileOpen(TPFullPath, "r").Read()
+		;ToolTip, % TPFullPath ",   " StrLen(tpDatei)
+		Gui, rxTP: Default
+		GuiControl,, T3, % "Quartal: " Quartal
+		Loop, Parse, tpfile, `n, `r
+		{
+				lTP := A_LoopField
+				If RegExMatch(lTP, "^(?<Datum>\d{2}\.\d{2}\.\d{4})\s+", "Akt") {
+					RegExMatch(AktDatum, "\d{4}", Jahr)
+				}
+
+				If RegExMatch(lTP, rxRezept, Rz) {
+
+					If (RzArt = "medrp") {
+						RzMedRp ++
+						GuiControl,, T4, % "medrp: " RzMedrp
+					} else if (RzArt = "medbm") {
+						RzMedbm ++
+						GuiControl,, T5, % "medbm: " RzMedbm
+					} else if (RzArt = "medhm") {
+						RzMedhm ++
+						GuiControl,, T6, % "medhm: " RzMedhm
+					} else if (RzArt = "medp") {
+						RzMedp ++
+						GuiControl,, T7, % "medp: " RzMedp
+					}
+
+					GuiControl,, T8, % "gesamt: " RzMedrp + RzMedbm + RzMedhm + Rzmedp
+
+
+				}
+
+		}
+
+
+	}
+
+return
+;}
 ;}
 
 
@@ -2992,8 +3256,6 @@ return ;}
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; FUNKTIONEN
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-
-
 QuartalsKuerzel_ermitteln(DataObj) {
 
 	SammelObjekt := Object()
@@ -3019,10 +3281,12 @@ QuartalZuProtokollname(QuartalsJahr) {
 return "20" Jahr "-" Quartal "_TP-AbrH.txt"
 }
 
+
+
 ;"Tagesprotokoll": "32802" - für Sendmessage
 ;----------------------------------------------------------------------------------------------------------------------------------------------
 ; RegEx Funktionen
-;----------------------------------------------------------------------------------------------------------------------------------------------
+;---------------------------------------------------------------------------------------------------------------------------------------------- ;{
 RegExParseTPFile(tprotfile, regextFilePath, RegExTP, deleteOrigin= false) {                  	;-- entfernt per RegEx für die weitere Verarbeitung unnötige Zeichen aus einem Tagesprotokol
 
 	; tprotfile   	- 	String mit Pfadangabe zum zu parsenden Tagesprotokoll
@@ -3038,22 +3302,21 @@ RegExParseTPFile(tprotfile, regextFilePath, RegExTP, deleteOrigin= false) {     
 		TPText := ReadAndConvertFile(tprotfile, "CP1252")
 		If (StrLen(TPText) > 0) {
 
-				; wenn noch nicht geparsed
-					If RegExMatch(TPText, "m)\\H\\N\+\d+") 	{
-						For index, arg in RegExTP
-							TPText := RegExReplace(TPText, arg.regex, arg.replace)
-					}
+			; wenn noch nicht geparsed
+				If RegExMatch(TPText, "m)\\H\\N\+\d+")
+					For index, arg in RegExTP
+						TPText := RegExReplace(TPText, arg.regex, arg.replace)
 
-				; Datei unter übergebenem Namen schreiben
-					File := FileOpen(regextFile, "w", "UTF-8")
-					File.Write(TPText)
-					File.Close()
+			; Datei unter übergebenem Namen schreiben
+				File := FileOpen(regextFile, "w", "UTF-8")
+				File.Write(TPText)
+				File.Close()
 
-				; das Albisprotokoll löschen
-					If deleteOrigin
-						FileDelete, % tprotfile
+			; das Albisprotokoll löschen
+				If deleteOrigin
+					FileDelete, % tprotfile
 
-				return TPText
+			return TPText
 		}
 
 return
@@ -3122,9 +3385,12 @@ TrimDiagnose(str) {                                                             
 return Trim(str)
 }
 
+
+;}
+
 ;----------------------------------------------------------------------------------------------------------------------------------------------
 ; Datei / Daten Funktionen
-;----------------------------------------------------------------------------------------------------------------------------------------------
+;---------------------------------------------------------------------------------------------------------------------------------------------- ;{
 TagesprotokollPfad(AddendumDir) {                                                                      	;-- liest den Tagesprotokollpfad ein
 
 	IniRead, tpfilepath,  % AddendumDir "\Addendum.ini", Abrechnungshelfer, letzte_Tagesprotokolldatei
@@ -3166,8 +3432,8 @@ ReadTPDir(dir, filepattern, ext, mode) {                                        
 
 	Loop, Files, % dir "\" filepattern "." ext, % mode
 	{
-			RegExMatch(A_LoopFileFullPath, "(?<Jahr>\d{4})\-(?<Quartal>\d)", TP)
-			tlist.Push({"Jahr": TPJahr, "Quartal": "0" TPQuartal, "path": A_LoopFileDir, "filename": A_LoopFileName, "displayname": StrReplace(A_LoopFileName, "_TP-AbrH.txt", "")})
+		RegExMatch(A_LoopFileFullPath, "(?<Jahr>\d{4})\-(?<Quartal>\d)", TP)
+		tlist.Push({"Jahr": TPJahr, "Quartal": "0" TPQuartal, "path": A_LoopFileDir, "filename": A_LoopFileName, "displayname": StrReplace(A_LoopFileName, "_TP-AbrH.txt", "")})
 	}
 
 return tlist
@@ -3179,21 +3445,13 @@ ReadAndConvertFile(FilePath, ReadEncoding="CP1252", WriteEncoding="") {         
 
 	If FileExist(FilePath)	{
 
-			f:= FileOpen(FilePath, "r", ReadEncoding)
-			while (!f.AtEOF)
-				txt.= f.ReadLine()
-			f.Close()
-
-			If (StrLen(WriteEncoding) > 0) 	{
-
-				SplitPath, FilePath,, Dir, fExt, fName
-				;MsgBox, % Dir "\" fName "_" WriteEncoding "." fExt "`n`n" txt
-				;f:= FileOpen(Dir "\" fName "-" WriteEncoding "." fExt, "w", WriteEncoding)
-				f:= FileOpen(FilePath, "w", WriteEncoding)
-				f.Write(txt)
-				f.Close
-
-			}
+		txt := FileOpen(FilePath, "r", ReadEncoding).Read()
+		If (StrLen(WriteEncoding) > 0) 	{
+			SplitPath, FilePath,, Dir, fExt, fName
+			f:= FileOpen(FilePath, "w", WriteEncoding)
+			f.Write(txt)
+			f.Close
+		}
 
 	}
 
@@ -3413,6 +3671,52 @@ VorsorgelistenIDs2Arr(file) {                                                   
 			return ""
 }
 
+ReadPatientDatabase(PatDBPath) {										                        				;-- liest die .csv Datei Patienten.txt als Object() ein
+
+	PatDB := Object()
+	If !RegExMatch(PatDBPath, "\.json$")
+		PatDBPath := Addendum.DBPath "\Patienten.json"
+
+	If !FileExist(PatDBPath)
+		return PatDB
+
+return JSONData.Load(PatDBPath,, "UTF-8")
+}
+
+GetAddendumDbPath() {                                                                                       	;-- liest den Pfad zum Datenbankordner aus der Addendum.ini
+
+	If (AddendumDir = "") {
+			AddendumDir:= FileOpen("C:\albiswin.loc\AddendumDir","r").Read()
+			If !AddendumDir {
+					MsgBox, 262144 , % "Addendum - " A_ScriptName,
+					(LTrim
+						Der Pfad zu den Dateien für Albis on Windows ist nicht hinterlegt.
+						Bitte starten Sie das AddendumStarter-Skript aus dem Addendum-
+						Hauptverzeichnis, damit alle notwendigen Dateien und Verzeichnisse
+						lokalisiert werden können.
+						Das Skript wird jetzt beendet!
+					), 15
+					ExitApp
+			}
+	}
+
+	IniRead, AddendumDbPath, % AddendumDir . "\Addendum.ini", Addendum, AddendumDbPath
+	If InStr(AddendumDbPath, "Error") {
+			MsgBox, 262144 , % "Addendum - " A_ScriptName,
+			(LTrim
+				Es wurde noch kein Datenbankpfad durch das Hauptskript Addendum.ahk
+				angelegt. Diese Funktion greift auf Dateien in diesem Ordner zu.
+				Bitte starten Sie Addendum.ahk!
+			)
+			ExitApp
+	} else {
+		return StrReplace(AddendumDbPath, "%AddendumDir%", AddendumDir)
+	}
+
+}
+
+;}
+
 ;----------------------------------------------------------------------------------------------------------------------------------------------
 ; Objekt Funktionen
 ;----------------------------------------------------------------------------------------------------------------------------------------------
@@ -3429,7 +3733,217 @@ return false
 ArrIn(Str, arr) {                                                                                                      	;-- gibt true oder false
 }
 
-TPObject(ConvQuartal, IDFilter:="", debug:=true, ShowProgress:=true) {                	; liest die zuvor geparsten Tagesprotokolle in ein Autohotkey-Object
+TPObject2(ConvQuartal, PatIDFilter:="", debug:=true, ShowProgress:=true) {            	;-- konvertiert Tagesprotokolle (Abrechnungshelfer-Format!) in ein AHK-Objekt
+
+	;----------------------------------------------------------------------------------------------------------------------------------------------
+	; Variablen festlegen
+	;----------------------------------------------------------------------------------------------------------------------------------------------;{
+		global 	MainNode, Datum, Subnode
+
+		QData    	:= Object()
+		TPFilepath	:= TagesprotokollPfad "\" QuartalZuProtokollname(ConvQuartal)
+		QJahr      	:= "20" SubStr(ConvQuartal, -1)
+		Quartal    	:= LTrim(SubStr(ConvQuartal, 1, StrLen(ConvQuartal) - 2), "0")                         	; damit geht 0119 oder 119
+		LQMonat 	:= (Quartal - 1) * 3 + 1 + 2                                                                          	; letzter Monat des Quartals
+		LQTag     	:= DaysInMonth(QJahr LQMonat) "." SubStr("0" LQMonat, -1) "." QJahr
+		tprot        	:= FileOpen(TPFilepath, "r").Read()
+		TP          	:= TPMax(tprot)                                                                                                ; zählt vorab die Zeilen und gibt die Anzahl gefundener PatientenID's zurück
+
+		Statistik[QJahr][Quartal]["Patientenzahl"] := TP.Patients
+	;}
+
+	;----------------------------------------------------------------------------------------------------------------------------------------------
+	; Fortschrittsanzeige
+	;----------------------------------------------------------------------------------------------------------------------------------------------;{
+		If ShowProgress		{
+			Gui, rxTP: default
+			GuiControl, rxTP: , T3, % "Tagesprotokoll (" ConvQuartal ") für Verarbeitung strukturieren"
+			GuiControl, rxTP: , T4, % "Zeilenzahl     `t: " 	TP.Lines
+			GuiControl, rxTP: , T5, % "Patientenzahl  `t: " 	TP.Patients
+			GuiControl, rxTP: , T6, % "<><><><><><><><><><><><><><><>"
+		}
+
+		If debug
+			debugFile:= FileOpen(A_ScriptDir "\Debug-" ConvQuartal ".txt", "w")
+	;}
+
+	;----------------------------------------------------------------------------------------------------------------------------------------------
+	; Konvertieren des Tagesprotokolls
+	;----------------------------------------------------------------------------------------------------------------------------------------------;{
+		For lineNr, line in StrSplit(tprot, "`n", "`r") {
+
+			;----------------------------------------------------------------------------------------------------------------------------------------------
+			; Fortschrittsanzeige:   	nicht jede bearbeitete Zeile quittieren, dies verlangsamt unnötig die Verarbeitungsgeschwindigkeit
+			;----------------------------------------------------------------------------------------------------------------------------------------------
+				If ShowProgress	&& (Mod(lineNr, 200) = 0) {
+					GuiControl, rxTP: , T7 	, % "Zeilen bearbeitet  `t: " 	SubStr("00000" lineNr, -4) "/" SubStr("00000" TP.Lines, -4)
+					GuiControl, rxTP: , T10 	, % "nodebuffer Länge`t: " 	SubStr("00000" StrLen(nodebuffer), -4)
+					GuiControl, rxTP: , T11 	, % "Knotennamen         `t: "	MainNode "/" (Datum ? Datum "/" : "") (SubNode ? SubNode "/" : "")
+				}
+
+			; ---------------------------------------------------------------------------------------------------------------------------------------------
+			; nächste Zeile:            	bei zutreffender Bedingung die aktuelle Zeile nicht verwerten
+			;----------------------------------------------------------------------------------------------------------------------------------------------
+				If GoNextPatient || (StrLen(line) = 0) || RegExMatch(line, "\\[HP]|Keine Eintragung innerhalb der Selektion vorhanden") ; z.B. \HKeine Diagnosen vorhanden! oder \HKeine Leistungen vorhanden!
+					continue
+
+			; ---------------------------------------------------------------------------------------------------------------------------------------------
+			; neuer Patient: 	         	Daten des Patienten werden extrahiert, nodebuffer sichern
+			;----------------------------------------------------------------------------------------------------------------------------------------------
+				If RegExMatch(line, ".*\,\s+.*\(\d+\).*\,\s+.*\(.*\,\s+.*\)") {
+
+					; nodebuffer speichern
+						If PatID
+							AddToTPObject2(PatID, nodebuffer)
+
+					; Patientendaten ermitteln
+						GoNextPatient	:= false
+						RegExMatch(line         	, "(?<Name>.*?)\((?<ID>\d+)\)\s+(?<Geb>\d{2}\.\d{2}\.\d{4})\s*\,\s*(?<Kasse>.*)"	, Pat)
+						RegExMatch(PatKasse 	, "(?<name>.*?)\(IK\:\s*(?<IK>\w+)\,\s+VNR\:\s*(?<VNR>\w+)"                                	, Kassen)
+
+					; PatientenID-Filter um bestimmte Akten nicht zu untersuchen (z.B. weil eine Akte für Notizen genutzt wird)
+						If PatID in %PatIDFilter%
+						{
+							GoNextPatient := true
+							continue
+						}
+
+					; Patienten-Index erhöhen, Variablen zurücksetzen, QData Objekt erweitern
+						PatIndex ++
+						MainNode := Datum := Subnode := nodebuffer := ""
+						QData[PatID] := {	"Nachname"  	: Trim(StrSplit(PatName, ",").1)
+												,	"Vorname"        	: Trim(StrSplit(PatName, ",").2)
+												,	"GebDatum"  	: PatGeb
+												,	"Krankenkasse"	: {"Name": Kassenname, "IK": KassenIK, "VNR": KassenVNR}
+												,	"Dia"             	: {}
+												,	"Ziffern"         	: {}
+												,	"ZLabor"        	: {}
+												,	"PathoLabor" 	: {}
+												,	"DDia"          	: {}
+												,	"DMed"         	: {}
+												,	"Cave"           	: {}
+												,	"BTag"             	: {}}
+
+					; Fortschrittsanzeige
+						If ShowProgress						{
+							GuiControl, rxTP: , T8 	, % "aktuelle Patienten-ID`t: " PatID
+							GuiControl, rxTP: , T9 	, % "Patienten bearbeitet `t: " PatIndex
+						}
+						If debug
+							debugFile.WriteLine("NEUER PATIENT : " PatID)
+
+						continue
+				}
+
+			; ---------------------------------------------------------------------------------------------------------------------------------------------
+			; NewNode:              	per RegEx alle Informationen der aktuellen Zeile erhalten
+			;----------------------------------------------------------------------------------------------------------------------------------------------
+			; ^((?<MN1>\d\d\.\d\d\.\d\d\d\d)|(?<MN2>[A-ZÄÖÜ][a-zäöüß!]+\:))*\s*(?<SubNode>^[A-Za-z\dÄÖÜäöü]+\s{2,}|\s{2,}[A-Za-z\dÄÖÜäöü]+)*(?<Value>.*)
+				RegExMatch(line, "^\d\d\.\d\d\.\d\d\d\d"  	, NewMN1)
+				RegExMatch(line, "^[A-ZÄÖÜ][a-zäöüß!]+\:"	, NewMN2)
+				If NewMN1
+					line := RegExReplace(line, "^" NewMN1 "\s*")
+				else If NewMN2
+					line := RegExReplace(line, "^" NewMN2 "\s*")
+				RegExMatch(line,"^(?<SubNode>[A-Za-z\dÄÖÜäöü]+\s{2,})*\s*(?<Value>.*)", New)
+
+			;----------------------------------------------------------------------------------------------------------------------------------------------
+			; neuer Hauptknoten:  	Knotenname festlegen oder wenn kein Hauptknoten Daten an nodebuffer angehängen
+			;----------------------------------------------------------------------------------------------------------------------------------------------
+				If (StrLen(NewMN1) > 0) {
+					NewMainNode	:= "BTag"
+					NewDatum      	:= NewMN1
+					GuiControl, rxTP: , T12 	, % "NewMainNode    `t: " 	NewMainNode ", " NewSubNode
+					GuiControl, rxTP: , T13 	, % "NewMN               `t: " 	(NewMN1 ? NewMN1 : " ---------- ") ", " (NewMN2 ? NewMN2 : " ---------- ")
+					;ListVars
+				}
+				else If (StrLen(NewMN2) > 0) {
+					NewMainNode	:= InStr(NewMN2, "Dauerdiagnosen") ? "DDia" : InStr(NewMN2, "Dauermedikamente") ? "DMed" : InStr(NewMN2, "Cave!") ? "Cave" : ""
+					NewSubNode	:= ""
+					NewDatum      	:= ""
+					GuiControl, rxTP: , T12 	, % "NewMainNode    `t: " 	NewMainNode ", " NewSubNode
+					GuiControl, rxTP: , T13 	, % "NewMN               `t: " 	(NewMN1 ? NewMN1 : " ---------- ") ", " (NewMN2 ? NewMN2 : " ---------- ")
+					;ListVars
+				}
+				else
+					nodebuffer .= NewValue
+
+			;----------------------------------------------------------------------------------------------------------------------------------------------
+			; nodebuffer:             	speichern bei neuem Subknotennamen oder Hauptknotennamen
+			;                                	Festlegung der aktuellen Knotennamen
+			;----------------------------------------------------------------------------------------------------------------------------------------------
+				NewSubNode := Trim(NewSubNode)
+				If (StrLen(NewSubNode) > 0) || (StrLen(NewMainNode) > 0) {
+
+					; nodebuffer speichern
+						AddToTPObject2(PatID, nodebuffer)
+
+					; Knotennamen, nodebuffer setzen
+						nodebuffer  	:= NewValue
+						MainNode	:= StrLen(NewMainNode)	> 0       	? NewMainNode	: MainNode
+						Datum      	:= StrLen(NewDatum)      	> 0      	? NewDatum	    	: MainNode = "BTag" ? Datum : ""
+						SubNode     	:= StrLen(NewSubNode) 	> 0      	? NewSubNode 	: ""
+						GuiControl, rxTP: , T11 	, % "Knotennamen         `t: "	MainNode "/" (Datum ? Datum "/" : "") (SubNode ? SubNode "/" : "")
+						Sleep 2000
+
+					; QData Objekt - erweitern je nach Bedarf
+						If (MainNode = "BTag") && !IsObject(QData[PatID][MainNode][Datum])
+							QData[PatID][MainNode][Datum] := Object()
+						If (MainNode = "BTag") && !IsObject(QData[PatID][MainNode][Datum][SubNode])
+							QData[PatID][MainNode][Datum][SubNode] := Object()
+
+				}
+
+		}
+	;}
+
+		If debug
+			DebugFile.Close()
+
+return QData
+}
+AddToTPObject2(PatID, nodebuffer) {
+
+	; globale Funktion auf das QData Objekt
+
+	; Variablen
+		global 	MainNode, Datum, Subnode
+		static 	trenner := {"lko":"-", "lkü":"-", "lp":"-", "lle":"-", "DMed":";", "DDia":";", "Cave":";", "labor":";"}
+
+		StrDelimiter := trenner.HasKey(SubNode) ? trenner[SubNode] : trenner.HasKey(MainNode) ? trenner[MainNode] : ""
+
+	; Daten sichern
+		If (StrLen(StrDelimiter) > 0) {                    ; Daten sind trennbar
+
+			For idx, val in StrSplit(nodebuffer, StrDelimiter) {
+
+				val := Trim(val)
+				If (StrLen(val) = 0)
+					continue
+
+				If     	  (MainNode = "DDia")
+					QData[PatID][MainNode].Push({"BhArt":SubNode, "ICD":val})
+				else if (MainNode = "DMed") || (MainNode = "Cave")
+					QData[PatID][MainNode].Push(val)
+				else
+					QData[PatID][MainNode][Datum][SubNode].Push(val)
+
+				If debug
+					debugFile.WriteLine("`t`t>write to: " . MainNode . "/" . (Datum ? Datum . "/" : "") . SubNode ": " . val)
+
+			}
+
+		}
+		else {                                                	; Daten sind nicht trennbar
+
+			QData[PatID][MainNode][Datum][SubNode].Push(nodebuffer)
+
+		}
+
+
+}
+
+TPObject(ConvQuartal, IDFilter:="", debug:=true, ShowProgress:=true) {                	;-- konvertiert Tagesprotokolle (Abrechnungshelfer-Format!) in ein AHK-Objekt
 
 	; Variablen festlegen
 
@@ -3440,7 +3954,7 @@ TPObject(ConvQuartal, IDFilter:="", debug:=true, ShowProgress:=true) {          
 		QJahr          		:= "20" SubStr(ConvQuartal, -1)
 		Quartal           	:= LTrim(SubStr(ConvQuartal, 1, StrLen(ConvQuartal) - 2), "0")                         	; damit geht 0119 oder 119
 		LQMonat      	:= (Quartal - 1) * 3 + 1 + 2                                                                          	; letzter Monat des Quartals
-		LQTag           	:= days_in_month(QJahr LQMonat) "." SubStr("0" LQMonat, -1) "." QJahr
+		LQTag           	:= DaysInMonth(QJahr LQMonat) "." SubStr("0" LQMonat, -1) "." QJahr
 
 	; vorgeparstes Tagesprotokoll einlesen
 		FileRead, tprot, % TPFilepath
@@ -3450,13 +3964,14 @@ TPObject(ConvQuartal, IDFilter:="", debug:=true, ShowProgress:=true) {          
 		Statistik[QJahr][Quartal]["Patientenzahl"] := TP.Patients
 
 	; Fortschrittsanzeige
-		If ShowProgress
-		{
+		If ShowProgress		{
+
 			Gui, rxTP: default
 			GuiControl, rxTP: , T3, % "Tagesprotokoll (" ConvQuartal ") für Verarbeitung strukturieren"
 			GuiControl, rxTP: , T4, % "Zeilenzahl     `t: " TP.Lines
 			GuiControl, rxTP: , T5, % "Patientenzahl  `t: " TP.Patients
 			GuiControl, rxTP: , T6, % "<><><><><><><><><><><><><><><>"
+
 		}
 
 		If debug
@@ -3467,10 +3982,9 @@ TPObject(ConvQuartal, IDFilter:="", debug:=true, ShowProgress:=true) {          
 		{
 
 			; nicht jede bearbeitete Zeile quittieren, dies verlangsamt unnötig die Verarbeitungsgeschwindigkeit
-				If ShowProgress
-				{
-						If (Mod(A_Index, 50) = 0) || (A_Index+100 > TP.Lines)
-							GuiControl, rxTP: , T7 	, % "Zeilen bearbeitet  `t: " SubStr("00000" A_Index, -4) "/" SubStr("00000" TP.Lines, -4)
+				If ShowProgress		{
+					If (Mod(A_Index, 50) = 0) || (A_Index+100 > TP.Lines)
+						GuiControl, rxTP: , T7 	, % "Zeilen bearbeitet  `t: " SubStr("00000" A_Index, -4) "/" SubStr("00000" TP.Lines, -4)
 				}
 
 			; ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3483,14 +3997,14 @@ TPObject(ConvQuartal, IDFilter:="", debug:=true, ShowProgress:=true) {          
 				If RegExMatch(A_LoopField, ".*\,\s+.*\(\d+\).*\,\s+.*\(.*\,\s+.*\)") {
 
 						GoNextPatient	:= false
-						RegExMatch(A_LoopField, "(?<Name>.*?)\((?<ID>\d+)\)\s+(?<Geb>\d{2}\.\d{2}\.\d{4})\s*\,\s*(?<Kasse>.*)", Pat)
-						RegExMatch(PatKasse, "(?<name>.*?)\(IK\:\s*(?<IK>\w+)\,\s+VNR\:\s*(?<VNR>\w+)", Kassen)
+						RegExMatch(A_LoopField, "(?<Name>.*?)\((?<ID>\d+)\)\s+(?<Geb>\d{2}\.\d{2}\.\d{4})\s*\,\s*(?<Kasse>.*)"	, Pat)
+						RegExMatch(PatKasse	 , "(?<name>.*?)\(IK\:\s*(?<IK>\w+)\,\s+VNR\:\s*(?<VNR>\w+)"                               	, Kassen)
 
 					; PatientenID Filter um bestimmte Akten nicht zu untersuchen (z.B. weil eine Akte für Notizen genutzt wird)
 						If PatID in %IDFilter%
 						{
-								GoNextPatient := true
-								continue
+							GoNextPatient := true
+							continue
 						}
 
 					; Patienten-ID sichern, Patienten-Index erhöhen, Variablen zurücksetzen
@@ -3509,18 +4023,17 @@ TPObject(ConvQuartal, IDFilter:="", debug:=true, ShowProgress:=true) {          
 
 						Datum:= Kuerzel:= Databuffer 	:= ""
 						node:= Subnode:= SubDiagnose:= nodebuffer	:= ""
-						Dauerinfo     	:= true
+						Dauerinfo := true
 						PatIndex ++
 
 					; Fortschrittsanzeige
-						If ShowProgress
-						{
-								GuiControl, rxTP: , T8 	, % "aktuelle Patienten-ID`t: " PatID
-								GuiControl, rxTP: , T9 	, % "Patienten bearbeitet `t: " PatIndex
+						If ShowProgress						{
+							GuiControl, rxTP: , T8 	, % "aktuelle Patienten-ID`t: " PatID
+							GuiControl, rxTP: , T9 	, % "Patienten bearbeitet `t: " PatIndex
 						}
-
 						If debug
 							debugFile.WriteLine("NEUER PATIENT : " PatID)
+
 				}
 
 			; ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3532,26 +4045,25 @@ TPObject(ConvQuartal, IDFilter:="", debug:=true, ShowProgress:=true) {          
 			; Datum:                    	 am Zeilenanfang markiert den Beginn der Quartalsdaten und steht für den Behandlungstag
 				If RegExMatch(A_LoopField, "^\d\d\.\d\d\.\d\d\d\d") {
 
-					; speichert die letzten Daten (Cave!:)
+					; speichert Daten (Cave!:)
 						If DauerInfo {
-								Dauerinfo:= false
-								If (StrLen(nodebuffer) > 0) {
-									val:= StrSplit(RTrim(nodebuffer, ";"), ";")
-									Loop, % val.MaxIndex()
-									{
-											toStore := Trim(val[A_Index])
-											QData[PatID][node].Push(toStore)
-											If debug
-												debugFile.WriteLine("`t`t>write to: " node ", subnode: " Subnode ", buffer: " toStore)
-									}
+							Dauerinfo := false
+							If (StrLen(nodebuffer) > 0) {
+								val:= StrSplit(RTrim(nodebuffer, ";"), ";")
+								Loop, % val.MaxIndex()			{
+									toStore := Trim(val[A_Index])
+									QData[PatID][node].Push(toStore)
+									If debug
+										debugFile.WriteLine("`t`t>write to: " node ", subnode: " Subnode ", buffer: " toStore)
 								}
-								nodebuffer:= node:= subnode := ""
+							}
+							nodebuffer:= node:= subnode := ""
 						}
 
-					; Sichern geparster Daten
+					; Sichern gefundener Daten
 						If (StrLen(Databuffer) > 0) {
-								AddToTPObject(PatID, Datum, Kuerzel, Databuffer)
-								Kuerzel:= Databuffer := ""
+							AddToTPObject(PatID, Datum, Kuerzel, Databuffer)
+							Kuerzel:= Databuffer := ""
 						}
 
 					; neues Datum auslesen
@@ -3564,73 +4076,81 @@ TPObject(ConvQuartal, IDFilter:="", debug:=true, ShowProgress:=true) {          
 					; eine Datumszeile ohne Eintragung, es wird mit der nächsten Zeile weiter gemacht
 						If InStr(A_LoopField, "Keine Eintragung innerhalb der Selektion vorhanden")
 							continue
+
 				}
 
 			; ---------------------------------------------------------------------------------------------------------------------------------------------
 			; Patientendaten:       	Dauermedikamente, Dauerdiagnosen und Cave! werden verarbeitet
 				If DauerInfo {
 
-						If RegExMatch(A_LoopField, "^[A-ZÄÖÜ][a-zäöüß!]*\:\s*$") {
+				  ; findet Dauerdignose: oder Dauermedikamente: oder Cave!:
+				  ; speichert zuvor gefundene Daten unter dem bisherigen Knotenpunkt
+				  ; legt den aktuellen Knotenpunkt fest
+					If RegExMatch(A_LoopField, "^[A-ZÄÖÜ][a-zäöüß!]*\:\s*$", Dauer) {
 
-								If (StrLen(nodebuffer) > 0) {
-										val:= StrSplit(RTrim(nodebuffer, ";"), ";")
-										Loop, % val.MaxIndex()
-										{
-												toStore := Trim(val[A_Index])
-												QData[PatID][node].Push(toStore)
-												If debug
-													debugFile.WriteLine("`t`t>write to: " node ", subnode: " Subnode ", buffer: " toStore)
-										}
+						; nodebuffer	- Inhalt speichern und leeren im Anschluß
+							If (StrLen(nodebuffer) > 0) {
+
+								For idx, val in StrSplit(RTrim(nodebuffer, ";"), ";") {
+									QData[PatID][node].Push(Trim(val))
+									If debug
+										debugFile.WriteLine("`t`t>write to: " node ", subnode: " Subnode ", buffer: " val)
 								}
+								nodebuffer := ""
 
-								RegExMatch(A_LoopField, "^([A-ZÄÖÜ][a-zäöüß!]*)\:\s*$", Dauer)
-								If InStr(Dauer1, "Dauerdiagnosen")
-									node := "DDia"
-								else If InStr(Dauer1, "Dauermedikamente")
-									node := "DMed"
-								else If InStr(Dauer1, "Cave")
-									node := "Cave"
+							}
+
+						; node      	- Knotenpunktname festlegen
+							If InStr(Dauer1, "Dauerdiagnosen")
+								node := "DDia"
+							else If InStr(Dauer1, "Dauermedikamente")
+								node := "DMed"
+							else If InStr(Dauer1, "Cave")
+								node := "Cave"
+
+							If debug
+								debugFile.WriteLine("`t`t*found node : " node " at line: " A_Index ", orig.RegMatch: " Dauer1)
+
+    						continue
+
+					}
+
+				  ; Knotenpunkt - Dauerdiagnosen
+					If InStr(node, "DDia") {
+
+						; matched anamnestisch oder Behandlung + Diagnosentext
+							RegExMatch(A_LoopField, "^(?<nodeN>\w+)*\s+(?<Diagnose>.*)", Sub)
+							Subnode 	 := (StrLen(SubnodeN) > 0) ? SubnodeN : Subnode
+							nodebuffer .= Trim(SubDiagnose) " "
+
+						; eine Diagnose endet mit einem Semikolon, endet die aktuelle Zeile dann können die Daten gespeichert werden
+							If RegExMatch(nodebuffer, "\;\s*$") {
+
+								tmpArr := StrSplit(Trim(nodebuffer), ";")
+								For idx, thisdiagnose in tmpArr
+									QData[PatID]["DDia"][Subnode].Push(thisdiagnose)
+								nodebuffer := ""
 
 								If debug
-									debugFile.WriteLine("`t`t*found node : " node " at line: " A_Index ", orig.RegMatch: " Dauer1)
+									debugFile.WriteLine("`t`t->write to: " node ", subnode: " Subnode ", buffer: " Trim(nodebuffer))
 
-								nodebuffer := ""
-								continue
+							}
 
-						}
-						else if InStr(node, "DDia") {
+					} ; ENDE DDIA
+					else If InStr(node, "DMed") {
 
-								;lastChar := SubStr(A_LoopField, StrLen(A_LoopField) - 1, 1)
-								If RegExMatch(A_LoopField, "\;\s*$") {
+						RegExMatch(A_LoopField, "^(?<node>\w+)\s+(?<Diagnose>.*)", Sub)
+						nodebuffer := SubDiagnose
 
-										If (StrLen(nodebuffer) > 0) {
-												nodebuffer := nodebuffer RTrim(Trim(A_LoopField), ";")
-										} else {
-												RegExMatch(A_LoopField, "^(?<node>\w+)\s+(?<Diagnose>.*)", Sub)
-												nodebuffer := RTrim(SubDiagnose, ";")
-										}
+						If debug
+							debugFile.WriteLine("`t`t+add to: " node ", subnode: " Subnode ", buffer: " nodebuffer)
 
-										QData[PatID]["DDia"][Subnode].Push(Trim(nodebuffer))
+				}
+				else {
+						nodebuffer .= A_LoopField
+				}
 
-										If debug
-											debugFile.WriteLine("`t`t->write to: " node ", subnode: " Subnode ", buffer: " Trim(nodebuffer))
-
-										nodebuffer := ""
-
-								} else {
-
-										RegExMatch(A_LoopField, "^(?<node>\w+)\s+(?<Diagnose>.*)", Sub)
-										nodebuffer := SubDiagnose
-
-										If debug
-											debugFile.WriteLine("`t`t+add to: " node ", subnode: " Subnode ", buffer: " nodebuffer)
-								}
-						}
-						else {
-								nodebuffer .= A_LoopField
-						}
-
-						continue
+				continue
 				}
 
 			; ---------------------------------------------------------------------------------------------------------------------------------------------
@@ -3686,19 +4206,15 @@ AddToTPObject(PatID, Datum, Kuerzel, Databuffer) {                              
 				If !IsObject(QData[PatID]["BTag"][Datum][Kuerzel])
 					QData[PatID]["BTag"][Datum][Kuerzel] := Object()
 
-				Loop % Ziffern.MaxIndex()
-				{
+				Loop % Ziffern.MaxIndex()		{
 						ziffer := Trim(Ziffern[A_Index])
-						If (StrLen(ziffer) > 0)
-						{
+						If (StrLen(ziffer) > 0)						{
 								QData[PatID]["BTag"][Datum][Kuerzel].Push(ziffer)
 
-								For ZiffIndex, QZiffer in QData[PatID]["Ziffern"]
-								{
+								For ZiffIndex, QZiffer in QData[PatID]["Ziffern"]		{
 										RegExMatch(QZiffer, "(?<Komplex>\d+)\(*x*\:*(?<Faktor>\d+)*\)*", Q)
 										RegExMatch(ziffer, "(?<Komplex>\d+)\(*x*\:*(?<Faktor>\d+)*\)*", T)
-										If (QKomplex = TKomplex)
-										{
+										If (QKomplex = TKomplex)		{
 												QFaktor := QFaktor=""	? 1: QFaktor
 												TFaktor	 :=  TFaktor=""	? 1: TFaktor
 												QData[PatID]["Ziffern"][ZiffIndex]:= QKomplex "(x:" QFaktor + TFaktor ")"
@@ -3916,14 +4432,14 @@ SetExplorerTheme(HCTL) {                                                        
 
 ReadSearchPatterns(Section) {
 
-		Loop {
+	Loop {
 
-				IniRead, SuchMuster,% A_ScriptDir "\Abrechnungshelfer.ahk", % Section, % "String" A_Index
-				If !InStr(SuchMuster, "Error")
-						Suchmuster[A_Index]:=  SuchMuster[A_Index]
-				else
-						break
-		}
+			IniRead, SuchMuster,% A_ScriptDir "\Abrechnungshelfer.ahk", % Section, % "String" A_Index
+			If !InStr(SuchMuster, "Error")
+					Suchmuster[A_Index]:=  SuchMuster[A_Index]
+			else
+					break
+	}
 
 return Suchmuster
 }
@@ -3932,16 +4448,12 @@ SaveSearchPattern(Section, Suchmuster, StrNr="") {
 
 	If (StrNr = "" )
 		Loop	{
-
 			IniRead, dummy, % A_ScriptDir "\Abrechnungshelfer.ahk", % Section, % "String" A_Index
 			If InStr(dummy, "Error") {
 				StrNr := A_Index
 				break
 			}
-
 		}
-
-
 
 	IniWrite, % Suchmuster, % A_ScriptDir "\Abrechnungshelfer.ahk", % Section, % "String" StrNr
 
@@ -3989,23 +4501,14 @@ ScriptMem() {                                                                   
 		TMM := A_TitleMatchMode
 		DetectHiddenWindows, On
 		SetTitleMatchMode	 , 2
-		;WinGet, PID, PID, \%A_ScriptName% - ahk_class AutoHotkey
 		WinGet, PID, PID, % "\" A_ScriptName " ahk_class AutoHotkey"
 		DetectHiddenWindows, % DHW
 		SetTitleMatchMode	 , % TMM
 	}
 	h:=DllCall("OpenProcess", "UInt", 0x001F0FFF, "Int", 0, "Int", pid)
 	DllCall("SetProcessWorkingSetSize", "UInt", h, "Int", -1, "Int", -1)
-	DllCall("CloseHandle", "Int", h)
+	DllCall("CloseHandle", "UInt", h)
 
-}
-
-Receive_WM_COPYDATA(wParam, lParam) {                                                         	;-- für die Kommunikation der Skripte untereinander - GUTE SACHE!!
-	global InComing
-    StringAddress := NumGet(lParam + 2*A_PtrSize)
-	InComing  	 := StrGet(StringAddress)
-	SetTimer, MessageWorker, -10
- return true
 }
 
 MessageWorker: ;{
@@ -4021,6 +4524,20 @@ return ;}
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; INCLUDES --- benötigte BIBLIOTHEKEN
 ;-------------------------------------------------------------------------------------------------------------------------------------------------------------;{
+	#Include %A_ScriptDir%\..\..\include\Addendum_Albis.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Controls.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Datum.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_DB.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Gdip_Specials.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Internal.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Menu.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_PdfHelper.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_PraxTT.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Protocol.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Screen.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Window.ahk
+
+	#include %A_ScriptDir%\..\..\lib\class_JSON.ahk
 	#include %A_ScriptDir%\..\..\lib\GDIP_All.ahk
 	#Include %A_ScriptDir%\..\..\lib\Sift.ahk
 	#Include %A_ScriptDir%\..\..\lib\ACC.ahk
@@ -4032,19 +4549,6 @@ return ;}
 	#Include %A_ScriptDir%\..\..\lib\TVH.ahk
 	#Include %A_ScriptDir%\..\..\lib\RMO.ahk
 	#Include %A_ScriptDir%\..\..\lib\SciTEOutput.ahk
-
-	#Include %A_ScriptDir%\..\..\include\Addendum_Albis.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_Controls.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_DB.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_Gdip_Specials.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_Internal.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_Menu.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_Misc.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_PdfHelper.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_Protocol.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_Screen.ahk
-	#Include %A_ScriptDir%\..\..\include\Addendum_Window.ahk
-	#Include %A_ScriptDir%\..\..\include\Gui\PraxTT.ahk
 
 ;}
 

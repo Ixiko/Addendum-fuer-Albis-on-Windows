@@ -11,19 +11,19 @@
 ;SetDefaultPrinter is to change the default printer. The parameter must be the COMPLETE name of the printer.
 
 GetInstalledPrinters(Delimiter="|",Default=True) {
-	
+
 	if (Default = True)
 	{
 			RegRead, defaultPrinter, HKCU, Software\Microsoft\Windows NT\CurrentVersion\Windows, Device
 			defaultName:= Strsplit(defaultPrinter, ",")
 			defaultName := defaultName[1]
 			printerlist := ""
-			
+
 			Loop, HKCU, Software\Microsoft\Windows NT\CurrentVersion\devices
 			{
 					if (A_LoopRegName = defaultname)
 						printerlist .= A_LoopRegName . Delimiter . Delimiter				;orig: printerlist = %printerlist%%A_loopRegName%%Delimiter%%Delimiter%
-					else 
+					else
 						printerlist .= A_loopRegName . Delimiter
 			}
 	}
@@ -33,9 +33,9 @@ GetInstalledPrinters(Delimiter="|",Default=True) {
 			Loop, HKCU, Software\Microsoft\Windows NT\CurrentVersion\devices
 					printerlist .= A_loopRegName . Delimiter
 	}
-	
+
 	return RTrim(printerlist, Delimiter)
-	
+
 }
 
 GetDefaultPrinter()  {

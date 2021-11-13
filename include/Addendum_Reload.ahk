@@ -1,25 +1,30 @@
-﻿;-----------------------------------------------------------------------------------------------------------------------------------
-;-------------------------------------------------------- Restart-Skript -----------------------------------------------------------
-;-------------------------------------------- Addendum für AlbisOnWindows --------------------------------------------------
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                            	Addendum_Reload
+;                            ~~~~~~~~~~~~
 ;
-;                                                                               	Beschreibung
+;     Beschreibung:     	Neuladen eines Skriptes unter Umgehung des 'Reload' Befehls.
+;       					    	Reload lädt Skripte relativ häufig nicht wirklich neu. Es verbleiben Daten im RAM,
+;                                  	welche vom neugeladenen Skript verwendet werden. Diese Daten (zumeist Bildhandles)
+;                                 	lassen sich nicht auffrischen, so daß Änderungen nicht sichtbar werden.
 ;
-;                          	Neuladen eines Skriptes unter Umgehen des AHK internen 'Reload' Befehl.
-;       	Notwendig geworden da dieser Befehl ein Skript relativ häufig nicht neu lädt. Durch ein Beenden
-;       	des Skriptes, werden gleichzeitig auch unnötig belegte Speicherresourcen wieder freigegeben.
-;           	- 	mit dem 5. Parameter (ist optional) wird das im Parameter 1 übergebene Skript durch eine
-;               	AutohotkeyH_U64.exe (multithread unicode 64bit Autohotkey-Version) gestartet
+;                                 	Das hier per commandline übergebene Skript wird als neuer, frischer Prozeß gestartet.
+;                                 	Unnötig belegter RAM wieder freigegeben.
+;
+;		Hinweis:	    		Parameter 5 (optional) ist true:  Ausführung mit AutohotkeyH [multithread unicode 64bit Version]
 ;
 ;
+;		Abhängigkeiten:	siehe includes
 ;
-;------------------------------------- written by Ixiko -this version is from 01.04.2020 -----------------------------------------
-;--------------------------- please report errors and suggestions to me: Ixiko@mailbox.org ---------------------------------
-;------------------------ use subject: "Addendum" so that you don't end up in the spam folder -----------------------------
-;--------------------------------- GNU Lizenz - can be found in main directory  - 2017 ---------------------------------------
-;-----------------------------------------------------------------------------------------------------------------------------------
+;	                    			Addendum für Albis on Windows
+;                        			by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
+;									begin: 02.04.2021,	last change 04.09.2021
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 #NoENV
 #NoTrayIcon
+
+q := Chr(0x22)
 
 FullAppPath       	:= A_Args.1
 delay                	:= A_Args.2
@@ -30,10 +35,12 @@ runAutohotkeyH	:= A_Args.5
 SplitPath, FullAppPath, AppName
 Sleep, % (delay * 1000)
 
+AHKH_FilePath := A_AppData "\AutoHotkeyH\AutoHotkeyH_U64.exe"
+
 If (runAutohotkeyH = 1)
-	Run, %A_ScriptDir%\AHK_H\AutohotkeyH_U64.exe /f "%FullAppPath%"
+	Run, % AHKH_FilePath " /f " q . FullAppPath . q " " q "reload" q
 else
-	Run, Autohotkey.exe /f "%FullAppPath%"
+	Run, % "Autohotkey.exe /f " q . FullAppPath . q " " q "reload" q
 
 
 ExitApp

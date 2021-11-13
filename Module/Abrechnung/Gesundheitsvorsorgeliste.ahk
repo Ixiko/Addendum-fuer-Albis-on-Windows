@@ -1,5 +1,5 @@
 ﻿
-;{ -----------------  Addendum für Albis on Windows - Modul Gesundheitsvorsorgeliste.ahk V1.89 vom 04.07.2020 -  Ixiko
+;{ -----------------  Addendum für Albis on Windows - Modul Gesundheitsvorsorgeliste.ahk V1.90 vom 25.12.2020 -  Ixiko
 
 ; 	nur lauffähig ab der Albis Version 12.071.005 (CG hatte mit dieser Albisversion eine Änderung des "Cave! von" Fenster eingeführt
 ;   und nur lauffähig mit der jeweils aktuellen Autohotkey-Version zum Versionsdatum
@@ -48,25 +48,22 @@ DetectHiddenWindows, On
 DetectHiddenText, On
 FileEncoding, UTF-8
 
-
 hIBitmap:= Create_GVU_ico(true)
-Menu Tray, Icon, hIcon:  %hIBitmap%
-
-
+Menu Tray, Icon, % "hIcon: "  hIBitmap
 ;ermittle ob eventuell dieses Modul schon gestartet wurde und breche den 2.Prozeß ab (funktioniert nicht, muss noch gemacht werden)
 ;If DllCall("GetCurrentProcessId") = 0 {
 ;			MsgBox, Dieses Skript sollte in keiner zweiten Instanz laufen!, 5
 ;			ExitApp
 ;	}
 
-OnExit, ExitModul
-
 ;}
 
 ;{2. Hotkey
+Hotkey, IfWinActive, Gesundheitsvorsorgeliste
 Hotkey, ^!p		, GVUPause
 Hotkey, ^!l		, GVUListVars
-Hotkey, End  	, ExitModul
+Hotkey, $End  	, ExitModul
+Hotkey, IfWinActive
 
 ;}
 
@@ -74,11 +71,10 @@ Hotkey, End  	, ExitModul
 
 	SciteWasActive:= 0
 
-	IfWinActive, ahk_class SciTEWindow
-	{
-				SciteWasActive:= 1
-				WinMinimize, ahk_class SciTEWindow
-	}
+	;~ IfWinActive, ahk_class SciTEWindow	{
+		;~ SciteWasActive:= 1
+		;~ WinMinimize, ahk_class SciTEWindow
+	;~ }
 ;}
 
 ;{4. Variablendeklarationen
@@ -121,18 +117,18 @@ Hotkey, End  	, ExitModul
 	;  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	;  Auslesen des Applikationsverzeichnisses (AddendumDir))
 	;  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-		;AddendumDir := RegReadUniCode64("HKEY_LOCAL_MACHINE", "SOFTWARE\Addendum für AlbisOnWindows", "ApplicationDir")
-		global AddendumDir		:= FileOpen("C:\albiswin.loc\AddendumDir","r").Read()
+		global AddendumDir
+		RegExMatch(A_ScriptDir, ".*(?=\\Module)", AddendumDir)
 	;}
 
 	;  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	;  Funktion zum Auswählen *gvu.txt (Quartalsdatei)
 	;  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
 		IniRead, GVUFile, % AddendumDir "\Addendum.ini", GVU_Queue, aktuelles_GVUFile
-		If InStr(GVUFile, "ERROR") or (GVUFile = "") {
-			FileSelectFile, FSF_GVUFile, 3, %AddendumDir%\Tagesprotokolle , GVU Quartals-Datei öffnen, GVU-Dokumente (*GVU.txt)
+		If InStr(GVUFile, "ERROR") || (StrLen(GVUFile) =0) {
+			FileSelectFile, FSF_GVUFile, 3, % AddendumDir "\Tagesprotokolle" , % "GVU Quartals-Datei öffnen", GVU-Dokumente (*GVU.txt)
 			If (GVUFile = "") {
-				MsgBox, 0x40000, AfAoW - Modul GVU Liste ausfüllen, Es scheint so als hätten Sie keine Datei ausgewählt`nDas Modul wird jetzt beendet.
+				MsgBox, 0x40000, Gesundheitsvorsorgeliste, % "Es scheint so als hätten Sie keine Datei ausgewählt`nDas Modul wird jetzt beendet."
 				ExitApp
 			}
 			SplitPath, FSF_GVUFile, GVUFile
@@ -141,7 +137,7 @@ Hotkey, End  	, ExitModul
 
 		RegExMatch(GVUFile, "^\d\d", Quartal)
 		RegExMatch(GVUFile, "(?<=^\d\d)\d\d", Jahr)
-		aktQuartal:= Quartal "/" Jahr
+		aktQuartal := Quartal "/" Jahr
 
 	;}
 
@@ -234,12 +230,12 @@ drücken Sie hier auf 'Abbrechen'. Das Skripte wird dann beendet!
 ;}
 
 ;{6. prüfe ob Albis läuft - starte die Hook Prozesse
-
-	AlbisWinID:= AlbisWinID()
-	If !AlbisWinID
+	If !(AlbisWinID:= AlbisWinID()) {
 		MsgBox, Starte bitte zunächst Albis!
+		ExitApp
+	}
 
-	gosub InitializeWinEventHooks
+	;gosub InitializeWinEventHooks
 
 ;}
 
@@ -255,47 +251,29 @@ drücken Sie hier auf 'Abbrechen'. Das Skripte wird dann beendet!
 			FileRead, filedata, % AddendumDir "\TagesProtokolle\" GVUFile
 			Loop, Parse, filedata, `n, `r
 			{
+				If (StrLen(A_LoopField) < 3)
+					continue
 
-					If StrLen(A_LoopField) < 3
-							continue
+				Counter ++
+				line[Counter] := A_LoopField
 
-					Counter++
-					line[Counter]:= A_LoopField
+				If      	InStr(A_LoopField, "Mindestalter 35 Jahre")			{
+					AbrBedNegativOld1++
+					continue
+				}
+				else If	InStr(A_LoopField, "kein Abrechnungsschein")		{
+					AbrBedNegativOld2++
+					continue
+				}
+				else If	InStr(A_LoopField, "eine GVU kann erst in")			{
+					AbrBedNegativOld3++
+					continue
+				}
 
-					If InStr(A_LoopField, "Mindestalter 35 Jahre")
-					{
-						AbrBedNegativOld1++
-						continue
-					}
-					else If InStr(A_LoopField, "kein Abrechnungsschein")
-					{
-						AbrBedNegativOld2++
-						continue
-					}
-					else If InStr(A_LoopField, "eine GVU kann erst in")
-					{
-						AbrBedNegativOld3++
-						continue
-					}
-
-					If !InStr(A_LoopField, "Neu:")
-						ohneGVU++
+				If !InStr(A_LoopField, "Neu:")
+					ohneGVU++
 			}
 
-	;}
-
-	;  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	;  Loop schaut welcher Backup-Name noch frei wäre und fertigt eine Kopie der aktuellen GVU-Liste an
-	;  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-			Loop {
-				backupFile:= AddendumDir "\TagesProtokolle\" SubStr(GVUFile, 1, StrLen(GVUFile) - 4) . A_Index . ".txt"
-			} until !FileExist(backupFile)
-
-		;-: Anlegen einer Sicherheitskopie der *gvu.txt Datei
-			FileCopy, % AddendumDir "\TagesProtokolle\" GVUFile, % backupFile
-			MsgBox, 0x40004, % "AfAoW - Modul GVU Liste ausfüllen", % "Es sind " . Counter . " Patienten in der Quartalliste: " . aktQuartal . " vorhanden.`nSoll ich mit dem Ausfüllen beginnen?`n'Nein' beendet das Programm."
-				IfMsgBox, No
-					ExitApp
 	;}
 
 	;  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -311,26 +289,52 @@ drücken Sie hier auf 'Abbrechen'. Das Skripte wird dann beendet!
 	;  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	;  die einzige GUI wird erstellt - benötigt um den Programmablauf kontrollieren zu können
 	;  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-			Gui, AC1: NEW
-			Gui, AC1: Font, S10 CDefault, Futura Bk Bt
-			Gui, AC1: +LastFound +AlwaysOnTop +HwndhAC
-			Gui, AC1: Margin, 5, 5
-			Gui, AC1: Add, Listview, r8 xm y0 w550 h700 gAAListView BackgroundAAAAFF HwndhAC_LV Grid NoSort, % "GVU-Quartal: " lvar[2] ", Pat.gesamt: " Counter ", unbearbeitet: " ohneGVU
-			;Gui, AC1: Add, Button, x20 y705 vPause gAAListView, Pause
-			Gui, Add, StatusBar, vACSBar HwndhACSBar, Beenden (Ende), Pause (Strg + Alt + P)		                                                	; Programmschritt weiter Strg + Pfeil rechts
-			Gui, AC1: Show, x1330 y100 w560 h750 Hide, Addendum für AlbisOnWindows - Gesundheitsvorsorgeliste    ;w350 h750
-			Gui, AC1: Default
-		;-: exakte Größe der Gui bestimmen
-			AC:= GetWindowSpot(hAC)
-		;-: Gui auf dem Monitor automatisch platzieren
-			SetWindowPos(hAC, (Mon1Right - AC.W - 10), 43, AC.W, (Mon1Bottom - 60))					; y = 43, dort endet der Fenstertitelbereich und Menubereich des Albisfenster
-			AC:= GetWindowSpot(hAC)
-			ControlGetPos, x, y, w, ACSbarH,, ahk_id %hACSBar%
-			ControlMove,,,,, ( AC.CH - (2 * AC.BH) - ACSBarH ), ahk_id %hAC_LV%
-			Gui, AC1: Show
+			APos     	:= GetWindowSpot(AlbisWinID())
+			STPos    	:= GetWindowSpot(WinExist("ahk_class Shell_TrayWnd"))
+			AlbisMon	:= screenDims(GetMonitorAt(APos.X, APos.Y))
+
+			Gui, AC1: NEW, % "-DPISCALE +LastFound +AlwaysOnTop +HwndhAC"
+			Gui, AC1: Font  	, S10 CDefault, Futura Bk Bt
+			Gui, AC1: Margin	, 5, 5
+
+			;Gui, AC1: Add    	, Text    	, % "xm y0 w550                HwndhACInfo BackgroundTrans "                                           	, % "GVU-Quartal: " aktQuartal ", Pat.gesamt: " Counter ", unbearbeitet: " ohneGVU
+			Gui, AC1: Add    	, Listview	, % "xm y0 w550 h700 r50 HwndhAC_LV gAAListView BackgroundAAAAFF NoSort"         	, % "GVU-Quartal: " aktQuartal ", Pat.gesamt: " Counter
+			Gui, AC1: Add   	, StatusBar, % "vACSBar HwndhACSBar"                                                                                         	, % ""
+
+			SB_SetParts(80, 30, 70, 50, 400)
+			SB_SetText("unbearbeitet"	, 1)
+			SB_SetText(ohneGVU     	, 2)
+			SB_SetText("insgesamt"     	, 3)
+			SB_SetText(Counter        	, 4)
+			SB_SetText("Befehle: Beenden (Ende), Pause (Strg + Alt + P)", 5)
+
+			ControlGetPos, x, y, w, ACSbarH,, % "ahk_id " hACSBar
+			guih 	:= AlbisMon.H - STPos.H - ACSBarH - 5
+
+			Gui, AC1: Show	, % "x" AlbisMon.W - 565 " y0 w560 h" guih " NA"                                             	, % "Gesundheitsvorsorgeliste"
+
+		;-: exakte Größe der Gui bestimmen und Listview anpassen
+			AC	:= GetWindowSpot(hAC)
+			ControlMove,,,,, ( AC.CH - (2 * AC.BH) - ACSBarH ), % "ahk_id " hAC_LV
+
 		;}
 
-			SetTimer, EventHook_WinHandler, 200
+	;  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	;  Loop schaut welcher Backup-Name noch frei wäre und fertigt eine Kopie der aktuellen GVU-Liste an
+	;  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
+			Loop {
+				backupFile := AddendumDir "\TagesProtokolle\" SubStr(GVUFile, 1, StrLen(GVUFile) - 4) . A_Index ".txt"
+			} until !FileExist(backupFile)
+
+		;-: Anlegen einer Sicherheitskopie der *gvu.txt Datei
+			FileCopy, % AddendumDir "\TagesProtokolle\" GVUFile, % backupFile
+			MsgBox, 0x40004, % "AfAoW - Modul GVU Liste ausfüllen", % "Es sind " . Counter . " Patienten in der Quartalliste: " . aktQuartal . " vorhanden.`nSoll ich mit dem Ausfüllen beginnen?`n'Nein' beendet das Programm."
+				IfMsgBox, No
+					ExitApp
+	;}
+
+		OnExit, ExitModul
+	   ;SetTimer, EventHook_WinHandler, 200
 ;}
 
 ;{8. Prozeduren: gehe Zeile für Zeile durch die GVUListe und erstelle Formulare, Einträge und Ziffern für noch nicht abgearbeitete Patienten
@@ -338,139 +342,141 @@ drücken Sie hier auf 'Abbrechen'. Das Skripte wird dann beendet!
 	;  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	;  a. Zeilenweises bearbeiten der ausgewählten Quartalsliste
 	;  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-		LineNum:= FormularZaehler := 0
+	LineNum:= FormularZaehler := 0
 
-		Loop, % line.Count() {
+	Loop, % line.Count()	{
+
+		; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		; Listview vorbereiten, Variablen zurücksetzen, aktuelle Patientendaten anzeigen
+		; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+			c := 1
+			lvar[4]	    	:= ""																; immer leeren sonst enthält diese eventuell noch den vorherigen Eintrag
+			thisround  	:= A_Index													; Formularzähler
+			currentline 	:= Trim(line[thisround])               					; temporäre Variable
+			lvar           	:= StrSplit(currentline, "`;")								; Aufteilen der aktuellen Zeile in vier Variablen als Beispiel, lvar[3] = Patienten-ID
+			GVUMonat  	:= SubStr(lvar[1], 4, 2)									; Ermitteln des Untersuchungsmonats
+			GVUJahr      	:= SubStr(lvar[1], StrLen(lvar[1]) - 1, 2)			; Ermitteln des Untersuchungsjahres
+			FormularZaehler ++
+
+			SB_SetText(ohneGVU, 2)
+
+		; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		;  nach Strsplit entstehen 4 Variablen - lvar[1]: Untersuchungsdatum, lvar[2]: Untersuchungsquartal, lvar[3]: PatientenID, lvar[4]: enthält evtl. die Kopie der Zeile 9 des ""Cave! von"" Fenster
+		;  Beispielzeilen: 17.01.2018;01/18;17716;Alt:01740, GVU/HKS 12#14,Neu:GVU/HKS, GVU/HKS 01^18
+		;	                     17.01.2018;01/18;11027;Alt:01740, GVU/HKS 10#15,Neu:01740, GVU/HKS 01^18
+		;                        17.01.2018;01/18;20273;kein Abrechnungsschein angelegt gewesen.
+		;
+		;  wenn lvar[4] eine Kopie enthält dann ist diese schon Zeile abgearbeitet, dies ist sozusagen gleich ein Backup der Zeile 9 im Cave! von Fenster oder es wird dort die Fehlermeldung
+		;  eingeschrieben, warum bei dem jeweiligen Patienten keine Formulare angelegt werden konnten
+		; ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+		If (StrLen(lvar[4]) = 0)	{
 
 			; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 			; Listview vorbereiten, Variablen zurücksetzen, aktuelle Patientendaten anzeigen
-			; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-				c := 1
-				lvar[4]	    	:= ""																; immer leeren sonst enthält diese eventuell noch den vorherigen Eintrag
-				thisround  	:= A_Index													; Formularzähler
-				currentline 	:= Trim(line[thisround])               					; temporäre Variable
-				lvar           	:= StrSplit(currentline, "`;")								; Aufteilen der aktuellen Zeile in vier Variablen als Beispiel, lvar[3] = Patienten-ID
-				GVUMonat  	:= SubStr(lvar[1], 4, 2)									; Ermitteln des Untersuchungsmonats
-				GVUJahr      	:= SubStr(lvar[1], StrLen(lvar[1]) - 1, 2)			; Ermitteln des Untersuchungsjahres
-				FormularZaehler ++
+			; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
+				GUI, AC1: Default
+				LV_Delete()                                                                                                                                        	;löschen des Inhalts meines ListView Fenster
+				LV_Add("", "------------------------------------------------------------------------------------------------------")
+				LV_Add("", "Formular Nr.: " SubStr("000" thisround, -2) ", Patienten-ID: " SubStr("00000" lvar[3], -4) ", Untersuchungsdatum: " lvar[1])
+				FileAppend	, % "`nFormular Nr.: " SubStr("000" thisround, -2) ", Patienten-ID: " SubStr("00000" lvar[3], -4) ", Untersuchungsdatum: " lvar[1] " | "
+									, % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
+			;}
 
 			; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-			;  nach Strsplit entstehen 4 Variablen - lvar[1]: Untersuchungsdatum, lvar[2]: Untersuchungsquartal, lvar[3]: PatientenID, lvar[4]: enthält evtl. die Kopie der Zeile 9 des ""Cave! von"" Fenster
-			;  Beispielzeilen: 17.01.2018;01/18;17716;Alt:01740, GVU/HKS 12#14,Neu:GVU/HKS, GVU/HKS 01^18
-			;	                     17.01.2018;01/18;11027;Alt:01740, GVU/HKS 10#15,Neu:01740, GVU/HKS 01^18
-			;                        17.01.2018;01/18;20273;kein Abrechnungsschein angelegt gewesen.
-			;
-			;  wenn lvar[4] eine Kopie enthält dann ist diese schon Zeile abgearbeitet, dies ist sozusagen gleich ein Backup der Zeile 9 im Cave! von Fenster oder es wird dort die Fehlermeldung
-			;  eingeschrieben, warum bei dem jeweiligen Patienten keine Formulare angelegt werden konnten
-			; ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+			; Patientenakte aus der Liste öffnen
+			; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
+				If !RegExMatch(lvar[3], "\d+")	{			;prüft auf fehlerhafte Patienten-ID
 
-			If (lvar[4] = "")
-			{
-					; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-					; Listview vorbereiten, Variablen zurücksetzen, aktuelle Patientendaten anzeigen
-					; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-						GUI, AC1:Default
-						LV_Delete()                                                                                                                                        	;löschen des Inhalts meines ListView Fenster
-						LV_Add("", SubStr("000" Counter, -2) " Untersuchungen gesamt. Davon bearbeitet: " Counter - ohneGVU)
-						LV_Add("", Substr("00" c, -1) ": Beginne mit Formular Nr.: " SubStr("000" thisround, -2) ", Patienten-ID: " SubStr("00000" lvar[3], -4) ", Untersuchungsdatum: " lvar[1])
-						FileAppend	, % "`nFormular Nr.: " SubStr("000" thisround, -2) ", Patienten-ID: " SubStr("00000" lvar[3], -4) ", Untersuchungsdatum: " lvar[1] " | "
+					MsgBox, 0x40000, Gesundheitsvorsorgeliste, % "In der Liste ist eine Zeile ohne Patienten-ID vorhanden.`nFahre mit dem nächsten Patienten fort!", 3
+					FileAppend, % "`nIn der Liste ist eine Zeile ohne Patienten-ID ( " SubStr("00000" lvar[3], -4) " ) vorhanden. Fahre mit dem nächsten Patienten fort!"
 											, % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
-					;}
+					continue
+				}
 
-					; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-					; Patientenakte aus der Liste öffnen
-					; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-						If !RegExMatch(lvar[3], "\d+")				;prüft auf fehlerhafte Patienten-ID
-						{
-								MsgBox, 0x40000, Gesundheitsvorsorgeliste, % "In der Liste ist eine Zeile ohne Patienten-ID vorhanden.`nFahre mit dem nächsten Patienten fort!", 3
-								FileAppend, % "`nIn der Liste ist eine Zeile ohne Patienten-ID ( " SubStr("00000" lvar[3], -4) " ) vorhanden. Fahre mit dem nächsten Patienten fort!"
-													, % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
-								continue
-						}
+				If !AlbisAkteGeoeffnet("", "", "", lvar[3])					{
 
-						If !AlbisAkteGeoeffnet("", "", "", lvar[3])
-						{
-								If !AlbisAkteOeffnen(lvar[3])																								;kein WaitAndActivate notwendig (hat diese Funktion integriert)
-										MsgBox, % "Akte: " lvar[3] " konnte nicht geöffnet werden.`nUnternimm was!"
-						}
+					If !AlbisAkteOeffnen(lvar[3])																								;kein WaitAndActivate notwendig (hat diese Funktion integriert)
+						MsgBox, % "Akte: " lvar[3] " konnte nicht geöffnet werden.`nUnternimm was!"
 
-						Sleep, % sleeptime
-					;}
+				}
 
-					; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-					; prüft das Alter des Patienten
-					; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-						age	:= Floor(DateDiff( "YY", AlbisPatientGeburtsdatum(), lvar[1]))
-						If (age >= minAlterEinmalig)
-						{
-								LV_Add("", Substr("00" c++, -1) ": 'Mindestalter " minAlterEinmalig " Jahre `(" age "`) ist erfüllt!" )
-								FileAppend, % "Mindestalter " minAlterEinmalig " Jahre `(" age "`) ist erfüllt! | " , % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
-						}
-						else
-						{
-								LV_Add("", Substr("00" c++, -1) ": Abrechnungsbedingung - 'Mindestalter " minAlterEinmalig " Jahre' `(" age "`) ist nicht erfüllt!" )
-								AbrBedNegativ1++
-								MsgBox, 0x40000, Gesundheitsvorsorgeliste, %  "Die Abrechnungsbedingung älter als " minAlterEinmalig " Jahre `(" age "`) ist nicht erfüllt!`nFahre mit dem nächsten Patienten fort!", 5
-								line[thisround]:= currentline ";!!!Mindestalter " minAlterEinmalig " Jahre ist nicht erfüllt!"
-								FileAppend, % line[thisround] , % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
-								AlbisAkteSchliessen()
-								continue
-						}
+				LV_Add("", "Patient: " AlbisCurrentPatient())
+				Sleep % sleeptime
 
-					;}
+			;}
 
-					; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-					; prüft ob Chipkarte für das Arbeitsquartal eingelesen wurde , falls ein Patient ohne Abrechnungsschein in der GVU Liste eingetragen ist
-					; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-						LV_Add("", Substr("00" c++, -1) ": Prüfe auf Vorliegen eines gültigen Abrechnungsscheines")
+			; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+			; prüft das Alter des Patienten
+			; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
+				age	:= Floor(DateDiff( "YY", AlbisPatientGeburtsdatum(), lvar[1]))
+				If (age >= minAlterEinmalig) {
+					LV_Add("", "  " Substr("00" c++, -1) ": 'Mindestalter " minAlterEinmalig " Jahre `(" age "`) ist erfüllt!" )
+					FileAppend, % "Mindestalter " minAlterEinmalig " Jahre `(" age "`) ist erfüllt! | " , % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
+				}
+				else	{
+					LV_Add("", "  " Substr("00" c++, -1) ": Abrechnungsbedingung - 'Mindestalter " minAlterEinmalig " Jahre' `(" age "`) ist nicht erfüllt!" )
+					AbrBedNegativ1 ++
+					MsgBox, 0x40000, Gesundheitsvorsorgeliste, %  "Die Abrechnungsbedingung älter als " minAlterEinmalig " Jahre `(" age "`) ist nicht erfüllt!`nFahre mit dem nächsten Patienten fort!", 5
+					line[thisround] := currentline ";!!!Mindestalter " minAlterEinmalig " Jahre ist nicht erfüllt!"
+					FileAppend, % line[thisround] , % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
+					AlbisAkteSchliessen()
+					continue
+				}
 
-						abr:= AlbisAbrechnungsscheinVorhanden(aktQuartal)
-						LV_Add("", Substr("00" c++, -1) ": Ergebnis der Abrechnungsscheinprüfung: " abr)
-						FileAppend, % "Ergebnis der Abrechnungsscheinprüfung: " abr " | " , % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
-					;}
+			;}
 
-					; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-					; kein Abrechnungsschein angelegt - dann führt er folgende Zeilen aus
-					; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-						If (abr = 0)
-						{
-								LV_Add("", "bei dem geöffneten Patienten wurde kein Abrechnungsschein angelegt")
-								LV_Add("", "eine Abrechnung der Untersuchung ist in dem Quartal nicht möglich.")
-								FileAppend, % "es war kein Abrechnungsschein für das Quartal " aktQuartal " angelegt!" , % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
-								Sleep, % sleeptime
-								AbrBedNegativ2++
+			; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+			; prüft ob Chipkarte für das Arbeitsquartal eingelesen wurde , falls ein Patient ohne Abrechnungsschein in der GVU Liste eingetragen ist
+			; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
+				LV_Add("", "  " Substr("00" c++, -1) ": Prüfe auf Vorliegen eines gültigen Abrechnungsscheines")
+				abr := AlbisAbrechnungsscheinVorhanden(aktQuartal)
+				LV_Add("", "  " Substr("00" c++, -1) ": Ergebnis der Abrechnungsscheinprüfung: " abr)
+				FileAppend, % "Ergebnis der Abrechnungsscheinprüfung: " abr " | " , % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
+			;}
 
-							;falls ein Programmierfehler vorliegt oder einfach nur der Schein nicht erkannt wurde kann der User hier nochmal eingreifen
-								MsgBox, 0x40001, Gesundheitsvorsorgeliste, % MsgTxt004
-								IfMsgBox, Ok
-									gosub, Abrechnung_Positiv
-								IfMsgBox, Cancel
-								{
-									line[thisround]:= currentline . ";!! es ist kein Abrechnungsschein angelegt gewesen !!"
-									FileAppend, % line[thisround], % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
-									AlbisAkteSchliessen()
-								}
-						}
+			; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+			; kein Abrechnungsschein angelegt - dann führt er folgende Zeilen aus
+			; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
+				If (abr = 0)			{
 
-					;}
+					LV_Add("", "  bei dem geöffneten Patienten wurde kein Abrechnungsschein angelegt")
+					LV_Add("", "  eine Abrechnung der Untersuchung ist in dem Quartal nicht möglich.")
+					FileAppend, % "es war kein Abrechnungsschein für das Quartal " aktQuartal " angelegt!" , % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
+					Sleep % sleeptime
+					AbrBedNegativ2++
 
-					; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-					; Abrechnungsschein vorhanden - dann das hier
-					; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-						If (abr > 0)
-						{
-								gosub, Abrechnung_Positiv
-								Loop, % WorkOff.Length()
-									WorkOff.RemoveAt(A_Index)                                                 	;Inhalte löschen
-						}
+				;falls ein Programmierfehler vorliegt oder einfach nur der Schein nicht erkannt wurde kann der User hier nochmal eingreifen
+					MsgBox, 0x40001, Gesundheitsvorsorgeliste, % MsgTxt004
+					IfMsgBox, Ok
+						gosub, Abrechnung_Positiv
+					IfMsgBox, Cancel
+					{
+						line[thisround] := currentline ";!! es ist kein Abrechnungsschein angelegt gewesen !!"
+						FileAppend, % line[thisround], % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
+						AlbisAkteSchliessen()
+					}
 
-					;}
+				}
 
-					ohneGVU --
+			;}
 
-			}
+			; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+			; Abrechnungsschein vorhanden - dann das hier
+			; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
+				If (abr > 0)	{
+					gosub, Abrechnung_Positiv
+					Loop % WorkOff.Length()
+						WorkOff.RemoveAt(A_Index)                                                 	;Inhalte löschen
+				}
+
+			;}
+
+			ohneGVU --
 
 		}
+
+	}
 
 	;}
 
@@ -487,14 +493,12 @@ drücken Sie hier auf 'Abbrechen'. Das Skripte wird dann beendet!
 		LV_Delete()
 
 		FileDelete, % AddendumDir "\TagesProtokolle\" GVUFile
-		Loop, % line.Count()
-		{
-				If StrLen(line[A_Index]) > 3
-				{
-						If ( A_Index < line.Count() )
-							FileAppend, % line[A_Index] "`n" , % AddendumDir "\TagesProtokolle\" GVUFile, UTF-8
-						else
-							FileAppend, % line[A_Index] 		, % AddendumDir "\TagesProtokolle\" GVUFile, UTF-8
+		Loop % line.Count()		{
+			If (StrLen(line[A_Index]) > 3) 	{
+				If ( A_Index < line.Count() )
+					FileAppend, % line[A_Index] "`n" , % AddendumDir "\TagesProtokolle\" GVUFile, UTF-8
+				else
+					FileAppend, % line[A_Index] 		, % AddendumDir "\TagesProtokolle\" GVUFile, UTF-8
 				}
 		}
 
@@ -563,130 +567,120 @@ ExitApp
 
 Abrechnung_Positiv: 						;{ überprüft ob die Voraussetzungen zur Abrechnung einer Gesundheitsvorsorge erfüllt sind
 
-	;  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	;  a) sucht nach einer Zeile welche den String "GVU" enthält, wenn nichts notiert ist, sichert er die Zeile 9
-	;  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-			CZeile:= Trim(AlbisGetCaveZeile("", "GVU"))
-			If (StrLen(CZeile) = 0)
-				CZeile:= Trim(AlbisGetCaveZeile("9", ""))
-		; Sichern der Kürzelzeile 9
-			FileAppend, % TC ";" lvar[3] ";" AlbisCurrentPatient() ";" CZeile "`n", % AddendumDir . "\Tagesprotokolle\cave9.txt", UTF-8
-	;}
-	;Pause
-	;  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	;  b) Parsen:        	 der 9.Zeile aus dem "Cave! von" Fenster
-	;  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-			;ist die Zeile 9 noch leer, wird gvufound auf 0 gesetzt
-			If RegExMatch(CZeile, "i)G[VU]+.H[KS]+.[KVU]*\s*(\d+).(\d+)", thisGVU)  ; Erkennung auch bei Buchstabenverdrehern (GUV
-			{
-					gvufound:= true
-					CaveMonat:= thisGVU1
-					CaveJahr:= thisGVU2
-					;RegExMatch(CZeile, "(?<=G[VU][VU].H[KS][KS]\s)\d\d", CaveMonat)
-					;RegExMatch(CZeile, "(?<=G[VU][VU].H[KS][KS]\s\d\d.)\d\d", CaveJahr)
-			}
-			else
-			{
-					gvufound:= CaveMonat:=  CaveJahr:= 0
-			}
+	;  A) SUCHT NACH EINER ZEILE WELCHE "GVU" oder "HKS" ENTHÄLT, WENN NICHTS NOTIERT IST, WIRD ZEILE 9 GELESEN
+		CZeile := Trim(AlbisGetCaveZeile("", "i)GVU|HKS|KVU", true))
+		If (StrLen(CZeile) = 0)
+			CZeile := Trim(AlbisGetCaveZeile(9, "", true))
+		; Sichern von CZeile
+		FileAppend, % TC ";" lvar[3] ";" AlbisCurrentPatient() ";" CZeile "`n", % AddendumDir "\Tagesprotokolle\cave9.txt", UTF-8
 
-			LV_Add("",  Substr("00" c++, -1) ": " thisGVU " gefunden - letzte Untersuchung: " SubStr("0" CaveMonat, -1) "/" SubStr("0" CaveJahr, -1) )
-	;}
+	;  B) PARSEN:        	 DER GVU/HKS INFO-ZEILE AUS DEM "CAVE! VON" FENSTER
+		If RegExMatch(CZeile, "i)G[VU]+.H[KS]+.[KVU]*\s*(?<Monat>\d+).(?<Jahr>\d+)", thisGVU) { ; Erkennung auch bei Buchstabenverdrehern (GUV
+			gvufound  	:= true
+			CaveMonat	:= thisGVUMonat
+			CaveJahr  	:= thisGVUJahr
+			LV_Add("",  "  " Substr("00" c++, -1) ": " thisGVU " gefunden - letzte Untersuchung: " SubStr("0" CaveMonat, -1) "/" SubStr("0" CaveJahr, -1) )
+		}
+		else	{
+			;ist die Zeile 9 (GVU) noch leer, wird gvufound auf 0 gesetzt
+			gvufound  	:= false
+			CaveMonat	:= CaveJahr := 0
+		}
 
-	;  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	;  c) Berechnung:	Abstand zwischen den Vorsorgeuntersuchungen
-	;  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-			if !gvufound
-			{
-					LV_Add("",  Substr("00" c++, -1) ": Es ist noch nie eine Vorsorgeuntersuchung abgerechnet worden.")
-					FileAppend, % "Es ist noch nie eine Vorsorgeuntersuchung abgerechnet worden. | " , % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
-					CaveJahr := CaveMonat :=0
-				; 2 Jahre + 1 Monat (damit es nachher funktioniert)
-					deltaGVU := minGVU_Abstand + 1
+	;  C) BERECHNUNG:	ABSTAND ZWISCHEN DEN VORSORGEUNTERSUCHUNGEN
+		if !gvufound	{
+
+				LV_Add("", "  " Substr("00" c++, -1) ": Es ist noch nie eine Vorsorgeuntersuchung abgerechnet worden.")
+				FileAppend, % "Es ist noch nie eine Vorsorgeuntersuchung abgerechnet worden. | " , % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
+				CaveJahr := CaveMonat :=0
+			; 2 Jahre + 1 Monat (damit es nachher funktioniert)
+				deltaGVU := minGVU_Abstand + 1
+
 			}
-			else
-			{
-					If (age < minAlterMehrmalig)
-					{
-							AbrBedNegativ3++
-							line[thisround]:= currentline ";Alt:" CZeile ";Eine GVU darf zwischen dem " minAlterEinmalig ". und dem " minAlterMehrmalig ". Lebensjahr nur einmal abgerechnet werden!"
-							LV_Add("",  Substr("00" c++, -1) ": Eine GVU darf zwischen dem " minAlterEinmalig ". - " minAlterMehrmalig " Lebensjahr nur einmal abgerechnet werden." )
-							FileAppend, % line[thisround], % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
-							MsgBox, 0x40001, Gesundheitsvorsorgeliste, % MsgTxt002, % boxtime1
-					    	IfMsgBox, Cancel
-									ExitApp
-					}
-					else
-					{
-						; Berechnung funktioniert nur ab dem Jahr 2000
-							deltaGVU:=	(GVUJahr * 12 + GVUMonat) - (CaveJahr * 12 + CaveMonat)
-							LV_Add("",  Substr("00" c++, -1) ": Abstand: " deltaGVU " Monate.")
-							FileAppend, % "GVU-Abstand: " SubStr("00" deltaGVU, -1) " Monate. | " , % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
-					}
-			}
-	;}
+		else	{
 
-	;  -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	;  d) Entscheidung:	was passiert wenn der Abstand zwischen Vorsorgeuntersuchungen stimmt (Label Ortho1 ausführen) oder nicht
-	;  -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-			If (deltaGVU >= minGVU_Abstand) 												                                      ;- also größer gleich 24 Monate Abstand (bis Ende März 2019)
-			{
-						if (GVUJahr = 0)
-								GVUJahr:="", GVUMonat:=""
+				If (age < minAlterMehrmalig)	{
 
-						MsgBox, 0x40001, Gesundheitsvorsorgeliste, % MsgTxt001 , % boxtime1
-						IfMsgBox Timeout
-								gosub, Ortho1
-						IfMsgBox Ok
-								gosub, Ortho1
-						IfMsgBox Cancel
-						{
-							line[thisround]:= currentline ";Alt:" CZeile ",Neu:"
+					AbrBedNegativ3++
+					line[thisround]:= currentline ";Alt:" CZeile ";Eine GVU darf zwischen dem " minAlterEinmalig ". und dem " minAlterMehrmalig ". Lebensjahr nur einmal abgerechnet werden!"
+					LV_Add("",  "  " Substr("00" c++, -1) ": Eine GVU darf zwischen dem " minAlterEinmalig ". - " minAlterMehrmalig " Lebensjahr nur einmal abgerechnet werden." )
+					FileAppend, % line[thisround], % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
+					MsgBox, 0x40001, Gesundheitsvorsorgeliste, % MsgTxt002, % boxtime1
+					IfMsgBox, Cancel
 							ExitApp
-						}
+
+				}
+				else		{
+
+				  ; Berechnung funktioniert nur ab dem Jahr 2000
+					deltaGVU :=	(GVUJahr*12 + GVUMonat) - (CaveJahr*12 + CaveMonat)
+					LV_Add("",  "  " Substr("00" c++, -1) ": Abstand: " deltaGVU " Monate.")
+					FileAppend, % "GVU-Abstand: " SubStr("00" deltaGVU, -1) " Monate. | " , % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
+
+					}
 			}
-			else
+
+	;  D) ENTSCHEIDUNG:	WAS PASSIERT WENN DER ABSTAND ZWISCHEN VORSORGEUNTERSUCHUNGEN STIMMT (LABEL ORTHO1 AUSFÜHREN) ODER NICHT
+		If (deltaGVU >= minGVU_Abstand) 		{										                                      ;- also größer gleich 24 Monate Abstand (bis Ende März 2019)
+
+			if (GVUJahr = 0)
+				GVUJahr := "", GVUMonat := ""
+
+			MsgBox, 0x40001, Gesundheitsvorsorgeliste, % MsgTxt001 , % boxtime1
+			IfMsgBox Timeout
+					gosub, Ortho1
+			IfMsgBox Ok
+					gosub, Ortho1
+			IfMsgBox Cancel
 			{
-						AbrBedNegativ3++
-						line[thisround]:= currentline ";Alt:" CZeile ";!! eine GVU kann erst in " (minGVU_Abstand - deltaGVU) " Monaten abgerechnet werden !!"
-						FileAppend, % line[thisround], % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
-						MsgBox, 0x40001, Gesundheitsvorsorgeliste, % MsgTxt002, % boxtime1
-						IfMsgBox, Cancel
-									ExitApp
+				line[thisround]:= currentline ";Alt:" CZeile ",Neu:"
+				ExitApp
 			}
-	;}
+
+		}
+		else		{
+
+			AbrBedNegativ3++
+			line[thisround]:= currentline ";Alt:" CZeile ";!! eine GVU kann erst in " (minGVU_Abstand - deltaGVU) " Monaten abgerechnet werden !!"
+			FileAppend, % line[thisround], % AddendumDir "\Tagesprotokolle\GesundheitsvorsorgelisteLog.txt", UTF-8
+			MsgBox, 0x40001, Gesundheitsvorsorgeliste, % MsgTxt002, % boxtime1
+			IfMsgBox, Cancel
+				ExitApp
+
+		}
+
 
 return
 ;}
 
 Ortho1: 										;{	GVU und HKS-Formular werden automatisiert aufgerufen und bearbeitet
 
-	;  Ändern des Programmdatums auf das Untersuchungsdatum, sonst würden alle Untersuchungen auf dem eingestellten Datum abgerechnet
-		LV_Add("",  Substr("00" c++, -1) ": Setze das Programmdatum auf das Untersuchungsdatum")
+	; ÄNDERN DES PROGRAMMDATUMS AUF DAS UNTERSUCHUNGSDATUM
+		LV_Add("",  "  " Substr("00" c++, -1) ": Setze das Programmdatum auf das Untersuchungsdatum")
 		AlbisActivate(1)
 		AlbisSetzeProgrammDatum(lvar[1])																	;kein WaitAndActivate notwendig (hat diese Funktion integriert)
-		LV_Add("",  Substr("00" c++, -1) ": Datum geändert")
+		LV_Add("",  "  " Substr("00" c++, -1) ": Datum geändert")
 
-	; HKS Formular wird aufgerufen wenn Patient >= 35 Jahre
+	; HKS FORMULAR WIRD AUFGERUFEN WENN PATIENT >= 35 JAHRE
 		If (age >= minAlterEinmalig) {
 
-				LV_Add("",  Substr("00" c++, -1) ": warte auf HKS-Formular")
-				If !hHKSWin:= AlbisFormular("eHKS_ND") {
-					while !(hHKSWin:=WinExist("Hautkrebsscreening - Nichtdermatologe ahk_class #32770") ) 	{
-							MsgBox,, Addendum für AlbisOnWindows, % MsgTxt006	;...Das HKS-Formular konnte nicht aufgerufen werden.... manuell öffnen
-							If MsgBox, No
-								ExitApp
+				LV_Add("", "  " Substr("00" c++, -1) ": warte auf HKS-Formular")
+				If !(hHKSWin := AlbisFormular("eHKS_ND")) {
+					while !(hHKSWin := WinExist("Hautkrebsscreening - Nichtdermatologe ahk_class #32770") ) 	{
+						MsgBox, 0x40004, Gesundheitsvorsorgeliste, % MsgTxt006, % boxtime1 	;...Das HKS-Formular konnte nicht aufgerufen werden.... manuell öffnen
+						If MsgBox, No
+							ExitApp
 					}
 				}
 
 			; Befüllen des Formulars
 				AlbisHautkrebsScreening("opb", true, true )
-				LV_Add("",  Substr("00" c++, -1) ": HKS Formular ausgefüllt")
+				LV_Add("", "  " Substr("00" c++, -1) ": HKS Formular ausgefüllt")
 
 			; Daten/Leistungen in die Patientenakte eintragen
 				AlbisActivate(1)
 				AlbisSchreibeInKarteikarte("", lvar[1], "lko", "01732-01746")
-				LV_Add("",  Substr("00" c++, -1) ": Ziffern sind in die Akte eingetragen.")
+				LV_Add("",  "  " Substr("00" c++, -1) ": Ziffern sind in die Akte eingetragen.")
 
 			; Cave! von Text
 				GVUText := "GVU/HKS " GVUMonat "^" GVUJahr ", "
@@ -696,8 +690,7 @@ Ortho1: 										;{	GVU und HKS-Formular werden automatisiert aufgerufen und be
 
 				AlbisActivate(1)
 				AlbisSchreibeInKarteikarte("", lvar[1], "lko", "01732")
-				LV_Add("",  Substr("00" c++, -1) ": Ziffer ist in die Akte eingetragen.")
-
+				LV_Add("", "  " Substr("00" c++, -1) ": Ziffer ist in die Akte eingetragen.")
 			; Cave! von Text
 				GVUText := "GVU " GVUMonat "^" GVUJahr ", "
 
@@ -705,48 +698,47 @@ Ortho1: 										;{	GVU und HKS-Formular werden automatisiert aufgerufen und be
 
 	; cave Fenster - die Kürzel auffrischen   #########FEHLER
 		LV_Add("", "        " GVUText)
-		if (CZeile = "")											;CZeile ist die ursprüngliche cave 9 Zeile - war sie leer?
-				neueZeile	:= GVUText
+		if (StrLen(CZeile) = 0)											;CZeile ist die ursprüngliche cave 9 Zeile - war sie leer?
+			neueZeile	:= GVUText
 		 else {
-				CZeile		:= StrReplace(CZeile, thisGVU, "###")
-				neueZeile	:= RegExReplace(CZeile, "###\s*\,*", GVUText)
+			temp		:= StrReplace(CZeile, thisGVU, "###")
+			neueZeile	:= RegExReplace(temp, "###\s*\,*", GVUText)
 		}
-		neueZeile:= RTrim(neueZeile, ", ")
-
-	; der hook fängt dieses Fenster manchmal nicht ab, das Cave! Fenster läßt sich aber bei dieser Warnung nicht öffnen
-		if WinExist("ALBIS - [Prüfung EBM/KRW]") {
-				WinActivate   	, % "ALBIS - [Prüfung EBM/KRW]"
-				WinWaitActive	, % "ALBIS - [Prüfung EBM/KRW]",,2
-				SendInput, {ESC}
-				WinWaitClose	, % "ALBIS - [Prüfung EBM/KRW]",,2
-				LV_Add("", "Fenster: Prüfung EBM/KRW geschlossen")
-		}
+		neueZeile := RTrim(neueZeile, ", ")
 
 	; ersetzt oder schreibt in die Zeile 9 im CaveVon! Fenster - das Abrechnungsquartal der Komplexe
 		AlbisActivate(1)
 		ControlGetFocus, cFocus, % "ahk_id " AlbisWinID()
-		If InStr(cFocus, "Edit")
-			SendInput, {Escape}
-		AlbisSetCaveZeile(9, neueZeile)
+		If InStr(cFocus, "Edit") || InStr(cFocus, "RichEdit")
+			 SendInput, {Escape}
+
+		Clipboard := neueZeile
+		hCave := Albismenu(32778, "Cave! von")
+
+		Clipboard := neueZeile
+		;res := AlbisCaveSetCellFocus(hCave, 9, 4)
+
+		MsgBox, 0x40000, Gesundheitsvorsorgeliste, % "Ergebnis: " res "`nneuen Text bitte einfügen:`n" neueZeile "`ndann hier auf OK drücken."
+		;AlbisSetCaveZeileEx(9, neueZeile, true)
+
 
 	; Zeile 9 wird im Array gespeichert (wird später in der GVU-Liste gespeichert)
 		line[thisround]:= currentline ";Alt:" CZeile ",Neu:" neueZeile
-
-		LV_Add("",  Substr("00" c++	, -1) ": Zeile 9 geändert. Cave! von geschlossen.")
-		LV_Add("",  Substr("00" c			, -1) ": Das Erstellen der Formulare und Leistungen ist für diesen Vorsorgefall abgeschlossen!")
-		LV_Add("",  Substr("00" c			, -1) ": Beginne gleich mit dem nächsten Fall......")
+		LV_Add("", "  " Substr("00" c++	, -1) ": Zeile 9 geändert. Cave! von geschlossen.")
+		LV_Add("", "  " Substr("00" c			, -1) ": Das Erstellen der Formulare und Leistungen ist für diesen Vorsorgefall abgeschlossen!")
+		LV_Add("", "  " Substr("00" c++	, -1) ": Beginne gleich mit dem nächsten Fall......")
 
 	; Schließen der aktuellen Akte, Mitteilung an den Nutzer das mit dem nächsten Patienten fortgefahren wird
-		MsgBox, 262148, Addendum für AlbisOnWindows - Gesundheitsvorsorgeliste, % MsgTxt003,  % boxtime1
-			IfMsgBox, No
-				ExitApp
+		MsgBox, 0x40004, Gesundheitsvorsorgeliste, % MsgTxt003	;,  % boxtime1 ; OK/Abbrechen - SysModal
+		IfMsgBox, No
+			ExitApp
 
 	; die aktuelle Patientenakte wird geschlossen
 		AlbisAkteSchliessen(lvar[3])
 		;ohneGVU --
 
 	; Löschen des Inhalts des ListView Fenster
-		Gui, AC1:Default
+		Gui, AC1: Default
 		LV_Delete()
 
 return
@@ -767,24 +759,9 @@ return
 
 ;{11. SUBROUTINEN/Gui's/Fensteranordung
 
-WinMoveMsgBox1: ;{
-
-	SetTimer, WinMoveMsgBox1, OFF
-	ID:=WinExist(WinName)
-	WinMove, ahk_id %ID%, , 850, 850
-
-return
-;}
-
-StartGui: ;{
-
-return
-;}
-
 AAListView: ;{
 
-		if A_GuiEvent = Normal
-		{
+		if (A_GuiEvent = Normal) 	{
 			LV_GetText(Reihentext, A_EventInfo)  ; Ermittelt den Text aus dem ersten Feld der Reihe.
 			ToolTip Text: "%Reihentext%"
 		}
@@ -799,6 +776,116 @@ return
 ;}
 
 ;{12. Funktionen
+
+AlbisSetCaveZeileEx(nr, txt, CloseCave=false) {	                                                           	;-- überschreibt eine Zeile im cave! von - Fenster
+
+	; letzte Änderung 01.10.2020:
+	;
+	; 		- SendInput z.T. ersetzt durch ControlSend damit die Tastaturbefehle an das richtige Fenster gesendet werden
+	;    	- fügt selbstständig fehlende Listenzeilen hinzu
+
+		SetKeyDelay, 10, 30
+
+		admTitel	:= "Addendum für Albis on Windows"
+		CaveVon 	:= "Cave! von ahk_class #32770"
+		slTime   	:= 100
+
+		AlbisActivate(1)
+
+	; CAVE! VON FENSTER - AUFRUFEN                                                    	;{
+		while !(hCave := Albismenu(32778, "Cave! von")) {
+			If (A_Index > 2) {
+				MsgBox, 0x40030, % admTitel, % 	"Dialogfenster:`n 'Cave! von <" AlbisCurrentPatient() ">`nist zum " A_Index "x nicht geöffnet worden.`nAbbrechen?"
+				IfMsgBox, Yes
+					return 0
+			}
+			MsgBox, 0x40030, % admTitel, % 	"Dialogfenster:`n 'Cave! von <" AlbisCurrentPatient() ">`nhat sich nicht aufrufen lassen!`nBitte manuell aufrufen!"
+		}
+	;}
+
+	; CAVE! VON FENSTER - AKTIVIEREN                                                    	;{
+		WinActivate   	, % "ahk_id " hCave
+		WinWaitActive	, % "ahk_id " hCave,, 2
+	;}
+
+	; HANDLES, ZEILENZAHL, AKTUELLEN FOCUS ERMITTELN                  	;{
+		ControlGetFocus, cFocus, % "ahk_id " hCave
+		ControlGet, hCaveLV, HWND,, SysListView321, % "ahk_id " hCave
+		ControlGet, rowCount, List, Count,, % "ahk_id " hCaveLV
+	;}
+
+	; NEUE ZEILEN ANLEGEN WENN PARAMETER - NR > ZEILENZAHL IST  	;{
+		If (nr > rowCount) {
+		    If !AlbisCaveAddRows(hCave, rowCount - nr)
+				return 0
+		}
+	;}
+
+	; NEUE DATEN EINTRAGEN                                                               	;{
+
+		Clipboard := txt
+
+		; setzt den Eingabefokus direkt in die spezifizierte Zelle der Tabelle
+		If !AlbisCaveSetCellFocus(hCave, nr, 4) {
+
+			MsgBox, 0x40000, Gesundheitsvorsorgeliste,
+					(LTrim
+					Ein Fehler ist aufgetreten.
+					Bitte wähle das Feld Beschreibung der Zeile %nr% manuell aus.
+					Drücke wenn Du fertig bist Ok!"
+					)
+
+			WinActivate   	, % "ahk_id " hCave
+			WinWaitActive	, % "ahk_id " hCave,, 2
+			ControlFocus, Edit1, % "ahk_id " hCave
+			sleep % slTime * 2
+
+		}
+
+		Table := AlbisCaveGetCellFocus(hCave)
+		If (Table.row = nr) && (Table.col = 4) {
+			ControlSendRaw, Edit1, % txt, % "ahk_id " hCave
+			;SendInput, {LControl Down}v{LControl Up}
+		}
+
+	;}
+
+
+	; Text auslesen
+		sleep % slTime * 2
+		ControlGetText, cText, Edit1, % "ahk_id " hCave
+
+	; kontrollieren ob der Text eingefügt wurde, wenn nicht wird der Nutzer zur manuellen Intervention aufgefordert
+		If (cText <> txt) {
+
+			If !(res:= VerifiedSetText("Edit1", txt, "ahk_id " hCave, 500)) 	{
+
+				Clipboard := txt
+				MsgBox, 0x40000, Gesundheitsvorsorgeliste,
+					(LTrim
+					Der neue Text konnte nicht ins
+					Cave! von Fenster kopiert werden.
+					Dieser ist im Clipboard jetzt vorhanden!
+					Bitte manuell per Tastenkombination Steuerung (links)+v in die Zeile %nr% eintragen!
+					Drücke wenn Du fertig bist Ok!"
+					)
+			}
+
+		}
+
+	; das Cave! von - Fenster schliessen, muss eventuell mehrfach trotz spezieller eigener Funktion wiederholt werden,
+	; da das Cave! von - Fenster per wm_command Aufruf selbst nach dem Schließen einer Patientenakte geöffnet bleiben kann. Dies beeinträchtigt diese Funktion!
+		If CloseCave {
+			while WinExist(CaveVon) {
+				res := VerifiedClick("Button3", hCave, "", "")
+	     		Sleep % slTime * 2
+				If (A_Index > 5)
+					MsgBox, 0x1030, % "Addendum für Albis on Windows - " A_ScriptName, Das "Cave! von" Fenster läßt sich nicht schließen.`nBitte schließen Sie es von Hand!
+			}
+		}
+
+return res
+}
 
 WinWasCreated(WinTitle, WinClass:="", WinText:="") {
 
@@ -936,65 +1023,65 @@ return
 ;}
 
 WinEventProc(hEventHook, event, hwnd, idObject, idChild, eventThread, eventTime) {						; abfangen von Albis Popup Fenstern
+
 	static hOldHook
 	Critical
-	If (hwnd = 0)
+
+	hHook:= GetHex(hwnd)
+	If (hwnd = 0) || (hOldHook = hHook)
 		return 0
-	If (hOldHook = hHook:= GetHex(hwnd))
-		return 0
+
+	If !Instr(WinGetClass(hHook), "#32770")
+		return
+
 	hOldHook:= hHook
 	SetTimer, EventHook_WinHandler,  -0
+
 return 0
 }
 
 EventHook_WinHandler:         	;{                                                                                            	; Eventhookhandler für popup (child) Fenster in Albis
 
-		hpop	:= GetLastActivePopup(AlbisWinID())
+		;hpop	:= GetLastActivePopup(AlbisWinID())
 
-		If (hHook = hpop)
-				hook	:= WinGetTitle(hHook) "|" WinGetClass(hHook) "|" WinGetText(hHook)
-		else
-				hook:= WinGetTitle(hpop) "|" WinGetClass(hpop) "|" WinGetText(hpop) "|" WinGetTitle(hHook) "|" WinGetClass(hHook) "|" WinGetText(hHook)
+		; If (hHook = hpop)
+		hook	:= WinGetTitle(hHook) "|" WinGetClass(hHook) "|" WinGetText(hHook)
+		; else
+		;	hook:= WinGetTitle(hpop) "|" WinGetClass(hpop) "|" WinGetText(hpop) "|" WinGetTitle(hHook) "|" WinGetClass(hHook) "|" WinGetText(hHook)
 
-		WorkOff.push((hook))
-		;SciTEOutput(hook, 0, 1, 0)
+		;WorkOff.push((hook))
+		SciTEOutput(hook, 0, 1, 0)
 
 		if InStr(hook, "Patient hat in diesem Quartal") {
-				VerifiedClick("Button1", "ALBIS ahk_class #32770", "Patient hat in diesem Quartal")
-				LV_Add("", "Fenster: Patient hat in diesem Quartal... - geschlossen")
+			VerifiedClick("Button1", "ALBIS ahk_class #32770", "Patient hat in diesem Quartal")
+			LV_Add("", "Fenster: Patient hat in diesem Quartal... - geschlossen")
 		}
-		else if InStr(hook, "Wollen Sie die Leistungen")
-		{
-				VerifiedClick("Button2", "ALBIS ahk_class #32770", "Wollen Sie die Leistungen")
-				LV_Add("", "Fenster: Wollen Sie die Leistungen wirklich diesem Schein zuordnen... - geschlossen")
+		else if InStr(hook, "Wollen Sie die Leistungen")		{
+			VerifiedClick("Button2", "ALBIS ahk_class #32770", "Wollen Sie die Leistungen")
+			LV_Add("", "Fenster: Wollen Sie die Leistungen wirklich diesem Schein zuordnen... - geschlossen")
 		}
-		else if InStr(hook, "Die aktuelle Zeile wurde")
-		{
-				VerifiedClick("Button2", "ALBIS ahk_class #32770", "Die aktuelle Zeile wurde")
-				LV_Add("", "Fenster: Die aktuelle Zeile wurde nicht gespeichert... - geschlossen")
+		else if InStr(hook, "Die aktuelle Zeile wurde")		{
+			VerifiedClick("Button2", "ALBIS ahk_class #32770", "Die aktuelle Zeile wurde")
+			LV_Add("", "Fenster: Die aktuelle Zeile wurde nicht gespeichert... - geschlossen")
 		}
-		else if InStr(hook, "Herzlichen Glückwunsch zum Geburtstag")
-		{
-				VerifiedClick("Button1", "Herzlichen Glückwunsch zum Geburtstag ahk_class #32770")
-				LV_Add("", "Fenster: Herzlichen Glückwunsch zum Geburtstag - geschlossen")
+		else if InStr(hook, "Herzlichen Glückwunsch zum Geburtstag")		{
+			VerifiedClick("Button1", "Herzlichen Glückwunsch zum Geburtstag ahk_class #32770")
+			LV_Add("", "Fenster: Herzlichen Glückwunsch zum Geburtstag - geschlossen")
 		}
-		else If InStr(hook, "GNR-Vorschlag")
-		{
-           		VerifiedClick("Button1", "GNR-Vorschlag")
-				LV_Add("", "Fenster: GNR Vorschlag - geschlossen")
+		else If InStr(hook, "GNR-Vorschlag")		{
+           	VerifiedClick("Button1", "GNR-Vorschlag")
+			LV_Add("", "Fenster: GNR Vorschlag - geschlossen")
    		}
-		else if InStr(hook, "ALBIS - [Prüfung EBM/KRW]")
-		{
-               	WinActivate   	, % "ALBIS - [Prüfung EBM/KRW]"
-               	WinWaitActive	, % "ALBIS - [Prüfung EBM/KRW]",, 2
-           		SendInput, {ESC}
-                Sleep, 200
-               	LV_Add("", "Fenster: Prüfung EBM/KRW geschlossen")
+		else if InStr(hook, "ALBIS - [Prüfung EBM/KRW]")		{
+            WinActivate   	, % "ALBIS - [Prüfung EBM/KRW]"
+            WinWaitActive	, % "ALBIS - [Prüfung EBM/KRW]",, 2
+           	SendInput, {ESC}
+			Sleep, 200
+            LV_Add("", "Fenster: Prüfung EBM/KRW geschlossen")
          }
-		 else If Instr(hook, "Überprüfung der Versichertendaten")
-		{
-              	VerifiedClick("Button1", "Überprüfung der Versichertendaten")
-				LV_Add("", "Fenster: Überprüfung der Versichertendaten wurde ignoriert.")
+		 else If Instr(hook, "Überprüfung der Versichertendaten")		{
+            VerifiedClick("Button1", "Überprüfung der Versichertendaten")
+			LV_Add("", "Fenster: Überprüfung der Versichertendaten wurde ignoriert.")
          }
 
 Return
@@ -1008,11 +1095,12 @@ Return
 
 	#include %A_ScriptDir%\..\..\include\Addendum_Albis.ahk
 	#include %A_ScriptDir%\..\..\include\Addendum_Controls.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_Datum.ahk
 	#Include %A_ScriptDir%\..\..\include\Addendum_DB.ahk
 	#include %A_ScriptDir%\..\..\include\Addendum_Gdip_Specials.ahk
 	#include %A_ScriptDir%\..\..\include\Addendum_Internal.ahk
-	#include %A_ScriptDir%\..\..\include\Addendum_Misc.ahk
 	#Include %A_ScriptDir%\..\..\include\Addendum_PdfHelper.ahk
+	#Include %A_ScriptDir%\..\..\include\Addendum_PraxTT.ahk
 	#Include %A_ScriptDir%\..\..\include\Addendum_Protocol.ahk
 	#include %A_ScriptDir%\..\..\include\Addendum_Screen.ahk
 	#include %A_ScriptDir%\..\..\include\Addendum_Window.ahk
@@ -1022,7 +1110,6 @@ Return
 	#Include %A_ScriptDir%\..\..\lib\RemoteBuf.ahk
 	#Include %A_ScriptDir%\..\..\lib\SciTEOutput.ahk
 	#Include %A_ScriptDir%\..\..\lib\Sift.ahk
-	#include %A_ScriptDir%\..\..\include\Gui\PraxTT.ahk
 
 ;}
 

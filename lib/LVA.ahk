@@ -2,6 +2,7 @@
 ; Advanced Library for ListViews
 ; by Dadepp
 ; Version 1.1 (minor bugfixes)
+; REMARK: lib contains ANSI functions!
 ; http://www.autohotkey.com/forum/viewtopic.php?t=43242
 ;{ ---------------------------------------------------------------------------------------
 ;
@@ -278,7 +279,7 @@ LVA_ListViewModify(LVvar, Options) {
 
 LVA_Refresh(LVvar) {
   tmp := LVA_hWndInfo(LVvar,0,2)
-  WinSet, Redraw,, ahk_id %tmp%
+  WinSet, Redraw,, % "ahk_id " tmp
 }
 
 LVA_SetProgressBar(LVvar, Row, Col, cInfo="") {
@@ -569,21 +570,22 @@ lva_GetStatusColor(Switch, Row=0, Col=0, LVvar=0) {
 }
 
 lva_hWndInfo(hwnd, switch=0, data=1) {
+
   Static
   Local tmp, found
-  if ((switch = 0)||(switch = 2))
-  {
+
+  return hwnd
+
+  if ((switch = 0)||(switch = 2))  {
+
     if hwnd is Integer
-      hwnd := hwnd+0
+      hwnd := hwnd + 0
 
     found := false
-    Loop, %LVCount%
-    {
+    Loop, % LV_GetCount()    {
       tmp := A_Index
-      Loop, 3
-      {
-        if (LVA_hWndInfo_%tmp%_%A_Index% = hwnd)
-        {
+      Loop, 3      {
+        if (LVA_hWndInfo_%tmp%_%A_Index% = hwnd)        {
           found := true
           break
         }
@@ -591,10 +593,10 @@ lva_hWndInfo(hwnd, switch=0, data=1) {
       if found
         break
     }
+
     if !found
       return ""
-    else
-    {
+    else    {
       if (switch = 0)
         return LVA_hWndInfo_%tmp%_%data%
       else if (switch = 2)
@@ -607,8 +609,7 @@ lva_hWndInfo(hwnd, switch=0, data=1) {
     return LVA_hWndInfo_%data%_2
   else if (switch = -3)
     return LVA_hWndInfo_%data%_3
-  else if (switch = 1)
-  {
+  else if (switch = 1)  {
     if !LVCount
       LVCount := 1
     else
@@ -670,8 +671,7 @@ lva_OnNotifyProg(wParam, lParam, msg, hwnd) {
 
 lva_OnLVScroll(hwnd, uMsg, wParam, lParam) {
   Critical, 500
-  if (uMsg = 0x115)
-  {
+  if (uMsg = 0x115)  {
     DLow := wParam & 0xFFFF
     if !DLow
       DllCall("LockWindowUpdate", "UInt", hwnd)
@@ -747,15 +747,14 @@ lva_DrawProgress(Row, Col, hHandle) {
 
 lva_Info(Switch, Name, Row=0, Col=0, Data=0) {
   Static
-  if (Switch = 0)
-  {
-    Loop, % LVA_GetCellNum("GetRows", Name)
-    {
+  if (Switch = 0)  {
+
+    Loop, % LVA_GetCellNum("GetRows", Name)    {
+
       lRow := A_Index
       if LVA_InfoArray_%Name%_%lRow%_0_HasCellColor
         LVA_InfoArray_%Name%_%lRow%_0_HasCellColor := ""
-      Loop, % LVA_GetCellNum("GetCols", Name)
-      {
+      Loop, % LVA_GetCellNum("GetCols", Name)      {
         if LVA_InfoArray_%Name%_%lRow%_%A_Index%_HasProgressBar
           LVA_InfoArray_%Name%_%lRow%_%A_Index%_HasProgressBar := ""
         if LVA_InfoArray_%Name%_%lRow%_%A_Index%_HasMultiImage

@@ -28,30 +28,29 @@ this function library will return all informations it receives from Telegram as 
 
 Telegram_GetChatID(BotToken) {
 
-		global nooption
-		url = https://api.telegram.org/bot%botToken%/get
-		straw:=DownloadToString(url, "utf-8")
+	global nooption
 
-		if straw = nooption
-			return obj:="no_message"
+	straw := DownloadToString("https://api.telegram.org/bot" BotToken "/get", "utf-8")
 
-		obj:= Telegram_parse2obj(straw)
+	if (straw = nooption)
+		return "no_message"
 
-	return obj
+	obj := Telegram_parse2obj(straw)
+
+return obj
 }
 
 Telegram_getUpdates(BotToken, offset = "") { 													;GetMessages incl. all id's , tags and so on
 
-		global nooption
-		obj:= Object()
-		url = https://api.telegram.org/bot%BotToken%/getUpdates?offset=%offset%
-		straw:=DownloadToString(url, "utf-8")
+	global nooption
+	obj	:= Object()
+	url	: = "https://api.telegram.org/bot" BotToken "/getUpdates?offset=" offset
+	straw:=DownloadToString(url, "utf-8")
 
-		if straw = nooption
-			return "no_message"
+	if (straw = nooption)
+		return "no_message"
 
-
-	return straw
+return straw
 }
 
 Telegram_GetUpdatesT(token, offset="", updlimit=100, timeout=0) { 				;includes limit and timeout
@@ -60,22 +59,22 @@ Telegram_GetUpdatesT(token, offset="", updlimit=100, timeout=0) { 				;includes 
 	; Offset = Identifier of the first update to be returned.
 	url := "https://api.telegram.org/bot" token "/getupdates?offset=" offset "&limit=" updlimit "&timeout=" timeout
 	updjson := URLDownloadToVar(url,"GET")
-	return updjson
+return updjson
 }
 
 Telegram_getMe(BotToken) { 																			;getting your id; first_name , Username(bot-name)
 
-		url = https://api.telegram.org/bot%botToken%/getMe
-		straw:=DownloadToString(url, "utf-8")
+	url = https://api.telegram.org/bot%botToken%/getMe
+	straw:=DownloadToString(url, "utf-8")
 
-		idn:= ExtractFromStringV2(straw, "id" . """:" , "`," , 1, 0, 0)
-		ib:= ExtractFromStringV2(straw, "is_bot" . """:" , "`," , 1, 0, 0)
-		fn:= ExtractFromStringV2(straw, "first_name" . """:""" , "`," , 1, 0, 1)
-		un:= ExtractFromStringV2(straw, "username" . """:""" , "`}" , 1, 0, 1)
+	idn:= ExtractFromStringV2(straw, "id" . """:" , "`," , 1, 0, 0)
+	ib:= ExtractFromStringV2(straw, "is_bot" . """:" , "`," , 1, 0, 0)
+	fn:= ExtractFromStringV2(straw, "first_name" . """:""" , "`," , 1, 0, 1)
+	un:= ExtractFromStringV2(straw, "username" . """:""" , "`}" , 1, 0, 1)
 
-		GetMe:= Object("id", idn, "is_bot", ib, "first_name", fn, "username", un)
+	GetMe:= Object("id", idn, "is_bot", ib, "first_name", fn, "username", un)
 
-	return GetMe
+return GetMe
 }
 
 Telegram_SendMessage(BotToken, chat_id, msg) { 											;Send a message to the chat_id you received through the Telegram_getUpdates () function
