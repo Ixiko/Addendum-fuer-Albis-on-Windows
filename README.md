@@ -1,7 +1,7 @@
 ![Addendum.svg](assets/AddendumLogo2021-2.svg)
 #### Extends the possibilities through surface analysis and manipulation
 
-### Release Version 1.65 vom 10.11.2021
+### Release Version 1.67 vom 10.11.2021
 lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.33+ Unicode 64bit*,
 geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
@@ -271,9 +271,9 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
     - **Karteikarte zeigen:**                    ![Alt](Docs/Icons/Alt.png)+![Links](Docs/Icons/Links.png) 
     - **Einstellen des aktuellen Tagesdatums:**   ![Alt](Docs/Icons/Alt.png)+![F5](Docs/Icons/F5.png) 
 
-- **Hotstrings** (nur Beispiele)
+- **Hotstrings** (Beispiele)
 
-    - **Kopie** bei ***lp*** als aktivem Kürzel oder in der Privatabrechnung eingeben. Es öffnet sich ein Fenster das sie nach der Anzahl der Kopien fragt. Nach Eingabe von z.B. 38 Seiten wird der Text so erweitert: ***(sach:Kopien 38x a 50 cent:19.00)***
+    - Hotstring: **Kopie** - automatisiert die Berechnung von Gebühren für Kopien nach Eingabe der Seitenzahl<br>**Kopie** bei ***lp*** als aktives Kürzel oder in der Privatabrechnung eingeben. Im folgenden Dialogfenster die Anzahl der Kopien eintragen. Es wird ein zulässiger Abrechnungstext erstellt und in die Karteikarte geschrieben (z.B. ergeben 38 Seiten:   **lp   |** ***(sach:Kopien 38x a 50 cent:19.00)***
 
         | Hotstring                              | Erweiterung                                             |
         | -------------------------------------- | ------------------------------------------------------- |
@@ -287,9 +287,13 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
         | **porto3**/**Groß**                    | (sach:Porto Groß:1.55)      	; bis 500g              |
         | **porto4**/**Maxi**                    | (sach:Porto Maxi:2.70)       	; bis 1000g            |
 
-    ![JVEG/SOzial](Docs/Screenshot - JVEG.png)
     
-    ![Porto](Docs/Screenshot - Porto.png)
+    
+    <u>Einblendung von Tooltips nach partieller Eingabe des auslösenden Hotstrings:</u>
+    
+    <img src="Docs/Screenshot-JVEG.png" alt="JVEG SOzial" style="zoom:67%;" />
+    
+    <img src="Docs/Screenshot-Porto.png" alt="Porto" style="zoom: 67%;" />
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
