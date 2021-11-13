@@ -212,8 +212,6 @@ admMenu_scan(cmd, pm) {                                                         
 			PatName      	:= StrReplace(AlbisCurrentPatient(), ", ", ",")
 			PatNamePath	:= Addendum.ExportOrdner "\" "(" PatID ") " PatName
 
-			SciTEOutput(PatNamePath)
-
 		; Export Ordner anlegen für diesen Patienten falls nicht vorhanden
 			If !InStr(FileExist(PatNamePath), "D")
 				FileCreateDir % PatNamePath
@@ -236,7 +234,6 @@ admMenu_scan(cmd, pm) {                                                         
 			PdfFullFilePath 	:= PatNamePath "\" KKDatum "-" RegExReplace(res.Text, "\.pdf") ".pdf"           		 	; eventuell noch vorhandene pdf Endung aus dem Karteikartentext entfernen
 			while FileExist(PdfFullFilePath)                                                                                                       	; sucht einen noch nicht vorhandenen Dateinamen
 				PdfFullFilePath := RegExReplace(PdfFullFilePath, "\(*\d*\)*\.pdf$", "(" A_Index ").pdf")
-			SciTEOutput(PdfFullFilePath)
 
 		; Taste F3 an Albis senden um PDF-Datei mit dem in Albis hinterlegten PDF-Reader anzuzeigen
 		; die Shellhook-Prozedure im Addendum Hauptskript ruft die als Parameter übergebene Funktion auf

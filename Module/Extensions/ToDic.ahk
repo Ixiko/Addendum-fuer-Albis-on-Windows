@@ -47,33 +47,28 @@
 
 		global Medical, Others, FilesP, FilesT
 
-		If FileExist(medicalWords)
-			Medical := JSONData.Load(medicalWords, "", "UTF-8")
-		else
-			Medical 	:= Object()
+		MFreq 	:= {}, maxMFreq	:= 0, minMFreq:= 10000000
+		SFreq	:= {}, maxSFreq	:= 0, minSFreq	:= 10000000
 
-		If FileExist(othersWords)
-			Others := JSONData.Load(othersWords, "", "UTF-8")
-		else
-			Others  	:= Object()
+		Medical	:= FileExist(medicalWords) 	? JSONData.Load(medicalWords	, "", "UTF-8")	: Object()
+		Others   	:= FileExist(othersWords)    	? JSONData.Load(othersWords  	, "", "UTF-8") 	: Object()
+		FilesP    	:= FileExist(FilesProcessed)    	? JSONData.Load(FilesProcessed	, "", "UTF-8")	: Array()
 
-		If FileExist(FilesProcessed)
-			FilesP := JSONData.Load(FilesProcessed, "", "UTF-8")
-		else
-			FilesP		:= Array()
-
-		MFreq := {}, SFreq := {}
-		maxMFreq := 0, minMFreq:= 10000000
-		maxSFreq := 0, minSFreq:= 10000000
-
+		removedOthers := 0
 		For word, wcount in Medical {
+
+			If Others.haskey(word) {
+				Medical[word] += Others[word]
+				Others.Delete(word)
+				removedOthers ++
+			}
+
 			maxMFreq:= wcount > maxMFreq	? wcount : maxMFreq
 			minMFreq	:= wcount > minMFreq	? wcount : minMFreq
-			If !MFreq.haskey(wcount)
-				MFreq[wcount] := 1
-			else
-				MFreq[wcount] += 1
+			MFreq[wcount] := !MFreq.haskey(wcount) ? 1 : MFreq[wcount] += 1
 		}
+
+		SciTEOutput((removedOthers ? removedOthers " identical words removed from others dictionary" : ""))
 
 		freqs := []
 		;~ points := "▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀"
@@ -85,10 +80,7 @@
 		For word, wcount in Others {
 			maxSFreq	:= wcount > maxSFreq	? wcount : maxSFreq
 			minSFreq 	:= wcount > minSFreq 	? wcount : minSFreq
-			If !SFreq.haskey(wcount)
-				SFreq[wcount] := 1
-			else
-				SFreq[wcount] += 1
+			SFreq[wcount] := !SFreq.haskey(wcount) ? 1 : SFreq[wcount] += 1
 		}
 
 		;~ For num, freq in SFreq
@@ -288,43 +280,67 @@ DicGui() {
 	global
 	static 	FNR := 1, DicInit := true
 
-	colW1 	:= 90, colW2 := 300, colW3 := 30
-	LvW  	:= colW1 + colW2 + colW3 + 10
+	col1W1	:= 280, col1W2 := 60
+	col2W1	:= 80, col2W2 := 270, col2W3 := 40
+	Lv1W  	:= col1W1 + col1W2 + 40
+	Lv2W  	:= col2W1 + col2W2 + col2W3 + 20
 
 	Gui, Dic: new, -DPIScale
 	Gui, Dic: Font, s11 q5 cBlack, Arial
-	Gui, Dic: Add, ListView	, % "xm 	ym 	w" LvW " r35 AltSubmit vDIC_LVTXT  	gDIC_LV", WBuch|Textwort|Z
-	Gui, Dic: Add, ListView	, % "x+5 		 	w" LvW " r35 AltSubmit vDIC_LVDIC  gDIC_LV", WBuch|Med.Wörterbuch|Z
+	Gui, Dic: Add, ListView	, % "xm 	y18 	w" Lv1W " r35 AltSubmit vDIC_LVTXT1 	gDIC_LV"	, Wort|GZ
+	Gui, Dic: Add, ListView	, % "x+0 	    	w" Lv1W " r35 AltSubmit vDIC_LVTXT2 	gDIC_LV"	, Wort|GZ
+	Gui, Dic: Add, ListView	, % "x+0 	    	w" Lv2W " r35 AltSubmit vDIC_LVTXT3 	gDIC_LV"	, WBuch|Textwort|Z
+	Gui, Dic: Add, ListView	, % "x+5 		 	w" Lv2W " r35 AltSubmit vDIC_LVDIC  	gDIC_LV"	, WBuch|Med.Wörterbuch|Z
+
+	GuiControlGet, cp2,	 Dic: Pos, DIC_LVTXT2
+	GuiControlGet, cp3, 	 Dic: Pos, DIC_LVTXT3
+	Gui, Dic: Font, s9 q5 cBlack, Arial
+	Gui, Dic: Add, Text		, % "xm+20 y0 "	     		                        		    							, % "Medizin"
+	Gui, Dic: Add, Text		, % "x" cp2X+20 " y0 "	  		                       		    							, % "andere"
+	Gui, Dic: Add, Text		, % "x" cp3X+20 " y0 "	  		                       		    							, % "unbekannt/ngram"
 
 	GuiControlGet, cp, DIC: pos, DIC_LVDIC
 	Gui, Dic: Font, s10 q5 cBlack, Arial
-	Gui, Dic: Add, Text		, % "xm 	y+2 "				                        							, % "Datei:"
-	Gui, Dic: Add, Text		, % "x+5 	Center	vDIC_WD"			                                 		, % "[" FNR "/" FilesT.MaxIndex() "] [0000 Worte] "
-	Gui, Dic: Add, Text		, % "x" cpX " y" cpY+cpH+2 " Center vDIC_WB"			       		, % "[0000 Worte] "
+	Gui, Dic: Add, Text		, % "x" cpX "	y0"				                        									, % "Datei:"
+	Gui, Dic: Add, Text		, % "x+5 	Center	vDIC_WD"			                                 				, % "[" FNR "/" FilesT.MaxIndex() "] [0000 Worte] "
+	Gui, Dic: Add, Text		, % "x" cpX " y" cpY+cpH+2 " Center vDIC_WB"			       				, % "[0000 Worte] "
 
 	; Statistik
-	Gui, Dic: Add, Text		, % "x+55 w300 Center"				    			, % "Gesamtstatistik"
+	Gui, Dic: Add, Text		, % "x+55 w300 Center"				   									 			, % "Gesamtstatistik"
 	Gui, Dic: Font, s8 q5 cBlack, Arial
-	Gui, Dic: Add, Edit		, % "Y+5   w300  h120 vDIC_GS ReadOnly"	, % "-------"
+	Gui, Dic: Add, Edit		, % "Y+5   w300  h120 vDIC_GS ReadOnly"									, % "-------"
 
 	GuiControlGet, cp, DIC: pos, DIC_WD
 	Gui, Dic: Font, s8 q5 cBlack, Arial
-	Gui, Dic: Add, Text		, % "xm y" cpY+cpH+5 "	vDIC_FN"							, % FilesT[FNR]
-	Gui, Dic: Font, s10 q5 cBlack, Arial
-	Gui, Dic: Add, Button 	, % "xm     y+10 	vDIC_BBK    	gDIC_BTNS"	, % "<<"
-	Gui, Dic: Add, Button 	, % "x+10            	vDIC_BFW   	gDIC_BTNS"	, % ">>"
-	Gui, Dic: Add, Button 	, % "xm     y+20 	vDIC_BOK	gDIC_BTNS hwndDIC_hOK"	, Übernehmen
-	Gui, Dic: Add, Button 	, % "x+10 			vDIC_BCL 	gDIC_BTNS"	, Abbrechen + Sichern
-	Gui, Dic: Add, Button 	, % "x+100 			vDIC_BXT  	gDIC_BTNS"	, Beenden
+	Gui, Dic: Add, Text		, % "xm y" cp2Y+cp2H+5 " w500 	vDIC_FN"		    						, % FilesT[FNR]
 
-	Gui, Dic: ListView, DIC_LVTXT
-	LV_ModifyCol(1, colW1)
-	LV_ModifyCol(2, colW2-10)
-	LV_ModifyCol(3, colW3-5)
+	Y := cp2Y + cp2H + 20
+	Gui, Dic: Font, s10 q5 cBlack, Arial
+	Gui, Dic: Add, Button 	, % "xm     y" Y      "	vDIC_BBK    	gDIC_BTNS"	                         	, % "<<"
+	Gui, Dic: Add, Button 	, % "x+10              	vDIC_BFW   	gDIC_BTNS"	                         	, % ">>"
+
+	GuiControlGet, cp, DIC: pos, DIC_WD
+	Gui, Dic: Add, Button 	, % "xm     y+10       	vDIC_BOK	gDIC_BTNS hwndDIC_hOK"		, Übernehmen
+	Gui, Dic: Add, Button 	, % "x+10 	     		vDIC_BCL 	gDIC_BTNS"	                         	, Abbrechen + Sichern
+	Gui, Dic: Add, Button 	, % "x+100 	    		vDIC_BXT  	gDIC_BTNS"	                        	, Beenden
+
+	Gui, Dic: ListView, % "DIC_LVTXT1"
+	LV_ModifyCol(1, col1W1)
+	LV_ModifyCol(2, col1W2 " Integer")
+
+	Gui, Dic: ListView, % "DIC_LVTXT2"
+	LV_ModifyCol(1, col1W1)
+	LV_ModifyCol(2, col1W2 " Integer")
+
+	Gui, Dic: ListView, % "DIC_LVTXT3"
+	LV_ModifyCol(1, col2W1)
+	LV_ModifyCol(2, col2W2)
+	LV_ModifyCol(3, col2W3 " Integer")
+
 	Gui, Dic: ListView, DIC_LVDIC
-	LV_ModifyCol(1, colW1)
-	LV_ModifyCol(2, colW2-10)
-	LV_ModifyCol(3, colW3-5)
+	LV_ModifyCol(1, col2W1)
+	LV_ModifyCol(2, col2W2)
+	LV_ModifyCol(3, col2W3 " Integer")
 
 	Gui, Dic: Show, AutoSize, Wörterbucheditor [Substantive]
 
@@ -349,6 +365,9 @@ return
 
 DIC_LV: ;{
 
+
+	Critical
+
 	;SciTEOutput(A_GuiControl "   " A_GuiControlEvent "  " A_EventInfo)
 	; Daten der angeklickten Zeile auslesen
 		row   	:= A_EventInfo
@@ -356,35 +375,46 @@ DIC_LV: ;{
 		rword 	:= []
 		Gui, Dic: Default
 		Gui, Dic: ListView, % LvCtrl
- 		Loop 3 {
+ 		Loop % (LvCtrl = "DIC_LVTXT3" ? 3 : 2) {
 			LV_GetText(rtxt, row, A_Index)
-			rword[A_Index] := rtxt
+			rword[A_Index + (LvCtrl = "DIC_LVTXT3" ? 0 : 1)] := rtxt
 		}
 
 	; ins gegenüberliegende Listview Steuerelement verschieben
 		If (A_GuiControlEvent = "Normal") {
 
-			If (LvCtrl = "DIC_LVTXT") {
+			If (LvCtrl = "DIC_LVTXT3") {
 
-				Gui, Dic: ListView, DIC_LVTXT
+				Gui, Dic: ListView, DIC_LVTXT3
 				LV_Delete(row)
 
 				Gui, Dic: ListView, DIC_LVDIC
 				LV_Add("", rword.1, rword.2, rword.3)
+
+			} else If (LvCtrl = "DIC_LVTXT2") {
+
+				Gui, Dic: ListView, DIC_LVTXT2
+				LV_Delete(row)
+
+				Gui, Dic: ListView, DIC_LVDIC
+				LV_Add("", "[andere]", rword.2, rword.3)
 
 			} else if (LvCtrl = "DIC_LVDIC") {
 
 				Gui, Dic: ListView, DIC_LVDIC
 				LV_Delete(row)
 
-				Gui, Dic: ListView, DIC_LVTXT
-				LV_Add("", rword.1, rword.2, rword.3)
+				Gui, Dic: ListView, %  "DIC_LVTXT" (InStr(rword.1, "Medizin") ? "1" : InStr(rword.1, "andere") ? "2" : "3")
+				If RegExMatch(rword.1, "i)(Medizin|andere)")
+					LV_Add("", rword.2, rword.3)
+				else
+					LV_Add("", rword.1, rword.2, rword.3)
 
 			}
 
 			LV_ModifyCol(1, "SortDesc", "Sort")
 
-			Gui, Dic: ListView, DIC_LVTXT
+			Gui, Dic: ListView, DIC_LVTXT2
 			GuiControl, Dic:, DIC_WD, % "[" FNR "/" FilesT.MaxIndex() "] [" LV_GetCount() " Worte] "
 
 			Gui, Dic: ListView, DIC_LVDIC
@@ -402,14 +432,11 @@ DIC_LV: ;{
 
 				; ins andere Wörterbuch verschieben
 					Medical.Delete(rword.2)
-					If !Others.haskey(rword.2)
-						Others[rword.2] := wcount
-					else
-						Others[rword.2] += wcount
+					Others[rword.2] :=  !Others.haskey(rword.2) ? wcount : Others[rword.2] += wcount
 
 				; Listviewanzeige ändern
 					Gui, Dic: ListView, % LvCtrl
-					If (LvCtrl = "DIC_LVTXT")
+					If (LvCtrl = "DIC_LVTXT2")
 						 LV_Modify(row,,  "andere  [" wcount "]")
 					else
 						 LV_Add("",  "andere  [" wcount "]", rword.2, rword.3)
@@ -455,7 +482,7 @@ return
 
 addToDictionary() {
 
-	;SciTEOutput("YO ich machs")
+
 	global Dic, DIC_LVDIC, DIC_LVTXT, DIC_WB, FNR, popfile
 	global medicalWords, othersWords, FilesProcessed
 	global Medical, Others, FilesP, FilesT
@@ -470,22 +497,23 @@ addToDictionary() {
 				rword[A_Index] := rtxt
 			}
 
-			If !Medical.haskey(rword.2)
-				Medical[rword.2] := rword.3
-			else
-				Medical[rword.2] += rword.3
+			Medical[rword.2] := !Medical.haskey(rword.2) ? rword.3 : Medical[rword.2] += rword.3
+			If Others.haskey[rword.2] {
+				Medical[rword.2] += Others[rword.2]
+				Others.Delete(rword.2)
+			}
 
-			For medWord, mWCount in Others
-				If (medword = rword.2) {
-					Others.Delete(medword)
-					break
-				}
+			;~ For medWord, mWCount in Others
+				;~ If (medword = rword.2) {
+					;~ Others.Delete(medword)
+					;~ break
+				;~ }
 
 		}
 		LV_Delete()
 
 	; Others Wörterbuch ergänzen
-		Gui, Dic: ListView, DIC_LVTXT
+		Gui, Dic: ListView, DIC_LVTXT2
 		Loop, % LV_GetCount() {
 
 			rword := [], row := A_Index
@@ -494,12 +522,14 @@ addToDictionary() {
 				rword[A_Index] := rtxt
 			}
 
-			If InStr(rword.1, "unbekannt")
-				If !Others.haskey(rword.2)
-					Others[rword.2] := 1
-				else
-					Others[rword.2] += 1
+			Others[rword.2] := !Others.haskey(rword.2) ? 1 : Others[rword.2] += 1
+
 		}
+		Loop 3 {
+			Gui, Dic: ListView, % "DIC_LVTXT" A_Index
+			LV_Delete()
+		}
+		Gui, Dic: ListView, % "DIC_LVDIC"
 		LV_Delete()
 
 	GuiControl, Dic:, DIC_WB, % "[           ]"
@@ -524,7 +554,6 @@ LoadText() {
 
 	; letzte Datei wird geladen und unter Processed gespeichert
 		popfile := FilesT.pop()
-		;FilesP.Push(popfile)
 		FNR++
 		GuiControl, Dic:, DIC_WD	, % "[" FNR "/" FilesT.MaxIndex() "] [" words.MaxIndex() " Worte] "
 		GuiControl, Dic:, DIC_FN	, % popfile
@@ -535,15 +564,30 @@ LoadText() {
 			LoadText()
 
 	; Worte anzeigen
-		Gui, Dic: ListView, DIC_LVTxt
 		For word, wdata in words {
-			col1 := (wdata.list=1 ? "unbekannt" : wdata.list=2 ? "Medizin [" wdata.listcount "]" : wdata.list=3 ? "andere  [" wdata.listcount "]" : "ngram   [" wdata.count "]")
-			LV_Add("", col1 , word, wdata.count)
+			col1 := ( wdata.list=1 ? "unbekannt"
+						: wdata.list=2 ? "Medizin"
+						: wdata.list=3 ? "andere"
+											  : "ngram")  ; 4 = ngram
+
+			Gui, Dic: ListView, % "DIC_LVTxt" ( wdata.list=1 || wdata.list=4 ? "3" :  wdata.list=2 ? "1" : "2")
+			If (wdata.list=1 || wdata.list=4)
+				LV_Add("", col1, word, wdata.count)
+			else
+				LV_Add("",  word, wdata.listcount) ;, wdata.listcount)
 		}
-		LV_ModifyCol(1, "SortDesc", "Sort")
-		GuiControl, Dic: Focus, DIC_LVTXT
+
+		Gui, Dic: ListView, % "DIC_LVTxt1"
+		LV_ModifyCol(1, "SortDesc")
+		Gui, Dic: ListView, % "DIC_LVTxt2"
+		LV_ModifyCol(1, "SortDesc")
+		Gui, Dic: ListView, % "DIC_LVTxt3"
+		LV_ModifyCol(1, "SortDesc")
+
+		GuiControl, Dic: Focus, DIC_LVTXT3
 
 return
+
 }
 
 WBStats() {
@@ -731,7 +775,6 @@ CollectWords(filepath, debug:=false) {
 	text := RegExReplace(text, "([a-zäöüß])([A-ZÄÖÜ][a-zäöü])", "$1 $2")
 	text := RegExReplace(text, "[\n\r\f]", " ")
 
-
 	tLen := StrLen(text)
 
 	while (spos := RegExMatch(text, "\s(?<Name>[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*)", P, spos)) {
@@ -742,51 +785,37 @@ CollectWords(filepath, debug:=false) {
 
 		; wenn ein Wort in einem der beiden Wörterbücher vorkommt
 			if Medical.haskey(PName) {
-
 				Medical[PName] += 1
-				If (Medical[PName]+0 < MFreqLimit)
-					takeword := 0
-				else
-					takeword := 2
-
+				takeword := (Medical[PName] < MFreqLimit) ? 0 : 2
 			}
 			else if Others.haskey(PName) {
-
 				Others[PName] += 1
-				If (Others[PName] <= OFreqLimit) {
-					If ngramWordCheck(PName, 5)
-						takeword := 3
-					else
-						takeword := 4
-				}
-				else
-					takeword := 3
-
+				takeword := (Others[PName] <= OFreqLimit) ? 3 : ngramWordCheck(PName, 5) ? 4 : 3
 			}
 
-		; ausgeschlossene Buchstabenkombinationen - kommen ins Others Wörterbuch
-			If RegExMatch(PName, "[a-zäöüß\-][A-ZÄÖÜ]{2,}[a-zäöüß\-]*") {
-				Others[PName] := 1
+		; ausgeschlossene Buchstabenkombinationen - kommen gleich ins Others Wörterbuch
+			If RegExMatch(PName, "[a-zäöüß\-][A-ZÄÖÜ]{2,}") {
+				Others[PName] := !Others.haskey[PName] ? 1 : Others[PName]+1
 				continue
 			}
 
-		; ngram Evaluierung unbekannter Wörter
-			If (takeword = 99)
-					takeword := 1			 ; bisher unbekannt
+		;~ ; ngram Evaluierung unbekannter Wörter
+			;~ If (takeword = 99)
+				;~ takeword := 1			 ; bisher unbekannt
 				;~ If ngramWordCheck(PName, 5)
 					;~ takeword := 1            ; ngrams haben nicht funktioniert
 				;~ else
 
 		tw3:= takeword
-		; zur Auswahl vorzustellende Wörter
-			If (takeword < 99)
-					;SciTEOutput(" :" PName ":, " takeword " (" tw "," tw2 "," tw3 ")")
-				If !PNames.haskey(PName)
-					PNames[PName] := {"count"    	: 1
-												, 	 "list"      	: takeword
-												, 	 "listcount"	: (takeword=2 ? Medical[PName] : takeword=3 ? Others[PName] : 0)}
-				else
-					PNames[PName].count += 1
+		; takeword 1 = unbekannt, 2 = andere
+			;~ If (takeword < 99)
+			If !PNames.haskey(PName)
+				PNames[PName] := {"count"    	: 1
+											, 	 "list"      	: takeword
+											, 	 "listcount"	: (takeword=2 ? Medical[PName]
+																:  takeword=3 ? Others[PName] : 0)}
+			else
+				PNames[PName].count += 1
 
 
 	}

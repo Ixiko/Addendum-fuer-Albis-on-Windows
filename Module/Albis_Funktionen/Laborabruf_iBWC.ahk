@@ -2,13 +2,18 @@
 ;                                          	** elektronischer Laborabruf ** Automatisierung für infoBoxWebClient.exe
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;
-;		Beschreibung: 	Automatisierung für den vianova Webclient
+;		Beschreibung: 		Automatisierung für 'vianova Webclient' und Labordatenimport
 ;
-; 		Inhalt:
-;       Abhängigkeiten:
+; 		Inhalt:					- Skript startet und überwacht den vianova Webclient für den elektronischen LDT-Transfer
+;									- erkennt dabei selbstständig ein neues Datenfile und
+; 									- führt automatisch den Labordatenimport durch
+;									- nach erfolgreichem Import öffnet es das Laborbuch und
+;									- stößt den Import der Daten in die Patientenkartei an (Addendum übernimmt den Rest)
+;
+;       Abhängigkeiten: 	siehe includes
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Laborabruf_iBWC.ahk last change:    	18.06.2021
+;       Laborabruf_iBWC.ahk last change:    	30.09.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -16,13 +21,13 @@
   ; -------------------------------------------------------------------------------------------------------------------------------------------------------;{
 	#NoEnv
 	#Persistent
-	#SingleInstance               	, Force
+	#SingleInstance              	, Force
 	#MaxThreads                  	, 100
 	#MaxThreadsBuffer       	, On
 	#KeyHistory						, Off
 
 	SetBatchLines					, -1
-	ListLines    						, Off
+	ListLines    						, On
 	FileEncoding                 	, UTF-8
   ;}
 
@@ -33,6 +38,7 @@
 	global adm            	:= Object()
 	global qq              	:= Chr(0x20)
 	global ThreadControl:= true
+	global compname := StrReplace(A_ComputerName, "-")                    	; der Name des Computer auf dem das Skript läuft
 
 	adm.Labor            	:= Object()
 	adm.scriptname    	:= RegExReplace(A_ScriptName, "\.ahk$")
@@ -117,7 +123,7 @@
 			adm.Labor.Alarmgrenze     		:= IniReadExt("LaborAbruf"	, "Alarmgrenze"                        	    , "30%"          	)
 
 		; Übertragen der Laborwerte aus dem Laborbuch ins Laborblatt der Patienten
-			adm.Labor.AutoImport		     	:= IniReadExt(compname 	, "Laborimport_automatisieren"  	, "nein"          	)
+			adm.Labor.AutoImport		     	:= IniReadExt(compname 	, "Laborimport_automatisieren"      	, "ja"          	)
 
 		; - : - - : - - : - - : - - : - - : - - : - - : - - : - - : - - : - - : - - : - - : - - : - - : - - : - - : - - : - - : - - : - - : - - : -
 		; Telegram - Mitteilungen
@@ -218,7 +224,7 @@
 				ExitApp
 			}
 
-		; Automatisierungsfunktionen von Addendum.ahk ausstellen per IPC!
+		; Automatisierungsfunktionen von Addendum.ahk per IPC pausieren!
 		; Addendum.ahk automatisiert den Laborabruf zum Teil und würde wenn die Funktionen
 		; nicht angehalten werden in fehlerhafter RPA-Ausführung enden
 			If !(writeStr := LaborAbrufToggle("off")) {
@@ -373,119 +379,13 @@ infoBoxWebClient() {                                                            
 return LabDataReceived
 }
 
-AlbisLaborImport(LbName) {			         									;-- Labordaten importieren
-
-		WinLabordaten := "Labordaten ahk_class #32770"
-
-	; Aufruf des Dialoges Labor wählen über das Menu Extern\Labor\Daten importieren ....
-		hLaborwaehlen := AlbisLaborwaehlen()
-		If !VerifiedChoose("ListBox1", hLaborwaehlen, LbName) {
-			FileAppend	, % (amsg .= datestamp(2)  "|" A_ThisFunc "() `t- Labor wählen: Listboxeintrag " LbName
-								. 	 " konnte nicht ausgewählt werden.`n")
-								, % adm.LogFilePath
-			return 0
-		}
-
-	; OK drücken, 2 Sekunden auf das Schliessen des Fenster warten
-	; der Hinweisdialog 'Keine Datei(en) im Pfad' wird abgefangen und geschlossen, das Skript bricht dann hier ab
-		err    	:= VerifiedClick("Button1", hLaborwaehlen,,, 2)
-		amsg 	.= datestamp(2) "|" A_ThisFunc "() `t- Warte auf den nächsten Laborabruf-Dialog"
-		WinWait, % "ALBIS", % "Keine Datei(en) im Pfad", 2
-		If (ErrorLevel = 0) 	{
-			FileAppend	, % 	(amsg .= datestamp(2) "|" A_ThisFunc "() `t- Labor wählen: keine Daten im Ordner "
-								.   	adm.Labor.LDTDirectory "`n")
-								, % 	adm.LogFilePath
-			If !(err := VerifiedClick("Button1", "ALBIS", "Keine Datei(en) im Pfad"))
-				FileAppend	, % (amsg .= datestamp(2) "|" A_ThisFunc "() `t- Fenster ''Keine Datei(en) im Pfad'': "
-									. 	  "konnte nicht geschlossen werden`n")
-									, % adm.LogFilePath
-			return err
-		}
-
-	; [Labordaten Sammelimport]
-		while !WinExist(WinLabordaten, "Sammelimport") && (A_Index < 400) {    ; = 20 Sekunden
-			Sleep 50
-		}
-		If !WinExist(WinLabordaten, "Sammelimport") {
-			FileAppend	, % (amsg .= datestamp(2) "|" A_ThisFunc "() `t- Labordaten Sammelimport: hat sich nicht geöffnet`n")
-								, % adm.LogFilePath
-			return 0
-		}
-
-	; kurze Pause damit sich das Fenster noch komplett aufbauen kann
-		Sleep 2000
-
-	; Checkbox: [für Sammelimport vormerken] anhaken
-		If !VerifiedCheck("Button5", WinLabordaten, "Sammelimport",, 1)
-			If !VerifiedClick("Button5", WinLabordaten, "Sammelimport")
-				If VerifiedSetFocus("Button5", WinLabordaten, "Sammelimport") {
-					BlockInput, On
-					SendInput, {Space}
-					BlockInput, Off
-				}
-				else {
-					FileAppend	, % (amsg .= datestamp(2) "|" A_ThisFunc "() `t- Labordaten Sammelimport: Checkbox"
-									. 	 " ''für Sammelimport vormerken'' konnte nicht gesetzt werden`n")
-									, % adm.LogFilePath
-					return 0
-				}
-
-	; Button: Sammelimport drücken
-		If !VerifiedClick("Button1", WinLabordaten,,, 3) {
-			FileAppend	, % (amsg .= datestamp(2)  "|" A_ThisFunc "() `t- Labordaten Sammelimport: konnte nicht geschlossen werden`n")
-								, % adm.LogFilePath
-			return 0
-		}
-
-	; Import: 	Fortschrittsanzeige detektieren und solange warten bis der Import abgeschlossen ist
-	; 				wartet auf das erste Popupfenster und wartet bis dieses geschlossen wurde
-	;				oder bricht ab wenn das Laborbuch angezeigt wird
-		PopupWin := false
-		writeStr := "|" A_ThisFunc "() `t- Labordaten Sammelimport: letztes Fenster (Importfortschritt) konnte nicht abgefangen werden"
-		Loop {
-
-			If InStr(AlbisGetActiveWinTitle(), "Laborbuch")
-				return 1
-
-			If (A_Index > 2400) { ; ~120 Sekunden
-				FileAppend, % (amsg .= datestamp(2) writeStr " [1]`n"), % adm.LogFilePath
-				return 0
-			}
-
-			hPopupWin := GetHex(DllCall("GetLastActivePopup", "uint", AlbisWinID()))
-			If (AlbisWinID() <> hPopupWin) {
-
-				WinGetTitle	, PopTitle	, % "ahk_id " hPopupWin
-				WinGetClass	, PopClass, % "ahk_id " hPopupWin
-				while WinExist(PopTitle " ahk_class " PopClass) {
-					If (A_Index >= 1200) {
-						FileAppend, % (amsg .= datestamp(2) writeStr " [" PopTitle " ahk_class " PopClass "]`n"), % adm.LogFilePath
-						return 0
-					}
-					Sleep 100
-				}
-
-				hPopupWin := GetHex(DllCall("GetLastActivePopup", "uint", AlbisWinID()))
-				If (AlbisWinID() <> hPopupWin)
-					return 0
-				else
-					return 1
-			}
-
-			Sleep 100
-
-		}
-
-
-
-}
 
 ;}
 
   ; -------------------------------------------------------------------------------------------------------------------------------------------------------
   ; Helfer
   ; -------------------------------------------------------------------------------------------------------------------------------------------------------;{
-ListBoxAbfrage(liste, GTitle:="", GText:="") {
+ListBoxAbfrage(liste, GTitle:="", GText:="")         	{
 
 	global
 
@@ -535,7 +435,7 @@ return LBR
 }
 
 ; - - - - -
-LaborAbrufGui(Title:="") {
+LaborAbrufGui(Title:="")                                	{
 
 		global
 
@@ -574,7 +474,7 @@ LaborAbrufGui(Title:="") {
 
 }
 
-AutoUpdateLCdbg() {
+AutoUpdateLCdbg()                                        	{
 
 	global LC, LCdbg, hLCdbg
 	static vOutput, RoundZ
@@ -588,7 +488,7 @@ AutoUpdateLCdbg() {
 
 }
 
-LaborAbrufToggle(Switch="off", Title:="") {
+LaborAbrufToggle(Switch="off", Title:="")        	{
 
 	; sendet eine Nachricht an Addendum.ahk, um die Laborabrufautomatisierung an- oder auszuschalten
 	; beim ersten Aufruf wird eine versteckte Gui erstellt (die ist notwendig für die Interprocesskommunikation)
@@ -599,7 +499,6 @@ LaborAbrufToggle(Switch="off", Title:="") {
 	; 													und OnMessage zu beenden
 
 		global
-
 
 	; sendet eine Nachricht an Addendum.ahk
 		if RegExMatch(Switch, "i)(on|restore|off)") {
@@ -667,25 +566,27 @@ return eLvl
 }
 
 ; - - - -
-FuncExitApp(ExitReason:="failure") {
+FuncExitApp(ExitReason:="failure", wTime:=20)	{           ; wTime = Wartezeit bis zum Beenden in Sekunden
 
-	global func_Autoupdate, LC, hLCPrg
+		global func_Autoupdate, LC, hLCPrg
 
-	If (ExitReason = "failure")
-		LaborAbrufToggle("restore destroy")
-	OnMessage(0x4a, "")
-	SetTimer, % func_Autoupdate, Delete
-	wTime := 20000, 	Interrupts := 100
-	Loop, % Floor(wTime/Interrupts) {
-		ToolTip % 100 - Floor((100*(A_Index*interrupts))/wTime)
-		GuiControl, LC:, %hLCPrg%, % 100 - Floor((100*(A_Index*interrupts))/wTime)
-		sleep % Interrupts
-	}
-	ExitApp
+		If (ExitReason = "failure")
+			LaborAbrufToggle("restore destroy")
+
+		OnMessage(0x4a, "")                                    	; RPC aus
+		SetTimer, % func_Autoupdate, Delete              	; Gui Autoupdate aus
+
+		wTime := wTime*1000,	Interrupts := 100
+		Loop, % Floor(wTime/Interrupts) {
+			;~ ToolTip % 100 - Floor((100*(A_Index*interrupts))/wTime)
+			GuiControl, LC:, %hLCPrg%, % 100 - Floor((100*(A_Index*interrupts))/wTime)
+			sleep % Interrupts
+		}
+		ExitApp
 
 }
 
-MessageWorker(msg) {                                                       		;--  verarbeitet die eingegangen Nachrichten
+MessageWorker(msg)                                      	{   		;--  verarbeitet die eingegangen Nachrichten
 
 		recv := {	"txtmsg"		: (StrSplit(msg, "|").1)
 					, 	"opt"     	: (StrSplit(msg, "|").2)
@@ -698,8 +599,9 @@ MessageWorker(msg) {                                                       		;--
 		else If InStr(recv.txtmsg, "Laborabruf fortgesetzt")                ; to stop on emergency
 			ThreadControl := false
 		else If InStr(recv.txtmsg, "AutoLaborAbruf Status") {
-			ThreadControl := false
+			SciTEOutput(" recv.Opt: "  recv.Opt )
 			adm.Labor.AutoAbruf := recv.Opt ? true : false
+			ThreadControl := false
 		}
 
 		PraxTT(recv.txtmsg, "6 1")

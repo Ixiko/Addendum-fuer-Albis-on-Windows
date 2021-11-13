@@ -1,11 +1,11 @@
-﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
-;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 07.04.2021 - this file runs under Lexiko's GNU Licence
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
+;                                                                                	!diese Bibliothek wird von fast allen Skripten benötigt!
+;                                              by Ixiko started in September 2017 - last change 06.10.2021 - this file runs under Lexiko's GNU Licence
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
-; FENSTER                                                                                                                                                                                                                                                   	(49)
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; FENSTER                                                                                                                                                                                            	(46)
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; ----- Get -----
 ; GetAncestor                                	GetLastActivePopup                   	GetParentList	                            	GetParent                                 	GetNextWindow
 ; GetWindowInfo								GetWindowSpot							GetWindow									FindChildWindow							FindWindow
@@ -24,9 +24,6 @@ ListLines, Off
 ; ----- Process -----
 ; GetProcessName                         	GetProcessProperties                 	GetProcessNameFromID
 
-; ----- Monitor -----
-; MonitorFromWindow                   	GetMonitorInfo   				           	IsInsideVisibleArea
-
 ; ----- Helpers -----
 ; Win32_SendMessage
 
@@ -40,7 +37,7 @@ GetLastActivePopup(hwnd) {                                                      
 	return DLLCall("GetLastActivePopup", "uint", hwnd)
 }
 
-GetParentList(ChildHwnd) {                                                                                                        	;-- returns a list of comma separated WinTitles and WinClasses of all parent windows
+GetParentList(ChildHwnd) {                                                                                                        	;-- comma separated WinTitles and WinClasses of all parent windows
 
 	;15.05.2019: Code shortend - using extra functions and while loop
 	while, (pHwnd:= GetParent(ChildHwnd)) {
@@ -50,7 +47,7 @@ GetParentList(ChildHwnd) {                                                      
 
 return List
 }
-GetParentClassList(ChildHwnd, WinHwnd) {                                                                                  	;-- returns a list of comma separated WinTitles and WinClasses of all parent windows
+GetParentClassList(ChildHwnd, WinHwnd) {                                                                                  	;-- comma separated WinTitles and WinClasses of all parent windows
 
 	;15.05.2019: Code shortend - using extra functions and while loop
 	List := Control_GetClassNN(WinHwnd, ChildHwnd) "|"
@@ -61,7 +58,7 @@ GetParentClassList(ChildHwnd, WinHwnd) {                                        
 
 return RTrim(List, "|")
 }
-_GetParentList(ChildHwnd) {                                                                                                      	;-- returns a list of comma separated WinTitles and WinClasses of all parent windows
+_GetParentList(ChildHwnd) {                                                                                                      	;-- comma separated WinTitles and WinClasses of all parent windows
 
 	Loop {
 			pHwnd:= GetParent(ChildHwnd)
@@ -93,7 +90,7 @@ GetWindow(hWnd, uCmd) {
 	return DllCall( "GetWindow", "Ptr", hWnd, "uint", uCmd, "Ptr")
 }
 
-GetWindowInfo(hWnd) {                                                                                                            	;-- returns an Key:Val Object with the most informations about a window
+GetWindowInfo(hWnd) {                                                                                                            	;-- returns an Key:Val Object with informations about a window
 	; returns an Key:Val Object with the most informations about a window (Pos, Client Size, Style, ExStyle, Border size...)
     NumPut(VarSetCapacity(WININFO, 60, 0), WININFO)
     DllCall("GetWindowInfo", "Ptr", hWnd, "Ptr", &WININFO)
@@ -116,7 +113,7 @@ GetWindowInfo(hWnd) {                                                           
     Return wInfo
 }
 
-GetWindowSpot(hWnd) {                                                                                                           	;-- like GetWindowInfo, but faster because it only returns position and sizes
+GetWindowSpot(hWnd) {                                                                                                           	;-- like GetWindowInfo, but faster
     NumPut(VarSetCapacity(WININFO, 60, 0), WININFO)
     DllCall("GetWindowInfo", "Ptr", hWnd, "Ptr", &WININFO)
     wi := Object()
@@ -362,15 +359,15 @@ IsResizable() {                                                                 
     return (Style & 0x40000) ; WS_THICKFRAME
 }
 
-IsWindow(hWnd) {                                                                                                                    		;-- wrapper for IsWindow DllCall
-    Return DllCall("IsWindow", "Ptr", hWnd)
+IsWindow(hWnd) {                                                                                                                   		;-- wrapper for IsWindow DllCall
+Return DllCall("IsWindow", "Ptr", hWnd)
 }
 
 IsWindowVisible(hWnd) {                                                                                                            	;-- ist Fenster sichtbar
 	return DllCall("IsWindowVisible","Ptr", hWnd)
 }
 
-CheckWindowStatus(hwnd, timeout:=100) {                                                               					;-- check's if a window is responding or not responding (hung or crashed
+CheckWindowStatus(hwnd, timeout:=100) {                                                               					;-- check's if a window is responding (hung or crashed)
 	NR_temp := 0 ; init
 return DllCall("SendMessageTimeout", "UInt", hwnd, "UInt", 0x0000, "Int", 0, "Int", 0, "UInt", 0x0002, "UInt", TimeOut, "UInt *", NR_temp)
 }
@@ -378,13 +375,14 @@ return DllCall("SendMessageTimeout", "UInt", hwnd, "UInt", 0x0000, "Int", 0, "In
 WinGetMinMaxState(hwnd) {                                                                                                			;-- get state if window ist maximized or minimized
 
 	; this function is from AHK-Forum: https://autohotkey.com/board/topic/13020-how-to-maximize-a-childdocument-window/
-	; it returns z for maximized("zoomed") or i for minimized("iconic")
+	; it returns z for maximized("zoomed") or i for minimized("iconic") and nothing if either maximized nor minimized
 	; it's also work on MDI Windows - use hwnd you can get from FindChildWindow()
+	; last modification: 06.10.2021
 
 	zoomed:= DllCall("IsZoomed", "UInt", hwnd)		; Check if maximized
 	iconic	:= DllCall("IsIconic"	, "UInt", hwnd)		; Check if minimized
 
-return (zoomed>iconic) ? "z":"i"
+return !zoomed && !iconic ? "" : zoomed ? "z" : "i"
 }
 
 WinGetTitle(hwnd) {                                                                                                                   	;-- schnellere Fensterfunktion
@@ -504,18 +502,29 @@ Return DllCall("MoveWindow", "Ptr",hWnd, "Int",X, "Int",Y, "Int",W, "Int",H, "In
 
 MoveWinToCenterScreen(hWin) {                                                                                               	;-- moves a window to center of screen if its position is outside the visible screen area
 
-	; dependencies: GetWindowSpot(), GetMonitorIndexFromWindow(), screenDims()
+	 /*  dependencies:
 
-	w:= GetWindowSpot(hWin)
+			GetWindowSpot()
+			IsInsideVisibleArea
+			GetMonitorIndexFromWindow()
+			screenDims()
 
-	If !IsInsideVisibleArea(w.X, w.Y, w.W, w.H)
-	{
+	 */
+
+	w := GetWindowSpot(hWin)
+	If !IsInsideVisibleArea(w.X, w.Y, w.W, w.H, CoordInjury)	{
 		mon	:= GetMonitorIndexFromWindow(hWin)
 		scr	:= screenDims(mon)
-		SetWindowPos(hWin, (scr.W//2) - (w.X//2), (scr.H//2) - (w.Y//2), w.W, w.H)
+		DllCall("MoveWindow"
+					, "Ptr",hWin
+					,"Int", (w.X := Floor(scr.W/2-w.W/2))
+					,"Int", (w.Y := Floor(scr.H/2-w.H/2))
+					,"Int", w.W
+					,"Int", w.H
+					, 0) ; Redraw := 0
 	}
 
-return
+return {hwnd:hWIN, X:w.X, Y:w.Y, W:w.W, H:w.H}
 }
 
 ActivateAndWait(WinTitle, MaxSecondsToWait) {                                                                            	;-- activates a window and wait for activation
@@ -689,44 +698,7 @@ GetProcessNameFromID(hwnd) {
 	return Process.Name
 }
 
-; ---- Monitor ----
-MonitorFromWindow(Hwnd := 0) {
- return DllCall("User32.dll\MonitorFromWindow", "Ptr", Hwnd, "UInt", Hwnd?2:1)
-}
-
-GetMonitorInfo(hMonitor) {
-
-    VarSetCapacity(MONITORINFOEX, 104)
-    NumPut(104, &MONITORINFOEX, "UInt")
-    if (!DllCall("User32.dll\GetMonitorInfoW", "Ptr", hMonitor, "UPtr", &MONITORINFOEX))
-        return FALSE
-    return {  L:    	     NumGet(&MONITORINFOEX+ 4      	, "Int")
-		    	, T:    	     NumGet(&MONITORINFOEX+ 8      	, "Int")
-		    	, R:   	     NumGet(&MONITORINFOEX+12     	, "Int")
-		    	, B:    	     NumGet(&MONITORINFOEX+16     	, "Int")
-		    	, WL: 	     NumGet(&MONITORINFOEX+20     	, "Int")
-		    	, WT: 	     NumGet(&MONITORINFOEX+24     	, "Int")
-		    	, WR:	     NumGet(&MONITORINFOEX+28     	, "Int")
-				, WB: 	     NumGet(&MONITORINFOEX+32     	, "Int")
-		    	, Primary:   NumGet(&MONITORINFOEX+36    	, "UInt")
-		    	, Name: 	    StrGet(&MONITORINFOEX+40,64	, "UTF-16") }
-
-}
-
-IsInsideVisibleArea(x,y,w,h) {
-
-  isVis := 0
-  SysGet, MonitorCount, MonitorCount
-  Loop % MonitorCount {
-    SysGet, Monitor%A_Index%, MonitorWorkArea, % A_Index
-    if (x+w-10>Monitor%A_Index%Left) && (x+10<Monitor%A_Index%Right) && (y+20>Monitor%A_Index%Top) && (y+20<Monitor%A_Index%Bottom)
-      isVis := 1
-  }
-
-return, IsVis
-}
-
-;helper
+; helper
 Win32_SendMessage(win) {                                                                                                       	;-- for closing a window via SendMessage - win is a Hwnd
 	static wm_msgs := {"WM_CLOSE":0x0010, "WM_QUIT":0x0012, "WM_DESTROY":0x0002}
 	for k, v in wm_msgs {

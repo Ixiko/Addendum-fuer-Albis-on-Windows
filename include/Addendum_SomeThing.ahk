@@ -852,10 +852,59 @@ KeyValueObjectFromLists2(keyList, valueList, delimiter:="`n"
 return merged
 }
 
+CRC32(str, enc = "UTF-8"){
+    l := (enc = "CP1200" || enc = "UTF-16") ? 2 : 1, s := (StrPut(str, enc) - 1) * l
+    VarSetCapacity(b, s, 0) && StrPut(str, &b, floor(s / l), enc)
+    CRC32 := DllCall("ntdll.dll\RtlComputeCrc32", "UInt", 0, "Ptr", &b, "UInt", s)
+    return Format("{:#X}", CRC32)
+}
+
+MouseOver(WinTitle, classnn) {
+
+	MouseGetPos, mx, my, hWin, hControl, 2
+	ToolTip, % hWin ": " wt " , " wc
+	WinGetTitle	, wt	, % "ahk_id " hWin
+	WinGetClass	, wc	, % "ahk_id " hWin
+	If InStr(wt, WinTitle) && InStr(wc, classnn)
+		return true
+
+return false
+}
+
+CheckControl: ;{
+
+	If !MouseOver("Muster 16", "#32770")
+		return
+
+	MouseGetPos, mx, my, hWin, hControl, 2
+	ControlGetText, ctext,, % "ahk_id " hControl
+
+	If !RegExMatch(cText, "i)(Drucken|Spooler|Speichern|Abbruch)") {
+		SendInput, {LButton}
+		return
+	}
+	cp := GetWindowSpot(hControl)
+	ToolTip, % "You clicked`n" ctext, % mx-1, % my-30, 15
+
+return ;}
+
+ObjToString(obj) {
+	if (!IsObject(obj))
+		return obj
+	str := "`n{"
+	for key, value in obj
+		str .= "`n" key ": " ObjToString(value) ","
+	return str "`n}"
+}
+SplitHexRGB(hexRGB) {
+return {"R":SubStr(hexRGB,1,2), "G":SubStr(hexRGB,3,2), "B":SubStr(hexRGB,5,2)}
+}
+
+
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum_Controls
-; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
 ;\/\/ RICHEDIT \/\/
 Rich_FindText(hEdit, Text, Mode:="WHOLEWORD") {
 
@@ -1019,10 +1068,23 @@ LVM_GetText(h, r, c=1) {
 Return t
 }
 
+LV_FindRow(LV, col, searchStr) {                                                                     	;-- search for a string in listview col, returns row
+
+	Gui, adm: ListView, % LV
+	Loop % LV_GetCount() {
+		LV_GetText(cmpStr, A_Index, col)
+		If InStr(cmpStr, searchStr)
+			return A_Index
+		}
+
+return 0
+}
+
+;}
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum_Windows
-; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
 WinToClient(hwnd, ByRef x, ByRef y) {
 
     WinGetPos, wx, wy,,, ahk_id %hwnd%
@@ -1071,10 +1133,11 @@ GetWindowPos(hWnd, ByRef X, ByRef Y, ByRef W, ByRef H) {
     H := NumGet(RECT, 12, "Int") - Y
 }
 
+;}
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum_DB.ahk
-; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
 ; some ways to find patient names in text by comparing against known patient data
 FindName(text)                                 	{                          	; PDF renaming - Hilfsfunktion
 
@@ -1320,10 +1383,11 @@ class string_old                                                               	
 
 }
 
+;}
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum.ahk
-; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
 global Script        	:= Object()
 Script.Gui         	:= Object()
 Script.User       	:= {"Interaction" : false, "Interface" : ""}
@@ -1431,10 +1495,31 @@ return ;}
 				WinClose, % "CGM LIFE ahk_class Afx:00400000:0:00010005:86101803"
 			}
 
+istda: ;{
+
+	Progress	, % "B2 B2 cW202842 cBFFFFFF cTFFFFFF zH25 w400 WM400 WS500"
+					, % "Addendum wird beendet."
+					, % "Addendum für AlbisOnWindows"
+					, % "by Ixiko vom " DatumVom
+					, % "Futura Bk Bt"
+
+	Loop 50 {
+		Progress % (100 - (A_Index * 2))
+		Sleep 1
+	}
+
+	Progress, Off
+	Gdip_Shutdown(pToken)
+
+ExitApp
+;}
+
+;}
+
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum_Gui.ahk
-; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ;{
 FuzzyKarteikarte_O1(NameStr, OnlyPatID=false)                   	{               	;-- fuzzy name matching function, öffnet eine Karteikarte
 
 	; mit OnlyPatID = true kann man nur einen String mit enthaltenem Patientennamen testen und bekommt bei einem Treffer die Patienten-ID zurück
@@ -2521,10 +2606,42 @@ admGui_Sort_old(EventNr, LV_Init=false)                          	{             
 
 }
 
+RNGuiUpDown:                                	;{   mit den Pfeiltasten zwischen den Eingabefeldern wechseln
+
+	; zurück bei aktivierter IAutoComplete Listbox (ahk_class Auto-Suggest DropDown)
+		If admGui_ASDDShow()
+			return
+
+		ControlGet, hASDD, HWND,, SysListView32, % "ahk_id " hadmRN
+		ToolTip, % GetHex(hadmRN) " - " GetHex(hASDD)
+
+		Gui, RN: Submit, NoHide
+		GuiControlGet, vtrl, RN: Focus
+		GuiControl, RN:Focus, % "RNE" (A_ThisHotkey="Up"	?	(vtrl="Edit1" ? "3" : vtrl="Edit2" ? "1" : vtrl="Edit3" ? "2" : "")
+    															                		:	(vtrl="Edit1" ? "2" : vtrl="Edit2" ? "3" : vtrl="Edit3" ? "1" : ""))
+
+return ;}
+
+RNGuiChoose:                                  	;{   mit den Pfeiltasten zwischen den Eingabefeldern wechseln
+
+	; je nach IAutoComplete Listbox
+		SendInput, % (!admGui_ASDDShow() ? "{Tab}" : "{Space}" )
+
+return
+;}
+}
+
+admGui_ASDDShow()                                                             	{
+	global hadmRN
+	ControlGet, hASDD, HWND,, % "ahk_class Auto-Suggest DropDown", % "ahk_id " hadmRN
+	ToolTip, % GetHex(hadmRN) " - " GetHex(hASDD)
+return hASDD ? true : false
+}
+
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum_Ini.ahk
-; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
 admAlbisMenuAufrufe()                                      	; Albis Menubezeichnungen und wm_command Befehle
 admAlbisMenuAufrufe() {                                                                       	;-- Menubezeichnungen und wm_command Befehle
 
@@ -2554,10 +2671,12 @@ admAlbisMenuAufrufe() {                                                         
 
 }
 
+;}
+
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum_Protocoll.ahk
-; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
 HashThisString(str) {
 return CryptHash(&str, StrLen(str), "MD5")
 }
@@ -2594,10 +2713,12 @@ CryptHash(pData, nSize, SID = "CRC32", nInitial = 0) {
 	Return	sHash
 }
 
+;}
+
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum_Internal.ahk
-; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
 ProcessExist(ProcName, cmd:="") {                                                                                            	;-- sucht nur nach Autohotkeyprozessen
 
 	; use cmd = "PID" to receive the PID of an Autohotkey process
@@ -2616,10 +2737,12 @@ ProcessExist(ProcName, cmd:="") {                                               
 return false
 }
 
+;}
+
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum_PDFReader.ahk
-; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
 RGBColorToBGR(vColor) {												; function: convert RGB 6 character hex color code to BGR
 	; example:  "8e3e2d" -> "2d3e8e"
   If (StrLen(vColor) = 6)
@@ -2651,9 +2774,12 @@ SetSystemCursor(Cursor := "") {										; function: SetSystemCursor() set custo
   }
 } ; https://msdn.microsoft.com/en-us/library/windows/desktop/ms648395(v=vs.85).aspx
 
+;}
+
+
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Laborjournal
-; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
 AlbisLaborJournal_new(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {       	;-- Laborwerte mit gewisser Überschreitung der Normgrenzen werden erfasst
 
 		static Lab
@@ -2849,9 +2975,12 @@ AlbisLaborJournal_new(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {       
 return LabPat
 }
 
+;}
+
+
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Addendum_Mining.ahk
-; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
 FindDocDate_GetMaxHits(datesObj)                              	{
 
 	retArr := Array()
@@ -2897,6 +3026,8 @@ FindDocOther(Text)                                                       	{     
 											,	"rxFileName"	: [""]}}
 
 }
+
+;}
 
 
 

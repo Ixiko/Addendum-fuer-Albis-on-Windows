@@ -234,7 +234,7 @@ GVU_Automat(IDListe) {
 				GVU_Pause()
 
 		; Albis GVU Makro starten (über ein Kürzel mit dem Namen GVU wird erst das GVU- dann das HKS Formular aufgerufen und automatisch die Ziffern eingetragen)
-			AlbisKarteikartenFocusSetzen("Edit2")
+			AlbisKarteikarteFocus("Edit2")
 			VerifiedSetText("Edit2", data.UDatum, "ahk_class OptoAppClass")
 			SendInput, {Tab}
 			Sleep, 100
@@ -535,10 +535,9 @@ return ;}
 PatDBSave(AddendumDBPath) {                                                                       	;-- zum Sichern der Patientendatenbank
 
 	dbFile:= FileOpen(AddendumDbPath "\Patienten.txt", "w", "UTF-8")
-	For PatID, obj in oPat
-	{
-			line           	:=  PatID ";" obj.Nn ";" obj.Vn ";" obj.Gt ";" obj.Gd ";" obj.Kk ";" obj.letzteGVU
-			dataToWrite	.=  RTrim(line, ";") "`n"
+	For PatID, obj in oPat	{
+		line           	:=  PatID ";" obj.Nn ";" obj.Vn ";" obj.Gt ";" obj.Gd ";" obj.Kk ";" obj.letzteGVU
+		dataToWrite	.=  RTrim(line, ";") "`n"
 	}
 	dbFile.Write(dataToWrite)
 	dbFile.Close()

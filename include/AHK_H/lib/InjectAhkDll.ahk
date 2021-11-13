@@ -1,11 +1,13 @@
-/*
-notepad := A_WinDir "\notepad.exe"
-if A_Is64bitOS && A_PtrSize = 4
-    notepad := A_WinDir "\SysWOW64\notepad.exe"
 
-Run % notepad, , , PID
-WinWaitActive % "ahk_pid" PID
+;~ notepad := A_WinDir "\notepad.exe"
+;~ if A_Is64bitOS && A_PtrSize = 4
+    ;~ notepad := A_WinDir "\SysWOW64\notepad.exe"
 
+;~ Run % notepad, , , PID
+;~ WinWaitActive % "ahk_pid" PID
+
+WinGet, PID, PID, ahk_class OptoAppClass
+MsgBox, % PID
 Clipboard := ""
 rThread := InjectAhkDll(PID, A_AhkDir "\AutoHotkey.dll", "Clipboard := DllCall(""GetModuleHandle"", ""Ptr"", 0, ""Ptr"")")
 Sleep 500
@@ -17,7 +19,7 @@ ExitApp
 Close(PID) {
   Process Close, % PID
 }
-*/
+
 
 InjectAhkDll(PID, dll := "AutoHotkey.dll", script := 0) {
   static PROCESS_ALL_ACCESS := 0x1F0FFF, MEM_COMMIT := 0x1000, MEM_RELEASE := 0x8000, PAGE_EXECUTE_READWRITE := 64

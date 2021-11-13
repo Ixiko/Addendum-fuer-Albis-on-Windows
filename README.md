@@ -1,7 +1,7 @@
 ![Addendum.svg](assets/AddendumLogo2021-2.svg)
 #### Extends the possibilities through surface analysis and manipulation
 
-### Release Version 1.64 vom 15.09.2021
+### Release Version 1.65 vom 10.11.2021
 lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.33+ Unicode 64bit*,
 geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
@@ -17,27 +17,30 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ![Trenner](Docs/TrennerExtraBreit.png)    
 
-### &#10042; wichtigste Neuerung: Addendum hat Zugriff auf Albis Datenbanken
+### &#10042; wichtigste Neuerung: *Addendum hat Zugriff auf Albis Datenbanken erhalten*
 
-​		<u>Module mit Datenbankzugriff</u>:<br>
+​		<u>**Module mit Datenbankzugriff**</u><br>
 
-- Laborjournal
-- Laborabruf
-- Export von Patientendaten in einem Durchgang (Dokumente, Laborblatt, Karteikarte)
-- Abrechnungshelfer (ähnlich der Albis internen Funktionen) im Infofenster
-- Quicksearch - den Inhalt der dBASE Datenbanken anzeigen oder gezielt durchsuchen
-- Abrechnungsassistent  - neue Version
+- **Laborjournal**
+- **Laborabruf**
+- **Export von Patientendaten in einem Durchgang** (Dokumente, Laborblatt, Karteikarte)
+- **Abrechnungshelfer** (ähnlich der Albis internen Funktionen) im Infofenster
+- **Quicksearch** - den Inhalt aller dBASE Datenbanken anzeigen und gezielt durchsuchen
+- **Abrechnungsassistent**  - neue Version 
 
 ### &#10042; neue Erweiterungen für das Infofenster
 
-- automatische Texterkennung mit Tesseract (Hotfolder)      
-- automatische Kategorisierung von PDF-Dateien
-- Vereinfachung des manuellen Umbennens einer Datei mit Dateivorschau
-- Autonaming Assistent
+- automatische **Texterkennung** mit Tesseract (Hotfolder)      
+- **Autonaming** Assistent
+- **Vereinfachung des manuellen Umbennens** einer Datei durch Dateivorschau
+- **Versand von Labordaten** an Patienten über die in Albis hinterlegte E-Mailadresse
 
 ### &#10042; weitere Funktionen
 
-- medizinische Berechnungen, Karteikartenexport (besser als das was die Compugroup anbietet!), automatischer Laborabruf,  Faxanhänge aus Outlook extrahieren, Albis reanimieren (erkennt das Albis hängt) und ein bißchen mehr
+- medizinische Berechnungen
+- Faxanhänge aus Outlook extrahieren 
+- Albis reanimieren
+- **PushToTelegram**
 
 
 
@@ -48,14 +51,12 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ### &#9733; PopupBlocker
 
-- Schließt automatisch diverse störende Albisdialoge und zugehörigen Programmen
+- schließt automatisch diverse störende Dialoge von Albis und anderen Programmen
 
 ### &#9733; Fensterhandler
 
-- positioniert, erweitert Albisdialoge zur besseren Übersicht innerhalb des Albisfenster damit die Patientenstammdaten immer sichtbar bleiben
-- sie können Albis-Dialognachfragen, welche sie seit Jahren immer gleich beantworten, automatische Bestätigen lassen
-- erweitert automatisch Anzeige-Elemente in Albisdialogen für mehr Übersicht 
-- die im Rezept angezeigte Werbung wird automatisch ausgeblendet
+- positioniert und erweitert Albisdialoge oder einzelne Elemente für eine bessere Übersicht 
+- keine Anzeige von Werbung mehr beim Kassenrezept
 - Albis *kann* individuell an jedem Arbeitsplatz in Größe und/oder Position fixiert werden 
 
 ### &#9733; Auto-Login 
@@ -64,24 +65,24 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 ### &#9733; eigene Patientendatenbank 
 
-- für eine schnelle und fehlertolerante Suche nach Patienten
+- für eine schnelle und fehlertolerante Suche (Fuzzy Stringvergleich) nach Patienten
 
 ### &#9733; Infofenster 
 
-​        zentral in Albis integriertes Tool für Dokument-Eingänge und Verwaltung des Praxisnetzwerk
+​        zentral ins Albisfenster integriertes Tool für Dokument-Eingänge und Verwaltung ihres Praxisnetzwerk
 
 - **Patient**: zeigt den Posteingang des aktuellen Patienten und Informationen und Tipps zur Abrechnung an.
-- **Journal**: zeigt Dateien des Befundordners an. Hat Funktionen für Texterkennung und automatische Namenserkennung. Befund-/Bilddateien können von dort ohne Umweg in die Patientenakte importiert, angezeigt und umbenannt werden
-- **Protokoll**: Anzeige aller zuvor geöffneten Karteikarten des Tages. Der angezeigte Tag kann geblättert werden.
+- **Journal**: der Posteingang. Funktionen für Texterkennung und automatische Namenserkennung. Organisation von Dokumentimport, -anzeige und benennung
+- **Protokoll**: Tagesprotokoll aller geöffneten Karteikarten.
 - **Netzwerk:** direkter Start einer Remotedesktopsitzung per Klick 
 - **Extras**: häufiger benötigte Programme/Skripte lassen sich im Infofenster anzeigen und von dort aus auch starten
 
-### &#9733; automatische Texterkennung für PDF Dateien
+### &#9733; Texterkennung
 
-- Tesseract erreiche ich eine bessere Erkennungsrate als mit meinem bisherigen Texterkennungsprogramm
-- neu in einen Ordner hinzugefügte PDF Dateien werden automatisch in PDF-Text Dateien umgewandelt
+- **Texterkennung** mit Tesseract
+- **Hotfolder**: neu in einen Ordner hinzugefügte PDF Dateien werden automatisch in PDF-Text Dateien umgewandelt
 
-### &#9733; automatische Kategorisierung (Autonaming) von PDF Dateien
+### &#9733; Autonaming 
 
 - Erkennung von Patientennamen und Erstellungsdatum des Dokumentes bzw. des Zeitraums eines Krankenhausaufenthaltes. Aus diesen Informationen wird ein neuer Dateiname generiert.
 - Autonaming wird im Anschluß an eine abgeschlossene Texterkennungsvorgang ausgeführt
@@ -103,19 +104,19 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
   - Einstellen des aktuellen **Tagesdatums**
   - **Addition** von einer **Woche** oder einem **Monat** in **Datumsfeldern**, anstatt nur einem Tag wie bisher 
   - **neuer Shift + F3 Kalender** zeigt mehrere Monate an 
-  - **Hotstrings** für die schnelle Eingabe von Abrechnungsziffern (EBM und GOÄ, Diagnosen)
+  - **Hotstrings** für die schnelle Eingabe von Abrechnungsziffern (EBM und GOÄ, Diagnosen und anderes)
 
 ###  &#9733; erweitertes Kontextmenu 
 
-- mehr Funktionen im Rechtsklick Menu in der Karteikarte. Bearbeiten (Anzeigen), Drucken, Exportieren, Versand als Fax, per Mail oder per Telegram (Automatisierung für FoxitReader und Sumatra PDF sind integriert)
+- mehr Funktionen im Rechtsklick Menu in der Karteikarte. Bearbeiten (Anzeigen), Drucken, Exportieren, Versand als Fax, per Mail  (Automatisierung für FoxitReader und Sumatra PDF sind integriert)
 
 ###  &#9733; Rezepthelfer 
 
 - Rezeptvorlagen, z.B. mehrzeilige Hilfsmittelrezepte oder Verschreibung mehrerer Medikamente nach Auswahl einer Vorlage 
 
-###  &#9733; schönerer Verordnungsplan und besserer BMP 
+###  &#9733; sinnvollerer Verordnungsplan  
 
-* letzteres mag übertrieben sein. Den Bundeseinheitlichen Medikationsplan finde ich furchtbar. Ich habe ein Skript geschrieben das die Vorgaben des BMP imitiert, dabei doch mehr Möglichkeiten und um einiges bessere Darstellungen von Informationen bietet
+* Der Bundeseinheitlichen Medikationsplan ist gut, es fehlte nur ein größeres Feld für bekannte Arzneimittelallergien oder unerwünschte Wirkungen welche beim Patienten auftraten 
 
 ###  &#9733; Anzeige von Beginn und Ende der Lohnfortzahlung  
 
@@ -126,11 +127,11 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 ###  &#9733; Kontextsensitive Texterweiterungen 
 
 - Erkennung des Eingabekontext in der Karteikarte anhand des Albiskürzel (z.B. lko, dia, bef, info, lp, lbg) 
-- Anlegen eigener Textkürzel die sich automatisch zur Leistungskomplexen, Diagnosen, Befundtexten oder anderem erweitern lassen 
+- Anlegen eigener Textkürzel die sich automatisch zu Leistungskomplexen, Diagnosen, Befundtexten oder anderes erweitern lassen 
 
-###  &#9733; Automatisierung DICOM-Daten Umwandlung 
+###  &#9733; DICOM-Daten Umwandlung 
 
-- [MicroDicom](https://www.microdicom.com), der freie DICOM-Viewer für Windows, wird automatisiert für eine schnelle Umwandlung der Daten in Bild- oder Videodateien (im Moment MRT/CT Aufnahmenumwandlung ins wmi Format (video)
+- [MicroDicom](https://www.microdicom.com), der freie DICOM-Viewer für Windows, wird automatisiert für eine schnelle Umwandlung der Daten in Bild- oder Videodateien (im Moment MRT/CT Aufnahmenumwandlung ins wmi Format (video) (im Moment fehlerhaft)
 
 ###  &#9733; RPA-Funktionsbibliothek
 
@@ -144,14 +145,16 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
 - Funktionsbibliothek für Berechnungen von BMI, eGFR nach der CKD-EPI Formel, KOF und mehr
 
-###  &#9733; Karteikarten exportieren		
+###  &#9733; Karteikartenexport		
 
-- Export von Karteikarte, Laborblatt und aller Befunde (Bilder-, Worddokumente und PDF-Dateien) ohne größeren Umweg.
+- Export von Karteikarte, Laborblatt und aller Befunde (Bilder-, Worddokumente und PDF-Dateien) ohne größeren Umweg
+- Dokumente lassen sich aus dem Karteikartenexport drucken (z.B. um Kopien für Behörden anzufertigen)
+- automatische Berechnung der entstandenen Sachkosten (Kopiegebühren), Sachkostenberechnung läßt sich nach Albis übertragen 
 
 ###  &#9733; Laborjournal
 
-- schnelle Übersicht auffälliger Laborwerte der letzten Werktage 
-- konfigurierbare Ausnahmen für einzelne Laborwerte
+- tägliche Übersicht medizinisch relevanter Laborwerte 
+- konfigurierbare Ausnahmebehandlung einzelner Laborwerte
 
 ###  &#9733; Laborabruf
 
@@ -207,21 +210,37 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
 
 <br>
 
-## ![](Docs/Icons/Addendum.png) <u>Laborjournal</u>
+## ![](Docs/Icons/Laborjournal.png) Laborjournal
 
 ![](Docs/Screenshot-Laborjournal.png) 
 
-<img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
+- ***Responsives Webinterface*** (Basis: Internet Explorers). 
 
-## ![](Docs/Icons/Addendum48x48.png) <u>Dauermedikamentenfenster</u>
+- ***Gruppierung der Laborparameter*** nach klinischer Bedeutung, erkennbar durch die dickere Schrift und die unterschiedliche farbliche Hervorhebung. 
+
+   ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) ’‘**immer**‘’ (Anzeige: immer (nur) wenn pathologisch) und ![#9400D3](https://via.placeholder.com/15/9400D3/000000?text=+) ‘’**exklusiv**‘’ (Anzeige: auch bei Normwert).
+
+- ***durchschnittliche Über- oder Unterschreitung:*** 
+
+  - Berechnet die durchschnittliche prozentuale Über- bzw. Unterschreitung der Normwertgrenzen je Laborparameter.
+  - Für eventuelle Anpassungen wird die maximale Über- oder Unterschreitung als Einzelwert gespeichert.
+  - Durch Nutzung eines Faktors (Prozentwert) erscheinen mir, die durch Annährung erreichten "Warngrenzen", auch bei unterschiedlichen			Einheiten und altersabhängigen Normwertgrenzen klinisch bedeutsame Laborwertveränderungen sicher herauszufiltern.
+
+  
+
+<img src="Docs/TrennerSchmal.png" style="zoom:50%;"/>
+
+## ![](Docs/Icons/Addendum48x48.png) Dauermedikamentenfenster
 
 ![](Docs/Screenshot-Dauermedikamente.png) 
 
 Auswahlmöglichkeit aus voreingestellten Kategorien (in Patienten verständlichem Deutsch). Erreichbar nach Drücken (#) der ![](Docs/Icons/Raute.png) Taste in einer geöffneten Zeile. Die Kategorien lassen sich im Quelltext des Addendum.ahk-Skriptes jederzeit ändern. (an einer komfortableren Lösung wird gearbeitet). Mit der Tastenkombination (![](Docs\Icons\Key-White_Strg-Links.png)+ ![](Docs\Icons\hoch.png)oder![](Docs\Icons\runter.png)) lassen sich alle Einträge innerhalb der Ansicht verschieben.
 
+
+
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![Addendum](Docs/Icons/Addendum48x48.png) <u>neuer Shift+F3 Kalender</u>
+## ![Addendum](Docs/Icons/Addendum48x48.png) neuer Shift+F3 Kalender
 
 ![Menu-Suche](Docs/Screenshot-ShiftF3Kalender.png)
 
@@ -229,7 +248,7 @@ Auswahlmöglichkeit aus voreingestellten Kategorien (in Patienten verständliche
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![Addendum](Docs/Icons/Addendum48x48.png) <u>Menu-Suche</u>
+## ![Addendum](Docs/Icons/KontextMenu.png) Menu-Suche
 
 ![Menu-Suche](Docs/Screenshot-Menu_Suche.png)
 
@@ -239,7 +258,7 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![Hotkey](Docs/Icons/Hotkey.png) <u>sinnvollere Albiskürzel</u>
+## ![Hotkey](Docs/Icons/Hotkey.png) sinnvollere Albiskürzel
 
 - **Kopieren**, **Ausschneiden** und **Einfügen** ist mit den üblichen Kürzeln überall in Albis möglich <br>
     - **Kopieren:**                                      ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![c](Docs/Icons/Key-White-c.png)
@@ -270,11 +289,13 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
         | **porto3**/**Groß**                    | (sach:Porto Groß:1.55)      	; bis 500g              |
         | **porto4**/**Maxi**                    | (sach:Porto Maxi:2.70)       	; bis 1000g            |
 
+    ![JVEG/SOzial](Docs/Screenshot - JVEG.png)
     
+    ![Porto](Docs/Screenshot - Porto.png)
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![Hausbesuche.png](Docs/Icons/Hausbesuch.png) <u>Formularhelfer Hausbesuche</u>
+## ![Hausbesuche.png](Docs/Icons/Hausbesuch.png) Formularhelfer Hausbesuche
 
 **Ausdrucken von Rezepten/Über- und Einweisungen ohne gedrucktes Datum**
 
@@ -289,7 +310,7 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-##  ![Rezepthelfer.png](Docs/Icons/Rezepthelfer.png) <u>Schnellrezepte</u>
+##  ![Rezepthelfer.png](Docs/Icons/Schnellrezept.png) Schnellrezepte
 
 ![](Docs/Schnellrezepte.gif)
 
@@ -297,7 +318,7 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-### ![KontextMenu](Docs/Icons/KontextMenu.png) <u>Erweitertes Kontextmenu</u>
+### ![KontextMenu](Docs/Icons/KontextMenu.png) Erweitertes Kontextmenu
 
 **mehr Funktionen im Rechtsklick Menu in der Karteikarte**
 
@@ -309,7 +330,7 @@ Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter ande
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![InfoIcon](Docs/Icons/Infofenster.png) <u>Infofenster</u>
+## ![InfoIcon](Docs/Icons/Infofenster.png) Infofenster
 
 **Befundeingang, Tagesprotokoll, Netzwerkübersicht, Praxisinfos**
 
@@ -319,7 +340,7 @@ Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter ande
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![Abrechnungshelfer](Docs/Icons/Abrechnungshelfer.png) <u>Abrechnungsassistent</u> 
+## ![Abrechnungshelfer](Docs/Icons/Abrechnungsassistent.png) Abrechnungsassistent
 
 <img src="Docs/Abrechnungsassistent.png" alt="Screenshot Abrechnungshelfer" style="zoom: 100%;" />
 
@@ -332,7 +353,7 @@ Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter ande
   <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
 
-## ![Export](Docs/Icons/Export.png) <u>Dokument Exporter</u> (einfach exportieren)
+## ![Export](Docs/Icons/DocPrinz.png) DocPrinz
 
 ***Skript ist ohne Addendum.ahk ausführbar***
 
@@ -347,15 +368,16 @@ Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter ande
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![Addendum](Docs/Icons/Addendum48x48.png) <u>Labor Anzeigegruppen</u>
+## ![Addendum](Docs/Icons/Labor.png) Labor Anzeigegruppen
 
 - automatische Erweiterung der Fenstergröße und der Steuerelemente für mehr Übersicht
+- weitere Fenster welche sich an die automatisch an die Bildschirmgröße anpassen: Rentenversicherung Befundbericht V015, S0051
 
 ![Labor Anzeigegruppen](Docs/LBAZGGNANI.svg)
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 
-## ![Laborabruf](Docs/Icons/LaborAbruf.png) <u>Laborabruf</u>
+## ![Laborabruf](Docs/Icons/LaborAbruf.png) Laborabruf
 
 **Die Automatisierung für den Abruf der Laborwerte**
 
@@ -371,35 +393,15 @@ Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter ande
 
 
 
-<img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
-
-## ![GVU](Docs/Icons/GVU.png) <u>Gesundheitsvorsorgeliste</u>
-
-**automatisierte Formularerstellung**
-
-*dieses Skript nutzt die zuvor erstellte **GVU-Formular-Liste** untersuchter Patienten*. 
-
-- **quartalsweise** und **datumsgenaue** Erstellung der Gesundheitsvorsorge- und der Hautkrebsscreeningformulare
-- die **Leistungskomplexe** werden automatisch erstellt und in die Akte geschrieben
-- nutzt einen Eintrag im **CaveVon**-Fenster um Ihnen den schnellen Überblick zu ermöglichen, wann die letzte Untersuchung war und wann die nächste fällig wäre
-
-***Wichtig***: *es erfolgt kein Zugriff auf die Albis-Datenbanken. Die Erstellung erfolgt vereinfacht ausgedrückt durch die Simulation von Maus und Tastatureingaben^1^.  In der vorherigen Version brauchte das Skript für circa 80 Formulare ungefähr 3 Stunden (wohl gemerkt! Es macht nichts anderes als ein Mensch, ist aber wesentlich schneller!). Wie lange brauchen Sie für diese Formularanzahl? Ich denke darüber haben Sie sich noch nie Gedanken gemacht.*
-
-^1^ mit ausschließlich simulierten Tasten- und Mauseingaben ist ein fehlerfreier Ablauf unmöglich. Das Skript verwendet nicht einen einzigen Befehl zum Senden von Tasten. Die Formularfelder werden ausschließlich direkt manipuliert. Dies macht das ganze aber auch deutlich aufwendiger. Mit einem reinen Maus- und Tastaturrekorder erreichen Sie niemals diesen hohen Grad an Zuverlässigkeit.
-
-*bitte lesen Sie die Anleitung zur Benutzung des Skriptes, sie finden diese in den ersten Zeilen des Skriptes selbst*
-
-
-
 <img src="Docs/TrennerExtraBreit.png" style="zoom: 67%;" />
 
-# ![OutOfTheBox](Docs/Icons/OutOfTheBox.png)  <u>"OUT OF THE BOX"</u>
+# ![OutOfTheBox](Docs/Icons/OutOfTheBox.png)  "OUT OF THE BOX"
 
-Dies ist noch immer **"keine out of the box"** Lösung! Allerdings denke ich, bin ich diesem Ziel näher gekommen.
+Dies ist noch immer **"keine out of the box"** Lösung! Ein wenig Einarbeitung in Autohotkey wird notwendig sein. Ich habe so gut wie keine grafischen Eingabemöglichkeiten für die Änderungen von Einstellungen bereitgestellt. Die meisten Einstellungen müssen noch händisch per Texteditor in der Addendum.ini vorgenommen werden. Wichtige Einstellungen erreicht man allerdings über das einen rechten Mausklick auf das Addendum Tray Menu.
 <br>
 <img src="Docs/TrennerExtraBreit.png" style="zoom: 67%;" />
 
-# ![Paragraphen](Docs/Icons/Paragraphen.png) <u>RECHTLICHE HINWEISE</u>
+# ![Paragraphen](Docs/Icons/Paragraphen.png) RECHTLICHE HINWEISE
 
 **FOLGENDE ABSCHNITTE GELTEN FÜR ALLE TEILE UND DIE GESAMTE SAMMLUNG DIE UNTER DEM NAMEN** **"Addendum für Albis On Windows"** (nachfolgend Skriptsammlung genannt) herausgegeben wurde
 
@@ -409,25 +411,19 @@ KOMMERZIELLEN UNTERNEHMEN, DIE SICH MIT DER HERSTELLUNG, DEM VERTRIEB ODER WARTU
 
 DIESES REPOSITORY DARF AUF EIGENEN SEITEN VERLINKT WERDEN.
 
-DIESE SOFTWARE IST **FREIE SOFTWARE**! (*!freie Software ist nicht dasselbe wie Open Source!*) 
+DIESE SOFTWARE IST **FREIE SOFTWARE**!
 
-DIE SAMMLUNG ENTHÄLT SKRIPTE/BIBLIOTHEKEN AUS ANDEREN QUELLEN. DAS COPYRIGHT SIEHT IN JEDEM FALL EINE FREIE VERWENDUNG FÜR NICHT KOMMERZIELLE ZWECKE VOR. AUS DIESEM GRUND KÖNNEN DIESE SAMMLUNG ODER AUCH NUR TEILE DAVON ZU KEINEM ZEITPUNKT VERKÄUFLICH SEIN! ANFRAGEN JEGLICHER JURISTISCHER ODER NATÜRLICHER PERSONEN HINSICHTLICH KOMMERZIELLER ANSÄTZE WERDEN IGNORIERT!
+DIE SAMMLUNG ENTHÄLT SKRIPTE/BIBLIOTHEKEN AUS ANDEREN QUELLEN. DAS COPYRIGHT SIEHT IN JEDEM FALL EINE FREIE VERWENDUNG FÜR NICHT KOMMERZIELLE ZWECKE VOR. AUS DIESEM GRUND KÖNNEN DIESE SAMMLUNG ODER AUCH NUR TEILE DAVON ZU KEINEM ZEITPUNKT VERKÄUFLICH SEIN! ANFRAGEN JURISTISCHER ODER NATÜRLICHER PERSONEN HINSICHTLICH KOMMERZIELLER ANSÄTZE WERDEN IGNORIERT!
 <br>
 <br>
 
 <img src="Docs/TrennerExtraBreit.png" style="zoom: 67%;" />
 
-# ![Haftungsauschluss](Docs/Icons/Haftungsausschluss.png) <u>AGB’s / HAFTUNGSAUSSCHLUSS</u>
+# ![Haftungsauschluss](Docs/Icons/Haftungsausschluss.png) AGB’s / HAFTUNGSAUSSCHLUSS
 
 **I.a.** Der Download und die Nutzung der Skripte unterliegen der GNU Lizenz welche von Lexikos dem Gründer der Autohotkey Foundation erstellt wurden. 
 
-Die Inhalte und Skripte dürfen AUSSCHLIESSLICH NUR von Praxisinhabern, interessierten Angestellte und natürlich allen Personen genutzt werden die sich dem Gedanken "der freien Software" anschliessen können. Ein Auftrag zum Download, Änderungsvorgaben, Nutzungsänderungen an Angestellte (dies gilt auch für angestellte (approbierte) Ärzte oder eine Auftragsvergabe an ein Unternehmen sind **UNTERSAGT**! Nach jeder noch so kleinen Änderung an einem der Skripte oder den grafischen Beigaben ist zusätzlich zu meinem Pseudonym im jeweiligen Skript ihr eigenes Pseudonym oder ihr eigener Namen hinzu zufügen, falls Sie das veränderte Skript weitergeben möchten. Eine Weitergabe *veränderter Dateien* unter ausschließlicher Angabe meines Pseudonyms **UNTERSAGE** ich hiermit ausdrücklich.
-
-**I.b.** ***Nicht gemeinnützigen Unternehmen*** (wie Softwarehäusern, Vertrieblern, Krankenhäusern, Servicefirmen und all Ihren Mitarbeitern) ist ***weder*** die Erwähnung (insbesondere zu Werbezwecken) noch das Weiterverwenden/Einbinden, das Ändern der Skripte oder die Nutzung meiner Ideen in jeglicher Form, selbst in ähnlicher Weise zum Verändern eigener oder anderer Software z.B. um hiermit Geld zu generieren **UNTERSAGT!** In diesen Fällen behalte ich mir vor einen Urheberanspruch an das kommerziell arbeitende Unternehmen zu stellen, den ich im entsprechenden Fall gesetzlich durchsetzen lasse werde.
-
-**I.c.** Universitäten, interessierten Studenten gestatte ich eine Nutzung nach schriftlicher Genehmigung und persönlichem Nachweis einer gemeinnützigen Sache, meiner Haftungsfreistellung und einer Erklärung in keinster Weise mit irgendeinem Unternehmen oder einer juristischen Person wie unter I.b. zusammenzuarbeiten. Die eventuellen Auslagen und Kosten trägt der Anfrage/Antragsteller!<BR>
-
-**I.d.** Gemeinnützige Einrichtungen aus nicht EU-Ländern und nicht-Gxx-Ländern ist die Nutzung wie den Personen unter I.a. unter allen Haftungsausschlüssen für mich jederzeit und ohne Nachfrage gestattet! Hier erkläre ich mich gerne ebenso wie bei I.a. bereit im Falle von Fragen zu helfen.<BR>
+**I.b.** Die Inhalte und Skripte dürfen frei verändert werden. Jegliche Änderung ist vor Weitergabe zukennzeichnen.
 
 #### Download
 
@@ -453,35 +449,12 @@ Die Inhalte und Skripte dürfen AUSSCHLIESSLICH NUR von Praxisinhabern, interess
 
 **III.h.** Für Fehler in Rechtschreibung, Grammatik bin ich ebenso nicht verantwortlich zu machen. Dazu wenden Sie sich bitte an meine Deutschlehrer.<BR>
 
-**III.i.** ich übernehme keinerlei HAFTUNG aufgrund hier fehlender rechtlicher Hinweise/Aus- oder Einschlüße. Ihnen sollte nach dem lesen bekannt und bewußt sein, daß ich keinerlei kommerzielle Zwecke verfolge und die Zusammenstellung der Dateien nicht zum Zwecke eigener Bekanntheit erfolgt und ich deshalb niemals wissentlich oder absichtlich fremdes geistiges Eigentums entwendet habe. Die angebotene Sammlung verfolgt ausschließlich unten genannten gemeinnützigen Zweck.<BR>
-
-**III.j** ich erkläre hiermit, das bewußt (und insbesondere bewußt) keine Informatiker, IT-Experten oder Angestellten einer Hotline für dieses Projekt genervt oder gequält wurden. Irgendwelche Ähnlichkeiten zu lebenden oder verstorbenen Personen sind rein zufällig.*
-
-###### * (! für Juristen ! - Artikel ‘III.j’ ist Satire!)
+**III.i.** ich übernehme keinerlei HAFTUNG aufgrund hier fehlender rechtlicher Hinweise/Aus- oder Einschlüße. Ihnen sollte nach dem Lesen bekannt sein, daß ich keinerlei kommerzielle Zwecke verfolge und die Zusammenstellung der Dateien nicht zum Zwecke eigener Bekanntheit erfolgt und ich deshalb niemals wissentlich oder absichtlich fremdes geistiges Eigentums entwendet habe. Die angebotene Sammlung verfolgt ausschließlich einen gemein-nützigen Zweck.<BR>
 
 <br>
 [GNU Licence for Addendum für Albis](Docs/GNU Licence for Addendum für Albis.pdf)
 
 <img src="Docs/TrennerExtraBreit.png" style="zoom: 67%;" />
 
-# ![Abschluss](Docs/Icons/Abschluss.png) <u>ABSCHLUSS</u>
+<center> - IXIKO 2021 - </center>
 
-## ![Aufruf](Docs/Icons/Aufruf.png) <u>Aufruf zur Gemeinnützigkeit</u>
-
-**DER FINANZIELLE DRUCK DER AUF UNS NIEDERGELASSENEN ÄRZTEN LASSTET, HINSICHTLICH EINER SCHNELLEN HILFREICHEN VERWALTUNGSSOFTWARE, EINER SOFTWARE DIE STÄNDIG NEUEN VORGABEN GEWACHSEN SEIN SOLL, DEM ZUNEHMENDEM DRUCK DER KOMMERZIALISIERUNG WICHTIGER INFORMATIONEN (Studien, Diagnostische Hilfen, Therapien, Formulare etc.), DEM VERMEINTLICHEN ZERTIFIZIERUNGSWAHNSINN, DEN EINGRIFFEN DES GESETZGEBER IN UNSERE ARBEITSZEIT - MUSS DRINGEND EINHALT GEBOTEN WERDEN! DIES HIER IST EIN AUFRUF AN ALLE KOLLEGEN SICH DARÜBER GEDANKEN ZU MACHEN!**
-
-LIEBE KOLLEGEN, DENKEN SIE AUCH AN EINE ENTLASTUNG IHRER ANGESTELLTEN!  UM SO MEHR SIE DIESE VON IMMER WIEDERKEHRENDEN TÄTIGKEITEN AM PC BEFREIEN, UM SO MEHR KÖNNEN ***AUCH SIE SICH*** VON UNNÖTIGER ARBEIT ENTLEDIGEN!
-
-
-
-## ![Projekt](Docs/Icons/Projekt.png) <u>Projektmitarbeit</u>
-
-Die Mitarbeit von Kollegen ist ausdrücklich erwünscht! Der Umfang meiner Skripte behindert leider immer wieder die Fehlerkorrekturen, da ich meist an einem anderen Skript arbeite, während ein anderes plötzlich kritische Fehler zeigt. 
-
-Da dieses Projekt unter einem gemeinnützigen, nicht kommerziellen Aspekt steht (Hilfe zur Selbsthilfe, !Mehr Zeit für Patienten!) stehen keine Gelder zur Verfügung! Dieses Projekt soll unsere tägliche Arbeit unterstützen und nicht zu einer weiteren Bereicherung der Medizinindustrie führen. Die Mitarbeit am Projekt endet sofort, wenn ein hinreichender Verdacht auf kommerzielle Interessen besteht! 
-
-Da dieses Projekt unter einem gemeinnützigen, nicht kommerziellen Aspekt steht (Hilfe zur Selbsthilfe, !Mehr Zeit für Patienten!) stehen keine Gelder zur Verfügung! Dieses Projekt soll unsere tägliche Arbeit unterstützen. 
-
-
-
-<center> - IXIKO 2020 - </center>

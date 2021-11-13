@@ -20,6 +20,8 @@
 		*                                    	- der ToolTip wird standardmäßig innerhalb des Albisfenster eingeblendet
 		*					15.02.2021	- Performanceverbesserungen, Code gekürzt
 		*					15.06.2021	- Performanceverbesserungen, Code gekürzt, mehr Kommentare
+		*					07.11.2021	- Text der in geschweiften Klammern {} gepackt wurde, wird für den Titel verwendet z.B. "{WARNUNG: Einstellungen fehlen}`n"
+		*                                      	   ergibt als Titel:                 WARNUNG: Einstellungen fehlen [Addendum]
 		*
 	   *
 	*/
@@ -39,7 +41,7 @@
 				, ModulName, T, BLEND, SLIDE, CENTER, ACTIVATE, HOR_POSITIVE, HOR_NEGATIVE, VER_POSITIVE
 				, VER_NEGATIVE, DefaultGui
 
-		global PraxTT, PraxTThGui, PraxTTRunning, PraxTTDuration, PraxTTCnt1, PraxTTCnt2
+		global PraxTT, PraxTThGui, PraxTTRunning, PraxTTDuration, PraxTTCnt1, PraxTTCnt2, PraxTTitle
 
 		ParentID	:= 0
 	;}
@@ -141,18 +143,24 @@
 
 	  ; ADD: Title
 		Gui, PraxTT: Font   		, % "q5 s" Floor(cFontSize*tFont) " c" FntCol1, % Addendum.Default.BoldFont
-		Gui, PraxTT: Add, Text	, % "x" MrgX " y0 BackgroundTrans Center HWNDhTitle" , % ModulName
+		Gui, PraxTT: Add, Text	, % "x0 y0 w300 BackgroundTrans Center vPraxTTitle HWNDPraxTTHTitle" , % ModulName
 		Gui, PraxTT: Font       	, % "s" cFontSize " c" FntCol2, % Addendum.Default.Font
 	  ; zentrieren
-		ControlGetPos	,TitleX,, TitleW, TitleH,                     	, % "ahk_id " hTitle
+		ControlGetPos	,TitleX,, TitleW, TitleH,                     	, % "ahk_id " PraxTThTitle
 		ControlMove 	,, 0, 0, % TitleW+MrgX, % TitleH+3	, % "ahk_id " hProgress
 
 	  ; ADD: Textzeilen hinzufügen
- 		cwMax  	:= TitleW + (2*MrgX)					; maximal mögliche Breite des Gui
+ 		cwMax  	:= 0 ;TitleW + (2*MrgX)					; maximal mögliche Breite des Gui
 		For LNr, printline in StrSplit(TextMsg, "`n", "`r") {
 
 		  ; Zeilenabstand - leere Zeilen erzeugen etwas größere Zeilenabstände
 			linespace	:= Floor(cFontSize * ((A_Index > 1 && StrLen(printline) = 0) ? 0.5 : 0.2))
+
+		  ; Titleergänzung
+			If RegExMatch(printline, "\{(?<Add>.*?)\}", Title) {
+				GuiControl, PraxTT:, PraxTTitle, % TitleAdd " [" ModulName "]"
+				continue
+			}
 
 		  ; z.B. #2 erhöht die Schriftgröße um X-Punkte für den danach folgenden Text der gesamten Zeile
 			If RegExMatch(printline, "(?<=#)\-*\d+", plusSize)
@@ -162,25 +170,25 @@
 
 		  ; Zeile als Static-Steuerelement hinzufügen
 			Gui, PraxTT: Font       	, % "s" (cFontSize + plusSize) " c" FntCol2
-			Gui, PraxTT: Add, Text	, % "x" MrgX " y+" linespace " Center BackgroundTrans", % printline
+			Gui, PraxTT: Add, Text	, % "x" MrgX " y+" linespace " Center BackgroundTrans hwndPraxTThStatic", % printline
 
 		  ; wenn cw größer als cwMax denn soll cwMax=cw sein, ansonsten gilt  cwMax=cwMax
-			ControlGetPos,,, cw,, % "Static" (A_Index + 1), % "ahk_id " PraxTThGui
+			ControlGetPos,,, cw,,, % "ahk_id " PraxTThStatic
 			cwMax	:= cw > cwMax ? cw : cwMax
 
 		}
 
 		Gui, PraxTT: Add, Text 	, % "x" MrgX " y+" cFontSize/4 " BackgroundTrans", % " "
-		Gui, PraxTT: Show     	, % "AutoSize Center NoActivate Hide"
+		Gui, PraxTT: Show     	, % "AutoSize Center NoActivate NA Hide"
 
 	  ; Zentrieren des Textes
 		Prax   	:= GetWindowSpot(PraxTThGui)
 		controls	:= GetControls(PraxTThGui)
-		Loop % controls.MaxIndex()
-			If (A_Index > 2) {
-				Control, Style, +0x1,				   , % "ahk_id " controls[A_Index].Hwnd
-				ControlMove,, 0,, % Prax.W	  ,, % "ahk_id " controls[A_Index].Hwnd
-			}
+		Loop % controls.MaxIndex() {
+			Control, Style, +0x1,		   	,	% "ahk_id " controls[A_Index].Hwnd
+			ControlMove,,,, % cwMax  ,, 	% "ahk_id " controls[A_Index].Hwnd
+		}
+		GuiControl, PraxTT: MoveDraw, PraxTTitle, % "x0"
 
 	  ; Positionieren der Gui oberhalb der Taskbar
 		Prax	:= GetWindowSpot(PraxTThGui)
@@ -208,11 +216,10 @@
 			GuiControl, PraxTT:, PraxTTCnt2, % "   "
 		}
 
-		GuiControl, MoveDraw, % hProgress	, % "w" (Prax.CW + MrgX) " h" ( TitleH + 3 )
-		GuiControl, MoveDraw, % hTitle		, % "x"  Floor((Prax.CW + MrgX)/2) - Floor(TitleW/2)
+		GuiControl, MoveDraw, % hProgress  	, % "w" (Prax.CW + MrgX) " h" ( TitleH + 3 )
 
 	  ; Einblenden mit Animation wenn keine Teamviewerverbindung besteht
-		Gui, PraxTT: Show, % "AutoSize NoActivate", % "PraxTT-Info"
+		Gui, PraxTT: Show, % "AutoSize NoActivate NA", % "PraxTT-Info"
 
 		If Addendum.PraxTTDebug
 			SciTEOutput("PraxTT: " StrReplace(TextMsg, "`n", " | "))

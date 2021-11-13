@@ -178,13 +178,13 @@
       ; Names of supported classes
       Static ClassNames := {Button: "", ComboBox: "", Edit: "", ListBox: "", Static: ""}
       ; Button styles
-      Static BS_CHECKBOX := 0x2
-           , BS_RADIOBUTTON := 0x8
+      Static	BS_CHECKBOX := 0x2
+           ,  	BS_RADIOBUTTON := 0x8
       ; Editstyles
       Static ES_READONLY := 0x800
       ; Default class background colors
-      Static COLOR_3DFACE := 15
-           , COLOR_WINDOW := 5
+      Static	COLOR_3DFACE := 15
+           , 	COLOR_WINDOW := 5
       ; Initialize default background colors on first call -------------------------------------------------------------
       If (This.SYSCOLORS.Edit = "") {
          This.SYSCOLORS.Static := DllCall("User32.dll\GetSysColor", "Int", COLOR_3DFACE, "UInt")

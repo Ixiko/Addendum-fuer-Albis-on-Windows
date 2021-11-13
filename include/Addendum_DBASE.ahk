@@ -714,7 +714,8 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 	  ; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 		SearchFast(pattern, outfields, startrecord=0, options="", callbackFunc="") {
 
-			; comparison is possible with ranges or Instr() operations. One date can be compared with another
+			; Instr() - based comparison
+			; comparison is possible for dates with ranges, for everything else comparison will use Instr() operation. One date can be compared with another
 			; by only showing the dates that are greater, less or equal. This also works with pure numerical values.
 
 				static matches, recordbuf, recordpos
@@ -753,6 +754,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 				this.recordpos := startrecord
 				VarSetCapacity(recordbuf	, this.lendataset*100, 0x20)
 
+			; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 			; search loop
 				this.foundrecord := 0, this.hits := 0, matches := Array()
 				while (!this.dbf.AtEOF) {
@@ -762,13 +764,13 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 						If (Mod(setNR := A_Index, this.ShowAt) = 0) {
 							If (this.debug = 1)
 								ToolTip, % "Search rx: " rxStr "`n" SubStr("00000000" A_Index, this.slen) "/" SubStr("00000000" this.records, this.slen)
-							If (StrLen(callbackFunc) > 0)
+							else if callbackFunc
 								%callbackFunc%(setNR, this.records, this.slen, matches.MaxIndex())
 						}
 
 					; reads one dataset from database
-						bytes	:= this.dbf.RawRead(recordbuf, this.lendataset)
-						set 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
+						bytes     	:= this.dbf.RawRead(recordbuf, this.lendataset)
+						set        	:= StrGet(&recordbuf, this.lendataset, this.encoding)
 						removed	:= SubStr(set, 1, 1) = "*" ? true : false
 						set          	:= Substr(set, 2, StrLen(set)-1)
 
@@ -780,7 +782,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 						hits := 0
 						For fLabel, searchString in pattern {
 							val := Trim(SubStr(set, this.dbfields[fLabel].start, this.dbfields[fLabel].len))
-							If (val = searchString) || RegExMatch(val, searchString){
+							If (val = searchString || RegExMatch(val, searchString)) {
 								hits ++
 								this.filepos_found 	:= this.dbf.Tell()
 								this.foundrecord 	:= this.recordpos
@@ -901,6 +903,62 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 		return obj
 		}
 
+	  ; -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	  ; READS SPECIFIC  RECORD SET              | ### NOT READY - DO NOT USE !!
+	  ; -------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		ReadSpecific(recordnr, outfields="", CloseDBF=false, callbackFunc="") {
+
+			; you can set seekpos by
+
+				global recordbuf
+
+			; establish read access if not already done
+				If !IsObject(this.dbf) {
+					this.nofileaccess := true
+					this.pos := this.OpenDBF()
+					this.dbf.Seek(this.recordsStart, 0)
+					this.recordpos := recordnr
+				}
+
+			; display progress
+				if (this.debug && Mod(this.recordnr, this.ShowAt) = 0) {
+					If RegExMatch(this.debug, "i)\bTT\b)")
+						ToolTip, % SubStr("00000000" this.recordnr, this.slen) "/" SubStr("00000000" this.records, this.slen)
+					If IsFunc(callbackFunc)  ;> 0)
+						%callbackFunc%(this.recordnr, this.records, this.slen, "---")
+				}
+
+			; filepointer
+				If (recordnr > 0) {
+					;~ If recordnr
+					this.dbf.Seek(this.recordsStart, 0)
+					this.dbf.Seek(this.lendataset * recordnr, 1)
+					this.lastrecordnr := recordnr
+				}
+
+			; reads one dataset
+				bytes		:= this.dbf.RawRead(recordbuf, this.lendataset)
+				readset	:= StrGet(&recordbuf, this.lendataset, this.encoding)
+				set 		:= Substr(readset, 2, StrLen(set)-1)
+
+			; change class object filepointer position
+				this.recordnr	:= Floor((this.dbf.Tell() - this.headerlen) / this.lendataset)
+				this.filepos 	:= this.dbf.Tell()
+
+			; return unparsed dataset
+				If !IsObject(outfields)
+					return set
+
+			; build key:value object
+				obj              	:= Object()
+				obj.removed	:= SubStr(readset, 1, 1) = "*" ? true : false
+				obj.recordNr	:= this.recordnr
+				For index, fLabel in outfields
+					obj[flabel] := Trim(SubStr(set, this.dbfields[fLabel].start, this.dbfields[fLabel].len))
+
+		return obj
+		}
+
 	  ; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 	  ; READS A BLOCK OF RECORDSETS		| RETURNS THE WHOLE RECORDSET
 	  ; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -981,7 +1039,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 	;}
 
 	; ⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌
-	; ⚌                                                       	CREATE OWN INDEX FILE BASED ON PARAMETERS                                                        	⚌
+	; ⚌                                                      	  CREATES OWN INDEX FILE BASED ON PARAMETERS                                                        	⚌
 	; ⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌;{
 		CreateIndex(IndexFilePath, IndexFieldName:="", IndexMode:="", ReIndex:=false) {
 

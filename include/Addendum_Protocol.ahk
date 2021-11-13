@@ -1,15 +1,15 @@
-﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
-;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 05.06.2021 - this file runs under Lexiko's GNU Licence
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                                             	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
+;                                                                             	!diese Bibliothek wird von fast allen Skripten benötigt!
+;                                              	by Ixiko started in September 2017 - last change 27.09.2021 - this file runs under Lexiko's GNU Licence
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; PROTOKOLLIEREN, FEHLERMELDUNGEN                                                                                                                                                                                                      	(04)
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; (01) FehlerProtokoll                        	(02) ExceptionHelper                      	(03) Telegram_Send                          	(04) TrayTip
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; PROTOKOLLIEREN, FEHLERMELDUNGEN                                                                                                                                                                             	(03)
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; (01) FehlerProtokoll                        	(02) Telegram_Send                          	(03) TrayTip
 ;1
-FehlerProtokoll(Exception, MsgToTelegram:= 1) {                                                                   	;-- Addendum.ahk stürzt auf manchen Clients einfach ab, Funktion erstellt ein Protokoll hoffentlich
+FehlerProtokoll(Exception, MsgToTelegram:= 1) {                                                	;-- erstellt ein Protokoll
 
 
 	; REMARK: this function uses a global object "Addendum", this object must contain data to Addendum paths and Telegram data (please see Addendum.ahk)
@@ -30,14 +30,13 @@ FehlerProtokoll(Exception, MsgToTelegram:= 1) {                                 
 		If IsObject(Exception)		{
 
 				startLine	:= (Exception.line - Floor(Range/2))
-				;startLine	+= 1
 				faultcode	:= "`tbetroffener Code (Bereich +-" Range "):`n"
 
 			; saves a range of code lines to file protocoll
 				FileRead, faultFile, % Exception.File
 				faultLine	:= StrSplit(faultFile, "`n", "`r")
 				faultcode 	:= "`t`t/*`n"
-				Loop, % Range
+				Loop % Range
 					faultcode .= "`t`t`t" SubStr("00000" (startLine+A_Index-1), -4) ": " faultLine[(startLine+A_Index-1)] "`n"
 				faultcode	.= " `t`t*/"
 
@@ -86,60 +85,19 @@ FehlerProtokoll(Exception, MsgToTelegram:= 1) {                                 
 return true
 }
 ;2
-ExceptionHelper(libPath, SearchCode, ErrorMessage, codeline) {													;-- searches for the given SearchCode in an uncompiled script as a help to throw exceptions
-
-	If !A_IsCompiled {
-
-	;Fehlerfunktion bei Eingabe eines falschen Parameter
-		FileRead, Pfunc, %AddendumDir%\libPath
-		Loop, Parse, Pfunc, `n
-		{
-			If Instr(A_LoopField, SearchCode) {
-				scriptline	:= A_Index
-				ScriptText	:= A_LoopField
-				break
-			}
-		}
-
-		Exception(ErrorMessage)
-
-	} else {
-
-		msg=
-		(Ltrim
-		This message is shown, because the script wanted
-		to call a function that works only in uncompiled scripts.
-
-		A function was called to show a runtime error.
-		This function was called from %A_ScriptName%
-		at line: %codeline%. The code to show ist:
-		%SearchCode%
-		with the following error-message:
-		%ErrorMessage%
-		)
-
-		MsgBox, % "Addendum für AlbisOnWindows - " A_ScriptName,  %msg%
-
-	}
-
-}
-;3
-Telegram_Send(telegramBotKey, telegramChatId, textMessage) {				                    			;-- another way to send a message
+Telegram_Send(telegramBotKey, telegramChatId, textMessage) {				     		;-- another way to send a message
 
     WinHTTP := ComObjCreate("WinHTTP.WinHttpRequest.5.1")
     WinHTTP.Open("POST", Format("https://api.telegram.org/bot{1}/sendMessage?chat_id={2}&text={3}", telegramBotKey, telegramChatId, textMessage), 0)
-	;WinHTTP.SetRequestHeader("Content-Type", "application/json")
 	WinHTTP.Send()
-
-    TrayTip Text Sent to Telegram, %textMessage%
+    TrayTip Text Sent to Telegram, % textMessage
 
 Return
 }
-;4
+;3
 TrayTip(Title, Msg, Seconds:=2) {
-
 	If !InStr(compname, "SP1")
 		return
 	TrayTip, % Title, % Msg, % Seconds
 }
-;5
+

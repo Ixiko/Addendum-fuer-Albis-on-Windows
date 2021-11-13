@@ -8,78 +8,224 @@
 ;       Abhängigkeiten:
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Outlook_Anhang_Speichern.ahk Letzte Änderung:    	07.02.2021
+;       Outlook_Anhang_Speichern.ahk Letzte Änderung:    	21.09.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #NoEnv
+#Persistent
 SetBatchLines, -1
 
-global compname := StrReplace(A_ComputerName, "-")                    	; der Name des Computer auf dem das Skript läuft
-global adm := Object()
-adm.scriptname := RegExReplace(A_ScriptName, "\.ahk$")
 
 ; -------------------------------------------------------------------------------------------------------------------------------------------------------
-  ; Pfade und Einstellungen
-  ; -------------------------------------------------------------------------------------------------------------------------------------------------------;{
+; Variablen, Pfade und Einstellungen
+; -------------------------------------------------------------------------------------------------------------------------------------------------------;{
+		global compname	:= StrReplace(A_ComputerName, "-")                    	; der Name des Computer auf dem das Skript läuft
+		global adm        	:= Object()
+		adm.scriptname := RegExReplace(A_ScriptName, "\.ahk$")
+
 	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	; Pfad zu Addendum und den Einstellungen
 	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 		RegExMatch(A_ScriptDir, "[A-Z]\:.*?AlbisOnWindows", AddendumDir)
 		adm.ini	:= AddendumDir "\Addendum.ini"
 		If !FileExist(adm.ini) {
-			MsgBox, 1024, % adm.scriptname, % "Die Einstellungsdatei ist nicht vorhanden!`n[" adm.ini "]"
+			MsgBox, 0x1024, % adm.scriptname, % "Die Einstellungsdatei ist nicht vorhanden!`n[" adm.ini "]"
 			ExitApp
 		}
 
 	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	; Backup Pfad für empfangene Labordateien einlesen und bei Bedarf anlegen
+	; Dateipfade
 	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 		workini	:= IniReadExt(adm.ini)
 		adm.DBPath := IniReadExt("Addendum", "AddendumDBPath")           	; Datenbankverzeichnis
 		If InStr(adm.DBPath, "ERROR") {
-			MsgBox, 1024, % adm.scriptname, % "In der Addendum.ini ist kein Pfad für`ndie Addendum Datendateien hinterlegt!`n"
+			MsgBox, 0x1000, % adm.scriptname, % "In der Addendum.ini ist kein Pfad für`ndie Addendum Datendateien hinterlegt!`n"
 			ExitApp
 		}
 		If !FilePathCreate(adm.DBPath "\sonstiges") {
-			MsgBox, 1024, % adm.scriptname, % "Datenbankpfad konnte nicht angelegt werden!"
+			MsgBox, 0x1000, % adm.scriptname, % "Datenbankpfad konnte nicht angelegt werden!"
 			ExitApp
 		}
-		adm.olFolder            	:= IniReadExt(compname, "Outlook_Folder", "Posteingang")
-		adm.olSubjectIn         	:= IniReadExt(compname, "Outlook_EMailSubjectFilter_In", "i)Fax\s")
-		adm.olSubjectOut     	:= IniReadExt(compname, "Outlook_EMailSubjectFilter_Out", "########")
-		adm.olSubjectData    	:= IniReadExt(compname, "Outlook_EMailSubject_Daten", "i)von\s*(?<Absender>[\w\s]+)*\s\(*(?<Nummer>\d\d+)")
-		adm.olAttachmentIn  	:= IniReadExt(compname, "Outlook_AttachmentFilter_In", ".*")
-		adm.olAttachmentOut	:= IniReadExt(compname, "Outlook_AttachmentFilter_Out", "########")
 		adm.BefundOrdner   	:= IniReadExt("ScanPool", "BefundOrdner")
 
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	; Outlook Attachment Filter-Einstellungen
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+		adm.ol := Object()
+		adm.ol.Folder            	:= IniReadExt(compname, "Outlook_Folder", "Posteingang")
+		adm.ol.SubjectIn         	:= IniReadExt(compname, "Outlook_EMailSubjectFilter_In", "i)Fax\s")
+		adm.ol.SubjectOut     	:= IniReadExt(compname, "Outlook_EMailSubjectFilter_Out", "########")
+		adm.ol.SubjectData    	:= IniReadExt(compname, "Outlook_EMailSubject_Daten", "i)von\s*(?<Absender>[\w\s]+)*\s\(*(?<Nummer>\d\d+)")
+		adm.ol.AttachmentIn  	:= IniReadExt(compname, "Outlook_AttachmentFilter_In", ".*")
+		adm.ol.AttachmentOut	:= IniReadExt(compname, "Outlook_AttachmentFilter_Out", "########")
+
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	; Outlook prüfen der COM Verbindung, Verbindung bleibt erhalten
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+		ol := new Outlook(adm.DBPath, adm.ol)
+		olStatus := ol.Connect()
+		If (olStatus = "no connection") {
+			MsgBox, 0x1000, % StrReplace(A_ScriptName, ".ahk")
+						, % "Es konnte keine Verbindung zu Outlook hergestellt werden.`n"
+						.	  "Bitte prüfen Sie ihre Outlookinstallation!"
+			ExitApp
+		}
+
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	; Speicherpfad für Anhänge
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+		Attachmentpath	:= IniReadExt(compname, "Outlook_AttachmentSavePath")
+		If (InStr(Attachmentpath, "ERROR") || StrLen(Attachmentpath) = 0) {
+
+			AskAttachmentSavePath:
+			Attachmentpath := SelectFolder(3, "Speicherpfad für Outlook-Anhänge auswählen")
+			MsgBox	, %  (!Attachmentpath	?	0x1005 : 0x1003)
+						, % StrReplace(A_ScriptName, ".ahk")
+						, % (!Attachmentpath 	? 	"Sie haben keinen Pfad gewählt.`nMöchten Sie die Speichpfadauswahl wiederholen?"
+												:	"Gewählter Dateiordner:`n<< " Attachmentpath " >>`nSoll der Ordnerpfad übernommen werden?")
+			IfMsgBox, Cancel
+				ExitApp
+			IfMsgBox, Retry
+				goto AskAttachmentSavePath
+
+			IniWrite, % Attachmentpath, % adm.ini, % compname, % "Outlook_AttachmentSavePath"
+
+		}
+
+	  ; wichtig!: der Ordner in welchem die Anhänge abgespeichert werden soll muss dem Outlook-Objekt übergeben werden
+		ol.AttachmentSavePath := AttachmentPath
 
 ;}
 
-	If InStr(compname, "SP1")
-		adm.BefundOrdner := "C:\tmp\outlook"
+; Outlook-Events abfangen
+	ol.CatchMailEvents()
 
-	ExtractAttachmentOutlook(adm.olFolder, adm.olSubjectIn, adm.olSubjectData, adm.olAttachmentIn, adm.BefundOrdner )
-	;ExtractAttachmentOutlook(adm.olFolder, ".*", "i)\s*(?<Absender>.*)", adm.olAttachmentIn, adm.BefundOrdner )
+; Outlook-Events und Outlook Verbindung beenden
+	;~ ol.Disconnect()
 
-ExitApp
 
-class Outlook {
+return
 
-		__New(DBPath, MainFolder:="") {
+class Outlook {                                     ; Outlook Class for automated attachment filtering and extraction
 
-				this.DBPath := DBPath
+		; this is just a basic class. At the moment with prepared specialization for Fritzbox fax attachments.
+		; last modification: 21.09.2021
+
+		__New(DBPath, Props, SaveFolder:="") {
+
+			this.DBPath 	:= DBPath
+			this.props  	:= Object()
+			If !IsObject(Props) {
+				this.props.olFolder             	:= "Posteingang"
+				this.props.olSubjectIn         	:= "i)Fax\s"
+				this.props.olSubjectOut       	:= "########"
+				this.props.olSubjectData    	:= "i)von\s*(?<Absender>[\w\s]+)*\s\(*(?<Nummer>\d\d+)"
+				this.props.olAttachmentIn   	:= "."
+				this.props.olAttachmentOut	:= "########"
+			} else {
+				this.props.olFolder             	:= Props.Folder
+				this.props.olSubjectIn         	:= Props.SubjectIn
+				this.props.olSubjectOut       	:= Props.SubjectOut
+				this.props.olSubjectData    	:= Props.SubjectData
+				this.props.olAttachmentIn   	:= Props.AttachmentIn
+				this.props.olAttachmentOut	:= Props.AttachmentOut
+			}
 
 		}
 
-		Connect() {
+		Connect()                                                              	{
 
 			try this.ol := ComObjActive("Outlook.Application")
 			catch
+				try
 				this.ol := ComObjCreate("Outlook.Application")
+					catch
+						return (this.olStatus := "no connection")
+
+		return (this.olStatus := "okay")
+		}
+
+		Disconnect()                                                            	{
+
+		  ; Outlook Event-Objekt stoppen und danach entfernen
+			If this.MailEvents {
+				ComObjConnect(this.ol)
+				this.ol.Events := false
+			}
+
+		  ; Outlook COM-Verbindung unterbrechen durch entfernen des Objekts
+			If IsObject(this.ol)
+				this.ol := ""
 
 		}
 
-		ExtractAttachment(folderName, SJct_In, SJct_Out, AMFilterIn, AMFilterOut, SaveTo) {
+		CatchMailEvents()                                                   	{
+
+			; The storage path for the attachments must be known
+				If (!this.AttachmentSavePath || !FilePathExist(this.AttachmentSavePath)) {
+					msg := "Function cannot be executed properly.`nCause of error: "
+					throw A_ThisFunc ":`nProblem: " msg
+												. (!this.AttachmentSavePath ? " Empty storage path"
+												: " this file path << " this.AttachmentSavePath " >>  does not exist")
+				}
+
+			ComObjConnect(this.ol, new this.email_events(this))
+			this.MailEvents := true
+
+		}
+
+		class email_events {
+
+			__New(parent:="") {
+					this.parent := parent
+			}
+
+			NewMailEx(args*) {
+
+				EntryIDCollection := args.1
+				try
+					mail := this.parent.ol.GetNamespace("MAPI").GetItemFromID(EntryIDCollection)
+					catch
+						throw A_ThisFunc ": this is no mailitem object"
+
+				attachments := mail.attachments
+
+				SciTEOutput(A_ThisFunc ": " args.Count() " | [" mail.subject ", " mail.sendername ", " attachments.Count() "]") ;
+
+				If (RegExMatch(mail.subject, "i)WG.*Test") && mail.sendername = "arzt@praxis-clemenz.de")
+					mail.delete()
+				else if attachments
+					this.parent.MailFilter(mail)
+
+			}
+
+			MailEx(args*) {
+				SciTEOutput(A_ThisFunc ": " args.Count())
+			}
+
+		}
+
+		MailFilter(mail) {
+
+			; es bietet sich an nicht nur die Fritzbox FaxMails zu bearbeiten, sondern alle Mails zu untersuchen
+			; es sollen bei ausser bei den Fritzbox-Mails
+			;	- die Nachrichten auf bestimmte Stichworte, bekannte Namen oder Absendeadressen untersucht werden
+			;	- bei einem Treffer können verschiedene Aktionen erfolgen:
+			;		- Rezeptbestellungen - Versand per Telegram an die Anmeldung
+			;		- Patientendokumente im Anhang - isolieren, untersuchen und wenn ungefährlich extrahieren und in den Befundordner kopieren
+			;		- Patient welche eine EMail gesendet hat ins Albis Wartezimmer aufnehmen, so daß man sieht wer geschrieben hat
+			;			- Mailtext könnte automatisch übernommen werden
+
+
+		}
+
+		ExtractMailAttachments(mail) {
+
+			; 1. mail item zunächst filtern anhand Betreff, Absender (bei Faxeingang über die Fritzbox ist der Absender eine eigene Mailadresse)
+
+		}
+
+		ExtractAttachments(folderName, SJct_In, SJct_Out, AMFilterIn, AMFilterOut, SaveTo) {
 
 				EMailsWithAttachment := unread := AttachmentCounter := 0
 				IF StrLen(SJct_In) = 0
@@ -221,7 +367,7 @@ ExtractAttachmentOutlook(folderName, EmailSubject, EmailSubjectData, attachmentn
 
 }
 
-
+;{ Hilfsfunktionen
 IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="", convert:=true) {                                          	;-- eigene IniRead funktion für Addendum
 
 	; beim ersten Aufruf der Funktion !nur! Übergabe des ini Pfades mit dem Parameter SectionOrFullFilePath
@@ -295,7 +441,6 @@ StrUtf8BytesToText(vUtf8) {                                                     
 		return StrGet(&vUtf8, "UTF-8")
 }
 
-
 FilePathCreate(path) {                                                                                                              	;-- erstellt einen Dateipfad falls dieser noch nicht existiert
 
 	If !FilePathExist(path) {
@@ -320,3 +465,83 @@ isFullFilePath(path) {                                                          
 		return 1
 return 0
 }
+
+SelectFolder(FSFOptions,FSFText="",hWndOwner="0") {
+   ; Common Item Dialog -> msdn.microsoft.com/en-us/library/bb776913%28v=vs.85%29.aspx
+   ; IFileDialog        -> msdn.microsoft.com/en-us/library/bb775966%28v=vs.85%29.aspx
+   ; IShellItem         -> msdn.microsoft.com/en-us/library/bb761140%28v=vs.85%29.aspx
+   Static OsVersion 	:= DllCall("GetVersion", "UChar")
+   Static Show         	:= A_PtrSize * 3
+   Static SetOptions 	:= A_PtrSize * 9
+   Static SetTitle      	:= A_PtrSize * 17
+   Static GetResult  	:= A_PtrSize * 20
+   SelectedFolder := ""
+   If (OsVersion < 6) { ; IFileDialog requires Win Vista+
+      FileSelectFolder, SelectedFolder,, %FSFOptions%, %FSFText%
+      Return SelectedFolder
+   }
+   If !(FileDialog := ComObjCreate("{DC1C5A9C-E88A-4dde-A5A1-60F82A20AEF7}", "{42f85136-db7e-439c-85f1-e4075d135fc8}"))
+      Return ""
+   VTBL := NumGet(FileDialog + 0, "UPtr")
+   DllCall(NumGet(VTBL + SetOptions, "UPtr"), "Ptr", FileDialog, "UInt", 0x00000028, "UInt") ; FOS_NOCHANGEDIR | FOS_PICKFOLDERS
+   If (FSFText != "")
+      DllCall(NumGet(VTBL + SetTitle, "UPtr"), "Ptr", FileDialog, "Str", FSFText, "UInt")
+   If !DllCall(NumGet(VTBL + Show, "UPtr"), "Ptr", FileDialog, "Ptr", hWndOwner, "UInt") {
+      If !DllCall(NumGet(VTBL + GetResult, "UPtr"), "Ptr", FileDialog, "PtrP", ShellItem, "UInt") {
+         GetDisplayName := NumGet(NumGet(ShellItem + 0, "UPtr"), A_PtrSize * 5, "UPtr")
+         If !DllCall(GetDisplayName, "Ptr", ShellItem, "UInt", 0x80028000, "PtrP", StrPtr) ; SIGDN_DESKTOPABSOLUTEPARSING
+            SelectedFolder := StrGet(StrPtr, "UTF-16"), DllCall("Ole32.dll\CoTaskMemFree", "Ptr", StrPtr)
+         ObjRelease(ShellItem)
+      }
+   }
+   ObjRelease(FileDialog)
+   Return SelectedFolder
+}
+
+SciTEOutput(Text:="", Clear=false, LineBreak=true, Exit=false) {     	; modified version for Addendum für Albis on Windows
+
+	; last change 17.08.2020
+
+	; some variables
+		static	LinesOut           	:= 0
+			, 	SCI_GETLENGTH	:= 2006
+			,	SCI_GOTOPOS		:= 2025
+
+	; gets Scite COM object
+		try
+			SciObj := ComObjActive("SciTE4AHK.Application")           	;get pointer to active SciTE window
+		catch
+			return                                                                            	;if not return
+
+	; move Caret to end of output pane to prevent inserting text at random positions
+		SendMessage, 2006,,, Scintilla2, % "ahk_id " SciObj.SciteHandle
+		endPos := ErrorLevel
+		SendMessage, 2025, % endPos,, Scintilla2, % "ahk_id " SciObj.SciteHandle
+
+	; shows count of printed lines in case output pane was erased
+		If InStr(Text, "ShowLinesOut") {
+			;SciObj.Output("SciteOutput function has printed " LinesOut " lines.`n")
+			return
+		}
+
+	; Clear output window
+		If (Clear=1) || ((StrLen(Text) = 0) && (LinesOut = 0))
+			SendMessage, SciObj.Message(0x111, 420)
+
+	; send text to SciTE output pane
+		If (StrLen(Text) != 0) {
+			Text .= (LineBreak ? "`r`n": "")
+			SciObj.Output(Text)
+			LinesOut += StrSplit(Text, "`n", "`r").MaxIndex()
+		}
+
+		If Exit {
+			MsgBox, 36, Exit App?, Exit Application?                         	;If Exit=1 ask if want to exit application
+			IfMsgBox,Yes, ExitApp                                                       	;If Msgbox=yes then Exit the appliciation
+		}
+
+}
+;}
+
+
+

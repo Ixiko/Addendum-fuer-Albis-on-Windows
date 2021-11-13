@@ -3,15 +3,23 @@
 ;
 ;
 ;
-;      Funktionen:           	- Anzeige von Datenbankinhalten und Suche in allen Datenbanken
-;                               	- Anzeige vorhandener Feldnamen (Tabellenkopf/Spaltennamen) mit maximaler Zeichenlänge und Zeichentyp
+;      Funktionen:           	- Anzeige von Datenbankinhalten mit (RegEx) Suchfunktion
+;                               	- Auflistung alle Datenbankdateien im Albiswin\db Ordner, dazu Dateigröße, Anzahl der Datensätze und die Zeit des letzten Zugriffes
+;                               	- Anzeige von Informationen über die gewählte DBase Datei wie Feldnamen (Tabellenkopf/Spaltennamen), Feldtyp und maximale Zeichenlänge
+;
+;                                	- einstellbare Ausgabetabelle
 ;                                	- Tabellenspalten lassen sich aus- und wieder einblenden
+;                               	- individuelle Tabellenlayout für jede einzelne Datenbank
 ;									- das veränderte Tabellenlayout (inkl. Spaltenbreite) wird nach Skriptstart oder nach einem Tabellenwechsel wiederhergestellt
-;									- Patientennamen werden bei einem einfachen Klick auf einen Datensatz angezeigt
+;									- Zeit- und Datumsinformationen werden automatisch ins Deutsche Zeitformat konvertiert
+;                                  	- Patientennamen werden bei einem einfachen Klick auf einen Datensatz angezeigt
 ;									- Karteikarten werden nach einem Doppelklick in Albis geöffnet
 ;									- verknüpfte Daten werden nach einem einfachen Klick angezeigt (unterstützt derzeit nur Daten aus BEFTEXTE.dbf)
-;									- Suchergebnisse und verbundene Daten können exportiert werden
-;									- eingebene Suchparameter können mit einer Bezeichnung zur geöffneten Datenbank gespeichert werden.
+;									- die Suchergebnisse und verlinkte Daten (aus anderen Datenbank) können als .csv-Datei exportiert werden
+;									- eingebene Suchparameter lassen sich mit einer freien Bezeichnung/Beschreibung sichern und auch wiederherstellen
+;									- UNIX Datums- und Zeitformate werden automatisch ins deutscher Format umgewandelt
+;									- anstatt eine Zahl zur Identifikation eines Patientendatensatzes kann zusätzlich der Patientenname angezeigt werden
+;									- gelöschte Datensätze lassen sich optional ausblenden
 ;
 ;		Hinweis:				beta Version, Nutzung auf eigenes Risiko!
 ;
@@ -19,7 +27,7 @@
 ;
 ;	                    			Addendum für Albis on Windows
 ;                        			by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;									begin: 02.04.2021,	last change 15.09.2021
+;									begin: 02.04.2021,	last modification: 01.10.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /*  Notizen
 
@@ -68,7 +76,6 @@
 	adm.compname	:= StrReplace(A_ComputerName, "-")                                                                 	; der Name des Computer auf dem das Skript läuft
 
   ; Nutzereinstellungen werden beim Erstellen des Objektes automatisch geladen
-	;Props := new Quicksearch_Properties(A_ScriptDir "\resources\Quicksearch_UserProperties.json")
 	Props := new Quicksearch_Properties(adm.DBPath "\QuickSearch\resources\Quicksearch_UserProperties.json")
 
   ; Patientendaten laden
@@ -88,7 +95,7 @@ Esc::ExitApp
 
 Quicksearch(dbname, SearchString)                                                                   	{	; Datenbanksuche + Gui Anzeige
 
-		global dbfiles, dbfdata, InCellEdit
+		global dbfiles, dbfdata, InCellEdit, Running
 
 	; Gui-Daten
 		Gui, QS: Default
@@ -109,6 +116,7 @@ Quicksearch(dbname, SearchString)                                               
 		}
 
 	; Datenbanksuche starten
+		Running 	:= "DBSearch"
 		dbf       	:= new DBASE(adm.AlbisDBPath "\" dbname ".dbf", 2)
 		filepos   	:= dbf.OpenDBF()
 		dbfdata  	:= dbf.SearchFast(pattern, "all fields", 0	,{"SaveMatchingSets"    	: false
@@ -116,6 +124,7 @@ Quicksearch(dbname, SearchString)                                               
 																					, "ReturnDeleted"          	: QSDBRView }
 																					, "QuickSearch_Progress")
 		filepos   	:= dbf.CloseDBF()
+		dbf          	:= ""
 
 	; Balken auf 100%
 		GuiControl, QS:, QSPGS	, 100
@@ -125,12 +134,14 @@ Quicksearch(dbname, SearchString)                                               
 		LV_Delete()
 
 	; Spalten zusammenstellen
-		equalIDs := Object()
-		ShowPatNames := Props.ShowPatNames()
+		equalIDs 	:= Object()
+		cutLen   	:= [10, 9, 8, 6, 6, 6]
+		ShowPatNames 	:= Props.ShowPatNames()
+		ShowRemovedSets	:= Props.ShowRemovedSets()
 		For rowNr, set in dbfdata {
 
 			; weiter wenn gelöschte Datensätze nicht angezeigt werden sollen
-				If !Props.ShowRemovedSets() && set.removed
+				If (!ShowRemovedSets && set.removed)
 					continue
 
 			; Spalten zusammenstellen
@@ -160,7 +171,8 @@ Quicksearch(dbname, SearchString)                                               
 						else if RegExMatch(flabel, "i)PATNR") {                                                                                      	; zählt und vergleicht eingesammelte PATNR
 							equalIDs[val] := !equalIDs.haskey(val) ? 1 : equalIDs[val] + 1
 							If ShowPatNames
-								val := PatDB[val].name ", " PatDB[val].vorname " [" val "]"
+								val := SubStr("          [" val "]" , -1*(cutLen[StrLen(val)])) "  "
+										. (!PatDB[val].Name && !PatDB[val].Vorname ? "✗✘ gelöschter Patient ✘✗" : PatDB[val].Name ", " PatDB[val].Vorname)
 						}
 
 						cols[Props.HeaderVirtualPos(flabel)] := val                                                                              	; ausgelesene Werte einer Spalte zuordnen
@@ -175,26 +187,24 @@ Quicksearch(dbname, SearchString)                                               
 					continue
 
 			; Zeile hinzufügen
-				cols.1 := set.removed ? "*" cols.1 : cols.1
+				If ShowRemovedSets
+					cols.1 := (set.removed ? "*" : " ") cols.1
 				LV_Add("", cols*)
 
 		}
 
-	; Ausrichtung in den Spalten nach dem Format in der Datenbank einstellen
-		ColTyp := Array()
-		DataType 	:= {"N":"Integer", "D":"Integer", "C":"Text", "L":"Text", "M":"Text"}
-		For idx, flabel in Props.Labels()
-			If Props.isVisible(fLabel)
-				LV_ModifyCol( idx, DataType[Props.HeaderField(flabel, "type")] )
+	;~ ; Ausrichtung in den Spalten nach dem Format in der Datenbank einstellen
+		;~ ColTyp := Array()
+		;~ DataType 	:= {"N":"Integer", "D":"Integer", "C":"Text", "L":"Text", "M":"Text"}
+		;~ For idx, flabel in Props.Labels()
+			;~ If Props.isVisible(fLabel)
+				;~ LV_ModifyCol(idx, (flabel <> "PATNR" ? DataType[Props.HeaderField(flabel, "type")] : "Text Logical")
 
 	; die Anzahl verschiedener Patienten einblenden
 		GuiControl, QS:, QST4, % equalIDs.Count()
 
 	; Suchparameter eingaben wieder ermöglichen
 		InCellEdit.OnMessage(true)
-
-		;~ JSONData.Save(A_Temp "\test.json", equalIDs, true,, 1, "UTF-8")
-		;~ Run, % A_Temp "\test.json"
 
 }
 
@@ -212,8 +222,8 @@ QuickSearch_Gui()                                                               
 		global	QSSearch			, QSSaveRes			, QSSaveAs			, QSSaveSearch	, QSQuit			, QSReload                	; Buttons
 		global 	QSBlockNR		, QSBlockSize		, QSLBlock			, QSNBlock
 		global 	QSEXTRANFO 	, QSEXTRAS	    	, QSXTRT          	, QSDBSSave    	, QSDBSParam	, QSDBName
-		global	QSDBRView  	, QSDBRPatView
-		global 	BlockNr			, BlockSize		    	, lastBlockSize		, lastBlockNr			, dbfRecords  	, lastSavePath
+		global	QSDBSNew      	, QSDBRView     	, QSDBRPatView
+		global 	BlockNr			, BlockSize		   	, lastBlockSize		, lastBlockNr			, dbfRecords  	, lastSavePath
 		global 	QSmrgX			, QSmrgY				, QSLvX, QSLvY, QSLvW, QSLvH
 		global	InCellEdit
 		global 	ReloadGui := false
@@ -222,7 +232,7 @@ QuickSearch_Gui()                                                               
 		global dbfiles, DBColW, DBFilesW, dbname
 
 		static	QSBlockNRBez, QSEXTRASx, QSReloadw
-		static	EventInfo, empty := "- - - - - - -"
+		static	EventInfo, empty := "- - - - - - - - - - -"
 		static	FSize            	:= (A_ScreenHeight > 1080 ? 9 : 8)
 		static	gcolor          	:= "5f5f50"
 		static	tcolor           	:= "DDDDBB"
@@ -341,7 +351,7 @@ QuickSearch_Gui()                                                               
 		GuiControlGet, dp, QS:Pos, QSFilter
 		mrgX := cpX, DBFilesW := dpX+dpW-mrgX, DBFieldX := dpX+dpW+5
 
-		lp 	        	:= GetWindowSpot(QShDB)
+		lp := GetWindowSpot(QShDB)
 		Gui, QS: Font	, % "s" FSize " q5 Normal" ColorData
 		Gui, QS: Add	, ListView    	, % "xm				 y+2 	w" LVWidth1 	" r16  " LVOptions1                                               	, % "Datenbank|Records|Größe|Änderung"
 
@@ -392,7 +402,7 @@ QuickSearch_Gui()                                                               
 		GuiControlGet, cp, QS:Pos, QSFelderT
 		GuiControlGet, dp, QS:Pos, QSFeldWahlT
 		Gui, QS: Font	, % "s" FSize+2 " q5 Italic" ColorTitles, Futura Bk Bt
-		Gui, QS: Add	, Text        	, % "x" GCol3X " y" cpY " w" DBSearchW " " BGT                                                       	, % "RegEx Suche"
+		Gui, QS: Add	, Text        	, % "x" GCol3X " y" cpY " w" DBSearchW " " BGT                                                       	, % "RegEx-Suche"
 
 		GuiControlGet, cp, QS:Pos, QSDB
 		GuiControlGet, dp, QS:Pos, QSDBFL
@@ -400,13 +410,17 @@ QuickSearch_Gui()                                                               
 		Gui, QS: Font	, % "s" FSize " q5 Normal" ColorData
 		Gui, QS: Add	, Edit         	, % "x" dpX+dpW+5 " y" dpY 	" w" DBSearchW " h" dpH . opt                                    	, % ""
 
+		Gui, QS: Font	, % "s" FSize " q5 Normal" ColorData
+		Gui, QS: Add	, ComboBox 	, % "y+2 w" DBSearchW " r8 vQSDBSParam 	gQS_Handler"                                      	, % ""
+		;~ Gui, QS: Add	, ComboBox 	, % " x+1 y" cpY " w" dpW-cpW-2+100 " h" FSize " r8 vQSDBSParam 	gQS_Handler"  	, % ""
+
+		GuiControlGet, cp, QS:Pos, QSDBSParam
 		Gui, QS: Font	, % "s" FSize-1 " q5 Normal" ColorData
-		Gui, QS: Add	, Button        	, % " y+2 vQSDBSSave  h" FSize-1+2 "	gQS_Handler"                                           	, % "Speichern"
+		Gui, QS: Add	, Button        	, % "x+1 y" cpY+1 " h" cpH-2 " vQSDBSSave    gQS_Handler"                                  	, % "Speichern"
+		Gui, QS: Add	, Button        	, % "x+3 h" cpH-2 " vQSDBSNew    gQS_Handler"                                                     	, % "neue Suche"
+
 		GuiControlGet, cp, QS:Pos, QSDBSSave
 		GuiControlGet, dp, QS:Pos, QSDBS
-
-		Gui, QS: Font	, % "s" FSize+1 " q5 Normal" ColorData
-		Gui, QS: Add	, ComboBox 	, % " x+1 y" cpY " w" dpW-cpW-2+100 " h" FSize " r8 vQSDBSParam 	gQS_Handler"  	, % ""
 
 	;}
 
@@ -429,53 +443,56 @@ QuickSearch_Gui()                                                               
 
 		GuiControl, % "QS:" (ExtrasStatus ? "Enable" : "Disable"), % "QSEXTRANFO"
 		GuiControl, % "QS:" (ExtrasStatus ? "Enable" : "Disable"), % "QSEXTRAS"
-
 	;}
 
 	;}
 
 	;-: ZEILE 2: BEFEHLE                                    	;{
 
-		GuiControlGet, dp, QS: Pos , QSEXTRAS
-		QSEXTRASx 	:= dpX, GuiW := dpX + dpW-5
-		row1H       	:= dpY + dpH
+		GuiControlGet, cp, QS: Pos , QSEXTRAS
 		GuiControlGet, dp, QS: Pos , QSDBSSave
+		GuiW          	:= cpX + cpW-5
+		QSEXTRASx 	:= cpX
+		row1H       	:= cpY + cpH
 		row2Y         	:= dpY + dpH
 
 		;-: FELD 1: INFO'S                                  	;{
-		Gui, QS: Font	, % "s" FSize+1 " q5" ColorTitles, Futura Md Bt
-
+		Gui, QS: Font	, % "s" FSize " q5" ColorTitles, Futura Md Bt
 		Gui, QS: Add	, GroupBox	, % "xm     	y" row1H-6  " w100 h50" 	 "  vQSTGB1"
 
 		Gui, QS: Add	, Text        	, % "xm+3  	y" (row1H+3)       BGT " vQST1a"                              	, % "Position:"
-		Gui, QS: Add	, Text        	, % "x+2                            	 " BGT " vQST1"                                	, % empty "   "
+		Gui, QS: Add	, Text        	, % "x+2                            	 " BGT " vQST1"                                	, % empty "     "
 
 		Gui, QS: Add	, Text        	, % "xm+3  	y+1                	 " BGT " vQST2a"                              	, % "Datensätze:"
-		Gui, QS: Add	, Text        	, % "x+2                           	 " BGT " vQST2"                                	, % empty "   "
+		Gui, QS: Add	, Text        	, % "x+2                           	 " BGT " vQST2"                                	, % empty "     "
 
 		GuiControlGet, cp, QS: Pos , QST2
 		GuiControlGet, dp, QS: Pos , QST2a
-		col2X := dpW + cpW + 20, InfoH := dpH+cpH+12
+		col2X := dpW+cpW+22
+		InfoH := dpH+cpH+12
+
 		GuiControl, QS: Move, QST1a  	, % "w" 	dpW
 		GuiControl, QS: Move, QST1    	, % "x" 	dpX+dpW+2
-		GuiControl, QS: Move, QSTGB1	, % "w" 	dpW+cpW+6 " h" InfoH
+		GuiControl, QS: Move, QSTGB1	, % "w" 	dpW+cpW+16 " h" InfoH
 
 		; - - - - -
 
 		Gui, QS: Add	, GroupBox	, % "x" col2X      " y" row1H-6  " w100 h" InfoH "  vQSTGB2"
 
-		Gui, QS: Add	, Text        	, % "x" col2X+3 " y" (row1H+3)	   BGT " vQST3a"                   	, % "Treffer gesamt:"
+		Gui, QS: Add	, Text        	, % "x" col2X+3 " y" (row1H+3)	   BGT " vQST3a"                   	, % "Treffer:"
 		Gui, QS: Add	, Text        	, % "x+2                               	 " BGT " vQST3"                        	, % empty " "
 
-		Gui, QS: Add	, Text        	, % "x" col2X+3 " y+1             	 " BGT " vQST4a"                      	, % "versch. PATNR:"
+		Gui, QS: Add	, Text        	, % "x" col2X+3 " y+1             	 " BGT " vQST4a"                      	, % "Patienten:"
 		Gui, QS: Add	, Text        	, % "x+2                               	 " BGT " vQST4"                     	, % empty " "
 
 		GuiControlGet, cp, QS: Pos , QST2
 		GuiControlGet, dp, QS: Pos , QST3a
-		col2X := dpW + cpW + 20
-		GuiControl, QS: Move, QST4a  	, % "w" 	dpW
-		GuiControl, QS: Move, QST4    	, % "x" 	dpX+dpW+2
+		GuiControlGet, ep, QS: Pos , QST4a
+
+		GuiControl, QS: Move, % (dpW >= epW ? "QST4a" 	: "QST3a")	, % "w" (dpW >= epW ? dpW : epW)
+		GuiControl, QS: Move, % (dpW >= epW ? "QST4" 	: "QST3")	, % "x"  (dpW >= epW ? dpX+dpW+2 : epX+epW+2)	;dpX+dpW+2
 		GuiControl, QS: Move, QSTGB2	, % "w" 	LVWidth1-dpX+mrgX+3
+		col2X := dpW + cpW + 20
 
 		; - - - - -
 
@@ -519,7 +536,7 @@ QuickSearch_Gui()                                                               
 
 		Gui, QS: Font	, % "s" FSize-1 " q5" ColorTitles
 		Gui, QS: Add	, Checkbox  	, % "x+10  y" cpY " " 	BGT "          	vQSDBRView     	gQS_Handler" 	, % "gelöschte Datensätze anzeigen"
-		Gui, QS: Add	, Checkbox  	, % "y+2 "             	BGT "          	vQSDBRPatView   	gQS_Handler" 	, % "PATNR mit Namen ersetzen"
+		Gui, QS: Add	, Checkbox  	, % "y+1 "             	BGT "          	vQSDBRPatView   	gQS_Handler" 	, % "PATNR mit Namen ersetzen"
 
 		Gui, QS: Font	, % "s" FSize+1 " q5" ColorData
 		Gui, QS: Add	, Button        	, % "x+250 y" cpY "              	      	vQSReload          	gQS_Handler "	, % "Reload"
@@ -565,7 +582,7 @@ QuickSearch_Gui()                                                               
 			BlockInput, Off
 		}
 
-	; Hotkeys
+	; Hotkeys ;{
 		fn_QSHK := Func("QuickSearch_Hotkeys")
 		Hotkey, IfWinActive, Quicksearch ahk_class AutoHotkeyGUI
 		Hotkey, Left               	, 	% fn_QSHK
@@ -573,8 +590,9 @@ QuickSearch_Gui()                                                               
 		Hotkey, Enter             	, 	% fn_QSHK
 		Hotkey, NumpadEnter 	, 	% fn_QSHK
 		Hotkey, TAB              	, 	% fn_QSHK
+		Hotkey, Escape             	, 	% fn_QSHK
 		Hotkey, IfWinActive
-
+	;}
 
 return
 
@@ -604,7 +622,7 @@ QS_Handler: 	;{
 			}
 		;}
 
-		Case "QSDBR":                             	;{     Datentabelle
+		Case "QSDBR":                             	;{   	Datentabelle
 
 			       If (A_GuiEvent = "ColClick"                  	)	{
 				colHDR := A_EventInfo
@@ -618,37 +636,30 @@ QS_Handler: 	;{
 				If !WinExist("ahk_class OptoAppClass") || !A_EventInfo
 					return
 
-				If (Pcol := Props.PatIDColumn()) {
+				If (Pcol := Props.PATNRColumn()) {
 					Gui, QS: ListView, QSDBR
 					LV_GetText(PatCell, A_EventInfo, Pcol)
-					If Props.ShowPatNames() {
-						RegExMatch(PatCell, "\[\d+", Patnr)
-						PatNr := SubStr(PatNR, 2, StrLen(PatNR)-1)
-					} else
-						PatNR    	:= StrReplace(PatCell, "*")
-
-					PatName 	:= PatDB[PatNR].NAME ", " PatDB[PatNR].VORNAME
-					GuiControl, QS:, QST5, % PatName
-					AlbisAkteOeffnen(PatName, PatNR)
+					RegExMatch(PatCell, "\d+", PATNR)
+					GuiControl, QS:, QST5, % "[" PATNR "] " (PatName := PatDB[PATNR].NAME ", " PatDB[PATNR].VORNAME
+														. 	" *" ConvertDBASEDate(PatDB[PATNR].GEBURT))
+					AlbisAkteOeffnen(PatName, PATNR)
 				}
 
 			}
 		; Patientenname und bei Bedarf den Inhalt der TEXTDB anzeigen
-			else if RegExMatch(A_GuiEvent, "(Normal|I)"	)  	{
-
+			else if RegExMatch(A_GuiEvent, "(Normal)"	)  	{	; |I
 				tblRow := A_EventInfo
-
 				If (!tblRow || Last_tblRow = tblRow)
 					return
 				Last_tblRow := tblRow
 
-			  ; PatID finden
-				If (Pcol := Props.PatIDColumn()) {
+			  ; PatNR finden
+				If (Pcol := Props.PATNRColumn()) {
 					Gui, QS: ListView, QSDBR
-					LV_GetText(PatID, tblRow, Pcol)
-					PatID := StrReplace(PatID, "*")
-					GuiControl, QS:, QST5, % "[" PatID "] " PatDB[PatID].NAME ", " PatDB[PatID].VORNAME
-														.	" *" ConvertDBASEDate(PatDB[PatID].GEBURT)
+					LV_GetText(PatCell, tblRow, Pcol)
+					RegExMatch(PatCell, "\d+", PATNR)
+					GuiControl, QS:, QST5, % "[" PATNR "] " (PatName := PatDB[PATNR].NAME ", " PatDB[PATNR].VORNAME
+														. 	" *" ConvertDBASEDate(PatDB[PATNR].GEBURT))
 				}
 
 			 ; verlinkte Daten aus anderer Datenbank anzeigen (wenn Häkchen bei verknüpfte Daten gesetzt ist)
@@ -690,6 +701,12 @@ QS_Handler: 	;{
 			Quicksearch_SaveSearch(dbname, QSDBSParam, QSDBS)
 		;}
 
+		Case "QSDBSNew":                     	;{ 	Suchparameterliste leeren
+			If !dbname
+				return
+			Props.SParams_NewSearch()
+		;}
+
 		Case "QSDBSParam":                	;{ 	neue Parameterliste wurde ausgewählt
 
 			;SciTEOutput("`n - - - - - - - - - - - label: " QSDBSParam "`n" Props.SParams_GetParams(QSDBSParam))
@@ -707,15 +724,12 @@ QS_Handler: 	;{
 
 		;}
 
-		Case "QSDBRView":                     	;{ 	Props Object Einstellung ändern
-
+		Case "QSDBRView":                     	;{ 	entfernte Datensätze anzeigen umschalten
 			Props.ShowRemovedSets(QSDBRView)
-
 		;}
 
 		Case "QSDBRPatview":                 	;{ 	PATNR durch Patientennamen ersetzen
 			Props.ShowPatNames(QSDBRPatView)
-
 		;}
 
 	}
@@ -830,6 +844,9 @@ QuickSearch_Hotkeys()                                                           
 			}
 			QuickSearch_ListFields(dbname, 1)
 
+		Case "Escape":
+			nil := ""
+
 	}
 
 }
@@ -861,6 +878,7 @@ QuickSearch_Extras(tblRow, TEXTDB:=0, TEXTDate:=0)                              
 				return
 		} else
 			SaveFeature := true
+
 		If !TEXTDate
 			LV_GetText(TEXTDate, tblRow, Props.HeaderVirtualPos("DATUM"))
 
@@ -912,9 +930,6 @@ QuickSearch_Extras(tblRow, TEXTDB:=0, TEXTDate:=0)                              
 
 					; indizieren
 						Loop % (records - IndexStartRecord) {
-
-							;~ If (Mod(A_Index, 100) = 0)
-								;~ QuickSearch_Progress(A_Index, records, StrLen(records), matchcount)
 
 							set := dbf.ReadRecord(["PATNR", "DATUM", "LFDNR", "POS", "TEXT"], "QuickSearch_Progress")
 
@@ -1004,6 +1019,8 @@ QuickSearch_Extras(tblRow, TEXTDB:=0, TEXTDate:=0)                              
 
 	; Daten ausgeben
 		If !SaveFeature {
+			;~ ListVars
+			;~ Pause, Toggle
 			extrahead	:=  extraLines " Zeile" (extraLines = 1 ? "" : "n")
 								. " aus BEFTEXT.dbf für TEXTDB Eintrag: " TEXTDB
 
@@ -1019,7 +1036,7 @@ QuickSearch_ListFields(dbname, step:=0)                                         
 		global	QS, QSDBS, QSBlockNr, QSBlockSize, QSPGS, QSPGST, QSDBSParam, QSDBRView
 		global 	dbfiles, empty, dbfdata
 		global 	BlockNr, BlockSize, lastBlockNr, lastBlockSize, dbfRecords
-		static 	lastdbname
+		static 	lastdbname, SRS
 
 		Gui, QS: Submit, NoHide
 		GuiControl, QS:, QST4, % ""
@@ -1052,7 +1069,7 @@ QuickSearch_ListFields(dbname, step:=0)                                         
 		If      	(step = 0) {     	; erste Anzeige
 
 			; Einstellungsobjekt anlegen                              	;{
-				If !Props.WorkDB(dbname, dbfiles[dbname].dbfields) {
+					If !Props.WorkDB(dbname, dbfiles[dbname].dbfields) {
 					throw A_ThisFunc ": Einstellungen zur Datenbank: " dbname " konnten nicht angelegt werden!"
 					return
 				}
@@ -1062,7 +1079,11 @@ QuickSearch_ListFields(dbname, step:=0)                                         
 				GuiControl, QS:, QSDBName, % "[" dbname ".dbf]"
 
 			; Datenbanksuche - Parameter/Auswahl
-				Props.SParams_CBSet(Props.SParams.lastLabel)
+				Props.SParams_CBSet("LastLabels")
+
+			; Checkbox Eintrag 'gelöschte Datensätze anzeigen' wiederherstellen
+				ShowRemovedSets := Props.ShowRemovedSets()
+				Props.ShowRemovedSets(ShowRemovedSets)
 
 			; Gui Inhalte zurücksetzen
 				GuiControl, QS:, QSEXTRASNFO	, % ""                   	; Zusatzinfos leeren
@@ -1074,7 +1095,7 @@ QuickSearch_ListFields(dbname, step:=0)                                         
 
 			; Ausgabelistview erstellen                              	;{
 
-				LV_DeleteCols("QS", "QSDBR")                           	; Spalten entfernen
+				LV_DeleteCols("QS", "QSDBR")                           	; alle Spalten entfernen
 
 				thisColPos := 1
 				For colNr, flabel in Props.Labels()
@@ -1087,9 +1108,9 @@ QuickSearch_ListFields(dbname, step:=0)                                         
 						width	:= RegExReplace(width, "i)[a-z]+")
 
 						If (thisColPos = 1)
-							LV_ModifyCol(thisColPos, (!width ? "100":width) " " dtype, flabel)
+							LV_ModifyCol(thisColPos, (!width ? "100" : width)       	" " dtype, flabel)
 						else
-							LV_InsertCol(thisColPos	 , (!width ? "AutoHdr":width) " " dtype, flabel)
+							LV_InsertCol(thisColPos	 , (!width ? "AutoHdr" : width)	" " dtype, flabel)
 
 						Props.HeaderSetVirtualPos(flabel, thisColPos)
 						thisColPos ++
@@ -1126,14 +1147,11 @@ QuickSearch_ListFields(dbname, step:=0)                                         
 		lastBlockSize	:= BlockSize
 		lastBlockNr	:= BlockNr
 
-	; Checkbox - gelöschte Datensätze anzeigen - einstellen
-		If (Props.dbname = "WZIMMER") {
-			SRS := Props.ShowRemovedSets()
-			Props.ShowRemovedSets(true)
-		}
+	; bei einigen Datenbanken ist es besser immer die gelöschten Datensätze anzuzeigen
+		If RegExMatch(Props.dbname, "(WZIMMER|LABREAD)")
+			Props.ShowRemovedSets(1)
 
 	; 	Controls anpassen
-		GuiControl, QS:, QSDBRView	, % Props.ShowRemovedSets()
 		GuiControl, QS:, QSBlockNR 	, % BlockNr
 		GuiControl, QS:, QSBlockSize	, % BlockSize
 
@@ -1155,32 +1173,28 @@ QuickSearch_ListFields(dbname, step:=0)                                         
 		LV_Delete()
 	;}
 
-	; 'PATNR mit Namen ersetzen' Zustand setzen     	;{
-		ShowPatNames := Props.ShowPatNames()
-		PatIDColumn  	:= Props.PatIDColumn()
+	; Checkbox Einstellung 'PATNR mit Namen ersetzen' ;{
+		ShowRemovedSets	:= Props.ShowRemovedSets()
+		PATNRColumn   	:= Props.PATNRColumn()                                               	; Spaltennummer der PATNR Spalte
+		ShowPatNames	 	:= PATNRColumn ? Props.ShowPatNames() : 0                	; Patientennamen  einblenden, letzte Einstellung
 
-		GuiControl,% "QS:", % "QSDBRPatView", % ShowPatNames
-		GuiControl, % "QS: " (!PatIDColumn ? "Disable" : "Enable")	, % "QSDBRPatView"
-
-		If PatIDColumn && ShowPatNames                                                                   	; Ausrichtung des Spalteninhaltes
-			LV_ModifyCol(PatIDColumn, "Left Auto")
-		else
-			LV_ModifyCol(PatIDColumn, "Right")
-
-		;~ SciTEOutput("Props.PatIDColumn(): " PatIDColumn ", " ShowPatNames)
+		GuiControl, QS:, % "QSDBRPatView", % ShowPatNames                                 	; zusätzlich Namen einblenden
+		GuiControl, % "QS: " (PATNRColumn ? "Enable" : "Disable")	, QSDBRPatView   	; Tabelle ohne/mit PATNR - Steuerelement wird in- oder reaktiviert
+		If PATNRColumn
+			LV_ModifyCol(PATNRColumn, (ShowPatNames ? "Left": "Left"))                  	; Ausrichtung des Spalteninhaltes
 	;}
 
 	; Ausgabe der Daten im Ergebnisfenster             	;{
 		equalIDs := {}
+		cutLen := [10, 9, 8, 6, 6, 6]
 		For rowNr, set in dbfdata {
 
 			; weiter wenn gelöschte Datensätze nicht angezeigt werden sollen
-				If (!Props.ShowRemovedSets() && set.removed)
+				If (!ShowRemovedSets && set.removed)
 					continue
 
 			; Spalten zusammenstellen
-				cols := Object()
-				noRowData := false
+				cols := Object(), noRowData := false
 				For flabel, val in set {
 
 					If Props.isVisible(fLabel) {
@@ -1203,10 +1217,11 @@ QuickSearch_ListFields(dbname, step:=0)                                         
 						else if RegExMatch(flabel, "i)PATNR") {                                                                                      	; zählt und vergleicht eingesammelte PATNR
 							equalIDs[val] := !equalIDs.haskey(val) ? 1 : equalIDs[val] + 1
 							If ShowPatNames
-								val := PatDB[val].name ", " PatDB[val].vorname " [" val "]"
+								val := SubStr("          [" val "]" , -1*(cutLen[StrLen(val)])) "  " (!PatDB[val].Name && !PatDB[val].Vorname ? "✗✘ gelöschter Patient ✘✗" : PatDB[val].Name ", " PatDB[val].Vorname)
 						}
 
 						cols[Props.HeaderVirtualPos(flabel)] := val
+
 					}
 
 				}
@@ -1215,26 +1230,25 @@ QuickSearch_ListFields(dbname, step:=0)                                         
 				If noRowData
 					continue
 
+			; * für gelöschten Datensatz in der ersten Spalte anzeigen
+				If ShowSetRemoved
+					cols.1 := (set.removed ? "*" : " ") cols.1
+
 			; Zeile hinzufügen
-				cols.1 := (set.removed ? "*" : "") cols.1
 				LV_Add("", cols*)
 
 		}
 
-		;~ JSONData.Save(A_Temp "\test.json", equalIDs, true,, 1, "UTF-8")
-		;~ Run, % A_Temp "\test.json"
+		If PATNRColumn && ShowPatNames                                                                   	; Ausrichtung des Spalteninhaltes
+			LV_ModifyCol(PATNRColumn, "AutoHDR")
 
-		If PatIDColumn && ShowPatNames                                                                   	; Ausrichtung des Spalteninhaltes
-			LV_ModifyCol(PatIDColumn, "AutoHDR")
+		GuiControl, QS: +Redraw, QSDBR                                                                 	; Datenausgabe-Listview jetzt neu zeichnen
+		GuiControl, QS:, QST4, % equalIDs.Count()                                                    	; Anzahl identischer PATNr anzeigen
 
-		GuiControl, QS: +Redraw, QSDBR
-		GuiControl, QS:, QST4, % equalIDs.Count()
-
-		If (Props.dbname = "WZIMMER")
-			Props.ShowRemovedSets(SRS)
+		;~ If RegExMatch(Props.dbname, "(WZIMMER|LABREAD)")
+			;~ Props.ShowRemovedSets(SRS)
 
 		InCellEdit.OnMessage(true)
-
 
 	;}
 
@@ -1294,7 +1308,6 @@ QuickSearch_DBFields(GChwnd:="", GuiEvent:="", EventInfo:="", ErrLevel:="")    	
 				dbfieldsRow	:= A_Index
 				ischecked  	:= LV_RowIsChecked(QShDBFL, dbfieldsRow)   ; Checkboxstatus
 				flabel         	:= Props.HeaderLabel(dbfieldsRow)
-				;SciTEOutput(flabel " is " Props.isVisible(fLabel) " <> " ischecked )
 
 			  ; ----------------------------------------------------------------------------
 			  ; eine Spalteneinstellung hat sich geändert
@@ -1497,27 +1510,49 @@ QuickSearch_SaveResults(format:="csv (Tab)", lastSavePath:="")                  
 
 }
 
-class Quicksearch_Properties                                                                              	{	; Tabellenmanager
+class Quicksearch_Properties                                                                              	{	; Listviewmanager
 
-		__New(propertiesPath) {
+	 /* Quicksearch_Properties - Listview- and Properties managing class
 
+		Funktionen:       	1. Ermittelt, sichert und stellt die vom Nutzer gemachten Veränderungen an der Oberfläche wieder her
+									2. Betreibt eine virtuelle Tabelle damit Spalten aus- und wieder eingeblendet werden können
+										dafür werden alle notwendigen Informationen aus dem DBase Header bezogen
+									3. Sichert die eingebenen Suchparameter zusammen mit den Datenbankeinstellungen
+
+									Alle Änderungen werden individuell für jede Datenbank vorgenommen und gespeichert.
+
+		Hinweise:         		einige Klassenfunktionen wir ShowRemovedSets() können ohne Parameter aufgerufen werden
+									und geben dann nur die Einstellung zurück
+
+
+	*/
+
+		__New(propertiesPath)                         	{ 	; Basisdatenobjekt anlegen, laden der Einstellungen
+
+		; Dateipfade erstellen
 			SplitPath, propertiesPath,, outFileDir,, outFileNameNoExt
 			this.FileDir     	:= outFileDir
 			this.FileName 	:= outFileNameNoExt ".json"
 			this.FilePath     	:= this.FileDir "\" this.FileName
-			this.DataPath		:= RegExReplace(this.FileDir, "\\.*$", "")
+			this.DataPath	:= RegExReplace(this.FileDir, "\\.*$", "")
 
+		; Dateipfade prüfen
+		; Dateipfade prüfen
 			If FilePathCreate(this.DataPath)
 				If FilePathCreate(this.FileDir) && FileExist(this.FilePath)
 					this.qs := this.LoadProperties()
 				else
 					this.qs := Object()
 
+		; Klartexte zu Versicherungsart
 			this.VERSART   	:= ["Mitglied", "2", "Angehöriger", "4", "Rentner"]
+
+		; Spaltennamen mit Datumsformaten für die automatische Umwandlung
 			this.DateLabels	:= "(STAT_VON|STAT_BIS|DATUM|EINLESTAG|AUS2DAT|GUELTIG|GUELTVON|GUELTVON2|GUELTBIS|"
 										. "GUELTBIS2|GEBURT|VERSBEG|GEBDATBIS|GEBDATVON|LAST_B_FR|LAST_B_TO|PATGRFROM|PATGRTO|"
 										. "PATIENTVON|PATIENTBIS|AUFNAME|ENDE|VALIDFROM|AUSSTDAT|DATSPEIC|VALIDUNTIL|GUELT_VON|GUELT_BIS|"
-										. "PRDATE|BEZAHLTAM|STORNODATE)|MAHNDATE"
+										. "PRDATE|BEZAHLTAM|STORNODATE|MAHNDATE|PATGEB|BERICHDATE|ABNAHMDATE|ABNAHMTIME|ZZIEL|DATECREATE|DATE|"
+										. "DATUM|TIMESTAMP|LESTAG|LASTCHANGE|ABDAT)"
 
 		}
 
@@ -1531,14 +1566,14 @@ class Quicksearch_Properties                                                    
 
 		; Klasse wurde initialisiert?
 			If !IsObject(this.qs)                            	{
-				MsgBox, 1,  A_ThisFunc, "Die Klasse muss zuerst initialisiert werden"
+				MsgBox, 1,  A_ThisFunc, "Die Klasse mittels __New() zuerst initialisiert werden"
 				return
 			}
 
 		; Objekt für virtuelle Datenbanktabelle anlegen
 			If !IsObject(this.qs[this.dbname])        	{
 
-				this.qs[this.dbname] := Object()
+					this.qs[this.dbname] := Object()
 
 				If !IsObject(this.qs[this.dbname].header)	{                                                  	; Einstellungen der Spalten
 					this.qs[this.dbname].header       	:= Object()                                        	; Spaltenüberschriften
@@ -1589,7 +1624,7 @@ class Quicksearch_Properties                                                    
 			}
 
 		; gelöschte Datensätze anzeigen
-			If !this.qs[this.dbname].haskey(ShowRemovedSets)
+			If (StrLen(this.qs[this.dbname].ShowRemovedSets) = 0)
 				this.qs[this.dbname].ShowRemovedSets := false
 
 		; Default labels anlegen für Datenbanksuche anlegen
@@ -1603,7 +1638,7 @@ class Quicksearch_Properties                                                    
 		}
 
 		DataType(label)                                  	{	; automatische Spalteneinstellungen für die Windows Listview anhand der dBase Feldtypen
-			static DataType 	:= {"N":"Integer", "D":"Integer", "C":"Text", "L":"Text", "M":"Text"}
+			static DataType 	:= {"N":"Integer", "D":"Integer", "C":"Text", "L":"Text", "M":"Text"}   ; L = Bool-Werte?
 		return DataType[this.qs[this.dbname].header.text[label].type]
 		}
 
@@ -1657,8 +1692,8 @@ class Quicksearch_Properties                                                    
 		return this.qs[this.dbname].header.text[label].col
 		}
 
-		HeaderSetVirtualWidth(label, width)    	{	; Pixelbreite eine Spalte des realen Steuerelementes speichern
-		this.qs[this.dbname].header.text[label].width := width
+		HeaderSetVirtualWidth(label, width)    	{	; Pixelbreite einer Spalte aus dem realen Listviewelement speichern
+			this.qs[this.dbname].header.text[label].width := width
 		}
 
 		HeaderSetVirtualPos(label, colpos)      	{	; Position eines Feldes in der virtuellen Tabelle setzen
@@ -1685,14 +1720,14 @@ class Quicksearch_Properties                                                    
 
 		}
 
-		PatIDColumn()                                 		{	; gibt die Spalte der Patientennummer in der virtuellen Listview zurück
+		PATNRColumn()                              		{	; gibt die Spalte mit der Patientennummer in der virtuellen Listview zurück
 
 			static PatIDCol := false
 
 			PatIDLabel := this.qs[this.dbname].PatID
 			If !PatIDLabel && !PatIDCol {
 				For colNr, label in this.Labels()
-					If RegExMatch(label, "i)^(PATNR|NR)$") {
+					If RegExMatch(Trim(label), "i)^(PATNR|NR)$") {
 						PatIDLabel 	:= this.qs[this.dbname].PatID := label
 						PatIDCol   	:= true
 						break
@@ -1702,7 +1737,7 @@ class Quicksearch_Properties                                                    
 		return PatIDLabel ? this.HeaderVirtualPos(PatIDLabel) : 0
 		}
 
-		LabelExist(label)                               		{	; true wenn Spaltenüberschrift vorhanden ist
+		LabelExist(label)                               		{	; true wenn die Spaltenüberschrift vorhanden ist
 
 			If IsObject(this.qs[this.dbname].header.text[label])
 				return true
@@ -1766,7 +1801,7 @@ class Quicksearch_Properties                                                    
 
 		SaveProperties(saveColWidth:=true)    	{	; Objekt speichern
 
-			global QSDBRView
+			global QS, QSDBRView
 
 			; Dateipfad anlegen
 				If !this.FilePath
@@ -1790,17 +1825,24 @@ class Quicksearch_Properties                                                    
 		return FileExist(this.FilePath) ? 1 : 0
 		}
 
-		ShowRemovedSets(show:="")                	{	; Einstellung letzte Datensätze anzeigen
-			If (StrLen(show) > 0)
+		ShowRemovedSets(show:="")                	{	; gelöschte Datensätze anzeigen/nicht anzeigen
+			global QS, QSDBRView
+			static SRSLast, SRSCount := 0
+			If (StrLen(show) > 0) {
 				this.qs[this.dbname].ShowRemovedSets := show
-			else
-				return this.qs[this.dbname].ShowRemovedSets
+				If (SRSLast <> show) {
+					GuiControl, % "QS:" , % "QSDBRView", % (show ? 1 : 0)              	; Checkbox Gelöschte Datensätze anzeigen setzen oder entfernen
+					SRSLast := show
+				}
+			}
+		return this.qs[this.dbname].ShowRemovedSets
 		}
 
-		ShowPatNames(show:="")                  	{	; anstatt einer Nummer (PATNR), Patientennamen anzeigen
+		ShowPatNames(show:="")                  	{	; nicht nur die PATNR, sondern auch den Patientennamen anzeigen
 
 			global QSDBR, QS
 			static Firstrun := true
+			static cutLen 	:= [10, 9, 8, 6, 6, 6]
 
 			If (Firstrun && StrLen(show) = 0) {
 				FirstRun := false, show := 0
@@ -1819,32 +1861,30 @@ class Quicksearch_Properties                                                    
 			this.qs[this.dbname].ShowPatNames := show
 
 		  ; welche Spaltennummer hat PATNR derzeit
-			PatNRCol := this.PatIDColumn()
+			PatNRCol := this.PATNRColumn()
 
 		  ; Wertanzeige in der PATNR Spalte ändern
 			Loop % LV_GetCount() {
 
-				LV_GetText(PatID, A_Index, PatNRCol)
+				LV_GetText(PatCell, A_Index, PatNRCol)
+				RegExMatch(PatCell, "(?<SetRemoved>\*)*.*?(?<NR>\d+)", Pat)
 				if show {
-					LV_Modify(A_Index, 	"Col" PatNRCol, PatDB[PatID].name ", " PatDB[PatID].VORNAME " [" PatID "]")
+					PatName 	:= !PatDB[PatNR].Name && !PatDB[PatNR].Vorname ? "✗✘ gelöschter Patient ✘✗" : PatDB[PatNR].Name ", " PatDB[PatNR].Vorname
+					PatNR   	:= (PatSetRemoved ? PatSetRemoved : " ")  SubStr("          [" PatNR "]" , -1*(cutLen[StrLen(PatNR)]))
+					LV_Modify(A_Index, 	"Col" PatNRCol, PatNR "  " PatName )
 				} else {
-					RegExMatch(PatID, "\[(?<NR>\d+)", Pat)
-					LV_Modify(A_Index, "Col" PatNRCol, PatNR)
+					LV_Modify(A_Index, "Col" PatNRCol, SubStr(" " PatSetRemoved, -1) PatNR)
 				}
 
 			}
 
-			If Show
-				LV_ModifyCol(PatNRCol, "Left Auto")
-			else
-				LV_ModifyCol(PatNRCol, "Right AutoHDR")
-
+			;~ LV_ModifyCol(PatNRCol, (Show ? "Left AutoHDR" : "Right AutoHDR"))
 
 		}
 	;}
 
 	; ------------------------------------------------------------------------------------
-	; Suchparameter-Handler der aktuellen Tabelle                              	;{
+	; Suchfeld-Handler der aktuellen Tabelle                                        	;{
 		SParams_Load()                                   	{	; gesicherte Suchparameter laden
 
 			; Funktion wird bei jedem WorkDB() Aufruf ausgeführt. Die Suchparamenter müssen deshalb nicht extra geladen werden.
@@ -1861,7 +1901,7 @@ class Quicksearch_Properties                                                    
 		return SParams
 		}
 
-		SParams_Save(delObject:=false)	       	{
+		SParams_Save(delObject:=false)	       	{	; Suchparameter sichern
 
 			If !InStr(FileExist(this.FileDir), "D")  {
 				throw A_ThisFunc ": Speicherordner <" this.FileDir "> ist nicht vorhanden."
@@ -1890,7 +1930,7 @@ class Quicksearch_Properties                                                    
 		return RTrim(labels, "|")
 		}
 
-		SParams_GetParams(TextLabel)           	{	; Parameter für Ausgabe in Edit-Control umwandeln
+		SParams_GetParams(TextLabel="")        	{	; Parameter für Ausgabe in Edit-Control umwandeln
 
 			If TextLabel && this.SParams.haskey(TextLabel)
 				return RegExReplace(this.SParams[TextLabel], "[#]{2}", "`n")
@@ -1906,12 +1946,22 @@ class Quicksearch_Properties                                                    
 			Gui, QS: Default
 			Gui, QS: Submit, NoHide
 
+			TextLabel := TextLabel = "LastLabels" ? this.SParams.lastLabel : TextLabel
+
 			If (QSDBSParam <> TextLabel) {
 				GuiControl, QS:                     	, QSDBSParam	, % "|" this.SParams_GetLabels()              	; Combobox befüllen ("|" am Anfang ersetzt die Liste)
-				GuiControl, QS:  ChooseString	, QSDBSParam	, % TextLabel                                            	; zuletzt angezeigte Suche vorwählen
+				GuiControl, QS:  ChooseString	, QSDBSParam	, % TextLabel                                            	; letzte Sucheinstellung wählen
 			}
 
 			GuiControl	, QS:                       	, QSDBS        	, % this.SParams_GetParams(TextLabel)  	; und anzeigen
+
+		}
+
+		SParams_NewSearch()                        	{	; alle Suchparameter wiederherstellen + CB leeren
+
+			Gui, QS: Default
+			GuiControl, QS: Focus	, QSDBSParam
+			Send, {BackSpace}
 
 		}
 	;}
@@ -2117,6 +2167,7 @@ Return hBitmap
 #Include %A_ScriptDir%\..\..\lib\SciTEOutput.ahk
 #include %A_ScriptDir%\..\..\lib\Sift.ahk
 ;}
+
 
 
 /*

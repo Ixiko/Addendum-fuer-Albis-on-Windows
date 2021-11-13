@@ -1,11 +1,11 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 29.06.2021 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 23.10.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
 return
-; CONTROLS                                                                                                                                                                                                                                        	(32)
+; CONTROLS                                                                                                                                                                                                                                        	(35)
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; GetClassName                                	Control_GetClassNN                     	GetClassNN                                  	GetFocusedControl                        	GetFocusedControlHwnd
 ; GetFocusedControlClassNN            	GetChildHWND                            	GetControls                                  	GetButtonType                                	Controls
@@ -14,17 +14,20 @@ return
 ; ControlGetTabs                               	TabCtrl_GetCurSel                          	TabCtrl_GetItemText
 ; VerifiedClick                                    	VerifiedCheck                                	VerifiedChoose                              	VerifiedSetFocus                            	VerifiedSetText
 ; UpSizeControl
-; LVM_GetNext                                   	LV_MouseGetCellPos							LV_Select                                        	LV_SortArrow									LV_FindRow
+; LVM_GetNext                                   	LV_Select                                        	LV_SortArrow									LV_GetColWidth                            	LV_EX_GetTopIndex
+; LV_GetScrollViewPos
 ; CaretPos
+; KeyValueObjectFromLists
 ;_________________________________________________________________________________________________________________________________________________________
 return
+; 01
 GetClassName(hwnd) {                                                                                 	;-- returns HWND's class name without its instance number, e.g. "Edit" or "SysListView32"
 		;https://autohotkey.com/board/topic/45515-remap-hjkl-to-act-like-left-up-down-right-arrow-keys/#entry283368
 	VarSetCapacity( buff, 256, 0 )
 	DllCall("GetClassName", "uint", hwnd, "str", buff, "int", 255 )
 return buff
 }
-
+; 02
 Control_GetClassNN(hWnd, hCtrl) {
 	; SKAN: www.autohotkey.com/forum/viewtopic.php?t=49471
  WinGet, CH, ControlListHwnd	, % "ahk_id " hWnd
@@ -34,7 +37,7 @@ Control_GetClassNN(hWnd, hCtrl) {
  LP:= InStr(CN, "`n",,, RplCount) - 1
  Return SubStr(CN,LP+2,InStr(CN,LF,0,LP+2)-LP-2)
 }
-
+; 03
 GetClassNN(Chwnd, Whwnd) {
 	global _GetClassNN := {}
 	_GetClassNN.Hwnd := Chwnd
@@ -55,12 +58,11 @@ GetClassNN_EnumChildProc(hwnd, lparam) {
 		N++
 	return _GetClassNN.Hwnd==hwnd? (0, _GetClassNN.ClassNN:=_GetClassNN.Class N, N:=0):1
 }
-
+; 04
 GetFocusedControl()  {                                                                                  	;-- retrieves the ahk_id (HWND) of the active window's focused control.
 
    ; This script requires Windows 98+ or NT 4.0 SP3+.
-   guiThreadInfoSize := 8 + 6*A_PtrSize + 16
-   VarSetCapacity(guiThreadInfo, guiThreadInfoSize, 0)
+   VarSetCapacity(guiThreadInfo, (guiThreadInfoSize := 8+6*A_PtrSize+16), 0)
    NumPut(GuiThreadInfoSize, GuiThreadInfo, 0)
    ; DllCall("RtlFillMemory" , "PTR", &guiThreadInfo, "UInt", 1 , "UChar", guiThreadInfoSize)   ; Below 0xFF, one call only is needed
    if (DllCall("GetGUIThreadInfo" , "UInt", 0, "PTR", &guiThreadInfo) = 0) {   ; Foreground thread
@@ -71,19 +73,19 @@ GetFocusedControl()  {                                                          
 ; *(addr + 12) + (*(addr + 13) << 8) +  (*(addr + 14) << 16) + (*(addr + 15) << 24)
 Return Format("0x{:X}", NumGet(guiThreadInfo, 8+A_PtrSize, "Ptr"))
 }
-
+; 05
 GetFocusedControlHwnd(hwnd:="A") {
 	ControlGetFocus, FocusedControl	 , % (hwnd = "A") ? "A" : "ahk_id " hwnd
 	ControlGet    	 , FocusedControlId, Hwnd,, % FocusedControl, % (hwnd = "A") ? "A" : "ahk_id " hwnd
 return GetHex(FocusedControlId)
 }
-
+; 06
 GetFocusedControlClassNN(hwnd:="A") {
 	ControlGetFocus, FocusedControl	 , % (hwnd = "A") ? "A" : "ahk_id " hwnd
 	ControlGet    	 , FocusedControlId, Hwnd,, % FocusedControl, % "ahk_id " hwnd
 return Control_GetClassNN(hwnd, FocusedControlId)
 }
-
+; 07
 GetChildHWND(ParentWindowID, ChildClassNN) {
 
 	; Link: https://autohotkey.com/board/topic/3369-unique-id-number-of-a-child-control/
@@ -100,7 +102,7 @@ GetChildHWND(ParentWindowID, ChildClassNN) {
 
 return DllCall("WindowFromPoint", "int", ChildX + ParentX, "int", ChildY + ParentY)
 }
-
+; 08
 GetControls(hwnd, class_filter:="", type_filter:="", info_filter:="") {                  	  	;-- returns an array with ClassNN, ButtonTyp, Position.....
 
 	;class_filter 	- comma separated list of classes        	you don't want to store
@@ -178,7 +180,7 @@ GetControls(hwnd, class_filter:="", type_filter:="", info_filter:="") {         
 
 return controls
 }
-
+; 09
 GetButtonType(hwndButton) {                                                                         	;-- ermittelt welcher Art ein Button ist, liest dazu den Buttonstyle aus
 	;Link: https://autohotkey.com/board/topic/101341-getting-type-of-control/
   static types := [ "Button"            	;BS_PUSHBUTTON
@@ -201,36 +203,32 @@ GetButtonType(hwndButton) {                                                     
   WinGet, btnStyle, Style, % "ahk_id " hwndButton
  return types[1+(btnStyle & 0xF)]
 }
-
+; 10
 GetHeaderInfo(hHeader) {                                                                                	;-- Returns an object containing the text and width of each item of a remote SysHeader32 control
 
 	; from WinSpy
 
-    Static MAX_TEXT_LENGTH := 260
-         , MAX_TEXT_SIZE := MAX_TEXT_LENGTH * (A_IsUnicode ? 2 : 1)
+    Static	MAX_TEXT_LENGTH 	:= 260
+         ,  	MAX_TEXT_SIZE     	:= MAX_TEXT_LENGTH * (A_IsUnicode ? 2 : 1)
 
-    WinGet PID, PID, ahk_id %hHeader%
+    WinGet PID, PID, % "ahk_id hHeader"
 
     ; Open the process for read/write and query info.
     ; PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION | PROCESS_QUERY_INFORMATION
-    If !(hProc := DllCall("OpenProcess", "UInt", 0x438, "Int", False, "UInt", PID, "Ptr")) {
+    If !(hProc := DllCall("OpenProcess", "UInt", 0x438, "Int", False, "UInt", PID, "Ptr"))
         Return
-    }
 
     ; Should we use the 32-bit struct or the 64-bit struct?
-    If (A_Is64bitOS) {
+    If (A_Is64bitOS)
         Try DllCall("IsWow64Process", "Ptr", hProc, "Int*", Is32bit := True)
-    } Else {
+    Else
         Is32bit := True
-    }
 
-    RPtrSize := Is32bit ? 4 : 8
-    cbHDITEM := (4 * 6) + (RPtrSize * 6)
+    RPtrSize 	:= Is32bit ? 4 : 8
+    cbHDITEM	:= (4*6) + (RPtrSize*6)
 
     ; Allocate a buffer in the remote process.
-    remote_item := DllCall("VirtualAllocEx", "Ptr", hProc, "Ptr", 0
-                         , "UPtr", cbHDITEM + MAX_TEXT_SIZE
-                         , "UInt", 0x1000, "UInt", 4, "Ptr") ; MEM_COMMIT, PAGE_READWRITE
+    remote_item := DllCall("VirtualAllocEx", "Ptr", hProc, "Ptr", 0, "UPtr", cbHDITEM + MAX_TEXT_SIZE, "UInt", 0x1000, "UInt", 4, "Ptr") ; MEM_COMMIT, PAGE_READWRITE
     remote_text := remote_item + cbHDITEM
 
     ; Prepare the HDITEM structure locally.
@@ -263,9 +261,9 @@ GetHeaderInfo(hHeader) {                                                        
     DllCall("VirtualFreeEx", "Ptr", hProc, "Ptr", remote_item, "UPtr", 0, "UInt", 0x8000) ; MEM_RELEASE
     DllCall("CloseHandle", "Ptr", hProc)
 
-    Return HDInfo
+Return HDInfo
 }
-
+; 11
 Controls(Control="",cmd="",WinTitle="",HidT=1,HidW=1,MMSpeed="slow") {   	;-- Universalfunktion für Steuerelemente
 
 	;  ********	    ********		Function grows and thrives, watered at the 25.03.2021
@@ -645,7 +643,7 @@ Controls(Control="",cmd="",WinTitle="",HidT=1,HidW=1,MMSpeed="slow") {   	;-- Un
 
 return result
 }
-
+; 12
 ControlFind(Control, cmd, WinTitle) {				                                                	;-- Controls ist die bessere Version jetzt
 
 		static knWinTitle, knWinText
@@ -688,32 +686,30 @@ ControlFind(Control, cmd, WinTitle) {				                                       
 
 return result
 }
-
+; 13
 ControlGet(Cmd,Value="",Control="",WTitle="",WTxt="",ExTitle="",ExText="") {  	;-- ControlGet als Funktion
 	ControlGet, v, % Cmd, % Value, % Control, % WTitle, % WTxt, % ExTitle, % ExText
 Return v
 }
-
+; 14
 ControlGetText(Control="", WTitle="", WText="", ExTitle="", ExText="") {          	;-- ControlGetText als Funktion
 	ControlGetText, v, % Control, % WTitle, % WText, % ExTitle, % ExText
 Return v
 }
-
+; 15
 ControlGetFocus(hWin) {                                                                                	;-- gibt das Handle des fokussierten Steuerelementes zurück
 	ControlGetFocus, FocusedControl, % "ahk_id " hWin
-	ControlGet, FocusedControlId, Hwnd,, %FocusedControl%, % "ahk_id " hWin
+	ControlGet, FocusedControlId, Hwnd,, % FocusedControl, % "ahk_id " hWin
 return FocusedControlId
 }
-
+; 16
 GuiControlGet(guiname, cmd, vcontrol) {                                                        	;-- GuiControlGet wrapper
-
 	GuiControlGet, cp, % guiname ": " cmd, % vcontrol
 	If (cmd = "Pos")
 		return {"X":cpX, "Y":cpY, "W":cpW, "H":cpH}
-
 return cp
 }
-
+; 17
 ControlGetFont(hWnd,ByRef Name,ByRef Size,ByRef Style,IsGDIFontSize=0) {  	;-- Fontname, Größe, Stil eines Controls ermitteln
 
 	; www.autohotkey.com/forum/viewtopic.php?p=465438#465438
@@ -735,63 +731,55 @@ ControlGetFont(hWnd,ByRef Name,ByRef Size,ByRef Style,IsGDIFontSize=0) {  	;-- F
 
     Size := IsGDIFontSize ? -NumGet(LOGFONT, 0, "Int") : Round((-NumGet(LOGFONT, 0, "Int") * 72) / A_ScreenDPI)
 }
-
+; 18
 WinSaveCheckboxes(hWin) {                                                                            	;-- speichert den Status aller Checkbox-Steuerelemente
 
-	idx				:=0
-	oControls1	:= Object()
-	oControls2	:= Object()
+	; letzte Änderung: 26.09.2021
+
+	idx :=0, oControls := Object()
 
 	WinGet, cClasses	, ControlList			, % "ahk_id " hWin
 	WinGet, cHwnds	, ControlListHwnd	, % "ahk_id " hWin
 
-	oControls1:= KeyValueObjectFromLists(cClasses, cHwnds, "`n", "Button", "[A-Za-z]+", "", "")
-
-	For key, val in oControls1
-	{
-			If InStr(GetButtonType(val), "Checkbox") {
-                    status:= ControlGet("checked",,, "ahk_id " . val)
-                    oControls2[(key)]:= status
-                    idx++
-			}
+	For classNN, hwnd in KeyValueObjectFromLists(cClasses, cHwnds, "`n", "Button", "[A-Za-z]+", "", "")	{
+		If InStr(GetButtonType(hwnd), "Checkbox") {
+			oControls[classNN] := ControlGet("checked",,, "ahk_id " hwnd)
+			idx++
+		}
 	}
 
-	If !idx
-		return 0
-
-return oControls2
+return idx ? oControls : 0
 }
+; 19
+ToolbarGetRect(hCtrl, pPos="", pQ="") {                                                           	;-- ermittelt die Größe eines ToolbarControls
 
-ToolbarGetRect(hCtrl, Pos="", pQ="") {                                                           	;-- ermittelt die Größe eines ToolbarControls
-	ListLines, Off
 	/*
- Function:  GetRect
- 			Get button rectangle
+		Link:     	https://github.com/fincs/SciTE4AutoHotkey/blob/master/source/toolbar/Lib/Toolbar.ahk
+		Function:  GetRect
+						Get button rectangle
 
- Parameters:
- 			pPos		- Button position. Leave blank to get dimensions of the toolbar control itself.
- 			pQ			- Query parameter: set x,y,w,h to return appropriate value, or leave blank to return all in single line.
+	 Parameters:	pPos		- Button position. Leave blank to get dimensions of the toolbar control itself.
+						pQ			- Query parameter: set x,y,w,h to return appropriate value, or leave blank to return all in single line.
 
- Returns:
- 			String with 4 values separated by space or requested information
- */
+	 Returns:		String with 4 values separated by space or requested information
+	*/
 
 	static TB_GETITEMRECT=0x41D
 
 	if pPos !=
-		ifLessOrEqual, Pos, 0, return "Err: Invalid button position"
+		ifLessOrEqual, pPos, 0, return "Err: Invalid button position"
 
 	VarSetCapacity(RECT, 16)
-    SendMessage, TB_GETITEMRECT, Pos-1,&RECT, ,ahk_id %hCtrl%
+    SendMessage, TB_GETITEMRECT, pPos-1,&RECT, ,ahk_id %hCtrl%
 	IfEqual, ErrorLevel, 0, return A_ThisFunc "> Can't get rect"
 
-	if Pos =
+	if pPos =
 		DllCall("GetClientRect", "uint", hCtrl, "uint", &RECT)
 
 	x := NumGet(RECT, 0), y := NumGet(RECT, 4), r := NumGet(RECT, 8), b := NumGet(RECT, 12)
 	return (pQ = "x") ? x : (pQ = "y") ? y : (pQ = "w") ? r-x : (pQ = "h") ? b-y : x " " y " " r-x " " b-y
 }
-
+; 20
 ControlGetTabs(hTab) {                                                                                 	;-- ermittelt die Texte aller TabControls zu diesem hwnd
 
 	; https://autohotkey.com/board/topic/70727-ahk-l-controlgettabs/
@@ -850,14 +838,14 @@ ControlGetTabs(hTab) {                                                          
 
 Return Tabs
 }
-
+; 21
 TabCtrl_GetCurSel(HWND) {                             		                                    	;-- index number of active tab in a gui
    ; Returns the 1-based index of the currently selected tab
    Static TCM_GETCURSEL := 0x130B
    SendMessage, TCM_GETCURSEL, 0, 0, , ahk_id %HWND%
    Return (ErrorLevel + 1)
 }
-
+; 22
 TabCtrl_GetItemText(HWND, Index=0) {                                                        	;-- returns text of a tab
 
    Static TCM_GETITEM  := A_IsUnicode ? 0x133C : 0x1305 ; TCM_GETITEMW : TCM_GETITEMA
@@ -888,20 +876,21 @@ SetError(ErrorValue, ReturnValue) {                                             
 ;}
 
 ;\/\/\/\ Funktionen prüfen die erfolgreiche Durchführung ihrer Interaktion mit Steuerelementen /\/\/\/
+; 23
 VerifiedClick(CName, WTitle="", WText="", WinID="", WaitClose=false) {         	;-- 4 verschiedene Methoden um auf ein Control zu klicken
 
-		tmm := A_TitleMatchMode, cd := A_ControlDelay, EL := 0
-		SetControlDelay	, 0
-		SetTitleMatchMode, 2
+	; WaitClose eine Zahl größer 0 für die maximale Zeit die gewartet werden darf
+	; eventuell vorhandene Kürzelzeichen <&> im Buttonnamen werden entfernt damit ein Vergleich Treffer erzielt
+	; letzte Änderung: 23.09.2021
+
 		CoordMode, Mouse, Screen
+		EL := 0, CName := RegExReplace(CName, "[\&]", "")
 
 	; leeren des Fenster-Titel und Textes wenn ein Handle übergeben wurde
-		if (StrLen(WinID) > 0)
+		if WinID
 			WText := "", WTitle := "ahk_id " WinID
 		else if RegExMatch(WTitle, "i)^(0x[A-F\d]+|[\d]+)$")
 			WText := "", WTitle := "ahk_id " WTitle
-
-		CName := RegExReplace(CName, "[\&]", "")
 
 	; 3 verschiedene Wege einen Buttonklick auszulösen
 		ControlClick, % CName, % WTitle, % WText,,, NA
@@ -928,65 +917,56 @@ VerifiedClick(CName, WTitle="", WText="", WinID="", WaitClose=false) {         	
 			EL := ErrorLevel                                                                                ; Zeitlimit überschritten = 1, sonst 0
 		}
 
-		SetControlDelay	 % cd
-		SetTitleMatchMode % tmm
-
 return (EL = 0 ? 1 : 0)
 }
-
+; 24
 VerifiedCheck(CName, WTitle="", WText="", WinID="", CheckIt=true) {          	;-- Fensteraktivierung + ControlDelay auf -1 + Kontrolle ob das Control wirklich checked ist jetzt
 
-		; 04.08.2020 - Code effizienter gemacht
-		; 02.08.2018 - neuer Parameter: CheckIt. Wenn dieser true, also gesetzt ist, wird ein Häkchen gesetzt , bei 'false' entfernt.
-		; die Funktion prüft nicht, ob das Setzen oder Entfernen überhaupt notwendig ist, wenn es schon gesetzt oder nicht gesetzt ist
+	; die Funktion prüft nicht, ob das Setzen oder Entfernen überhaupt notwendig ist, wenn es schon gesetzt oder nicht gesetzt ist
+	; wenn nur die WinID und kein CName, WTitle und WText übergeben wird, dann WinID als das Steuerelementhandle interpretiert
+	; 02.08.2018 - neuer Parameter: CheckIt. Wenn dieser true, also gesetzt ist, wird ein Häkchen gesetzt , mit 'false' entfernt.
+	; 23.09.2021 -
 
-		command := CheckIt ? "check":"uncheck"
-		tmm      	:= A_TitleMatchMode
-		cd         	:= A_ControlDelay
+		CName := RegExReplace(CName, "[\&]", "")
 
-		SetTitleMatchMode, 2
-		SetControlDelay	, 10
+		if RegExMatch(WTitle, "Oi)^(0x[A-F\d]+|[\d]+)$")
+			WinID := WTitle
+		else if WTitle && WText && CName
+			WinID := WinExist(WTitle, WText)
+		else if !CName && !WTitle && !WText && WinID
+			hCName := WinID
+		WText := "", WTitle := "ahk_id " WinID
 
-		if WinID
-			WTitle := "ahk_id " WinID, WText := ""
-		else if RegExMatch(WTitle, "^0x[\w]+$", hex)
-			WTitle := "ahk_id " WTitle, WText := "", WinID := hex
-		else if RegExMatch(WTitle, "^\d+$", digits)
-			WTitle := (StrLen(WTitle) = StrLen(digits) ? "ahk_id " digits : WTitle ), WText := "", WinID := digits
-
-		If (StrLen(CName) > 0)
-			ControlGet, hCName, hwnd,, % Trim(CName), % WTitle, % WText
+		If CName && !hCName
+			ControlGet, hCName, hwnd,, % Trim(CName), % WTitle
 
 		ButtonType := GetButtonType((hCName ? hCName : WinID))
 		If !RegExMatch(ButtonType, "Autocheckbox|Checkbox|Radio")	{
-			If (StrLen(CName) = 0)
+			If !CName
 				ControlGetText, CName,, % WTitle
-			PraxTT("Fehler in der Funktion VerifiedCheck()`n`nDas angesprochene Steuerelement (" CName ")`nist keine Standard-Checkbox!", "2 0")
+			PraxTT("Fehler in der Funktion VerifiedCheck()`n`nDas angesprochene Steuerelement (" CName ")`nist keine Standard-Checkbox!", "1 0")
 			return 0
 		}
 
-		If !WinActive(WTitle, WText) {
-			WinActivate	 , % WTitle, % WText
-			WinWaitActive, % WTitle, % WText, 1
+		If !WinActive(WTitle) {
+			WinActivate	 , % WTitle
+			WinWaitActive, % WTitle,, 1
 		}
 
 		Loop {
-			Control		, % command,, % CName, % WTitle, % WText
-            sleep, 20
-			ControlGet, isChecked, checked,, % CName, % WTitle, % WText
-		} until (isChecked = CheckIt) || (A_Index > 10)
-
-		SetControlDelay	, % cd
-		SetTitleMatchMode, % tmm
+			Control, % (CheckIt ? "check" : "uncheck"),, % CName, % WTitle
+			sleep 20
+			ControlGet, isChecked, checked,, % CName, % WTitle
+		} until (isChecked = CheckIt) || (A_Index > 50)
 
 return (isChecked = CheckIt ? true : false)
 }
-
+; 25
 VerifiedChoose(CName, WTitle, RxStrOrPos ) {                                                  	;-- wählt einen List- oder Comboboxeintrag
 
 	; das gewünschte Listboxelement kann per Übergabe eines String, RegExString
 	; oder direkt über seine Position ausgewählt werden
-	; letzte Änderung: 17.01.2021
+	; letzte Änderung: 23.10.2021
 
 	; für flexible Übergabe des Fenstertitel, von String, Dezimalzahl oder Hexzahl alles möglich
 		If RegExMatch(WTitle, "^0x[\w]+$")
@@ -1018,8 +998,7 @@ VerifiedChoose(CName, WTitle, RxStrOrPos ) {                                    
 			found := false
 			For idx, item in Items
 				If InStr(item, RxStrOrPos) {
-					found := true
-					RxStrOrPos := idx
+					found := true, RxStrOrPos := idx
 					break
 				}
 			If !found
@@ -1030,69 +1009,65 @@ VerifiedChoose(CName, WTitle, RxStrOrPos ) {                                    
 		If (Items.MaxIndex() < RxStrOrPos) || (RxStrOrPos <= 0)
 			return 6
 
-	; Ändern des Steuerelementes
-		SendMessage, 0x014E, % RxStrOrPos-1,,, % "ahk_id " CHwnd  ; CB_SetCursel
+	; Auswählen des Eintrages im Steuerelement [0x014E CB_SetCursel, 0x0186 LB_SetCursel]
+		SendMessage, % InStr(CName, "ComboBox") ? 0x014E : 0x0186, % RxStrOrPos-1,,, % "ahk_id " CHwnd
 		return ErrorLevel ? 1 : 7
-
-		;~ Loop {
-				;Control, Choose, % RxStrOrPos,, % "ahk_id " CHwnd
-	;~ }
 
 return 0
 }
+; 25
+VerifiedSetFocus(CName, WTitle="", WText="", WinID="", activate=false) {       	;-- setzt den Eingabefokus und überprüft das dieser auch gesetzt wurde
 
-VerifiedSetFocus(CName, WTitle:="", WText:="", WinID:="", activate:=false) { 	;-- setzt den Eingabefokus und überprüft das dieser auch gesetzt wurde
+	; Rückgabeparameter: 	erfolgreich - 	das Handle des Controls, ansonsten 0 (false)
+	; letzte Änderung: 26.09.2021
 
-	; Rückgabeparameter: 	erfolgreich - 	das Handle des Controls
-	;                                	erfolglos  	-	0
+		static tms
 
-		tmm:= A_TitleMatchMode, cd:=A_ControlDelay
-		SetTitleMatchMode	, 2
-		SetControlDelay    	, -1
+	; hwnd (WinID) des Fensters ermitteln
+		If WText {
+			tms := A_TitleMatchModeSpeed
+			SetTitleMatchMode, Slow
+		}
+		ControlID := WinID && !CName ? WinID : ""
+		WinID := WinID ? WinID : RegExMatch(WTitle, "i)^(0x[A-F\d]+|\d+)$") ? GetHex(WinTitle) : WTitle ? WinExist(WTitle, WText)
+		WTitle := ("ahk_id " WinID), WText := ""
 
-	; leeren des Fenster-Titel und Textes wenn ein Handle übergeben wurde
-		if WinID
-			WText := "", WTitle := "ahk_id " WinID
-		else if RegExMatch(WTitle, "i)^(0x[A-F\d]+|[\d]+)$")
-			WText := "", WinID := GetHex(WinTitle), WTitle := "ahk_id " WTitle
-
+	; Fenster aktivieren nach Bedarf
 		if activate {
-			WinActivate	 , % WTitle, % WText
-			WinWaitActive, % WTitle, % WText, 1
+			WinActivate	 , % WTitle
+			WinWaitActive, % WTitle,,  1
 		}
 
 	; Focus setzen und überprüfen
-		res := true
-		If (StrLen(CName) > 0) {
-			while !InStr(GetFocusedControlClassNN(WinID), CName) {
-               	If (A_Index > 1)
-					sleep 70
-				else if (A_Index > 20) {
-					res := false
-					break
-				}
+		If CName {
+			while (!InStr(GetFocusedControlClassNN(WinID), CName) && A_Index < 21) {
+               	wIndex := A_Index
               	ControlFocus, % CName, % WTitle
+				focusEL := ErrorLevel
+				If (A_Index > 1)
+					sleep 70
 			}
 		}
 		else {
-
-			while (GetFocusedControlHwnd() <> WinID) {
+			while (GetFocusedControlHwnd() <> ControlID && A_Index < 21) {
+               	wIndex := A_Index
+              	ControlFocus, % CName, % WTitle
+				focusEL := ErrorLevel
 				If (A_Index > 1)
 					sleep 70
-				else if (A_Index > 20) {
-					res := false
-					break
-				}
-                ControlFocus,, % WTitle
 			}
 		}
 
-		SetControlDelay    	, % cd
-		SetTitleMatchMode	, % tmm
+	; Titlematchmodespeed zurücksetzen
+		If tms
+			SetTitleMatchMode, % tms
+		tms := ""
 
-return res ? GetFocusedControlHwnd() : 0
+		;~ SciTEOutput(A_ThisFunc ": EL=" focusEL ", wI=" wIndex )
+
+return wIndex >= 20 ? GetFocusedControlHwnd() : false
 }
-
+; 26
 VerifiedSetText(CName="", NewText="", WTitle="", delay=100, WText="") {    	;-- erweiterte ControlSetText Funktion
 
 	; kontrolliert ob der Text tatsächlich eingefügt wurde und man kann noch eine Verzögerung übergeben
@@ -1120,7 +1095,7 @@ VerifiedSetText(CName="", NewText="", WTitle="", delay=100, WText="") {    	;-- 
 
 return (ControlGetText(CName, WTitle, WText) = NewText ? true : false)
 }
-
+; 27
 UpSizeControl(WinTitle, WinClass, UpSizedControl, ExpandDown                      	;-- changes width and height of a control element and repositions the controls below and to the right of it
 , ExpandRight, CenterToWin:=0) {
 
@@ -1182,6 +1157,7 @@ return
 }
 
 ;\/\/\/\/\/\/\/\/\/\/ Listview Control Funktionen \/\/\/\/\/\/\/\/\/\/
+; 28
 LVM_GetNext(hLV, rLV=0, oLV=0) {
 
 	; hLV = ListView handle.
@@ -1192,7 +1168,7 @@ LVM_GetNext(hLV, rLV=0, oLV=0) {
 
 Return DllCall("SendMessage", "uint", hLV, "uint", 4108, "uint", rLV-1, "uint", oLV) + 1 ; LVM_GETNEXTITEM
 }
-
+; 29
 LV_Select(r, Control, hWin) {                                                                             	;-- select/deselect 1 to all rows of a listview (funktioniert nicht in fremder Listview)
 
 	; Modified from http://www.autohotkey.com/board/topic/54752-listview-select-alldeselect-all/?p=343662
@@ -1214,7 +1190,7 @@ LV_Select(r, Control, hWin) {                                                   
 	RemoteBuf_Close(hLVITEM)
 
 }
-
+; 30
 LV_SortArrow(h, c, d="") {
 
 	; LV_SortArrow by Solar. http://www.autohotkey.com/forum/viewtopic.php?t=69642
@@ -1247,7 +1223,7 @@ LV_SortArrow(h, c, d="") {
 
 return DllCall("SendMessage", ptr, h, "uint", LVM_SETCOLUMN, "uint", c, ptr, &lvColumn)
 }
-
+; 31
 LV_GetColWidth(hLV, ColN) {                                                                        	;-- gets the width of a column
 
 	; from AutoGui
@@ -1260,14 +1236,14 @@ LV_GetColWidth(hLV, ColN) {                                                     
 
 Return (ErrorLevel != "FAIL") ? NumGet(HDITEM, 4, "UInt") : 0
 }
-
+; 32
 LV_EX_GetTopIndex(HLV) {                                                                             	;-- retrieves the index of the topmost visible item when in list or report view
 	; Author just me
    ; LVM_GETTOPINDEX = 0x1027 -> http://msdn.microsoft.com/en-us/library/bb761087(v=vs.85).aspx
    SendMessage, 0x1027, 0, 0, , % "ahk_id " . HLV
    Return (ErrorLevel + 1)
 }
-
+; 33
 LV_GetScrollViewPos(hwnd) {
 
 	Loop, % LV_GetCount() {
@@ -1279,20 +1255,7 @@ LV_GetScrollViewPos(hwnd) {
 	}
 
 }
-
-LV_FindRow(LV, col, searchStr) {                                                                     	;-- search for a string in listview col, returns row
-
-	Gui, adm: ListView, % LV
-
-	Loop % LV_GetCount() {
-		LV_GetText(cmpStr, A_Index, col)
-		If InStr(cmpStr, searchStr)
-			return A_Index
-		}
-
-return 0
-}
-
+; 34
 CaretPos(ControlId) {                                                                                      	;-- Get start and End Pos of the selected string - Get Caret pos if no string is selected
 	;https://autohotkey.com/boards/viewtopic.php?p=27979#p27979
 	DllCall("User32.dll\SendMessage", "Ptr", ControlId, "UInt", 0x00B0, "UIntP", Start, "UIntP", End, "Ptr")
@@ -1307,6 +1270,7 @@ return, CaretPos
 }
 
 ; Hilfsfunktionen
+; 35
 KeyValueObjectFromLists(keyList, valueList, delimiter:="`n"
 , IncludeKeys:="", KeyREx:="", IncludeValues:="", ValueREx:="") {                	;-- Funktion um z.B. zwei Listen aus WinGet zusammenzuführen
 

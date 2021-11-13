@@ -1,13 +1,14 @@
 ﻿;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                              	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                             	by Ixiko started in September 2017 - last change 09.07.2021 - this file runs under Lexiko's GNU Licence
+;                             	by Ixiko started in September 2017 - last change 18.09.2021 - this file runs under Lexiko's GNU Licence
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-;	MONITOR / SCREEN                                                                                                                                                                    	(07)
+;	MONITOR / SCREEN                                                                                                                                                                    	(10)
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; (01) GetMonitorIndexFromWindow   	(02) GetMonitorAt                         	(03) screenDims                              	(04) MonitorScreenShot
 ; (05) TaskbarHeight                          	(06) DPIFactor                                	(07) DPI
+; (08) MonitorFromWindow                   	(09) GetMonitorInfo   				    	(10) IsInsideVisibleArea
 ; __________________________________________________________________________________________________________________________
 
 GetMonitorIndexFromWindow(windowHandle) {
@@ -58,6 +59,74 @@ GetMonitorAt(Lx, Ly, Ldefault:=1) {                                             
     }
 
 return LDefault
+}
+
+MonitorFromWindow(Hwnd := 0) {
+ return DllCall("User32.dll\MonitorFromWindow", "Ptr", Hwnd, "UInt", Hwnd?2:1)
+}
+
+GetMonitorInfo(hMonitor) {
+
+    VarSetCapacity(MONITORINFOEX, 104)
+    NumPut(104, &MONITORINFOEX, "UInt")
+    if (!DllCall("User32.dll\GetMonitorInfoW", "Ptr", hMonitor, "UPtr", &MONITORINFOEX))
+        return FALSE
+    return {  L:    	     NumGet(&MONITORINFOEX+ 4      	, "Int")
+		    	, T:    	     NumGet(&MONITORINFOEX+ 8      	, "Int")
+		    	, R:   	     NumGet(&MONITORINFOEX+12     	, "Int")
+		    	, B:    	     NumGet(&MONITORINFOEX+16     	, "Int")
+		    	, WL: 	     NumGet(&MONITORINFOEX+20     	, "Int")
+		    	, WT: 	     NumGet(&MONITORINFOEX+24     	, "Int")
+		    	, WR:	     NumGet(&MONITORINFOEX+28     	, "Int")
+				, WB: 	     NumGet(&MONITORINFOEX+32     	, "Int")
+		    	, Primary:   NumGet(&MONITORINFOEX+36    	, "UInt")
+		    	, Name: 	    StrGet(&MONITORINFOEX+40,64	, "UTF-16") }
+
+}
+
+IsInsideVisibleArea(x, y, w, h, ByRef CoordInjury) {
+
+	/* Description IsInsideVisibleArea()
+
+		Function task:
+			Checks if the passed window coordinates are within the visible screen area in all 4 directions.
+
+		How it works:
+			1. it determines the maximum width and height of the connected screens
+			2. it determines the minimum x- and y-coordinate of the connected screens
+			3. it compares the given parameters with the min and max coordinates
+
+			If at least one point is outside the visible screen area, the function will return 'false'.
+			The ByRef parameter contains the coordinate names of the deviated points.
+
+		last modification:
+			18.09.2021
+
+	 */
+
+	monMinX  	:= 1000000000
+	monMinY  	:= 1000000000
+	monMaxW 	:= 0
+	monMaxH 	:= 0
+
+	SysGet, MonitorCount, MonitorCount
+	Loop % MonitorCount {
+		mon := ScreenDims(A_Index)
+		monMinX  	:= mon.X < monMinX ? mon.X : monMinX
+		monMinY  	:= mon.Y < monMinY ? mon.Y : monMinY
+		monMaxW 	:= mon.X + mon.W > monMaxW	? mon.X + mon.W : monMaxW
+		monMaxH 	:= mon.Y + mon.H > monMaxH 	? mon.Y + mon.H : monMaxH
+	}
+
+	CoordInjury := x < monMinX ? "x" : ""
+	CoordInjury .= (CoordInjury ? "," : "") (y < monMinY ? "y" : "")
+	CoordInjury .= (CoordInjury ? "," : "") (x+w > monMaxW ? "w" : "")
+	CoordInjury .= (CoordInjury ? "," : "") (y+h > monMaxH ? "h" : "")
+	CoordInjury := RegExReplace(CoordInjury, ",{2,}", ",")
+
+	;~ if (x+w > Monitor%A_Index%Left) && (x < Monitor%A_Index%Right) && (y > Monitor%A_Index%Top) && (y+h < Monitor%A_Index%Bottom)
+    ;~ SysGet, Monitor%A_Index%, MonitorWorkArea, % A_Index
+return CoordInjury  ? false : true
 }
 
 ScreenDims(MonNr:=1) {	                                                       		;-- returns a key:value pair of screen dimensions

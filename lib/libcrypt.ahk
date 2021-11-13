@@ -119,19 +119,13 @@ LC_CalcAddrHash(addr, length, algid, byref hash = 0, byref hashlength = 0) {
 	static h := [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, "a", "b", "c", "d", "e", "f"]
 	static b := h.minIndex()
 	hProv := hHash := o := ""
-	if (DllCall("advapi32\CryptAcquireContext", "Ptr*", hProv, "Ptr", 0, "Ptr", 0, "UInt", 24, "UInt", 0xf0000000))
-	{
-		if (DllCall("advapi32\CryptCreateHash", "Ptr", hProv, "UInt", algid, "UInt", 0, "UInt", 0, "Ptr*", hHash))
-		{
-			if (DllCall("advapi32\CryptHashData", "Ptr", hHash, "Ptr", addr, "UInt", length, "UInt", 0))
-			{
-				if (DllCall("advapi32\CryptGetHashParam", "Ptr", hHash, "UInt", 2, "Ptr", 0, "UInt*", hashlength, "UInt", 0))
-				{
+	if (DllCall("advapi32\CryptAcquireContext", "Ptr*", hProv, "Ptr", 0, "Ptr", 0, "UInt", 24, "UInt", 0xf0000000))	{
+		if (DllCall("advapi32\CryptCreateHash", "Ptr", hProv, "UInt", algid, "UInt", 0, "UInt", 0, "Ptr*", hHash))		{
+			if (DllCall("advapi32\CryptHashData", "Ptr", hHash, "Ptr", addr, "UInt", length, "UInt", 0))			{
+				if (DllCall("advapi32\CryptGetHashParam", "Ptr", hHash, "UInt", 2, "Ptr", 0, "UInt*", hashlength, "UInt", 0))				{
 					VarSetCapacity(hash, hashlength, 0)
-					if (DllCall("advapi32\CryptGetHashParam", "Ptr", hHash, "UInt", 2, "Ptr", &hash, "UInt*", hashlength, "UInt", 0))
-					{
-						loop % hashlength
-						{
+					if (DllCall("advapi32\CryptGetHashParam", "Ptr", hHash, "UInt", 2, "Ptr", &hash, "UInt*", hashlength, "UInt", 0))					{
+						loop % hashlength						{
 							v := NumGet(hash, A_Index - 1, "UChar")
 							o .= h[(v >> 4) + b] h[(v & 0xf) + b]
 						}
@@ -222,15 +216,13 @@ LC_FileCRC32(sFile := "", cSz := 4) {
 	cSz := (cSz < 0 || cSz > 8) ? 2**22 : 2**(18 + cSz)
 	VarSetCapacity(Buffer, cSz, 0)
 	hFil := DllCall("Kernel32.dll\CreateFile", "Str", sFile, "UInt", 0x80000000, "UInt", 3, "Int", 0, "UInt", 3, "UInt", 0, "Int", 0, "UInt")
-	if (hFil < 1)
-	{
+	if (hFil < 1)	{
 		return hFil
 	}
 	hMod := DllCall("Kernel32.dll\LoadLibrary", "Str", "Ntdll.dll")
 	CRC32 := 0
 	DllCall("Kernel32.dll\GetFileSizeEx", "UInt", hFil, "Int64", &Buffer), fSz := NumGet(Buffer, 0, "Int64")
-	loop % (fSz // cSz + !!Mod(fSz, cSz))
-	{
+	loop % (fSz // cSz + !!Mod(fSz, cSz))	{
 		DllCall("Kernel32.dll\ReadFile", "UInt", hFil, "Ptr", &Buffer, "UInt", cSz, "UInt*", Bytes, "UInt", 0)
 		CRC32 := DllCall("Ntdll.dll\RtlComputeCrc32", "UInt", CRC32, "UInt", &Buffer, "UInt", Bytes, "UInt")
 	}

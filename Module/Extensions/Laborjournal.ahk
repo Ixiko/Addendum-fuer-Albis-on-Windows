@@ -1,4 +1,4 @@
-﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                 	Addendum Laborjournal
 ;
 ;      Funktion:           	- 	schnellerer Überblick über die Laborwerte der letzten Tage in Tabellenform mit farblicher Hervorhebung.
@@ -12,13 +12,13 @@
 ;		Hinweis:				Nichts ist ohne Fehler. Auch das hier sicher nicht. Nicht drauf verlassen! Skript soll nur eine Unterstützung sein!
 ;									Das Skript filtert noch keine Werte heraus die nur positiv oder negativ sein können (z.B. SARS-CoV-2 PCR)
 ;									INR Werte werden angezeigt, wenn ein Pat. Falithrom/Marcumar nimmt, der Wert aber nicht als therapeutischer INR gespeichert wurde.
-;									Im Moment müssen Einstellungen für die Anzeige noch direkt im Skript vorgenommen werden, wie z.B. die gesondert zu behandelnden Laborparameter
+;									Im Moment müssen Einstellungen noch direkt im Skript vorgenommen werden, wie z.B. die gesondert zu behandelnden Laborparameter
 ;
 ;		Abhängigkeiten:	siehe includes
 ;
 ;	                    			Addendum für Albis on Windows
-;                        			by Ixiko started in September 2017 - last change 04.09.2021 - this file runs under Lexiko's GNU Licence
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                        			by Ixiko started in September 2017 - last change 07.11.2021 - this file runs under Lexiko's GNU Licence
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; Einstellungen
 	#NoEnv
@@ -32,16 +32,13 @@
 	global adm := Object()
 	global load_Bar, percent
 	global PatDB
+	global q := Chr(0x22)
 
   ; startet Windows Gdip
    	If !(pToken:=Gdip_Startup()) {
 		MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
 		ExitApp
 	}
-
-  ; Tray Icon erstellen
-	If (hIconLabJournal := Create_Laborjournal_ico())
-    	Menu, Tray, Icon, % "hIcon: " hIconLabJournal
 
   ; Albis Datenbankpfad / Addendum Verzeichnis
 	RegRead, AlbisPath, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, Installationspfad
@@ -54,8 +51,49 @@
 	adm.AlbisDBPath 	:= AlbisPath "\DB"
 	adm.compname	:= StrReplace(A_ComputerName, "-")                                                    	; der Name des Computer auf dem das Skript läuft
 
+	workini := IniReadExt(adm.Ini)
 
-  ; hier alle Parameter eintragen welche gesondert verarbeitet werden sollen
+ ; Einstellungen in der Addendum.ini anlegen
+	If !IniReadExt("LaborJournal", "") {
+		backupfailure := 0
+		If !FilePathCreate(adm.Dir "\_backup") {
+			backupfailure ++
+			PraxTT("Der Backup-Pfad konnte nicht angelegt werden!", "4 1")
+		}
+		else {
+			FileCopy, % adm.ini, % adm.Dir "\_backup\" A_YYYY A_MM A_DD "Addendum.ini", 1
+			If ErrorLevel
+				backupfailure ++
+		}
+		If !backupfailure {
+			labjournalIni =
+			(LTrim
+			[Laborjournal]
+			htmlresource=%A_ScriptDir%\resources
+
+			[B----
+			)
+			inifull := FileOpen(adm.ini, "r", "UTF-8").Read()
+			inifull := RegExReplace(inifull, "\[B\-{4}", labjournalIni)
+			FileOpen(adm.ini, "w", "UTF-8").Write(inifull)
+		}
+
+	}
+
+  ; Einstellungen laden
+	adm.LabJ := Object()
+	adm.LabJ.htmlresource	:= IniReadExt("Laborjournal", "htmlresource", A_ScriptDir "\resources") "\Laborjournal.html"
+	adm.LabJ.lastupdate 	:= IniReadExt("Laborjournal", "LabParam_letztesUpdate", "10000001")
+	If !RegExMatch(adm.LabJ.lastupdate, "^\d{8}$") {
+		adm.LabJ.lastupdate := "10000001"
+		IniWrite, % "10000001", % adm.Ini, % "Laborjournal", % "LabParam_letztesUpdate"
+	}
+
+  ; Tray Icon erstellen
+	hIconLabJournal	:= Laborjournal_ico()
+   	Menu, Tray, Icon, % (hIconLabJournal ? "hIcon: " hIconLabJournal : adm.Dir "\assets\ModulIcons\LaborJournalS.ico")
+
+  ; hier alle Parameter eintragen, welche gesondert behandelt werden sollen
 
 						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						  ; nie         	= werden nie angezeigt
@@ -65,7 +103,7 @@
 						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						  ; immer 	 	= nur wenn pathologisch
 						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-					    	, "immer" 	: 	"NA,K,BNP,NTBNP,TropIs,TROPI,TROPT,TROP,TROPOIHS,CK,CKMB,HBK-ST,DDIM-CP,PROCAL"
+					    	, "immer" 	: 	"NA,K,BNP,NTBNP,CK,CKMB,HBK-ST,DDIM-CP,PROCAL"
 
 						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						  ; exklusiv 	= wenn pathologisch und bei negativen Befund (z.B. COVIA, HIV)
@@ -73,9 +111,11 @@
 											; 	Leukozytenveränderungen
 							, "exklusiv"	: 	"ALYMP,ALYMPDIFF,ALYMPH,ALYMPNEO,ALYMPREA,ALYMPRAM,KERNS,METAM,MYELOC,PROMY,HLAMBDA,"
 											; 	Erythrozytenveränderungen
-											.	"DIFANISO,DIFPOLYC,DIFPOIKL,DIFHYPOC,DIFMIKRO,DIFMAKRO,DIFOVALO,"
+											.	"DIFANISO,DIFPOLYC,DIFPOIKL,DIFHYPOC,DIFMIKRO,DIFMAKRO,DIFOVALO,DIFECHIN,"
 											; 	Infektionen
 											.	"COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,COVMU484,COVMU501,COVM6970,HIV,"
+											; 	Herz
+											. 	"TropIs,TROPI,TROPT,TROP,TROPOIHS,"
 											; 	Tumor
 											.	"KAP,KAP-U,LAM,LAM-U,"
 											; 	sonstige
@@ -84,8 +124,8 @@
 						  ; Gruppierungen
 						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 							, "Gruppe"   	: {"atyp. Leuko"	: "ALYMP,ALYMPDIFF,ALYMPH,ALYMPNEO,ALYMPREA,"
-																		. "ALYMPRAM,KERNS,METAM,MYELOC,PROMY,HLAMBDA"
-												,	"atyp. Ery" 	: "DIFANISO,DIFPOLYC,DIFPOIKL,DIFHYPOC,DIFMIKRO,DIFMAKRO,DIFOVALO"
+																		. "ALYMPRAM,KERNS,METAM,MYELOC,PROMY,HLAMBDA,"
+												,	"atyp. Ery" 	: "DIFANISO,DIFPOLYC,DIFPOIKL,DIFHYPOC,DIFMIKRO,DIFMAKRO,DIFOVALO,DIFECHIN"
 												,	"COVID-19"	: "COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,COVMU484,COVMU501,COVM6970"}}
 
   ; load_Bar anzeigen
@@ -122,6 +162,8 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 
 	*/
 
+		global LabDic
+
 		static Lab
 
 	; Variablen                                                                                                         	;{
@@ -153,7 +195,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 
 	; Suchzeitraum                                                                                                  	;{
 
-		load_Bar.Set(7, "berechne den Suchzeitraum")
+		load_Bar.Set(8, "berechne den Suchzeitraum")
 
 		; Von enthält kein Datum
 			RegExMatch(Von, "^\d+$", Tage)
@@ -183,14 +225,13 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 				LabJ.Tagesanzeige :=  "ab " WTag ", " StrReplace(ViewStart, A_YYYY) " (" Tage " Werktage)"
 
 				FormatTime, Von, % Von, yyyyMMdd
-				;QJ	:= A_YYYY . Ceil(SubStr(Von, 5, 2)/3)          	; muss das Quartaljahr des Von-Datum sein
 				VB	:= "Von"
 
 			}
 			else
 				VB := (Von && !Bis) ? "Von" : (!Von && Bis) ? "Bis" : "VonBis"
 
-		load_Bar.Set(8, "Suchzeitraum berechnet")
+		load_Bar.Set(8, "LABBLATT.dbf: öffnen")
 	;}
 
 	; Albis: Datenbank laden und entsprechend des Datums die Leseposition vorrücken	;{
@@ -203,7 +244,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 
 			QJ := !QJ ? SubStr(Von, 1, 4) . Ceil(SubStr(Von, 5, 2)/3) : QJ 	; muss das Quartaljahr des Von-Datum sein
 
-				; ein Quartal davor
+		  ; ein Quartal davor
 			If !lab.seeks.HasKey(QJ) {
 				nYYYY 	:= SubStr(QJ, 1, 4)
 				nQ      	:= SubStr(QJ, 5, 1)
@@ -214,14 +255,13 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 
 			startrecord := Lab.seeks.HasKey(QJ) ? Lab.seeks[QJ] : Lab.seeks[Lab.seeks.MaxIndex()]
 			res := labDB._SeekToRecord(startrecord, 1)
-			;~ SciTEOutput("startrecord: " startrecord)
 
 		}
 	;}
 
 		t :=  nieWarnen "`n" exklusivWarnen "`n" immerWarnen "`n`n"
 		ShowAt := Floor(labDB.records/80)
-		load_Bar.Set(8, "lade neue Laborwerte")
+		load_Bar.Set(9, "LABBLATT.dbf: lade neue Laborwerte")
 
 	; filtert nach Datum und ab einer Überschreitung von der durchschnittlichen Abweichung von den Grenzwerten anhand
 	; der zuvor für jeden Laborwert berechneten durchschnittlichen prozentualen Überschreitung des Grenzwertes aus den
@@ -237,7 +277,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 						. 	SubStr("00000000" labDB.recordnr, -5) "/"
 						. 	SubStr("00000000" labDB.records, -5)
 					percent := Floor(((labDB.recordnr*100)/labDB.records)*0.8)
-					load_Bar.Set(8+percent, tt)
+					load_Bar.Set(9+percent, tt)
 				}
 
 			; Datum passt nicht, weiter
@@ -320,10 +360,6 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 
 				}
 
-					;~ If plus < 102
-						;~ t .= "D:" data["DATUM"] " | P:" data["PARAM"] " | PW:" PW " | NW:"  data["NORMWERT"]
-							;~ . 	" | PSU: " PSU " | PSO:" PSO " | UNG:" UNG " | ONG:" ONG " | UD:" UD " | OD:" OD " => plus:" plus "`n"
-
 			; Laborwert liegt über der Grenzwert-Abweichung oder gehört zu einer Filterliste
 				If (plus > GWA || PNImmer || PNExklusiv) {
 
@@ -369,7 +405,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 		LabDB := ""
 		If Anzeige
 			ToolTip
-		percent := percent + 8
+		percent := percent + 9
 
 		;~ FileOpen(A_Temp "\labdata.txt", "w", "UTF-8").Write(t)
 		;~ Run, % A_Temp "\labdata.txt"
@@ -383,8 +419,8 @@ AlbisLaborwertGrenzen(LbrFilePath, Anzeige=true) {                              
 
 		⚬	Berechnet aus den Daten der LABBLATT.dbf die durchschnittliche prozentuale Über- oder Unterschreitung eines Laborparameters.
 		⚬	Für eventuelle Anpassungen wird die maximalste Über- oder Unterschreitung als Einzelwert gespeichert.
-		⚬	Durch Nutzung eines Faktors (Prozentwert) sind die dadurch mit Annährung erreichte "Warngrenze" auch bei unterschiedlichen
-			Einheiten und altersabhängigen Normwertgrenzen praktikabel.
+		⚬	Durch Nutzung eines Faktors (Prozentwert) erscheinen mir, die durch Annährung erreichten "Warngrenzen", auch bei unterschiedlichen
+			Einheiten und altersabhängigen Normwertgrenzen klinisch bedeutsame Laborwertveränderungen sicher herauszufiltern.
 
 		⊛  Die Relevanz von path. Laborwerten ist bei einem Teil ganz deutlich am Grenzwert festzumachen. Als bestes Beispiel sind hier
 			Elektrolytwert-Veränderungen zu nennen. Bei anderen Parametern ist dies aber nicht so. Als langjährig tätiger Arzt benötigt man oft
@@ -519,32 +555,45 @@ return Labwrite
 
 AlbisLabParam(cmd:="load", data:="short", Anzeige:=false) {                               	;-- Laborparameter als Excel (.csv) Datei speichern
 
-	; Albis: Inhalt der LABPARAM.dbf komplett laden
+	; LABPARAM.dbf wurde verändert dann müssem Inhalte neu erstellt werden
 		LabDB := new DBASE(adm.AlbisDBPath "\LABPARAM.dbf", Anzeige)
+		If (adm.LabJ.lastupdate <> LabDB.lastupdatedBase) {
+			IniWrite, % LabDB.lastupdatedBase, % adm.Ini, % "Laborjournal", % "LabParam_letztesUpdate"
+			adm.LabJ.lastupdate := LabDB.lastupdatedBase
+			cmd := "rewrite"
+			load_Bar.Set(7, "Bezeichnungen der Laborparameter müssen aktualisiert werden")
+		}
+
+	; Wörterbuch laden
+		If (cmd = "load") {
+			LabDic := JSONData.Load(adm.LabDBPath "\LabDictionary.json", "", "UTF-8")
+			return LabDic
+		}
+
+	; Datenbank öffnen und lesen
 		LabDB.OpenDBF()
-		LabParam := labDB.GetFields("")
-		LabDB.OpenDBF()
+		LabParam := labDB.GetFields()
+		LabDB.CloseDBF()
+		LabDB := ""
 
 		If (data = "full") {
 
 			For idx, line in LabParam {
-				For key, val in Line
-					h .= key "`t"
-				break
-			}
-			h := RTrim(h, "`t") "`n"
-			For idx, line in LabParam {
-				For key, val in Line
+				For key, val in Line {
 					t .= val "`t"
+					If (idx=1)
+						h .= key "`t"
+				}
 				t := RTrim(t, "`t") "`n"
 			}
+			h := RTrim(h, "`t") "`n"
 
 			FileOpen(adm.LabDBPath "\LabParam.csv", "w", "UTF-8").Write(h . t)
 			JSONData.Save(adm.LabDBPath "\LabParam.json", LabParam, true,, 1, "UTF-8")
-			return LabParam
 
+			return LabParam
 		}
-		else {
+		else if (data = "short") {
 
 			; es wurde noch kein Wörterbuch angelegt oder es soll neu erstellt werden
 			; Wörterbuch besteht nur aus der Abkürzung (key) und der ausgeschriebenen Parameterbezeichnung (value)
@@ -562,9 +611,6 @@ AlbisLabParam(cmd:="load", data:="short", Anzeige:=false) {                     
 					JSONData.Save(adm.LabDBPath "\LabDictionary.json", LabDic, true,, 1, "UTF-8")
 
 				}
-			; Wörterbuch laden
-				else (cmd = "load")
-					LabDic := JSONData.Load(adm.LabDBPath "\LabDictionary.json", "", "UTF-8")
 
 			return LabDic
 		}
@@ -577,16 +623,17 @@ AlbisLabParam(cmd:="load", data:="short", Anzeige:=false) {                     
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 LaborJournal(LabPat, Anzeige=true) {
 
+
 	; letzte Fensterposition laden
 		IniRead, winpos, % adm.ini, % adm.compname, LaborJournal_Position
 		If (InStr(winpos, "ERROR") || StrLen(winpos) = 0)
-			winpos := "w920 h500"
+			winpos := "w1040 h500"
 
 	; Variablen bestücken                                	;{
 		srchdrecords  	:= LTrim(labJ.srchdrecords, "0")
 		dbrecords     	:= labJ.records
 		Tagesanzeige	:= LabJ.Tagesanzeige
-		iconpath        	:= adm.Dir "\assets\ModulIcons\LabJournal.svg"
+		iconpath        	:= adm.Dir "\assets\ModulIcons\Laborjournal2.svg"
 	;}
 
 	; HTML Vorbereitungen 	                              	;{
@@ -599,13 +646,14 @@ LaborJournal(LabPat, Anzeige=true) {
 		static TDR1     	:= "<TD style='text-align:Right; border-right:0px solid; '>"                                                            	; Textausrichtung rechts, kein Rand rechts
 		static TDR2a     	:= "<TD style='text-align:Right; border-right:1px; '>"
 		static TDR2b     	:= "<TD style='text-align:Right; border-right:1px; border-top:0px; border-bottom:0px; '>"             	; Tooltip
-		static TDR3      	:= "<TD class='tooltip' data-tooltip='##' style='text-align:Right; '>"                                              	; Param
+		static TDR3      	:= "<TD class='tooltip' data-tooltip='#TT1#' onclick='ahk.LabJournal_MoreTips(" q "#TT2#" q  ")' style='text-align:Center;'>"                                            	; Param
 
 		static cColW    	:= ["color:Red; font-weight:bold"
 									, "color:BlueViolet; font-weight:bold"
 									, "color:DarkTeal; font-weight:bold; font-family: sans-serif"
 									, "color:Blue;	font-weight:normal"
-									, "color:FireBrick; font-weight:normal"]
+									, "color:FireBrick; font-weight:normal"
+									, "color:Black; font-weight:normal; font-size:smaller"]
 
 	; HTML Seitendaten
 		htmlheader := FileOpen(A_ScriptDir "\assets\LaborjournalN.html", "r", "UTF-8").Read()
@@ -619,7 +667,7 @@ LaborJournal(LabPat, Anzeige=true) {
 
 				<tr>
 					<th style='text-align:Right'>Datum</th>
-					<th style='text-align:Center' colspan='3'>NR, Name, Vorname, Geburtsdatum</th>
+					<th style='text-align:Center' colspan='3'>[NR] Name, Vorname  Geburtsdatum</th>
 					<th style='text-align:Left'>Anford.Nr</th>
 					<th style='text-align:Right'>Param</th>
 					<th style='text-align:Right'>Wert</th>
@@ -683,7 +731,9 @@ LaborJournal(LabPat, Anzeige=true) {
 
 				  ; temporäre Variablen
 					TDPATBUTTONS 	:= (Patient  	? (trIdf ? " class='table-btn1'" : " class='table-btn2'") " onclick='ahk.LabJournal_KarteiKarte(event)'" : "")
-					TDR4	            	:= StrReplace(TDR3, "##", PN.PB)         ; Beschreibung des Laborparameter
+					TDR4	            	:= StrReplace(TDR3, "#TT1#", PN.PB)         ; Beschreibung des Laborparameter (PB = Parameterbeschreibung)
+					TDR4	            	:= StrReplace(TDR4, "#TT2#", "event")         ; Beschreibung des Laborparameter (PB = Parameterbeschreibung)
+					;~ TDR4	            	:= StrReplace(TDR4, "#TT2#", "'" PN.PB "'")         ; Beschreibung des Laborparameter (PB = Parameterbeschreibung)
 					html_ID              	:= PatID "_" Patient
 
 				  ; Datum                                      Hintergrund=Farbe1        Farbe2
@@ -698,7 +748,7 @@ LaborJournal(LabPat, Anzeige=true) {
 				  ; Parameter Wert
 					TDR2X     	:= PN.CV = 0
 									? 	(PN.PL 	> 0 ? StrReplace(TDR, "'>", cColW.5 "'>") : StrReplace(TDR, "'>", cColW.4 "'>"))
-									: 	(PN.CV = 1 ? StrReplace(TDR, "'>", cColW.1 "'>") : StrReplace(TDR, "'>", cColW.2 "'>"))
+									: 	(PN.CV = 1 ? StrReplace(TDR, "'>", cColW.1 "'>") : StrReplace(TDR, "'>", (PN.PW = "NEGATIV" ? cColW.6 : cColW.2) "'>"))
 				  ; Parameter Normwerte
 					TDR3X     	:= PN.CV = 0 ? TDR1	: (PN.CV = 1 ? StrReplace(TDR1, "'>"	, cColW.1 "'>")	: StrReplace(TDR1	, "'>", cColW.2 "'>"))
 				  ; Parameter Einheit
@@ -730,7 +780,7 @@ LaborJournal(LabPat, Anzeige=true) {
 							. 	"`t`t "	TDPAT     	.	Patient             	                  	"</TD>`n"	; Patientenname                    [Patient]
 							. 	"`t`t "	TDPAT     	.	PatGeburt        	                  	"</TD>`n"	; Patientengeburtstag           	[Patient]
 							. 	"`t`t "	TDRDX     	.	ANFNR          	                  	"</TD>`n"	; Anforderungsnummer       	[Patient]
-							. 	"`t`t "	TDR2X     	.	PN.PN                                 	"</TD>`n"	; Parameter Name              	[Param]
+							. 	"`t`t "	TDR1X     	.	PN.PN                                 	"</TD>`n"	; Parameter Name              	[Param]
 							. 	"`t`t "	TDR2X    	.	PN.PW                               	"</TD>`n"	; Parameter Wert               	[Wert]
 							.	"`t`t "	TDR3X    	.	PN.PV			                     	"</TD>`n"	; Parameter Normwerte        	[Normalwerte]
 							.	"`t`t "	TDL1X     	.	PE                                       	"</TD>`n"	; Parameter Einheit                [      ]
@@ -749,17 +799,16 @@ LaborJournal(LabPat, Anzeige=true) {
 		}
 
 		html .= "</div></table></div></body></html>"
-		;html .= "</tbody></table></div></body></html>"
+
 		;}
 
-	; erstellte HTML Seite wird angezeigt         		;{
+	; erstellte HTML Seite anzeigen               		;{
 		FileOpen(A_Temp "\Laborjournal.html", "w", "UTF-8").Write(html)
-		neutron := new NeutronWindow("","","","Laborjournal" LabJ.maxrecords ")", "+AlwaysOnTop minSize920x400")
+		neutron := new NeutronWindow("","","","Laborjournal" LabJ.maxrecords ")", "+AlwaysOnTop minSize1040x800")
 		neutron.Load(A_Temp "\Laborjournal.html")
 		neutron.Gui("+LabelNeutron")
 		neutron.Show(winpos)
 		hLJ := WinExist("A")
-		;WinSet, AlwaysOnTop,, % "ahk_id " hLJ
 
 		obj := neutron.wb.document.getElementById("LaborJournal_Header")	, hcr	:= obj.getBoundingClientRect()
 		obj := neutron.wb.document.getElementById("LabJournal_Table")    	, tcr	:= obj.getBoundingClientRect()
@@ -769,11 +818,18 @@ LaborJournal(LabPat, Anzeige=true) {
 		labJ.TableHeight   	:= Floor(tcr.Bottom  + 1)
 		labJ.enrolled	    		:= true
 
-		npos := PosStringToObject(winpos)
-		If !IsInsideVisibleArea(npos.X, npos.Y, npos.W, npos.H)
-			winpos := "xCenter yCenter w" npos.W " h" npos.H
+		npos	:= PosStringToObject(winpos)
+		npos.W := npos.W	< 1040	 ? 1040	: npos.W
+		npos.H	:= npos.H 	< 800   	 ? 800   	: npos.H
+		winpos :=	"x" npos.X " y" npos.Y " w " npos.W " h" npos.H
+		If !npos.Maximize && !(isInside := IsInsideVisibleArea(npos.X, npos.Y, npos.W, npos.H, CoordInjury)) {
+			winpos :=	"x" 	(InStr(CoordInjury, "x") ? "0"     	: npos.X)
+						. 	" y" 	(InStr(CoordInjury, "y") ? "0"     	: npos.Y)
+						. 	" w" 	(npos.W	< 1040	 ? 1040	: npos.W)
+						.	" h" 	(npos.H 	< 800   	 ? 800   	: npos.H)
+		}
 
-		neutron.Show(winpos)
+		neutron.Show(winpos " ")
 
 		load_Bar.Set(100, "Das Laborjounal ist geladen!")
 		Gui, load_BarGUI: Destroy
@@ -798,7 +854,6 @@ LabJournal_KarteiKarte(neutron, event) {
 	; event.target will contain the HTML Element that fired the event.
 	; Show a message box with its inner text.
 		RegExMatch(event.target.id, "^\s*(?<ID>\d+)?_(?<Name>.*)", thisPat)
-		;~ SciTEOutput("ID: " thisPatID ", text: " thisPatName ", " event.target.id)
 
 		If labJ.enrolled ="x" {
 
@@ -827,7 +882,7 @@ LabJournal_DragTitleBar(event) {
 	If labJ.enrolled {
 		PostMessage, 0xA1, 2, 0,, % "ahk_id" labJ.hwnd  ; WM_NCLBUTTONDOWN := 0xA1
 	}
-	else If labj.enrolled ="x" {
+	else If (labj.enrolled = "x") {
 
 		lj := GetWindowSpot(labJ.hwnd)
 		dh	:= lj.h
@@ -858,23 +913,57 @@ LabJournal_Grenzen(event) {
 AlbisLaborwertGrenzen(adm.LabDBPath)
 }
 
+LabJournal_MoreTips(neutron, event) {
+
+	global LabDic
+
+	LabPB 	:= LabDic[event.target.innerText].1
+
+	;~ Run, % "https://de.wikipedia.org/wiki/" LabPB
+	;~ SciTEOutput("url: https://de.wikipedia.org/wiki/" LabPB)
+
+	;~ ToolTip, % knowledge
+	;~ SetTimer, ttaus, -6000
+
+	;knowledge := RegExReplace(knowledge, "(\<.*?\>)")
+	;~ URLDownloadToFile, % "https://de.wikipedia.org/wiki/" LabPB, % A_Temp "\wikipedia.html"
+return knowledge
+ttaus:
+	ToolTip
+return
+}
+
+LoadKnowlegde(LabPB) {
+
+	LabPB 	:= RegExReplace(LabPB, "zyten", "zyt")
+	html  	:= DownloadToString("https://de.wikipedia.org/wiki/" LabPB)
+	html  	:= RegExReplace(html, "^.*\<div\sclass\=" q "mw\-parser\-output" q "\>" q)
+	RegExMatch(html, "\<p\>(?<ledge>.*?)\<\/p\>", know)
+
+return knowledge
+}
+
 Menu_LabJournal(event) {                                                                  	; im Moment nur Reload
 
 	global hLJ
 
-	SaveGuiPos(hLJ)
+	SaveGuiPos(labJ.hwnd)
 	Reload
 
 }
+
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Hilfsfunktionen
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 SaveGuiPos(hwnd) {
 
-	win 			:= GetWindowSpot(hwnd)
-	winPos	 	:= "x" win.X " y" win.Y " w" win.CW " h" win.CH
-	IniWrite, % winpos	, % adm.Ini, % adm.compname, LaborJournal_Position
+	MinMaxState := WinGetMinMaxState(hwnd)
+	If (MinMaxState <> "i") {
+		win 			:= GetWindowSpot(hwnd)
+		winPos	 	:= "x" win.X " y" win.Y " w" win.CW " h" win.CH   (MinMaxState = "z" ? " Maximize " : " ")
+		IniWrite, % winpos	, % adm.Ini, % adm.compname, LaborJournal_Position
+	}
 
 }
 
@@ -885,6 +974,8 @@ PosStringToObject(string) {
 		RegExMatch(string, "i)" coord "(?<Pos>\d+)", w)
 		p[coord] := wPos
 	}
+
+	p.Maximize := InStr(string, "Maximize") ? true : false
 
 return p
 }
@@ -950,96 +1041,35 @@ Local Enc := 0x557CF400 | Round({"bmp":0, "jpg":1,"jpeg":1,"gif":2,"tif":5,"tiff
 Return E[1] ? 0 : E[2] ? -1 : E[3] ? -2 : E[4] ? -3 : 1
 }
 
-Create_Laborjournal_ico(NewHandle := False) {                                                   	;-- ICON anzeigen
-Static hBitmap := 0
+Laborjournal_ico(NewHandle := False) {                                                            	;-- Skript-Icon
+Static hBitmap := Laborjournal_ico()
 If (NewHandle)
    hBitmap := 0
 If (hBitmap)
    Return hBitmap
 VarSetCapacity(B64, 9812 << !!A_IsUnicode)
-B64 :=	"AAABAAEAMDAAAAEAGACoHAAAFgAAACgAAAAwAAAAYAAAAAEAGAAAAAAAAAAAABwAAAAcAAAAAAAAAAAAAAAAHwAAHwAAHwAAHwAAHwAFIQNUSi+kc1zYjXj0nIj/oo//oo//oo//oo//oo//oo//oo//oo//oo//"
-		. 	"oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo/znIjYjXijc1tTSi8FIQMAHwAAHwAAHwAAHwAAHwAAHwAAHwAAHwAAHwBRSC3ckHv/oo/ai3isbVqWXk2OWUeOWUeOWUeOWUeOW"
-		.	"UeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeWXk2tbFvbi3n/oo/bj3pOSCwAHwAAHwAAHwAAHwAA"
-		. 	"HwAAHwACIAGKZk3/oo/HfmtjPSxCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd"
-		. 	"CKBdkPi3If2z/oo+JZU0CIAEAHwAAHwAAHwAAHwCLZk78oI2VXUxCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKB"
-		.	"dCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeWXk38oI2JZU0AHwAAHwAAHwBSSS7/oo+VXUxCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd"
-		.	"CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeXX03/oo9PRywAHwAGIgPdkHvHfmtCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKB"
-		.	"dCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBfIf2zbj3oFIQNVSzD/oo9jPSxCKBdCKBdCKBdCKBdC"
-		.	"KBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdkPi3/oo"
-		.	"9TSi+ldF3ainhCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdC"
-		.	"KBdCKBdCKBdCKBdCKBdCKBdCKBdCKBfcjHmiclvaj3qrbFlCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdiPCu5dWLKf23Ngm/Ngm/Ngm/Ngm/Ngm/Ngm/Ngm/Ngm/Ngm/Ngm/Ngm/Ngm/Ngm/"
-		.	"Ngm/Jf225dWNeOilCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBesbVrZjnnznIiWXk1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeWXk3/oo//oo//oo//oo//oo//oo//oo//oo//"
-		.	"oo//oo//oo//oo//oo//oo//oo//oo//oo//oo+RW0lCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeYYE7xmof/oo+OWUdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdHKxp2STi"
-		.	"BUT+BUT/ul4T/oo//oo//oo//oo//oo//oo//oo//oo//oo//oo/qlIKBUT+BUT90SDdGKhpCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeOWUf/oo//oo+OWUdCKBdCKBdCKBdCKBdCKBdCKBdCKB"
-		.	"dCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBflkX7/oo//oo//oo//oo//oo//oo//oo//oo//oo//oo/gjntCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeOWUf/oo//oo+OWU"
-		.	"dCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBflkX7/oo//oo//oo//oo//oo//oo//oo//oo//oo//oo/gjntCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKB"
-		.	"dCKBdCKBdCKBeOWUf/oo//oo+OWUdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeZYE6naVenaVenaVenaVenaVenaVenaVenaVenaVenaVeWXk1CKBdCKBdCKBdCKBdC"
-		.	"KBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeOWUf/oo//oo+OWUdCKBdCKBdSMiHBemjymofymofymofymofymofymofymofymofymofymofymofymofymofymofymofymofymofymofymofymofymofym"
-		.	"ofymofymofymofymofymofymofymofymofymofymofymofymofymofymoe8d2VOLx9CKBdCKBeOWUf/oo//oo+OWUdCKBdCKBfJf23hjnx7TTt0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd"
-		.	"0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd0SDd8TjzkkH3BemdCKBdCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9uRDNCKBdCKBdCKBdCKBdCKBdCKBdCK"
-		.	"BdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd0SDf+oY5CKBdCKBeOWUf/oo//oo+OWUdCKBdH"
-		.	"Kxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdDKRhEKhlCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH"
-		.	"/oo9CKBdCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBerbFmzcV5CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd"
-		.	"CKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9CKBdCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdDKRifZFNPMB9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdGKxnwmIbvl4VDK"
-		.	"RhCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9CKBdCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBemaVf/oo+KV0RCKBdCKBdCKBdCKB"
-		.	"dCKBdCKBdCKBdCKBd/Tz7kkX7vmIVtRDNCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9DKRhCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBeE"
-		.	"U0Hymoe4dGLAeWdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBfGfWudY1G4dGKnaVdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9DKRhCKBeOWUf/oo//oo+OWUdCKBdHKxr"
-		.	"/oo9lPy1CKBdCKBdCKBdCKBdCKBdmPi71nIl6TDpnQC70mohGKhpCKBdCKBdCKBdCKBdCKBdCKBdTMyL6n4xYNiV/Tz7gjntCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9DKRh"
-		.	"CKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdDKRhmPi5oQC9uRDPqlYKYYE5CKBdDKRjsloNwRTRCKBdCKBdCKBdCKBdCKBdCKBeXX03LgW5CKBdKLRz4nYtdOilCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdC"
-		.	"KBdCKBdCKBdCKBdrQjH/oo9DKRhCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdXNSTkkX7mkX/mkX+ycF5CKBdCKBdCKBe4dGKmaVdCKBdCKBdCKBdCKBdCKBdCKBfejXqEU0FCKBdCKBfHfmuXX01CKBdCKBdC"
-		.	"KBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9EKhlCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeBUT/ci3lCKBdCKBdCKBdCKBdCKBdpQS/zm4dJ"
-		.	"LRtCKBdCKBeNWEfRhXJCKBdCKBdCKBdCKBdFKhnVh3TymofymofymofymofKgG1CKBdCKBdrQjH/oo9FKhlCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdOLx/7oIxWNSR"
-		.	"CKBdCKBdCKBdCKBewcF6zcV5CKBdCKBdCKBdVNCP7oIxRMiBCKBdCKBdCKBeLV0bjkH1oQC9oQC9oQC9oQC9XNiRCKBdCKBdrQjH/oo9GKhpCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKB"
-		.	"dCKBdCKBdCKBdCKBdCKBfThXKLV0ZCKBdCKBdCKBdGKxnxmYZrQjFCKBdCKBdCKBdCKBfXiHaHVENCKBdCKBdGKxnnkn+CUj9CKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9FKhlCKBeOWUf/oo//oo+OWUdCKBdHK"
-		.	"xr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBecY1DBemdCKBdCKBdCKBeCUUDjkH1CKBdCKBdCKBdCKBdCKBeeZFLBemhCKBdCKBeWXkzdjHlDKRhCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9FKh"
-		.	"lCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdmPi71m4hGKhpCKBdCKBfKf22ZYE5CKBdCKBdCKBdCKBdCKBdjPiz2nIlILBpLLh3vl4V3SzlCKBdCKBdCKBdCKBdCKBd"
-		.	"CKBdCKBdCKBdrQjH/oo9FKhlCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdDKRjslYJxRjRCKBdVNST6n4xVNSRCKBdCKBdCKBdCKBdCKBdCKBfnkn94SzmgZVPThXJ"
-		.	"CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9FKhlCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBe2c2GnaVdCKBebYU/If2xCKBdCKBdCKBdCKBd"
-		.	"CKBdCKBdCKBesbVrBemf1m4htRDNCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9FKhlCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeAUD7djHl"
-		.	"CKBfhj32AUD5CKBdCKBdCKBdCKBdCKBdCKBdCKBdzSDb/oo/GfWtCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9FKhlCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBd"
-		.	"CKBdCKBdCKBdCKBdCKBdNMB77oIyBUT/ymodHKxpCKBdCKBdCKBdCKBdCKBdCKBdCKBdFKhndjHljPixCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9FKhlCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lP"
-		.	"y1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBfRhXLvl4WvblxCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH/oo9FKhlCKBeO"
-		.	"WUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBebYU//oo9oQC9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCK"
-		.	"BdCKBdCKBdCKBdrQjH/oo9FKhlCKBeOWUf/oo//oo+OWUdCKBdHKxr/oo9lPy1CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdcOSi8d2VCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd"
-		.	"CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdrQjH7n41CKBdCKBeOWUf/oo//oo+OWUdCKBdGKxn+oY52SThCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKB"
-		.	"dCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd7TTvwmIZCKBdCKBeOWUf/oo/0nIiWXkxCKBdCKBe0cl/tl4SdY1GaYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+"
-		.	"aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+aYU+eZFLvmIW0cl9CKBdCKBeXX03ym4faj3urbFlCKBdCKBdJLRujZl"
-		.	"TNgm/Ngm/Ngm/Ngm/Ngm/WiHXZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfZinfNgm/KgG2kZ1VILBpCKBdCKBesbVrajnmndV7YinZCKBdCKBdCKBdCKBdCKBdC"
-		.	"KBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBfai3ikc"
-		.	"1xWTDD+oY5iPCtCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdC"
-		.	"KBdCKBdCKBdCKBdCKBdCKBdjPSz/oo9USi8GIgPekHzFfGpCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKB"
-		.	"dCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBfHfmvckHsFIQMAHwBUSi//oo+UXUtCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd"
-		.	"CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeUXkv/oo9RSC0AHwAAHwAAHwCMZ0/8oI2UXUtCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd"
-		.	"CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBeUXkv8oI2KZk0AHwAAHwAAHwAAHwACIAGMZ0//oo/FfWtiPCtCKBdC"
-		.	"KBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdjPSzGfmv/oo+KZk0CIAEAHwAAHwAA"
-		.	"HwAAHwAAHwAAHwBUSi/ekHz/oo/ai3irbFqWXkyOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWUeOWU"
-		.	"eOWUeOWUeOWUeWXkyrbFnainj/oo/dkHtRSC0AHwAAHwAAHwAAHwAAHwAAHwAAHwAAHwAAHwAGIgNWTDCmdF3ajnr1nIn/oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo/"
-		.	"/oo//oo//oo//oo//oo//oo//oo//oo/0nIjZjnqldF1VSzAFIQMAHwAAHwAAHwAAHwAAHwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-		.	"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-		.	"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-		.	"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
-	If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", 0, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
-	   Return False
-	VarSetCapacity(Dec, DecLen, 0)
-	If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", &Dec, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
-	   Return False
-	; Bitmap creation adopted from "How to convert Image data (JPEG/PNG/GIF) to hBITMAP?" by SKAN
-	; -> http://www.autohotkey.com/board/topic/21213-how-to-convert-image-data-jpegpnggif-to-hbitmap/?p=139257
-	hData := DllCall("Kernel32.dll\GlobalAlloc", "UInt", 2, "UPtr", DecLen, "UPtr")
-	pData := DllCall("Kernel32.dll\GlobalLock", "Ptr", hData, "UPtr")
-	DllCall("Kernel32.dll\RtlMoveMemory", "Ptr", pData, "Ptr", &Dec, "UPtr", DecLen)
-	DllCall("Kernel32.dll\GlobalUnlock", "Ptr", hData)
-	DllCall("Ole32.dll\CreateStreamOnHGlobal", "Ptr", hData, "Int", True, "PtrP", pStream)
-	hGdip := DllCall("Kernel32.dll\LoadLibrary", "Str", "Gdiplus.dll", "UPtr")
-	VarSetCapacity(SI, 16, 0), NumPut(1, SI, 0, "UChar")
-	DllCall("Gdiplus.dll\GdiplusStartup", "PtrP", pToken, "Ptr", &SI, "Ptr", 0)
-	DllCall("Gdiplus.dll\GdipCreateBitmapFromStream",  "Ptr", pStream, "PtrP", pBitmap)
-	DllCall("Gdiplus.dll\GdipCreateHICONFromBitmap", "Ptr", pBitmap, "PtrP", hBitmap, "UInt", 0)
-	DllCall("Gdiplus.dll\GdipDisposeImage", "Ptr", pBitmap)
-	DllCall("Gdiplus.dll\GdiplusShutdown", "Ptr", pToken)
-	DllCall("Kernel32.dll\FreeLibrary", "Ptr", hGdip)
-	DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
-
+B64 := "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"
+If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", 0, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+   Return False
+VarSetCapacity(Dec, DecLen, 0)
+If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", &Dec, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+   Return False
+; Bitmap creation adopted from "How to convert Image data (JPEG/PNG/GIF) to hBITMAP?" by SKAN
+; -> http://www.autohotkey.com/board/topic/21213-how-to-convert-image-data-jpegpnggif-to-hbitmap/?p=139257
+hData := DllCall("Kernel32.dll\GlobalAlloc", "UInt", 2, "UPtr", DecLen, "UPtr")
+pData := DllCall("Kernel32.dll\GlobalLock", "Ptr", hData, "UPtr")
+DllCall("Kernel32.dll\RtlMoveMemory", "Ptr", pData, "Ptr", &Dec, "UPtr", DecLen)
+DllCall("Kernel32.dll\GlobalUnlock", "Ptr", hData)
+DllCall("Ole32.dll\CreateStreamOnHGlobal", "Ptr", hData, "Int", True, "PtrP", pStream)
+hGdip := DllCall("Kernel32.dll\LoadLibrary", "Str", "Gdiplus.dll", "UPtr")
+VarSetCapacity(SI, 16, 0), NumPut(1, SI, 0, "UChar")
+DllCall("Gdiplus.dll\GdiplusStartup", "PtrP", pToken, "Ptr", &SI, "Ptr", 0)
+DllCall("Gdiplus.dll\GdipCreateBitmapFromStream",  "Ptr", pStream, "PtrP", pBitmap)
+DllCall("Gdiplus.dll\GdipCreateHICONFromBitmap", "Ptr", pBitmap, "PtrP", hBitmap, "UInt", 0)
+DllCall("Gdiplus.dll\GdipDisposeImage", "Ptr", pBitmap)
+DllCall("Gdiplus.dll\GdiplusShutdown", "Ptr", pToken)
+DllCall("Kernel32.dll\FreeLibrary", "Ptr", hGdip)
+DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
 Return hBitmap
 }
 
@@ -1187,6 +1217,22 @@ class LoaderBar {
 	}
 }
 
+DownloadToString(url, encoding = "utf-8") {
+    static a := "AutoHotkey/" A_AhkVersion
+    if (!DllCall("LoadLibrary", "str", "wininet") || !(h := DllCall("wininet\InternetOpen", "str", a, "uint", 1, "ptr", 0, "ptr", 0, "uint", 0, "ptr")))
+        return 0
+    c := s := 0, o := ""
+    if (f := DllCall("wininet\InternetOpenUrl", "ptr", h, "str", url, "ptr", 0, "uint", 0, "uint", 0x80003000, "ptr", 0, "ptr"))    {
+        while (DllCall("wininet\InternetQueryDataAvailable", "ptr", f, "uint*", s, "uint", 0, "ptr", 0) && s > 0)        {
+            VarSetCapacity(b, s, 0)
+            DllCall("wininet\InternetReadFile", "ptr", f, "ptr", &b, "uint", s, "uint*", r)
+            o .= StrGet(&b, r >> (encoding = "utf-16" || encoding = "cp1200"), encoding)
+        }
+        DllCall("wininet\InternetCloseHandle", "ptr", f)
+    }
+    DllCall("wininet\InternetCloseHandle", "ptr", h)
+    return o
+}
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Includes

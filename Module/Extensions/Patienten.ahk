@@ -8,7 +8,7 @@
 ;		Abhängigkeiten:		siehe includes
 ;
 ;      	begonnen:       	    	03.05.2021
-; 		letzte Änderung:	 	04.05.2021
+; 		letzte Änderung:	 	18.09.2021
 ;
 ;	  	Addendum für Albis on Windows by Ixiko started in September 2017
 ;      	- this file runs under Lexiko's GNU Licence
@@ -53,9 +53,10 @@
 	SciTEOutput()
 
   ; Patientendatenbank
-	global outfilter 	:= ["NR", "PRIVAT", "GESCHL", "NAME", "VORNAME", "GEBURT",  "PLZ", "ORT", "STRASSE", "HAUSNUMMER", "TELEFON", "TELEFON2", "TELEFAX", "ARBEIT", "LAST_BEH", "MORTAL"]
-	global Table 		:= ["NR", "PR", "Geschl.", "Name", "Vorname", "Geb.", "PLZ", "Ort", "Strasse", "Nr", "Telefon1", "Telefon2", "Fax", "Beruf", "LBeh.", "Verst."]
-	global colWidth := [42, 25, 25, 95, 98, 66, 48, 125, 136,	34, 112, 120, 100, 160, 66, 66]
+	global outfilter 	:= ["NR", "PRIVAT", "GESCHL", "NAME", "VORNAME", "GEBURT", "Alter", "PLZ", "ORT", "STRASSE", "HAUSNUMMER", "TELEFON", "TELEFON2", "TELEFAX", "ARBEIT", "LAST_BEH", "MORTAL"]
+	global Table 		:= ["NR"    	, "PR" 	, "Geschl."	, "Name"	, "Vorname"	, "Geb." 	, "Alter" 	, "PLZ"   	, "Ort"	, "Strasse"	, "Nr"    	, "Telefon1"    	, "Telefon2"   	, "Fax", "Beruf", "LBeh.", "Verst."]
+	global colType	:= ["Integer"	, "Text"	, "Text"   	, "Text"  	, "Text"      	, "Integer"	, "Integer"	, "Integer"	, "Text"	, "Text"   	, "Integer"	, "Text Logical"	, "Text Logical"	, "Text Logical", "Text", "Text", "Text"]
+	global colWidth := [42, 25, 25, 95, 98, 66, 40, 48, 125, 136,	34, 112, 120, 100, 160, 66, 66]
 	PatDB 	:= ReadPatientDBF(Addendum.AlbisDBPath, outfilter, outfilter)
 
   ; Gui aufrufen
@@ -68,6 +69,7 @@ Patienten() {
 
 		global
 
+		today := A_DD "." A_MM "." A_YYYY
 		fields := {}
 		For i, col in table
 			cols .= (i>1?"|":"") col
@@ -79,13 +81,18 @@ Patienten() {
 	; Datum und Geschlechterbez. wird in lesbares Format geändert
 		For PatID, data in PatDB
 			For field, fieldvalue in data {
-				If RegExMatch(field, "(GEBURT|LAST_BEH|DEL_DATE|MORTAL)")
-					PatDB[PatID][field] := ConvertDBASEDate(fieldvalue)
+				If (RegExMatch(field, "(GEBURT|LAST_BEH|DEL_DATE|MORTAL)") && fieldvalue)
+					data[field] := ConvertDBASEDate(fieldvalue)
 				else if (field = "GESCHL")
-					PatDB[PatID][field] := fieldvalue = 1 ? "m":"w"
+					data[field] := fieldvalue = 1 ? "m":"w"
 				else if (field = "PRIVAT")
-					PatDB[PatID][field] := fieldvalue = "t" ? "P":""
+					data[field] := fieldvalue = "t" ? "P":""
 			}
+
+		For PatID, data in PatDB
+			data.Alter := Age(data.Geburt, today)
+
+		;~ outfilter.InsertAt(7, "Alter")
 
 	; GUI zeichen
 		Gui, PAT: new, % "-DPIScale +HWNDhPAT +Resize MinSize" maxwidth+50 "x300"
@@ -93,12 +100,12 @@ Patienten() {
 		For i, width in colWidth
 			Gui, PAT: Add, Edit, % (i = 1 ? "xm" : "x+0") " ym w" (i = 1 ? width+2 : width) " r1 AltSubmit vPATSF" i " gSUCHFELD"
 		Gui, PAT: Add, Text   	, % "x+2 yp+3 Backgroundtrans vPATNFO", % "0      "
-		Gui, PAT: Add, ListView	, % "xm y+4 w" maxwidth+30 " h800 Grid vPATLV", % cols
+		Gui, PAT: Add, ListView	, % "xm y+4 w" maxwidth+30 " h800 Grid vPATLV gLVHandler", % cols
 		Gui, PAT: Show, AutoSize, Patienten
 
 	; Spaltenbreite anpassen
 		For i, width in colWidth
-			LV_ModifyCol(i, width)
+			LV_ModifyCol(i, width " " colType[i])
 
 	; Focus auf den Nachnamen
 		GuiControl, PAT: Focus, PATSF4
@@ -126,9 +133,9 @@ SUCHFELD:   	;{
 
 	; Daten suchen
 		For PatID, data in PatDB {
-			LVRow 	:= Object(), LVRow.1 := PatID, found := 0
+			LVCol 	:= Object(), LVCol.1 := PatID, found := 0
 			For field, fieldvalue in data {
-				LVRow[fields[field]] := fieldvalue
+				LVCol[fields[field]] := fieldvalue
 				If search.haskey(field) {
 
 					If (field = "LAST_BEH") && RegExMatch(fieldvalue, search[field])
@@ -139,12 +146,16 @@ SUCHFELD:   	;{
 				}
 			}
 			If (found = search.Count())
-				LV_Add("", LVRow*)
+				LV_Add("", LVCol*)
 
 		}
 
 		GUIControl, PAT: +Redraw, PATLV
 		GuiControl, PAT:, PATNFO, % LV_GetCount()
+
+return ;}
+
+LVHandler: ;{
 
 return ;}
 

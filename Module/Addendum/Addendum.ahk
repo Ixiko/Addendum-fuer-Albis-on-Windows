@@ -1,99 +1,24 @@
-﻿; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-; . . . . . . . . . .
-; . . . . . . . . . .                                                              	ADDENDUM HAUPTSKRIPT
-global                                                      AddendumVersion:= "1.64" , DatumVom:= "14.09.2021"
-; . . . . . . . . . .
-; . . . . . . . . . .           ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
-; . . . . . . . . . .                  BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
-; . . . . . . . . . .                                     RUNS ONLY WITH AUTOHOTKEY_H 64 BIT UNICODE VERSION
-; . . . . . . . . . .                                        THIS SOFTWARE IS ONLY AVAIBLE IN GERMAN LANGUAGE
-; . . . . . . . . . .
-; . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-; . . . . . . . . . .                    !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !!
-; . . . . . . . . . .                                        THIS SCRIPT ONLY WORKS WITH AUTOHOTKEY_H V1.1.32.00+
-; . . . . . . . . . . . . . . . . . . .  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-; . . . . . . . . . . . . . . . . . . .  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-; . . . . . . . . . . . . . . . . . . .  . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+﻿; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+; . . . . .
+; . . . . .                                                              	ADDENDUM HAUPTSKRIPT
+global                                            AddendumVersion:= "1.67" , DatumVom:= "10.11.2021"
+; . . . . .
+; . . . . .           ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
+; . . . . .                  BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
+; . . . . .                                     RUNS ONLY WITH AUTOHOTKEY_H 64 BIT UNICODE VERSION
+; . . . . .                                        THIS SOFTWARE IS ONLY AVAIBLE IN GERMAN LANGUAGE
+; . . . . .
+; . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+; . . . . .                    !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !!
+; . . . . .                                        THIS SCRIPT ONLY WORKS WITH AUTOHOTKEY_H V1.1.32.00+
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 
 /*               	A DIARY OF CHANGES  [⏵]
 
-| **11.09.2021** | **F~**  | **Addendum_Albis**          	-   **AlbisKopiekosten()** - Funktion sollte jetzt zuverlässig den korrekten Eingabefokus erkennen und unterscheiden können.<br>
-																				    		Prüft das vor Ausführung ob eine Privatabrechnung angelegt wurde.<br>
-                                                                                     	-   **AlbisBrief()** - Textvorlagen/Arztbriefe öffnen<br>
-																						-	**AlbisAbrScheinCOVIDPrivat()** - Anlegen eines Abrechnungsscheines zur Abrechnung einer COVID-19 Impfung für privatversicherte Personen<br>
-																						-	**AlbisErstelleTagesprotokoll()** - Interaktion mit nahezu allen Steuerelementen ermöglicht |
-
-| **11.09.2021** | **F+**  | **Addendum**                  	-  **Laborjournal** - Anzeige zu festgelegten Zeit, z.B. zum Beginn der Spechstunde. An Tagen ohne Sprechstunde (Wochenende, Urlaub)
-																							wird das Laborjournal nicht aufgerufen. <br>**Addendum V1.64**<br>
-																						-   automatisches Ersetzen (**Hotstrings**):
-																								⏵	Senden von Diagnosen erweitert. Cursor wird zur schnelleren Eingabe von z.B. Seitenangaben an entsprechende die Position im ICD-Code gesetzt.<br>
-																								⏵ Senden von Ziffern im Abrechnungsfenster per Hotkey hinzugefügt. Schnelles Einfügen von Einzelziffern z.B. im Rahmen der Korrekturen bei
-																									 Abrechnungsprüfung.<br>
-																								⏵ Kontextsensitive Hotstringhilfe hinzugefügt. Die Eingabe eines Sternchen (*) nach einer begonnenen Texteingabe  stellt ein Suchfenster für
-																									 Hotstrings in ihrem Kontext bereit. Wurde zuvor nichts eingegeben werden alle HotStrings des jeweiligen Kontext angezeigt (z.B. alle EBM
-																									 oder Diagnosenhotstrings). <br>**Addendum V1.63**<br>
-																								⏵ vor dem Eintragen von Kosten für Kopien (als Sachkosten) wird auf einen angelegten Privat oder BG Schein geprüft
-																								⏵ Portokosten: nach Eingabe von porto nach den Kürzeln bg oder lbg erscheint jetzt ein Tooltip mit Preisen und Beschreibungen der Deutschen Post AG
-																														nachfolgend muss nur noch eine Zahl zur Auswahl der richtigen Portokosten gedrückt werden
-																														die Europreise sind in der Addendum.ini hinterlegt,
-																								⏵ mehr Diagnosenhotstrings
-																				    	-	Fristenanzeige im AU Formular leicht überarbeitet, Fristen werden in die Karteikarte übernommen<br>
-																				    	-	Tray-Menu enthält mehr Einstellungsmöglichkeiten für Addendum<br>
-																						-   Skript für die Organisation des Corona-Impfmanagements hinzugefügt + Hotstrings für die Corona EBM Ziffern.<br>
-																						-	Schnellentfernung aus der Wartezimmerliste (Albisdialog wird nach Festlegung automatisch bestätigt)<br>
-																						-	**Coronaimpfdokumentation.ahk** - hilft die Dokumentation schneller zu erfassen<br> |
-
-| **08.08.2021** | **F+**  | **Addendum_PDFReader**	-  	**Sumatra_PrintPDF()** - PDF mit SumatraPDF.exe über die Befehlszeile drucken |
-
-| **08.08.2021** | **F+**  | **Addendum_Gui**          	-   Autonaming wird nach jedem Texterkennungsvorgang aufgerufen. Bei Erfolg enthält der Dateiname des Dokumentes den richtigen Patientennamen
-																							und das Erstellungsdatum des Dokumentes
-																						-	Wiederherstellung der letzten Fensteransicht verbessert
-																						-   das Laborblatt kann per EMail (Outlook) versendet werden. Die für den Versand benötigte EMail Adresse wird aus der Albis-Datenbank bezogen
-																							(einzutragen unter Stammdaten).
-																						- 	der Dokumentimport hat eine ansehnliche Fortschrittsanzeige erhalten
-																						- 	Autovervollständigung beim Umbennen von Dokumenten
-																						-	Dateiexport aus dem Journal in den Exportordner |
-
-| **05.08.2021** | **F+~** | **DocPrinz**                    	-	Skript erhielt neuen Namen. Aus **Addendum_Exporter** wurde **DocPrinz**
-																						-	drucken von Dokumenten direkt aus DocPrinz heraus
-																						- 	die Anzahl der gedruckten Seiten je Patient wird gemerkt
-																						-	die Anzahl der gedruckten Kopien (Seiten) können automatisiert in der Albisabrechnung eingetragen werden
-																						- 	Dokumentenliste: 	- 	Kennzeichnung bereits exportierter Dokumente
-																				                                 		- 	Anzeige ob PDF Text oder Bild
-																														-	Anzeige der Seitenzahl von Dokumenten (auch bei WORD Dokumenten), bei Bilddateien wird die Dateigröße angezeigt
-																						-	Vorschau von Dateien um die Auswahl zu exportierender Dateien zu erleichtern (die Vorschaufunktion ist abschaltbar)  **Addendum V1.62**	|
-
-| **30.07.2021** | **F+~**  | **Quicksearch**               	- 	anstatt der Zahl für die PATNR kann optional an dieser der Patientenname inkl. ID eingeblendet werden
-                                                                                     	-  	ein doppelter Klick in die Datentabelle öffnet die Karteikarte des Patienten (nur wenn es das Feld NR oder PATNR gibt)
-																				    	-	bei Auswahl einer Zeile und vorhandenem Feld TEXTDB werden zusätzliche Daten aus der BEFTEXTE.dbf angezeigt (abschaltbar)
-																				    	-	gelöschte Datensätze können optional angezeigt werden
-																						-	Spalten mit Datumsinhalt werden im deutschen Datumsformat angezeigt
-																						-  	einzelne Spalten lassen sich in der Ausgabetabelle ein- oder ausblenden
-																						-	für jede Datenbank wird das individuelle Layout ihrer Ausgabetabelle gesichert und nach Neustart oder Datenbankwechsel wieder exakt hergestellt
-																				    	-	kleine Verbesserungen der Vorschau, speichert jetzt die komplette letzte Ansicht |
-
-| **10.07.2021** | **F+**    | **Abrechnungsassistent**   	-  	Gui verbessert
-																						- 	Automatisierung der Karteikarteneingaben zuverlässiger gemacht
-																						-	Auswertung der Albis Datenbanken verbessert und deutlich erweitert
-																						-	zeigt den Inhalt der Karteikarte des ausgewählten Patienten an
-																						-	neue Funktionen wie Berücksichtigung von Behandlungstagen mit Autovorschlägen erstellt  |
-
-| **04.07.2021** | **F+~**  | **Addendum_DB**           	-  	Fehlerbehebungen und Optimierung des Codes
-																						- 	.Behandlungstage() ermittelt die Tage mit Einträgen in der Karteikarte für alle Patienten in einem Quartal	**Addendum V1.61** |
-
-| **04.07.2021** | **F+~**  | **Addendum_DBASE**   	-  	DBASE Löschflags wurden nicht erkannt, Fehler behoben |
-
-
-| **09.05.2021** | **F+** | **AddendumMonitor**       	-	Beenden von Addendum.ahk ohne Taskmanager über das TrayIcon Menu möglich, kleinere Fehler beseitigt	|
-
-| **02.05.2021** | **F+**  | **Addendum_Datum**       	-   **DaysBetween()** - berechnet die Tage zwischen zwei Daten und **WeekOfYear()** - berechnet die Kalenderwoche 	|
-
-|                         | **F~**  | **Addendum_PopMenu**     	-   Fehlerbehebung war notwendig geworden |
-
-| **16.04.2021** | **F+**  | **Addendum_MDCalc**       	-   **ConvertHbA1c()** - konvertiert HbA1c Werte in beide Richtungen zwischen Prozent und mmol/mol	|
-
-
+| **08.11.2021** | **F+**  | **Addendum**					- |
 
 
 	CGM_ALBIS DIENST Service SID:                    	S-1-5-80-845206254-3503829181-3941749774-3351807599-4094003504
@@ -116,18 +41,21 @@ global                                                      AddendumVersion:= "1
 		#Persistent
 		#InstallKeybdHook
 		#SingleInstance               	, Force
-		#MaxThreads                  	, 50
+		#MaxThreads                  	, 200
 		#MaxThreadsBuffer       	, On
-		#MaxThreadsPerHotkey 	, 24
+		#MaxThreadsPerHotkey 	, 36
 		#MaxHotkeysPerInterval	, 99000000
 		#HotkeyInterval              	, 99000000
 		#MaxMem                    	, 256
-		#KeyHistory                  	, 1
-		#IfTimeout                   		, 500                     ; experimentell: in loop Schleife hängendes Skript beenden oder neustarten soll ermöglicht werden
+
+		;#IfTimeout              		, 500                      	; experimentell: in loop Schleife hängendes Skript beenden oder neustarten soll ermöglicht werden
 		;#WarnContinuableException, Off
 		;#Warn ;, All
 
+		#KeyHistory                  	, 0
+		SetBatchLines                	, -1
 		ListLines                        	, Off
+		Process                         	, Priority,, High  	; auf hohe Priorität setzen aufgrund der Hook-Prozesse
 
 		DetectHiddenWindows   	, On
 		SetTitleMatchMode        	, 2
@@ -139,7 +67,9 @@ global                                                      AddendumVersion:= "1
 		CoordMode, Caret        	, Screen
 		CoordMode, Menu        	, Screen
 
-		SetBatchLines                	, -1
+		SendMode                      	, Input
+		SetKeyDelay                   	, 5, 5
+
 		SetWinDelay                    	, -1
 		SetControlDelay            	, -1
 		AutoTrim                       	, On
@@ -147,10 +77,10 @@ global                                                      AddendumVersion:= "1
 
 	; Schutz gegen Doppelstart , das Skript mit einer zufälligen Verzögerung ausgeführt wird
 		Random, slTime, 1, 5
-		Sleep % slTime * 400
+		Sleep % slTime*400
 		If WinExist("Addendum Message Gui ahk_class AutohotkeyGUI")
 			ExitApp
-		DetectHiddenWindows, Off	;Off is default
+		DetectHiddenWindows, Off
 
 	; Scriptende und -fehlerbehandlungsfunktionen festlegen
 		OnExit("DasEnde")
@@ -160,24 +90,14 @@ global                                                      AddendumVersion:= "1
 		global compname := StrReplace(A_ComputerName, "-")                    	; der Name des Computer auf dem das Skript läuft
 
 	; Tray Icon Leichen entfernen
-		NoTrayOrphansWin10()
-
-	; auf hohe Priorität setzen aufgrund der Hook-Prozesse
-		Process, Priority,, High
+		;~ NoTrayOrphansWin10()
 
 	; startet die Windows Gdip Funktion
-		If !(pToken:=Gdip_Startup()) {
+		global pToken
+		If !(pToken := Gdip_Startup()) {
 			MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
 			ExitApp
 		}
-
-	; Tray Icon erstellen
-		If (hIconAddendum := Create_Addendum_ico())
-			Menu, Tray, Icon, % "hIcon: " hIconAddendum
-
-	; wichtige Hotkeys sollten an dieser Stelle bleiben
-		Hotkey, $^!ä  	, BereiteDichVor                                                         	;= Überall: beendet das Addendumskript
-		Hotkey, $^!n   	, SkriptReload                                                            	;= Überall: Addendum.ahk wird neu gestartet
 
 ;}
 
@@ -188,17 +108,12 @@ global                                                      AddendumVersion:= "1
 	  ; allgemeine globale Variablen
 		global AlbisWinID      	:= AlbisWinID()                      	; für alle Funktionen muss die ID des Albis Hauptfenster ohne weitere Aufrufe
 																							; als Variable vorhanden sein
-		global AlbisPID          	:= AlbisPID()                         	; # wird dies noch benötigt?
-		global Albis               	:= Object()                           	; # enthält aktuelle Fenstergrößen und andere Daten aus den Albisfenstern
-		global AutoDocCalled	:= 0                                      	; # flag für AutoDoc Funktion welche nicht mehrfach gestartet werden kann
-		;~ global JSortDesc, JSortCol                                           	; Sortierung des Journals im Addendum Infofenster
-		global DatumZuvor
-		global q                     	:= Chr(0x22)                           	; ist dieses Zeichen -> "
-		global admServer                                                       	; für Interskriptkommuniktion im LAN
 		global AddendumDir                                                 	; Skriptverzeichnis
+		global AutoDocCalled	:= 0                                      	; # flag für AutoDoc Funktion welche nicht mehrfach gestartet werden kann
+		global q                     	:= Chr(0x22)                           	; ist dieses Zeichen -> "
 		global ac32770           	:= " ahk_class #32770"          	; spart ein paar Zeichen im Code
-
-		RegExMatch(A_ScriptDir, ".*(?=\\Module)", AddendumDir)
+		global DatumZuvor
+		global admServer                                                       	; für Interskriptkommuniktion im LAN
 
 	 ; Hook's
 		global EHProc		    		:= ""                                  	; der Name des Prozesses der gehookt wurde
@@ -239,6 +154,8 @@ global                                                      AddendumVersion:= "1
 
 	 */
 
+		RegExMatch(A_ScriptDir, ".*(?=\\Module)", AddendumDir)
+
 		global Addendum	    	:= Object()
 		Addendum.Dir          	:= AddendumDir
 		Addendum.Debug     	:= false                           	; gibt Daten in meine Standardausgabe (Scite) aus wenn = true
@@ -272,7 +189,8 @@ global                                                      AddendumVersion:= "1
 		admSicherheit()                                                   	; Lockdown Funktion - Nutzer hat den Arbeitsplatz verlassen
 		admSonstiges()
 		admStandard()                                                    	; Standard-Einstellungen für Gui's
-		admWartezimmer()                                              	; Wartezimmer Einstellungen
+		If Addendum.AutoDelete                                    	; Wartezimmer entfernen ohne Nachfrage ist an
+			admWartezimmer()                                          	; Wartezimmer Einstellungen
 		admTagesProtokoll()                                           	; Tagesprotokoll laden
 		admTelegramBots()				                            	; Telegram Bot Daten
 		admThreads()                                                    	; Skriptcode für Multithreading (z.B. Tesseract OCR)
@@ -281,18 +199,18 @@ global                                                      AddendumVersion:= "1
 		GeriatrischListe()                                                   	; Geriatrie Index
 
 	; geriatrischer Basiskomplex - notwendige Diagnosen
-		GeriatrieICD := [	"Ataktischer Gang {R26.0G};"        	, "Spastischer Gang {R26.1G};"                         	, "Probleme beim Gehen {R26.2G};"
-								, 	"Bettlägerigkeit {R26.3G};"               	, "Immobilität {R26.3G};"                                  	,"Standunsicherheit {R26.8G};"
+		GeriatrieICD := [	"Ataktischer Gang {R26.0G};"         	, "Spastischer Gang {R26.1G};"                         	, "Probleme beim Gehen {R26.2G};"
+								, 	"Bettlägerigkeit {R26.3G};"             	, "Immobilität {R26.3G};"                                   	,"Standunsicherheit {R26.8G};"
 								, 	"Ataxie {R27.0G};"                        	, "Koordinationsstörung {R27.8G};"                    	, "Multifaktoriell bedingte Mobilitätsstörung {R26.8G};"
-								,	"Hemineglect {R29.5G};"         	    	, "Sturzneigung a.n.k. {R29.6G};"                      	, "Harninkontinenz {R32G};"
-								,	"Stuhlinkontinenz {R15G};"            	, "Überlaufinkontinenz {N39.41G};"                   	, "n.n. bz. Harninkontinenz {N39.48G};"
-								,	"Dysphagie {R13.9G};"                                                                                              	, "Dysphagie mit Beaufsichtigungspflicht während der Nahrungsaufnahme {R13.0G};"
-								,                                                                                                                                   	  "Dysphagie bei absaugpflichtigem Tracheostoma mit geblockter Trachealkanüle {R13.1G};"
+								,	"Hemineglect {R29.5G};"  	            	, "Sturzneigung a.n.k. {R29.6G};"                       	, "Harninkontinenz {R32G};"
+								,	"Stuhlinkontinenz {R15G};"             	, "Überlaufinkontinenz {N39.41G};"                  	, "n.n. bz. Harninkontinenz {N39.48G};"
 								,	"Orientierungsstörung {R41.0G};"  	, "Gedächtnisstörung {R41.3G};"                       	, "Vertigo {R42G};"
-								, 	"chron. Schmerzsyndrom {R52.2G};"	, "chron. unbeeinflußbarer Schmerz {R51.1G};"  	, "Chronische Schmerzstörung mit somatischen und psychischen Faktoren {F45.41G};"
-								,	"Multiinfarktdemenz {F01.1G};"      	, "Subkortikale vaskuläre Demenz {F01.2G};"    		, "Gemischte kortikale und subkortikale vaskuläre Demenz {F01.3G};"
-								,	"Vaskuläre Demenz {F01.9G};"      	, "Dementia senilis {F03G};"
-								,	"Vorliegen eines Pflegegrades {Z74.9G};"
+								, 	"chron. Schmerzsyndrom {R52.2G};"	, "chron. unbeeinflußbarer Schmerz {R51.1G};"  	, "Dementia senilis {F03G};"
+								,	"Multiinfarktdemenz {F01.1G};"      	, "Subkortikale vaskuläre Demenz {F01.2G};"    		,	"Vorliegen eines Pflegegrades {Z74.9G};"
+								,	"Vaskuläre Demenz {F01.9G};"        	, "Chronische Schmerzstörung mit somatischen und psychischen Faktoren {F45.41G};"
+								,	"Dysphagie {R13.9G};"                 	, "Dysphagie mit Beaufsichtigungspflicht während der Nahrungsaufnahme {R13.0G};"
+								, 	"Gemischte kortikale und subkortikale vaskuläre Demenz {F01.3G};"
+								,	"Dysphagie bei absaugpflichtigem Tracheostoma mit geblockter Trachealkanüle {R13.1G};"
 								,	"Demenz bei Alzheimer-Krankheit mit frühem Beginn (Typ 2) [F00.0*] {G30.0+G};Alzheimer-Krankheit, früher Beginn {G30.0G};"
 								,	"Demenz bei Alzheimer-Krankheit mit spätem Beginn (Typ 1) [F00.1*] {G30.1+G};Alzheimer-Krankheit, später Beginn {G30.1G};"
 								,	"Primäres Parkinson-Syndrom mit mäßiger Beeinträchtigung ohne Wirkungsfluktuation {G20.10G};"
@@ -300,13 +218,12 @@ global                                                      AddendumVersion:= "1
 								, 	"Primäres Parkinson-Syndrom mit schwerster Beeinträchtigung ohne Wirkungsfluktuation {G20.20G};"
 								, 	"Primäres Parkinson-Syndrom mit schwerster Beeinträchtigung mit Wirkungsfluktuation {G20.21G};"]
 
-		;~ DiabetesICD := [
-						;~ , "Diabetisches Ulcus, Wagner 0 {L89.08};", "Diabetisches Ulcus, Wagner 1 {L89.18};", "Diabetisches Ulcus, Wagner 2 {L89.28};", "Diabetisches Ulcus, Wagner 3 {L89.38};"
-						;~ , "Diabetisches Fersenulcus, Wagner 0 {L89.07};", "Diabetisches Fersenulcus, Wagner 1 {L89.17};", "Diabetisches Fersenulcus, Wagner 2 {L89.27};", "Diabetisches Fersenulcus, Wagner 3 {L89.37};"
-						;~ , "Fußdeformität {M21.6};", "Krallenzehen (erworben) {M20.5};", "Hallux valgus {M20.1};", "Charcot‘sche Osteoarthropathie {M14.6};", "Zustand nach Zehenamputation {Z89.4};"
-						;~ , "Zustand nach US-Amputation {Z89.5};", "Zustand nach OS-Amputationen {Z89.6};", "Rollstuhlpflichtigkeit {Z99.3};", "MRSA-Infektion {U80.0};"
-						;~ , "Retinopathia diabetica {H36.0*};", "Diabetische Nephropathie {N08.3*};", "Periphere diabetische Angiopathie {I79.2*};", "", ""
-						;~ ]
+		family := { "(G)roß"   	: ["(m)utter", "(v)ater", "(t)ante", "(o)nkel", "(ni)chte", "(ne)ffe"]
+						, "(Ur)groß"	: ["(m)utter", "(v)ater", "(t)ante", "(o)nkel", "(ni)chte", "(ne)ffe"]
+						, "(H)alb"   	: ["(b)ruder", "(s)chwester"]
+						, "(Sc)hw"		: ["wager", "wägerin", "ester", "ieger"]}
+
+
 
 
 	;}
@@ -315,9 +232,8 @@ global                                                      AddendumVersion:= "1
 	; Tray Menu erstellen
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
 		func_NoNo                     	:= Func("NoNo")
-		func_ZeigePatDB             	:= Func("ZeigePatDB")
-		func_ZeigeFehlerProtokoll	:= Func("ZeigeFehlerProtokoll")
-		func_AddendumObjekt		:= Func("AddendumObjektSpeichern")
+		hIconAddendum             	:= Create_Addendum_ico()
+		AddendumIcon    	         	:= hIconAddendum ? "hIcon: " hIconAddendum : Addendum.Dir "\assets\ModulIcons\Addendum.ico"
 
 		Menu, Tray, NoStandard
 		Menu, Tray, Tip					, % StrReplace(A_ScriptName, ".ahk") " V." AddendumVersion " vom " DatumVom
@@ -328,14 +244,13 @@ global                                                      AddendumVersion:= "1
 
 		Menu, Tray, Color            	, % "c" Addendum.Default.BGColor3
 		Menu, Tray, Add				, Addendum, % func_NoNo
-		Menu, Tray, Icon				, Addendum, % "hIcon: " hIconAddendum
+		Menu, Tray, Icon           	, % AddendumIcon
 	;}
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	; Module laden
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-		modul 	:= Object()
-		tool   	:= Object()
+		modul 	:= Object(), tool := Object()
 
 	; Clientabhängige Authorisierung laden
 		CompAuth 	:= IniReadExt(compname, "Module")
@@ -357,7 +272,7 @@ global                                                      AddendumVersion:= "1
 			Modultemp:= IniReadExt("Module", "Modul" SubStr("0" A_Index, -1))
 			Tooltemp	 := IniReadExt("Module", "Tool" 	 SubStr("0" A_Index, -1))
 
-			If !InStr(ModulTemp, "ERROR") {
+			If !InStr(ModulTemp	, "ERROR") {
 
 				tmp              	:= StrSplit(Modultemp, "|")
 				iconpath       	:= tmp[4]
@@ -369,18 +284,18 @@ global                                                      AddendumVersion:= "1
 				If InStr(tmp[1], "NoAuth") {
 					Menu, SubMenu1, Add, % tmp[2], ModulStarter
 					If FileExist(iconpath)
-						Menu, SubMenu1, Icon, % tmp[2], % iconpath
+						Menu, SubMenu1, Icon, % tmp[2], % RegExReplace(iconpath, "i)M(\.[a-z]+)$", "$1")
 				}
 				else if A_Index in %CompAuth%
 				{
 					Menu, SubMenu1, Add, % tmp[2], ModulStarter
 					If FileExist(iconpath)
-						Menu, SubMenu1, Icon, % tmp[2], % iconpath
+						Menu, SubMenu1, Icon, % tmp[2], % RegExReplace(iconpath, "i)M(\.[a-z]+)$", "$1")
 				}
 
 			}
 
-			If !InStr(ToolTemp, "ERROR")	{
+			If !InStr(ToolTemp  	, "ERROR")	{
 
 				tmp          	:=StrSplit(StrReplace(ToolTemp, "Ã¼", "ü"), "|")
 				iconpath   	:= tmp[4]
@@ -404,7 +319,7 @@ global                                                      AddendumVersion:= "1
 			}
 
 			If InStr(ModulTemp, "ERROR") && InStr(ToolTemp, "ERROR")
-					break
+				break
 		}
 
 		Menu, SubMenu2, Add	, % "Albis reanimieren"                 	, ToolStarter
@@ -417,8 +332,28 @@ global                                                      AddendumVersion:= "1
 	; per Checkbox zu- oder abschaltbare Funktionen (SubMenu3)
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
 
+	; Albis                                                                                      	;{
+	  ; Automatisierung von GVU Formulare
+		Menu, SubMenu36, Add, % "GVU automatisieren"                                      	, Menu_GVUAutomation
+		Menu, SubMenu36, % (Addendum.GVUAutomation ? "Check":"UnCheck")      	, % "GVU automatisieren"
+	  ; PopUpMenu
+		Menu, SubMenu36, Add, % "PopUpMenu", Menu_PopUpMenu
+		Menu, SubMenu36, % (Addendum.PopUpMenu ? "Check":"UnCheck")          	, % "PopUpMenu"
+	  ; schnelles Löschen im Wartezimmer
+		Menu, SubMenu36, Add, % "schnelles Löschen im Wartezimmer", Menu_Wartezimmer_AutoDelete
+		Menu, SubMenu36, % (Addendum.AutoDelete ? "Check":"UnCheck")           	, % "schnelles Löschen im Wartezimmer"
+	  ; Schnellrezept
+		Menu, SubMenu36, Add, % "Schnellrezept", Menu_Schnellrezept
+		Menu, SubMenu36, % (Addendum.Schnellrezept ? "Check":"UnCheck")           	, % "Schnellrezept"
+	  ; Addendum Toolbar
+		Menu, SubMenu36, Add, % "Addendum Toolbar", Menu_AddendumToolbar
+		Menu, SubMenu36, % (Addendum.ToolbarThread ? "Check":"UnCheck")        	, % "Addendum Toolbar"
+
+		Menu, SubMenu3, Add, % "Albis", :SubMenu36
+	;}
+
 	; AutoSizer für Albis, Ifap, MS Word, FoxitReader, Sumatra PDF 	;{
-		Menu, SubMenu31, Add, % "Albis AutoSize"                                                     	, Menu_AlbisAutoPosition
+		Menu, SubMenu31, Add, % "Albis AutoSize"                                                          	, Menu_AlbisAutoPosition
 		Menu, SubMenu31, % (Addendum.AlbisLocationChange ? "Check":"UnCheck"    )	, % "Albis AutoSize"
 		For classnn, appname in Addendum.Windows.Proc {
 			Menu, SubMenu31, Add, % appname, Menu_AutoSize
@@ -428,19 +363,37 @@ global                                                      AddendumVersion:= "1
 		Menu, SubMenu3, Add, % "AutoSizer", :SubMenu31
 	;}
 
-	; AddendumGui - Infofenster                                                    	;{
-		Menu, SubMenu32, Add, % "Infofenster anzeigen"                                       	, Menu_AddendumGui
-		Menu, SubMenu32, % (Addendum.AddendumGui        	? "Check":"UnCheck")	, % "Infofenster anzeigen"
+	; FoxitReader-Automatisierung                                                	;{
+		Menu, SubMenu37, Add, % "Signaturhilfe"                                                     	, Menu_PDFSignatureAutomation
+		Menu, SubMenu37, Add, % "signiertes Dokument schliessen"                         	, Menu_PDFSignatureAutoTabClose
+		Menu, SubMenu37, % (Addendum.AutoCloseFoxitTab ? "Check":"UnCheck")  	, % "signiertes Dokument schliessen"
+		Menu, SubMenu37, % (Addendum.PDFSignieren ? "Check":"UnCheck")          	, % "Signaturhilfe"
+		Menu, SubMenu37, % (Addendum.PDFSignieren ? "Enable":"Disable")             	, % "signiertes Dokument schliessen"
+
+		Menu, SubMenu3, Add, % "FoxitReader", :SubMenu37
+	;}
+
+	; Infofenster (AddendumGui)                                                  	;{
+		Menu, SubMenu32, Add, % "Infofenster"                                                             	, Menu_AddendumGui
+		Menu, SubMenu32, % (Addendum.AddendumGui        	? "Check":"UnCheck")	 	, % "Infofenster"
 		If Addendum.AddendumGui {
-			Menu, SubMenu32, Add, % "Einzelbestätigung für Importvorgänge"		     		, Menu_Einzelbestaetigung
+			Menu, SubMenu32, Add, % "Einzelbestätigung für Importvorgänge"		         		, Menu_Einzelbestaetigung
 			Menu, SubMenu32, % (Addendum.iWin.ConfirmImport	? "Check":"UnCheck")	, % "Einzelbestätigung für Importvorgänge"
-			Menu, SubMenu32, Add, % "Auto Wartezimmerkommentar"			            	, Menu_WZKommentar
-			Menu, SubMenu32, % (Addendum.iWin.WZKommentar	? "Check":"UnCheck")	, % "Auto Wartezimmerkommentar"
-			Menu, SubMenu32, Add, % "Abrechnungshelfer anzeigen"		     	        		, Menu_Abrechnungshelfer
-			Menu, SubMenu32, % (Addendum.iWin.AbrHelfer       	? "Check":"UnCheck")	, % "Abrechnungshelfer anzeigen"
+			Menu, SubMenu32, Add, % "Autozuweisung Wartezimmer"                              	, Menu_AutoWZ
+			Menu, SubMenu32, % (Addendum.iWin.AutoWZ         	? "Check":"UnCheck")	, % "Autozuweisung Wartezimmer"
+			Menu, SubMenu32, Add, % "Abrechnungshelfer"		                     	        	    	, Menu_Abrechnungshelfer
+			Menu, SubMenu32, % (Addendum.iWin.AbrHelfer       	? "Check":"UnCheck")	, % "Abrechnungshelfer"
 		}
-		Menu, SubMenu3, Add, % "Infofenster Einstellungen", :SubMenu32
-	  ;}
+		Menu, SubMenu3, Add, % "Infofenster", :SubMenu32
+    ;}
+
+	; Mail Management                                                                	;{
+		If Addendum.Mail.Outlook {
+		Menu, SubMenu38, Add, % "Outlook FaxMailManager"                                    	, Menu_FaxMailManager
+		Menu, SubMenu38, % (Addendum.Mail.FaxMail ? "Check":"UnCheck")              	, % "Outlook FaxMailManager"
+		Menu, SubMenu3, Add, % "Mail Management", :SubMenu38
+		}
+	;}
 
 	; Laborabruf/import automatisieren                                          	;{
 		Menu, SubMenu34, Add, % "Laborabruf", Menu_LaborAbrufManuell
@@ -473,41 +426,18 @@ global                                                      AddendumVersion:= "1
 	; Laborjournal                                                                         	;{
 		Menu, SubMenu35, Add, % "Täglich anzeigen", Menu_Laborjournalanzeige
 		Menu, SubMenu35, Add, % "Startzeit: " Addendum.Laborjournal.StartTime, Menu_LaborjournalStartzeit
-		Menu, SubMenu35, % (Addendum.Laborjournal.SheduledView ? "Check":"UnCheck") , % "Täglich anzeigen"
+		Menu, SubMenu35, % (Addendum.Laborjournal.AutoView ? "Check":"UnCheck") , % "Täglich anzeigen"
 		Menu, SubMenu3	, Add, % "Laborjournal", :SubMenu35
 	;}
 
 	; Texterkennung                                                                       	;{
-		Menu, SubMenu33, Add, % "Befundordner überwachen"                                 	, Menu_WatchFolder
-		Menu, SubMenu33, % (Addendum.OCR.WatchFolder ? "Check":"UnCheck")         	, % "Befundordner überwachen"
+		Menu, SubMenu33, Add, % "Befundordner überwachen"                                   	, Menu_WatchFolder
+		Menu, SubMenu33, % (Addendum.OCR.WatchFolder ? "Check":"UnCheck")       	, % "Befundordner überwachen"
 		If (Addendum.OCR.Client = compname) {
 			Menu, SubMenu33, Add, % "AutoOCR"                                                       	, Menu_AutoOCR
-			Menu, SubMenu33, % (Addendum.OCR.AutoOCR ? "Check":"UnCheck")         	, % "AutoOCR"
+			Menu, SubMenu33, % (Addendum.OCR.AutoOCR ? "Check":"UnCheck")        	, % "AutoOCR"
 		}
 		Menu, SubMenu3, Add, % "Texterkennung", :SubMenu33
-	;}
-
-	; Automatisierung von GVU Formulare                                      	;{
-		Menu, SubMenu3, Add, % "Albis GVU automatisieren"                                    	, Menu_GVUAutomation
-		Menu, SubMenu3, % (Addendum.GVUAutomation ? "Check":"UnCheck")                	, % "Albis GVU automatisieren"
-	;}
-
-	; Schnellrezept                                                                       	;{
-		Menu, SubMenu3, Add, % "Albis Schnellrezept", Menu_Schnellrezept
-		Menu, SubMenu3, % (Addendum.Schnellrezept ? "Check":"UnCheck")           	, % "Albis Schnellrezept"
-	;}
-
-	; Automatisierung der PDF Signierung mit dem FoxitReader        	;{
-		Menu, SubMenu3, Add, % "FoxitReader Signaturhilfe"                                  	, Menu_PDFSignatureAutomation
-		Menu, SubMenu3, Add, % "FoxitReader Dokument automatisch schliessen"    	, Menu_PDFSignatureAutoTabClose
-		Menu, SubMenu3, % (Addendum.AutoCloseFoxitTab ? "Check":"UnCheck")      , % "FoxitReader Dokument automatisch schliessen"
-		Menu, SubMenu3, % (Addendum.PDFSignieren ? "Check":"UnCheck")          	, % "FoxitReader Signaturhilfe"
-		Menu, SubMenu3, % (Addendum.PDFSignieren ? "Enable":"Disable")             	, % "FoxitReader Dokument automatisch schliessen"
-	;}
-
-	; Addendum Toolbar                                                             	;{
-		Menu, SubMenu3, Add, % "Addendum Toolbar", Menu_AddendumToolbar
-		Menu, SubMenu3, % (Addendum.ToolbarThread ? "Check":"UnCheck")        	, % "Addendum Toolbar"
 	;}
 
 	; MicroDicom Dateiexport automatisieren                                 	;{
@@ -519,11 +449,6 @@ global                                                      AddendumVersion:= "1
 		}
 	;}
 
-	; PopUpMenu                                                                          	;{
-		Menu, SubMenu3, Add, % "PopUpMenu", Menu_PopUpMenu
-		Menu, SubMenu3, % (Addendum.PopUpMenu ? "Check":"UnCheck"), % "PopUpMenu"
-	;}
-
 	;}
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
@@ -531,39 +456,45 @@ global                                                      AddendumVersion:= "1
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
 	; DATEN / PROTOKOLLE
 
-		Menu, SubMenu4, Add, % "Patienten Datenbank"              	, % func_ZeigePatDB
+		func_call := Func("ZeigePatDB")
+		Menu, SubMenu4, Add, % "Patienten Datenbank"              	, % func_call
 		Menu, SubMenu4, Add
-		Menu, SubMenu4, Add, % "aktuelles Fehlerprotokoll"        	, % func_ZeigeFehlerProtokoll
-		Menu, SubMenu4, Add, % "Addendum Objekt"                	, % func_AddendumObjekt
+
+		func_call := Func("ZeigeFehlerProtokoll")
+		Menu, SubMenu4, Add, % "aktuelles Fehlerprotokoll"        	, % func_call
+
+		func_call := Func("AddendumObjektSpeichern")
+		Menu, SubMenu4, Add, % "Addendum Objekt"                	, % func_call
 
 	; Protokolle/Datenbanken anzeigen
 		If FileExist(protokoll := Addendum.DBPath           	"\Labordaten\LaborabrufLog.txt")            	{
-			func_LaborAbrufLog  	:= Func("ShowTextProtocol").Bind(protokoll)
-			Menu, SubMenu4, Add, % "Laborabruf Protokoll"           	, % func_LaborAbrufLog
+			func_call 	:= Func("ShowTextProtocol").Bind(protokoll)
+			Menu, SubMenu4, Add, % "Laborabruf Protokoll"           	, % func_call
 		}
 		If FileExist(protokoll := Addendum.DBPath          	"\Labordaten\LaborimportLog.txt")          	{
-			func_LaborImportLog  	:= Func("ShowTextProtocol").Bind(protokoll)
-			Menu, SubMenu4, Add, % "Laborimport Protokoll"           	, % func_LaborImportLog
+			func_call  	:= Func("ShowTextProtocol").Bind(protokoll)
+			Menu, SubMenu4, Add, % "Laborimport Protokoll"         	, % func_call
 		}
 		If FileExist(protokoll := Addendum.Dir                 	"\logs'n'data\OnExit-Protokoll.txt")           	{
-			func_ZeigeOnExitProtokoll := Func("ShowTextProtocol").Bind(protokoll)
-			Menu, SubMenu4, Add, % "OnExit Protokoll"                	, % func_ZeigeOnExitProtokoll
+			func_call := Func("ShowTextProtocol").Bind(protokoll)
+			Menu, SubMenu4, Add, % "OnExit Protokoll"                	, % func_call
 		}
 		If FileExist(protokoll := Addendum.DBPath           	"\sonstiges\PDfImportLog.txt")                   	{
-			func_PDFImportLog  	:= Func("ShowTextProtocol").Bind(protokoll)
-			Menu, SubMenu4, Add, % "PDF Importprotokoll"            	, % func_PDFImportLog
+			func_call  	:= Func("ShowTextProtocol").Bind(protokoll)
+			Menu, SubMenu4, Add, % "PDF Importprotokoll"            	, % func_call
 		}
 		If FileExist(protokoll := Addendum.DBPath          	"\OCRTime_Log.txt")                              	{
-			func_tessOCRLog  	:= Func("ShowTextProtocol").Bind(protokoll)
-			Menu, SubMenu4, Add, % "PDF OCR Protokoll"            	, % func_tessOCRLog
+			func_call  	:= Func("ShowTextProtocol").Bind(protokoll)
+			Menu, SubMenu4, Add, % "PDF OCR Protokoll"            	, % func_call
 		}
 		If FileExist(protokoll := Addendum.DBPath          	"\sonstiges\WatchFolder-Log.txt")            	{
-			func_tessMonLog   	:= Func("ShowTextProtocol").Bind(protokoll)
-			Menu, SubMenu4, Add, % "OCR WatchFolder"            	, % func_tessMonLog
+			func_call   	:= Func("ShowTextProtocol").Bind(protokoll)
+			Menu, SubMenu4, Add, % "OCR WatchFolder"            	, % func_call
 		}
 		If FileExist(protokoll := Addendum.DBPath          	"\sonstiges\AddendumMonitorLog.txt")     	{
-			func_tessMonLog   	:= Func("ShowTextProtocol").Bind(protokoll)
-			Menu, SubMenu4, Add, % "Addendum Monitor"            	, % func_tessMonLog
+			func_call   	:= Func("ShowTextProtocol").Bind(protokoll)
+			Menu, SubMenu4, Add, % "Addendum Monitor"            	, % func_call
+			func_call   	:= ""
 		}
 
 	; FARBEN festlegen
@@ -595,9 +526,6 @@ global                                                      AddendumVersion:= "1
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
 		oPat := admDB.ReadPatDB() ; oPat - ist ein Objekt das die aktuell Daten zu registriertem Patientienten enthält
 	;}
-
-
-
 ;}
 
 
@@ -613,9 +541,9 @@ global                                                      AddendumVersion:= "1
 
 	;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	; Skript neu starten um 0 Uhr
-		func_AutoReload := Func("SkriptReload").Bind("AutoRestart")
+		func_call := Func("SkriptReload").Bind("AutoRestart")
 		diffTime := GetSeconds("240000") - GetSeconds(A_Hour A_Min A_Sec )
-		SetTimer, % func_AutoReload, % -1*(diffTime*1000)
+		SetTimer, % func_call, % -1*(diffTime*1000)
 
 	;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	; Laborabruf Timer
@@ -623,7 +551,8 @@ global                                                      AddendumVersion:= "1
 
 	;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	; Laborjournal Timer
-		LaborjournalTimer(Addendum.Laborjournal.StartTime) ;~ nicht fertig
+		;~ If Addendum.Laborjournal.AutoView
+			;~ LaborjournalTimer(Addendum.Laborjournal.StartTime)
 
 	;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	; SetWinEventHooks /Shellhook initialisieren
@@ -645,29 +574,21 @@ global                                                      AddendumVersion:= "1
 		}
 
 	;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	; Infofenster sofort anzeigen wenn eine Akte/Karteikarteikarte geöffnet ist
+	; Hotfolder - Überwachung des Befundordners
+		If Addendum.OCR.WatchFolder {                                                                                    ; Überwachung des Befundordners einschalten
+			WatchFolder(Addendum.BefundOrdner, "admGui_FolderWatch", False, (1+2+8+64))
+			Addendum.OCR.WatchFolderStatus := "running"
+		}
+		;~ SciTEOutput("WatchFolder: " (!Addendum.OCR.WatchFolderStatus ? "off" : Addendum.OCR.WatchFolderStatus))
+
+	;-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	; Infofenster gleich anzeigen wenn eine Karteikarteikarte geöffnet ist
 		Addendum.AktiveAnzeige := AlbisGetActiveWindowType()
 		If InStr(Addendum.AktiveAnzeige, "Patientenakte")         	{
 			PatDb(AlbisTitle2Data(AlbisTitle), "exist")
-			If Addendum.AddendumGui {
-			  ; Überwachung des Befundordners einschalten
-				If Addendum.OCR.WatchFolder {
-					WatchFolder(Addendum.BefundOrdner, "admGui_FolderWatch", False, (1+2+8+64))
-					Addendum.OCR.WatchFolderStatus := "running"
-				}
-				If RegExMatch(Addendum.AktiveAnzeige, "i)(Karteikarte|Laborblatt|Biometriedaten)")				; WinActive("ahk_class OptoAppClass") &&
-					AddendumGui()
-			}
+			If Addendum.AddendumGui && RegExMatch(Addendum.AktiveAnzeige, "i)(Karteikarte|Laborblatt|Biometriedaten)")
+				AddendumGui()
 		}
-
-	; Hotstrings erstellen
-		HotS_View_EBM()
-		HotS_View_Privatabrechnung()
-		HotS_Privatabrechung()
-		HotS_View_Diagnosen()
-
-	; WorkingSet freigeben nach dem ersten Start
-		ScriptMem()
 
 ;}
 
@@ -678,59 +599,46 @@ HotkeyLabel:
 	; Hotkey's die überall funktionieren
 	;=------------------------------------------------------------------------------------------------------------------------------------------------------------ ;{
 	fn_LVCopy	:= Func("ListviewClipboard")
-	fn_ILCalc  	:= Func("InlineCalculator")
+	fn_Reload  	:= Func("SkriptReload")
 
+	Hotkey, $^!n                 	, SkriptReload                        	;= Überall: Addendum.ahk wird neu gestartet
+	Hotkey, $^!ä                 	, BereiteDichVor                     	;= Überall: beendet das Addendumskript
+	Hotkey, $^+n                 	, % fn_Reload                        	;= Überall: Addendum.ahk wird neu gestartet
 	Hotkey, !m                    	, MenuSearch                          	;= Überall: Menu Suche - funktioniert in allen Standart Windows Programmen
-	Hotkey, !q                     	, ScreenShot                             	;= Überall: erstellt einen Screenshot per Mausauswahl
-	Hotkey, CapsLock          	, DoNothing                             	;= Überall: Capslock kann nicht mehr versehentlich gedrückt werden
+	Hotkey, $CapsLock          	, DoNothing                             	;= Überall: Capslock kann nicht mehr versehentlich gedrückt werden
 	Hotkey, +!e                  	, EnableAllControls                   	;= Überall: inaktivierte Bedienfelder in externen Fenstern aktivieren
-	Hotkey, ^!p                  	, PatientenkarteiOeffnen           	;= Überall: selektierte Zahlen zum Öffnen einer Patientenkarteikarte nutzen
 	Hotkey, Pause               	, AddendumPausieren              	;= Überall: Addendum legt eine Pause ein
 	Hotkey, ^!F10               	, SendClipBoardText                	;= Überall: sendet den Inhalt des Clipboards als simulierte Tasteneingabe
 	Hotkey, $^+c		    		, % fn_LVCopy                          	;= Überall: Inhalt aus Standard-Windows-Listview Steuerelementen kopieren
-	Hotkey, $^#-		    		, % fn_ILCalc                            	;= Überall: ein selektierter mathematischer Ausdruck wird berechnet
-
-
-InlineCalculator() {
-
-   ClipBoard := ""
-   SendInput ^c ; copy selection
-   ClipWait 0.5
-   If (ErrorLevel) {
-      SendInput +{HOME}^c ; copy, keep selection to overwrite (^x for some apps)
-      ClipWait 1
-      IfEqual ErrorLevel,1, Return
-      If RegExMatch(ClipBoard, "(.*)(``)(.*)", y)
-         SendInput % "{RAW}" y1 . (A_ThisHotKey="^#=" ? y3 . " = " : "") . Eval(y3)
-   } Else
-   SendInput % "{RAW}" . (A_ThisHotKey="^#=" ? ClipBoard . " = " : "") . Eval(ClipBoard)
-	Return
-}
-
 	;}
 
 	;=---------------------------------------------------------------------------------------------------------------------------------------------------------------
 	; Scite4AutoHotkey
 	;=------------------------------------------------------------------------------------------------------------------------------------------------------------ ;{
+	fn_Send := {	"^NumPad1"	: Func("SendRawFast").Bind(";{ ")
+					,	"^NumPad2"	: Func("SendRawFast").Bind(";}")
+					,	"^5"              	: Func("SendRawFast").Bind("`r"	, "")
+					,	"!´"                  	: Func("SendRawFast").Bind("`n"	, "")
+					,	"^´"              	: Func("SendRawFast").Bind("%%", "L")
+					,	"^!´"            	: Func("SendRawFast").Bind("`t"	, "")
+					,	"^,"              	: Func("SendAlternately").Bind("/* | */")
+					,	"^-"              	: Func("SendAlternately").Bind("{ | }")}
+
 	Hotkey, IfWinActive, ahk_class SciTEWindow
-    Hotkey, ^NumPad1                  	, SendRawBAuf                      	;= SciTE:  '; {'
-    Hotkey, ^NumPad2                  	, SendRawBzu                        	;= SciTE:  '; }'
-    Hotkey, ^Numpad3                  	, SendRawElse                       	;= SciTE:  } else {
+
+	For hkey, funcCall in fn_Send
+		Hotkey, % hkey, % funcCall
+	fn_Send := ""
+
     Hotkey, Numpad6                     	, SendStrgRight                      	;= SciTE:  Strg+Pfeil rechts
     Hotkey, Numpad4                     	, SendStrgLeft                        	;= SciTE:  Strg+Pfeil links
-    Hotkey, LControl & 5                 	, SendRawProzentAll              	;= SciTE: %%, setzt den Cursor zwischen beide Zeichen
-    Hotkey, LControl & `.                	, SciteBracket                         	;= SciTE: 'LCtrl + .' bringt '{' und nach nochmaligem drücken '}'
-    Hotkey, LControl & `,                	, SciteCommentBlock             	;= SciTE: 'LCtrl + ,' bringt '/*' und nach nochmaligem drücken '*/'
-    Hotkey, LControl & `´                	, SendRawN                          	;= SciTE: ein Linefeed (`n)
-    Hotkey, LAlt & `´                       	, SendRawR                           	;= SciTE: carriage return (`r)
-    Hotkey, ^!`´                            	, SendRawTab                       	;= SciTE: Tab (`t)
     Hotkey, LAlt & Right                   	, SendFourSpace                   	;= SciTE: sends 4 times space
     Hotkey, LAlt & Left                        	, SendFourBackspace             	;= SciTE: sends 4 times backspace
     Hotkey, LAlt & v                         	, SciteDescriptionBlock, I2      	;= SciTe: Abschnittbezeichner für Addendumskripte
     Hotkey, LControl & Numpad4    	, SciteSmartCaretL                 	;= SciTe: for language depend moving of caret
     Hotkey, LControl & Numpad6    	, SciteSmartCaretR                 	;= SciTe: for language depend moving of caret
-	Hotkey, IfWinActive
 
+	Hotkey, IfWinActive
 	;}
 
 	;=---------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -767,7 +675,6 @@ InlineCalculator() {
 	fn_AIndis   	:= Func("AusIndisKorrigieren")
 	fn_Abr       	:= Func("AlbisAbrechnungAktiv")
 	fn_SchnellZ 	:= Func("Schnellziffer")
-	fn_SchnellZ 	:= Func("Schnellziffer")
 	fn_COVIDA 	:= Func("ScheinCOVIDPrivat")
 	If Addendum.CImpf.CNRRun {                                                      	; Funktion bei Hotstrings/EBM
 		fn_IFLko    	:= Func("IFActive_Lko")
@@ -791,12 +698,13 @@ InlineCalculator() {
 	Hotkey, !Left  					, Karteikarte      			            		;= Albis: Karteikarte des Patienten anzeigen
 	Hotkey, $^!d                	, StarteAutoDiagnosen                    	;= Albis: Skript AutoDiagnosen3 starten
 	Hotkey, $^z	                 	, % fn_Undo                                  	;= Albis: Eingaben rückgängig machen (Edit, RichEdit)
-	Hotkey, $^d	                 	, % fn_Redo                                   	;= Albis: Eingaben wiederherstellen
+	Hotkey, $^d	                	, % fn_Redo                                   	;= Albis: Eingaben wiederherstellen
 	Hotkey, $^!-                	, % fn_AIndis                                  	;= Albis: Ausnahmeindikationen werden korrigiert
 	Hotkey, ^!i                   	, % fn_COVIDA                                	;= Albis: Abrechnungsschein für COVID-19 Impfung Privatpatienten
 	Hotkey, IfWinActive
 
 	Hotkey, IfWinExist, ahk_class OptoAppClass                          		;~~ mehrmonatiges Kalender-Addon
+	Hotkey, $#H                  	, HotkeyViewer                                 	;= Albis: zeigt die Hotkeys an
 	Hotkey, $F9			    		, MinusEineWoche                            	;= Albis: addiert eine Woche einem Datum hinzu, z.B. im AU Formular
 	Hotkey, $F10		        	, PlusEineWoche                            	;= Albis: subtrahiert eine Woche von einem Datum, z.B. im AU Formular
 	Hotkey, $F11		    		, MinusEinMonat                            	;= Albis: addiert 4x7 Tage (4 Wochen) auf ein Datum
@@ -837,16 +745,6 @@ InlineCalculator() {
 		Hotkey, IF
 	}
 
-	;~ Hotkey, If, % fn_Abr                                                             	;~~ schnelles Einfügen von EBM Gebühren im Abrechnungsfenster
-	;~ Hotkey, a                        	, % fn_SchnellZ
-	;~ Hotkey, s                        	, % fn_SchnellZ
-	;~ Hotkey, d                        	, % fn_SchnellZ
-	;~ Hotkey, f                        	, % fn_SchnellZ
-	;~ Hotkey, g                        	, % fn_SchnellZ
-	;~ Hotkey, h                        	, % fn_SchnellZ
-	;~ Hotkey, i                        	, % fn_SchnellZ
-	;~ Hotkey, If
-
 	;}
 
 	;=---------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -863,38 +761,15 @@ InlineCalculator() {
 
 	;}
 
+	; Hotstrings erstellen
+		global hsUser
+
+		HotS_View_EBM()
+		HotS_View_Privatabrechnung()
+		HotS_View_Diagnosis()
+		HotS_Scan_Hotstrings()
+
 return
-
-IFActive_Lko()                                                                                	{           	;-- #IF Hotkey/Hotstring Funktion - lko/Karteikarte aktiv?
-
-	global KK
-
-	If WinActive("ahk_class OptoAppClass")  {
-		kuerzel := AlbisGetActiveControl("contraction")
-		If (RegExMatch(kuerzel, "i)^lk\w") || StrLen(kuerzel) = 0 || InStr(AlbisGetActiveWindowType(), "Karteikarte"))
-			return true
-	}
-
-return false
-}
-
-HoveredControl(WinNN, CtrlNN)                                                    	{          	;-- true wenn Maus über benanntem Steuerelement steht
-
-	MouseGetPos, mx, my, hWin, hCtrl, 2
-	WinGetClass , WinClass, % "ahk_id " hWin
-	If !InStr(WinClass, WinNN)
-		return false
-	If RegExMatch(Control_GetClassNN(hWin, hCtrl), CtrlNN)
-		return true
-
-return false
-hCtrlOff:
-	ToolTip, % "classnn: " fCtrl, % mx-10, % my+30, 12
-	SetTimer, hCtrlOff, -1000
-	ToolTip,,,,12
-return
-}
-
 ;}
 
 ;{06. Hotstrings
@@ -902,10 +777,17 @@ return
 :*:#at::@
 
 ;{ 	6.1. -- ALBIS
-#include %A_ScriptDir%\include\EBM-COVIDImpfung.ahk
+;~ #include %A_ScriptDir%\include\EBM-COVIDImpfung.ahk
 ; --- EBM	- Leistungskomplexe                                                         	;{
-#If WinActive("ahk_class OptoAppClass") && InStr(AlbisGetActiveControl("contraction"), "lk")
-HotS_View_EBM() {
+#If HotS_EBM_IF()
+; ----- ----- ----- ----- -----
+HotS_EBM_IF()                                                                                  	{              	;-- für kontextsensitive Auslösung
+	If WinActive("ahk_class OptoAppClass")
+		&& (RegExMatch(AlbisGetActiveControl("contraction"), "lk") || )
+		return true
+return false
+}
+HotS_View_EBM()                                                                          	{
 
   ; schreibe ** um alle Hotstrings des Kontext anzuzeigen oder
   ; schreibe *Suchmuster z.B. *Zuschlag um in den Hotstrings zu suchen
@@ -914,11 +796,11 @@ HotS_View_EBM() {
   ; IF Bedingung - START
 	fn_IFPAbr := Func("HotS_EBM_IF")
 	Hotkey, If, % fn_IFPAbr
-	Hotstring(":?:*", Func("HotS_View").Bind(A_LineNumber+3, "EBM"))
+	Hotstring(":?*:*", Func("HotS_View").Bind(A_LineNumber+3, "EBM"))
 
 return
 }
-
+; ----- ----- ----- ----- -----
 ; Gespräch
 :*R:gs::03230(x:2)                                                                        	; Gesprächziffer
 :*R:ps1::35110(x:2)                                                                      	; Psychosomatikziffer 1
@@ -996,9 +878,8 @@ return ;}
 :*R:U9::01719                                                                             	; U9
 :*R:J1::01723                                                                             	; J1
 :*:Kind::                                                                                      	; Vorsorgeuntersuchungen Kinder inkl. J1
-:*:UUnt::                                                                                   	;{
-Send, % 	"{RAW}01711-01712-01713-01714-01715-01716-01717-"
-			. 	"01718-01719-01723"
+:*:UUnt::                                                                                   	;{ Vorsorgeuntersuchungen Kinder inkl. J1
+Send, % "{RAW}01711-01712-01713-01714-01715-01716-01717-01718-01719-01723"
 return ;}
 :*R:entw::03350-03351                                                               	; Orientierende entwicklungsneurologische Untersuchung eines Neugeborenen,
 																									; Säuglings, Kleinkindes oder Kindes
@@ -1055,6 +936,14 @@ return ;}
 :*R:Wunde3::02302-                                                                 	; Kleinchirurgischer Eingriff III und/oder primäre Wundversorgung
 :*R:eingriff3::02302-    																	; bei Säuglingen, Kleinkindern und Kindern
 
+; Impfungen
+:*:FSME::89102ABR{LShift Down}{Left 3}{LShift Up}
+:*:ig1::89111-
+:*:gsi1::89111-
+:*:ig2::89112-
+:*:gsi2::89112-
+:*:Grippe::89111-89112
+
 ; Hausbesuche
 :*R:Verwe::01440(x:2)                                                                 	; Verweilen außerhalb der Praxis
 :*R:hb0::01410-97234-03230(x:3)                                               	; Hausbesuch (bestellt) {Left 11}
@@ -1081,18 +970,24 @@ return ;}
 																									; mit Pflegegrad zur Koordination der Versorgung
 																									; nach Krankenhausaufenthalt
 ; Corona
-:*R:prior::88320                                                                          	; Ausstellung Zeugnis im Kontext der CoronaImpfV (§9)
-:*R:berat::88322                                                                       	; Ausschließliche Impfberatung (§ 9 Abs. 2)
-:*R:COVID::88331-88332-88333-88334-88323-88324             	; Corona Impfung im Hausbesuch
-:*R:coronaHB::88323-88324                                                       	; Corona Impfung im Hausbesuch
-:*R:coronaImpfHB::88323-88324                                                	; Corona Impfung im Hausbesuch
+:*:prior::88320                                                                          	; Ausstellung Zeugnis im Kontext der CoronaImpfV (§9)
+:*:berat::88322                                                                          	; Ausschließliche Impfberatung (§ 9 Abs. 2)
+:*:COVID::88331-88332-88333-88334-88323-88324             	; Corona Impfung im Hausbesuch
+:*:coronaHB::88323-88324                                                       	; Corona Impfung im Hausbesuch
+:*:coronaImpfHB::88323-88324                                                	; Corona Impfung im Hausbesuch
 :*R:Bion1N::88331A(charge:xxxxxx)                                           	; Comirnaty 1.Impfung - normal
 :*R:BionN1::88331A(charge:xxxxxx)                                           	; Comirnaty 1.Impfung - normal
 :*R:Bion2N::88331B(charge:xxxxxx)                                            	; Comirnaty 2.Impfung - normal
 :*R:BionN2::88331B(charge:xxxxxx)                                            	; Comirnaty 2.Impfung - normal
 :*R:BionP1::88331G(charge:xxxxxx)                                             	; Comirnaty 1.Impfung - Pflegeheim
 :*R:BionP2::88331H(charge:xxxxxx)                                               	; Comirnaty 2.Impfung - Pflegeheim
-:*:genesen1::88370                                                                  	; Ausstellung eines COVID-19-Genesenenzertifikats
+																									; COVID-19-Impfzertifikat
+:*:Cert1::88350                                                                        	; geimpft in eigener Praxis (Web)
+:*:CertP::88351                                                                        	; geimpft in eigener Praxis (PVS)
+:*:CertE1::88352                                                                        	; nicht selbst geimpft (1.Impfung)
+:*:CertE2::88353                                                                        	; nicht selbst geimpft (2.Impfung)
+:*:CertG::88371                                                                       	; Ausstellung Genesenenzertifikats W‒ automatisiert mithilfe des PVS
+:*:genesen1::88370                                                                  	; Ausstellung eines COVID-19-Genesenenzertifikats (Web)
 :*:genesen2::88371                                                                  	; Ausstellung Genesenenzertifikats W‒ automatisiert mithilfe des PVS
 
 ; Hausarztprogramme
@@ -1126,15 +1021,16 @@ return ;}
 																									; DiGA verordnet wurden mit Benennung der  DiGA ;}
 
 #If
-HotS_EBM_IF()                                                                                   	{              	;-- für kontextsensitive Auslösung
-	If WinActive("ahk_class OptoAppClass") && RegExMatch(AlbisGetActiveControl("contraction"), "lk")
+;}
+; --- GOÄ	- Privatabrechnung                                                          	;{
+#If HotS_Privatabrechnung_IF()
+; ----- ----- ----- ----- -----
+HotS_Privatabrechnung_IF()                                                              	{              	;-- für kontextsensitive Auslösung
+	If WinActive("ahk_class OptoAppClass") && (RegExMatch(AlbisGetActiveControl("contraction"), "lp|lbg") || InStr(AlbisGetActiveWindowType(), "Privatabrechnung"))
 		return true
 return false
 }
-;}
-; --- GOÄ	- Privatabrechnung                                                          	;{
-#If WinActive("ahk_class OptoAppClass") && (RegExMatch(AlbisGetActiveControl("contraction"), "lp|lbg") || InStr(AlbisGetActiveWindowType(), "Privatabrechnung"))  ; GOÄ [lp, lpg oder Privatabrechnung]
-HotS_View_Privatabrechnung() {
+HotS_View_Privatabrechnung()                                                       	{
 
   ; schreibe ** um alle Hotstrings des Kontext anzuzeigen oder
   ; schreibe *Suchmuster z.B. *Zuschlag um in den Hotstrings zu suchen
@@ -1143,17 +1039,18 @@ HotS_View_Privatabrechnung() {
   ; IF Bedingung - START
 	fn_IFPAbr := Func("HotS_Privatabrechnung_IF")
 	Hotkey, If, % fn_IFPAbr
-	Hotstring(":?:*", Func("HotS_View").Bind((A_LineNumber+3), "GOÄ"))
+	Hotstring(":?*:*", Func("HotS_View").Bind(A_LineNumber+4, "GOÄ"))    ;
+	HotS_Privatabrechung()
 
 return
 }
-
+; ----- ----- ----- ----- -----
 ; Anamnese
-:*R:Fremdan::4-                                                                                	; Fremdanamnese/Unterweisung
+:*R:Fremd::4-                                                                                    	; Fremdanamnese/Unterweisung
 :*R:Unterweisung::4-                                                                         	; Fremdanamnese/Unterweisung
 :*R:Anamnese Kin::807-                                                                    	; biographische psychiatrische Anamnese Kind/Jugendlicher
 :*R:Anamnese erw::809-                                                                    	; biographische psychiatrische Anamnese Erwachsener
-:*R:Fremdan::835-                                                                            	; Fremdanamneseerhebung
+:*R:Erheb::835-                                                                                 	; Fremdanamneseerhebung
 
 ; Beratung
 :*R:Bera1::1(fak:3,5:Beratung < 10 Minuten)-                                     	; Beratung < 10 Minuten
@@ -1242,8 +1139,8 @@ return
 :*R:psychB2::806-                                                                                	; psychiatrische Behandlung [Punktzahl 250]
 :*R:psych T::808-                                                                                 	; Psychotherapie, Einleitung/Verlängerung
 :*R:psychT::808-                                                                                 	; Psychotherapie, Einleitung/Verlängerung
-:*R:verbale::849-                                                                                 	; verbale Intervention - Psychosomatik
-:*R:psy::849-                                                                                      	; verbale Intervention - Psychosomatik
+:*R:verbale::849-                                                                                 	; verbale Intervention - Psychosomatik (20 Minuten)
+:*R:psy::849-                                                                                      	; verbale Intervention - Psychosomatik (20 Minuten)
 :*R:Einl::15-                                                                                      	; Einleitung/Koordination
 :*R:Koord::15-                                                                                    	; Einleitung/Koordination
 :*R:verband::200-                                                                                	; Verband
@@ -1270,13 +1167,12 @@ return
 
 ; Impfungen
 :*R:impf::375-                                                                                    	; Impfung GOÄ Ziffer
-:*R:influvac::(sach:Influenzaimpfstoff Influvac: 10.94)                            	; Impfung Grippe Ziffern + Influvacpreis
-:*R:grlp::1-5-375-(sach:Influenzaimpfstoff Influvac: 10.94)                    	; Impfung Grippe Ziffern + Influvacpreis
+:*R:influvac::(sach:Influenzaimpfstoff Influvac Tetra: 9.56)                     	; Impfung Grippe Ziffern + Influvacpreis
+:*R:grlp::1-5-375-(sach:Influenzaimpfstoff Influvac: 9.56)                    	; Impfung Grippe Ziffern + Influvacpreis
 
 ; sonstige Gebühren
 :*:kopie::                                                                                           	;{ Berechnung Kopiekosten
-	; bis zu 50 Seiten 0,50 € darüber hinaus 0,15 € je Seite
-	AlbisKopiekosten("0.50 ab 50 Seiten 0.15€")
+	AlbisKopiekosten("0.50 ab 50 Seiten 0.15€")                                     	; bis zu 50 Seiten 0,50 € darüber hinaus 0,15 € je Seite
 return ;}
 :*:reiseunf::(sach:Reiseunfähigkeitsbescheinigung:20.00)                     	;{ Reiseunfähigkeitsbescheinigung
 :*:reiserüc::(sach:Reiseunfähigkeitsbescheinigung:20.00)                    	;} Reiseunfähigkeitsbescheinigung
@@ -1285,18 +1181,12 @@ return ;}
 ; Früherkennungsuntersuchungen, Erwachsene
 :*R:gvu::29-                                                                                       	; Früherkennungsuntersuchung, Erwachsener
 :*R:kvu::28-                                                                                       	; Krebsvorsorge, Mann
-
 #If
-HotS_Privatabrechnung_IF()                                                              	{              	;-- für kontextsensitive Auslösung
-	If WinActive("ahk_class OptoAppClass") && (RegExMatch(AlbisGetActiveControl("contraction"), "lp|lbg") || InStr(AlbisGetActiveWindowType(), "Privatabrechnung"))
-		return true
-return false
-}
 
 ;}
 ; --- Kuerzelfeld                                                                                	;{
 #If WinActive("ahk_class OptoAppClass") && InStr(AlbisGetActiveControl("identify"), "Edit3")
-:*:GVU::                                                                                        	;{ GVU,HKS Automatisierung
+:*:GVU::                                                                                            	;{ GVU,HKS Automatisierung
 
 	ControlGetText, EditDatum, % KK.Datum, ahk_class OptoAppClass
 	If !RegExMatch(EditDatum, "\d{2}\.\d{2}\.\d{4}")	{
@@ -1310,12 +1200,12 @@ return false
 	SendInput, {Tab}
 
 return ;}
-:*b0:AISC::                                                                                   	;{ AISC - Laborwebinterface
+:*b0:AISC::                                                                                       	;{ AISC - Laborwebinterface
 	SendInput, {Tab}
 	Sleep 50
 	SendInput, {Tab}
 return ;}
-:*:ci::                                                                                          	;{ Impfung gegen Corona Biontech
+:*:ci::                                                                                                 	;{ Impfung gegen Corona Biontech
 
 
 return
@@ -1360,72 +1250,98 @@ return
 ;}
 #If
 ;}
-; --- Diagnosen                                                                              	;{
-#If (WinActive("ahk_class OptoAppClass") && InStr(AlbisGetActiveControl("contraction"), "dia")) || WinActive("Akutdiagnose" ac32770) || WinActive("Dauerdiagnosen" ac32770) || WinActive("Muster 6" ac32770)
-HotS_Diagnosen_IF() {                                                                	;-- für kontextsensitive Auslösung
-	If (WinActive("ahk_class OptoAppClass") && InStr(AlbisGetActiveControl("contraction"), "dia")) || WinActive("Akutdiagnose ahk_class #32770") || WinActive("Dauerdiagnosen ahk_class #32770")
+; --- Diagnosen                                                                                	;{
+#If HotS_Diagnosis_IF()
+; ----- ----- ----- ----- -----
+HotS_Diagnosis_IF() {                                                                	;-- kontextsensitive Auslösung Diagnosenfelder
+
+	; letzte Änderung 27.09.2021
+
+	static diaControls := {"Muster 2 ahk_class #32770"                       	: "(1)"                            ; Krankenhauseinweisung
+									, "Muster 6 ahk_class #32770"                      	: "(5|6|7)"                    	; Überweisung
+									;, "Muster 12a ahk_class #32770"                    	: "(1|2|3|4)"                	; Häusliche Krankenpflege
+									; "Muster 1a ahk_class #32770"                       	: "(4|5|6|7|8|9|10)"	; Arbeitsunfähigkeitsbescheinigung
+									, "Muster 56 ahk_class #32770"                    	: "(1)"                        	; Antrag auf Kostenübernahme
+									, "Muster G1204 ahk_class #32770"                 	: "(12|16|20|24)"        	; Befundbericht Rehabilitationsantrag
+									, "Ärztliches Gutachten für ahk_class #32770"	: "(15|18|21|24)"}
+
+	If (WinActive("ahk_class OptoAppClass") && InStr(AlbisGetActiveControl("contraction"), "dia"))
 		return true
+	else if WinActive("Akutdiagnose ahk_class #32770") || WinActive("Dauerdiagnosen ahk_class #32770")
+		return true
+	else {
+		For WinTitle, nn in diaControls
+			If WinActive(WinTitle) {
+				ControlGetFocus, cfocus, % WinTitle
+				If RegExMatch(cFocus, "^Edit" nn "$")
+					return true
+			}
+	}
+
 return false
 }
-HotS_View_Diagnosen() {                                                           	;-- für kontextsensitive Auslösung
+HotS_View_Diagnosis() {                                                            	;-- für kontextsensitive Auslösung
 
-  ; schreibe ein Sternchen (*) um alle Hotstrings des Kontext anzuzeigen
-  ; die Hotstring-Suche wird erst nach der Eingabe von Space/Tab/Enter ausgeführt
+	global hsUser
 
-  ; IF Bedingung - START
-	fn_IFPAbr := Func("HotS_Diagnosen_IF")
+  ; Schreibe ein Sternchen (*) um alle Hotstrings des Kontext anzuzeigen.
+  ; Die Hotstring-Suche wird sofort nach Eingabe des Sternchen ausgeführt!
+	fn_IFPAbr := Func("HotS_Diagnosis_IF")
 	Hotkey, If, % fn_IFPAbr
-	Hotstring(":*?:*", Func("HotS_View").Bind((A_LineNumber+4), "Diagnosen"))
-	Hotstring(":*?:?", Func("HotS_View").Bind((A_LineNumber+4), "Diagnosen"))
+	Hotstring(":*?:*", Func("HotS_View").Bind(A_LineNumber+25, "Diagnosen"))
+	Hotstring(":*?:?", Func("HotS_View").Bind(A_LineNumber+24, "Diagnosen"))
+
+  ; Instanthotstring Objekt anlegen
+	If !IsObject(hsUser)
+		hsUser      	:= Object()
+	If !IsObject(hsUser.Path)
+		hsUser.Path 	:= Object()
+	If !IsObject(hsUser[2])
+		hsUser[2]   	:= Object()
+
+  ; Pfad festlegen
+	hsUser.Path.dia := Addendum.DBPath "\Dictionary\NutzerHotstrings_Diagnosen.hsd"
+	If !FilePathCreate(hsUser.Path.dia) {
+		; ### Protokoll schreiben
+		return
+	}
+
+  ; Hotstringdaten laden und Hotstrings erstellen
+	If FileExist(hsUser.Path.dia) {
+
+		If IsObject(hsUser[2] := FileOpen(hsUser.Path.dia, "r", "UTF-8").Read())
+			For dia, hsd in hsUser[2]
+				Hotstring(":X" hsd.opt ":" hsd.hs, Func("SendDiagnosis").Bind(dia))
+
+	}
 
 return
 }
-
-:*:gb::                                                                                          	;{ geriatrischer Basiskomplex (alle Diagnosen)
+; ----- ----- ----- ----- -----
+:*:.gb::                                                                                        	;{ geriatrischer Basiskomplex (alle Diagnosen)
 	Auswahlbox(["border=on title=Diagnosenliste Geriatrie"
-					, 	"Ataktischer Gang {R26.0G};"        	, "Spastischer Gang {R26.1G};"                        	, "Probleme beim Gehen {R26.2G};"
-					, 	"Bettlägerigkeit {R26.3G};"               	, "Immobilität {R26.3G};"                                 	,"Standunsicherheit {R26.8G};"
-					, 	"Ataxie {R27.0G};"                        	, "Koordinationsstörung {R27.8G};"                  	, "Multifaktoriell bedingte Mobilitätsstörung {R26.8G};"
-					,	"Hemineglect {R29.5G};"         	    	, "Sturzneigung a.n.k. {R29.6G};"                     	, "Harninkontinenz {R32G};"
-					,	"Stuhlinkontinenz {R15G};"            	, "Überlaufinkontinenz {N39.41G};"                 	, "n.n. bz. Harninkontinenz {N39.48G};"
-					,	"Dysphagie {R13.9G};"
-					,	"Dysphagie mit Beaufsichtigungspflicht während der Nahrungsaufnahme {R13.0G};"
-					,	"Dysphagie bei absaugpflichtigem Tracheostoma mit geblockter Trachealkanüle {R13.1G};"
-					,	"Orientierungsstörung {R41.0G};"  	, "Gedächtnisstörung {R41.3G};"                      	, "Vertigo {R42G};"
-					, 	"chron. Schmerzsyndrom {R52.2G};"	, "chron. unbeeinflußbarer Schmerz {R51.1G};" 	, "Chronische Schmerzstörung mit somatischen und psychischen Faktoren {F45.41G};"
-					,	"Multiinfarktdemenz {F01.1G};"      	, "Subkortikale vaskuläre Demenz {F01.2G};"  	, "Gemischte kortikale und subkortikale vaskuläre Demenz {F01.3G};"
-					,	"Vaskuläre Demenz {F01.9G};"      	, "Dementia senilis {F03G};"                            	, "Vorliegen eines Pflegegrades {Z74.9G};"
-					,	"Demenz bei Alzheimer-Krankheit mit frühem Beginn (Typ 2) [F00.0*] {G30.0+G};Alzheimer-Krankheit, früher Beginn {G30.0G};"
-					,	"Demenz bei Alzheimer-Krankheit mit spätem Beginn (Typ 1) [F00.1*] {G30.1+G};Alzheimer-Krankheit, später Beginn {G30.1G};"
-					,	"Primäres Parkinson-Syndrom mit mäßiger Beeinträchtigung ohne Wirkungsfluktuation {G20.10G};"
-					, 	"Primäres Parkinson-Syndrom mit mäßiger Beeinträchtigung mit Wirkungsfluktuation {G20.11G};"
-					, 	"Primäres Parkinson-Syndrom mit schwerster Beeinträchtigung ohne Wirkungsfluktuation {G20.20G};"
-					, 	"Primäres Parkinson-Syndrom mit schwerster Beeinträchtigung mit Wirkungsfluktuation {G20.21G};"])
+					, 	"Ataktischer Gang {R26.0G}"            	, "Spastischer Gang {R26.1G}"                        	, "Probleme beim Gehen {R26.2G}"
+					, 	"Bettlägerigkeit {R26.3G}"                	, "Immobilität {R26.3G}"                                 	,"Standunsicherheit {R26.8G}"
+					, 	"Ataxie {R27.0G}"                            	, "Koordinationsstörung {R27.8G}"                  	, "Multifaktoriell bedingte Mobilitätsstörung {R26.8G}"
+					,	"Hemineglect {R29.5G}"                	, "Sturzneigung a.n.k. {R29.6G}"                     	, "Harninkontinenz {R32G}"
+					,	"Stuhlinkontinenz {R15G}"                	, "Überlaufinkontinenz {N39.41G}"                 	, "n.n. bz. Harninkontinenz {N39.48G}"
+					,	"Dysphagie {R13.9G}"                  	, "Vorliegen eines Pflegegrades {Z74.9G}"
+					,	"Dysphagie mit Beaufsichtigungspflicht während der Nahrungsaufnahme {R13.0G}"
+					,	"Dysphagie bei absaugpflichtigem Tracheostoma mit geblockter Trachealkanüle {R13.1G}"
+					,	"Orientierungsstörung {R41.0G}"   	, "Gedächtnisstörung {R41.3G}"                      	, "Vertigo {R42G}"
+					, 	"chron. Schmerzsyndrom {R52.2G}"	, "chron. unbeeinflußbarer Schmerz {R51.1G}"
+					, 	"Chronische Schmerzstörung mit somatischen und psychischen Faktoren {F45.41G}"
+					,	"Multiinfarktdemenz {F01.1G}"      	, "Subkortikale vaskuläre Demenz {F01.2G}"
+					, 	"Gemischte kortikale und subkortikale vaskuläre Demenz {F01.3G}"
+					,	"Vaskuläre Demenz {F01.9G}"       	, "Dementia senilis {F03G}"
+					,	"Demenz bei Alzheimer-Krankheit mit frühem Beginn (Typ 2) [F00.0*] {G30.0+G}Alzheimer-Krankheit, früher Beginn {G30.0G}"
+					,	"Demenz bei Alzheimer-Krankheit mit spätem Beginn (Typ 1) [F00.1*] {G30.1+G}Alzheimer-Krankheit, später Beginn {G30.1G}"
+					,	"Primäres Parkinson-Syndrom mit mäßiger Beeinträchtigung ohne Wirkungsfluktuation {G20.10G}"
+					, 	"Primäres Parkinson-Syndrom mit mäßiger Beeinträchtigung mit Wirkungsfluktuation {G20.11G}"
+					, 	"Primäres Parkinson-Syndrom mit schwerster Beeinträchtigung ohne Wirkungsfluktuation {G20.20G}"
+					, 	"Primäres Parkinson-Syndrom mit schwerster Beeinträchtigung mit Wirkungsfluktuation {G20.21G}"])
 return ;}
-:*:corona::                                                                                 	;{ Corona Diagnosenliste
-:*:covid3::
-:*:covid19::
-:*:SARS-C::
-	Auswahlbox(["border=on title=Diagnosenliste SARS-CoV-2"
-					, 	"Spezielle Verfahren zur Untersuchung auf SARS-CoV-2 {!U99.0G};"
-					,	"Spezielle Verfahren zur Untersuchung auf infektiöse und parasitäre Krankheiten {Z11G};"
-					,	"COVID-19, Viruserkrankung V.a. {!U07.1V};"
-					,	"COVID-19, Virus nachgewiesen {!U07.1G};"
-					,	"COVID-19, Virus nicht nachgewiesen {!U07.2G};"
-					,	"Pneumonie durch SARS-CoV-2 {J12.8BG};"
-					,	"Respiratorische Insuffizienz vom Typ I [hypoxisch] {J96.90G};"
-					,	"Thrombozytopenie durch SARS-CoV-2 {D69.59G};"
-					,	"Infektanämie {D64.9G};"
-					,	"Schweres akutes respiratorisches Syndrom [SARS] {U04.9}; "
-					,	"COVID-19 in der Eigenanamnese, nicht näher bezeichnet {U08.9G};"
-					,	"Notwendigkeit der Impfung gegen COVID-19 {U11.9G};"
-					,	"1. Impfung gegen COVID-19 {U11.9G};"
-					,	"2. Impfung gegen COVID-19 {U11.9G};"
-					,	"Multisystemisches Entzündungssyndrom in Verbindung mit COVID-19 {U10.9G};"
-					,	"Kontakt mit und Exposition gegenüber COVID-19 {Z20.8G};"
-					,	"Unerwünschte Nebenwirkungen bei der Anwendung von COVID-19-Impfstoffen {!U12.9G};"])
-return ;}
-:*:igpr::                                                                                        	;{ Impfung Grippe Privatpatienten
+:*:.igpr::                                                                                      	;{ Gebühr+ICD Grippeimpfung
 
 	;SendMode, Event
 	;SetKeyDelay, 10, 10
@@ -1459,28 +1375,83 @@ return ;}
 	;SetKeyDelay, 10, 10
 
 return ;}
-:*R:grdia::Infektausschluß, A.v. {J06.9A};Impfung gegen Grippe, 2020/2021 (Influvac Tetra Ch: X17) {Z25.1G};    ; Influvac Preis
+:*R:.grdia::Infektausschluß, A.v. {J06.9A};Impfung gegen Grippe, 2020/2021 (Influvac Tetra Ch: X17) {Z25.1G};    ; Influvac Preis
 
-; weitere Diagnosen, welche aber mit einem Punkt am Anfang beginnen müssen
-; Augenheilkunde/Opthalmologie
+; Allergien                                          	;{
+:*:Kontaktder::
+:*:Kontaktall::
+Auswahlbox(["border=on title=Diagnosenliste Kontaktexanthem/-dermatitis"
+				, 	"Nickelallergie {L23.0}"
+				,  	"Allergische Kontaktdermatitis durch Nickel {L23.0}"               		, "Chromallergie {L23.0}", "Allergische Kontaktdermatitis durch Chrom {L23.0}"
+				,  	"Allergische Kontaktdermatitis durch Metalle {L23.0}"             		, "Allergische Kontaktdermatitis durch Bichromat {L23.0}"
+				,  	"Allergische Kontaktdermatitis durch Klebstoff {L23.1}"            		, "Heftpflasterekzem {L23.1}"
+				, 	"Allergische Kontaktdermatitis durch Heftpflaster {L23.1}"       		, "Allergische Kontaktdermatitis durch Zugpflaster {L23.1}"
+				,  	"Allergische Kontaktdermatitis durch Katharidenpflaster {L23.1}"		, "Allergie gegen Kosmetika {L23.2}"
+				,  	"Allergische Kontaktdermatitis durch Kosmetika {L23.2}"         		, "Allergische Kontaktdermatitis durch Kölnisch Wasser {L23.2}"
+				,  	"Allergische Dermatitis durch Haarfärbemittel {L23.2}"             		, "Allergische Kontaktdermatitis durch Arzneimittel {L23.3}"
+				,  	"Allergisches Kontaktexanthem durch Arzneimittel {L23.3}"      		, "Allergische Kontaktdermatitis durch Farbstoff {L23.4}"
+				,  	"Allergische Dermatitis durch chemische Produkte {L23.5}"       		, "Allergische Kontaktdermatitis durch chemische Produkte {L23.5}"
+				,  	"Allergische Kontaktdermatitis durch Kunststoff {L23.5}"          		, "Allergische Kontaktdermatitis durch Insektizide {L23.5}"
+				,  	"Allergische Kontaktdermatitis durch Gummi {L23.5}"             		, "Allergische Kontaktdermatitis durch Zement {L23.5}"
+				,  	"Allergische Kontaktdermatitis durch Plastik {L23.5}"						, "Allergische Kontaktdermatitis durch Nylon {L23.5}"
+				,  	"Allergie durch industrielle Fette {L23.5}"										, "Allergische Kontaktdermatitis durch Hautkontakt mit Nahrungsmitteln {L23.6}"
+				,  	"Allergische Kontaktdermatitis durch Mehl {L23.6}"							, "Allergisches Bäckerekzem {L23.6}"
+				,  	"Allergische Kontaktdermatitis durch Fisch {L23.6}"							, "Allergische Kontaktdermatitis durch Obst {L23.6}"
+				,  	"Allergische Kontaktdermatitis durch Milch {L23.6}"						, "Allergische Kontaktdermatitis durch Gemüse {L23.6}"
+				,  	"Allergische Kontaktdermatitis durch Fleisch {L23.6}"						, "Dermatitis venenata {L23.7}"
+				,  	"Allergische Kontaktdermatitis durch Schlüsselblumen {L23.7}"		, "Allergische Kontaktdermatitis durch Primeln {L23.7}"
+				,  	"Allergische Kontaktdermatitis durch Jakobskreuzkraut {L23.7}"		, "Allergische Kontaktdermatitis durch Gräser {L23.7}"
+				,  	"Allergische Kontaktdermatitis durch Brennnesseln {L23.7}"				, "Allergische Kontaktdermatitis durch Ambrosiagewächse {L23.7}"
+				,  	"Allergische Kontaktdermatitis durch Giftsumach {L23.7}"				, "Allergische Kontaktdermatitis durch Gifteiche {L23.7}"
+				,  	"Allergische Kontaktdermatitis durch Giftefeu {L23.7}"					, "Allergische Kontaktdermatitis durch Pelz {L23.8}"
+				,  	"Allergische Dermatitis durch äußeren Reizstoff a.n.k. {L23.8}"		, "Allergie gegen organisches Lösungsmittel {L23.5}"
+				,  	"Allergische Kontaktdermatitis durch Konservierungsstoffe {L23.5}"	, "Allergische Dermatitis durch Terpentine {L23.5}"
+				,  	"Gummiallergie {L23.5}"			, "Allergie gegen Pflaster {L23.5}"	, "Pflasterallergie {L23.5}"
+				,  	"Rhus-Dermatitis {L23.7}"			, "Insektizidallergie {L23.5}"			, "Hautallergie durch Kontakt {L23.9}"
+				,  	"Pflanzenallergie {L23.7}"			, "Dermatitis pratensis {L23.7}"   	, "Wiesengräser-Dermatitis {L23.7}"
+				,  	"Chemikalienallergie {L23.5}"	, "Allergisches Ekzem {L23.9}"		, "Konservierungsmittelallergie {L23.5}"
+				,  	"Detergenzienallergie {L23.5}"	, "Seifenallergie {L23.5}"				, "Waschmittelallergie {L23.5}"
+				,  	"Kontaktallergie {L23.9}"			, "Hautallergie {L23.9}"			    	, "Allergische Kontaktdermatitis {L23.9}"
+				,  	"Zementallergie {L23.5}"			, "Kunststoffallergie {L23.5}"])
+return ;}
+
+; Augenheilkunde/Opthalmologie      	;{
 :R*:.Katarakt::Katarakt bds. {H25.9BG};
-:X*:.Glaukom W::SendDiagnosis("Primäres Weitwinkelglaukom {H40.1#G}")
+:X*:.Glaukom W::
 :X*:.Weitwi::SendDiagnosis("Primäres Weitwinkelglaukom {H40.1#G}")
+;}
 
-; Chirurgie
+; Chirurgie                                         	;{
+:R*:.Adhä::Peritoneale Adhäsionen {K66.0G};
+:X*:.Arteros::                                          ;{ Liste von Diagnosen zum Thema Becken-Bein-Arterossklerose
+Auswahlbox(["border=on title=Diagnosenliste Arterossklerose der Beingefäße"
+				,	"Atherosklerose der Extremitätenarterien vom Becken-Bein-Typ, ohne Beschwerden {I70.20#G}"
+				,	"Atherosklerose der Extremitätenarterien vom Becken-Bein-Typ, Stadium I nach Fontaine {I70.20#G}"
+				,	"Atherosklerose der Extremitätenarterien vom Becken-Bein-Typ mit einer Gehstrecke von 200 m und mehr {I70.21#G}"
+				,	"Atherosklerose der Extremitätenarterien vom Becken-Bein-Typ, Stadium IIa nach Fontaine {I70.21#G}"
+				,	"Atherosklerose der Extremitätenarterien vom Becken-Bein-Typ mit einer Gehstrecke weniger als 200 m {I70.22#G}"
+				,	"Atherosklerose der Extremitätenarterien vom Becken-Bein-Typ, Stadium IIb nach Fontaine {I70.22#G}"
+				,	"Atherosklerose der Extremitätenarterien vom Becken-Bein-Typ mit Ruheschmerzen {I70.23#G}"
+				,	"Atherosklerose der Extremitätenarterien vom Becken-Bein-Typ, Stadium III nach Fontaine {I70.23#G}"
+				,	"Atherosklerose der Extremitätenarterien vom Becken-Bein-Typ mit Ulzeration {I70.24#G}"
+				,	"Atherosklerose der Extremitätenarterien vom Becken-Bein-Typ, Stadium IV nach Fontaine mit Ulzeration {I70.24#G}"
+				,	"Atherosklerose der Extremitätenarterien vom Becken-Bein-Typ mit Gangrän {I70.25#G}"])
+return ;}
 :R*:.Bauchao::Aneurysma der Aorta abdominalis ohne Ruptur {I71.4G};
-:R*:.Cholez::Cholezystektomie ## {K80.00Z}
+:R*:.Cholezyste::Cholezystektomie ## {K80.00Z}
+:R*:.Cholezysto::Cholezystolithiasis {K80.20G};
 :X*:.Gangrän Fu::SendDiagnosis("Gangrän des Fußes und der Zehen {R02.07#G}")
-:R*:.hiatus h::Hernia diaphragmatica {K44.9G};
-:R*:.zwerchf::Hernia diaphragmatica {K44.9G};
-:R*:.Hernia d::Hernia diaphragmatica {K44.9G};
-:R*:.Herniad::Hernia diaphragmatica {K44.9G};
+:X*:.hiatus h::
+:X*:.zwerchf::
+:X*:.Hernia d::
+:X*:.Herniad::SendDiagnosis("Hernia diaphragmatica {K44.9G}")
 :X*:.Leisten::SendDiagnosis("(Einseitige) Hernia inguinalis ohne Einklemmung u. Gangrän, kein Rezidiv {K40.90#}")
-:X*:.Kopfplatz::SendDiagnosis("Kopfplatzwunde # {S01.9G}")
+:X*:.Kopfplatz::
 :X*:.KPW::SendDiagnosis("Kopfplatzwunde # {S01.9G}")
+:X*:Prellung K::SendDiagnosis("Prellung des Kopfes, Teil nicht näher bezeichnet {S00.95#G}")
 :X*:.pavk::SendDiagnosis("Periphere Gefäßkrankheit {I73.9#G}")
 :X*:.Sigma::SendDiagnosis("Sigmadivertikulitis {K57.32#}")
-:X*:.Varizen:: ;{ Liste von Diagnosen zum Thema Varikosis
+:X*:.Varizen::         	;{ Liste von Diagnosen zum Thema Varikosis
 	Auswahlbox(["border=on title=Diagnosenliste Varikosis"
 					,	"Varizen der unteren Extremitäten mit Ulzeration {I83.0#G};"
 					,	"Varizen der unteren Extremitäten mit Entzündung {I83.1#G};"
@@ -1488,43 +1459,79 @@ return ;}
 					,	"Varizen der unteren Extremitäten ohne Ulzeration oder Entzündung {I83.9#G};"
 					, 	"ausgeprägte Stammvarikosis d. V.saphena magna {I83.9#G}; "])
 return ;}
+;}
 
-; Diabetologie
-:R*:.Diabetes neur::Diabetes mellitus Typ 2 mit neurologischen Komplikationen {+E11.40G}; Diabetische Polyneuropathie {*G63.2BG};
-:R*:.Diabetische Poly::Diabetes mellitus Typ 2 mit neurologischen Komplikationen {+E11.40G}; Diabetische Polyneuropathie {*G63.2BG};
-:R*:.Diab2::Diabetes mellitus Typ 2 {E11.90G};
-:R*:.Dm2::Diabetes mellitus Typ 2 {E11.90G};
-:R*:.Dm 2::Diabetes mellitus Typ 2 {E11.90G};
-:R*:.Diabetes 2::Diabetes mellitus Typ 2 {E11.90G};
-:R*:.Diabetes Typ2::Diabetes mellitus Typ 2 {E11.90G};
-:R*:.Diabetes Typ 2::Diabetes mellitus Typ 2 {E11.90G};
+; Diabetologie                                   	;{
+:X*:.Diabetes neur::
+:X*:.diabetische Poly::SendDiagnosis("Diabetes mellitus Typ 2 mit neurologischen Komplikationen {+E11.40G}; Diabetische Polyneuropathie {*G63.2BG}")
+:X*:.Dm2::
+:X*:.Dm 2::
+:X*:.Diab2::
+:X*:.Diabetes 2::
+:X*:.Diabetes Typ2::
+:X*:.Diabetes Typ 2::SendDiagnosis("Diabetes mellitus Typ 2 {E11.90G}")
 :X*:.Hypoglyk::SendDiagnosis("Hypoglykämie {E16.2G}")
 :X*:.Hyperglyk::SendDiagnosis("Hyperglykämie {R73.9}")
 :R*:.Retinop::Retinopathia diabetica (E10-E14+, vierte Stelle .3) {*H36.0G};
+:X*:.Diabetes K::     ;{ ICD Diabetes-Komplikationen
+	Auswahlbox(["border=on title=Diagnosenliste ICD Diabetes-Komplikationen L89.X, M,Z,H,N,I"
+						, "Diabetisches Ulcus, Wagner 0 {L89.08};", "Diabetisches Ulcus, Wagner 1 {L89.18}"
+						, "Diabetisches Ulcus, Wagner 2 {L89.28};", "Diabetisches Ulcus, Wagner 3 {L89.38}"
+						, "Diabetisches Fersenulcus, Wagner 0 {L89.07}", "Diabetisches Fersenulcus, Wagner 1 {L89.17};"
+						, "Diabetisches Fersenulcus, Wagner 2 {L89.27}", "Diabetisches Fersenulcus, Wagner 3 {L89.37};"
+						, "Fußdeformität {M21.6}", "Krallenzehen (erworben) {M20.5}", "Hallux valgus {M20.1}", "Charcot‘sche Osteoarthropathie {M14.6}"
+						, "Zustand nach Zehenamputation {Z89.4}", "Zustand nach US-Amputation {Z89.5}", "Zustand nach OS-Amputationen {Z89.6G}"
+						, "Rollstuhlpflichtigkeit {Z99.3G}", "MRSA-Infektion {U80.0G}"
+						, "Retinopathia diabetica {H36.0*}", "Diabetische Nephropathie {N08.3*}", "Periphere diabetische Angiopathie {I79.2*}","Diabetische Polyneuropathie {*G63.2BG};"])
+return ;}
+;}
 
-; Dermatologie
+; Dermatologie                                  	;{
 :R*:.Aktin::Aktinische Keratose {L57.0G};
+:X*:.Basaliom::      ;{
+:X*:.Basalzell::
+Auswahlbox(["border=on title=Diagnosenliste Basalzellkarzinom"
+				,	"Basaliom, Gesicht {C44.3G}"	, "Basaliom, behaarte Kopfhaut {C44.4G}", "Basaliom, Hals {C44.4G}", "Basaliom, Rumpf {C44.5G}"
+				,	"Basaliom, Arm {C44.6G}"    	, "Basaliom, Bein {C44.7G}"     				, "Basaliom, ___ {C44.9G}"])
+return ;}
 :R*:.Rosa::Rosacea {L71.9G};
+:R*:.Psori::Psoriasis vulgaris {L40.0G};
+:R*:.Schup::Psoriasis vulgaris {L40.0G};
+:R*:.Sebo::Seborrhoe {L21.0G};
+;}
 
-; Gastroenterologie/Hepatologie
-:R*:.barret::Barrett-Ösophagus {K22.7G};
-:RC*:.COUL::Colitis ulcerosa {K51.9G};
-:R*:.Colitis u::Colitis ulcerosa {K51.9G};
-:RC*:.HEPA::
-:R*:.Hepatitis A::Virushepatitis A ohne Coma hepaticum {B15.9G};
+; Gastroenterologie/Hepatologie        	;{
+:R*:.Barret::Barrett-Ösophagus {K22.7G};
+:XC*:.COUL::
+:X*:.Colitis u::SendDiagnosis("Colitis ulcerosa {K51.9G}")
+:X*:.Darmb::
+:X*:.Blutung Gast::
+:X*:.Gastrointestinale B::
+:X*:.GI-Blutung::
+:X*:.GI Blutung::SendDiagnosis("Gastrointestinale Blutung {K92.2#}")
+:X*:.Melä::
+:X*:.Teer::SendDiagnosis("Meläna {K92.1G}")
+:X*:.HepA::
+:X*:.Hepatitis A::SendDiagnosis("Virushepatitis A ohne Coma hepaticum {B15.9G}")
+:X*:.HepB::
+:X*:.Hepatitis B::SendDiagnosis("Akute Hepatitis B {B16.9G}")
 :R*:.Hiatush::Hiatushernie {K22.9G};
 :R*:.Lakto::Laktoseintoleranz {E73.9G};
-:R*:.portale Hyper::Portale Hypertonie {K76.6G};
-:R*:.Pfortaderho::Portale Hypertonie {K76.6G};
-:R*:.Refluxo::Refluxoesophagitis {K21.0G}
-:R*:.Refluxö::Refluxoesophagitis {K21.0G}
+:R*:.Leberz::C2-toxische Leberkrankheit {K70.9G};
+:X*:.portale Hyper::
+:X*:.Pfortaderhy::SendDiagnosis("Portale Hypertonie {K76.6G}")
+:X*:.Reflux::SendDiagnosis("Refluxoesophagitis mit Ösophagitis {K21.0G}")
+:R*:.Reizd::Reizdarmsyndrom {K58.2G};
+:R*:.Sod::Sodbrennen {R12G};
+:X*:.Steat::
+:X*:.Fettl::SendDiagnosis("Steatosis hepatis {K76.0G}")
+;}
 
-; Geriatrie
-;
-; Gynäkologie
+; Gynäkologie                                   	;{
 :R*:.dysme::Dysmenorrhoe, nicht näher bezeichnet {N94.6G};
+;}
 
-; Harnwege und Organe
+; Harnwege und Organe                    	;{
 :R*:.gicht::Idiopathische Gicht {M10.00G};
 :R*:.harnw::Harnwegsinfektion {N39.0G};
 :R*:.hti::Harnwegsinfektion {N39.0G};
@@ -1535,8 +1542,15 @@ return ;}
 :R*:.ni3::Chronische Nierenkrankheit, Stadium 3 {N18.3G};
 :R*:.ni4::Chronische Nierenkrankheit, Stadium 4 {N18.4G};
 :X*:.nierenz::SendDiagnosis("Erworbene Zyste der Niere {N28.1#G}")
+;}
 
-; HNO
+; HNO                                              	;{
+:X*:.Epist::
+:X*:.Nasenbl::SendDiagnosis("Epistaxis {R04.0#G}")
+:X*:.Lagerungss::
+:X*:.paroxysmaler Schw::SendDiagnosis("Benigner paroxysmaler Schwindel {H81.1G}")
+:X*:.Neuropathia::
+:X*:.Vestib::SendDiagnosis("Neuropathia vestibularis Ausfall {H81.2#G}")
 :X*:.Sinusitis f::SendDiagnosis("Akute Sinusitis frontalis {J01.1#G}")
 :X*:.Sinusitis m::SendDiagnosis("Akute Sinusitis maxillaris {J01.0#G}")
 :X*:.Tinit::SendDiagnosis("Tinnitus aurium {H93.1#G}")
@@ -1544,81 +1558,238 @@ return ;}
 :X*:.Angina ton::SendDiagnosis("Akute Tonsillitis {J03.9#G}")
 :XC*:.OE::
 :X*:.Otitis e::SendDiagnosis("Otitis externa {H60.9#G}")
+;}
 
-; Infektionen
-:R*:.Angina t::Akute Tonsillitis {J03.9G};
-:R*:.Anginat::Akute Tonsillitis {J03.9G};
-:R*:.tons::Akute Tonsillitis {J03.9G};
+; Infektionen                                      	;{
+:X*:.Angina t::
+:X*:.Anginat::
+:X*:.tons::SendDiagnosis("Akute Tonsillitis {J03.9G}")
+:X*:.Aspira::SendDiagnosis("Aspirationspneumonie {J69.8#G}")
+:RC*:.BR::Akute Bronchitis {J20.9G};
 :R*:covid-19na::COVID-19, Virus nachgewiesen {!U07.1G};
-:R*:covid-19ni::COVID-19, Virus nicht nachgewiesen {!U07.2G};
 :R*:covid19na::COVID-19, Virus nachgewiesen {!U07.1G};
-:R*:covid19ni::COVID-19, Virus nicht nachgewiesen {!U07.2G};
 :R*:covidV::COVID-19, Virus nachgewiesen {!U07.1V};
-:R*:covidA::COVID-19, Virus nachgewiesen A.v. {!U07.1A};
+:R*:covidA::COVID-19, Virus nachgewiesen {!U07.1A};
 :R*:covid1::COVID-19, Virus nachgewiesen {!U07.1G};
+:R*:covid-19ni::COVID-19, Virus nicht nachgewiesen {!U07.2G};
+:R*:covid19ni::COVID-19, Virus nicht nachgewiesen {!U07.2G};
 :R*:covid2::COVID-19, Virus nicht nachgewiesen {!U07.2G};
 :R*:.multisys::Multisystemisches Entzündungssyndrom in Verbindung mit COVID-19 {U10.9G};
-:R*:.sars::SendDiagnosis("Schweres akutes respiratorisches Syndrom [SARS] {U04.9#}")
+:X*:.Post-C::                                                                                 	;{ Post-COVID
+:X*:.Post C::
+:X*:.PostC::SendDiagnosis("Post-COVID-19-Zustand {!U09.9G}") ;}
+:X*:.sars::SendDiagnosis("Schweres akutes respiratorisches Syndrom [SARS] {U04.9#}")
 :RC*:iC::Impfung gegen COVID-19 {U11.9G};
-:X*:USARS::SendDiagnosis("Spezielle Verfahren zur Untersuchung auf SARS-CoV-2 {!U99.0G}"
+:X*:.USARS::SendDiagnosis("Spezielle Verfahren zur Untersuchung auf SARS-CoV-2 {!U99.0G}"
 									. 	 "Spezielle Verfahren zur Untersuchung auf infektiöse und parasitäre Krankheiten {Z11G}")
 :X*:ldsars::LDSars()
-:R*:.Erythema::Erythema migrans {A69.2G};
-:R*:.ERMI::Erythema migrans {A69.2G};
-:RC*:.GE::Gastroenteritis und Kolitis infektiösen Ursprungs {A09.0G};
+:*:corona::                                                                                 	;{ Corona Diagnosenliste
+:*:covid3::
+:*:covid19::
+:*:SARS-C::
+	Auswahlbox(["border=on title=Diagnosenliste SARS-CoV-2"
+					, 	"Spezielle Verfahren zur Untersuchung auf SARS-CoV-2 {!U99.0G};"
+					,	"Spezielle Verfahren zur Untersuchung auf infektiöse und parasitäre Krankheiten {Z11G};"
+					,	"COVID-19, Viruserkrankung V.a. {!U07.1V};"
+					,	"COVID-19, Virus nachgewiesen {!U07.1G};"
+					,	"COVID-19, Virus nicht nachgewiesen {!U07.2G};"
+					,	"Pneumonie durch SARS-CoV-2 {J12.8BG};"
+					,	"Respiratorische Insuffizienz vom Typ I [hypoxisch] {J96.90G};"
+					,	"Thrombozytopenie durch SARS-CoV-2 {D69.59G};"
+					,	"Infektanämie {D64.9G};"
+					,	"Schweres akutes respiratorisches Syndrom [SARS] {U04.9}; "
+					,	"COVID-19 in der Eigenanamnese, nicht näher bezeichnet {U08.9G};"
+					,	"Notwendigkeit der Impfung gegen COVID-19 {U11.9G};"
+					,	"1. Impfung gegen COVID-19 {U11.9G};"
+					,	"2. Impfung gegen COVID-19 {U11.9G};"
+					,	"Multisystemisches Entzündungssyndrom in Verbindung mit COVID-19 {U10.9G};"
+					,	"Kontakt mit und Exposition gegenüber COVID-19 {Z20.8G};"
+					,	"Unerwünschte Nebenwirkungen bei der Anwendung von COVID-19-Impfstoffen {!U12.9G};"])
+return ;}
+:X*:.Enterob::                                                                               	;{ Fadenwürmer
+:X*:.Madenw::
+:X*:.Würm::
+:X*:.Oxyu::SendDiagnosis("Enterobiasis [Oxyuriasis] {B80G}")  ;}
+:X*:.Erythema::
+:XC*:.ERMI::SendDiagnosis("Erythema migrans {A69.2G}")
+:XC*:.GE::
+:X*:.Gastroent::SendDiagnosis("Gastroenteritis {A09.0G}")
 :R*:.HepE::Akute Virushepatitis E {B17.2G};
-:RC*:.VI::Virusinfektion {B34.9G};
-:R*:.Virusi::Virusinfektion {B34.9G};
-:XC*:.HZ::
-:X*:.Herpes Zoster::
-:X*:.HerpesZoster::
-:X*:.Zoster::SendDiagnosis("Herpes zoster ohne Komplikation {B02.9#G}")
+:X*:.Keuch::
+:X*:.Pertu::SendDiagnosis("Keuchhusten durch Bordetella pertussis {A37.0#}")
+:R*:.Noro::Akute Gastroenteritis durch Norovirus {A08.1G};
+:XC*:.VI::
+:X*:.Virusi::SendDiagnosis("Virusinfektion {B34.9G}")
+:XC*:.HZ::                                                                                  	;{ Gürtelrose ohne Komplikationen
+:X*:.Herpes Z::
+:X*:.HerpesZ::
+:X*:.Gür::
+:X*:.Zoster::SendDiagnosis("Herpes zoster ohne Komplikation {B02.9#G}") ;}
+:X*:.Neuralgie G::                                                                      	;{ Postzosterneuralgie
+:X*:.Neuralgie Z::
+:X*:.Postzos::SendDiagnosis("Neuralgie nach Herpes Zoster {*G53.0}; Herpes zoster mit Beteiligung anderer Abschnitte des Nervensystems {+B02.2G}") ;}
+:X*:.ZosterE::SendDiagnosis("Zoster-Enzephalitis (G05.1*) {+B02.0}; Virusenzephalitis {*G05.1}")
+;}
 
-; Kardiologie
+; Kardiologie                                     	;{
 :R*:.ACE::ACE Hemmer Husten {T88.7G};
-:R*:.Stenose Aorten::Aortenklappenstenose {I35.0G};
+:X*:.Anas::
+:X*:.generalisiertes Ö::SendDiagnosis("Anasarka {R60.1G}")
+:XC*:.AS::
+:X*:.Aortenste::
+:X*:.Aortenklappenst::
+:X*:.Stenose Aorten::SendDiagnosis("Aortenklappenstenose {I35.0G}")
+:XC*:.AI::
+:X*:.Insuffizienz Aorten::SendDiagnosis("Aortenklappeninsuffizienz {I35.1G}")
 :X*:.AV Bl::
 :X*:.AV-Bl::SendDiagnosis("Atrioventrikulärer Block X. Grades {I44.#G}")
 :R*:.AVB1::Atrioventrikulärer Block 1. Grades {I44.1G};
 :R*:.AVB2::Atrioventrikulärer Block 2. Grades {I44.2G};
-:R*:.AVB3::Atrioventrikulärer Block 3. Grades {I44.3G};
-:R*:.Linksan::Linksanteriorer Hemiblock {I44.4G};
-:R*:.LAHB::Linksanteriorer Hemiblock {I44.4G};
+:R*:.AVB3::SendDiagnosis("Atrioventrikulärer Block $1. Grades {I44.3G};
+;H
+:X*:.Herzinfarkt alt::              ;{
+:X*:.Myokardinfarkt alt::
+:X*:.Alter Myokardin::
+:X*:.Alter Herzin::SendDiagnosis("Alter Myokardinfarkt {I25.29G}") ;}
 :R*:.Herzschr::implantierter Herzschrittmacher {Z95.0G};
-:X*:.KHK::SendDiagnosis("KHK {I25.9#}")
-:R*:.Akute Myok::Akute Myokarditis {I40.9G};
-:R*:.AKMY::Akute Myokarditis {I40.9G};
-:R*:.VES::Ventrikuläre Extrasystolie {I49.3G};
-:R*:.ventrikuläre Ex::Ventrikuläre Extrasystolie {I49.3G};
+;L
+:XC*:.LAHB::
+:X*:.Linksan::SendDiagnosis("Linksanteriorer Hemiblock {I44.4G}")
+:RC*:.LSB::Linksschenkelblock {I44.7G};
+:XC*:.LHI::    	;{
+:X:.Linksherzi::
+Auswahlbox(["border=on title=Diagnosenliste Linksherzinsuffizienz"
+					,	"Linksherzinsuffizienz NYHA-Stadium IV {I50.11G}"
+					,	"Linksherzinsuffizienz NYHA-Stadium IV {I50.12}"
+					,	"Linksherzinsuffizienz NYHA-Stadium IV {I50.13}"
+					,	"Linksherzinsuffizienz NYHA-Stadium IV {I50.14}"])
+return  ;}
+:X*:.NYHA1:: 	;{
+:X*:.NYHA I::SendDiagnosis("Linksherzinsuffizienz NYHA-Stadium I {I50.11G}")
+:X*:.NYHA2::
+:X*:.NYHA II::SendDiagnosis("Linksherzinsuffizienz NYHA-Stadium II {I50.12G}")
+:X*:.NYHA3::
+:X*:.NYHA III::SendDiagnosis("Linksherzinsuffizienz NYHA-Stadium III {I50.13G}")
+:X*:.NYHA4::
+:X*:.NYHA IV::SendDiagnosis("Linksherzinsuffizienz NYHA-Stadium IV {I50.14G}")
+;}
+:R*:.Linksh::Linksherzinsuffizienz nnbz. {I50.19G};
+;K
+:X*:.KHK1::    	;{
+:X*:.KHK2::
+:X*:.KHK3::SendDiagnosis("KHK-[\d] {I25.9G}") ;}
+:XC*:.KHKA::
+:XC*:.KHKG::
+:XC*:.KHKV::
+:XC*:.koronare H::SendDiagnosis("KHK {I25.9G}")
+:X*:.Lungenö::  ;{
+:XC*:.LUÖD::
+:X*:.Ödem L::SendDiagnosis("Lungenödem {J81G}") ;}
+:X*:.AKMY::
+:X*:.Akute Myok::SendDiagnosis("Akute Myokarditis {I40.9G}")
+:R*:.Mitrali::Mitralinsuffizienz {I34.0G};
+:X*:.Rechtsh:: ;{
+Auswahlbox(["border=on title=Diagnosenliste Rechtsherzinsuffizienz"
+					,	"Primäre Rechtsherzinsuffizienz {I50.00}"
+					,	"Rechtsherzinsuffizienz {!I50.01}"
+					,	"Rechtsherzinsuffizienz ohne Beschwerden {!I50.02}"
+					, 	"Rechtsherzinsuffizienz mit Beschwerden bei stärkerer Belastung {!I50.03}"
+					,	"Rechtsherzinsuffizienz mit Beschwerden bei leichterer Belastung {!I50.04G}"])
+return ;}
+:X*:.Ödem U::
+:X*:.Unterschenkelö::SendDiagnosis("Unterschenkelödeme {R60.0#G}")
+:X*:.SA-Bl::
+:X*:.SABl::SendDiagnosis("intermittierende SA-Blöcke {I45.5G}")
+:XC*:.VES::
+:X*:.ventrikuläre Ex::SendDiagnosis("Ventrikuläre Extrasystolie {I49.3G}")
 :R*:.VHF P::Vorhofflimmern, paroxysmal {I48.0G};
 :R*:.WPW::Wolff-Parkinson-White-Syndrom {I45.6G};
+;}
 
-; Morbus ...
+; Morbus ...                                       	;{
 :X*:.ledder::
+:X*:.Fibromatose der Pl::
 :X*:.morbus led::SendDiagnosis("M.Ledderhose {M72.2#G}")
 :X*:.dupu::
-:X*:.morbus du::SendDiagnosis("M.Dupuytren Kontraktur {M72.0#G};")
+:X*:.Fibromatose der Pa::
+:X*:.morbus du::SendDiagnosis("M.Dupuytren Kontraktur {M72.0#G}")
+:X*:.Mobus B::
+:X*:.Based::SendDiagnosis("M.Basedow {E05.0V}")
+;}
 
-; Neurologie
-:R*:.Ataxie::Ataktischer Gang {R26.0G};
-:R*:.Ataktisch::Ataktischer Gang {R26.0G};
-:R*:.Folgen Apo::Folgen eines Schlaganfalls {I69.4G};
-:R*:.Folgen Schl::Folgen eines Schlaganfalls {I69.4G};
+; Neurologie                                     	;{
+:R*:.Apraxie::Apraxie {R48.2G};
+:R*:.Artik::Artikulationsstörung {F80.0G}; Dysarthrie und Anarthrie {R47.1G};
+:X*:.Ataktisch::
+:X*:.Ataxie::SendDiagnosis("Ataktischer Gang {R26.0G}")
+:X*:.Cluster::SendDiagnosis("Cluster-Kopfschmerz {G44.0G}")
+:X*:.Critical-i::SendDiagnosis("Critical-illness-Polyneuropathie {G62.80G}; Critical-illness-Myopathie {G72.80G}")
+:X*:.Dysar::
+:X*:.Anar::SendDiagnosis("Dysarthrie und Anarthrie {R47.1G}")
+:X*:.Fibularis::
+:X*:.Fußhe::
+:X*:.Peronaeus::SendDiagnosis("Läsion des Nervus fibularis communis {G57.3#G}")
+:X*:.Narkol::
+:X*:.Katapl::SendDiagnosis("Narkolepsie und Kataplexie {G47.4G}")
+:X*:.Paräst::
+:X*:.Paraes::SendDiagnosis("Parästhesie der Haut {R20.2G}")
+:XC*:.PNP::
+:X*:.Polyneuro::SendDiagnosis("Idiopathische progressive Neuropathie {G60.3G}")
+:X*:.Folgen Apo::
+:X*:.Folgen Schl::SendDiagnosis("Folgen eines Schlaganfalls {I69.4G}")
 :R*:.Sturzn::Sturzneigung {R29.6G};
 :R*:.Tremor::Essentieller Tremor {G25.0G};
-:R*:.TIA::TIA {G45.92G};
+:X*:.TIA::
+:X*:.transit::SendDiagnosis("TIA {G45.92#}")
 :R*:.Trigem::Trigeminusneuralgie {G50.0G};
 :R*:.REM::REM-Schlafstörung {G47.9G};
-:R*:.RLS::Restless-Legs-Syndrom {G25.81G};
+:X*:.Restless::
+:X*:.RLS::SendDiagnosis("Restless-Legs-Syndrom {G25.81G}")
+;}
 
-; Onkologie
-:R*:.Pankreaskopf-Ca::Bösartige Neubildung des Pankreaskopfes {C25.0G};
-:R*:.Pankreaskopf Ca::Bösartige Neubildung des Pankreaskopfes {C25.0G};
+; Onkologie                                      	;{
+:X*:.Hypophysena::SendDiagnosis("Hypophysenadenom {D35.2G}")
+:X*:.Adenom Neb::
+:X*:.Nebennierenad::SendDiagnosis("Nebennierenadenom {E27.8LG}")
+:X*:.Pankreaskopf-Ca::
+:X*:.Pankreaskopf Ca::SendDiagnosis("Bösartige Neubildung des Pankreaskopfes {C25.0G}")
+:X*:.Colon Ca::        	;{ Diagnosenliste intestinaler Krebs ab Dickdarm
+:X*:.Colon-Ca::
+:X*:.Dickdarmk::
+:X*:.Rektumk::
+:X*:.Rektum C::
+:X*:.Rektum-C::
+:X*:.Sigma C::
+:X*:.Sigma-C::
+:X*:.Sigmak::
+:XC*:.COCA::
+Auswahlbox(["border=on title=Diagnosenliste intestinaler Krebs ab Dickdarm"
+				, 	"Karzinom der Appendix {C18.1#}"
+				, 	"Karzinom des Colon ascendens {C18.2#}"
+				,	"Karzinom der Flexura coli dextra {C18.3#}"
+				,	"Karzinom des Colon transversum {C18.4#}"
+				,	"Karzinom der Flexura coli sinistra {C18.5#}"
+				,	"Karzinom des Colon descendens {C18.6#}"
+				,	"Karzinom des Colon sigmoideum {C18.7#}"
+				,	"Sigmakarzinom {C18.7#}"
+				,	"Karzinom des Colon und des Sigmas {C18.8#}"
+				,	"Adenokarzinom des Kolons {C18.9#}"
+				, 	"Lynch-Syndrom {C18.9#}"
+				, 	"Kolorektales Karzinom {C19#}"
+				, 	"Rektumkarzinom {C20#}"
+				, 	"Karzinom des Anus {C21.0#}"])
+return
+;}
+;}
 
-; Orthopädie
- ; obere Extremitäten
-:X*:.Epikondylitis ul::SendDiagnosis("Epicondylitis ulnaris humeri {M77.0#G}")
-:X*:.Epikondylitis ra::SendDiagnosis("Epicondylitis radialis humeri {M77.1#G}")
+; Orthopädie / Unfallchirurgie            	;{
+ ; --- obere Extremitäten ---
+:XC*:.Carpalt::
+:XC*:.CTS::SendDiagnosis("Karpaltunnelsyndrom {G56.0#G}")
+:X*:.Bizepss::SendDiagnosis("Tendinitis des Musculus biceps brachii {M75.2RG}")
+:X*:.Epikondylitis ul::
+:X*:.Golf::SendDiagnosis("Epicondylitis ulnaris humeri {M77.0#G}")
+:X*:.Epikondylitis ra::
 :X*:.Tennis::SendDiagnosis("Epicondylitis radialis humeri {M77.1#G}")
 :X*:.Bursitis Sch::SendDiagnosis("Bursitis im Schulterbereich {M75.5#G}")
 :X*:.Impingement Schulter::SendDiagnosis("Impingement-Syndrom der Schulter {M75.4#G}")
@@ -1626,172 +1797,251 @@ return ;}
 :X*:.Schulter Bursitis::SendDiagnosis("Bursitis im Schulterbereich {M75.5#G}")
 :X*:.Schulter Imping::SendDiagnosis("Impingement-Syndrom der Schulter {M75.4#G}")
 :X*:.Rhiz::SendDiagnosis("Rhizarthrose {M18.9#G}")
- ; untere Extremitäten
+:X*:.Rota::SendDiagnosis("Läsionen der Rotatorenmanschette {M75.1#G}")
+:X*:.Suprasp::SendDiagnosis("Supraspinatussehnenruptur {M75.1#G}")
+ ; --- Wirbelsäule ---
+:RC*:.BB::Blockierung BWS {M99.82G};
+:RC*:.BH::Blockierung HWS {M99.81G};
+:RC*:.BL::Blockierung LWS {M99.83G};
+:X*:.Bandscheibenvorfall LW::
+:X*:.Bandscheibe L::SendDiagnosis("lumbale Bandscheibenschäden mit Radikulopathie (G55.1*) {+M51.1G}; Kompression v. Nervenwurzeln u. -plexus bei Bandscheibenschäden (M50-M51+) {*G55.1G}")
+:X*:.Skoliose L::SendDiagnosis("Skoliose, nicht näher bezeichnet: Lumbalbereich {M41.96#G}")
+:X*:.Spondylose L::SendDiagnosis("Sonstige Spondylose: Lumbalbereich {M47.86G}")
+:X*:.Wirbelkanalstenose HWK::
+:X*:.Spinalkanalstenose HW::SendDiagnosis("Spinalkanalstenose HWS {M48.02#G}")
+:X*:.Wirbelkanalstenose LW::
+:X*:.Spinalkanalstenose LW::SendDiagnosis("Spinalkanalstenose: Lumbalbereich {M48.06#G}")
+:X*:.Wirbelgleiten L::
+:X*:.Spondylolistesis L::SendDiagnosis("Spondylolisthesis: Lumbosakralbereich {M43.17G}")
+ ; --- untere Extremitäten ---
+:X*:.Bak::SendDiagnosis("Baker-Zyste {M71.2#G}")
+:R*:.Coxa::Primäre Koxarthrose, beidseitig {M16.0G};
 :X*:.Gonar::SendDiagnosis("Primäre Gonarthrose {M17.0#G}")
 :X*:.Gonal::
 :X*:.Kniesc::SendDiagnosis("Gelenkschmerz: Kniegelenk {M25.56#G}")
+:X*:.Kniegelenker::
+:X*:.Erguß Knie::SendDiagnosis("Kniegelenkerguss {M25.46#G} ")
 :X*:.Knie TEP::SendDiagnosis("Knie TEP {Z96.6#G}")
 :X*:.Hallux::SendDiagnosis("Hallux valgus {M20.1#G}")
-:R*:.Knick::Knick-Senk-Spreizfuß {M21.07BG};
-:R*:.Senk::Knick-Senk-Spreizfuß {M21.07BG};
-:R*:.Spreiz::Knick-Senk-Spreizfuß {M21.07BG};
- ; Wirbelsäule
-:R*:.BB::Blockierung BWS {M99.82G};
-:R*:.BH::Blockierung HWS {M99.81G};
-:R*:.Bandscheibe L::Lumbale u. sonstige Bandscheibenschäden mit Radikulopathie (G55.1*) {+M51.1G}; Kompression von Nervenwurzeln u. -plexus bei Bandscheibenschäden (M50-M51+) {*G55.1G};
-:X*:.Wirbelkanalstenose HWK::
-:X*:.Spinalkanalstenose HWK::SendDiagnosis("Spinalkanalstenose HWK {M48.02#G}")
- ; ohne Lokalisation
-:R*:.Postmenop::Postmenopausale Osteoporose {M80.08G};
-:R*:.Osteoporose post::Postmenopausale Osteoporose {M80.08G};
+:X*:.Knick::
+:X*:.Senk::
+:X*:.Spreiz::SendDiagnosis("Knick-Senk-Spreizfuß {M21.07BG}")
+:X*:.Patella F::
+:XC*:.FXPA::SendDiagnosis("Fraktur der Patella {S82.0#G}")
+ ; --- ohne Lokalisation ---
+:R*:.Polyarthro::Polyarthrose {M15.0G};
+:X*:.Postmenop::
+:X*:.Osteoporose post::SendDiagnosis("Postmenopausale Osteoporose {M80.08G}")
+;}
 
-; Pulmologie
+; Pulmologie                                      	;{
+:R*:.Asthma ni::Nichtallergisches Asthma bronchiale {J45.1G};
+:X*:.Asthma br::
+:XC*:.AB::SendDiagnosis("allerg. Asthma bronchiale {J45.0G}")
+:R*:.COPD::COPD {J44.89G};
 :X*:.pneumonie::SendDiagnosis("Pneumonie {J15.8#G}")
-:R*:.OSAS::Obstruktives Schlafapnoesyndrom {G47.31G};
-:R*:.Schlafa::Obstruktives Schlafapnoesyndrom {G47.31G};
-:X*:.Tracheo::
+:R*:.OSAS::
+:X*:.Schlafa::SendDiagnosis("Obstruktives Schlafapnoesyndrom {G47.31G}")
+:X*:.Sarkoi::SendDiagnosis("Sarkoidose der Lunge {D86.0#}")
+:X*:.Tracheost::
 :X*:.Vorhandensein Tra::SendDiagnosis("Vorhandensein eines Tracheostomas {Z93.0#}")
+;}
 
-; Psychiatrie
+; Psychiatrie                                       	;{
 :R*:.Alb::Albträume [Angstträume] {F51.5G};
-:R*:.akute Bel::Akute Belastungsreaktion {F43.0G};
-:R*:.Belast::Akute Belastungsreaktion {F43.0G};
 :R*:.Anpass::Anpassungsstörung {F43.2G};
+:X*:.akute Bel::
+:X*:.Belast::SendDiagnosis("Akute Belastungsreaktion {F43.0G}")
+:R*:.Benzo::Abhängigkeitssyndrom durch Gebrauch von Sedativa oder Hypnotika {F13.2G};
+:R*:.leichtg::leichtgradige Depression {F32.0G};
+:R*:.mittelg::mittelgradige Depression {F32.1G};
+:R*:.schwerg::schwergradige Depression {F32.2G};
+:R*:.Dysthym::Dysthymia {F34.1G};
+:R*:.Hypocho::Hypochondrische Störung {F45.2G};
 :R*:.Neuras::Neurasthenie {F48.0G};
-:R*:.Angst::Panikstörung [episodisch paroxysmale Angst] {F41.0G};
-:R*:.Panik::Panikstörung [episodisch paroxysmale Angst] {F41.0G};
-:R*:.soziale Um::Kontaktanlässe mit Bezug auf die soziale Umgebung {Z60G};
-:R*:.Kontakta::Kontaktanlässe mit Bezug auf die soziale Umgebung {Z60G};
+:X*:.Angst::
+:X*:.Panik::SendDiagnosis("Panikstörung [episodisch paroxysmale Angst] {F41.0G}")
+:XC*:.PTBS::
+:X*:.posttrau::SendDiagnosis("Posttraumatische Belastungsstörung {F43.1V};")
+:X*:.Psy::
+:X*:.Soma::SendDiagnosis("Somatisierungsstörung {F45.0G}")
+:X*:.Kontakta::
+:X*:.soziale Um::SendDiagnosis("Kontaktanlässe mit Bezug auf die soziale Umgebung {Z60G}")
 :R*:.Schlaf::Ein- und Durchschlafstörungen {G47.0G};
+;}
 
-; Rheumatologie
-:R*:.PCP::Chronische Polyarthritis, mehrere Lokalisationen {M06.90G};
-:R*:.Chronische Poly::Chronische Polyarthritis, mehrere Lokalisationen {M06.90G};
+; Rheumatologie                                	;{
+:R*:.Fibromy::Fibromyalgie {M79.70G};
+:X*:.PCP::
+:X*:.Chronische Poly::SendDiagnosis("Chronische Polyarthritis, mehrere Lokalisationen {M06.90G}")
+:X*:.Psoriasis Art::
+:X*:.Psoriasis-Art::SendDiagnosis("Psoriasis-Arthropathie (M07.0-M07.3*, M09.0-*) {+L40.5G}")
+;}
 
-; Urologie
-:R*:.Prostata Ca::Bösartige Neubildung der Prostata {C61G};
-:RC*:.PRCA::Bösartige Neubildung der Prostata {C61G};
+; Urologie                                         	;{
+:R*:.Balano::Balanoposthitis {N48.1G};
+:R*:.Hämatu::Hämaturie {R31G};
+:R*:.Harnv::Harnverhaltung {R33G};
+:X*:.Harnröhrenstr::     	;{
+Auswahlbox(["border=on title=Diagnosenliste Harnröhrenstriktur"
+				, 	"Harnröhrenstriktur {N35.9G}", "Harnröhrenstriktur nach medizinischen Maßnahmen {N99.1G}"])
+return ;}
+:R*:.Hyposp::Hypospadie {Q54.9G};
+:X*:.Nierenko::SendDiagnosis("Nierenkolik {N23#}")
+:XC*:.PRCA::
+:X*:.Carcinom Pros::
+:X*:.Bösartige Neubildung Pros::
+:X*:.Prostata Ca::SendDiagnosis("Bösartige Neubildung der Prostata {C61G}")
+:R*:.Prostatah::Prostatahyperplasie {N40G};
+;}
 
-; was der Internist so wichtig findet
+; was der Internist so wichtig findet     	;{
 :X*:.Adipo::SendDiagnosis("Adipositas {E66.0#G}")
 :R*:.adi1::Adipositas I {E66.00G};
 :R*:.adi2::Adipositas II {E66.01G};
 :R*:.adi3::Adipositas III {E66.02G};
-:R*:.Hyperto::essentielle Hypertonie {I10.00G};
-:CR*:.HY::essentielle Hypertonie {I10.00G};
+:R*:.Hyperto::
+:CR*:.HY::SendDiagnosis("essentielle Hypertonie {I10.00G}")
 :R*:.Hyperch::Hypercholesterinämie {E78.0G};
+:R*:.Hypoka::Hypokaliämie {E87.6G};
+;}
 
-; ohne Kategorie
-:R*:.AllergischeU::Allergische Urtikaria {L50.0G};
-:R*:.Urtikaria al::Allergische Urtikaria {L50.0G};
-:R*:.Aortenskl::Atherosklerose der Aorta, G. {I70.0G};
-:R*:.Antikogu::Dauertherapie mit Antikoagulanzien{Z92.1G};
-:RC*:.CE::Kopfschmerz {G44.8G};
+; ohne Kategorie                               	;{
+:R*:.Agn::Agnosie {R48.1G};
+:X*:.Anos::
+:X*:.Geruchssinn::SendDiagnosis("Anosmie {R43.0G}")
+:R*:.Aortenskl::Atherosklerose der Aorta {I70.0G};
+:X*:.Antik::                                    ;{ Dauertherapie mit Antikoagulanzien
+:X*:.Falit::
+:X*:.NOAK::
+:X*:.Marcu::SendDiagnosis("Dauertherapie mit Antikoagulanzien{Z92.1G}") ;}
+;B
+:R*:.Bauchs::Bauchschmerzen {R10.4};
+:R*:.Oberb::Oberbauchschmerz {R10.1G};
+:R*:.Unterb::Unterbauchschmerz {R10.3G};
+:X*:.Brusts::
+:X*:.Thoraxs::SendDiagnosis("Brustschmerzen {R07.4G};Brustschmerzen bei der Atmung {R07.1G}")
+;C
+:XC*:.CE::
+:X*:.Kopfs::SendDiagnosis("Kopfschmerz {G44.8G}")
+;D
+:R*:.Dyspn::Dyspnoe {R06.0G};
+:R*:.Dysph::
+:R*:.Heiser::SendDiagnosis("Dysphonie {R49.0G}")
+;E
 :R*:.Eisen::Eisenmangelanämie {D50.9G};
-:R*:.Fali::Dauertherapie mit Antikoagulanzien{Z92.1G};
-:RC*:.Gastroent::Gastroenteritis {A09.0G};
-:RC*:.GE::Gastroenteritis {A09.0G};
-:R*:.Gewich::abnorme Gewichtsabnahme {R63.4G};
-:R*:.Gewichtsz::Abnorme Gewichtszunahme {R63.5G};
+;F
+:R*:.FUO::Fieber unbekannter Ursache {R50.80G};
+:R*:.Fruktose::Störungen des Fruktosestoffwechsels {E74.1G};
+;G
+:R*:.Gehen::Probleme beim Gehen {R26.2G};
+:R*:.Gewichtsa::abnorme Gewichtsabnahme {R63.4G};
+:R*:.Gewichtsz::abnorme Gewichtszunahme {R63.5G};
 :X*:.Gicht::SendDiagnosis("Idiopathische Gicht, {M10.09#G}")
 :X*:.Poda::SendDiagnosis("Podagra {M10.97#G}")
-:R*:.NOAK::Dauertherapie mit Antikoagulanzien{Z92.1G};
+;H
 :R*:.Harnink::Harninkontinenz {R32G};
-:R*:.Hyperli::Hyperlipidämie {E78.5G};
-:R*:.Hypoka::Hypokaliämie {E87.6G};
-:X*:.Hypothy::SendDiagnosis("Hypothyreose {E03.9G}")
+:R*:.Hyperlipi::Hyperlipidämie {E78.5G};
+:R*:.Hyperlipo::Hyperlipoproteinämie, G. {E78.8G};
+:R*:.Hypothy::Hypothyreose {E03.9G};
+;I
 :R*:.Insekt::Insektenstich/-biß {T14.03G};
+;K
 :R*:.Kache::Kachexie {R64G};
-:X*:.Lungenembolie cor::SendDiagnosis("Lungenembolie mit akutem Cor pulmonale {I26.0#}")
+;L
+:R*:.Laktose::Laktoseintoleranz {E73.9G};
+:X*:.Lungenembolie cor::
 :X*:.LE cor::SendDiagnosis("Lungenembolie mit akutem Cor pulmonale {I26.0#}")
+:X*:.LE ohne::
 :X*:.Lungenembolie ohne::SendDiagnosis("Lungenembolie ohne akutes Cor pulmonale {I26.9#}")
-:X*:.LE ohne::SendDiagnosis("Lungenembolie ohne akutes Cor pulmonale {I26.9#}")
+:R*:.Lipom::Lipom der Unterhaut {D17.3G};
+:R*:.Lip1::Lipödem, Stadium I {E88.20G}
+:R*:.Lip I::Lipödem, Stadium I {E88.20G};
+:R*:.Lip2::Lipödem, Stadium II {E88.21G};
+:R*:.Lip II::Lipödem, Stadium II {E88.21G};
+:R*:.Lip3::Lipödem, Stadium III {E88.22G};
+:R*:.Lip III::Lipödem, Stadium III {E88.22G};
+:R*:.Lipö::nicht näher bezeichnetes Lipödem {E88.28G};
+;M
 :R*:.Mara::Alimentärer Marasmus {E41G};
 :R*:.Meteo::Meteorismus {R14G};
-:R*:.Oberba::Schmerzen im Bereich des Oberbauches {R10.1G};
-:R*:.Bauchschmerz1::Schmerzen im Bereich des Oberbauches {R10.1G};
-:R*:.Ray::Raynaud-Syndrom {I73.0G}
+;N
+:R*:.NOAK::Dauertherapie mit Antikoagulanzien{Z92.1G};
+;O
+:R*:.Oberba::
+:X*:.Bauchschmerz1::SendDiagnosis("Schmerzen im Bereich des Oberbauches {R10.1G}")
+:R*:.Obsti::Obstipation {K59.00G};
+;P
+:R*:.Parosm::Parosmie {R43.1G};
+;R
+:R*:.Raucherleu::Raucherleukozytose {D72.8G};
+:R*:.Ray::Raynaud-Syndrom {I73.0G};
+:R*:.Rhino::Allergische Rhinopathie durch Pollen {J30.1G}
+;S
 :R*:.Schlafst::Ein- und Durchschlafstörungen {G47.0G};
 :R*:.Schwind::Schwindel und Taumel {R42G};
-:R*:.Verti::Vertigo {R42G};
 :R*:.Stand::Standunsicherheit {R26.8G};
+;V
+:R*:.Verti::Vertigo {R42G};
 :R*:.SIADH::SIADH-Syndrom {E22.2G};
-:R*:.Struma::Struma multinodosa {E04.2G};
-:R*:.Synk::Synkope und Kollaps {R55G};
-:R*:.Kollap::Synkope und Kollaps {R55G};
+:R*:.Struma m::Struma multinodosa {E04.2G};
+:X*:.Synk::
+:X*:.Kollap::SendDiagnosis("Synkope und Kollaps {R55G}")
 :X*:.Stuhlink::SendDiagnosis("Stuhlinkontinenz {R15#}")
 :X*:.TVT::SendDiagnosis("Tiefe Venenthrombose {I80.1#G}")
-:R*:.VitD::Vitamin D Mangel {E64.8G};
-:R*:.VitaminD::Vitamin D Mangel {E64.8G};
-:R*:.Vitamin D::Vitamin D Mangel {E64.8G};
+:X*:.Urti::           ;{ Urtikariaformen
+:X*:.Kälteu::
+:X*:.Wärmeu::
+:X*:.Cholinergische::
+:X*:.Urtikarielles::
+:X*:.Thermale::
+:X*:.HitzeU::
+	Auswahlbox(["border=on title=Diagnosenliste Urtikaria L50.X"
+					, 	"Allergische Urtikaria {L50.0G}"
+					, 	"Idiopathische Urtikaria {L50.1G}"
+					, 	"Kälteurtikaria {L50.2G}"
+					, 	"Wärmeurtikaria {L50.2G}"
+					, 	"Urticaria factitia {L50.3G}"
+					, 	"Urticaria mechanica {L50.4G}"
+					, 	"Cholinergische Urtikaria {L50.5G}"
+					, 	"Chronische Urtikaria {L50.8G}"
+					, 	"Urtikarielles Exanthem {L50.9}"])
+return
+:R*:.AllergischeU::Allergische Urtikaria {L50.0G};
+:R*:.Urtikaria al::Allergische Urtikaria {L50.0G};
+;}
+:X*:.VitD::
+:X*:.VitaminD::
+:X*:.Vitamin D::SendDiagnosis("Vitamin D Mangel {E64.8G}")
+:R*:.Wespe::Wespengiftallergie {T78.4G};
+; Z
+:X*:.Zeru::
+:X*:.Ceru::SendDiagnosis("Zeruminalpfropf {H61.2#G}")
+;}
 
 #If
-LDSars()                                                                                   	{
-
-	;~ hparent := AlbisSendText("RichEdit20A1", "Spezielle Verfahren zur Untersuchung auf SARS-CoV-2 {!U99.0G}"
-										  ;~ . ";Spezielle Verfahren zur Untersuchung auf infektiöse und parasitäre Krankheiten {Z11G};")
-	;SendMode, Event
-	;SetKeyDelay, 10, 10
-
-	Linedate	:= AlbisLeseZeilenDatum(60, false)
-	PrgDate	:= AlbisLeseProgrammDatum()
-	AlbisSetzeProgrammDatum(LineDate)
-
-	Sleep 300
-	Send, % "{Blind}"
-	Sleep 100
-	Send, % "{Text}Spezielle Verfahren zur Untersuchung auf SARS-CoV-2 {!U99.0G};Spezielle Verfahren zur Untersuchung auf infektiöse und parasitäre Krankheiten {Z11G};"
-	Send, {Tab}
-	Sleep 200
-	WinWait, % "ALBIS ahk_class #32770", % "meldepflichtig", 2
-	VerifiedClick("Button1", "ALBIS ahk_class #32770", "meldepflichtig",, true)
-	Send, {Esc}
-	Sleep 300
-	Send, {Down}
-	Sleep 300
-	Send, % "{Blind}"
-	Sleep 100
-	Send, % "{Text}lko"
-	Send, {Tab}
-	Sleep 300
-	Send, % "{Blind}"
-	Sleep 100
-	Send, % "{Text}32006-88240"
-	Send, {Tab}
-	PraxTT("Circa 4s braucht Albis für Berechnungen!")
-	;WinWait
-	Sleep 4000
-	Send, {Esc}
-	AlbisSetzeProgrammDatum(PrgDate)
-
-	;SetKeyDelay, 10, 10
-
-	;~ SciTEOutput("2:" hParent)
-	;~ hParent := AlbisSendText("Edit6", "lko", hParent)
-
-	;~ SciTEOutput("3:" hParent)
-		;~ ;return
-	;~ hParent := AlbisSendText("RichEdit20A1", "88240-32006", hParent)
-	;~ SciTEOutput("4:" hParent)
-		;~ ;return
-	;~ hParent := AlbisSendText("Edit6", "**End", hParent)
-	;~ SciTEOutput("5:" hParent "`n")
-		;~ ;return
-}
 
 ;}
-; --- bef                                                                                         	;{
+; --- bef | anam | info                                                                     	;{
 #IF WinActive("ahk_class OptoAppClass") && RegExMatch(AlbisGetActiveControl("contraction"), "(bef|anam|info)")
 :*:cafe::Café-au-lait-Flecken{Space}
 :*:lisch::Lisch-Knötchen{Space}
+:*C:Tubero::Tuberositas tibiae{Space}
+:*C:tib::tibiae{Space}
+:*C:weg::wegen{Space}
+:*C:Beschwe::Beschwerden{Space}
+:*C:Halss::Halsschmerzen{Space}
+:*C:Orthop::Orthopädie{Space}
+:*C:Gallenb::Gallenblase
+:*C:Vorste::Vorstellung{Space}
 #IF ;}
-; --- Impf                                                                                          	;{
+; --- Impf                                                                                       	;{
 #If (WinActive("ahk_class OptoAppClass") && InStr(AlbisGetActiveControl("contraction"), "Impf") )
-:R*:1.::1.COVID-19 Impfung
-:R*:2.::2.COVID-19 Impfung
+:R*:1.C::1.COVID-19 Impfung
+:R*:2.C::2.COVID-19 Impfung
 #If
 ;}
-; --- Info                                                                                          	;{
+; --- Info                                                                                        	;{
 #If (WinActive("ahk_class OptoAppClass") && InStr(AlbisGetActiveControl("contraction"), "info") )
 :R*:letztes::letztes Quartal nicht da (keine Chronikerziffer möglich)
 #If
@@ -1805,12 +2055,61 @@ LDSars()                                                                        
 :R*:EMac::Einnahmebeschreibung für Macrogol mitgegeben
 #If
 ;}
-; --- Rezept                                                                                      	;{
+; --- Rezept                                                                                     	;{
 #If WinActive("Muster 16 ahk_class #32770") || WinActive("Privatrezept ahk_class #32770")
 :*:#Trya::                                           	;{ Tryasol 30 ml
 	IfapVerordnung("Tryasol 30 ml")
 return ;}
 #If
+;}
+; --- scan/pdf                                                                                 	;{
+#If HotS_Scan_IF()
+HotS_Scan_IF() {                                                                 	;-- kontextsensitive Auslösung Diagnosenfelder
+	; letzte Änderung 30.09.2021
+	If (WinActive("ahk_class OptoAppClass") && InStr(AlbisGetActiveControl("contraction"), Addendum.PDF.ScanKuerzel))
+		return true
+return false
+}
+HotS_Scan_Hotstrings() {                                                     	;-- ausgelagerte Hotstringdatei
+
+	If FileExist(Addendum.DBPath "\Dictionary\Hotstrings_scan.json") {
+		fn_IFPAbr := Func("HotS_Scan_IF")
+		Hotkey, If, % fn_IFPAbr
+		For replacement, hotstrings in  JSONData.Load(Addendum.DBPath "\Dictionary\Hotstrings_scan.json", "", "UTF-8")
+			For each, string in hotstrings
+				Hotstring(string, replacement)
+	}
+
+}
+;}
+; --- Familiendaten                                                                          	;{
+#IfWinActive, Familiendaten ahk_class #32770
+:C*:G::Groß
+:C*:Gm::Großmutter
+:C*:Oma::Großmutter
+:C*:Opa::Großvater
+:C*:On::Onkel
+:C*:V::Vater
+:C*:v::vater
+:C*:Mu::Mutter
+:C*:m::mutter
+:C*:Ma::Mann
+:C*:T::Tochter
+:C*:So::Sohn
+:C*:Sc::Schw
+:C*:a::ager
+:C*:ä::ägerin
+:C*:e::ester
+:C*:i::ieger
+:C*:B::Bruder
+:C*:Ta::Tante
+:C*:C::Cousin
+:C*:Fr::Frau
+:C*:E::Enkel
+:C*:s::sohn
+:C*:t::tochter
+:C*:L::Lebenspartner
+#IfWinActive
 ;}
 ; --- AUTODOC ---                                                                          	;{
 #IfWinActive, ahk_class OptoAppClass
@@ -1827,8 +2126,20 @@ return ;}
 	}
 return
 ;}
-; --- Ausnahmeindikationen                                                              	;{
+; --- Ausnahmeindikationen                                                             	;{
 #If IsFocusedAusnahmeIndikation()                                                  	;
+IsFocusedAusnahmeIndikation() {
+
+	; das Fenster "weitere Information" trägt nur den Namen des Patienten
+		WinGetText       	, activeWinText	, A
+		ControlGetFocus	, activeControl	, A
+
+	If InStr(activeWinText, "Ausnahmeindikation") && InStr(activeControl, "Edit14")
+		return true
+
+return false
+}
+
 :*:#::
 	AutoFillAusnahmeindikation()
 return
@@ -1906,17 +2217,6 @@ AutoFillAusnahmeindikation() {
 	;}
 
 }
-IsFocusedAusnahmeIndikation() {
-
-	; das Fenster "weitere Information" trägt nur den Namen des Patienten
-		WinGetText       	, activeWinText	, A
-		ControlGetFocus	, activeControl	, A
-
-	If InStr(activeWinText, "Ausnahmeindikation") && InStr(activeControl, "Edit14")
-		return true
-
-return false
-}
 InList(var, list) {
 	If var in %list%
 		return true
@@ -1957,7 +2257,7 @@ return ;}
 ;:*:Ibu600::Ibuprofen 600{F3}
 :*:Ibu 600::Ibuprofen 600{F3}
 :*:Ibu 800::Ibuprofen 800{F3}
-:*:Novamin::Novamin{F3}
+:*:Novamin::Novaminsulfon{F3}
 #If
 ;}
 ;}
@@ -2108,7 +2408,12 @@ return ;}
 :*:.fo::FileOpen(, "r", "UTF-8").Read(){Left 22}
 :*:.fw::FileOpen(, "r", "UTF-8").Write(){Left 22}
 :*:.jl::JSONData.Load(filepath, "", "UTF-8"){Left 14}{LShift Down}{Left 8}{LShift Up}
-:*:.jw::JSONData.Save(filepath, oJSON, true,, 1, "UTF-8"){Left 27}{LShift Down}{Left 8}{LShift Up}
+:*C:.jw::JSONData.Save(filepath, oJSON, true,, 1, "UTF-8"){Left 27}{LShift Down}{Left 8}{LShift Up}
+:*C:.JW::JSONData.Save(A_Temp "\tmp.json", oJSON, true,, 1, "UTF-8"){Enter}Run, % A_Temp "\tmp.json"{Up}{End}{Left 20}{LShift Down}{Left 5}{LShift Up}
+:*:.sd::SendDiagnosis(`"
+
+
+
 
 #IfWinActive
 
@@ -2184,113 +2489,35 @@ return ;}
 
 ;----------------------------------- End of Autoexecute ----------------------------------------------------------------------------------
 
+
 ;{10. Hotkey Labels und Funktionen, sowie Hotstringfunktionen
 
 ;{ ############### 	HOTKEY-FUNCTIONS     ###############
+EnableAllControls(ask=true)                                                             	{              	;-- Zugriff für alle Steuerelemente eines Fenster ermöglichen
 
-IsDatumsfeld() {                                                                                	; stellt fest ob sich der Eingabefocus in einem editierbaren Feld befindet
+	hwnd := WinExist("A")
 
-	feldOk    	:= 0
-	cfHwnd 	:= GetFocusedControlHwnd()
-	cContent 	:= ControlGetText("",  "ahk_id " cfHwnd, "", "", "")
-	hactive		:= WinExist("A")
-	RegExMatch(Control_GetClassNN(hactive, cfHwnd), "(?<=Edit)\d+", classnn)
-	RegExMatch(WinGetTitle(hactive), "Muster\s\d+\w*", wtitle)
-	classnn += 0
-
-	If 			InStr(wtitle, "Muster 1a")
-		If classnn in 1,2
-			feldOk:= 1
-	else if 	InStr(wtitle, "Muster 12a")
-		If classnn in 6,7,12,13,17,18,22,23,27,28,32,33,37,38,43,44,52,53,59,60,65,66,71,72,78,79,83,84
-			feldOk:= 2
-	else if 	InStr(wtitle, "Muster 21")
-		If classnn in 6,7
-			feldOk:= 3
-	else if 	InStr(wtitle, "Muster 20")
-		If classnn in 3,4,7,8,11,12,15,16
-			feldOk:= 4
-	else If 	RegExMatch(cContent, "\d\d\.\d\d\.\d\d\d\d", datum)
-	        feldOk:= 5
-
-	;ToolTip, % "wtitle:" wtitle "`nclassnn: '" classnn "'`nFeldOk: " feldOk, 2000, 100, 3
-
-	If (datum = "" && feldOk)
-		If !RegExMatch(cContent, "\d\d\.\d\d\.\d\d\d\d", datum)
- 			FormatTime, datum, %A_Now%, ddMMyyyy
-
-	If feldOk
-			return {"txt":cContent, "datum":datum, "hwnd":cfHwnd, "hWin":hactive, "WinTitle":wtitle, "classnn":classnn}
-	else
-			return 0
-}
-
-EnableAllControls(ask=1) {                                                                	; Zugriff für alle Steuerelemente eines Fenster ermöglichen
-
-	hwnd:= WinExist("A")
-
-	if ask
-	{
-			WinGetTitle, wtitle, ahk_id %hwnd%
-			MsgBox, 4, Addendum für Albis on Windows, Wollen Sie im Fenster: `n%hwnd%`n`"%wtitle%`"`nwirklich alle Felder freischalten und auch anzeigen?
-			If MsgBox, No
-					return
+	if ask {
+		WinGetTitle, wtitle, % "ahk_id " hwnd
+		MsgBox, 4, % "Addendum für Albis on Windows"
+						, % "Sollen im Fenster mit dem Titel: `n" "<< '" wtitle " >>`nalle Felder editierbar und sichtbar gemacht werden?"
+		IfMsgBox, No
+			return
 	}
 
-	For key, control in GetControls(hwnd,"","", "Enabled,hwnd,Visible")
-	{
-			If !(control.enabled)
-					Control, Enable,,, % "ahk_id " control.hwnd
-			If !(control.Visible)
-					Control, Show,,, % "ahk_id " control.hwnd
-	}
-
-	return
-}
-
-UnRedo(Do) {                                                                                    	; Undo und Redo in den Textfeldern im Albisfenster
-
-	;WM_UNDO = 0x0304
-	ControlGetFocus	, focused	, % "ahk_id " (AlbisWinID := AlbisWinID())
-	If RegExMatch(focused, "i)Edit|RichEdit|ComboBox") {
-
-			ControlGet       	, hfocused , Hwnd,, % focused, % "ahk_id " AlbisWinID
-			ControlGetText	, text                 	, % focused, % "ahk_id " AlbisWinID
-
-			If (Do = "Undo") {
-
-					If ( Addendum.UndoRedo.OnUnRedo <> GetHex(hfocused) ) {
-							Addendum.UndoRedo.OnUnRedo := GetHex(hfocused)
-							Addendum.UndoRedo.List := Array()
-					}
-
-					Addendum.UndoRedo.List.InsertAt(1, text)
-					PostMessage, 0x0304,,, % focused, % "ahk_id " AlbisWinID
-					SciTEOutput(text)
-
-			}
-			else if (Do = "Redo") {
-
-					If (Addendum.UndoRedo.MaxIndex() > 0) {
-							text := Addendum.UndoRedo.List.Pop()
-							ControlSetText,, % text, % "ahk_id " Addendum.UndoRedo.OnUnRedo
-					}
-
-					SciTEOutput(text)
-
-			}
-
+	For key, control in GetControls(hwnd,"","", "Enabled,hwnd,Visible") {
+		If !control.enabled
+			Control, Enable,,,	% "ahk_id " control.hwnd
+		If !control.Visible
+			Control, Show,,,	% "ahk_id " control.hwnd
 	}
 
 }
-
-FoxitReaderSignieren() {                                                                       	; macht ein Backup der PDF Datei bevor diese signiert wird
+FoxitReaderSignieren()                                                                     	{                	;-- macht ein Backup der PDF Datei bevor diese signiert wird
 
 	for process in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")
-		If InStr(process.name, "FoxitReader") {
-			RegExMatch(process.CommandLine, "\s\" q "(.*)?\" q, cmdline)
+		If InStr(process.name, "FoxitReader") && RegExMatch(process.CommandLine, "\s\" q "(.*)?\" q, cmdline)
 			break
-		}
 
 	SplitPath, cmdline1, PDFName
 	FileCopy, % cmdline1, % Addendum.BefundOrdner "\Backup\" PdfName, 1
@@ -2298,1865 +2525,104 @@ FoxitReaderSignieren() {                                                        
 	FoxitReader_SignaturSetzen()
 
 }
+HoveredControl(WinNN, CtrlNN)                                                    	{              	;-- true wenn Maus über benanntem Steuerelement steht
 
-;}
-;{ ###############  HOTSTRING-FUNCTIONS  ###############
-HotS_IF(context)                                                                             	{              	;-- Hotkey/Hotstring - kontextabhängige Überprüfung
+	MouseGetPos, mx, my, hWin, hCtrl, 2
+	WinGetClass , WinClass, % "ahk_id " hWin
+	If !InStr(WinClass, WinNN)
+		return false
+	If RegExMatch(Control_GetClassNN(hWin, hCtrl), CtrlNN)
+		return true
 
-  ;~ ; ALBIS
-	;~ If context in Diagnosen,EBM,GOÄ
-		;~ If !WinActive("ahk_class OptoAppClass")
-			;~ return false
-		;~ else {
-
-			;~ switch context {
-				;~ case "Diagnosen":
-					;~ If InStr(AlbisGetActiveControl("contraction"), "dia") || WinActive("Akutdiagnose ahk_class #32770") || WinActive("Dauerdiagnosen ahk_class #32770")
-						;~ return true
-				;~ case "EBM":
-					;~ #If WinActive("ahk_class OptoAppClass") && InStr(AlbisGetActiveControl("contraction"), "lk")
-						;~ return true
-				;~ case "GOÄ":
-					;~ If WinActive("ahk_class OptoAppClass") && (RegExMatch(AlbisGetActiveControl("contraction"), "lp|lbg") || InStr(AlbisGetActiveWindowType(), "Privatabrechnung"))
-						;~ return true
-			;~ }
-
-		;~ }
-
+return false
+hCtrlOff:
+	ToolTip, % "classnn: " fCtrl, % mx-10, % my+30, 12
+	SetTimer, hCtrlOff, -1000
+	ToolTip,,,,12
+return
 }
-HotS_View(ALineNr, context:="")                                                     	{              	;-- kontextsensitive Hotstringhilfe
+HotkeyViewer()                                                                              	{               	;-- zeigt Hotkeys
 
-	;{ Variablen 🟣🟡🔵🔴⚪⚫🔶🟨
+	SciTEOutput("Hotkey-Viewer")
 
-		global hHSV, HSV_LV, HSV, HSV_B1, HSV_NHS, HSV_NRP, HSV_NOP, HSV_PM
-		static hsContext, hotstrings, cFocused, wFocused, hsStrings, hsSearched
-		static hsRemover := {"[\(\[\{].*[\}\]\)].*"                      	: " "      	; z.B. [Punktzahl 200]
-									, 	"\s\d+\s.*"                                 	: " "    	; z.B. 30 Minuten
-									, 	"i)([a-zäöüß]+\.)([\s;,]*)"              	: " "		; z.B. mind. 10 min
-									, 	"i)[^a-zäöüß\s\-]"                        	: " "
-									, 	"\s\-\s|$"                                  	: " "
-									, 	"\s{2,}"                                        	: " "}
+	; Hotkey, IfWinActive, % "ahk_class " Addendum.PDF.ReaderWinClass
+	rxhotkey 	:= "Oi)^\s*Hotkey\s*,\s*(?<Case>If.+)*(?<Key>[a-z\d\+\#\!\^]+)*\s*?,\s*(?<Func>.+)\s*?(;--\s*)(?<Description>.+)*$"
+	WinNN 	:= {"ahk_class OptoAppClass":"Albis", "Dauerdiagnosen von ahk_class #32770":"Dauerdiagnosen"
+						, "Dauermedikamente von ahk_class #32770":"Dauermedikamente", "Cave! von ahk_class #32770":"Cave" }
+	allHotK 	:= ""
 
-		acx := A_CaretX, acy := A_CaretY
-		hotstrings	:= {}
-		hsNr     	:= 0
-		hsContext	:= RegExMatch(context, "i)(EBM|GOÄ)") ? 1 : RegExMatch(context, "i)(Diagnose)") ? 2 : 0
-		scriptlines	:= StrSplit(FileOpen(A_ScriptFullPath, "r", "UTF-8").Read(), "`n", "`r")
-		scriptlines.RemoveAt(1, ALineNr)
+	For lineNr, line in FileOpen(A_ScriptFullPath, "r", "UTF-8").Read() {
 
-		RegExMatch(A_ThisHotkey, "i)\*(?<Search>.*)\s*$" , Hot)
-		ControlGetFocus	, cFocused, % "ahk_id " (wFocused := WinExist("A"))
-		ControlGetText		, cText, % cFocused, % "ahk_id " wFocused
+		If RegExMatch(line, rxhotkey, Hot) {
 
-		If (hsContext = 2)                       	; Diagnosenkontext
-			RegExMatch(cText, "(^\s*|\};*\s*)[\s\.]*\.(?<Searched>\pL+[\s\-]*\pL*)?\b", hs)
+				If Hot.Case {
 
-	;}
+					Switch Hot.case {
 
-	;{ Hotstring-Parser aus dem Skriptcode
-		For lineNr, line in scriptLines {
+						Case "IfWinActive":
+							IfCase := "bei aktiviertem ## Fenster"
+						Case "IfWinExist":
+							IfCase := "bei existierendem ## Fenster"
+						Case "If":
+							IfCase := "wenn Sonderbedingung"
 
-			If RegExMatch(line, "i)\s*#If")
-				break
-
-		  ; Hotstrings finden und Informationen extrahieren
-			If (hsContext = 1) && RegExMatch(line, "O)\s*\:(?<Options>.*)?:(?<String>.*)?\:\:(?<Replacement>.*)?\t*;[\s\{\}\=~]*(?<Description>.*)$", hs) {
-
-			  ; RegEx - Objekt läßt sich nicht bearbeiten - warum?
-				Options         	:= hs.Options
-				String             	:= Trim(hs.String)
-				Replacement  	:= RegExReplace(hs.Replacement, "\s{2,}")
-				Description     	:= hs.Description
-				hsDescription 	:= hs.Description
-
-			  ; entfernt Sonderzeichen und anderes überflüssiges
-				For rxStr, rxRpl in hsRemover
-					hsDescription := RegExReplace(hsDescription, rxStr, rxRpl)
-				hsDescription := Trim(hsDescription)
-
-			  ; Hotstringbeschreibungen kürzen (für thematische Sortierung)
-				hsKey := "", upperChar := false
-				For wNr, word in StrSplit(hsDescription, A_Space)
-					If RegExMatch(word, "^und") {
-						hsKey .= word " "
-					} else If RegExMatch(word, "^[a-zäöü]") {
-						If upperChar
-							break
-						hsKey .= word " "
-					} else if RegExMatch(word, "^[A-ZÄÖÜ]") {
-						hsKey .= word " "
-						upperChar := wNr = 1 ? false : true
-					}
-				hsKey := Trim(hsKey)
-
-			 ; Hotstrings nach Beschreibung sortieren
-			 ;
-				hsKeyWords := StrSplit(hsKey, A_Space)
-
-				; ▹ - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-				; erste Gruppe anlegen
-				; ▹ - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-				If (hotstrings.Count() = 0) {
-
-					hotstrings[hsKey] := {}
-					hotstrings[hsKey][String] := {	"Description"		: Description
-															,	"Replacement"	: Replacement
-															,	"Option"			: Options}
-				}
-
-				; ▹ - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-				; bekannter Gruppe zuordnen
-				; ▹ - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-				else if hotstrings.haskey(hsKey) {
-
-					hotstrings[hsKey][String] := {	"Description"		: Description
-															,	"Replacement"	: Replacement
-															,	"Option"			: Options}
-
-				}
-
-				; ▹ - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-				; Gruppierung suchen, Gruppierungen anpassen
-				; ▹ - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-				else {
-
-				  ; Wort für Wort Vergleich gemerkter Hotstringbeschreibungen und neuen
-				  ; die Position des letzten passenden Wortes innerhalb des Satzes wird gemerkt
-				  ; die längste gemeinsame Wortreihe wird zur Gruppierung verwendet
-					HSIndex := []
-					For category, hotstring in hotstrings {
-						lastmatchword := 0
-						For stringN, word in StrSplit(category, " ") {
-							If (word = hsKeyWords[stringN])
-								lastmatchword := stringN
-							else
-								break
-						}
-						If lastmatchword
-							HSIndex.InsertAt(lastmatchword, category)
 					}
 
-				  ; Index der längsten, passenden Wortfolge
-					MaxIndex := HSIndex.Count() = 0 ? 0 : HSIndex.MaxIndex()
 
-				  ; neuen Key anlegen wenn es überhaipt keine Übereinstimmungen gab
-					If !MaxIndex {
-
-						hotstrings[hsKey] := {}
-						hotstrings[hsKey][String] := {	"Description"		: Description
-																,	"Replacement"	: Replacement
-																,	"Option"			: Options}
-					}
-					else {
-
-						newhskey  	:= ""
-						replacedKey	:= hotstrings.Delete(HSIndex[MaxIndex])
-						hsKeyStr    	:= StrSplit(HSIndex[MaxIndex], A_Space)
-						Loop % MaxIndex
-							newhskey .= hsKeyStr[A_Index] " "
-						newhskey := Trim(newhskey)
-						;~ SciTEOutput(newhskey "|" HSIndex[MaxIndex] "|" MaxIndex)
-						hotstrings[newhskey] := replacedkey
-						hotstrings[newhskey][String] := {	"Description"		: Description
-																		,	"Replacement"	: Replacement
-																		,	"Option"			: Options}
-					}
 
 				}
 
-			}
-			else if (hsContext = 2) &&  RegExMatch(line, "O)\s*\:(?<Options>.*):(?<String>.+)::(?<Replacement>.+)$", hs) {
-
-				Options         	:= hs.Options
-				String             	:= Trim(hs.String)
-				If RegExMatch(hs.Replacement, "SendDiagnosis\(" q "(.+)?" q "\)")
-					SendDiagnosis := true
-				Replacement  	:= RegExReplace(hs.Replacement	, "SendDiagnosis\(" q "(.+)?" q "\)", "$1")
-				Replacement  	:= RegExReplace(Replacement   	, "\s{2,}")
-
-				If !hotstrings.Haskey(replacement)
-					hotstrings[replacement] := {"String" : String, "Options": Options, "Diagnose": SendDiagnosis}
-				else
-					hotstrings[replacement].String .= "/" String
-
-			}
-
-		}
-	;}
-
-	;{ Gui
-
-		Gui, HSV: new, +Border +ToolWindow +AlwaysOnTop +HWNDhHSV
-		Gui, HSV: Margin, 0, 0
-		Gui, HSV: Font, s7
-
-	  ; Listview füllen
-		If (hsContext = 1) {
-			Gui, HSV: Add, Listview, % "xm ym h400 vHSV_LV hwndHSV_hLV gHSVHandler Grid ReadOnly AltSubmit -Multi ", % "Beschreibung|Ersatztext|Abkürzung"
-			For category, hsStrings in hotstrings
-				For abbreviation, hsdata in hsStrings
-					LV_Add("", hsdata.Description, hsdata.replacement, abbreviation)
-			LV_ModifyCol()
-		}
-		else If (hsContext = 2) {
-			Gui, HSV: Add, Listview, % "xm ym h400 vHSV_LV hwndHSV_hLV gHSVHandler ReadOnly AltSubmit -Multi ", % "Diagnose|Abkürzung"  ; -Hdr
-			For diagnosis, hsdata in hotstrings
-				LV_Add("", diagnosis, hsdata.string)
-			LV_ModifyCol(2, "Auto")
-			LV_ModifyCol(1, 600)
-		}
-
-		Gui, HSV: Add, Button	, % "xm y+14   	vHSV_B1   	gHSVHandler"	                  	, % "Auswahl übernehmen"
-		Gui, HSV: Add, Edit   	, % "x+5 w80  	vHSV_NOP 	gHSVHandler"                      	, % ""
-		Gui, HSV: Add, Edit   	, % "x+5 w200 	vHSV_NHS 	gHSVHandler AltSubmit"       	, % ""
-		Gui, HSV: Add, Edit   	, % "x+5 w350 	vHSV_NRP 	gHSVHandler"                      	, % ""
-		Gui, HSV: Add, Button  	, % "x+5       	vHSV_PM  	gHSVHandler"                      	, % "+/-"
-
-		GuiControlGet, cp	, HSV: Pos, HSV_LV
-		GuiControlGet, dp, HSV: Pos, HSV_NOP
-		Gui, HSV: Add, Text    	, % "x" dpX " y" cpY+cpH " w" dpW " Backgroundtrans Center"	, % "HS-Optionen"
-
-		GuiControlGet, dp, HSV: Pos, HSV_NHS
-		Gui, HSV: Add, Text    	, % "x" dpX " y" cpY+cpH " w" dpW " Backgroundtrans Center"	, % "Suchen oder Hotstring hinzufügen"
-
-		GuiControlGet, dp, HSV: Pos, HSV_NRP
-		Gui, HSV: Add, Text    	, % "x" dpX " y" cpY+cpH " w" dpW " Backgroundtrans Center"	, % "Ersatztext"
-
-		GuiControl, HSV: Enabled0, HSV_B1
-		GuiControl, HSV: Enabled0, HSV_NOP
-		GuiControl, HSV: Enabled0, HSV_NRP
-
-	  ; Listview und Guigröße an den Inhalt automatisch anpassen
-		LVwidth	:= 0, APos := GetWindowSpot(AlbisWinID())
-		SysGet, VScrollWidth   	, 2
-		SysGet, CursorHeight	, 14
-
-	 ; Listview Spaltenbreite zusammenrechnen und Listview-/Guibreite für komplette Ansicht ändern
-		Gui, HSV: Listview, HSV_LV
-		LV_Width := 0
-		Loop, % LV_GetCount("Col")
-			LVwidth += DllCall("SendMessage", "uint", HSV_hLV, "uint", 4125, "uint", A_Index-1, "uint", 0)
-		LVwidth := LVwidth>APos.W ? APos.W : (LVwidth<600 ? 600 : LVwidth)
-		GuiControl, HSV: Move, HSV_LV, % "w" LVwidth+2*VScrollWidth
-
-	  ; Anzeigen
-		GuiControlGet, Gui, HSV: Pos, HSV_B1
-		Gui, HSV: Show, % "x" acx " y" acy-GuiY-GuiH-CursorHeight  " NoActivate", % "Addendum Hotstringviewer [" context ": " LV_GetCount() "] "
-
-	  ; Suchfeld fokussieren
-		GuiControl, HSV: Focus, HSV_NHS
-
-	  ; gleich die Suche durchführen, wenn bei der Eingabe ein mgl. Hotstring eingegeben wurde
-		If hsSearched
-			GuiControl, HSV:, HSV_NHS, % hsSearched
-
-	;}
-
-return
-
-HSVHandler:		;{
-
-	Critical
-
-	;SciTEOutput(A_GuiEvent ", " A_GuiControl ", " A_EventInfo)
-
-  ; Doppelklick oder Button sendet Hotstring
-	If (A_GuiEvent = "DoubleClick" && A_GuiControl = "HSV_LV") || (A_GuiControl = "HSV_B1") {
-
-		If (A_GuiControl = "HSV_B1") {
-			row := 0
-			Gui, HSV: Listview, HSV_LV
-			If !(row := LV_GetNext(row)) {
-				GuiControl, HSV: Enabled0, HSV_B1
-				return
-			}
-		}
-
-		LV_GetText(rText, (A_GuiControl="HSV_B1" ? row : A_EventInfo), (hsContext=1 ? 2 : 1))
-
-		SendDiagnosis := 0
-		If (hsContext = 2 && rText) {
-			If !RegExMatch(rText, "\{.*[A-Z]\d+\.[\d#]+[A-Z]*\}") {
-				HSVPos := GetWindowSpot(hHSV)
-				Splash("Kein Ersatztext gefunden.", 8, HSVPos.X, Floor(HSVPos.Y/2), HSVPos.W, hHSV)
-				Sleep 2000
-			}
-			For diagnosis, hsdata in hotstrings
-				If (diagnosis = rText) {
-					SendDiagnosis := hsdata.Diagnose
-					break
-				}
-		}
-
-		Gui, HSV: Destroy
-		Sleep 50
-		ControlFocus, % cFocused, % "ahk_id " wFocused
-		Sleep 200
-
-		If hsSearched
-			SendInput, % "{BackSpace " StrLen(hsSearched)+1 "}"  ; . muss auch entfernt werden
-
-		SendDiagnosis(rText)
-
-		hotstrings := hsContext := cFocused := wFocused := hsSearched := ""
-
-	}
-  ; übernehmen Button aktivieren oder inaktivieren
-	else If (A_GuiControl = "HSV_LV") 		{
-
-		If  (A_GuiEvent = "Normal") {
-			row := 0
-			If !(isSelected := LV_GetNext(row))
-				GuiControl, HSV: Enabled0, HSV_B1
-			else
-				GuiControl, HSV: Enabled1, HSV_B1
 		}
 
 	}
-	else If (A_GuiControl = "HSV_PM") 	{
-
-		; zunächst Eingaben prüfen
-			HSVPos := GetWindowSpot(hHSV)
-			Gui, HSV: Submit, NoHide
-			If (StrLen(HSV_NHS)  = 0) {
-				Splash("Das Feld Hotstring darf nicht leer sein!", 4, HSVPos.X, Floor(HSVPos.Y/2), HSVPos.W, hHSV)
-				return
-			} else if (StrLen(HSV_NRP) = 0) {
-				Splash("Das Feld Ersatztext darf nicht leer sein!", 4, HSVPos.X, Floor(HSVPos.Y/2), HSVPos.W, hHSV)
-				return
-			} else If (hsContext = 2 && !RegExMatch(HSV_NRP, "\{.*[A-Z]\d+\.[\d#]+[A-Z]*\}")) {
-				Splash("Das Feld Ersatztext muss einen ICD Code enthalten!", 4, HSVPos.X, Floor(HSVPos.Y/2), HSVPos.W, hHSV)
-				return
-			}
-
-	}
-	else If (A_GuiControl = "HSV_NHS") 	{   ; Suche oder neuen Hotstring anlegen
-
-		Gui, HSV: Submit, NoHide
-		LV_Delete()
-		If (hsContext = 1) {
-
-			For category, hsStrings in hotstrings
-				For abbreviation, hsdata in hsStrings
-					If InStr(hsdata.Description . hsdata.replacement . abbreviation, HSV_NHS)
-						LV_Add("", hsdata.Description, hsdata.replacement, abbreviation)
-
-		} else if (hsContext = 2) {
-
-			For diagnosis, hsdata in hotstrings
-				If InStr(diagnosis . hsdata.string, HSV_NHS)
-					LV_Add("", diagnosis, hsdata.string)
-
-		}
-
-	}
-
-return	;}
-HSVGuiClose: 	;{
-HSVGuiEscape:
-	Gui, HSV: Destroy
-	hsContext := hsStrings := ""
-return ;}
 }
-HotS_Privatabrechung()                                                                  	{              	;-- Behörden, Portokosten
-
-	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	; IF Bedingung - START
-		fn_IFPAbr := Func("HotS_Privatabrechnung_IF")
-		Hotkey, If, % fn_IFPAbr
-
-	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	;	Behörden
-
-		gLASVk	:= "(sach:Kurzauskunft LA für Soziales u. Versorgung:5.00)"
-		gJVEG	:= "(sach:Anfrage Sozialgericht gem. JVEG: "                  	Addendum.Abrechnung.JVEG 	")"
-		gLASV	:= "(sach:Landesamt für Soziales u. Versorgung:"            	Addendum.Abrechnung.JVEG 	")"
-		gDRV1 	:= "(sach:Anfrage Rentenversicherung:"                          	Addendum.Abrechnung.DRV1  	")"
-		gDRV2 	:= "(sach:Anfrage Rentenversicherung:"                          	Addendum.Abrechnung.DRV2  	")"
-		gBAfA	:= "(sach:Anfrage Bundesagentur für Arbeit gem. JVEG:" 	Addendum.Abrechnung.BAfA 	")"
-
-		HotString(":b0*?X:DRV"         	, "HotS_Info")                                              	; Hotstring Info
-		HotString(":b0*?X:RLV"         	, "HotS_Info")
-		HotString(":b0*?X:lasv"         	, "HotS_Info")
-		HotString(":b0*?X:lageso"     	, "HotS_Info")
-		HotString(":*:JVEG"             	, gJVEG)                                                    	; Anfrage Sozialgericht
-		HotString(":*:sozialgericht"  	, gJVEG)                                                    	; Anfrage Sozialgericht
-		HotString(":*X:lasv1"            	, Func("HotS_Info").Bind(gLASV))                    	; Anfrage LaGeSo Schwerbehinderung Normal
-		HotString(":*X:lasv2"            	, Func("HotS_Info").Bind(gLASVk))                  	; Anfrage LaGeSo Schwerbehinderung Kurzbefund
-		HotString(":*X:lasvk"             	, Func("HotS_Info").Bind(gLASVk))                  	; Anfrage LaGeSo Schwerbehinderung Kurzbefund
-		HotString(":*X:lageso1"        	, Func("HotS_Info").Bind(gLASV))                   	; Anfrage LaGeSo Schwerbehinderung Normal
-		HotString(":*X:lageso2"        	, Func("HotS_Info").Bind(gLASVk))                  	; Anfrage LaGeSo Schwerbehinderung Kurzbefund
-		HotString(":*X:lagesokurz"    	, Func("HotS_Info").Bind(gLASVk))                	; Anfrage LaGeSo Schwerbehinderung Kurzbefund
-		HotString(":*X:RLV1"              	, Func("HotS_Info").Bind(gDRV1))                   	; Anfrage Rentenversicherung
-		HotString(":*X:RLV2"              	, Func("HotS_Info").Bind(gDRV2))                	; Anfrage Rentenversicherung
-		HotString(":*X:DRV1"            	, Func("HotS_Info").Bind(gDRV1))                   	; Anfrage Rentenversicherung
-		HotString(":*X:DRV2"            	, Func("HotS_Info").Bind(gDRV2))                   	; Anfrage Rentenversicherung
-		HotString(":*:Rent"                 	, gDRV1)                                                     	; Anfrage Rentenversicherung
-		HotString(":*:S0051"            	, gDRV2)                                                    	; Anfrage Rentenversicherung
-		HotString(":*:Bundes"         	, gBAfA)                                                     	; Anfrage Bundesagentur für Arbeit
-		HotString(":*:Agentur"        	, gBAfA)                                                       	; Anfrage Bundesagentur frü Arbeit
-
-	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	; Porto
-		Postkarte    	:= "(sach:Porto Standard:0.60)"
-		Standard   	:= "(sach:Porto Standard:0.80)"	, Kompakt := "(sach:Porto Kompakt:0.95)"
-		Gross        	:= "(sach:Porto Groß:1.55)"   	, Maxi   	:= "(sach:Porto Maxi:2.70)"
-		Paeckchen 	:= "(sach:Porto Päckchen:4.50)"
-
-		HotString(":b0*?X:porto"  	, "HotS_Info")
-		HotString(":*:porto0"       	, Postkarte)                                                       	; Postkarte
-		HotString(":*:Postk"          	, Postkarte)                                                     	; Postkarte
-		HotString(":*:karte"          	, Postkarte)                                                     	; Postkarte
-		HotString(":*:porto1"        	, Kompakt)                                                    	; Porto bis 20g
-		HotString(":*:Standard"   	, Kompakt)                                                     	; Porto bis 20g
-		HotString(":*:porto2"      	, Kompakt)                                                     	; Porto bis 50g
-		HotString(":*:Kompakt"   	, Kompakt)                                                       	; Porto bis 50g
-		HotString(":*:porto3"      	, Gross)                                                         	; Porto bis 500g
-		HotString(":*:Groß"        	, Gross)                                                         	; Porto bis 500g
-		HotString(":*:porto4"      	, Maxi)                                                           	; Porto bis 1000g
-		HotString(":*:Maxi"         	, Maxi)                                                            	; Porto bis 1000g
-		HotString(":*:porto5"       	, Paeckchen)                                                    	; DHL-Päckchen
-		HotString(":*:Päck"         	, Paeckchen)                                                    	; DHL-Päckchen
-		HotString(":*:Pack"         	, Paeckchen)                                                    	; DHL-Päckchen
-
-	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	; IF Bedingung - ENDE
-		Hotkey, If
-
-return
+IFActive_Lko()                                                                                	{              	;-- #IF Hotkey/Hotstring Funktion - lko/Karteikarte aktiv?
+	global KK
+	If WinActive("ahk_class OptoAppClass") && InStr(AlbisGetActiveWindowType(), "Karteikarte")
+		If RegExMatch(AlbisGetActiveControl("contraction"), "i)^lk\w")
+			return true
+return false
 }
-HotS_Info(replacement:="")                                                        		{              	;-- zeigt Hinweise zu Hotstrings
+IsDatumsfeld()                                                                               	{                 	;-- ist der Eingabefokus in einem editierbaren Datumsfeld
 
-	static hs
+	; letzte Änderung: 22.09.2021
 
-	If !IsObject(hs)
-		hs := {	"DRV"     	: "Rentenversicherung:`nDRV1 (" Addendum.Abrechnung.DRV1 " €) "
-									. "und DRV2 (" Addendum.Abrechnung.DRV2 " €)"
-				, 	"RLV"     	: "Rentenversicherung:`nRLV1 (" Addendum.Abrechnung.DRV1 " €) "
-									. "und RLV2 (" Addendum.Abrechnung.DRV2 " €)"
-				, 	"LASV"   	: "Erstfeststellungsverfahren nach dem Schwerbehindertenrecht:`n"
-									. "LASV1 (" Addendum.Abrechnung.JVEG " €) und lasv2/lasvk (5.00 €)"
-				, 	"lageso" 	: "Erstfeststellungsverfahren nach dem Schwerbehindertenrecht:`n"
-									. "lageso1 (" Addendum.Abrechnung.JVEG " €) und lageso2/lagesokurz (5.00 €)"
-				, 	"porto"  	: "P O R T O K O S T E N`n`n"
-									. "porto0: Postkarte 0.60 €`n"
-									. "porto1: Standard 0.80 €`t(Gewicht bis 20 g. max. LxBxH 23,5 x 12,5 x 0,5 cm [z.B. DIN lang oder C6 Umschlag])`n"
-									. "porto2: Kompakt 0.95 €`t(Gewicht bis 50 g. max. LxBxH 23,5 x 12,5 x 1 cm [z.B. DIN lang oder C6 Umschlag])`n"
-									. "porto3: Groß 1,55 €      `t(Gewicht bis 500 g. max. LxBxH 35,3 x 25 x 2 cm [z.B. Umschläge bis zu DIN B4])`n"
-									. "porto4: Groß 2,70 €     `t(Gewicht bis 1000 g. max. LxBxH 35,3 x 25 x 5 cm [z.B. Umschläge oder Versandboxen bis zu DIN B4])`n"
-									. "porto5: Päckchen 4,50 €`t(Gewicht bis 2 kg. max. LxBxH 60 x 30 x 15 cm`n`n"
-									. "alternativ: Postkarte,Karte,Standard,Kompakt,Groß,Maxi,Päckchen"}
+	feldOk    	:= 0
+	cContent 	:= ControlGetText("", "ahk_id " (cfHwnd := GetFocusedControlHwnd()))
 
-	ControlGetFocus, cFocus, A
-	aHwnd 	:= WinExist("A")
-	actrl  	:= GetFocusedControlHwnd(aHwnd)
-	cp       	:= GetWindowSpot(actrl)
+	RegExMatch(Control_GetClassNN((hactive := WinExist("A")), cfHwnd), "(?<=Edit)\d+", classnn)
+	RegExMatch(WinGetTitle(hactive), "Muster\s+\w+", wtitle)
 
-	If !replacement {
-		RegExMatch(A_ThisHotkey, "\:.*\:(?<HotString>.*)$", this)
-		RegExReplace(hs[thisHotString], "\n", "", CR)
-		ToolTip, % hs[thisHotString], % A_CaretX, % cp.Y - cp.H - ((CR+1)*14) - 2 , 12
-		SetTimer, HotS_InfoOff, -16000
-	}
-	else {
-		SendRaw, % replacement
-		ToolTip,,,, 12
+	Switch wtitle {
+		Case "Muster 1a":
+			If RegExMatch(classnn, "^(1|2)$")
+				feldOk := 1
+		Case "Muster 12a":
+			If RegExMatch(classnn, "^(6|7|12|13|17|18|22|23|27|28|32|33|37|38|43|44|52|53|59|60|65|66|71|72|78|79|83|84)$")
+				feldOk := 2
+		Case "Muster 21":
+			If RegExMatch(classnn, "^(6|7)$")
+				feldOk := 3
+		Case "Muster 20":
+			If RegExMatch(classnn, "^(3|4|7|8|11|12|15|16")
+				feldOk := 4
+		Default:
+			If RegExMatch(cContent, "\d{2}\.\d{2}\.\d{4}", datum)
+				feldOk := 5
 	}
 
-return
+	If (!datum && feldOk)
+		If !RegExMatch(cContent, "\d\d\.\d\d\.\d\d\d\d", datum)
+ 			FormatTime, datum, % A_Now, ddMMyyyy
 
-HotS_InfoOff:
-	SetTimer, HotS_InfoOff, Off
-	ToolTip,,,, 12
-return
+	;~ ToolTip, % "wtitle:" wtitle "`nclassnn: '" classnn "'`nFeldOk: " feldOk "`nDatum: " datum, 1800, 1, 3
+
+	If feldOk
+		return {"txt":cContent, "datum":datum, "hwnd":cfHwnd, "hWin":hactive, "WinTitle":wtitle, "classnn":classnn}
+
+return 0
 }
-;}
-;{ ############### 	SCITE4AUTOHOTKEY     ###############
-scriptVars:                     	;{     zeigt die Variablen des AddendumSkriptes                         	(für Scite4Autohotkey)
-	ListVars
-return
-;}
-FuerTests:							;{		Strg (links) + Alt (links) + t
-	;MsgBox, % AlbisGetActiveControl("contraction")
-
-return
-;}
-SendRawBzu:                   	;{	 	Strg (links) + Ziffernblock 2                                             	(für Scite4Autohotkey)
-	SendRawFast(";}")
-return
-;}
-SendRawBAuf:               	;{	 	Strg (links) + Ziffernblock 1                                             	(für Scite4Autohotkey)
-	SendRawFast(";{ ")
-return
-;}
-SendRawElse:                	;{	 	Strg (links) + Ziffernblock 3                                              	(für Scite4Autohotkey)
-	SendRawFast(elseSEND)
-return
-;}
-SendRawProzentAll: 	    	;{	 	Strg (links) + 5                                                                	(für Scite4Autohotkey)
-	SendRawFast("%%", "L")
-return
-;}
-SendStrgRight: 	            	;{ 	Ziffernblock 6                                                                 	(für Scite4Autohotkey)
-	SendInput, {LControl Down}{Right}{LControl Up}
-return
-;}
-SendStrgLeft:                 	;{ 	Ziffernblock 4                                                                 	(für Scite4Autohotkey)
-	SendInput, {LControl Down}{Left}{LControl Up}
-return
-;}
-SendRawBAll:                	;{     Alt (links) 	+ 7                                                                 	(für Scite4Autohotkey)
-	SendInput, % "{Raw}{}"
-	SendInput, {Left}
-return
-;}
-SendRawRAll:                	;{     Strg (links) + 8                                                                 	(für Scite4Autohotkey)
-	SendRawFast("()", "L")
-return
-;}
-SendRawKAll:                	;{     Alt (links) 	+ 8                                                                 	(für Scite4Autohotkey)
-	SendRawFast("[]", "L")
-return
-;}
-SendRawKauf:               	;{     Win (links) + 8                                                                 	(für Scite4Autohotkey)
-	SendRawFast("[", "R")
-return
-;}
-SendRawKzu:                	;{     Win (links) + 9                                                                 	(für Scite4Autohotkey)
-	SendRawFast("]", "L")
-return
-;}
-SendRawR:                    	;{	 	Strg (links) + ´                                                                	(für Scite4Autohotkey) | `r
-	SendRawFast("``r", "")
-return
-;}
-SendRawN:                   	;{	 	Strg (links) + `                                                                	(für Scite4Autohotkey) | `n
-	SendRawFast("``n", "")
-Return
-;}
-SendRawTab:                	;{	 	Strg (links) + Alt (links) + `                                               	(für Scite4Autohotkey) | `t
-	SendRawFast("``t", "")
-return
-;}
-SendFourSpace:            	;{	 	Strg (links) + Pfeil rechts                                                   	(für Scite4Autohotkey)
-	Send, {Space 4}
-Return
-;}
-SendFourBackspace:      	;{	 	Strg (links) + Delete                                                         	(für Scite4Autohotkey)
-	Send, {BackSpace 4}
-Return
-;}
-SciteDescriptionBlock:    	;{	 	Alt (links)   + v                                                               	(für Scite4Autohotkey)
-	SendRawFast(";---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------", "Enter")
-	SendRawFast("; " Clipboard , "Enter")
-	SendRawFast(";---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------", "Enter")
-return
-;}
-SciteCommentBlock:      	;{	 	Strg (links) + ,                                                                  	(für Scite4Autohotkey)
-	SendAlternately("/* | */")
-return
-;}
-SciteBracket:                   	;{ 	Strg (links) + .                                                                  	(für Scite4Autohotkey)
-	SendAlternately("{|}")
-return
-;}
-SciteSmartCaretL:           	;{
-	SciteSmartCaret(-1)
-return
-SciteSmartCaretR:
-	SciteSmartCaret(1)
-return
-
-SciteSmartCaret(direction) {
-
-	global curpos, curline, curlen, endpos, bufLen
-
-	sci            	:= Sci_GetCurTextLine()
-	Txt				:= direction = - 1 ? string.Flip(sci.curText) : sci.curText
-	SLen				:= StrLen(Txt)
-	LineStartPos	:= endpos - SLen                                                                                			;lineendpos ist immer +2 wegen CR + LF Zeichen am Ende
-	CPosInTxt		:= curpos - LineStartPos
-	newPos			:= curpos + ( direction * InStr(Txt, ",", false, CPosInTxt + 1, 1) )
-
-	SendMessage, 2025, % newPos, 0,, % "ahk_id " hSci
-	gosub MsgBoxer
-sscDir := 0
-
-return
-
-MsgBoxer:
-	t =
-	(LTrim
-				direction    	:  %direction%
-				CaretPosition	:  %curpos%
-				Linelength 	:  %curlen%
-				Bufferlänge 	:  %buflen%
-				LineStartPos	:  %LineStartPos%
-				LineEndPos	:  %EndPos%
-				newPos     	:  %newPos%
-				Textlänge  	:  %SLen%
-				Text          	:  %Txt%
-	))
-	SciTEOutput(t)
-return
-}
-
-;}
-
-;}
-;{ ###############                 ALBIS                 ###############
-AlbisHeuteDatum:         	;{ 	Albis Programmdatum auf heute setzen
-	AlbisSetzeProgrammDatum(A_DD "." A_MM "." A_YYYY)
-Return
-;}
-AlbisKopieren:               	;{ 	Strg	+	c                                                                	(wie sonst überall in Windows nur nicht in Albis)
-	If InStr(AlbisGetActiveWinTitle(), "Wartezimmer") {
-		ListviewClipboard("Wartezimmer")
-		return
-	}
-	else if RegExMatch(WinGetClass(DLLCall("GetLastActivePopup", "uint", AlbisWinID())), "#32770") {
-		ListviewClipboard("")
-		return
-	}
-
-	AlbisCText := AlbisCopyCut()
-	If (StrLen(AlbisCText) > 0) 	{
-		clipboard := AlbisCText
-		GdiSplash(SubStr(AlbisCText, 1, 30) "...", 1)
-	}
-	else
-		Tooltip("!Nichts kopiert!", 1)
-return
-;}
-AlbisAusschneiden:        	;{ 	Strg	+	x                                                                	(wie sonst überall in Windows nur nicht in Albis)
-	AlbisCText:= AlbisCopyCut()
-	If (StrLen(AlbisCText) > 0) 	{
-		clipboard := AlbisCText
-		GdiSplash(SubStr(AlbisCText, 1, 30) . "`.`.`.", 1)
-		SendInput, {DEL}
-	}
-	else
-		Tooltip("!Nichts ausgeschnitten!", 1)
-return
-;}
-AlbisEinfuegen:             	;{ 	Strg	+	v                                                                	(wie sonst überall in Windows nur nicht in Albis)
-	If (AlbisCText <> clipboard)
-        FileAppend, % clipboard  "`n", % Addendum.LogPath "\CopyAndPaste.log"
-	KDly	:= A_KeyDelay
-	KDur	:= A_KeyDuration
-	;~ SetKeyDelay, 0, 0
-	SendRaw, % Clipboard
-	;~ SetKeyDelay, % KDly, % KDur
-return
-;}
-AlbisMarkieren:              	;{ 	Strg	+ a
-	AlbisSelectAll()
-return ;}
-AlbisKarteikarteSchliessen:	;{ 	Shift	+	Pfeil nach unten
-	IfWinNotActive, ahk_class OptoAppClass
-			WinActivate, ahk_class OptoAppClass
-	Send, {LControl Down}{F4}{LControl Up}
-return
-;}
-AlbisNaechsteKarteikarte:	;{ 	Shift	+	Pfeil nach rechts
-	SendMessage, 0x224,,,, % "ahk_id " AlbisMDIClientHandle()	; WM_MDINEXT
-return
-;}
-Schulzettel:                    	;{ 	Strg 	+ F11
-	Run, %AddendumDir%\include\AHK_H\x64w\AutohotkeyH_U64.exe /f "%AddendumDir%\Module\Albis_Funktionen\Schulzettel.ahk"
-return ;}
-Hausbesuche:               	;{ 	Strg 	+ F12
-	Run, %AddendumDir%\include\AHK_H\x64w\AutohotkeyH_U64.exe /f "%AddendumDir%\Module\Albis_Funktionen\Hausbesuche.ahk"
-return ;}
-DauermedBezeichner:   	;{ 	nur # eingeben im Dauermedikamentenfenster
-	ControlGetText, fT,, % "ahk_id " (f := GetFocusedControl())
-	If (fT="") {
-       	If InStr(GetClassName(f), "Edit")
-           	MedTrenner(f)
-	} else
-		SendInput, #
-return
-;}
-DauermedRauf:             	;{ 	Strg	+ Pfeil nach oben
-	PostMessage, 0x00F5,,, Button1,  Dauermedikamente ahk_class #32770
-	SetTimer, DauermedFokus, -50
-Return
-;}
-DauermedRunter:          	;{ 	Strg	+ Pfeil nach unten
-	PostMessage, 0x00F5,,, Button2,  Dauermedikamente ahk_class #32770
-	SetTimer, DauermedFokus, -50
-return
-;}
-DiagnoseRauf:              	;{ 	Strg	+ Pfeil nach oben
-	PostMessage, 0x00F5,,, Button1,  Dauerdiagnosen von ahk_class #32770
-	SetTimer, DauerDiagnoseFokus, -50
-Return ;}
-DiagnoseRunter:            	;{ 	Strg	+ Pfeil nach unten
-	PostMessage, 0x00F5,,, Button2,  Dauerdiagnosen von ahk_class #32770
-	SetTimer, DauerDiagnoseFokus, -50
-return ;}
-CaveVonRauf:               	;{ 	Strg	+ Pfeil nach oben  stark Verbesserungswürdig
-	PostMessage, 0x00F5,,, Button1,  Cave! von ahk_class #32770
-	SetTimer, DauerDiagnoseFokus, -50
-Return ;}
-CaveVonRunter:            	;{ 	Strg	+ Pfeil nach unten
-	PostMessage, 0x00F5,,, Button2,  Cave! von ahk_class #32770
-	SetTimer, DauerDiagnoseFokus, -50
-return ;}
-TTipOff:                        	;{
-	ToolTip,,,, % TT
-return
-;}
-DauermedFokus:           	;{ 	Eingabefokus auf das Listview im Dauermedikamentenfenster
-	If WinExist("Dauermedikamente ahk_class #32770")
-			ControlFocus, SysListView321, Dauermedikamente ahk_class #32770
-return
-;}
-DauerDiagnoseFokus:   	;{ 	Eingabefokus auf das Listview im Dauerdiagnosenfenster
-	If WinExist("Dauerdiagnosen von ahk_class #32770")
-			ControlFocus, SysListView321, Dauerdiagnosen von ahk_class #32770
-return
-;}
-CaveVonFokus:             	;{ 	Eingabefokus auf das Listview im Cave! von fenster
-	If WinExist("Dauerdiagnosen von ahk_class #32770")
-		ControlFocus, SysListView321, Cave! von ahk_class #32770
-return
-;}
-EnableAllControls:	        	;{
-	EnableAllControls(1)
-return
-;}
-PlusEineWoche:             	;{ 	F10                                                                                     - in allen Datumsfeldern in Albis
-	If IsObject(Feld:= IsDatumsfeld())
-			AddToDate(Feld, 7, "days")
-	else
-			SendInput, {F10}
-Return
-;}
-MinusEineWoche:          	;{ 	F9                                                                                       - in allen Datumsfeldern in Albis
-	If IsObject(Feld:= IsDatumsfeld())
-			AddToDate(Feld, -7, "days")
-	else
-			SendInput, {F9}
-Return
-;}
-PlusEinMonat:                	;{ 	F12                                                                                     - in allen Datumsfeldern in Albis
-	If IsObject(Feld:= IsDatumsfeld())
-			AddToDate(Feld, 4*7, "days")
-	else
-			SendInput, {F12}
-Return
-;}
-MinusEinMonat:            	;{ 	F11                                                                                     - in allen Datumsfeldern in Albis
-	If IsObject(Feld:= IsDatumsfeld())
-		AddToDate(Feld, -4*7, "days")
-	else
-		SendInput, {F11}
-Return
-;}
-Kalender:                      	;{ 	Shift	+ F3
-	If IsObject(feld:= IsDatumsfeld())	{
-		If !InStr(GetProcessNameFromID(feld.hwin), "albis")	{
-			SendInput, {Shift Down}{F3}{Shift Up}
-				return
-		}
-
-			;Kalender Gui erstellen
-		Calendar(feld)
-	}	else	{
-		SendInput, {Shift Down}{F3}{Shift Up}
-	}
-return
-;}
-DruckeLabor:                	;{ 	Alt 	+ F8
-	AlbisLaborblattDrucken(1, "Standard", "")
-return
-;}
-Laborblatt:                    	;{ 	Alt 	+ Rechts
-	If !InStr(AlbisGetActiveWindowType(), "Patientenakte") or InStr(AlbisGetActiveWindowType(), "Laborblatt")
-		return
-	AlbisLaborBlattZeigen()
-return
-;}
-Karteikarte:                   	;{ 	Alt 	+ Links
-	If !InStr(AlbisGetActiveWindowType(), "Patientenakte") or InStr(AlbisGetActiveWindowType(), "Karteikarte")
-		return
-	AlbisKarteikarteZeigen()
-return
-;}
-GVUListe_ProgDatum:   	;{ 	Strg	+	F7
-	GVUListe(1)
-Return
-;}
-GVUListe_ZeilenDatum: 	;{ 	Alt	+	F7
-	GVUListe(2)	; Funktion ist im Addendumskript
-return
-;}
-KarteikartenMenu:          	;{
-	MouseGetPos, mx, my
-	; Context menu opened –> Get handle:
-	MN_GETHMENU := 0x1E1 ; Shell Constant: "Menu_GetHandleMenu"
-	SendMessage, MN_GETHMENU, False, False
-	hCM := ErrorLevel ; Return Handle in ErrorLevel
-	ToolTip, % "Hab Dich Menu: " GetHex(hCM) , % mx , % my - 60, 6
-	SetTimer, HDM, -3000
-return
-
-HDM:
-	ToolTip,,,,6
-return
-;}
-StarteAutoDiagnosen:       	;{   	Strg	+ Alt + d
-	If !ScriptIsRunning("AutoDiagnosen3")
-		ADPID :=  RunSkript(A_ScriptDir "\include\AutoDiagnosen3.ahk")
-return ;}
-COVIDImpfA:                 	;{
-Send, % "{Raw}88331A(charge:FE6975)"
-return
-COVIDImpfB:
-Send, % "{Raw}88331B(charge:FE6975)"
-return ;}
-
-SendDiagnosis(dia)                                                                        	{                 	; -- für automatische Ersetzung von Diagnosestrings
-
-	; selektiert ein '#' Zeichen im übergebenen String als Position für Nutzereingaben
-	; z.B. eine Seitenangabe: 	Pneumonie {J15.8#G};
-	; derzeit wird nur ein Sonderzeichen pro übergebenem String ersetzt
-	; geplant sind flexiblere Ersetzungen für Seitenangabe, Diagnosesicherheit und Diagnosentext
-
-	;~ CooCt  	:= A_CoordModeCaret
-
-	BlockInput, On
-	dia   	:= RegExReplace(dia, "[#]+", "#", rplCount) . (!RegExMatch(dia, "\s*;\s*$") ? ";" : "")  ; fügt ein Semikolon bei Bedarf hinzu
-	rplPos	:= InStr(dia, "#")
-	SendRaw,	% dia
-	If rplPos
-		SendInput	, % "{Left " (StrLen(dia)-rplPos+1) "}{LShift Down}{Right 1}{LShift Up}"
-	BlockInput, Off
-
-}
-Privatabrechnung_Begruendungen(cmd="zeigen", bgrWahl="")       	{
-
-	static hfocused, hparent, hfocused_last, hparent_last
-
-	hfocused 	:= GetFocusedControlHwnd(AlbisWinID())
-	hparent		:= GetParent(hfocused)
-
-	If (cmd = "zeigen") {
-
-		hfocused_last 	:= hfocused
-		hparent_last  	:= hparent
-		caretpos           	:= CaretPos(hfocused)
-		ctrltxt            	:= SubStr(ControlGetText("", "ahk_id " hfocused), 1, caretpos - 1)
-
-		If FileExist(Addendum.AdditionalData_Path "\GOÄTexte.json")
-			bgr := JSON.Load(FileOpen(Addendum.AdditionalData_Path "\GOÄTexte.json", "r").Read(),, "UTF-8")
-
-		RegExMatch(ctrltxt, "\d+$", ziffer)
-		Privatabrechnung_BgrGui(bgr[ziffer], ziffer)
-		;FileOpen(Addendum.AdditionalData_Path "\GOÄTexte.json", "w", "UTF-8").Write(JSON.Dump(bgr,, 2, "UTF-8"))
-
-	}
-	else if (cmd = "einfuegen") {
-
-		ControlFocus,, % "ahk_id " hfocused_last
-		if !ErrorLevel
-			Send, % bgrWahl	;, % "ahk_id " hfocused_last
-		else
-			PraxTT("Addendum konnte den Text nicht einfügen", "1 2")
-
-	}
-	;SciTEOutput("so geht es nicht")
-
-}
-Privatabrechnung_BgrGui(content, ziffer)                                        	{                  ;-- Gui für die Auswahl von EBM Begründungen
-
-	global
-	local acx, acy
-
-	acx        	:= A_CaretX
-	acy       	:= A_CaretY
-
-	Gui, Bgr: New, HWNDbgrHgui
-	Gui, Bgr: Add, ListView	, % "xm ym w500 r10 vbgrLV ", % "Texte"
-	For idx, bgrtxt in content
-		LV_Add("", bgrtxt)
-	Gui, Bgr: Add, Button	, % "xm y+5	vbgrUse    	gbgrButtonHandler", % "Begründungstext übernehmen"
-	Gui, Bgr: Add, Button	, % "x+30 	vbgrCancel 	gbgrButtonHandler", % "Abbruch"
-	Gui, Bgr: Show, AutoSize, % "Begründungstexte für GOÄ Ziffer [" ziffer "]"
-
-return
-
-bgrButtonHandler:
-
-	if (A_GuiControl = "bgrUse") {
-		Gui, bgr: ListView, bgLV
-		If !(crow  := LV_GetNext(0))
-			return
-		LV_GetText(bgrWahl, crow)
-		Privatabrechnung_Begruendungen("einfuegen", bgrWahl)
-	}
-
-bgrGuiClose:
-bgrGuiEscape:
-	Gui, bgr: Destroy
-return
-}
-ScheinCOVIDPrivat()                                                                      	{                  ;-- Funktionsaufruf für "Neuen Schein anlegen"
-
-	Quartal := QuartalTage("aktuell")
-	res := AlbisAbrScheinCOVIDPrivat(Quartal)
-
-}
-Schnellziffer(Datum:="")                                                                 	{
-
-		static SZiffern := {"a":"03220", "s":"03221", "d":"03230(x:2)", "f":"03360", "g":"03362", "h":"35100", "i":"35110"}
-
-		ziffer := SZiffern["#" A_ThisHotkey]
-	;~ SciTEOutput(A_ThisFunc ": [" A_ThisHotkey "] " ziffer)
-
-	; Eingaben ermöglichen
-		ControlGetFocus, cFocus, ahk_class OptoAppClass
-		while (!RegExMatch(cFocus, "^Edit(?<nr>\d+)", Edit) && A_Index < 4) {
-			If (A_Index > 1)
-				Sleep 500
-			SendInput, {Insert}
-			Sleep 100
-			ControlGetFocus, cFocus, ahk_class OptoAppClass
-		}
-
-	; auf Eingabefeld prüfen
-		If !RegExMatch(EditNr, "\d+") {
-			PraxTT("Eingabefeld konnte nicht erstellt werden", "1 1")
-			return 0
-		}
-
-	; EBM Ziffer senden
-		If !VerifiedSetText(cFocus, ziffer, "ahk_class OptoAppClass") {
-			PraxTT("EBM Ziffer [" ziffer "]: ließ sich nicht einfügen", "1 1")
-			return 0
-		}
-
-	; Eingabe durch TAB abschließen
-		SendInput, {TAB}
-		Sleep, 300
-		ControlGetFocus, cFocus, ahk_class OptoAppClass
-		while (RegExMatch(cFocus, "^Edit(?<nr>\d+)", Edit) && A_Index < 4) {
-			If (A_Index > 1)
-				Sleep 500
-			SendInput, {TAB}
-			Sleep 100
-			ControlGetFocus, cFocus, ahk_class OptoAppClass
-		}
-		If RegExMatch(cFocus, "^Edit(?<nr>\d+)", Edit) {
-			PraxTT("Die Eingabe konnte nicht abgeschlossen werden", "1 1")
-			return 0
-		}
-
-return 1
-}
-EBM_COVIDImpfung()                                                                     	{
-
-		static EBMSkript := A_ScriptDir "\include\EBM-COVIDImpfung.ahk"
-
-		If !Addendum.Thread["COVIDEBM"].ahkReady()  {
-
-			If !FileExist(EBMSkript) {
-				throw Exception("Kann EBM-Skript nicht im Ordner " A_ScriptDir "\include\ finden.")
-				return
-			}
-
-			Addendum.Thread["COVIDEBM"] := AHKThread(FileOpen(EBMSkript, "r", "UTF-8").Read())
-
-		}
-
-	; Funktion im Thread aufrufen
-		If Addendum.Thread["COVIDEBM"].ahkReady()  {
-
-		  ; warten bis die Abrechnungsdaten zusammengestellt sind
-			If Addendum.Thread["COVIDEBM"].ahkgetvar.EBMInitRunning {
-				SetTimer, EBMInitCheck, 200
-				return
-			}
-
-		 ; Funktion im Threadskript wird per Postmessage (ahkPostFunction) aufgerufen.
-		 ; Das Hauptskript wartet nicht auf Antwort.
-			Addendum.Thread["COVIDEBM"].ahkPostFunction("Chargennummern")
-
-		}
-
-return
-EBMInitCheck:                                ; SetTimer Label (sleep)
-
-	; im Anschluß die EBM Abrechnungsfunktion aufrufen
-		If !Addendum.Thread["COVIDEBM"].ahkgetvar.EBMInitRunning {
-			SetTimer, EBMInitCheck, Off
-			If EBMCNRunning                 ; Hotkey wurde zu früh gefeuert, Thread arbeitet noch
-				return
-			Addendum.Thread["COVIDEBM"].ahkPostFunction("Chargennummern")
-		}
-
-return
-}
-AusIndisKorrigieren()                                                                     	{                 	;-- lädt Daten für AlbisAusIndisKorrigieren()
-
-	static AusIndisToRemove, AusIndisToHave
-
-	If !AusIndisToRemove {
-		IniRead, AusIndisToRemove, % Addendum.Ini, Abrechnungshelfer, AusIndis_ToRemove
-		AusIndisToRemove := RegExReplace(AusIndisToRemove, "^\s\(")
-		AusIndisToRemove := RegExReplace(AusIndisToRemove, "^\s\)")
-		AusIndisToRemove := RegExReplace(AusIndisToRemove, "[\,\.\s\;\:\-\+]", "|")
-		AusIndisToRemove := "(" RegExReplace(AusIndisToRemove, "[\\]{2,}", "|")  ")"
-	}
-	If !IsObject(AusIndisToHave) {
-		IniRead, ToHave, % Addendum.Ini, Abrechnungshelfer, AusIndis_ToHave
-		AusIndisToHave := []
-		For idx, EBMZiffer in StrSplit(ToHave, "|")
-			AusIndisToHave.Push(EBMZiffer)
-	}
-
-	AusIndis := AlbisAusIndisKorrigieren(AusIndisToRemove, AusIndisToHave)
-
-	If AusIndis.neu {
-		RegExReplace(AusIndis.Alt, "\-",, AltC)
-		RegExReplace(AusIndis.Neu, "\-",, NeuC)
-		inter := AusIndis.Alt ? (AltC > 0 ? "n" : "") " ersetzt mit" : "n erstmalig eingetragen"
-		msg := "Ausnahmeindikation" (AltC > 0 ? "en" : "") ":`n" AusIndis.Alt "`nwurde" inter "`n" AusIndis.Neu
-	}
-	else
-		msg := "Ausnahmeindikation" (AltC > 0 ? "en" : "") ":`n" AusIndis.alt "`nwurde" (AltC > 0 ? "n" : "") " nicht geändert"
-
-	MsgBox	, 0x1024, % A_ScriptName, %	"Bitte überprüfen!`n"
-															. 	"⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘`n"
-															.	msg "`n"
-															.	"⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘", 10
-
-}
-
-
-;}
-;{ ###############	          ALLGEMEIN        	 ###############
-KopierenUeberall:         	;{	 	Strg	+ c
-	CopyToClipboard := true
-AusschneidenUeberall:   	;	 	Strg (links) + x
-
-	;SetKeyDelay, 10, 10
-
-	Clipboard := ""
-	while (clip = "")	{
-		SendEvent, {CTRL Down}c{CTRL Up}
-		ClipWait, 1
-		clip := Clipboard
-		If (A_Index > 6)
-			break
-	}
-
-	If (clip != "")	{
-		clip := SubStr(ClipBoard, 1, 30) . "`.`.`."
-		GDISplash(clip,1)
-	}
-	else
-		GDISplash("Clipboard war leer!",1)
-
-	If !CopyToClipboard
-		Send, {CTRL down}x{CTRL up}
-
-	CopyToClipboard	:= false
-	clip						:= ""
-	;SetKeyDelay, 10, 10
-
-return
-;}
-ScreenShot:                   	;{    	Alt	+ q
-	ScreenShotArea()
-Return
-;}
-DoNothing:                   	;{
-return
-;}
-BereiteDichVor:					;{
-	ExitApp
-return
-;}
-FastSets:							;{
-	SendInput, {F3}
-	sleep, 500
-	ControlClick, Button27, Hautkrebsscreening - Nichtdermatologe ahk_class #32770
-	sleep, 500
-	ControlClick, Button18, Hautkrebsscreening - Nichtdermatologe ahk_class #32770
-	WinWaitActive, Elektronischer Export Dokumentationsbögen zum eHautkrebs-Screening ahk_class #32770,, 2
-	SendInput, {Down}
-return
-;}
-AddendumPausieren:     	;{ 	Strg + Alt + Pause
-		PraxTT("Addendum ist pausiert", "5 0")
-		Pause, Toggle
-return ;}
-PatientenkarteiOeffnen: 	;{
-
-	PatientenID := Clip()
-	If !RegExMatch(PatientenID, "\d+") {
-		PraxTT("Der ausgewählte Text (" PatientenID ")`nkann keine Patienten ID sein!", "3 3")
-		return
-	}
-	else if !oPat.Haskey(PatientenID)	{
-		MsgBox, 1, Addendum für Albis on Windows, % "Die ausgewählte Patienten ID (" PatientenID ")`n ist nicht bekannt. Soll diese ID dennoch benutzt werden?"
-		IfMsgBox, No
-			return
-	}
-
-	;PraxTT("Geöffnet wird die Karteikarte des Patienten:`n#2" oPat[PatientenID].Nn ", " oPat[PatientenID].Vn ", geb.am " oPat[PatientenID].Gd "(" PatientenID ")", "6 3")
-	AlbisAkteOeffnen(PatientenID, PatientenID)
-
-return
-Clip(Text:="", Reselect:="") {                                                                        	;-- Clip() - Send and Retrieve Text Using the Clipboard
-
-	; by berban - updated February 18, 2019
-	; https://www.autohotkey.com/boards/viewtopic.php?f=6&t=62156
-
-	Static BackUpClip, Stored, LastClip
-
-	If (A_ThisLabel = A_ThisFunc) {
-
-		If (Clipboard == LastClip)
-			Clipboard := BackUpClip
-		BackUpClip := LastClip := Stored := ""
-
-	}
-	Else	{
-
-		If !Stored{
-			Stored := True
-			BackUpClip := ClipboardAll                         	; ClipboardAll must be on its own line
-		}
-		Else
-			SetTimer, % A_ThisFunc, Off
-
-	; LongCopy gauges the amount of time it takes to empty the clipboard which can predict how long the subsequent clipwait will need
-		LongCopy := A_TickCount
-		Clipboard := ""
-		LongCopy -= A_TickCount
-
-		If (Text = "") {
-			SendInput, % "{Shift Down}c{Shift Up}"
-			ClipWait, LongCopy ? 0.6 : 0.2, True
-		} Else {
-			Clipboard := LastClip := Text
-			ClipWait, 10
-			SendInput, % "{Shift Down}v{Shift Up}"
-		}
-
-		SetTimer, % A_ThisFunc, -700
-		Sleep 20                                                            	; Short sleep in case Clip() is followed by more keystrokes such as {Enter}
-
-		If (StrLen(Text) = 0)
-			Return (LastClip := Clipboard)
-		Else If ReSelect && ((ReSelect = True) || (StrLen(Text) < 3000))
-			SendInput, % "{Shift Down}{Left " StrLen(StrReplace(Text, "`r")) "}{Shift Up}"
-	}
-
-Return
-
-Clip:
-Return Clip()
-}
-
-;}
-SendClipBoardText:       	;{ 	Strg + Alt + F10
-
-	If (StrLen(TextToSend) = 0) {
-		TextToSend 	:= ClipBoard
-		ClipBoard 	:= ""
-	}
-
-	PraxTT("Sende ClipBoard Inhalt.", "3 3")
-	Loop, % StrLen(TextToSend) {
-		Send, % "{Text}" SubStr(TextToSend, A_Index, 1)
-		Sleep, 25
-	}
-	;Send, % "{Text}" TextToSend
-	SetTimer, emptyTextToSend, -180000 ; nach 3min leeren
-
-return
-emptyTextToSend:
-	TextToSend := ""
-return
-;}
-ScanBeenden:               	;{
- If (hwnd := WinExist("ScanSnap Manager - Bild erfassen und Datei speichern ahk_class #32770"))
-	res := VerifiedClick("Button2", hwnd)
-return ;}
-;}
-
-;}
-
-;{11. Labels - TrayMenu
-
-SkriptReload(msg:="") {                                                                                   					;-- besseres Reload eines Skriptes
-
-  ; es wird ein RestartScript gestartet, welches zuerst das laufende Skript komplett beendet und
-  ; dann das Addendum-Skript per run Befehl erneut gestartet. Dies verhindert einige Probleme
-  ; mit datumsabhängigen Handles bestimmter Prozesse im System.
-  ; +Albisprogrammdatum wird auf den nächsten Tag gesetzt
-
-	; Abbruch des Neustart falls Addendum gerade Befunde importiert oder ein OCR Vorgang läuft
-		If (Addendum.Importing || Addendum.ImportRunning || Addendum.tessOCRRunning || Addendum.Thread["tessOCR"].ahkReady()) {
-
-			; Protokolltext
-				FormatTime	, Time      	, % A_Now    	, dd.MM.yyyy HH:mm:ss
-				FormatTime	, TimeIdle	, % A_TimeIdle	, HH:mm:ss
-				FileAppend	, % Time ", " A_ScriptName ", " A_ComputerName ", " msg ", terminated due to a running process, " TimeIdle "`n"
-									, % Addendum.AddendumDir "\logs'n'data\OnExit-Protokoll.txt"
-
-			; Nutzer fragen
-				MsgBox, 4	, % RegExReplace(A_ScriptName, "\.[a-z]+$")
-								, % 	"Addendum ist gerade beschäftigt.`n"
-									. 	"Ein Abbruch könnte zu fehlerhaften Daten führen.`n"
-									.  	"Möchten Sie dennoch einen Neustart durchführen?"
-								, 10
-				IfMsgBox, No
-					Return
-				IfMsgBox, Timeout
-					Return
-
-		}
-
-	; Status des Infofenster sichern
-		If Addendum.AddendumGui
-			admGui_SaveStatus()
-
-	; Programmdatum auf aktuelles Datum setzen
-		If (msg = "AutoRestart") && WinExist("ahk_class OptoAppClass")
-			AlbisSetzeProgrammDatum()
-
-		admScript	:= Addendum.Dir "\Module\Addendum\Addendum.ahk"
-		scriptPID 	:= DllCall("GetCurrentProcessId")
-		__          	:= q " " q                                             	; für bessere Lesbarkeit des Codes - ergibt > " " <
-
-	; Autohotkey.exe /f "Z:\Addendum für AlbisOnWindows\Addendum_Reload.ahk" "Z:\Addendum für AlbisOnWindows\Module\Addendum\Addendum.ahk" "1" "0x34A567" "9876" " 1"
-		cmdline := "Autohotkey.exe /f " q Addendum.Dir "\include\Addendum_Reload.ahk" __ admScript __ "1" __ A_ScriptHwnd __ scriptPID __ "1" q
-		Run, % cmdline
-		ExitApp
-
-return
-}
-ShowTextProtocol(FilePath) {                                                                                            	;-- zeigt Textdateien im eingestellten Texteditor an
-	Run % FilePath
-}
-ZeigePatDB() {                                                                              		                   			;-- zeigt in einer eigenen Listview die Patienten.txt
-	For PatID, Pat in oPat
-		AutoListview("Pat.Nr.|Nachname|Vorname|Geburtsdatum|Geschlecht|Krankenkasse|letzte GVU", PatID "," Pat.Nn "," Pat.Vn "," Pat.Gt "," Pat.Gd "," Pat.KK "," Pat.letzteGVU, ",")
-}
-ZeigeFehlerProtokoll() {                                                                                  					;-- das Skriptfehlerprotokoll wird angezeigt
-
-	filebasename    	:= Addendum.LogPath "\ErrorLogs\Fehlerprotokoll-"
-	thisMonthProtocol	:=  filebasename . A_MM . A_YYYY ".txt"
-	lastMonthProtocol	:=  filebasename (A_MM-1 = 0 ? "12" A_YYYY-1 : A_MM-1 . A_YYYY) ".txt"
-
-	If FileExist(thisMonthProtocol)
-		Run % thisMonthProtocol
-	else if FileExist(lastMonthProtocol)
-		Run % lastMonthProtocol
-	else
-		MsgBox, 1, % StrReplace(A_ScriptName, ".ahk"), % "Es wurden keine Fehler erfasst!"
-
-return
-
-	;~ thisMonth          	:= A_MM A_YYYY
-	;~ lastMonth          	:= (A_MM-1 = 0 ? "12" A_YYYY-1 : A_MM . A_YYYY)
-	;~ thisMonthProtocol	:=  filebasename thisMonth ".txt"
-	;~ lastMonthProtocol	:=  filebasename lastMonth ".txt"
-}
-NoNo() {                                                                         	                                 				;-- Addendum "Über" Fenster
-
-	static UberPic, UberSN, UberEdit, UberOk, hUberText, hUber
-
-	;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	; Info Text
-	;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		D1 := "Addendum V" Version "  - The managing script -"
-		D2 =
-		(LTrim
-		Addendum für Albis on Windows
-		written by Ixiko - this version is from %vom%
-		---------------------------------------------------------------------------------
-		please report errors and suggestions to me: Ixiko@mailbox.org
-		use subject: 'Addendum' so that you don't end up in the spam folder
-		GNU Lizenz can be found in Docs directory  - 2017
-		)
-
-	UberW	:= 526
-	ul     	:= "__________________________________________________________________________________________________________________"
-
-	Betriebssystem := StrSplit(A_OsVersion, ".").1 " " (A_Is64bitOS=1 ? "64" : "32")
-	C .= "installierte Autohotkeyversion: " 	A_AhkVersion                                  	"`n"
-	C .= "Computer Name: "                   	A_ComputerName                        	"`n"
-	C .= "IP Adresse des Computer: "       	A_IPAddress1                                 	"`n"
-	C .= "Login Name: "                          	A_UserName                                 	"`n"
-	C .= "Nutzer hat Adminrechte: "         	(A_IsAdmin=1 ? "Ja" : "Nein")         	"`n"
-	C .= "Addendum Hauptverzeichnis: " 	Addendum.Dir                               	"`n"
-	C .= "Skript ist compiliert: "                	(A_IsCompiled=1 ? "Ja" : "Nein")    	"`n"
-	C .= "Skripthandle: "                         	A_ScriptHwnd                                	"`n"
-	C .= "Betriebssystem: Windows "         	Betriebssystem "-bit"                         	"`n"
-	C .= "Bildschirm-DPI: "                      	A_ScreenDPI                                  	"`n"
-	C .= "Bildschirmgröße in Pixel: "         	A_ScreenWidth "x" A_ScreenHeight 	"`n"
-	C .= "letzte Fehlernummer: "              	A_LastError
-
-	MaxLen := 0
-	Loop, Parse, C, `n
-		MaxLen := StrLen(A_LoopField) > MaxLen ? StrLen(A_LoopField) : MaxLen
-
-	B := "`n" D2 "`n" SubStr(ul, 1, MaxLen - 20) "`n" C
-
-	Gui Uber: New, -Caption +ToolWindow  0x94400000 HWNDhUber
-	Gui Uber: Color, c202842
-	Gui Uber: Margin, 0, 10
-
-	Gui Uber: Add, Picture, % "x" (Floor(UberW/2) - 250) " ym vUberPic", % Addendum.Dir "\assets\AddendumBigLogo.jpg"
-	GuiControlGet, UberPic, Uber: Pos
-
-	Gui Uber: Add, Progress, % "x13 y" (UberPicY+UberPicH+3) " w" (UberW-26) " -E0x00020000 h36 c5669ad" , 100
-
-	Gui Uber: Font, s18 q5 cWhite, Futura Bk Bt
-	Gui Uber: Add, Text, % "x0 y" ( UberPicY+UberPicH+5 ) " w" UberW " vUberSN BackgroundTrans Center", % D1
-	GuiControlGet, UberSN, Uber: Pos
-
-	Gui Uber: Font, s9 q5 cWhite, Futura Bk Bt
-	Gui Uber: Add, Edit, % "x0 y" ( UberPicY+UberPicH+40 ) " w" UberW " vUberEdit ReadOnly -WantCtrlA -WantReturn -Wrap -0x002000C0 +0x00000001 -E0x00000200 HWNDhUberText", % B
-	GuiControlGet, UberEdit, Uber: Pos
-
-	Gui Uber: Add, Progress, % "x13 y" ( UberEditY+UberEditH ) " w" (UberW-26) " -E0x00020000 h5 c5669ad" , 100
-
-	Gui Uber: Font, s10 q5 cWhite, Futura Bk Bt
-	Gui Uber: Add, Button, % "xs y" ( UberEditY+UberEditH+12 ) " vUberOk gUberEnde", Schließen
-	GuiControlGet, UberOk, Uber: Pos
-	GuiControl, Move, UberOk, % "x" ( (UberW//2) - (UberOkW//2) )
-
-	ControlFocus, %hUberText%
-	SendInput, ^{HOME}
-	ControlFocus, UberOk, ahk_id %hUber%
-	SendInput, {Left}
-
-	Gui Uber: Show, AutoSize, Addendum für Albis on Windows
-	DllCall("HideCaret","Int", hUberText)
-
-return
-
-UberEnde:
-	If (A_GuiControl="UberOk")
-			Gui Uber: Destroy
-return
-}
-AddendumObjektSpeichern() {                                                                         					;-- speichert und zeigt das Addendum Objekt an
-
-	PraxTT("Speichere Addendum Objekt", "0 1")
-	JSONData.Save(A_ScriptDir "\AddendumObjekt.json", Addendum, true,, 1, "UTF-8")
-	Run, % A_ScriptDir "\AddendumObjekt.json"
-	PraxTT("", "Off")
-
-}
-
-; ----------------------------------------- Tray Menu Programmstarter
-ModulStarter:                                 	;{                                                                            	;-- startet Module vom Tray-Menu
-	If RegExMatch(modul[A_ThisMenuItem], "\.exe$")
-		RunExe(modul[A_ThisMenuItem])
-	Else if RegExMatch(modul[A_ThisMenuItem], "\.ahk$")
-		RunSkript(modul[A_ThisMenuItem])
-return ;}
-ToolStarter:                                   	;{                                                                            	;-- startet Tools vom Tray-Menu
-	If InStr(A_ThisMenuItem, "Windows komplett neu starten")
-		Run, Shutdown -g -t 0
-	else if RegExMatch(tool[A_ThisMenuItem], "\.exe")
-		Run, % tool[A_ThisMenuItem]
-	else
-		RunSkript(tool[A_ThisMenuItem])
-return ;}
-
-; ----------------------------------------- Funktionen ein- oder ausstellen
-Menu_AlbisAutoPosition:                   	;{
-	Addendum.AlbisLocationChange := !Addendum.AlbisLocationChange
-	Menu, SubMenu3, ToggleCheck, % "Albis AutoSize"
-	IniWrite, % (Addendum.AlbisLocationChange ? "ja":"nein")	, % Addendum.Ini, % compname, % "Albis_AutoGroesse"
-return
-;}
-Menu_Schnellrezept:                      	;{
-	Addendum.Schnellrezept := !Addendum.Schnellrezept
-	Menu, SubMenu3, ToggleCheck, % "Albis Schnellrezept"
-	IniWrite, % (Addendum.Schnellrezept ? "ja":"nein")  	, % Addendum.Ini, % "Addendum", % "Albis Schnellrezept"
-return ;}
-Menu_AddendumGui:                    	;{ Infofenster
-	Addendum.AddendumGui := !Addendum.AddendumGui
-	Menu, SubMenu32, ToggleCheck, % "Addendum Infofenster"
-	IniWrite, % (Addendum.AddendumGui ? "ja":"nein"), % Addendum.Ini, % compname, % "Infofenster_anzeigen"
-	If Addendum.AddendumGui {
-		Menu, SubMenu32, Add, % "Einzelbestätigung für Importvorgänge"		     		, Menu_Einzelbestaetigung
-		Menu, SubMenu32, % (Addendum.iWin.ConfirmImport	? "Check":"UnCheck")	, % "Einzelbestätigung für Importvorgänge"
-		Menu, SubMenu32, Add, % "Auto Wartezimmerkommentar"			            	, Menu_WZKommentar
-		Menu, SubMenu32, % (Addendum.iWin.WZKommentar	? "Check":"UnCheck")	, % "Auto Wartezimmerkommentar"
-		Menu, SubMenu32, Add, % "Abrechnungshelfer anzeigen"		     	        		, Menu_Abrechnungshelfer
-		Menu, SubMenu32, % (Addendum.iWin.AbrHelfer       	? "Check":"UnCheck")	, % "Abrechnungshelfer anzeigen"
-		Addendum.AktiveAnzeige := AlbisGetActiveWindowType()
-		If RegExMatch(Addendum.AktiveAnzeige, "i)(Karteikarte|Laborblatt|Biometriedaten)")
-			AddendumGui()
-	} else {
-		Menu, SubMenu32, Delete, % "Einzelbestätigung für Importvorgänge"
-		Menu, SubMenu32, Delete, % "Auto Wartezimmerkommentar"
-		Menu, SubMenu32, Delete, % "Abrechnungshelfer anzeigen"
-		If Controls("", "ControlFind, AddendumGui, AutoHotkeyGUI, return hwnd", "ahk_class OptoAppClass") {
-			Controls("", "reset", "")
-			admGui_SaveStatus()
-			admGui_Destroy()
-		}
-	}
-return ;}
-Menu_Einzelbestaetigung:               	;{ Infofenster
-	Addendum.iWin.ConfirmImport := !Addendum.iWin.ConfirmImport
-	Menu, SubMenu32, ToggleCheck, % "Einzelbestätigung für Importvorgänge"
-	IniWrite, % (Addendum.iWin.ConfirmImport 	? "ja":"nein"), % Addendum.Ini, % compname, % "Infofenster_Import_Einzelbestaetigung"
-return ;}
-Menu_WZKommentar:                   	;{ Infofenster
-	Addendum.iWin.WZKommentar := !Addendum.iWin.WZKommentar
-	Menu, SubMenu32, ToggleCheck, % "Auto-Wartezimmerkommentar"
-	IniWrite, % (Addendum.iWin.WZKommentar	? "ja":"nein"), % Addendum.Ini, % compname, % "Infofenster_AutoWZ_Kommentar"
-return ;}
-Menu_Abrechnungshelfer:              	;{ Infofenster
-	Addendum.iWin.AbrHelfer := !Addendum.iWin.AbrHelfer
-	Menu, SubMenu32, ToggleCheck, % "Abrechnungshelfer anzeigen"
-	IniWrite, % (Addendum.iWin.AbrHelfer      	? "ja":"nein"), % Addendum.Ini, % compname, % "Infofenster_Abrechnungshelfer"
-return ;}
-Menu_GVUAutomation:                    	;{
-	Addendum.GVUAutomation := !Addendum.GVUAutomation
-	Menu, SubMenu3, ToggleCheck, % "Albis GVU automatisieren"
-	IniWrite, % (Addendum.GVUAutomation ? "ja":"nein")        	, % Addendum.Ini, % compname, % "GVU_automatisieren"
-return
-;}
-Menu_PDFSignatureAutomation:      	;{ FoxitReader
-
-	; Menupunkt umschalten, Einstellung speichern
-		Addendum.PDFSignieren := !Addendum.PDFSignieren
-		Menu, SubMenu3, ToggleCheck, % "FoxitReader Signaturhilfe"
-		IniWrite, % (Addendum.PDFSignieren ? "ja":"nein")          	, % Addendum.Ini, % compname, % "FoxitPdfSignature_automatisieren"
-
-	; weitere Funktionen an- oder abschalten
-		If Addendum.PdfSignieren {
-
-			; Hotkey Funktion einschalten
-				;func_FRSignature := Func("FoxitReader_SignaturSetzen")
-				Hotkey, IfWinActive, % "ahk_class classFoxitReader"
-				Hotkey, % Addendum.PDFSignieren_Kuerzel, % Func("FoxitReader_SignaturSetzen")
-				Hotkey, IfWinActive
-
-			; AutoCloseTab - Tray Menu - anschalten
-				Menu, SubMenu3, Enable, FoxitReader Dokument automatisch schliessen
-				If Addendum.AutoCloseFoxitTab
-					Menu, SubMenu3, Check	  , FoxitReader Dokument automatisch schliessen
-				else
-					Menu, SubMenu3, UnCheck, FoxitReader Dokument automatisch schliessen
-
-		} else {
-
-			; Hotkey Funktion ausschalten
-				Hotkey, % Addendum.PDFSignieren_Kuerzel, Off
-
-			; AutoCloseTab - Tray Menu - ausschalten
-				Menu, SubMenu3, Disable, FoxitReader Dokument automatisch schliessen
-
-		}
-
-return ;}
-Menu_PDFSignatureAutoTabClose:	;{ FoxitReader
-	Addendum.AutoCloseFoxitTab := !Addendum.AutoCloseFoxitTab
-	Menu, SubMenu3, ToggleCheck, % "FoxitReader Dokument automatisch schliessen"
-	IniWrite, % (Addendum.AutoCloseFoxitTab ? "ja":"nein") 	, % Addendum.Ini, % compname, % "FoxitTabSchliessenNachSignierung"
-return ;}
-Menu_LaborAbrufManuell:               	;{
-	Addendum.Labor.AutoAbruf := !Addendum.Labor.AutoAbruf
-	Menu, SubMenu34, ToggleCheck, % "Laborabruf"
-	IniWrite, % (Addendum.Labor.AutoAbruf ? "ja":"nein")   	, % Addendum.Ini, % compname, % "Laborabruf_automatisieren"
-return ;}
-Menu_LaborImportManuell:              	;{
-	Addendum.Labor.AutoImport := !Addendum.Labor.AutoImport
-	Menu, SubMenu34, ToggleCheck, % "Laborimport"
-	IniWrite, % (Addendum.Labor.AutoImport ? "ja":"nein")   	, % Addendum.Ini, % compname, % "Laborimport_automatisieren"
-return ;}
-Menu_LaborAbrufTimer:                  	;{
-	Addendum.Labor.AbrufTimer := !Addendum.Labor.AbrufTimer
-	Menu, SubMenu34, ToggleCheck, % "zeitgesteuerter Abruf"
-	IniWrite, % (Addendum.Labor.AbrufTimer ? "Ja":"Nein")   	, % Addendum.Ini, % compname, % "Laborabruf_Timer"
-	If Addendum.Labor.AbrufTimer && !Addendum.Labor.AutoAbruf  {
-		Addendum.Labor.AutoAbruf := !Addendum.Labor.AutoAbruf
-		Menu, SubMenu34, ToggleCheck, % "Laborabruf"
-		IniWrite, % "ja", % Addendum.Ini, % compname, % "Laborabruf_automatisieren"
-	}
-return ;}
-Menu_AddendumToolbar:             	;{
-	Addendum.ToolbarThread := !Addendum.ToolbarThread
-	Menu, SubMenu3, ToggleCheck, % "Addendum Toolbar"
-	IniWrite, % (Addendum.ToolbarThread ? "ja":"nein"), % Addendum.Ini, % compname, % "Toolbar_anzeigen"
-	admThreads()                                                                             ; startet oder stoppt die Ausführung von Threadcode
-return ;}
-Menu_mDicom:                              	;{
-	Addendum.mDicom := !Addendum.mDicom
-	Menu, SubMenu3, ToggleCheck, % "MicroDicom Export"
-	IniWrite, % (Addendum.mDicom ? "Ja":"Nein")         	, % Addendum.Ini, % compname, % "MicroDicomExport_automatisieren"
-return ;}
-Menu_PopUpMenu:                          	;{
-	Addendum.PopUpMenu := !Addendum.PopUpMenu
-	Menu, SubMenu3, ToggleCheck, % "PopUpMenu"
-	IniWrite, % (Addendum.PopUpMenu ? "ja":"nein") 	, % Addendum.Ini, % compname, % "PopUpMenu"
-
-	; PopUpMenu wird neugestartet
-	If Addendum.PopUpMenu {
-		Addendum.Hooks[4] := AlbisPopUpMenuHook(AlbisPID())
-		PraxTT("PopUpMenu Funktion - gestartet", "3 0")
-	}
-	else { ; oder auch beendetm wenn Nutzer diese nicht braucht
-		If IsObject(Addendum.Hooks[4]) {
-			UnhookWinEvent(Addendum.Hooks[4].hEvH, Addendum.Hooks[4].HPA)
-			Addendum.Hooks[4] := ""
-			Addendum.PopUpMenuCallback := ""
-			PraxTT("PopUpMenu Funktion - beendet", "3 0")
-		}
-		else
-			PraxTT("PopUpMenu Funktion - war nicht gestartet`nund konnte deshalb nicht beendet werden.", "3 0")
-	}
-return ;}
-Menu_AutoSize:                             	;{
-	; 0 = keines , 1 = 2k , 2 = 4k , 3 = 2k & 4k ..... "2k:nein,4k:nein"
-	Menu, SubMenu31, ToggleCheck, % A_ThisMenuItem
-	IniWrite, % (xset := GetSetAutoPosString(A_ThisMenuItem)), % Addendum.Ini, % compname, % "AutoPos_" A_ThisMenu
-return
-GetSetAutoPosString(appname) {                                ;-- wandelt die binär gespeicherte AutoPos Einstellung in lesbaren Text um
-
-	ap := Addendum.Windows[appname].AutoPos
-	ms := Addendum.MonSize
-	If (ms = 2) {
-		do1 := 0x1	& ap
-		do2 := ms	& ap ? 0x0 : 0x2
-	} else {
-		do1 := ms	& ap ? 0x0 : 0x1
-		do2 := 0x2	& ap
-	}
-
-	Addendum.Windows[appname].AutoPos := do1 + do2
-
-return "2k:" (do1 ? "ja":"nein") ",4k:" (do2 ? "ja":"nein")
-}  ;}
-Menu_AutoOCR:                            	;{
-	Addendum.OCR.AutoOCR := !Addendum.OCR.AutoOCR
-	Menu, SubMenu3, ToggleCheck, % "AutoOCR"
-	IniWrite, % (Addendum.OCR.AutoOCR ? "ja":"nein"), % Addendum.Ini, % "OCR", % "AutoOCR"
-;}
-Menu_WatchFolder:                        	;{
-	Addendum.OCR.WatchFolder := !Addendum.OCR.WatchFolder
-	Menu, SubMenu3, ToggleCheck, % "Befundordner überwachen"
-	IniWrite, % (Addendum.OCR.WatchFolder ? "ja":"nein"), % Addendum.Ini, % compname, % "BefundOrdner_ueberwachen"
-	If !Addendum.OCR.WatchFolder {
-		WatchFolder("**End", 0)
-		Addendum.OCR.WatchFolderStatus := "off"
-		PraxTT("Überwachung des Befundordner angehalten", "2 1")
-	}
-	else {
-		WatchFolder(Addendum.BefundOrdner, "admGui_FolderWatch", False, (1+2+8+64))
-		Addendum.OCR.WatchFolderStatus := "running"
-		PraxTT("Überwachung des Befundordner gestartet", "2 1")
-	}
-;}
-Menu_Laborjournalanzeige:           	;{
-	Addendum.Laborjournal.SheduledView := !Addendum.Laborjournal.SheduledView
-	Menu, SubMenu35, ToggleCheck, % "Täglich anzeigen"
-	IniWrite, % (Addendum.Laborjournal.SheduledView ? "Ja":"Nein")   	, % Addendum.Ini, % compname, % "Laborjournal_AutoAnzeige"
-	If Addendum.Laborjournal.SheduledView && !Addendum.Laborjournal.StartTime
-		gosub Menu_LaborjournalStartzeit
-
-return ;}
-Menu_LaborjournalStartzeit:           	;{
-
-return ;}
-;}
-
-;{12. Allgemeine Funktionen
-
-;Screenshot
-ScreenShotArea(mode:="mouse") {                                                                               	;-- Screenshot
-
-	ListLines, Off
-	DetectHiddenWindows, On
-
-	InputRect(vWinX, vWinY, vWinR, vWinB)
-	vWinW := vWinR-vWinX, vWinH := vWinB-vWinY
-	if (vScrInputRectState = -1)
-		return
-
-	vScreen := vWinX "|" vWinY "|" vWinW "|" vWinH
-	pScrShotToken := Gdip_Startup()
-	pBitmap := Gdip_BitmapFromScreen(vScreen, 0x40CC0020)
-	DllCall("gdiplus\GdipCreateHBITMAPFromBitmap", Ptr,pBitmap, PtrP,hBitmap, Int,0xffffffff)
-	Gdip_SetBitmapToClipboard(pBitmap)
-
-	SplashImage, % "HBITMAP:" hBitmap, B1
-	Sleep, 3000
-	SplashImage, Off
-
-	DeleteObject(hBitmap)
-	Gdip_DisposeImage(pBitmap)
-	Gdip_Shutdown(pScrShotToken)
-
-return
-}
-InputRect(ByRef vX1, ByRef vY1, ByRef vX2, ByRef vY2) {                                                	;-- Screenshot subfunktion
-
-	ListLines, Off
-	global vScrInputRectState := 0
-	DetectHiddenWindows, On
-	Gui, Scr: -Caption -DPIScale +ToolWindow +AlwaysOnTop +hWndhGuiSel
-	Gui, Scr: Color, Yellow
-	WinSet, Transparent, 100, % "ahk_id " hGuiSel
-	Hotkey, *LButton, InputRect_Return, On
-	Hotkey, *RButton, InputRect_End, On
-	Hotkey, Esc, InputRect_End, On
-	KeyWait, LButton, D
-	MouseGetPos, vX0, vY0
-	SetTimer, InputRect_Update, 10
-	KeyWait, LButton
-	Hotkey, *LButton, Off
-	Hotkey, Esc, InputRect_End, Off
-	SetTimer, InputRect_Update, Off
-	Gui, Scr: Destroy
-	return
-
-	InputRect_Update:
-	if !vScrInputRectState	{
-		MouseGetPos, vX, vY
-		(vX < vX0) ? (vX1 := vX, vX2 := vX0) : (vX1 := vX0, vX2 := vX)
-		(vY < vY0) ? (vY1 := vY, vY2 := vY0) : (vY1 := vY0, vY2 := vY)
-		Gui, 1:Show, % "NA x" vX1 " y" vY1 " w" (vX2-vX1) " h" (vY2-vY1)
-		return
-	}
-	vScrInputRectState := 1
-
-	InputRect_End:
-	if !ScrvInputRectState
-		vScrInputRectState := -1
-	Hotkey, *LButton, Off
-	Hotkey, *RButton, Off
-	Hotkey, Esc, Off
-	SetTimer, InputRect_Update, Off
-	Gui, Scr: Destroy
-
-	InputRect_Return:
-	return
-}
-
-
-;Infofenster
-Splash(string, time=4, x="", y="", w="", ParentHWnd=0) {                         					;-- Splash Gui - to show text for some seconds
-
-	static hsp
-
-	CoordMode, Mouse, Screen
-	CoordMode, Caret, Screen
-
-	If !x {
-		Lmx:= A_CaretX, Lmy:= A_CaretY
-		If !Lmx or !Lmy
-			MouseGetPos, Lmx, Lmy
-		Lmy -= 10
-	}	else {
-		Lmx := x, Lmy := y, Lmw := w
-	}
-
-	Lc := StrSplit(string, "`n").MaxIndex()
-	Lc := Lc > 4 ? 4 : Lc
-	FSize := 10
-	mx := 8
-	my := 5
-
-	; build gui
-	Gui sp: New  	, % "-SysMenu -Caption +ToolWindow " (ParentHWnd = 0 ? "AlwaysOnTop" : "+Parent" ParentHwnd) " +HWNDhsp"
-	Gui sp: Font  	, % "s" FSize "  q5 cWhite bold", Futura Bk Md
-	Gui sp: Color	, cC57773
-	Gui sp: Margin	, % mx, % my
-	Gui sp: Add   	, Text, % "xm ym" (Lmw ? " w" Lmw-2*mx :"") " R" Lc " Center BackgroundTrans hSplashText" , % string
-	Gui sp: Show	, % "x" Lmx " y" (Lmy - FSize*(Lc) - 5 ) . (Lmw ? " w" Lmw :"") " Hide NA" , Addendum Splash
-
-	; form a rounded rectangle
-	SP := GetWindowSpot(hsp)
-	WinSet, Region, % "0-0 w" (SP.W) " h" (SP.H) " R20-20", % "ahk_id " hsp
-	DllCall("AnimateWindow", "UInt",hSp, "Int",500, "UInt",0x80000)
-
-	; close with delay
-	SetTimer, SPClosePopup, % "-" (time*1000)
-
-return
-
-SPClosePopup:
-	DllCall("AnimateWindow", "UInt",hSp, "Int",500, "UInt",0x90000)
-	Gui sp: Destroy
-return
-
-}
-GDISplash(text, time=2, SplashPos="", SplashOpt="") {                                              	;-- Hinweisfenster
-
-		static hGdiSp, GdiSp
-
-		If !IsObject(SplashOpt)
-			hFont := CreateFont("y5 Centre cff000000 q5 s16, " Addendum.Standard.Font), bgColor := "0x778fA2ff"
-		else
-			hFont := CreateFont(SplashOpt.FontStyle ", " SplashOpt.Font), bgColor := SplashOpt.bgColor
-
-		If !IsObject(SplashPos) {
-			cx := A_CaretX , cy := A_CaretY - 35
-			If (!cx or !cy) {
-				MouseGetPos, cx, cy
-				cy += 20
-			}
-		}
-		else
-			cx := SplashPos.X, cy := SplashPos.Y
-
-		Gui, GdiSp: New, -Caption -SysMenu -DPIScale +ToolWindow +E0x80000 +HwndhGdiSp
-
-		GetFontTextDimension(hFont, Text, Width, Height ,1)
-		Width	:= Floor(Width // 1.35)
-		Height	:= Floor(Height // 1.15)
-		hbm 	:= CreateDIBSection(Width, Height)
-		hdc 		:= CreateCompatibleDC()
-		obm 	:= SelectObject(hdc, hbm)
-		G 		:= Gdip_GraphicsFromHDC(hdc)
-
-		Gdip_SetSmoothingMode(G, 4)
-		pBrush 	:= Gdip_BrushCreateSolid(bgColor)
-
-		Gdip_FillRoundedRectangle(G, pBrush, 0, 0, Width, Height, 5)
-		Gdip_TextToGraphics(G, text, Options, Font, Width, Height)
-		UpdateLayeredWindow(hGdiSp, hdc, cx, cy, Width, Height)
-
-		Gdip_DeleteBrush(pBrush), DeleteObject(hbm), DeleteDC(hdc), Gdip_DeleteGraphics(G)
-		Gui, GdiSp: Show, % "x" cx " y" cy " NA", GdiSp
-
-		SetTimer, GDISplashOff, % -1 * (time*1000)
-
-return hGdiSp
-
-GDISplashOff:
-		Gui, GdiSp: Destroy
-return
-}
-Tooltip(content, wait:=2) {
-	Splash(content, wait)
-}
-
-;Text senden
-SendRawFast(string, cmd="") {                                                                                   	;-- sendet eine String
-
-	; Parameter: go - L, R, U, D - stehen für Left, Right, Up, Down, nach diesen kann
-
-	KDly	:= A_KeyDelay
-	KDur	:= A_KeyDuration
-
-	;~ SetKeyDelay, 0, 0
-
-	Splash(string " [" cmd "]", 1)
-	RegExMatch(cmd, "\d+", do)
-	RegExMatch(cmd, "i)\w", go)
-
-	SendRaw, % string
-	If InStr(go, "L")
-		SendInput, % "{Left " 	do "}"
-	else If InStr(go, "R")
-		SendInput, % "{Right " 	do "}"
-	else If InStr(go,"U")
-		SendInput, % "{Up "  	do "}"
-	else If Instr(go, "D")
-		SendInput, % "{Down " 	do "}"
-	else If (go, "Enter")
-		SendInput, % "{Enter}"
-
-	;~ SetKeyDelay, % KDly, % KDur
-
-}
-SendAlternately(chars:="/* | */") {                                                                              	;-- sendet alternierend Zeichen
-
-	static alternating:= []
-
-	;SendMode, Event
-	;SetKeyDelay, 10, 10
-	Send, % ""
-
-	Loop, % alternating.MaxIndex()
-		If (alternating[A_Index] = chars) 	{
-			SendInput, % StrSplit(chars, "|").2
-			alternating.RemoveAt(A_Index)
-			return
-		}
-
-	SendInput, % StrSplit(chars, "|").1
-	alternating.Push(chars)
-
-}
-
-SciTEFoldAll() {                                                                                                            	;-- gesamten Code zusammenfalten
-	ControlGet, hScintilla1, hwnd,, Scintilla1, % "ahk_class SciTEWindow"
-	Sleep 300
-	SendMessage, 2662,,,, % "ahk_id " hScintilla1 ; SCI_FOLDALL
-}
-RunExe(exePath) {                                                                                                         	;-- startet eine ausführbare Datei
-
-	SplitPath, exePath, filename, filepath
-	If !FileExist(exepath) {
-		PraxTT("Das Modul: " filename "`nim Pfad:`n" filepath "`nist nicht vorhanden!", "6 3")
-		return 0
-	}
-
-	Run, % exepath, % filepath, ModulPID
-
-return ModulPID
-}
-RunSkript(modulpath) {                                                                                              	;-- startet oder beendet Autohotkeyskripte
-
-	AddendumDir := Addendum.Dir
-	SplitPath, modulpath, filename, filepath
-	If !FileExist(modulpath) {
-		PraxTT("Das Modul: " filename "`nim Pfad:`n" filepath "`nist nicht vorhanden!", "6 3")
-		return 0
-	}
-
-	filename := StrReplace(filename, ".ahk")
-
-	If (PID := ScriptIsRunning(filename))  {
-		MsgBox, 0x1004, Addendum für Albis on Windows, % "Das Modul '" filename "' ist schon gestartet!`nMöchten Sie das Modul stattdessen beenden?"
-		IfMsgBox, Yes
-		{
-		   	; sendet exitapp-Befehl als 1.Versuch ; Exitapp 65405
-				PostMessage, 0x111, 65405,,, % "ahk_pid " PID
-				Process, WaitClose, % PID, 6
-				Process, Exist , % PID
-				If ErrorLevel {
-					PostMessage, 0x111, 65405,,, % "ahk_pid " PID
-					Process, WaitClose, % PID, 6
-				}
-
-		   	; gnadenloses Beenden, weil sich der Prozeß aufgehängt hat. Das war auch der Grund den Modulstarter um diese Fähigkeit zu erweitern!
-				If !ErrorLevel	{
-					Process, Close		, % PID
-					Process, WaitClose, % PID, 4
-					If !ErrorLevel
-                           	MsgBox, 1, Addendum für Albis on Windows, % "Das Modul '" filename "' konnte nicht beendet werden!"
-				}
-		}
-		return
-	}
-
-	If !RegExMatch(modulpath, "^[A-Z]\:\\")
-		Run, Autohotkey.exe "%AddendumDir%\%modulpath%",, ModulPID
-	else
-		Run, Autohotkey.exe "%modulpath%",, ModulPID
-
-return ModulPID
-}
-ListviewClipboard(WinTitle:="") {                                                                                	;-- kopiert den Inhalt einer Listview,Listbox,DDL ins Clipboard
+ListviewClipboard(WinTitle:="")                                                      	{                 	;-- kopiert den Inhalt einer Listview,Listbox,DDL ins Clipboard
 
 	; letzte Änderung: 22.02.2021
 
@@ -4378,12 +2844,2195 @@ ListviewClipboard(WinTitle:="") {                                               
 		}
 
 }
+UnRedo(Do)                                                                                   	{                	;-- Undo und Redo in den Textfeldern im Albisfenster
+
+	;WM_UNDO = 0x0304
+	ControlGetFocus, focused, % "ahk_id " (AlbisWinID := AlbisWinID())
+	If RegExMatch(focused, "i)Edit|RichEdit|ComboBox") {
+
+			ControlGet       	, hfocused , Hwnd,, % focused, % "ahk_id " AlbisWinID
+			ControlGetText	, text                 	, % focused, % "ahk_id " AlbisWinID
+
+			If (Do = "Undo") {
+				If ( Addendum.UndoRedo.OnUnRedo <> GetHex(hfocused) ) {
+					Addendum.UndoRedo.OnUnRedo := GetHex(hfocused)
+					Addendum.UndoRedo.List := Array()
+				}
+				Addendum.UndoRedo.List.InsertAt(1, text)
+				PostMessage, 0x0304,,, % focused, % "ahk_id " AlbisWinID
+			}
+			else if (Do = "Redo") {
+				If Addendum.UndoRedo.MaxIndex()
+					ControlSetText,, % (text := Addendum.UndoRedo.List.Pop()), % "ahk_id " Addendum.UndoRedo.OnUnRedo
+			}
+
+			SciTEOutput("UnRedo: " text)
+
+	}
+
+}
+
+;}
+;{ ###############  HOTSTRING-FUNCTIONS  ###############
+HotS_IF(context)                                                                             	{              	;-- Hotkey/Hotstring - kontextabhängige Überprüfung
+
+	; ◈ ᗅᏞВІЅ ◈
+	If RegExMatch(context, "(Diagnosen|EBM|GOÄ)") {
+
+		If !WinActive("ahk_class OptoAppClass")
+			return false
+
+	} else {
+
+		contraction := AlbisGetActiveControl("contraction")
+		Switch context {
+
+			case "Diagnosen":
+				If InStr(contraction, "dia") || WinActive("Akutdiagnose ahk_class #32770") || WinActive("Dauerdiagnosen ahk_class #32770")
+					return true
+				if WinActive("Muster 2 ahk_class #32770") {
+					ControlGetFocus, cfocus, % "Muster 2 ahk_class #32770"
+					If (cFocus = "Edit1")
+						return true
+				}
+
+			case "EBM":
+				#If WinActive("ahk_class OptoAppClass") && InStr(contraction, "lk")
+					return true
+
+			case "GOÄ":
+				If WinActive("ahk_class OptoAppClass") && (RegExMatch(contraction, "lp|lbg") || InStr(AlbisGetActiveWindowType(), "Privatabrechnung"))
+					return true
+
+		}
+
+	}
+
+}
+HotS_View(ALineNr, context:="")                                                     	{              	;-- kontextsensitive Hotstringhilfe
+
+	;{ Variablen 🟣🟡🔵🔴⚪⚫🔶🟨
+
+		global hHSV, HSV_LV, HSV, HSV_B1, HSV_NHS, HSV_NRP, HSV_NOP, HSV_PM, HSV_NDS, NHSLast, NRPLast, NOPLast
+		global hsUser
+		static hsContext, hsBase, hotstrings, cFocused, wFocused, hsStrings, hsSearched, lastSelected, ICDAll
+		static rxFee        	:= "O)^\s*\:(?<options>.*?):(?<abbreviation>.*?)\:\:(?<replacement>.*?)\s*\t*;[\s\{\}\=\~]*(?<description>.*)$"
+		static rxSendRpl    	:= "Oi)^\s*(?<send>Send.*?(\{[a-z]+\})*)(?<replacement>[\d\-\(\):a-zäöüß]+)"
+		static hsRemover 	:= {	"[\(\[\{].*[\}\]\)].*"          	: " "      	; z.B. [Punktzahl 200]
+							    	, 		"\s\d+\s.*"                      	: " "    	; z.B. 30 Minuten
+									, 		"i)([a-zäöüß]+\.)([\s;,]*)"   	: " "		; z.B. mind. 10 min
+									, 		"i)[^a-zäöüß\s\-]"            	: " "     	;
+									, 		"\s\-\s"                            	: " "
+									, 		"\s{2,}"                         	: " "}
+
+		acx := A_CaretX, acy := A_CaretY
+		hotstrings	:= {}, replacements := {}
+		hsNr     	:= 0
+		hsBase     	:= context
+		hsContext	:= RegExMatch(context, "i)(EBM|GOÄ)") ? 1 : RegExMatch(context, "i)(Diagnose)") ? 2 : 0
+		scriptlines	:= StrSplit(FileOpen(A_ScriptFullPath, "r", "UTF-8").Read(), "`n", "`r")
+		scriptlines.RemoveAt(1, ALineNr)
+
+	  ; Daten des fokussierten Editsteuerelementes auslesen
+		ControlGetFocus, cFocused, % "ahk_id " (wFocused := WinExist("A"))
+		ControlGetText, cText, % cFocused, % "ahk_id "  wFocused
+		ControlGet, hcFocused, hwnd,, % cFocused, % "ahk_id "  wFocused
+		FPos := GetWindowSpot(hcFocused)
+
+		If (hsContext = 2)                       	; Diagnosen
+			RegExMatch(cText, "(^\s*|\};*\s*)[\s\.]*\.(?<Searched>\pL+[\s\-]*\pL*?)\b", hs)
+
+	;}
+
+	;{ Hotstrings aus dem Skriptcode parsen
+		For lineNr, line in scriptLines {
+
+			If RegExMatch(line, "i)\s*#If")
+				break
+
+		; Hotstrings aus dem Skriptcode lesen
+		; ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦
+		;    GOÄ / EBM   - -   GOÄ / EBM   - -   GOÄ / EBM   - -   GOÄ / EBM
+		; ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦
+			If (hsContext = 1) {
+
+				If RegExMatch(line, rxFee, hs) {
+
+				  ; RegEx - ein Objekt läßt sich nicht bearbeiten - warum?
+					hs.abbreviation	:= Trim(hs.abbreviation)
+					hs.replacement	:= Trim(RegExReplace(hs.replacement, "\s{2,}"))
+					hs.options        	:= StrReplace(hs.options, "*")
+					hsDescription 	:= hs.Description
+
+				  ; entfernt Sonderzeichen und anderes überflüssiges
+					For rxStr, rxRpl in hsRemover
+						hsDescription := RegExReplace(hsDescription, rxStr, rxRpl)
+
+				  ; Hotstringbeschreibungen kürzen (thematische Sortierung)
+					hsKey := "", upperChar := false
+					For wIndex, word in StrSplit(Trim(hsDescription), A_Space)
+						If RegExMatch(word, "^und") {
+							hsKey .= word " "
+						} else If RegExMatch(word, "^[a-zäöü]") {
+							If upperChar
+								break
+							hsKey .= word " "
+						} else if RegExMatch(word, "^[A-ZÄÖÜ]") {
+							upperChar := wIndex = 1 ? false : true
+							hsKey .= word " "
+						}
+					hsKeySaved := hsKey := Trim(hsKey)
+
+				  ; alle Gruppierungen und Ersatztexte sammeln
+					If (!replacements.haskey(hsKeySaved) && hs.replacement)
+						replacements[hsKeySaved] := hs.replacement
+
+				 ; ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦
+				 ; Hotstrings nach Beschreibung sortieren
+					; ▹ - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+					; erste Gruppe anlegen oder einer Gruppe hinzufügen
+					If (!hotstrings[hsKey].Count() || hotstrings.haskey(hsKey)) {
+
+						If !hotstrings[hsKey].Count()
+							hotstrings[hsKey] := {}
+
+						hotstrings[hsKey][hs.abbreviation] := {"description"		: hs.description
+																				,"replacement"	: hs.replacement
+																				,"options"	    	: hs.options}
+					}
+
+					; ▹ - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+					; Gruppierung suchen, Gruppierungen anpassen
+					else {
+
+					  ; 1. Wort für Wortvergleich der bekannten Beschreibungen mit neuen Beschreibung.
+					  ; 2. Der Index des letzten übereinstimmenden Wortes innerhalb der Wortkette wird gespeichert.
+					  ; 3. Die längste gemeinsame Wortkette wird zur Gruppierung (hskey) verwendet.
+					  ; letzte Änderung: 30.10.2021
+						HSIndex := []
+						newhskey := hskey
+						newhskeyWords := StrSplit(newhskey, A_Space)
+						For hskey, hotstring in hotstrings {
+							lastMatchedPos := 0
+							For wIndex, word in StrSplit(hsKey, A_Space)
+								If (word = newhsKeyWords[wIndex])
+									lastMatchedPos := wIndex, HSIndex.InsertAt(lastMatchedPos, hsKey)
+								else
+									break
+						}
+
+					  ; Index der längsten passenden Wortkette
+						MaxIndex := HSIndex.Count() = 0 ? 0 : HSIndex.MaxIndex()
+
+					  ; neuen Key anlegen bei fehlender Übereinstimmung
+						If !MaxIndex {
+							hotstrings[newhsKey] := {}
+							hotstrings[newhsKey][hs.abbreviation] := {	"description"		: hs.description
+																						,	"replacement"	: hs.replacement
+																						,	"options"	   		: hs.options}
+						}
+						else {
+							newhskey  	:= ""
+							replacedKey	:= hotstrings.Delete(HSIndex[MaxIndex])
+							For each, hskey in StrSplit(HSIndex[MaxIndex], A_Space)
+								newhskey .= hsKey " "
+							newhskey := Trim(newhskey)
+							hotstrings[newhskey] := replacedkey
+							hotstrings[newhskey][hs.abbreviation] := {	"description"		: hs.description
+																						,	"replacement"	: hs.replacement
+																						,	"options"		   	: hs.options}
+						}
+
+					}
+
+				}
+				else if RegExMatch(line, "i)\bSend\b") {
+					RegExMatch(line, rxSendRpl, match)
+					If !replacements.haskey(hsKeySaved) && match.replacement
+						replacements[hsKeySaved] := match.replacement
+				}
+
+			}
+
+		; ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦
+		;    Diagnosen    - -    Diagnosen    - -    Diagnosen    - -    Diagnosen
+		; ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦ ◦
+			else if (hsContext = 2) {
+
+				If RegExMatch(line, "O)\s*\:(?<options>.*):(?<abbreviation>.*)::(?<diagnosis>.*)", hs) {
+
+					hs.diagnosis  	:= Trim(hs.diagnosis)
+					hs.diagnosis      := RegExReplace(hs.diagnosis, "\s{2,}")
+					hs.diagnosis    	:= RegExReplace(hs.diagnosis, !RegExMatch(hs.diagnosis, ";.*\{.*\}.*$") ? "\s*;*.*$" : "\s*;*\s*$")
+					hs.abbreviation	:= Trim(hs.abbreviation)
+
+					If (hs.diagnosis && Ord(hs.diagnosis)<>32) {
+
+						diagnosis      	:= RegExMatch(hs.diagnosis, "Oi)(?<Name>[\w\$_]+)\(\" q "(?<diagnosis>.*)\" q, fnCall) ? fnCall.diagnosis : hs.diagnosis
+						abbreviation   	:= hs.abbreviation . abbreviations  	; Hotstringsammler wird und aktuellen Hotstring zusammenfügen
+						abbreviations  	:= ""
+
+						If !IsObject(hotstrings[diagnosis])
+							hotstrings[diagnosis] := {"abbreviation":abbreviation, "options":hs.options, "func":fnCallName}
+						else
+							hotstrings[diagnosis].abbreviation .= "●" . abbreviation
+
+					}
+					else {        ; Hotstringsammler
+
+						last_options   	:= hs.options ? hs.options : last_options 	; für das spätere Zuordnen von Hotstrings zu ihren Ersatztexten
+						abbreviations 	.= StrLen(hs.abbreviation)>0 ? "●" hs.abbreviation : ""
+
+					}
+
+				}
+				else if RegExMatch(line, "Oi)\stitle\s*\=\s*(?<diagnosis>.+?)(" q "|\s\w+\=)", hs) {
+
+					If !hotstrings.haskey(hs.diagnosis)
+						hotstrings[hs.diagnosis] := {"abbreviation":LTrim(abbreviations, "●"), "options":last_options, "func":"Auswahlbox"}
+					else
+						hotstrings[hs.diagnosis].abbreviation .= abbreviations
+
+					abbreviations := ""
+
+				}
+
+			}
+
+		}
+
+	  ; fehlende Ersatztexte zuordnen
+		If (hsContext = 1) {
+			For hsKey, abbreviations in hotstrings
+				For abbreviation, hsdata in abbreviations
+					If !hsdata.replacement
+						hotstrings[hskey][abbreviation].replacement := replacements[hsKey]
+		}
+
+	;}
+
+	;{ Gui
+
+		Gui, HSV: new, +Border +ToolWindow +AlwaysOnTop +HWNDhHSV
+		Gui, HSV: Margin, 0, 0
+		Gui, HSV: Font, s7 q5
+
+	  ; Listview erstellen
+		If (hsContext = 1)                 	{        	; GOÄ/EBM
+			Gui, HSV: Add, Listview, % "xm ym h400 vHSV_LV hwndHSV_hLV gHSVHandler Grid ReadOnly AltSubmit -Multi "
+												, % "Beschreibung|Ersatztext|Option|Abkürzung"
+			For category, hsStrings in hotstrings
+				For abbreviation, hsd in hsStrings
+					LV_Add("", hsd.description, hsd.replacement, hsd.options, abbreviation) ;
+			LV_ModifyCol()
+		}
+		else If (hsContext = 2)         	{			; Diagnosen
+			Gui, HSV: Add, Listview, % "xm ym h400 vHSV_LV hwndHSV_hLV gHSVHandler ReadOnly AltSubmit ", % "Diagnose|Abkürzung"  ; -Hdr
+			For dia, hsd in hotstrings
+				LV_Add("", dia, hsd.abbreviation)
+			LV_ModifyCol()
+			LV_ModifyCol(1, 600)
+			LVwidth := DllCall("SendMessage", "uint", HSV_hLV, "uint", 4125, "uint", 1, "uint", 0)
+			LVwidth := LVwidth>=500 ? 500 : LVwidth
+			LV_ModifyCol(2, LVwidth)
+		}
+
+		Gui, HSV: Add, Button	, % "xm y+14   	vHSV_B1   	gHSVHandler"	                              	, % "Auswahl übernehmen"
+		Gui, HSV: Add, Edit   	, % "x+5 w50  	vHSV_NOP 	gHSVHandler AltSubmit"                   	, % "*"                                         	; Options
+		Gui, HSV: Add, Edit   	, % "x+5 w200 	vHSV_NHS 	gHSVHandler AltSubmit"                   	, % ""                                            	; Hotstring
+		Gui, HSV: Add, Edit   	, % "x+5 w420 	vHSV_NRP 	gHSVHandler AltSubmit"                   	, % ""                                           	; Ersatztext
+		Gui, HSV: Add, Button  	, % "x+5       	vHSV_PM  	gHSVHandler"                                  	, % "☘"
+
+		GuiControlGet, cp, HSV: Pos, HSV_LV
+		GuiControlGet, dp, HSV: Pos, HSV_NOP
+		Gui, HSV: Add, Text    	, % "x" dpX " y" cpY+cpH " w" dpW " Backgroundtrans Center"        	, % "Optionen"
+
+		GuiControlGet, dp, HSV: Pos, HSV_NHS
+		Gui, HSV: Add, Text    	, % "x" dpX " y" cpY+cpH " w" dpW " Backgroundtrans Center"        	, % "Suchen oder Hotstring hinzufügen"
+
+		GuiControlGet, dp, HSV: Pos, HSV_NRP
+		dpW := cpW - dpX
+		Gui, HSV: Add, Text    	, % "x" dpX " y" cpY+cpH " w" dpW " Backgroundtrans Center"        	, %  (hsContext = 2 ? "Diagnose" : "Ersatztext")
+
+		If (hsContext = 1)                 	{
+			GuiControlGet, cp, HSV: Pos, HSV_NOP
+			GuiControlGet, dp, HSV: Pos, HSV_NRP
+			Y := cpY+cpH, W := dpX+dpW-cpX
+			Gui, HSV: Add, Edit  	, % "x" cpX " y" Y+13 " w" W " vHSV_NDS gHSVHandler AltSubmit"	, % ""                                           	; Beschreibung
+			Gui, HSV: Add, Text	, % "x" cpX " y" Y " w" W " Backgroundtrans Center"                        	, % "Beschreibung"
+		}
+
+		GuiControl, HSV: Enabled0, HSV_B1
+		GuiControl, HSV: Enabled0, HSV_PM
+
+	  ; Listview und Guigröße an den Inhalt automatisch anpassen
+		LVwidth	:= 0, APos := GetWindowSpot(AlbisWinID())
+		SysGet, VScrollWidth   	, 2
+		SysGet, CursorHeight	, 14
+
+	 ; Listview Spaltenbreite zusammenrechnen und Listview-/Guibreite für komplette Ansicht ändern
+		Gui, HSV: Listview, HSV_LV
+		LV_Width := 0
+		Loop, % LV_GetCount("Col")
+			LVwidth += DllCall("SendMessage", "uint", HSV_hLV, "uint", 4125, "uint", A_Index-1, "uint", 0)
+		LVwidth := LVwidth>APos.W ? APos.W : (LVwidth<600 ? 600 : LVwidth)
+		GuiControl, HSV: Move, HSV_LV, % "w" LVwidth+2*VScrollWidth
+
+	  ; Anzeigen
+		GuiControlGet, Gui, HSV: Pos, HSV_B1
+		Gui, HSV: Show, % "x" acx " y" acy-GuiY-GuiH-CursorHeight  " Hide NoActivate", % "Addendum Hotstringviewer [" hsBase ": " LV_GetCount() "] "
+
+		GuiControlGet, cp, HSV: Pos, HSV_LV
+		GuiControlGet, ep	, HSV: Pos, HSV_PM
+		GuiControlGet, fp , HSV: Pos, HSV_NRP
+		GuiControl, HSV: Move, HSV_NRP, % "w" cpW-(fpX+epW+10)
+		GuiControlGet, fp	, HSV: Pos, HSV_NRP
+		GuiControl, HSV: Move, HSV_PM, % "x" fpX+fpW+5
+
+	  ; Anzeigeposition korrigieren
+		hsvp := GetWindowSpot(hHSV)
+		If (hsvp.X+hsvp.W > FPos.X+FPos.W)
+			SetWindowPos(hHSV, (FPos.X+FPos.W)-hsvp.W, hsvp.Y, hsvp.W, hsvp.H)
+
+	 ; Gui sichtbar machen
+		Gui, HSV: Show, % " NoActivate"
+
+	  ; Suchfeld fokussieren
+		GuiControl, HSV: Focus, HSV_NHS
+
+	  ; gleich die Suche durchführen, wenn die Eingabe des Sternchen (*) einer Texteingabe folgte
+		If hsSearched
+			GuiControl, HSV:, HSV_NHS, % hsSearched
+
+		Hotkey, IfWinActive, % "Addendum Hotstringviewer ahk_class AutoHotkeyGUI1"
+		Hotkey, ENTER, HSVHandlerEnter
+		Hotkey, If
+
+	;}
+
+return
+
+HSVHandlerEnter:  	;{
+	Gui, HSV: Submit, NoHide
+;}
+HSVHandler:		    	;{
+
+	Critical
+	hsvp := GetWindowSpot(hHSV)
+
+  ; Doppelklick, Enter oder ein Klick auf das Steuerelement ('Übernehmen' = HSV_B1) sendet Hotstring
+	If (A_GuiEvent = "DoubleClick" && A_GuiControl = "HSV_LV") || (A_GuiControl = "HSV_B1") 	{
+
+		diag := ""
+		Gui, HSV: Listview, HSV_LV
+
+		If (A_GuiControl = "HSV_B1") {
+			row := 0
+			If !(row := LV_GetNext(row)) {
+				GuiControl, HSV: Enabled0, HSV_B1
+				return
+			}
+			else {
+				row := 0
+				while, % (row := LV_GetNext(row)) {
+					LV_GetText(rText, row, hsContext=1 ? 2:1)
+					diag .= RegExReplace(rText, ";\s*$") . "; "
+				}
+			}
+		}
+		else
+			LV_GetText(diag, A_EventInfo, hsContext=1 ? 2:1)
+
+	;
+		If (hsContext = 2 && diag) {
+			If !RegExMatch(diag, "\{.*[A-Z]\d+\.[\d#]+[A-Z]*\}") {         ; ICD Codes finden {E11.90}
+				Splash("Kein Ersatztext gefunden.", 8, hsvp.X, Floor(hsvp.Y/2), hsvp.W, hHSV)
+				Sleep 2000
+				For dia, hsd in hotstrings
+					If (dia = diag) {
+						diag := hsd.Diagnose
+						break
+					}
+			}
+		}
+
+		Gui, HSV: Destroy
+		Sleep 50
+		ControlFocus, % cFocused, % "ahk_id " wFocused
+		Sleep 100
+
+		If hsSearched
+			SendInput, % "{BackSpace " StrLen(hsSearched)+1 "}"  ; . muss auch entfernt werden
+
+		SendDiagnosis(diag)
+		hotstrings := hsContext := cFocused := wFocused := hsSearched := diag:= ICDAll := ""
+
+	}
+  ; einfacher Klick ins Hotstring Listviewelement
+	else If (A_GuiControl = "HSV_LV") 	                                                                                		{
+
+		If  (A_GuiEvent = "Normal") {
+
+		  ; gLabel Events ausschalten
+			HotS_gSwitch("Off")
+
+			LV_GetText(NRP	, row:=A_EventInfo, (hsContext=1 ? 2 : 1))
+			LV_GetText(Nhs	, row, (hsContext=1 ? 4 : 2))
+			GuiControl, HSV:, HSV_NRP 	, % NRP
+			GuiControl, HSV:, HSV_NHS	, % Nhs
+			GuiControl, % "HSV: Enabled" (Nhs && NRP ? "1" : "0"), HSV_B1
+			GuiControl, % "HSV:", HSV_PM, % "🗑"
+
+			If (hsContext=1) {
+				LV_GetText(NDsc	, row, 1)
+				LV_GetText(Nop	, row, 3)
+				GuiControl, HSV:, HSV_Nop	, % Nop
+				GuiControl, HSV:, HSV_NDS	, % NDsc
+			}
+			else if (hsContext=2) {
+				selRows := row := 0
+				Gui, HSV: Listview, HSV_LV
+				while, (row := LV_GetNext())
+					selRows :=
+				GuiControl, HSV:, HSV_NOP	, % (Nop := hotstrings.haskey(NRP) ? hotstrings[NRP].options : hsUser[NRP].opt)
+			}
+
+		; gLabel Events wiederherstellen
+			HotS_gSwitch("On")
+
+		}
+
+	}
+  ; Hotstring anlegen oder entfernen
+	else If (A_GuiControl = "HSV_PM")                                                                                 		{
+
+			Gui, HSV: Submit, NoHide
+
+		; ⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤
+		; Eingaben prüfen
+		; ⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤
+			If (StrLen(HSV_NHS)  = 0) {
+				Splash("Das Feld Hotstring darf nicht leer sein!", 4, hsvp.X, Floor(hsvp.Y/2), hsvp.W, hHSV)
+				return
+			} else if (StrLen(HSV_NRP) = 0) {
+				Splash("Das Feld Ersatztext darf nicht leer sein!", 4, hsvp.X, Floor(hsvp.Y/2), hsvp.W, hHSV)
+				return
+			} else If (hsContext = 2 && !RegExMatch(HSV_NRP, "\{.*[A-Z]\d+\.[\d#]+[A-Z]*\}")) {
+				Splash("Das Feld Ersatztext muss einen ICD Code enthalten!", 4, hsvp.X, Floor(hsvp.Y/2), hsvp.W, hHSV)
+				return
+			}
+
+		; ⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤
+		; Hotstringzeichenketten anpassen
+		; ⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤
+			Nhs  	:= Trim(HSV_NHS)                           	; Hotstring
+			NRP  	:= Trim(HSV_NRP)                          	; Ersatztext (replacement)
+			NRP  	:= RTrim(HSV_NRP, ";")
+			Nop  	:= Trim(HSV_NOP)                         	; Options
+			Nhse 	:= xstring.EscapeStrRegEx(Nhs)         	; Hotstring escaped für RegEx-Suche
+			NRPe 	:= xstring.EscapeStrRegEx(NRP)         	; Ersatzttext escaped für RegEx-Suche
+			found 	:= 0
+
+		; ⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤
+		; Hotstring hinzufügen und speichern
+		; ⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤⏤
+			If (hsContext = 2) {
+
+				For dia, hsd in hsUser[hsContext]
+					If RegExMatch(hsd.hs, "\b" Nhse "\b") {
+
+						found := 1
+						If (dia = NRP) {
+							Splash("Hotstring und Ersetzungstext sind beide bekannt! Es wird nichts übernommen", 4, hsvp.X, Floor(hsvp.Y/2), hsvp.W, hHSV)
+							return
+						}
+
+						Msgbox, 0x1004,% "Addendum Hotstring Manager", % "Diesem Hotstring ist bereits eine Diagnose zugeordnet.`n"
+												                                             			. "Wollen Sie das komplette Kontstrukt ersetzen?`n"
+												                                            			. "Falls ja wird sicherheitshalber ein BackupUp angelegt."
+						IfMsgBox, No
+							return
+
+						;hsUser[hsContext][dia] := {"opt":Nop, "hs":"_backup" NhS}
+
+						break
+
+					}
+
+				If !found {
+
+						nil := 0
+
+				}
+
+				HotS_gSwitch("Off")
+
+				GuiControl, HSV:, HSV_NOP	, % "*"
+				GuiControl, HSV:, HSV_NHS	;, % " "
+				GuiControl, HSV:, HSV_NRP 	;, % " "
+				If (hscontext = 1) {
+					GuiControl, HSV:, HSV_NDS 	;, % " "
+					hsUser[hsContext][dia] := {"opt":Nop, "hs":NhS}
+				}
+				else if (hscontext = 2) {
+					hsUser[hsContext][dia] := {"opt":Nop, "hs":NhS}
+				}
+				Hotstring(":" Nop ":" Nhs, Func("SendDiagnosis").Bind(NRP))
+
+				HotS_gSwitch("On")
+
+
+				Gui, HSV: ListView, NHS_LV
+				LV_Add("", NRP, Nhs)
+
+				t:=""
+				For dia, hsd in hsUser[hsContext]
+					t .= hsd.opt "|" hsd.hs "|" dia "`n"
+
+				SciTEOutput("hsUser: " StrLen(t))
+				FileOpen(hsUser.Path.dia, "w", "UTF-8").Write(RTrim(t, "`n"))
+
+			}
+
+	}
+  ; Suchen oder neuen Hotstring anlegen
+	else If RegExMatch(A_GuiControl, "i)HSV_(NHS|NOP|NRP|DSC)", hsEdit)    	                    	{
+
+		Gui, HSV: Submit, NoHide
+		allWithText := HSV_NHS && HSV_NRP
+
+	  ; Hotstring wurde geändert
+		If (NHSLast <> HSV_NHS || NRPLast <> HSV_NRP || NOPLast <> HSV_NOP) {
+
+			If (NHSLast <> HSV_NHS) {
+
+				abbrevMatched := false
+				LV_Delete()
+
+				If (hsContext = 1) {           ; EBM/GOÄ
+
+					For category, hsStrings in hotstrings
+						For abbreviation, hsd in hsStrings
+							If InStr(hsd.description . hsd.replacement . abbreviation, HSV_NHS) {
+								LV_Add("", hsd.description, hsd.replacement, hsd.options, abbreviation)
+								abbrevMatched := true
+							}
+
+				}
+				else if (hsContext = 2) {   	; Diagnosen
+
+				  ; Auflisten gefundener Hotstring-Diagnosen
+					For dia, hsd in hotstrings {
+						If InStr(dia . hsd.abbreviation . hsd.description, HSV_NHS)
+							LV_Add("", dia, hsd.Abbreviation)
+						If (hsd.abbreviation = HSV_NHS)
+							abbrevMatched := true
+					}
+
+				; falls keine Diagnose gefunden wurden dann den ICD Katalog verwenden
+					If !LV_GetCount() {
+
+						If !IsObject(ICDAll) {
+							tmp := FileOpen(Addendum.DataPath "\icd10gm2019.txt", "r", "UTF-8").Read()
+							ICDAll := StrSplit(tmp, "`n", "`r")
+						}
+
+						words := StrSplit(StrReplace(HSV_NHS, "."), " ")
+						For idx, icd in ICDAll {
+							hits := 0
+							For each, word in words
+								If InStr(icd, word)
+									hits ++
+							If (hits = words.Count())
+								LV_Add("", icd, "" )
+							If (LV_GetCount() > 400)
+								break
+							}
+
+						}
+
+					}
+
+				}
+
+
+			GuiControl, % "HSV:", HSV_PM, % (!abbrevMatched && HSV_NRP && allWithText) ? "⚙" : abbrevMatched ? "🗑" : ""
+
+		  ; Felder leeren wenn Hotstrings leer ist
+			Gui, HSV: Submit, NoHide
+			HotS_gSwitch("Off")
+			GuiControl, HSV:, HSV_NRP	, % (HSV_NHS ? HSV_NRP 	: "")
+			GuiControl, HSV:, HSV_NOP	, % (HSV_NHS ? HSV_NOP	: "*")
+			GuiControl, % "HSV: Enabled" (HSV_NHS && HSV_NRP ? "1" : "0"), HSV_PM
+			GuiControl, % "HSV: Enabled" (HSV_NHS && HSV_NRP ? "1" : "0"), HSV_B1
+			HotS_gSwitch("On")
+
+			NRPLast := HSV_NRP, NHSLast := HSV_NHS
+
+		}
+
+	}
+
+return	;}
+HSVGuiClose:        	;{
+HSVGuiEscape:
+	Gui, HSV: Destroy
+	hsContext := hsStrings := ""
+return ;}
+}
+HotS_gSwitch(gStatus="On")                                                            	{
+
+		global HSV, HSV_NHS, HSV_NRP, HSV_NOP, HSV_NDS
+
+	; gLabel Events abschalten
+		GuiControl, % "HSV: " (gStatus="On" ? "+gHSVHandler" : "-g"), HSV_NHS
+		GuiControl, % "HSV: " (gStatus="On" ? "+gHSVHandler" : "-g"), HSV_NRP
+		GuiControl, % "HSV: " (gStatus="On" ? "+gHSVHandler" : "-g"), HSV_NOP
+		GuiControl, % "HSV: " (gStatus="On" ? "+gHSVHandler" : "-g"), HSV_NDS
+
+}
+HotS_Privatabrechung()                                                                  	{              	;-- Behörden, Portokosten
+
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	; IF Bedingung - START
+		;~ fn_IFPAbr := Func("HotS_Privatabrechnung_IF")
+		;~ Hotkey, If, % fn_IFPAbr
+
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	;	Behörden
+
+		gLASVk 	:= "(sach:Kurzauskunft LA für Soziales u. Versorgung:5.00)"
+		gJVEG1	:= "(sach:Anfrage Sozialgericht gem. JVEG: "                  	Addendum.Abrechnung.JVEG.1	")"
+		gJVEG2	:= "(sach:Anfrage Sozialgericht gem. JVEG: "                  	Addendum.Abrechnung.JVEG.2	")"
+		gJVEG3	:= "(sach:Anfrage Sozialgericht gem. JVEG: "                  	Addendum.Abrechnung.JVEG.3	")"
+		gJVEG4	:= "(sach:Anfrage Sozialgericht gem. JVEG: "                  	Addendum.Abrechnung.JVEG.4	")"
+		gLASV   	:= "(sach:Landesamt für Soziales u. Versorgung:"            	Addendum.Abrechnung.LASV 	")"
+		gDRV1     	:= "(sach:Anfrage Rentenversicherung:"                          	Addendum.Abrechnung.DRV1  	")"
+		gDRV2     	:= "(sach:Anfrage Rentenversicherung:"                          	Addendum.Abrechnung.DRV2  	")"
+		gBAfA   	:= "(sach:Anfrage Bundesagentur für Arbeit gem. JVEG:" 	Addendum.Abrechnung.BAfA 	")"
+
+		HotString(":b0*?X:DRV"         	, "HotS_Info")                                              	; Hotstring Info
+		HotString(":b0*?X:RLV"         	, "HotS_Info")
+		HotString(":b0*?X:lasv"         	, "HotS_Info")
+		HotString(":b0*?X:lageso"     	, "HotS_Info")
+		HotString(":b0*?X:JVEG"     	, "HotS_Info")
+		HotString(":b0*?X:jveg"      	, "HotS_Info")
+		HotString(":b0*?X:Sozial"     	, "HotS_Info")
+		HotString(":*X:JVEG1"           	, Func("HotS_Info").Bind(gJVEG1))               	; Anfrage Sozialgericht
+		HotString(":*X:JVEG2"           	, Func("HotS_Info").Bind(gJVEG2))               	; Anfrage Sozialgericht
+		HotString(":*X:JVEG3"           	, Func("HotS_Info").Bind(gJVEG3))               	; Anfrage Sozialgericht
+		HotString(":*X:JVEG4"           	, Func("HotS_Info").Bind(gJVEG4))               	; Anfrage Sozialgericht
+		HotString(":*X:Sozial1"       	, Func("HotS_Info").Bind(gJVEG1))               	; Anfrage Sozialgericht
+		HotString(":*X:Sozial2"       	, Func("HotS_Info").Bind(gJVEG2))               	; Anfrage Sozialgericht
+		HotString(":*X:Sozial3"       	, Func("HotS_Info").Bind(gJVEG3))               	; Anfrage Sozialgericht
+		HotString(":*X:Sozial4"       	, Func("HotS_Info").Bind(gJVEG4))               	; Anfrage Sozialgericht
+		HotString(":*X:lasv1"            	, Func("HotS_Info").Bind(gLASV))                    	; Anfrage LaGeSo Schwerbehinderung Normal
+		HotString(":*X:lasv2"            	, Func("HotS_Info").Bind(gLASVk))                  	; Anfrage LaGeSo Schwerbehinderung Kurzbefund
+		HotString(":*X:lasvk"             	, Func("HotS_Info").Bind(gLASVk))                  	; Anfrage LaGeSo Schwerbehinderung Kurzbefund
+		HotString(":*X:lageso1"        	, Func("HotS_Info").Bind(gLASV))                   	; Anfrage LaGeSo Schwerbehinderung Normal
+		HotString(":*X:lageso2"        	, Func("HotS_Info").Bind(gLASVk))                  	; Anfrage LaGeSo Schwerbehinderung Kurzbefund
+		HotString(":*X:lagesokurz"    	, Func("HotS_Info").Bind(gLASVk))                	; Anfrage LaGeSo Schwerbehinderung Kurzbefund
+		HotString(":*X:RLV1"              	, Func("HotS_Info").Bind(gDRV1))                   	; Anfrage Rentenversicherung
+		HotString(":*X:RLV2"              	, Func("HotS_Info").Bind(gDRV2))                	; Anfrage Rentenversicherung
+		HotString(":*X:DRV1"            	, Func("HotS_Info").Bind(gDRV1))                   	; Anfrage Rentenversicherung
+		HotString(":*X:DRV2"            	, Func("HotS_Info").Bind(gDRV2))                   	; Anfrage Rentenversicherung
+		HotString(":*X:Rent"            	, Func("HotS_Info").Bind(gDRV1))                	; Anfrage Rentenversicherung
+		HotString(":*X:S0051"         	, Func("HotS_Info").Bind(gDRV2))                	; Anfrage Rentenversicherung
+		HotString(":*X:Bundes"         	, Func("HotS_Info").Bind(gBAfA))                 	; Anfrage Bundesagentur für Arbeit
+		HotString(":*X:Agentur"        	, Func("HotS_Info").Bind(gBAfA))                  	; Anfrage Bundesagentur für Arbeit
+
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	; Porto
+		Postkarte    	:= "(sach:Porto Standard:0.60)"
+		Standard   	:= "(sach:Porto Standard:0.80)"
+		Kompakt    	:= "(sach:Porto Kompakt:0.95)"
+		Gross        	:= "(sach:Porto Groß:1.55)"
+		Maxi   	    	:= "(sach:Porto Maxi:2.70)"
+		Paeckchen 	:= "(sach:Porto Päckchen:4.50)"
+
+		HotString(":b0*?X:porto"     	, "HotS_Info")
+		HotString(":b0*?X:Standard"  	, "HotS_Info")
+		HotString(":b0*?X:Kompakt"  	, "HotS_Info")
+		HotString(":b0*?X:Gross"     	, "HotS_Info")
+		HotString(":b0*?X:Maxi"     	, "HotS_Info")
+		HotString(":b0*?X:Päck"      	, "HotS_Info")
+		HotString(":*:porto0"       	, Func("HotS_Info").Bind(Postkarte))                   	; Postkarte
+		HotString(":*:Postk"          	, Func("HotS_Info").Bind(Postkarte))                 	; Postkarte
+		HotString(":*:karte"          	, Func("HotS_Info").Bind(Postkarte))                 	; Postkarte
+		HotString(":*:porto1"        	, Func("HotS_Info").Bind(Kompakt))                 	; Porto bis 20g
+		HotString(":*:Standard"   	, Func("HotS_Info").Bind(Kompakt))                 	; Porto bis 20g
+		HotString(":*:porto2"      	, Func("HotS_Info").Bind(Kompakt))                 	; Porto bis 50g
+		HotString(":*:Kompakt"   	, Func("HotS_Info").Bind(Kompakt))                   	; Porto bis 50g
+		HotString(":*:porto3"      	, Func("HotS_Info").Bind(Gross))                        	; Porto bis 500g
+		HotString(":*:Groß"        	, Func("HotS_Info").Bind(Gross))                       	; Porto bis 500g
+		HotString(":*:porto4"      	, Func("HotS_Info").Bind(Maxi))                          	; Porto bis 1000g
+		HotString(":*:Maxi"         	, Func("HotS_Info").Bind(Maxi))                         	; Porto bis 1000g
+		HotString(":*:porto5"       	, Func("HotS_Info").Bind(Paeckchen))                	; DHL-Päckchen
+		HotString(":*:Päck"         	, Func("HotS_Info").Bind(Paeckchen))                  	; DHL-Päckchen
+		HotString(":*:Pack"         	, Func("HotS_Info").Bind(Paeckchen))                	; DHL-Päckchen
+
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	; IF Bedingung - ENDE
+		Hotkey, If
+
+return
+}
+HotS_Info(replacement:="")                                                        		{              	;-- zeigt Hinweise zu Hotstrings
+
+	static hs
+	static Bericht := [	"Bericht ohne nähere gutachtliche Äußerung [Nr. 200 der Anlage 2 zu 8 10 Abs. 1 JVEG]"
+						,		"Bericht mit außergewöhnlich umfangreicher Tätigkeit [Nr. 201 der Anlage 2 zu 8 10 Abs. 1 JVEG]"
+						,		"Bericht mit kurzer gutachtlicher Äußerung [Nr. 202 der Anlage 2 zu 8 10 Abs. 1 JVEG]"
+						,		"Bericht mit außergewöhnlich umfangreichen gutachterlichen Äußerung [Nr. 203 der Anlage 2 zu 8 10 Abs. 1 JVEG]"]
+
+	If !IsObject(hs)
+		hs := {	"DRV"             	: "Rentenversicherung:`nDRV1  (" Addendum.Abrechnung.DRV1 " €) "
+								        	. "und DRV2  (" Addendum.Abrechnung.DRV2 " €)"
+				, 	"RLV"             	: "Rentenversicherung:`nRLV1  (" Addendum.Abrechnung.DRV1 " €) "
+								        	. "und RLV2  (" Addendum.Abrechnung.DRV2 " €)"
+				, 	"LASV"           	: "Erstfeststellungsverfahren nach dem Schwerbehindertenrecht:`n"
+								        	. "LASV1  (" Addendum.Abrechnung.LASV " €) und lasv2/lasvk (5.00 €)"
+				, 	"lageso"         	: "Erstfeststellungsverfahren nach dem Schwerbehindertenrecht:`n"
+								        	. "lageso1  (" Addendum.Abrechnung.LASV " €) und lageso2/lagesokurz (5.00 €)"
+				,	"JVEG"           	: "z.B. Sozialgericht:`n"
+								        	. "JVEG1  ("  Addendum.Abrechnung.JVEG.1 ") " Bericht.1 "`n"
+								        	. "JVEG2  ("  Addendum.Abrechnung.JVEG.2 ") " Bericht.2 "`n"
+								        	. "JVEG3  ("  Addendum.Abrechnung.JVEG.3 ") " Bericht.3 "`n"
+								        	. "JVEG4  ("  Addendum.Abrechnung.JVEG.4 ") " Bericht.4 "`n"
+								        	. "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - `n"
+								        	. "Ansetzen nicht vergessen!: Portogebühren mit 'porto' und Kopiegebühren mit 'Kopie'"
+				,	"Sozial"           	: "z.B. Sozialgericht:`n"
+								        	. "Sozial1  ("  Addendum.Abrechnung.JVEG.1 ") " Bericht.1 "`n"
+								        	. "Sozial2  ("  Addendum.Abrechnung.JVEG.2 ") " Bericht.2 "`n"
+								        	. "Sozial3  ("  Addendum.Abrechnung.JVEG.3 ") " Bericht.3 "`n"
+								        	. "Sozial4  ("  Addendum.Abrechnung.JVEG.4 ") " Bericht.4 "`n"
+								        	. "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - `n"
+								        	. "Ansetzen nicht vergessen!: Portogebühren mit 'porto' und Kopiegebühren mit 'Kopie'"
+				, 	"porto"          	: "P O R T O K O S T E N`n`n"
+								        	. "porto0:  Postkarte 0.60 €`n"
+								        	. "porto1:  Standard 0.80 €`t(Gewicht bis 20 g. max. LxBxH 23,5 x 12,5 x 0,5 cm [z.B. DIN lang oder C6 Umschlag])`n"
+								        	. "porto2:  Kompakt 0.95 €`t(Gewicht bis 50 g. max. LxBxH 23,5 x 12,5 x 1 cm [z.B. DIN lang oder C6 Umschlag])`n"
+								        	. "porto3:  Groß 1,55 €      `t(Gewicht bis 500 g. max. LxBxH 35,3 x 25 x 2 cm [z.B. Umschläge bis zu DIN B4])`n"
+								        	. "porto4:  Groß 2,70 €     `t(Gewicht bis 1000 g. max. LxBxH 35,3 x 25 x 5 cm [z.B. Umschläge oder Versandboxen bis zu DIN B4])`n"
+								        	. "porto5:  Päckchen 4,50 €`t(Gewicht bis 2 kg. max. LxBxH 60 x 30 x 15 cm`n`n"
+								        	. "alternativ:  Postkarte,Karte,Standard,Kompakt,Groß,Maxi,Päckchen"}
+
+	ControlGetFocus, cFocus, A
+
+	If !replacement {
+		cp := GetWindowSpot(GetFocusedControlHwnd(WinExist("A")))
+		RegExMatch(A_ThisHotkey, "\:.*\:(?<HotString>.*)$", this)
+		RegExReplace(hs[thisHotString], "\n", "", CR)
+		ToolTip, % hs[thisHotString], % A_CaretX, % cp.Y-cp.H-((CR+1)*14)-2 , 12
+		SetTimer, HotS_InfoOff, -16000
+	}
+	else {
+		SendRaw, % replacement
+		ToolTip,,,, 12
+	}
+
+return
+
+HotS_InfoOff:
+	SetTimer, HotS_InfoOff, Off
+	ToolTip,,,, 12
+return
+}
+
+SendDiagnosis(dia)                                                                        	{                 	; -- für automatische Ersetzung von Diagnosestrings
+
+	/*
+	 ·	selektiert ein '#' Zeichen im übergebenen String als Position für Nutzereingaben z.B. eine Seitenangabe: Pneumonie {J15.8#G};
+	 · 	geplant sind flexiblere Ersetzungen für Seitenangabe, Diagnosesicherheit und Diagnosentext
+	 ·  in eckige Klammern [] gesetzte Bereiche sind für flexible RegEx-Ersetzungen gedacht
+
+	 Einschränkung: BlockInput ist nur wirksam, wenn dieses Skript als Administrator gestartet wurde
+
+		letzte Änderung: 10.11.2021
+	*/
+
+
+	;SendMode                      	, Input
+	SetKeyDelay                   	, 20, 20
+
+	; es lassen sich bestimmte Teile durch RegEx ersetzen
+	; :X*:.NYHA IV::SendDiagnosis("Linksherzinsuffizienz NYHA-Stadium [CMB] {I50.1[\d]G}")
+	If RegExMatch(dia, "\[(?<This>.*?)\]", replace)
+		If RegExMatch(replaceThis, "\\d(?<string>\+|\*)*", c)
+			rxStr := "\d" cstring "$"
+		else if RegExMatch(replaceThis, "CMB")
+			rxStr := "\b(I|II|III|IV|V|VI)\b$"
+
+	If rxStr
+		RegExMatch(A_ThisHotkey, rxStr, DA)
+
+	dia := RegExReplace(dia, "\[.*?\]", DA)                  	; Ersetzen aus Eingabe oder Entfernen wenn leer
+	dia := RegExReplace(dia, "[#]+", "#", rplCount)  	; nur einzelne # stehen lassen
+	dia .= !RegExMatch(dia, "\s*;\s*$") ? ";" : ""         	; fügt ein Semikolon hinzu
+	SendRaw, % dia
+
+	; Caret/Cursor auf das #-Zeichen versetzen und umschliessen
+	If (rplPos := InStr(dia, "#"))
+		SendInput, % "{Left " (StrLen(dia)-rplPos+1) "}{LShift Down}{Right 1}{LShift Up}"
+
+}
+;}
+;{ ############### 	SCITE4AUTOHOTKEY     ###############
+
+SendRawBzu:                   	;{	 	Strg (links) + Ziffernblock 2                                             	(für Scite4Autohotkey)
+	SendRawFast(";}")
+return ;}
+SendRawBAuf:               	;{	 	Strg (links) + Ziffernblock 1                                             	(für Scite4Autohotkey)
+	SendRawFast(";{ ")
+return ;}
+SendRawProzentAll: 	    	;{	 	Strg (links) + 5                                                                	(für Scite4Autohotkey)
+	SendRawFast("%%", "L")
+return ;}
+SendStrgRight: 	            	;{ 	Ziffernblock 6                                                                 	(für Scite4Autohotkey)
+	SendInput, {LControl Down}{Right}{LControl Up}
+return ;}
+SendStrgLeft:                 	;{ 	Ziffernblock 4                                                                 	(für Scite4Autohotkey)
+	SendInput, {LControl Down}{Left}{LControl Up}
+return ;}
+SendRawR:                    	;{	 	Strg (links) + ´                                                                	(für Scite4Autohotkey) | `r
+	SendRawFast("``r", "")
+return ;}
+SendRawN:                   	;{	 	Strg (links) + `                                                                	(für Scite4Autohotkey) | `n
+	SendRawFast("``n", "")
+Return ;}
+SendRawTab:                	;{	 	Strg (links) + Alt (links) + `                                               	(für Scite4Autohotkey) | `t
+	SendRawFast("``t", "")
+return ;}
+SendFourSpace:            	;{	 	Strg (links) + Pfeil rechts                                                   	(für Scite4Autohotkey)
+	Send, {Space 4}
+Return ;}
+SendFourBackspace:      	;{	 	Strg (links) + Delete                                                         	(für Scite4Autohotkey)
+	Send, {BackSpace 4}
+Return ;}
+SciteDescriptionBlock:    	;{	 	Alt (links)   + v                                                               	(für Scite4Autohotkey)
+	SendRawFast(";---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------", "Enter")
+	SendRawFast("; " Clipboard , "Enter")
+	SendRawFast(";---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------", "Enter")
+return
+;}
+SciteCommentBlock:      	;{	 	Strg (links) + ,                                                                  	(für Scite4Autohotkey)
+	SendAlternately("/* | */")
+return
+;}
+SciteBracket:                   	;{ 	Strg (links) + .                                                                  	(für Scite4Autohotkey)
+	SendAlternately("{|}")
+return
+;}
+SciteSmartCaretL:           	;{
+	SciteSmartCaret(-1)
+return
+SciteSmartCaretR:
+	SciteSmartCaret(1)
+return
+
+SciteSmartCaret(direction) {
+
+	global curpos, curline, curlen, endpos, bufLen
+
+	sci            	:= Sci_GetCurTextLine()
+	Txt				:= direction = - 1 ? xstring.Flip(sci.curText) : sci.curText
+	LTxt           	:= sci.strL
+	RTxt				:= sci.strR
+	SLen				:= StrLen(Txt)
+	curpos       	:= sci.Pos
+	curColumn   	:= sci.Column
+	curline       	:= sci.curline
+	posfromline	:= sci.PosFromLine
+	LineStartPos	:= curpos - curColumn                                                                                			;lineendpos ist immer +2 wegen CR + LF Zeichen am Ende
+	EndPos        	:= LineStartPos + SLen
+	CPosInTxt		:= curpos - LineStartPos
+	newPos			:= curpos + ( direction * InStr(Txt, ",", false, CPosInTxt+1, 1) )
+
+	SendMessage, 2025, % newPos, 0,, % "ahk_id " sci.hScintilla
+	gosub MsgBoxer
+	sscDir := 0
+
+return
+
+MsgBoxer:
+	t =
+	(
+direction    	:  %direction%
+CaretPosition	:  %curpos%
+curline      	:  %curline%
+posfromline	:  %posfromline%
+curColumn	:  %curColumn%
+LineStartPos	:  %LineStartPos%
+LineEndPos	:  %EndPos%
+newPos     	:  %newPos%
+Textlänge  	:  %SLen%
+Text           	:  %Txt%
+Text Caret li.	:  %LTxt%
+       Caret re.:  %RTxt%
+	))
+
+	SciTEOutput(t "`n")
+
+return
+}
+
+;}
+
+;}
+;{ ###############                 ALBIS                 ###############
+AlbisHeuteDatum:         	;{ 	Albis Programmdatum auf heute setzen
+	AlbisSetzeProgrammDatum(A_DD "." A_MM "." A_YYYY)
+Return
+;}
+AlbisKopieren:               	;{ 	Strg	+	c                                                                	(wie sonst überall in Windows nur nicht in Albis)
+	If InStr(AlbisGetActiveWinTitle(), "Wartezimmer") {
+		ListviewClipboard("Wartezimmer")
+		return
+	}
+	else if RegExMatch(WinGetClass(DLLCall("GetLastActivePopup", "uint", AlbisWinID())), "#32770") {
+		ListviewClipboard("")
+		return
+	}
+
+	AlbisCText := AlbisCopyCut()
+	If (StrLen(AlbisCText) > 0) 	{
+		clipboard := AlbisCText
+		GdiSplash(SubStr(AlbisCText, 1, 30) "...", 1)
+	}
+	else
+		Tooltip("!Nichts kopiert!", 1)
+return
+;}
+AlbisAusschneiden:        	;{ 	Strg	+	x                                                                	(wie sonst überall in Windows nur nicht in Albis)
+	AlbisCText:= AlbisCopyCut()
+	If (StrLen(AlbisCText) > 0) 	{
+		clipboard := AlbisCText
+		GdiSplash(SubStr(AlbisCText, 1, 30) . "`.`.`.", 1)
+		SendInput, {DEL}
+	}
+	else
+		Tooltip("!Nichts ausgeschnitten!", 1)
+return
+;}
+AlbisEinfuegen:             	;{ 	Strg	+	v                                                                	(wie sonst überall in Windows nur nicht in Albis)
+	If (AlbisCText <> clipboard)
+        FileAppend, % clipboard  "`n", % Addendum.LogPath "\CopyAndPaste.log"
+	KDly	:= A_KeyDelay
+	KDur	:= A_KeyDuration
+	;~ SetKeyDelay, 0, 0
+	SendRaw, % Clipboard
+	;~ SetKeyDelay, % KDly, % KDur
+return
+;}
+AlbisMarkieren:              	;{ 	Strg	+ a
+	AlbisSelectAll()
+return ;}
+AlbisKarteikarteSchliessen:	;{ 	Shift	+	Pfeil nach unten
+	IfWinNotActive, ahk_class OptoAppClass
+			WinActivate, ahk_class OptoAppClass
+	Send, {LControl Down}{F4}{LControl Up}
+return
+;}
+AlbisNaechsteKarteikarte:	;{ 	Shift	+	Pfeil nach rechts
+	SendMessage, 0x224,,,, % "ahk_id " AlbisMDIClientHandle()	; WM_MDINEXT
+return
+;}
+Schulzettel:                    	;{ 	Strg 	+ F11
+	Run, %AddendumDir%\include\AHK_H\x64w\AutohotkeyH_U64.exe /f "%AddendumDir%\Module\Albis_Funktionen\Schulzettel.ahk"
+return ;}
+Hausbesuche:               	;{ 	Strg 	+ F12
+	Run, %AddendumDir%\include\AHK_H\x64w\AutohotkeyH_U64.exe /f "%AddendumDir%\Module\Albis_Funktionen\Hausbesuche.ahk"
+return ;}
+DauermedBezeichner:   	;{ 	nur # eingeben im Dauermedikamentenfenster
+	ControlGetText, fT,, % "ahk_id " (f := GetFocusedControl())
+	If (fT="") {
+       	If InStr(GetClassName(f), "Edit")
+           	MedTrenner(f)
+	} else
+		SendInput, #
+return
+;}
+DauermedRauf:             	;{ 	Strg	+ Pfeil nach oben
+	PostMessage, 0x00F5,,, Button1,  Dauermedikamente ahk_class #32770
+	SetTimer, DauermedFokus, -50
+Return
+;}
+DauermedRunter:          	;{ 	Strg	+ Pfeil nach unten
+	PostMessage, 0x00F5,,, Button2,  Dauermedikamente ahk_class #32770
+	SetTimer, DauermedFokus, -50
+return
+;}
+DiagnoseRauf:              	;{ 	Strg	+ Pfeil nach oben
+	PostMessage, 0x00F5,,, Button1,  Dauerdiagnosen von ahk_class #32770
+	SetTimer, DauerDiagnoseFokus, -50
+Return ;}
+DiagnoseRunter:            	;{ 	Strg	+ Pfeil nach unten
+	PostMessage, 0x00F5,,, Button2,  Dauerdiagnosen von ahk_class #32770
+	SetTimer, DauerDiagnoseFokus, -50
+return ;}
+CaveVonRauf:               	;{ 	Strg	+ Pfeil nach oben  stark Verbesserungswürdig
+	PostMessage, 0x00F5,,, Button1,  Cave! von ahk_class #32770
+	SetTimer, DauerDiagnoseFokus, -50
+Return ;}
+CaveVonRunter:            	;{ 	Strg	+ Pfeil nach unten
+	PostMessage, 0x00F5,,, Button2,  Cave! von ahk_class #32770
+	SetTimer, DauerDiagnoseFokus, -50
+return ;}
+TTipOff:                        	;{		ToolTip aus
+	ToolTip,,,, % TT
+return
+;}
+DauermedFokus:           	;{ 	Eingabefokus auf das Listview im Dauermedikamentenfenster
+	If WinExist("Dauermedikamente ahk_class #32770")
+			ControlFocus, SysListView321, Dauermedikamente ahk_class #32770
+return
+;}
+DauerDiagnoseFokus:   	;{ 	Eingabefokus auf das Listview im Dauerdiagnosenfenster
+	If WinExist("Dauerdiagnosen von ahk_class #32770")
+			ControlFocus, SysListView321, Dauerdiagnosen von ahk_class #32770
+return
+;}
+CaveVonFokus:             	;{ 	Eingabefokus auf das Listview im Cave! von fenster
+	If WinExist("Dauerdiagnosen von ahk_class #32770")
+		ControlFocus, SysListView321, Cave! von ahk_class #32770
+return
+;}
+EnableAllControls:	        	;{
+	EnableAllControls(1)
+return
+;}
+PlusEineWoche:             	;{ 	F10                                                                                     - in allen Datumsfeldern in Albis
+	If IsObject(Feld:= IsDatumsfeld())
+			AddToDate(Feld, 7, "days")
+	else
+			SendInput, {F10}
+Return
+;}
+MinusEineWoche:          	;{ 	F9                                                                                       - in allen Datumsfeldern in Albis
+	If IsObject(Feld:= IsDatumsfeld())
+			AddToDate(Feld, -7, "days")
+	else
+			SendInput, {F9}
+Return
+;}
+PlusEinMonat:                	;{ 	F12                                                                                     - in allen Datumsfeldern in Albis
+	If IsObject(Feld:= IsDatumsfeld())
+			AddToDate(Feld, 4*7, "days")
+	else
+			SendInput, {F12}
+Return
+;}
+MinusEinMonat:            	;{ 	F11                                                                                     - in allen Datumsfeldern in Albis
+	If IsObject(Feld:= IsDatumsfeld())
+		AddToDate(Feld, -4*7, "days")
+	else
+		SendInput, {F11}
+Return
+;}
+Kalender:                      	;{ 	Shift	+ F3
+	If IsObject(feld := IsDatumsfeld())	{
+		If !InStr(GetProcessNameFromID(feld.hwin), "albis")	{
+			SendInput {Shift Down}{F3}{Shift Up}
+				return
+		}
+		Calendar(feld)  ; Kalender-Gui anzeigen
+	}
+	else
+		SendInput, {Shift Down}{F3}{Shift Up}
+return
+;}
+DruckeLabor:                	;{ 	Alt 	+ F8
+	AlbisLaborblattDrucken(1, "Standard", "")
+return
+;}
+Laborblatt:                    	;{ 	Alt 	+ Rechts
+	If !InStr(AlbisGetActiveWindowType(), "Patientenakte") or InStr(AlbisGetActiveWindowType(), "Laborblatt")
+		return
+	AlbisLaborBlattZeigen()
+return
+;}
+Karteikarte:                   	;{ 	Alt 	+ Links
+	If !InStr(AlbisGetActiveWindowType(), "Patientenakte") or InStr(AlbisGetActiveWindowType(), "Karteikarte")
+		return
+	AlbisKarteikarteZeigen()
+return
+;}
+GVUListe_ProgDatum:   	;{ 	Strg	+	F7
+	GVUListe(1)
+Return
+;}
+GVUListe_ZeilenDatum: 	;{ 	Alt	+	F7
+	GVUListe(2)	; Funktion ist im Addendumskript
+return
+;}
+KarteikartenMenu:          	;{
+	MouseGetPos, mx, my
+	; Context menu opened –> Get handle:
+	MN_GETHMENU := 0x1E1 ; Shell Constant: "Menu_GetHandleMenu"
+	SendMessage, MN_GETHMENU, False, False
+	hCM := ErrorLevel ; Return Handle in ErrorLevel
+	ToolTip, % "Hab Dich Menu: " GetHex(hCM) , % mx , % my - 60, 6
+	SetTimer, HDM, -3000
+return
+
+HDM:
+	ToolTip,,,,6
+return
+;}
+StarteAutoDiagnosen:       	;{   	Strg	+ Alt + d
+	If !ScriptIsRunning("AutoDiagnosen3")
+		ADPID :=  RunSkript(A_ScriptDir "\include\AutoDiagnosen3.ahk")
+return ;}
+COVIDImpfA:                 	;{
+Send, % "{Raw}88331A(charge:FE6975)"
+return
+COVIDImpfB:
+Send, % "{Raw}88331B(charge:FE6975)"
+return ;}
+
+Privatabrechnung_Begruendungen(cmd="zeigen", bgrWahl="")       	{
+
+	static hfocused, hparent, hfocused_last, hparent_last
+
+	hfocused 	:= GetFocusedControlHwnd(AlbisWinID())
+	hparent		:= GetParent(hfocused)
+
+	If (cmd = "zeigen") {
+
+		hfocused_last 	:= hfocused
+		hparent_last  	:= hparent
+		caretpos           	:= CaretPos(hfocused)
+		ctrltxt            	:= SubStr(ControlGetText("", "ahk_id " hfocused), 1, caretpos - 1)
+
+		If FileExist(Addendum.DataPath "\GOÄTexte.json")
+			bgr := JSON.Load(FileOpen(Addendum.DataPath "\GOÄTexte.json", "r").Read(),, "UTF-8")
+
+		RegExMatch(ctrltxt, "\d+$", ziffer)
+		Privatabrechnung_BgrGui(bgr[ziffer], ziffer)
+		;FileOpen(Addendum.DataPath "\GOÄTexte.json", "w", "UTF-8").Write(JSON.Dump(bgr,, 2, "UTF-8"))
+
+	}
+	else if (cmd = "einfuegen") {
+
+		ControlFocus,, % "ahk_id " hfocused_last
+		if !ErrorLevel
+			Send, % bgrWahl	;, % "ahk_id " hfocused_last
+		else
+			PraxTT("Addendum konnte den Text nicht einfügen", "1 2")
+
+	}
+	;SciTEOutput("so geht es nicht")
+
+}
+Privatabrechnung_BgrGui(content, ziffer)                                        	{                  ;-- Gui für die Auswahl von EBM Begründungen
+
+	global
+	local acx, acy
+
+	acx        	:= A_CaretX
+	acy       	:= A_CaretY
+
+	Gui, Bgr: New, HWNDbgrHgui
+	Gui, Bgr: Add, ListView	, % "xm ym w500 r10 vbgrLV ", % "Texte"
+	For idx, bgrtxt in content
+		LV_Add("", bgrtxt)
+	Gui, Bgr: Add, Button	, % "xm y+5	vbgrUse    	gbgrButtonHandler", % "Begründungstext übernehmen"
+	Gui, Bgr: Add, Button	, % "x+30 	vbgrCancel 	gbgrButtonHandler", % "Abbruch"
+	Gui, Bgr: Show, AutoSize, % "Begründungstexte für GOÄ Ziffer [" ziffer "]"
+
+return
+
+bgrButtonHandler:
+
+	if (A_GuiControl = "bgrUse") {
+		Gui, bgr: ListView, bgLV
+		If !(crow  := LV_GetNext(0))
+			return
+		LV_GetText(bgrWahl, crow)
+		Privatabrechnung_Begruendungen("einfuegen", bgrWahl)
+	}
+
+bgrGuiClose:
+bgrGuiEscape:
+	Gui, bgr: Destroy
+return
+}
+ScheinCOVIDPrivat()                                                                      	{                  ;-- Funktionsaufruf für "Neuen Schein anlegen"
+
+	Quartal := QuartalTage("aktuell")
+	res := AlbisAbrScheinCOVIDPrivat(Quartal)
+
+}
+Schnellziffer(Datum:="")                                                                 	{
+
+		static SZiffern := {"a":"03220", "s":"03221", "d":"03230(x:2)", "f":"03360", "g":"03362", "h":"35100", "i":"35110"}
+
+		ziffer := SZiffern["#" A_ThisHotkey]
+	;~ SciTEOutput(A_ThisFunc ": [" A_ThisHotkey "] " ziffer)
+
+	; Eingaben ermöglichen
+		ControlGetFocus, cFocus, ahk_class OptoAppClass
+		while (!RegExMatch(cFocus, "^Edit(?<nr>\d+)", Edit) && A_Index < 4) {
+			If (A_Index > 1)
+				Sleep 500
+			SendInput, {Insert}
+			Sleep 100
+			ControlGetFocus, cFocus, ahk_class OptoAppClass
+		}
+
+	; auf Eingabefeld prüfen
+		If !RegExMatch(EditNr, "\d+") {
+			PraxTT("Eingabefeld konnte nicht erstellt werden", "1 1")
+			return 0
+		}
+
+	; EBM Ziffer senden
+		If !VerifiedSetText(cFocus, ziffer, "ahk_class OptoAppClass") {
+			PraxTT("EBM Ziffer [" ziffer "]: ließ sich nicht einfügen", "1 1")
+			return 0
+		}
+
+	; Eingabe durch TAB abschließen
+		SendInput, {TAB}
+		Sleep, 300
+		ControlGetFocus, cFocus, ahk_class OptoAppClass
+		while (RegExMatch(cFocus, "^Edit(?<nr>\d+)", Edit) && A_Index < 4) {
+			If (A_Index > 1)
+				Sleep 500
+			SendInput, {TAB}
+			Sleep 100
+			ControlGetFocus, cFocus, ahk_class OptoAppClass
+		}
+		If RegExMatch(cFocus, "^Edit(?<nr>\d+)", Edit) {
+			PraxTT("Die Eingabe konnte nicht abgeschlossen werden", "1 1")
+			return 0
+		}
+
+return 1
+}
+EBM_COVIDImpfung()                                                                     	{
+
+		static EBMSkript := A_ScriptDir "\include\EBM-COVIDImpfung.ahk"
+
+		If !Addendum.Thread["COVIDEBM"].ahkReady()  {
+
+			If !FileExist(EBMSkript) {
+				throw Exception("Kann EBM-Skript nicht im Ordner " A_ScriptDir "\include\ finden.")
+				return
+			}
+
+			Addendum.Thread["COVIDEBM"] := AHKThread(FileOpen(EBMSkript, "r", "UTF-8").Read())
+
+		}
+
+	; Funktion im Thread aufrufen
+		If Addendum.Thread["COVIDEBM"].ahkReady()  {
+
+		  ; warten bis die Abrechnungsdaten zusammengestellt sind
+			If Addendum.Thread["COVIDEBM"].ahkgetvar.EBMInitRunning {
+				SetTimer, EBMInitCheck, 200
+				return
+			}
+
+		 ; Funktion im Threadskript wird per Postmessage (ahkPostFunction) aufgerufen.
+		 ; Das Hauptskript wartet nicht auf Antwort.
+			Addendum.Thread["COVIDEBM"].ahkPostFunction("Chargennummern")
+
+		}
+
+return
+EBMInitCheck:                                ; SetTimer Label (sleep)
+
+	; im Anschluß die EBM Abrechnungsfunktion aufrufen
+		If !Addendum.Thread["COVIDEBM"].ahkgetvar.EBMInitRunning {
+			SetTimer, EBMInitCheck, Off
+			If EBMCNRunning                 ; Hotkey wurde zu früh gefeuert, Thread arbeitet noch
+				return
+			Addendum.Thread["COVIDEBM"].ahkPostFunction("Chargennummern")
+		}
+
+return
+}
+AusIndisKorrigieren()                                                                     	{                 	;-- lädt Daten für AlbisAusIndisKorrigieren()
+
+	static AusIndisToRemove, AusIndisToHave, KeinBMP
+
+	If !AusIndisToRemove {
+		IniRead, AusIndisToRemove, % Addendum.Ini, Abrechnungshelfer, AusIndis_ToRemove
+		AusIndisToRemove := RegExReplace(AusIndisToRemove, "^\s\(")
+		AusIndisToRemove := RegExReplace(AusIndisToRemove, "^\s\)")
+		AusIndisToRemove := RegExReplace(AusIndisToRemove, "[\,\.\s\;\:\-\+]", "|")
+		AusIndisToRemove := "(" RegExReplace(AusIndisToRemove, "[\\]{2,}", "|")  ")"
+	}
+	If !IsObject(AusIndisToHave) {
+		IniRead, ToHave, % Addendum.Ini, Abrechnungshelfer, AusIndis_ToHave
+		AusIndisToHave := []
+		For idx, EBMZiffer in StrSplit(ToHave, "|")
+			AusIndisToHave.Push(EBMZiffer)
+	}
+	If !KeinBMP
+		IniRead, KeinBMP, % Addendum.Ini, Abrechnungshelfer, AusIndis_KeinBMP
+
+	PatID := AlbisAktuellePatID()
+
+	AusIndis := AlbisAusIndisKorrigieren(AusIndisToRemove, AusIndisToHave, "ChronischKrank=" Chroniker " Geriatsch=" GB " KeinBMP=" KeinBMP)
+
+	If AusIndis.neu {
+		RegExReplace(AusIndis.Alt, "\-",, AltC)
+		RegExReplace(AusIndis.Neu, "\-",, NeuC)
+		inter := AusIndis.Alt ? (AltC > 0 ? "n" : "") " ersetzt mit" : "n erstmalig eingetragen"
+		msg := "Ausnahmeindikation" (AltC > 0 ? "en" : "") ":`n" AusIndis.Alt "`nwurde" inter "`n" AusIndis.Neu
+	}
+	else
+		msg := "Ausnahmeindikation" (AltC > 0 ? "en" : "") ":`n" AusIndis.alt "`nwurde" (AltC > 0 ? "n" : "") " nicht geändert"
+
+	MsgBox	, 0x1024, % A_ScriptName, %	"Bitte überprüfen!`n"
+															. 	"⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘`n"
+															.	msg "`n"
+															.	"⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘ ⁘", 10
+
+}
+LDSars()                                                                                        	{
+
+	;~ hparent := AlbisSendText("RichEdit20A1", "Spezielle Verfahren zur Untersuchung auf SARS-CoV-2 {!U99.0G}"
+										  ;~ . ";Spezielle Verfahren zur Untersuchung auf infektiöse und parasitäre Krankheiten {Z11G};")
+	;SendMode, Event
+	;SetKeyDelay, 10, 10
+
+	Linedate	:= AlbisLeseZeilenDatum(60, false)
+	PrgDate	:= AlbisLeseProgrammDatum()
+	AlbisSetzeProgrammDatum(LineDate)
+
+	Sleep 300
+	Send, % "{Blind}"
+	Sleep 100
+	Send, % "{Text}Spezielle Verfahren zur Untersuchung auf SARS-CoV-2 {!U99.0G};Spezielle Verfahren zur Untersuchung auf infektiöse und parasitäre Krankheiten {Z11G};"
+	Send, {Tab}
+	Sleep 200
+	WinWait, % "ALBIS ahk_class #32770", % "meldepflichtig", 2
+	VerifiedClick("Button1", "ALBIS ahk_class #32770", "meldepflichtig",, true)
+	Send, {Esc}
+	Sleep 300
+	Send, {Down}
+	Sleep 300
+	Send, % "{Blind}"
+	Sleep 100
+	Send, % "{Text}lko"
+	Send, {Tab}
+	Sleep 300
+	Send, % "{Blind}"
+	Sleep 100
+	Send, % "{Text}32006-88240"
+	Send, {Tab}
+	PraxTT("Circa 4s braucht Albis für Berechnungen!")
+	;WinWait
+	Sleep 4000
+	Send, {Esc}
+	AlbisSetzeProgrammDatum(PrgDate)
+
+	;SetKeyDelay, 10, 10
+
+	;~ SciTEOutput("2:" hParent)
+	;~ hParent := AlbisSendText("Edit6", "lko", hParent)
+
+	;~ SciTEOutput("3:" hParent)
+		;~ ;return
+	;~ hParent := AlbisSendText("RichEdit20A1", "88240-32006", hParent)
+	;~ SciTEOutput("4:" hParent)
+		;~ ;return
+	;~ hParent := AlbisSendText("Edit6", "**End", hParent)
+	;~ SciTEOutput("5:" hParent "`n")
+		;~ ;return
+}
+
+
+;}
+;{ ###############	          ALLGEMEIN        	 ###############
+KopierenUeberall:         	;{	 	Strg	+ c
+	CopyToClipboard := true
+AusschneidenUeberall:   	;	 	Strg (links) + x
+	;SetKeyDelay, 10, 10
+	Clipboard := ""
+	while (clip = "")	{
+		SendEvent, {CTRL Down}c{CTRL Up}
+		ClipWait, 1
+		clip := Clipboard
+		If (A_Index > 6)
+			break
+	}
+	If (clip != "")	{
+		clip := SubStr(ClipBoard, 1, 30) . "`.`.`."
+		GDISplash(clip,1)
+	}
+	else
+		GDISplash("Clipboard war leer!",1)
+	If !CopyToClipboard
+		Send, {CTRL down}x{CTRL up}
+
+	CopyToClipboard	:= false
+	clip						:= ""
+	;SetKeyDelay, 10, 10
+
+return ;}
+DoNothing:                   	;{
+return
+;}
+BereiteDichVor:					;{
+	ExitApp
+return
+;}
+AddendumPausieren:     	;{ 	Strg + Alt + Pause
+		PraxTT("Addendum ist pausiert", "5 0")
+		Pause, Toggle
+return ;}
+PatientenkarteiOeffnen: 	;{     ;~ Hotkey, ^!p                  	, PatientenkarteiOeffnen           	;= Überall: selektierte Zahlen zum Öffnen einer Patientenkarteikarte nutzen
+
+	PatientenID := Clip()
+	If !RegExMatch(PatientenID, "\d+") {
+		PraxTT("Der ausgewählte Text (" PatientenID ")`nkann keine Patienten ID sein!", "3 3")
+		return
+	}
+	else if !oPat.Haskey(PatientenID)	{
+		MsgBox, 1, Addendum für Albis on Windows, % "Die ausgewählte Patienten ID (" PatientenID ")`n ist nicht bekannt. Soll diese ID dennoch benutzt werden?"
+		IfMsgBox, No
+			return
+	}
+
+	;PraxTT("Geöffnet wird die Karteikarte des Patienten:`n#2" oPat[PatientenID].Nn ", " oPat[PatientenID].Vn ", geb.am " oPat[PatientenID].Gd "(" PatientenID ")", "6 3")
+	AlbisAkteOeffnen(PatientenID, PatientenID)
+
+return
+Clip(Text:="", Reselect:="") {                                                                        	;-- Clip() - Send and Retrieve Text Using the Clipboard
+
+	; by berban - updated February 18, 2019
+	; https://www.autohotkey.com/boards/viewtopic.php?f=6&t=62156
+
+	Static BackUpClip, Stored, LastClip
+
+	If (A_ThisLabel = A_ThisFunc) {
+
+		If (Clipboard == LastClip)
+			Clipboard := BackUpClip
+		BackUpClip := LastClip := Stored := ""
+
+	}
+	Else	{
+
+		If !Stored{
+			Stored := True
+			BackUpClip := ClipboardAll                         	; ClipboardAll must be on its own line
+		}
+		Else
+			SetTimer, % A_ThisFunc, Off
+
+	; LongCopy gauges the amount of time it takes to empty the clipboard which can predict how long the subsequent clipwait will need
+		LongCopy := A_TickCount
+		Clipboard := ""
+		LongCopy -= A_TickCount
+
+		If (Text = "") {
+			SendInput, % "{Shift Down}c{Shift Up}"
+			ClipWait, LongCopy ? 0.6 : 0.2, True
+		} Else {
+			Clipboard := LastClip := Text
+			ClipWait, 10
+			SendInput, % "{Shift Down}v{Shift Up}"
+		}
+
+		SetTimer, % A_ThisFunc, -700
+		Sleep 20                                                            	; Short sleep in case Clip() is followed by more keystrokes such as {Enter}
+
+		If (StrLen(Text) = 0)
+			Return (LastClip := Clipboard)
+		Else If ReSelect && ((ReSelect = True) || (StrLen(Text) < 3000))
+			SendInput, % "{Shift Down}{Left " StrLen(StrReplace(Text, "`r")) "}{Shift Up}"
+	}
+
+Return
+
+Clip:
+Return Clip()
+}
+
+;}
+SendClipBoardText:       	;{ 	Strg + Alt + F10
+
+	If (StrLen(TextToSend) = 0) {
+		TextToSend 	:= ClipBoard
+		ClipBoard 	:= ""
+	}
+
+	PraxTT("Sende ClipBoard Inhalt.", "3 3")
+	Loop, % StrLen(TextToSend) {
+		Send, % "{Text}" SubStr(TextToSend, A_Index, 1)
+		Sleep, 25
+	}
+	;Send, % "{Text}" TextToSend
+	SetTimer, emptyTextToSend, -180000 ; nach 3min leeren
+
+return
+emptyTextToSend:
+	TextToSend := ""
+return
+;}
+ScanBeenden:               	;{
+ If (hwnd := WinExist("ScanSnap Manager - Bild erfassen und Datei speichern ahk_class #32770"))
+	res := VerifiedClick("Button2", hwnd)
+return ;}
+;}
+
+;}
+
+;{11. Labels - TrayMenu
+
+SkriptReload(msg:="")                     	{                                                          					;-- besseres Reload eines Skriptes
+
+  ; es wird ein RestartScript gestartet, welches zuerst das laufende Skript komplett beendet und
+  ; dann das Addendum-Skript per run Befehl erneut gestartet. Dies verhindert einige Probleme
+  ; mit datumsabhängigen Handles bestimmter Prozesse im System.
+  ; +Albisprogrammdatum wird auf den nächsten Tag gesetzt
+
+	; Abbruch des Neustart falls Addendum gerade Befunde importiert oder ein OCR Vorgang läuft
+		If (Addendum.Importing || Addendum.ImportRunning || Addendum.tessOCRRunning || Addendum.Thread["tessOCR"].ahkReady()) {
+
+			; Protokolltext
+				FormatTime	, Time      	, % A_Now    	, dd.MM.yyyy HH:mm:ss
+				FormatTime	, TimeIdle	, % A_TimeIdle	, HH:mm:ss
+				FileAppend	, % Time ", " A_ScriptName ", " A_ComputerName ", " msg ", terminated due to a running process, " TimeIdle "`n"
+									, % Addendum.AddendumDir "\logs'n'data\OnExit-Protokoll.txt"
+
+			; Nutzer fragen
+				MsgBox, 4	, % RegExReplace(A_ScriptName, "\.[a-z]+$")
+								, % 	"Addendum ist gerade beschäftigt.`n"
+									. 	"Ein Abbruch könnte zu fehlerhaften Daten führen.`n"
+									.  	"Möchten Sie dennoch einen Neustart durchführen?"
+								, 10
+				IfMsgBox, No
+					Return
+				IfMsgBox, Timeout
+					Return
+
+		}
+
+	; Status des Infofenster sichern
+		;~ If Addendum.AddendumGui {
+			;~ admGui_SaveStatus()
+			;~ admGui_Destroy()
+		;~ }
+
+	; Programmdatum auf aktuelles Datum setzen
+		If (msg = "AutoRestart") && WinExist("ahk_class OptoAppClass")
+			AlbisSetzeProgrammDatum()
+
+		admScript	:= Addendum.Dir "\Module\Addendum\Addendum.ahk"
+		scriptPID 	:= DllCall("GetCurrentProcessId")
+		__          	:= q " " q                                             	; für bessere Lesbarkeit des Codes - ergibt > " " <
+
+	; Autohotkey.exe /f "Z:\Addendum für AlbisOnWindows\Addendum_Reload.ahk" "Z:\Addendum für AlbisOnWindows\Module\Addendum\Addendum.ahk" "1" "0x34A567" "9876" " 1"
+		cmdline := "Autohotkey.exe /f " q Addendum.Dir "\include\Addendum_Reload.ahk" __ admScript __ "1" __ A_ScriptHwnd __ scriptPID __ "1" q
+		Run, % cmdline
+		ExitApp
+
+return
+}
+ShowTextProtocol(FilePath)             	{                                                                          	;-- zeigt Textdateien im eingestellten Texteditor an
+	Run % FilePath
+}
+ZeigePatDB()                                    	{                                            		                   			;-- zeigt in einer eigenen Listview die Patienten.txt
+	For PatID, Pat in oPat
+		AutoListview("Pat.Nr.|Nachname|Vorname|Geburtsdatum|Geschlecht|Krankenkasse|letzte GVU", PatID "," Pat.Nn "," Pat.Vn "," Pat.Gt "," Pat.Gd "," Pat.KK "," Pat.letzteGVU, ",")
+}
+ZeigeFehlerProtokoll()                     	{                                                             					;-- das Skriptfehlerprotokoll wird angezeigt
+
+	filebasename    	:= Addendum.LogPath "\ErrorLogs\Fehlerprotokoll-"
+	thisMonthProtocol	:=  filebasename . A_MM . A_YYYY ".txt"
+	lastMonthProtocol	:=  filebasename (A_MM-1 = 0 ? "12" A_YYYY-1 : A_MM-1 . A_YYYY) ".txt"
+
+	If FileExist(thisMonthProtocol)
+		Run % thisMonthProtocol
+	else if FileExist(lastMonthProtocol)
+		Run % lastMonthProtocol
+	else
+		MsgBox, 1, % StrReplace(A_ScriptName, ".ahk"), % "Es wurden keine Fehler erfasst!"
+
+return
+
+	;~ thisMonth          	:= A_MM A_YYYY
+	;~ lastMonth          	:= (A_MM-1 = 0 ? "12" A_YYYY-1 : A_MM . A_YYYY)
+	;~ thisMonthProtocol	:=  filebasename thisMonth ".txt"
+	;~ lastMonthProtocol	:=  filebasename lastMonth ".txt"
+}
+NoNo()                                         	{                             	                                 				;-- Addendum "Über" Fenster
+
+	static UberPic, UberSN, UberEdit, UberOk, hUberText, hUber
+
+	;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	; Info Text
+	;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		D1 := "Addendum V" Version "  - The managing script -"
+		D2 =
+		(LTrim
+		Addendum für Albis on Windows
+		written by Ixiko - this version is from %vom%
+		---------------------------------------------------------------------------------
+		please report errors and suggestions to me: Ixiko@mailbox.org
+		use subject: 'Addendum' so that you don't end up in the spam folder
+		GNU Lizenz can be found in Docs directory  - 2017
+		)
+
+	UberW	:= 526
+	ul     	:= "__________________________________________________________________________________________________________________"
+
+	Betriebssystem := StrSplit(A_OsVersion, ".").1 " " (A_Is64bitOS=1 ? "64" : "32")
+	C .= "installierte Autohotkeyversion: " 	A_AhkVersion                                  	"`n"
+	C .= "Computer Name: "                   	A_ComputerName                        	"`n"
+	C .= "IP Adresse des Computer: "       	A_IPAddress1                                 	"`n"
+	C .= "Login Name: "                          	A_UserName                                 	"`n"
+	C .= "Nutzer hat Adminrechte: "         	(A_IsAdmin=1 ? "Ja" : "Nein")         	"`n"
+	C .= "Addendum Hauptverzeichnis: " 	Addendum.Dir                               	"`n"
+	C .= "Skript ist compiliert: "                	(A_IsCompiled=1 ? "Ja" : "Nein")    	"`n"
+	C .= "Skripthandle: "                         	A_ScriptHwnd                                	"`n"
+	C .= "Betriebssystem: Windows "         	Betriebssystem "-bit"                         	"`n"
+	C .= "Bildschirm-DPI: "                      	A_ScreenDPI                                  	"`n"
+	C .= "Bildschirmgröße in Pixel: "         	A_ScreenWidth "x" A_ScreenHeight 	"`n"
+	C .= "letzte Fehlernummer: "              	A_LastError
+
+	MaxLen := 0
+	Loop, Parse, C, `n
+		MaxLen := StrLen(A_LoopField) > MaxLen ? StrLen(A_LoopField) : MaxLen
+
+	B := "`n" D2 "`n" SubStr(ul, 1, MaxLen - 20) "`n" C
+
+	Gui Uber: New, -Caption +ToolWindow  0x94400000 HWNDhUber
+	Gui Uber: Color, c202842
+	Gui Uber: Margin, 0, 10
+
+	Gui Uber: Add, Picture, % "x" (Floor(UberW/2) - 250) " ym vUberPic", % Addendum.Dir "\assets\AddendumBigLogo.jpg"
+	GuiControlGet, UberPic, Uber: Pos
+
+	Gui Uber: Add, Progress, % "x13 y" (UberPicY+UberPicH+3) " w" (UberW-26) " -E0x00020000 h36 c5669ad" , 100
+
+	Gui Uber: Font, s18 q5 cWhite, Futura Bk Bt
+	Gui Uber: Add, Text, % "x0 y" ( UberPicY+UberPicH+5 ) " w" UberW " vUberSN BackgroundTrans Center", % D1
+	GuiControlGet, UberSN, Uber: Pos
+
+	Gui Uber: Font, s9 q5 cWhite, Futura Bk Bt
+	Gui Uber: Add, Edit, % "x0 y" ( UberPicY+UberPicH+40 ) " w" UberW " vUberEdit ReadOnly -WantCtrlA -WantReturn -Wrap -0x002000C0 +0x00000001 -E0x00000200 HWNDhUberText", % B
+	GuiControlGet, UberEdit, Uber: Pos
+
+	Gui Uber: Add, Progress, % "x13 y" ( UberEditY+UberEditH ) " w" (UberW-26) " -E0x00020000 h5 c5669ad" , 100
+
+	Gui Uber: Font, s10 q5 cWhite, Futura Bk Bt
+	Gui Uber: Add, Button, % "xs y" ( UberEditY+UberEditH+12 ) " vUberOk gUberEnde", Schließen
+	GuiControlGet, UberOk, Uber: Pos
+	GuiControl, Move, UberOk, % "x" ( (UberW//2) - (UberOkW//2) )
+
+	ControlFocus, %hUberText%
+	SendInput, ^{HOME}
+	ControlFocus, UberOk, ahk_id %hUber%
+	SendInput, {Left}
+
+	Gui Uber: Show, AutoSize, Addendum für Albis on Windows
+	DllCall("HideCaret","Int", hUberText)
+
+return
+
+UberEnde:
+	If (A_GuiControl="UberOk")
+			Gui Uber: Destroy
+return
+}
+AddendumObjektSpeichern()         	{                                                             					;-- speichert und zeigt das Addendum Objekt an
+
+	PraxTT("Speichere Addendum Objekt", "0 1")
+	JSONData.Save(A_Temp "\AddendumObjekt.json", Addendum, true,, 1, "UTF-8")
+	Run, % A_Temp "\AddendumObjekt.json"
+	PraxTT("", "Off")
+
+}
+scriptVars:                                        	;{                                                                         	;-- zeigt die Variablen des AddendumSkriptes
+	ListVars
+return ;}
+
+; ----------------------------------------- Tray Menu Programmstarter
+ModulStarter:                                 	;{                                                                            	;-- startet Module vom Tray-Menu
+	If RegExMatch(modul[A_ThisMenuItem], "\.exe$")
+		RunExe(modul[A_ThisMenuItem])
+	Else if RegExMatch(modul[A_ThisMenuItem], "\.ahk$")
+		RunSkript(modul[A_ThisMenuItem])
+return ;}
+ToolStarter:                                   	;{                                                                            	;-- startet Tools vom Tray-Menu
+	If InStr(A_ThisMenuItem, "Windows komplett neu starten")
+		Run, Shutdown -g -t 0
+	else if RegExMatch(tool[A_ThisMenuItem], "\.exe")
+		Run, % tool[A_ThisMenuItem]
+	else
+		RunSkript(tool[A_ThisMenuItem])
+return ;}
+
+; ----------------------------------------- Funktionen ein- oder ausstellen
+Menu_AlbisAutoPosition:                   	;{
+	Addendum.AlbisLocationChange := !Addendum.AlbisLocationChange
+	Menu, SubMenu31, ToggleCheck, % "Albis AutoSize"
+	IniWrite, % (Addendum.AlbisLocationChange ? "ja":"nein")	, % Addendum.Ini, % compname, % "Albis_AutoGroesse"
+return
+;}
+Menu_Wartezimmer_AutoDelete:    	;{
+	Addendum.AutoDelete := !Addendum.AutoDelete
+	Menu, SubMenu36, ToggleCheck, % "schnelles Löschen im Wartezimmer"
+	IniWrite, % (Addendum.AutoDelete ? "ja":"nein")  	, % Addendum.Ini, % "Addendum", % "Wartezimmer_loeschen_bestaetigen"
+return ;}
+Menu_Schnellrezept:                      	;{
+	Addendum.Schnellrezept := !Addendum.Schnellrezept
+	Menu, SubMenu36, ToggleCheck, % "Schnellrezept"
+	IniWrite, % (Addendum.Schnellrezept ? "ja":"nein")  	, % Addendum.Ini, % "Addendum", % "Schnellrezept"
+return ;}
+Menu_AddendumGui:                    	;{ Infofenster
+	Addendum.AddendumGui := !Addendum.AddendumGui
+	Menu, SubMenu32, ToggleCheck, % "Addendum"
+	IniWrite, % (Addendum.AddendumGui ? "ja":"nein"), % Addendum.Ini, % compname, % "Infofenster_anzeigen"
+	If Addendum.AddendumGui {
+		Menu, SubMenu32, Add, % "Einzelbestätigung für Importvorgänge"		     			, Menu_Einzelbestaetigung
+		Menu, SubMenu32, % (Addendum.iWin.ConfirmImport	? "Check":"UnCheck")	, % "Einzelbestätigung für Importvorgänge"
+		Menu, SubMenu32, Add, % "Autozuweisung Wartezimmer"	                        		, Menu_AutoWZ
+		Menu, SubMenu32, % (Addendum.iWin.AutoWZ         	? "Check":"UnCheck")	, % "Autozuweisung Wartezimmer"
+		Menu, SubMenu32, Add, % "Abrechnungshelfer"		     	                             		, Menu_Abrechnungshelfer
+		Menu, SubMenu32, % (Addendum.iWin.AbrHelfer       	? "Check":"UnCheck")	, % "Abrechnungshelfer"
+		If RegExMatch((Addendum.AktiveAnzeige := AlbisGetActiveWindowType()), "i)(Karteikarte|Laborblatt|Biometriedaten)")
+			AddendumGui()
+	} else {
+		Menu, SubMenu32, Delete, % "Einzelbestätigung für Importvorgänge"
+		Menu, SubMenu32, Delete, % "Autozuweisung Wartezimmer"
+		Menu, SubMenu32, Delete, % "Abrechnungshelfer"
+		Controls("", "reset", "")
+		If Controls("", "ControlFind, AddendumGui, AutoHotkeyGUI, return hwnd", "ahk_class OptoAppClass") {
+			admGui_SaveStatus()
+			admGui_Destroy()
+		}
+	}
+return ;}
+Menu_Einzelbestaetigung:               	;{ Infofenster
+	Addendum.iWin.ConfirmImport := !Addendum.iWin.ConfirmImport
+	Menu, SubMenu32, ToggleCheck, % "Einzelbestätigung für Importvorgänge"
+	IniWrite, % (Addendum.iWin.ConfirmImport 	? "ja":"nein"), % Addendum.Ini, % compname	, % "Infofenster_Import_Einzelbestaetigung"
+return ;}
+Menu_AutoWZ:                             	;{ Infofenster
+	Addendum.iWin.AutoWZ := !Addendum.iWin.AutoWZ
+	Menu, SubMenu32, ToggleCheck, % "Autozuweisung Wartezimmer"
+	IniWrite, % (Addendum.iWin.AutoWZ	? "ja":"nein"), % Addendum.Ini, % "Infofenster"	, % "AutoWZ"
+return ;}
+Menu_Abrechnungshelfer:              	;{ Infofenster
+	Addendum.iWin.AbrHelfer := !Addendum.iWin.AbrHelfer
+	Menu, SubMenu32, ToggleCheck, % "Abrechnungshelfer anzeigen"
+	IniWrite, % (Addendum.iWin.AbrHelfer      	? "ja":"nein"), % Addendum.Ini, % compname  	, % "Infofenster_Abrechnungshelfer"
+return ;}
+Menu_GVUAutomation:                    	;{
+	Addendum.GVUAutomation := !Addendum.GVUAutomation
+	Menu, SubMenu36, ToggleCheck, % "GVU automatisieren"
+	IniWrite, % (Addendum.GVUAutomation ? "ja":"nein")        	, % Addendum.Ini, % compname, % "GVU_automatisieren"
+return
+;}
+Menu_PDFSignatureAutomation:      	;{ FoxitReader
+
+	; Menupunkt umschalten, Einstellung speichern
+		Addendum.PDFSignieren := !Addendum.PDFSignieren
+		Menu, SubMenu37, ToggleCheck, % "Signaturhilfe"
+		IniWrite, % (Addendum.PDFSignieren ? "ja":"nein")          	, % Addendum.Ini, % compname, % "FoxitPdfSignature_automatisieren"
+
+	; weitere Funktionen an- oder abschalten
+		If Addendum.PdfSignieren {
+
+			; Hotkey Funktion einschalten
+				;func_FRSignature := Func("FoxitReader_SignaturSetzen")
+				Hotkey, IfWinActive, % "ahk_class classFoxitReader"
+				Hotkey, % Addendum.PDFSignieren_Kuerzel, % Func("FoxitReader_SignaturSetzen")
+				Hotkey, IfWinActive
+
+			; AutoCloseTab - Tray Menu - anschalten
+				Menu, SubMenu37, Enable, % "signiertes Dokument schliessen"
+				Menu, SubMenu37, % (Addendum.AutoCloseFoxitTab ? "Check" : "UnCheck")  , % "signiertes Dokument schliessen"
+
+		} else {
+
+			; Hotkey Funktion ausschalten
+				Hotkey, % Addendum.PDFSignieren_Kuerzel, Off
+
+			; AutoCloseTab - Tray Menu - ausschalten
+				Menu, SubMenu37, Disable, % "signiertes Dokument schliessen"
+
+		}
+
+return ;}
+Menu_PDFSignatureAutoTabClose:	;{ FoxitReader
+	Addendum.AutoCloseFoxitTab := !Addendum.AutoCloseFoxitTab
+	Menu, SubMenu37, ToggleCheck, % "signiertes Dokument schliessen"
+	IniWrite, % (Addendum.AutoCloseFoxitTab ? "ja":"nein") 	, % Addendum.Ini, % compname, % "FoxitTabSchliessenNachSignierung"
+return ;}
+Menu_LaborAbrufManuell:               	;{
+	Addendum.Labor.AutoAbruf := !Addendum.Labor.AutoAbruf
+	Menu, SubMenu34, ToggleCheck, % "Laborabruf"
+	IniWrite, % (Addendum.Labor.AutoAbruf ? "ja":"nein")   	, % Addendum.Ini, % compname, % "Laborabruf_automatisieren"
+return ;}
+Menu_LaborImportManuell:              	;{
+	Addendum.Labor.AutoImport := !Addendum.Labor.AutoImport
+	Menu, SubMenu34, ToggleCheck, % "Laborimport"
+	IniWrite, % (Addendum.Labor.AutoImport ? "ja":"nein")   	, % Addendum.Ini, % compname, % "Laborimport_automatisieren"
+return ;}
+Menu_LaborAbrufTimer:                  	;{
+	Addendum.Labor.AbrufTimer := !Addendum.Labor.AbrufTimer
+	Menu, SubMenu34, ToggleCheck, % "zeitgesteuerter Abruf"
+	IniWrite, % (Addendum.Labor.AbrufTimer ? "Ja":"Nein")   	, % Addendum.Ini, % compname, % "Laborabruf_Timer"
+	If Addendum.Labor.AbrufTimer && !Addendum.Labor.AutoAbruf  {
+		Addendum.Labor.AutoAbruf := !Addendum.Labor.AutoAbruf
+		Menu, SubMenu34, ToggleCheck, % "Laborabruf"
+		IniWrite, % "ja", % Addendum.Ini, % compname, % "Laborabruf_automatisieren"
+	}
+return ;}
+Menu_AddendumToolbar:             	;{
+	Addendum.ToolbarThread := !Addendum.ToolbarThread
+	Menu, SubMenu36, ToggleCheck, % "Addendum Toolbar"
+	IniWrite, % (Addendum.ToolbarThread ? "ja":"nein"), % Addendum.Ini, % compname, % "Addendum_Toolbar"
+	admThreads()                                                                             ; startet oder stoppt die Ausführung von Threadcode
+return ;}
+Menu_mDicom:                              	;{
+	Addendum.mDicom := !Addendum.mDicom
+	Menu, SubMenu3, ToggleCheck, % "MicroDicom Export"
+	IniWrite, % (Addendum.mDicom ? "Ja":"Nein")         	, % Addendum.Ini, % compname, % "MicroDicomExport_automatisieren"
+return ;}
+Menu_PopUpMenu:                          	;{
+	Addendum.PopUpMenu := !Addendum.PopUpMenu
+	Menu, SubMenu36, ToggleCheck, % "PopUpMenu"
+	IniWrite, % (Addendum.PopUpMenu ? "ja":"nein") 	, % Addendum.Ini, % compname, % "PopUpMenu"
+
+	; PopUpMenu wird neugestartet
+	If Addendum.PopUpMenu {
+		Addendum.Hooks[4] := AlbisPopUpMenuHook(AlbisPID())
+		PraxTT("PopUpMenu Funktion - gestartet", "3 0")
+	}
+	else { ; oder auch beendetm wenn Nutzer diese nicht braucht
+		If IsObject(Addendum.Hooks[4]) {
+			UnhookWinEvent(Addendum.Hooks[4].hEvH, Addendum.Hooks[4].HPA)
+			Addendum.Hooks[4] := ""
+			Addendum.PopUpMenuCallback := ""
+			PraxTT("PopUpMenu Funktion - beendet", "3 0")
+		}
+		else
+			PraxTT("PopUpMenu Funktion - war nicht gestartet`nund konnte deshalb nicht beendet werden.", "3 0")
+	}
+return ;}
+Menu_AutoSize:                             	;{
+	; 0 = keines , 1 = 2k , 2 = 4k , 3 = 2k & 4k ..... "2k:nein,4k:nein"
+	Menu, SubMenu31, ToggleCheck, % A_ThisMenuItem
+	IniWrite, % (xset := GetSetAutoPosString(A_ThisMenuItem)), % Addendum.Ini, % compname, % "AutoPos_" A_ThisMenu
+return
+GetSetAutoPosString(appname) {                                ;-- wandelt die binär gespeicherte AutoPos Einstellung in lesbaren Text um
+
+	ap := Addendum.Windows[appname].AutoPos
+	ms := Addendum.MonSize
+	If (ms = 2) {
+		do1 := 0x1	& ap
+		do2 := ms	& ap ? 0x0 : 0x2
+	} else {
+		do1 := ms	& ap ? 0x0 : 0x1
+		do2 := 0x2	& ap
+	}
+
+	Addendum.Windows[appname].AutoPos := do1 + do2
+
+return "2k:" (do1 ? "ja":"nein") ",4k:" (do2 ? "ja":"nein")
+}  ;}
+Menu_AutoOCR:                            	;{
+	Addendum.OCR.AutoOCR := !Addendum.OCR.AutoOCR
+	Menu, SubMenu33, ToggleCheck, % "AutoOCR"
+	IniWrite, % (Addendum.OCR.AutoOCR ? "ja":"nein"), % Addendum.Ini, % "OCR", % "AutoOCR"
+;}
+Menu_WatchFolder:                        	;{
+	Addendum.OCR.WatchFolder := !Addendum.OCR.WatchFolder
+	Menu, SubMenu33, ToggleCheck, % "Befundordner überwachen"
+	IniWrite, % (Addendum.OCR.WatchFolder ? "ja":"nein"), % Addendum.Ini, % compname, % "BefundOrdner_ueberwachen"
+	If !Addendum.OCR.WatchFolder {
+		WatchFolder("**End", 0)
+		Addendum.OCR.WatchFolderStatus := "off"
+		PraxTT("Überwachung des Befundordner angehalten", "2 1")
+	}
+	else {
+		WatchFolder(Addendum.BefundOrdner, "admGui_FolderWatch", False, (1+2+8+64))
+		Addendum.OCR.WatchFolderStatus := "running"
+		PraxTT("Überwachung des Befundordner gestartet", "2 1")
+	}
+;}
+Menu_Laborjournalanzeige:           	;{
+	Addendum.Laborjournal.AutoView := !Addendum.Laborjournal.AutoView
+	Menu, SubMenu35, ToggleCheck, % "Täglich anzeigen"
+	IniWrite, % (Addendum.Laborjournal.AutoView ? "Ja":"Nein")   	, % Addendum.Ini, % compname, % "Laborjournal_AutoAnzeige"
+	If Addendum.Laborjournal.AutoView && !Addendum.Laborjournal.StartTime
+		gosub Menu_LaborjournalStartzeit
+return ;}
+Menu_LaborjournalStartzeit:             	;{
+
+return ;}
+Menu_FaxMailManager:                 	;{
+	Addendum.Mail.FaxMail := !Addendum.Mail.FaxMail
+	Menu, SubMenu38, ToggleCheck, % "Outlook FaxMailManager"
+	IniWrite, % (Addendum.OCR.AutoOCR ? "ja":"nein"), % Addendum.Ini, % "OCR", % "AutoOCR"
+return ;}
+;}
+
+;{12. Allgemeine Funktionen
+
+;Infofenster
+Splash(string, time=4, x="", y="", w="", ParentHWnd=0) {                         					;-- Splash Gui - to show text for some seconds
+
+	static hsp
+
+	CoordMode, Mouse, Screen
+	CoordMode, Caret, Screen
+
+	If !x {
+		Lmx:= A_CaretX, Lmy:= A_CaretY
+		If !Lmx or !Lmy
+			MouseGetPos, Lmx, Lmy
+		Lmy -= 10
+	}	else {
+		Lmx := x, Lmy := y, Lmw := w
+	}
+
+	Lc := StrSplit(string, "`n").MaxIndex()
+	Lc := Lc > 4 ? 4 : Lc
+	FSize := 10
+	mx := 8
+	my := 5
+
+	; build gui
+	Gui sp: New  	, % "-SysMenu -Caption +ToolWindow " (ParentHWnd = 0 ? "AlwaysOnTop" : "+Parent" ParentHwnd) " +HWNDhsp"
+	Gui sp: Font  	, % "s" FSize "  q5 cWhite bold", Futura Bk Md
+	Gui sp: Color	, cC57773
+	Gui sp: Margin	, % mx, % my
+	Gui sp: Add   	, Text, % "xm ym" (Lmw ? " w" Lmw-2*mx :"") " R" Lc " Center BackgroundTrans hSplashText" , % string
+	Gui sp: Show	, % "x" Lmx " y" (Lmy - FSize*(Lc) - 5 ) . (Lmw ? " w" Lmw :"") " Hide NA" , Addendum Splash
+
+	; form a rounded rectangle
+	SP := GetWindowSpot(hsp)
+	WinSet, Region, % "0-0 w" (SP.W) " h" (SP.H) " R20-20", % "ahk_id " hsp
+	DllCall("AnimateWindow", "UInt",hSp, "Int",500, "UInt",0x80000)
+
+	; close with delay
+	SetTimer, SPClosePopup, % "-" (time*1000)
+
+return
+
+SPClosePopup:
+	DllCall("AnimateWindow", "UInt",hSp, "Int",500, "UInt",0x90000)
+	Gui sp: Destroy
+return
+
+}
+GDISplash(text, time=2, SplashPos="", SplashOpt="") {                                              	;-- Hinweisfenster
+
+		static hGdiSp, GdiSp
+
+		If !IsObject(SplashOpt)
+			hFont := CreateFont("y5 Centre cff000000 q5 s16, " Addendum.Standard.Font), bgColor := "0x778fA2ff"
+		else
+			hFont := CreateFont(SplashOpt.FontStyle ", " SplashOpt.Font), bgColor := SplashOpt.bgColor
+
+		If !IsObject(SplashPos) {
+			cx := A_CaretX , cy := A_CaretY - 35
+			If (!cx or !cy) {
+				MouseGetPos, cx, cy
+				cy += 20
+			}
+		}
+		else
+			cx := SplashPos.X, cy := SplashPos.Y
+
+		Gui, GdiSp: New, -Caption -SysMenu -DPIScale +ToolWindow +E0x80000 +HwndhGdiSp
+
+		GetFontTextDimension(hFont, Text, Width, Height ,1)
+		Width	:= Floor(Width // 1.35)
+		Height	:= Floor(Height // 1.15)
+		hbm 	:= CreateDIBSection(Width, Height)
+		hdc 		:= CreateCompatibleDC()
+		obm 	:= SelectObject(hdc, hbm)
+		G 		:= Gdip_GraphicsFromHDC(hdc)
+
+		Gdip_SetSmoothingMode(G, 4)
+		pBrush 	:= Gdip_BrushCreateSolid(bgColor)
+
+		Gdip_FillRoundedRectangle(G, pBrush, 0, 0, Width, Height, 5)
+		Gdip_TextToGraphics(G, text, Options, Font, Width, Height)
+		UpdateLayeredWindow(hGdiSp, hdc, cx, cy, Width, Height)
+
+		Gdip_DeleteBrush(pBrush), DeleteObject(hbm), DeleteDC(hdc), Gdip_DeleteGraphics(G)
+		Gui, GdiSp: Show, % "x" cx " y" cy " NA", GdiSp
+
+		SetTimer, GDISplashOff, % -1 * (time*1000)
+
+return hGdiSp
+
+GDISplashOff:
+		Gui, GdiSp: Destroy
+return
+}
+Tooltip(content, wait:=2) {
+	Splash(content, wait)
+}
+
+;Text senden
+SendRawFast(string, cmd="") {                                                                                   	;-- sendet eine String
+
+	; Parameter: go - L, R, U, D - stehen für Left, Right, Up, Down, nach diesen kann eine Zahl für die Anzahl der Tastendrücke stehen
+
+	Splash(string (cmd ? " [" cmd "]" : ""), 1)
+	RegExMatch(cmd, "i)(?<go>[LRUD]|(Enter))\s*(?<do>\d+)*", k)
+
+	SendRaw	, % string
+	SendInput	, % (	kgo="L"    	? "{Left "
+						: 	kgo="R"    	? "{Right "
+						: 	kgo="U"   	? "{Up "
+						: 	kgo="D"   	? "{Down "
+						: 	kgo="Enter"	? "{Enter "
+						:  	"")
+					. 	kdo "}"
+
+}
+SendAlternately(chars:="/* | */") {                                                                              	;-- sendet alternierend Zeichen
+
+	static alternating:= []
+
+	SendRaw, % ""
+
+	Loop, % alternating.MaxIndex()
+		If (alternating[A_Index] = chars) 	{
+			txt := StrSplit(chars, "|").2
+			SendRaw, % ""
+			SendRaw, % txt
+			alternating.RemoveAt(A_Index)
+			return
+		}
+ ;
+	txt := StrSplit(chars, "|").1
+	SendRaw, % ""
+	SendRaw, % txt
+	alternating.Push(chars)
+
+}
+
+;verschiedenes
+SciTEFoldAll() {                                                                                                            	;-- gesamten Code zusammenfalten
+	ControlGet, hScintilla1, hwnd,, Scintilla1, % "ahk_class SciTEWindow"
+	Sleep 300
+	SendMessage, 2662,,,, % "ahk_id " hScintilla1 ; SCI_FOLDALL
+}
+RunExe(exePath) {                                                                                                        	;-- startet eine ausführbare Datei
+
+	SplitPath, exePath, filename, filepath
+	If !FileExist(exepath) {
+		PraxTT("Das Modul: " filename "`nim Pfad:`n" filepath "`nist nicht vorhanden!", "6 3")
+		return 0
+	}
+
+	Run, % exepath, % filepath, ModulPID
+
+return ModulPID
+}
+RunSkript(modulpath) {                                                                                              	;-- startet oder beendet Autohotkeyskripte
+
+	AddendumDir := Addendum.Dir
+	SplitPath, modulpath, filename, filepath
+	If !FileExist(modulpath) {
+		PraxTT("Das Modul: " filename "`nim Pfad:`n" filepath "`nist nicht vorhanden!", "6 3")
+		return 0
+	}
+
+	filename := StrReplace(filename, ".ahk")
+
+	If (PID := ScriptIsRunning(filename))  {
+		MsgBox, 0x1004, Addendum für Albis on Windows, % "Das Modul '" filename "' ist schon gestartet!`nMöchten Sie das Modul stattdessen beenden?"
+		IfMsgBox, Yes
+		{
+		   	; sendet exitapp-Befehl als 1.Versuch ; Exitapp 65405
+				PostMessage, 0x111, 65405,,, % "ahk_pid " PID
+				Process, WaitClose, % PID, 6
+				Process, Exist , % PID
+				If ErrorLevel {
+					PostMessage, 0x111, 65405,,, % "ahk_pid " PID
+					Process, WaitClose, % PID, 6
+				}
+
+		   	; gnadenloses Beenden, weil sich der Prozeß aufgehängt hat. Das war auch der Grund den Modulstarter um diese Fähigkeit zu erweitern!
+				If !ErrorLevel	{
+					Process, Close		, % PID
+					Process, WaitClose, % PID, 4
+					If !ErrorLevel
+                           	MsgBox, 1, Addendum für Albis on Windows, % "Das Modul '" filename "' konnte nicht beendet werden!"
+				}
+		}
+		return
+	}
+
+	If !RegExMatch(modulpath, "^[A-Z]\:\\")
+		Run, Autohotkey.exe "%AddendumDir%\%modulpath%",, ModulPID
+	else
+		Run, Autohotkey.exe "%modulpath%",, ModulPID
+
+return ModulPID
+}
 GetPatNameFromExplorer() {                                                                                     	;-- ermittelt aus pdf Dateibezeichnung den Namen, öffnet die KK
 	; Voraussetzung: der Patient ist in der Addendum Patientendatenbank gelistet, ansonsten passiert nichts
 		SplitPath, % Explorer_GetSelected(WinExist("A")),,,, fname
 		FuzzyKarteikarte(fname)
 }
+CorrectWinPos(hWin, wPos) {                                                                                        	;-- Fenster an eine bestimmte Position verschieben
 
+	; prüft das ein Object übergeben wurde und gültige Werte/Schlüsselnamen enthält
+		If !IsObject(wPos)
+			return
+
+	; Einstellungen prüfen
+		w := GetWindowSpot(hWin)
+
+		switch wPos.X		{
+
+			case "-":
+				wPos.X := w.X
+
+			case "L":
+				wPos.X := 0
+				wPos.Y := 0
+
+			case "R":
+				wPos.X := A_ScreenWidth	- wPos.W
+
+			case "B":
+				wPos.X := 0
+				wPos.Y := A_ScreenHeight	- wPos.H - 30 ; genaue Höhe der Taskbar und ob überhaupt am unteren Bildschirmrand!
+
+			case "T":
+				wPos.X := 0
+				wPos.Y := 0
+		}
+
+		switch wPos.Y		{
+			case "-":
+				wPos.Y := w.Y
+		}
+
+		switch wPos.W		{
+			case "F":
+				wPos.W := A_ScreenWidth
+		}
+
+		switch wPos.H		{
+			case "F":
+				wPos.H := A_ScreenHeight
+		}
+
+	; Fenster versetzen
+		If (w.X != wPos.X) || (w.Y != wPos.Y) || (w.W != wPos.W) || (w.H != wPos.H)
+			SetWindowPos(hWin, wPos.X, wPos.Y, wPos.W, wPos.H)
+
+}
 
 ; Laborabruf
 LaborAbrufCheck() {                                                                                                   	;-- prüft Bedingungen vor der Ausführung des Timers
@@ -4475,7 +5124,6 @@ LaborjournalTimer(nextstart:="") {                                              
 	;
 	; letzte Änderung 14.09.2021
 
-
 	; Variablen
 		func_Lbjrnal	:= Func("LaborjournalStart")
 		ANow         	:= A_Hour A_Min A_Sec
@@ -4521,7 +5169,7 @@ LaborjournalTimer(nextstart:="") {                                              
 			diffTime := (GetSeconds(235959) - GetSeconds(ANow)) + GetSeconds(nextstart)
 
 	; Func-Timer starten
-		SciTEOutput("Start d. Laborjournal in: " diffTime "s")
+		;SciTEOutput("Start d. Laborjournal in: " diffTime "s")
 		SetTimer, % func_Lbjrnal, % -1*(diffTime*1000)
 
 }
@@ -4668,7 +5316,7 @@ return
 
 ;}
 
-;{14. EventHooks - alle Funktionen und Labels
+;{14. EventHooks
 
 ;                         ---------------------------------------------------------------------------------------------------------------------------------
 ;                       	 AUF DIESEN FUNKTIONEN BERUHEN DIE WICHTIGSTEN VORGENOMMENEN AUTOMATISIERUNGEN
@@ -4684,17 +5332,20 @@ InitializeWinEventHooks() {                                                     
 		; EVENT_OBJECT_DESTROY              	:= 0x8001
 		; EVENT_OBJECT_SHOW                   	:= 0x8002
 		; EVENT_OBJECT_HIDE                     	:= 0x8003
-		; EVENT_OBJECT_REORDER              	:= 0x8004	; A container object has added,removed,or reordered its children. (header control, list-view, toolbar control, and window object - !z-order!)
-		; EVENT_OBJECT_FOCUS                 	:= 0x8005	; An object has received the keyboard focus. elements: listview,menubar, popup menu,switch window, tabcontrol, treeview, and window object.
-		; EVENT_OBJECT_INVOKED              	:= 0x8013	; An object has been invoked; for example, the user has clicked a button.
-		; EVENT_OBJECT_NAMECHANGE     	:= 0x800C   ; An object's name has changed - like a title bar
-		; EVENT_OBJECT_VALUECHANGE     	:= 0x800E	; An object's Value property has changed.  edit, header, hot key, progress bar, slider, and up-down, scrollbar
+		; EVENT_OBJECT_REORDER              	:= 0x8004	; 	A container object has added,removed,or reordered its children.
+																							(header control, list-view, toolbar control, and window object - !z-order!)
+		; EVENT_OBJECT_FOCUS                 	:= 0x8005	; 	An object has received the keyboard focus. elements: listview,menubar, popup menu,switch window,
+																							tabcontrol, treeview, and window object.
+		; EVENT_OBJECT_INVOKED              	:= 0x8013	; 	An object has been invoked; for example, the user has clicked a button.
+		; EVENT_OBJECT_NAMECHANGE     	:= 0x800C   ; 	An object's name has changed - like a title bar
+		; EVENT_OBJECT_VALUECHANGE     	:= 0x800E	; 	An object's Value property has changed.  edit, header, hot key, progress bar, slider, and up-down, scrollbar
 
-		; EVENT_SYSTEM_CAPTUREEND        	:= 0x0009	; A window has lost mouse capture.
-		; EVENT_SYSTEM_CAPTURESTART      	:= 0x0008	; A window has received mouse capture. This event is sent by the system, never by servers.
-		; EVENT_SYSTEM_DIALOGEND          	:= 0x0011	; A dialog box has been closed.
-		; EVENT_SYSTEM_DIALOGSTART        	:= 0x0010	; A dialog box has been displayed.
-		; EVENT_SYSTEM_FOREGROUND      	:= 0x0003	; The foreground window has changed. The system sends this event even if the foreground window has changed to another window in the same
+		; EVENT_SYSTEM_CAPTUREEND        	:= 0x0009	; 	A window has lost mouse capture.
+		; EVENT_SYSTEM_CAPTURESTART      	:= 0x0008	; 	A window has received mouse capture. This event is sent by the system, never by servers.
+		; EVENT_SYSTEM_DIALOGEND          	:= 0x0011	; 	A dialog box has been closed.
+		; EVENT_SYSTEM_DIALOGSTART        	:= 0x0010	; 	A dialog box has been displayed.
+		; EVENT_SYSTEM_FOREGROUND      	:= 0x0003	; 	The foreground window has changed. The system sends this event even if the foreground window has
+																							changed to another window in the same
 
 		; EVENT_SYSTEM_MENUSTART           	:= 0x0004
 		; EVENT_SYSTEM_MENUPOPUPSTART 	:= 0x0006	; context menu was opened
@@ -4715,18 +5366,6 @@ InitializeWinEventHooks() {                                                     
 		hWinEventHook     	:= SetWinEventHook( 0x8004, 0x8004, 0, HookProcAdr, 0, 0, EVENT_SKIPOWNTHREAD | EVENT_SKIPOWNPROCESS )
 		Addendum.Hooks[1]	:= {"HPA": HookProcAdr, "hWinEventHook": hWinEventHook}
 
-	/* Shellhook für neue Programmfenster - es werden nur Fenster der obersten Ebene (top-level-windows) erkannt ...
-
-			Damit kann ich WinEvent Hooks, die nur Albis überwachen, realisieren. Wird Albis geschlossen, weil es z.B. neugestartet werden muss, wird der momentan aktive WinEvent Hook beendet.
-			Der Shell Hook wartet auf einen neuen Albisprozeß und startet nach Erscheinen des Albisfenster einen neuen Hook. Ohne diese kleinen Umweg würde der alte Hook weiter existieren und
-			die Automatisierungsfunktionen würden nicht aufgerufen.
-
-			Warum nur einen Hook auf Albis?
-			Autohotkey ist eine Skriptsprache. Diese ist schnell, aber bei weitem nicht so schnell wie eine kompilierbare Programmiersprache wie C++.
-			Können Eventnachrichten nicht schnell genug abgearbeitet werden, entgehen sie der Erkennung und es die programmierten Automatisierungen starten nicht.
-
-	*/
-
 	; der ShellHook benötigt ein dummy Gui an das die Ereignisse (Events) geschickt werden
 		Gui, AMsg: New	, +HWNDhMsgGui +ToolWindow
 		Gui, AMsg: Add	, Edit, xm ym w100 h100 HWNDhEditMsgGui
@@ -4739,7 +5378,7 @@ InitializeWinEventHooks() {                                                     
 		MsgNum := DllCall("RegisterWindowMessage", Str, "SHELLHOOK")
 		OnMessage(MsgNum, "ShellHookProc")
 
-	; startet weitere Hooks die nur auf Ereignisse vom Albisprozess reagieren
+	; startet weitere Hooks die nur auf Ereignisse des Albisprozess reagieren
 		AlbisStartHooks()
 
 	; Eingabe Focus Hook für andere Programme (Autovervollständigung)
@@ -4782,7 +5421,7 @@ AlbisStartHooks() {                                                             
 
 }
 
-AlbisStopHooks() {                                                                                                         	; beendet alles bestehenden ALBIS Hooks, wenn kein Albisprozeß mehr vorhanden ist
+AlbisStopHooks() {                                                                                                         	; beendet ALBIS Hooks, wenn kein Albis geschlossen wurde
 
 		local idx
 
@@ -4820,7 +5459,7 @@ AlbisPopUpMenuHook(AlbisPID) {                                                  
 return {"HPA": HookProcAdr, "hEvH": hWinEventHook}
 }
 
-AlbisFocusHook(AlbisPID) {                                                                                            	; Hook ausschließlich für EVENT_OBJECT_FOCUS Nachrichten wird gestartet
+AlbisFocusHook(AlbisPID) {                                                                                            	; Hook für EVENT_OBJECT_FOCUS (nur Albis)
 
 	; benötigt um Änderung des Eingabefocus innerhalb von Albis zu erkennen
 	; z.B. für eine leider noch funktionierende Autovervollständigungsfunktion
@@ -4832,7 +5471,7 @@ AlbisFocusHook(AlbisPID) {                                                      
 return {"HPA": HookProcAdr, "hEvH": hWinEventHook}
 }
 
-AlbisLocationChangeHook(AlbisPID) {                                                                            	; Hook ausschließlich für EVENT_OBJECT_LOCATIONCHANGE Nachrichten wird gestartet
+AlbisLocationChangeHook(AlbisPID) {                                                                            	; Hook für EVENT_OBJECT_LOCATIONCHANGE (nur Albis)
 
 	static EVENT_OBJECT_LOCATIONCHANGE	:= 0x800B
 	static EVENT_OBJECT_REORDER                	:= 0x8004
@@ -4850,7 +5489,7 @@ AlbisLocationChangeHook(AlbisPID) {                                             
 return {"HPA": HookProcAdr, "hEvH": hWinEventHook}
 }
 
-GetActiveFocusHook() {                                                                                                 	; Hook der bei jeder Änderung des Eingabefokus aktiv wird
+GetActiveFocusHook() {                                                                                                 	; Hook für EVENT_OBJECT_FOCUS (alle anderen Prozesse)
 
 	HookProcAdr   	:= RegisterCallback("ActiveFocusEventProc", "F")
 	hWinEventHook	:= SetWinEventHook( 0x8005, 0x8005, 0, HookProcAdr, 0, 0, 0x0003)
@@ -4861,7 +5500,7 @@ return {"HPA": HookProcAdr, "hEvH": hWinEventHook}
 
 
 ; ----------------------- Verarbeitung abgefangener Systemmeldungen (EventProcs)
-WinEventProc(hHook, event, hwnd, idObject, idChild, eventThread, eventTime) {              	; zum Abfangen bestimmter Fensterklassen
+WinEventProc(hHook, event, hwnd, idObject, idChild, eventThread, eventTime) {              	; Hook für bestimmte Fenster/Prozesse
 
 		static class_filter	:= [ "OptoAppClass", "#32770", "Teamviewer", "WindowsForms10.Window"
 									,  "Qt5QWindowIcon", "AutohotkeyGui", "SciTEWindow"
@@ -4916,7 +5555,7 @@ WinEventProc(hHook, event, hwnd, idObject, idChild, eventThread, eventTime) {   
 
 			}
 
-	; Callback für
+	; Callback für PDF Funktionen
 		If (StrLen(Addendum.FuncCallback) > 0) {
 			For idx, viewerclass in PDFViewer
 				If InStr(cClass, viewerclass) {
@@ -4945,7 +5584,7 @@ WinEventProc(hHook, event, hwnd, idObject, idChild, eventThread, eventTime) {   
 return 0
 }
 
-AlbisPopUpMenuProc(hHook, event, hwnd) {                                                                   	; eigene Menupunkte in Albiskontextmenu's unterbringen
+AlbisPopUpMenuProc(hHook, event, hwnd) {                                                                   	; weitere Menupunkte für das Albiskontextmenu
 
 	; alle anderen Funktionen für Aufrufe finden sich in %AddendumDir%\Module\Addendum\include\Addendum_PopUpMenu.ahk
 
@@ -4958,18 +5597,13 @@ AlbisPopUpMenuProc(hHook, event, hwnd) {                                        
 
 }
 
-AlbisFocusEventProc(hHook, event, hwnd) {                                                                    	; behandelt EVENT_OJECT_FOCUS Nachrichten von Albis
+AlbisFocusEventProc(hHook, event, hwnd) {                                                                    	; Handler EVENT_OJECT_FOCUS Nachrichten Albis
 
 	If !GetDec(hwnd)
 		return 0
 
 	fn_PatChange := Func("CurrPatientChange").Bind(AlbisGetActiveWinTitle())
 	SetTimer, % fn_PatChange, -0
-
-	;~ If Addendum.IamTheBoss  {
-		;~ fn_FEGui := Func("FEGui").Bind(hwnd)
-		;~ SetTimer, % fn_FEGui, -500
-	;~ }
 
 	If WinActive("ahk_class OptoAppClass") && (habrAssist := WinExist("Abrechnungsassistent ahk_class AutoHotkeyGui"))
 		If GetNextWindow(habrAssist, 3)
@@ -4978,7 +5612,7 @@ AlbisFocusEventProc(hHook, event, hwnd) {                                       
 return 0
 }
 
-AlbisLocationChangeEventProc(hHook, event, hwnd) {                                                    	; behandelt EVENT_OBJECT_LOCATIONCHANGE Nachrichten von Albis
+AlbisLocationChangeEventProc(hHook, event, hwnd) {                                                    	; Handler EVENT_OBJECT_LOCATIONCHANGE Albis
 
 	; nur für Monitore mit einer Auflösung > 2k
 	; last change: 27.01.2021
@@ -5065,7 +5699,7 @@ AlbisLocationChangeEventProc(hHook, event, hwnd) {                              
 return 0
 }
 
-ActiveFocusEventProc(hHook, event, hwnd) {                                                                    	; behandelt EVENT_OJECT_FOCUS Nachrichten für alle Programme außer Albis
+ActiveFocusEventProc(hHook, event, hwnd) {                                                                    	; Handler EVENT_OJECT_FOCUS Nachrichten (alle anderen)
 
 	static excludeFilter := ["OptoAppClass"]
 
@@ -5084,14 +5718,17 @@ ActiveFocusEventProc(hHook, event, hwnd) {                                      
 
 }
 
-ShellHookProc(lParam, wParam) {                                                                                  	; Startet oder entfernt einen WinEventHook bei Erscheinen oder Schließen des Albisprogramms
+ShellHookProc(lParam, wParam) {                                                                                  	; Startet oder entfernt den Albis WinEventHook
 
-		; diese Fensterklassen werden ignoriert. Dies beschleunigt die Funktion, da Autohotkey als Skriptsprache zu langsam ist, um den Message-Queue schnell genug abzuarbeiten
-		static excludeFilter	:= [ "Windows.UI", "NVOpen", "QTrayIcon", "SunAwt", "qtopen", "Scite", "ThunderRT", "QT5Q", "Shell Embedding", "IME", "TForm"
-										 , "TApplication", "DDEM", "COMTASKSWINDOWCLASS", "OfficePowerManagerWindow", "GDI+", "WICOMCLASS", "OleDdeWndClass"
-										 , "GlassWndClass-", "Shell_TrayWnd", "Ghost", "ApplicationFrameWindow", "DAXParkingWindow", "EdgeUiInputTopWndClass"
-										 , "DummyDWMListenerWindow", "Progman", "ThumbnailDeviceHelperWnd", "tooltips_class32", "MsiDialogCloseClass", "MsiHiddenWindow"
-										 , "HwndWrapper", ".NET-BroadcastEventWindow", "CtrlNotifySink", "OperationStatusWindow", "ThorConnWndClass", "Shell Preview Extension", "TForm_ipcMain" ]
+		; Sammlung ignorierter Fensterklassen zur Funktionsbeschleunigung, da Autohotkey als Skriptsprache zu langsam ist,
+		; um den Message-Queue schnell genug abarbeiten zu können
+		static excludeFilter	:= [ "Windows.UI", "NVOpen", "QTrayIcon", "SunAwt", "qtopen", "Scite", "ThunderRT", "QT5Q", "Shell Embedding", "IME"
+										,  "TForm", "TApplication", "DDEM", "COMTASKSWINDOWCLASS", "OfficePowerManagerWindow", "GDI+"
+										,  "WICOMCLASS", "OleDdeWndClass", "GlassWndClass-", "Shell_TrayWnd", "Ghost", "ApplicationFrameWindow"
+										,  "DAXParkingWindow", "EdgeUiInputTopWndClass", "DummyDWMListenerWindow", "Progman"
+										,  "ThumbnailDeviceHelperWnd", "tooltips_class32", "MsiDialogCloseClass", "MsiHiddenWindow"
+										 , "HwndWrapper", ".NET-BroadcastEventWindow", "CtrlNotifySink", "OperationStatusWindow"
+										 , "ThorConnWndClass", "Shell Preview Extension", "TForm_ipcMain" ]
 		static includeFilter 	:= [ "OptoAppClass", "#32770", "AutohotkeyGui", "OpusApp" ]
 		static PDFViewer 	:= [ "classFoxitReader", "SUMATRA_PDF_FRAME" ]
 		static func_winpos
@@ -5100,7 +5737,7 @@ ShellHookProc(lParam, wParam) {                                                 
 
 		Critical	;, 50
 
-	; return on empty callback parameters ;{
+	; return on empty callback parameters                                                                  	;{
 		If (wParam = 0)
 			return 0
 
@@ -5116,10 +5753,9 @@ ShellHookProc(lParam, wParam) {                                                 
 				return 0
 	;}
 
+	; SHELL_WINDOWCREATED,WINDOWACTIVATED,REDRAW,RUDEAPPACTIVATED	;{
 		SHookHwnd := Format("0x{:x}", wparam)
-
-	; SHELL_WINDOWCREATED,WINDOWACTIVATED,REDRAW,RUDEAPPACTIVATED
-		If  RegExMatch(lParam, "^1|4|6|32772$") {                           	                                               	; ALBIS wurde gestartet
+		If RegExMatch(lParam, "^1|4|6|32772$")                         	{                                              	; ALBIS wurde gestartet
 
 			; Albisereignisse haben Vorrang
 				If (AlbisWinID() <> AlbisID_old) {
@@ -5130,11 +5766,18 @@ ShellHookProc(lParam, wParam) {                                                 
 
 			; InfoFenster prüfen
 				If Addendum.AddendumGui
-					If (AlbisWinID() = SHookHwnd) && RegExMatch(AlbisGetActiveWindowType(), "i)Karteikarte|Laborblatt|Biometriedaten") {
-						If !WinExist("AddendumGui ahk_class AutohotkeyGui")
+					If (AlbisWinID() = SHookHwnd) && RegExMatch(AlbisGetActiveWindowType(), "i)(Karteikarte|Laborblatt|Biometriedaten)") {
+						If (Addendum.iWin.lastPatID <> AlbisAktuellePatID())
+							admGui_Destroy()
+						hwndadmGui := admGui_Exist()
+						If !hwndadmGui {
 							AddendumGui()
-						else
-							RedrawWindow(hadm)
+							;~ SciTEOutput(A_ThisFunc ": gestartet hwnd = " admGui_Exist())
+						}
+						else {
+							RedrawWindow(hwndadmGui)
+							;~ SciTEOutput(A_ThisFunc ": neu gezeichnet hwnd = " hwndadmGui)
+						}
 					}
 
 			; andere Programme (MS Word, Ifap, FoxitReader) - Einstellungen sollten in der Addendum.ini stehen
@@ -5156,12 +5799,13 @@ ShellHookProc(lParam, wParam) {                                                 
 				admGui_Destroy()
 
 			AlbisStopHooks()
-			PraxTT("Albis wurde beendet. Hooks wurden entfernt.", "2 0")
+			PraxTT("Albis wurde beendet. Hooks wurden entfernt.", "1 0")
 			AlbisID_old := 0
 
 		}
+	;}
 
-	; --------------------------- PopUpMenuCallback -----------------------------
+	; --------------------------- PopUpMenuCallback -----------------------------                	;{
 	; für Addendum_PopUpMenu - ruft die als String in der Variable .PopUpMenuCallback Funktion auf und übergibt zusätzliche Parameter
 		If (StrLen(Addendum.PopUpMenuCallback) > 0) {
 
@@ -5186,6 +5830,7 @@ ShellHookProc(lParam, wParam) {                                                 
 				}
 
 	}
+	;}
 
 return
 }
@@ -5202,7 +5847,12 @@ return ;}
 
 
 ; ----------------------- Automatisierungsroutinen / Fensterhandler
-EventHook_WinHandler:                                                                                                	;{ Eventhookhandler - Popupblocker/Fensterhandler - für diverse Fenster verschiedener Programme
+;
+; Vorsicht mit Änderungen des Skriptcodes vor dem If und nach dem If Block! Mehr als 3 Jahre Trial and Error stecken
+; in diesen Zeilen. Der Code ist jetzt zuverlässig und ausreichend schnell in der Erkennung und Abarbeitung der
+; Hook-Events (Fenster, Applikationen).
+;
+EventHook_WinHandler:                                                                                                	;{ Eventhookhandler - Popupblocker/Fensterhandler
 
 	StackEntry:
 	EHWHStatus :=true, thisWin := EHStack.Pop()
@@ -5228,24 +5878,24 @@ EventHook_WinHandler:                                                           
 
 	If        InStr(EHproc1, "albis")                                                                      	{        	; ALBIS
 
-			If   	  InStr(EHWText	, "ist keine Ausnahmeindikation")                                                              	 {  	; Fenster wird geschlossen
+			If   	  InStr(EHWText	, "ist keine Ausnahmeindikation")                                                   	{ 	; Fenster wird geschlossen
 				VerifiedClick("Button2", hHookedWin)
 				GNRChanged 	:= true
 			}
-			else If InStr(EHWT  	, "Daten von") && GNRChanged                                                              	 {  	; schließt nach Änderung der GNR das Fenster "Daten von " für schnelleres Handling
+			else If InStr(EHWT  	, "Daten von") && GNRChanged                                                   	{ 	; schließt nach Änderung der GNR das Fenster "Daten von"
 				while (A_Index < 30) || WinExist("ALBIS ahk_class #32770", "ist keine Ausnahmeindikation")
 					Sleep 10
 				VerifiedClick("Button30", "Daten von ahk_class #32770")
 				GNRChanged 	:= false
 			}
-			else If InStr(EHWText	, "Patient aus dem Wartezimmer entfernen")                                              	 {  	; Wartezimmer entfernen nicht nachfragen
+			else If InStr(EHWText	, "Patient aus dem Wartezimmer entfernen")                                 	{ 	; Wartezimmer entfernen nicht nachfragen
 				If Addendum.WZ.RemoveFast && RegExMatch(AlbisWZTabAktuell(), "i)(" Addendum.WZ.RemoveFast ")")
 					VerifiedClick("Ja", hHookedWin)
 			}
-			else If InStr(EHWText	, "Möchten Sie diesen Eintrag wirklich löschen") && Addendum.AutoDelete 	 {  	; Eintrag löschen
+			else If InStr(EHWText	, "Möchten Sie diesen Eintrag wirklich") && Addendum.AutoDelete  	{ 	; Eintrag löschen
 				VerifiedClick("Ja", hHookedWin)
 			}
-			else If InStr(EHWText	, "ALBIS wartet auf Rückgabedatei")                                                          	 {  	; Laborhinweis schliessen
+			else If InStr(EHWText	, "ALBIS wartet auf Rückgabedatei")                                               	{ 	; Laborhinweis schliessen
 				BlockInput, On
 				VerifiedClick("Button1", hHookedWin)
 				AlbisActivate(1)
@@ -5253,94 +5903,93 @@ EventHook_WinHandler:                                                           
 				WinActivate, % "ahk_class #32770", % "ALBIS wartet auf Rückgabedatei"
 				BlockInput, Off
 			}
-			else If InStr(EHWText	, "Patient hat in diesem")                                                                           	 {  	; in Abhängigkeit des Client wird das Fenster sofort oder verzögert geschlossen
+			else If InStr(EHWText	, "Patient hat in diesem")                                                              	{ 	; Dialog wird sofort oder verzögert geschlossen
 				hNoChippie := hHookedWin
 				If (Addendum.noChippie > 0)
 					Sleep % Addendum.noChippie*1000
 				VerifiedClick("Button1", hNoChippie)
 			}
-			else if Instr(EHWText	, "Der Parameter ist bereits in dieser Gruppe")                                         	 {  	; Fenster wird geschlossen
+			else if Instr(EHWText	, "Der Parameter ist bereits in dieser Gruppe")                               	{ 	; Fenster wird geschlossen
 				VerifiedClick("Button1", hHookedWin)
 			}
-			else if Instr(EHWText	, "Behandlungszeitraum")                                                                         	 {  	; Behandlungszeitraum überschritten, neue Rechnung erstellen
+			else if Instr(EHWText	, "Behandlungszeitraum")                                                              	{ 	; Behandlungszeitraum überschritten, neue Rechnung erstellen
 				VerifiedClick("Button2", "ALBIS", "Behandlungszeitraum")
 			}
-			else if Instr(EHWT   	, "Patientenausweis")                                                                                 	 {  	; automatisch drucken
+			else if Instr(EHWT   	, "Patientenausweis")                                                                     	{ 	; automatisch drucken
 				VerifiedClick("Button23", hHookedWin)
 			}
-			else if InStr(EHWText	, "folgende Diagnosen übernommen")                                                       	 {  	; Fenster wird geschlossen
+			else if InStr(EHWText	, "folgende Diagnosen übernommen")                                           	{ 	; Fenster wird geschlossen
 				VerifiedClick("Button1", hHookedWin)
 			}
-			else if InStr(EHWT   	, "ALBIS - Login") && AutoLogin                                                               	 {  	; Client spezifisches automatisches Einloggen in Albis
+			else if InStr(EHWT   	, "ALBIS - Login") && AutoLogin                                                     	{ 	; Client spezifisches automatisches Einloggen in Albis
 				AlbisAutoLogin(10)
 			}
-			else If InStr(EHWText	, "Sie haben eine Besuchsziffer ohne Wege")                                             	 {  	; Fenster wird geschlossen
-				VerifiedClick("Button2", "Sie haben eine Besuchsziffer ohne Wege")
+			else If InStr(EHWText	, "Sie haben eine Besuchsziffer ohne Wege")                                  	{ 	; Fenster wird geschlossen
+				VerifiedClick("Nein", "ALBIS ahk_class #32770", "Sie haben eine Besuchsziffer ohne Wege")
 			}
-			else If InStr(EHWText	, "Datum darf nicht vordatiert werden")                                                     	 {  	; Datum wird verändert, Daten werden eingetragen, Datum wird zurückgesetzt
-				VerifiedClick("Button1", "ALBIS ahk_class #32770", "Datum darf nicht")
-				fControlHwnd:= GetFocusedControlHwnd()
-				ControlGetText, VorDatierDatum, Edit2, ahk_class OptoAppClass
-				AlbisSetzeProgrammDatum(VorDatierDatum)
-				VerifiedSetFocus("", "", "", fControlHwnd)
-				SendInput, {Tab}
+			else If InStr(EHWText	, "Datum darf nicht vordatiert werden")                                          	{ 	; Datum wird verändert, Daten eingetragen, Datum wird zurückgesetzt
+				AlbisVordatierer()
 			}
-			else If InStr(EHWText	, "Wollen Sie wirklich die GNR ändern")                                              		 {  	; es wird automatisch mit "Ja" bestätigt
+			else If InStr(EHWText	, "Wollen Sie wirklich die GNR ändern")                                     		{	; es wird automatisch mit "Ja" bestätigt
 				VerifiedClick("Button1", "ALBIS ahk_class #32770", "Wollen Sie wirklich")
 			}
-			else If InStr(EHWText	, "Der Patient wurde bereits als verstorben")                                               	 {  	; es wird automatisch mit "Ja" bestätigt
+			else If InStr(EHWText	, "Der Patient wurde bereits als verstorben")                                    	{	; es wird automatisch mit "Ja" bestätigt
 				VerifiedClick("Button1", hHookedWin)
 			}
-			else If InStr(EHWText	, "Fehler beim Aufruf dppivassist")                                                             	 { 	; Fenster wird geschlossen
+			else If InStr(EHWText	, "Fehler beim Aufruf dppivassist")                                                  	{	; Fenster wird geschlossen
 				VerifiedClick("Button1", hHookedWin)
 			}
-			else If InStr(EHWText	, "Folgender Pfad existiert nicht")                                                               	 { 	; Fenster wird geschlossen
+			else If InStr(EHWText	, "Folgender Pfad existiert nicht")                                                  	{	; Fenster wird geschlossen
 				VerifiedClick("Button1", hHookedWin)
 			}
-			else if Instr(EHWT   	, "Herzlichen Glückwunsch") && WinExist("Gesundheitsvorsorgeliste")        	 { 	; Fenster "Herzlichen Glückwunsch" schliessen
+			else if Instr(EHWT   	, "Herzlichen Glückwunsch") && WinExist("Gesundheitsvorsorgeliste"){	; Fenster "Herzlichen Glückwunsch" schliessen
 				VerifiedClick("Button1", hHookedWin)
 			}
-			else if InStr(EHWText	, "Der Druckauftrag konnte nicht gestartet werden")                                    	 { 	; Fenster wird geschlossen
+			else if InStr(EHWText	, "Der Druckauftrag konnte nicht gestartet werden")                         {	; Fenster wird geschlossen
 				VerifiedClick("Button1", hHookedWin)
 			}
-			else if InStr(EHWT  	, "CGM HEILMITTELKATALOG")                                                              	 { 	; Fensterposition wird innerhalb des Albisfenster zentriert
+			else if InStr(EHWT  	, "CGM HEILMITTELKATALOG")                                                      {	; Fensterposition wird innerhalb des Albisfenster zentriert
 				AlbisHeilmittelKatologPosition()
 			}
-			else if InStr(EHWT  	, "Dauerdiagnosen von")                                                                        	 { 	; Autopositionierung des Dauerdiagnosenfensters
-				res:= AlbisResizeDauerdiagnosen()
+			else if InStr(EHWT  	, "Dauerdiagnosen von")                                                              	{	; Autopositionierung des Dauerdiagnosenfensters
+				AlbisResizeDauerdiagnosen()
 			}
-			else if InStr(EHWT  	, "ICD-10 Thesaurus")                                                                            	 { 	; vergrößert den Diagnosenauswahlbereich
+			else if InStr(EHWT  	, "ICD-10 Thesaurus")                                                                    {	; vergrößert den Diagnosenauswahlbereich
 				UpSizeControl("ICD-10 Thesaurus", "#32770", "Listbox1", 200, 150, AlbisWinID())
 			}
-			else if InStr(EHWText 	, "in der Regel meldepflichtig")                                                                	 { 	; Fenster Diagnosen des Kodes ... in der Regel meldepflichtig wird geschlossen
+			else if InStr(EHWText 	, "in der Regel meldepflichtig")                                                        {	; schließt Dialog Diagnosen des Kodes .. in der Regel meldepflichtig
 				VerifiedClick("Button1", hHookedWin)
 			}
-			else if InStr(EHWT  	, "Labor - Anzeigegruppen")                                                                      	 { 	; die Anzeige der Listen
-				res:= AlbisResizeLaborAnzeigegruppen()
+			else if InStr(EHWT  	, "Labor - Anzeigegruppen")                                                        	{	; die Anzeige der Listen
+				AlbisResizeLaborAnzeigegruppen()
 			}
-			else if InStr(EHWT  	, "Muster 1a") || InStr(EHWText, "Der Patient ist noch AU")                       	 { 	; Arbeitsunfähigkeitsbescheinigung - Einblendung von zusätzlichen Informationen
+			else if InStr(EHWT  	, "Muster 1a") || InStr(EHWText, "Der Patient ist noch AU")               { 	; Arbeitsunfähigkeitsbescheinigung - zusätzliche Informationen
 				AlbisFristenGui()
 			}
-			else If InStr(EHWText	, "Fehler im ifap praxisCENTER")	                                                            	 {    	; Fehlerbenachrichtungen Java Runtime des ifap praxisCENTER
+			else If InStr(EHWText	, "Fehler im ifap praxisCENTER")	                                                    {	; Fehlerbenachrichtungen Java Runtime des ifap praxisCENTER
 				VerifiedClick("Button1", hHookedWin)
 				If !ifaptimer
 					SetTimer, ifapActive, 30
 				ifaptimer:= A_TickCount
 			}
-			else If InStr(EHWText	, "Bitte die Straße")                                                                                  	 {  	; weitere Information Dialog (Patientendaten) und Adressproblematik
+			else If InStr(EHWText	, "Bitte die Straße")                                                                         { 	; weitere Information Dialog (Patientendaten) und Adressproblematik
 				; bei Adressen ohne Straßenangabe, kann das Fenster 'weitere Informationen' nicht ohne weiteres geschlossen werden
-				MsgBox, 0x1024, Addendum für Albis on Windows, Rechnungsempfänger löschen?
-				IfMsgBox, Yes
-				{
-					Loop 8
-						VerifiedSetText("Edit" A_Index, "", "ahk_class #32770", 200, "Adresse des Rechnungs")
-				}
-				VerifiedClick("OK", "ahk_class #32770", "Adresse des Rechnungs")
+				AlbisLoescheEmpfaenger()
 			}
-			else if Addendum.Schnellrezept && InStr(EHWT, "Muster 16")                                                     	 {  	; Kassenrezept - Schnellrezept + Auto autIdem Kreuz
-					AlbisRezeptHelferGui(Addendum.AdditionalData_Path "\RezepthelferDB.json")
+			else If InStr(EHWT   	, "Muster G1204")                                                                       	{	; Reha-Antrag Dialog an Hochkantmonitore anpassen
+				fn_temp := Func("AlbisRehaDialog").Bind(hHookedWin)
+				SetTimer, % fn_temp, -100
 			}
-			;-------------------- Laborabruf Automation --------------------------------------------------------
+			else If InStr(EHWText	, "elektronisch über KIM")                                                             	{	; eAU Hinweistext
+				VerifiedClick("Button1", hHookedWin,,, true)                                                               	; klickt auf: 'Ich bin mir dessen bewusst'
+			}
+			else If InStr(EHWText	, "Folgende eAU-Tabelle konnte nicht")                                          	{	; Folgende eAU-Tabelle konnte nicht gefunden werden
+				VerifiedClick("Button1", hHookedWin,,, true)
+			}
+			else if Addendum.Schnellrezept && InStr(EHWT, "Muster 16")                                           { 	; Kassenrezept - Schnellrezept + Auto autIdem Kreuz
+					AlbisRezeptHelferGui(Addendum.DataPath "\RezepthelferDB.json")
+			}
+			;-------------------- Laborabruf Automatisierung --------------------------------------------------------
 			else If Addendum.Labor.AutoAbruf && InStr(EHWText	, "Anforderungen ins Laborblatt")            	 {  	; es wird automatisch mit "Ja" bestätigt
 				If !InStr(Addendum.Labor.AbrufStatus, "Failure")
 					VerifiedClick("Button1", hHookedWin)
@@ -5351,7 +6000,8 @@ EventHook_WinHandler:                                                           
 			}
 			else If Addendum.Labor.AutoAbruf && InStr(EHWText	, "Keine Datei(en) im Pfad") 	                   	 { 	; Laborabrufvorgang wird beendet
 				ResetLaborAbrufStatus()
-				VerifiedClick("Button1", hHookedWin)
+				func_KeineDateien := Func("AlbisLaborKeineDateien").Bind(hHookedWin)
+				SetTimer, % func_keineDateien, -2000
 			}
 			else if Addendum.Labor.AutoAbruf && Instr(EHWT  	, "Labor auswählen")                                 	 {    	; wählt das eingetragene Labor und bestätigt mit 'Ok'
 				AlbisLaborAuswählen(Addendum.Labor.LbName)
@@ -5362,6 +6012,135 @@ EventHook_WinHandler:                                                           
 			else If Addendum.Labor.AutoAbruf && InStr(EHWT  	, "GNR der Anford")             	                 	 {		;
 				If !Addendum.Labor.AbrufStatus
 					AlbisLaborGNRHandler(1, hHookedWin)       	         	; Listbox1 enthält Rechnungsdaten
+			}
+			;-------------------- GVU und HKS Formular Automatisierung -----------------------------------------
+			else If Addendum.GVUAutomation && InStr(EHWT  	, "Muster 30")                                             	&& (ClickReady > 0)    		{
+
+					RegExMatch(EHWT, "(?<=Seite\s)\d", FormularSeite)
+					If (FormularSeite = 1)     				{
+
+							If (ClickReady = 1)							{
+
+									ClickReady := 2
+								; überprüft auf welche Art das GVU Formular aufgerufen wurde, verhindert die Automatisierung schon angelegter Formulare
+								; funktioniert nur wenn man sich ein Albismakro mit dem Namen GVU anlegt! In Edit3 steht dann GVU
+									EditDatum := EditKuerzel := ""
+									ControlGetText, EditDatum , Edit2, ahk_class OptoAppClass
+									ControlGetText, EditKuerzel, Edit3, ahk_class OptoAppClass
+									If (StrLen(EditDatum) = 0) || !InStr(EditKuerzel, "GVU")
+											DatumZuvor := "", ClickReady := 1
+
+								; Quartal, Untersuchungsmonat und Jahr ermitteln
+									AbrQuartal := LTrim(GetQuartal(EditDatum, "/"), "0")
+									RegExMatch(EditDatum, "\d+\.(\d+)\.\d\d(\d+)", aGVU)
+									GVU_AlteDatenStartZeit := A_TickCount
+									PraxTT("Warte auf alte Daten", "0 3")
+									SetTimer, GVU_WarteAufAlteDaten, 250
+									If !VerifiedClick("Alte Daten", "Muster 30 ahk_class #32770")
+										VerifiedClick("Button63", "Muster 30 ahk_class #32770")	        	; Button63 = [Alte Daten] - GVU Seite 1
+
+							}
+							else if (ClickReady = 3)							{
+
+									SetTimer, GVU_WarteAufAlteDaten, Off
+									PraxTT("Abbruch", "2 3")
+									VerifiedClick("Button62", "Muster 30 ahk_class #32770")	        	; Button62 = [Abbruch]	 - GVU Seite 1
+									If RegExMatch(DatumZuvor, "\d{2}\.\d{2}\.\d{4}")
+										AlbisSetzeProgrammDatum(DatumZuvor)
+									DatumZuvor := ""
+									SetTimer, SetClickReadyBack, -4000
+
+							}
+							else if (ClickReady = 4)							{
+
+									SetTimer, GVU_WarteAufAlteDaten, Off
+									PraxTT("Weiter", "2 3")
+									VerifiedClick("Button61", "Muster 30 ahk_class #32770")	        	; Button61 = [Weiter]   	 ->	GVU Seite 2
+
+							}
+
+					}
+					else if (FormularSeite = 2)				{
+						ClickReady := 5
+						SetTimer, GVU_WarteAufAlteDaten, Off
+						PraxTT("GVU Formular Seite 2 schließen", "2 3")
+						VerifiedClick("Button61", "Muster 30 ahk_class #32770", "", "", 3)      	; Button61 = [Weiter]   	 ->	GVU Seite 2
+
+					}
+
+			}
+			else If Addendum.GVUAutomation && InStr(EHWText	, "keine alten Daten vorhanden")                	&& (ClickReady = 2)			{
+					ClickReady := 0
+					PraxTT("", "off")
+					SetTimer, GVU_WarteAufAlteDaten, Off
+					GVU_KeineAlteDatenVorhanden()
+					ClickReady := 5
+			}
+			else If Addendum.GVUAutomation && InStr(EHWT  	, "Alte Formulardaten übernehmen")           	&& (ClickReady = 2)			{
+						ClickReady := 0 ; auf 0 gesetzt damit nichts anderes den Ablauf hier behindern kann
+						SetTimer, GVU_WarteAufAlteDaten, Off
+						ClickReady := GVU_AlteFormulardatenUebernehmen()
+			}
+			else If Addendum.GVUAutomation && InStr(EHWText	, "Soll das Makro abgebrochen werden")      	&& (ClickReady > 1)			{
+			    	VerifiedClick("Button1", "ALBIS", "Soll das Makro abgebrochen werden")
+					ClickReady	:= 1
+					SetTimer, SetClickReadyBack, off
+			}
+			else If Addendum.GVUAutomation && InStr(EHWT  	, "GNR-Vorschlag zur Befundung")              	&& (ClickReady = 5)			{
+
+						entries := ""
+						while (StrLen(entries) = 0)		{
+
+							entries := AlbisReadFromListbox("GNR-Vorschlag zur Befundung", 1, 0)
+							If (StrLen(entries) > 0)
+								break
+							;SciteOutPut("entrieTry: " A_Index "`tQuartal: " AbrQuartal "`tEinträge: " entries)
+							Sleep 300
+							If (A_Index > 5) 	{
+								PraxTT("Die Erkennung des Abrechnungsquartals im Dialog hat nicht funktioniert`nBitte wählen Sie das richtige Abrechnungsquartal manuell aus!", "8 4")
+								ClickReady:= 6
+							}
+
+						}
+
+						Loop, Parse, entries, `n
+							If InStr(A_LoopField, AbrQuartal)	{
+								PostMessage, 0x186, % A_Index - 1, 0, ListBox1, % "ahk_id " WinExist("GNR-Vorschlag zur Befundung ahk_class #32770") ;LB_SetCursel
+								entrieIndex:= A_Index - 1
+								break
+							}
+
+						;ToolTip, % "entrieId: " entrieIndex "`nQuartal: " AbrQuartal "`nEinträge: " entries, 1250, 1, 5
+						If !VerifiedClick("Button1", "GNR-Vorschlag zur Befundung ahk_class #32770", "", "", 3) ;GNR-Vorschlag schliessen
+								MsgBox, Bitte schließen Sie den Dialog`nGNR-Vorschlag zur Befundung
+
+						ClickReady := 6
+						WinWait, Hautkrebsscreening - Nichtdermatologe ahk_class #32770,, 8
+						If ErrorLevel
+							WinActivate, Hautkrebsscreening - Nichtdermatologe ahk_class #32770
+						else
+							Albismenu(34505, "Hautkrebsscreening - Nichtdermatologe")     	;"eHautkrebs-Screening Nicht-Dermatologe": "34505" wird aufgerufen
+
+
+
+			}
+			else If Addendum.GVUAutomation && InStr(EHWT  	, "Hautkrebsscreening - Nichtdermatologe")	&& (ClickReady = 6)			{
+						GVU_HKSFormularBefuellen()
+						ClickReady:= 7
+			}
+			else If Addendum.GVUAutomation && InStr(EHWT  	, "Leistungskette bestätigen")                        	&& (ClickReady = 7)			{
+					ClickReady:= 1
+					GVU_LeistungsketteBestaetigen()
+					GVU_CaveVonEintragen(EditDatum)
+					If RegExMatch(DatumZuvor, "\d{2}\.\d{2}\.\d{4}")
+						AlbisSetzeProgrammDatum(DatumZuvor)
+					DatumZuvor := ""
+			}
+			else If Addendum.GVUAutomation && InStr(EHWText	, "Übertrage Gebühren-Nummer(n)...")		                                        	{
+					VerifiedClick("Button1", "ALBIS", "Übertrage Gebühren-Nummer")
+			}
+			else If Addendum.GVUAutomation && InStr(EHWText	, "außerhalb des Quartals in dem der Schein gültig ist")		                	{ 	;<-- überarbeiten
+					VerifiedClick("Button1", hHookedWin)
 			}
 
 	}
@@ -5475,8 +6254,22 @@ return ;}
 
 ;}
 
+AlbisRehaDialog(hReha) {                                                                                                  	;-- Dialog aufziehen, wenn der Monitor genügend Auflösung hat
 
-FEGui(hwnd) {                                                                                                               	; Fokushook Testgui
+	MonNr	:= GetMonitorIndexFromWindow(hReha)
+	wMon	:= ScreenDims(MonNr)
+	wReha	:= GetWindowSpot(hReha)
+
+  ;  Vergrößern wenn genug Höhe vorhanden ist
+	if (wMon.H >= 1740)
+		SetWindowPos(hReha, wReha.X, Floor(wMon.H//2 - 1740//2), wReha.W, 1740)
+  ; Dialog an Auflösungshöhe des Monitor anpassen, wenn nicht genug Höhe vorhanden ist
+	else
+		SetWindowPos(hReha, wReha.X, 10, wReha.W, wMon.H-50)
+
+}
+
+FEGui(hwnd) {                                                                                                               	;-- Fokushook Testgui
 
 	;global
 	static FEText1, FE, hFEText1, hFEGui
@@ -5518,79 +6311,33 @@ FEGuiOff:
 return
 }
 
-CorrectWinPos(hWin, wPos) {                                                                                         	; ein Fenster an eine bestimmte Position auf dem Bildschirm verschieben
+CurrPatientChange(AlbisTitle) {                                                                                      	;-- behandelt Änderung des Albisfenstertitels
 
-	; prüft das ein Object übergeben wurde und gültige Werte/Schlüsselnamen enthält
-		If !IsObject(wPos)
-			return
-
-	; Einstellungen prüfen
-		w := GetWindowSpot(hWin)
-
-		switch wPos.X		{
-
-			case "-":
-				wPos.X := w.X
-
-			case "L":
-				wPos.X := 0
-				wPos.Y := 0
-
-			case "R":
-				wPos.X := A_ScreenWidth	- wPos.W
-
-			case "B":
-				wPos.X := 0
-				wPos.Y := A_ScreenHeight	- wPos.H - 30 ; genaue Höhe der Taskbar und ob überhaupt am unteren Bildschirmrand!
-
-			case "T":
-				wPos.X := 0
-				wPos.Y := 0
-		}
-
-		switch wPos.Y		{
-			case "-":
-				wPos.Y := w.Y
-		}
-
-		switch wPos.W		{
-			case "F":
-				wPos.W := A_ScreenWidth
-		}
-
-		switch wPos.H		{
-			case "F":
-				wPos.H := A_ScreenHeight
-		}
-
-	; Fenster versetzen
-		If (w.X != wPos.X) || (w.Y != wPos.Y) || (w.W != wPos.W) || (w.H != wPos.H)
-			SetWindowPos(hWin, wPos.X, wPos.Y, wPos.W, wPos.H)
-
-}
-
-CurrPatientChange(AlbisTitle) {                                                                                      	; behandelt Änderung des Albisfenstertitels
-
-		global hadm, admHJournal
-		static 	AlbisTitleO
+		global 	hadm
+		static 	AlbisTitleO, AktiveAnzeigeO
 
 		Critical, 50
 
-		If (AlbisTitleO = AlbisTitle)
+		AktiveAnzeige := AlbisGetActiveWindowType()
+		If (AlbisTitleO=AlbisTitle && AktiveAnzeigeO=AktiveAnzeige)
 			return
-		 AlbisTitleO	:= AlbisTitle
-		 AktiveAnzeige := AlbisGetActiveWindowType()
+		 AlbisTitleO := AlbisTitle, AktiveAnzeigeO := AktiveAnzeige
 
-	; Zurücksetzen des Status des Laborabrufes ist bei Wechsel auf eine andere Ansicht möglich/notwendig
+	; Zurücksetzen des Laborabrufstatus bei Wechsel auf eine andere Ansicht
 		Addendum.Labor.AbrufStatus := ""
 
-	; Patienten registrieren bei der Addendum Patientendatenbank
-		If 	InStr(AktiveAnzeige, "Patientenakte") {
+	; es wurde auf eine andere Karteikarte gewechselt
+		If (Addendum.AddendumGui && Addendum.iWin.lastPatID <> AlbisAktuellePatID())
+			admGui_Destroy()
+
+	; Patienten bei der Addendum Patientendatenbank registrieren
+		If InStr(AktiveAnzeige, "Patientenakte") {
 
 			; ist das Infofenster verfügbar, wird das Protokoll dort aufgefrischt
-				If PatDb(AlbisTitle2Data(AlbisTitle), "exist")
-					If Addendum.AddendumGui && WinExist("AddendumGui ahk_class AutoHotkeyGUI")
-						admGui_TProtokoll(Addendum.TProtDate, 0, compname)
+				If IsObject(PatData := AlbisTitle2Data(AlbisTitle))
+					If PatDb(PatData, "exist")
+						If Addendum.AddendumGui && admGui_Exist()
+							admGui_TProtokoll(Addendum.TProtDate, 0, compname)
 
 			; Corona-Impfhelfer ist aktiv
 				If Addendum.CImpf.Helfer
@@ -5600,23 +6347,16 @@ CurrPatientChange(AlbisTitle) {                                                 
 		}
 
 	; AddendumGui verbergen wenn Bedingungen nicht erfüllt sind
-		If 	!Addendum.AddendumGui || !WinExist("ahk_class OptoAppClass") {
+		If (!Addendum.AddendumGui || !WinExist("ahk_class OptoAppClass") || RegExMatch(AlbisGetActiveWindowType(), "i)(Abrechnung|Rechnungsliste)"))
 			admGui_Destroy()
-		}
-		else if Addendum.AddendumGui {
-
-			If RegExMatch(AktiveAnzeige, "i)(Karteikarte|Laborblatt|Biometriedaten)")
-				AddendumGui()
-			else If (RegExMatch(AktiveAnzeige, "i)(Abrechnung|Rechnungsliste)") || RegExMatch(AlbisTitle, "i)(Laborbuch|Terminkalender)"))
-				admGui_Destroy()
-			else
-				admGui_Destroy()
-
-		}
+		else if Addendum.AddendumGui && RegExMatch(AlbisGetActiveWindowType(), "i)(Karteikarte|Laborblatt|Biometriedaten)")
+			AddendumGui()
 
 	; Hinweisfenster entfernen
-		If InStr(AlbisTitle, "Prüfung EBM/KRW") && !InStr(AlbisTitle, "Abrechnung vorbereiten")
-			SetTimer, EBMKRWOff, -5000
+		If InStr(AlbisTitle, "Prüfung EBM/KRW") && !InStr(AlbisTitle, "Abrechnung vorbereiten") {
+			PraxTT("DIe Anzeige Prüfung EBM/KRW wird in`n" (Addendum.IamTheBoss ? "2":"6") " Sekunden ausgeblendet!")
+			SetTimer, EBMKRWOff, % Addendum.IamTheBoss ? "-2000":"-6000"
+		}
 
 	; Patientenakte geöffnet - dann Überprüfung des Patientennamen und Erstellen der AddendumGui
 		If 	InStr(AktiveAnzeige, "aPEK")	                 	{
@@ -5625,7 +6365,7 @@ CurrPatientChange(AlbisTitle) {                                                 
 				return
 			AlbisMDIChildWindowClose("Prüfung EBM/KRW")
 		}
-		else if 	InStr(AktiveAnzeige, "Laborbuch") && (Addendum.Laborabruf_Voll)
+		else if InStr(AktiveAnzeige, "Laborbuch") && (Addendum.Laborabruf_Voll)
 			Albismenu(34157, "", 6, 1)			;34157 - alle übertragen
 
 Return
@@ -5635,6 +6375,10 @@ EBMKRWOff:      ;{
 	If InStr(AlbisGetActiveWinTitle(), "Prüfung EBM/KRW") && !InStr(AlbisTitle, "Abrechnung vorbereiten") {
 		AlbisActivate(1)
 		SendInput, {Esc}
+		while (InStr(AlbisGetActiveWinTitle(), "Prüfung EBM/KRW") && A_Index < 20)
+			Sleep 20
+		InStr(AlbisGetActiveWinTitle(), "Prüfung EBM/KRW")
+			AlbisMDIChildWindowClose("Prüfung EBM/KRW")
 	}
 
 return   ;}
@@ -5645,7 +6389,7 @@ return   ;}
 ;}
 
 ;{16. Interskriptkommunikation / OnMessage
-MessageWorker(InComing) {                                                                	;-- verarbeitet die eingegangen Nachrichten
+MessageWorker(InComing)                    	{                                                 	;-- verarbeitet die eingegangen Nachrichten
 
 		global AutoLogin
 		static func_AutoOCR	:= func("admGui_OCRAllFiles")
@@ -5671,7 +6415,7 @@ MessageWorker(InComing) {                                                       
 		else if 	InStr(recv.txtmsg, "OCR_ready")                                           	{	          	; der OCR-Thread hat alle Dateien abgearbeitet
 
 			; Anzeige auffrischen
-				admGui_Journal()
+				admGui_Journal()                                              ;## todo: class Journal nutzen
 				OCR := Addendum.OCR
 				Addendum.tessOCRRunning := false
 				If !OCR.RestartAutoOCR
@@ -5679,7 +6423,7 @@ MessageWorker(InComing) {                                                       
 
 			; den Thread beenden, Speicher freigeben
 				If IsObject(Addendum.Thread["tessOCR"]) {
-					PraxTT("Tesseract Texterkennung abgeschlossen.", "2 4")
+					PraxTT("Tesseract Texterkennung abgeschlossen.", "1 2")
 					ahkthread_free(Addendum.Thread["tessOCR"])
 					Addendum.Thread["tessOCR"] := ""
 				}
@@ -5718,42 +6462,98 @@ MessageWorker(InComing) {                                                       
 return
 }
 
-WM_DISPLAYCHANGE(wParam, lParam) {                                            	;-- einsetzbar für Script-Editoren - AutoZoom bei Wechsel der Bildschirmauflösung
+WM_DISPLAYCHANGE(wParam, lParam) 	{                                                	;-- WinPos-Arrange: Scite4AHK - AutoZoom und Autoteilung
 
-	; zoomt bei einer Auflösung > 1920x1080 Scite4AHK
-	; verschiebt WinSpy in die Mitte des Hauptmonitors
-	; letzte Änderung: 06.02.2021
+	; Funktion die auf eine Änderung der Bildschirmauflösung (z.B. Wechsel der Auflösung bei Nutzung des Windows Remotedesktop) reagiert
+	;
+	; - passt die Schriftgröße der Monitorauflösung an, damit die Schrift nicht lesbar bleibt
+	; - automatische Einstellung der vertikalen oder horizontalen Teilung beider Scite Fenster je nach Orientierung des Monitor (Quer oder Hochkant)
+	; - verschiebt WinSpy in die Mitte des Hauptmonitors, falls es außerhalb des sichtbaren Bildschirmbereiches liegen sollte
+	;
+	; letzte Änderung: 17.10.2021
 
-	static lastScreenSize, SCI_GETZOOM := 2374, SCI_SETZOOM := 2373
-	static ZoomLevel := {"4k":{"Sci1":"2", "Sci2":"-2"},  "2k":{"Sci1":"0", "Sci2":"-3"}}
+	static lastScreenSize, SCI_GETZOOM := 2374, SCI_SETZOOM := 2373, SCI_TOGGLE_OUTPANE_ORIENTATION := 401
+	static ZoomLevel := {"4k":{"Sci1":"1", "Sci2":"-1"},  "2k":{"Sci1":"-2", "Sci2":"-2"}} ;Sci1 = Hauptfenster, Sci2 = Ausgabefenster
+	static Sci1Height := 250, Sci1Width := 380
 
 	If (hScite := WinExist("ahk_class SciTEWindow")) {
 
-		SPos := GetWindowSpot(hScite)
-		SysGet SciteMon_, Monitor, % GetMonitorAt(SPos.X, SPos.Y)
-		monDim := SciteMon_Right "x" SciteMon_Bottom
+	  ; Scite auf maximale Größe bringen
+		WinMaximize, % "ahk_class SciTEWindow",, 0, 0
 
-		ZoomLevel_Sci1 := SciteMon_Bottom > 1080 ? ZoomLevel.4k.Sci1 : ZoomLevel.2k.Sci1
-		ZoomLevel_Sci2 := SciteMon_Bottom > 1080 ? ZoomLevel.4k.Sci2 : ZoomLevel.2k.Sci2
+	  ; Fenster und Monitordimensionen ermitteln
+		SPos      	:= GetWindowSpot(hScite)
+		SctM     	:= ScreenDims(GetMonitorAt(SPos.X+SPos.W//2, SPos.Y+SPos.H//2))
+		monDim 	:= SctM.W "x" SctM.H
 
 		If (lastScreenSize <> monDim) {
 
-			lastScreenSize := monDim
+		  ; ZoomLevels festlegen
+			IsHighResolution	:= (SctM.H > 1080 && SctM.W > 1920) || (SctM.H > 1920 && SctM.W > 1080) ? true : false
+			ZoomLevel_Sci1	:= IsHighResolution ? ZoomLevel.4k.Sci1 : ZoomLevel.2k.Sci1
+			ZoomLevel_Sci2 	:= IsHighResolution ? ZoomLevel.4k.Sci2 : ZoomLevel.2k.Sci2
 
+		  ; hwnds der Scite Fenster ermitteln
 			ControlGet	, hScintilla1	, hwnd,, Scintilla1	, % "ahk_id " hScite
 			ControlGet	, hScintilla2	, hwnd,, Scintilla2	, % "ahk_id " hScite
 
+		  ; ZoomLevels auslesen
 			SendMessage, SCI_GETZOOM, 0, 0,, % "ahk_id " hScintilla1
 			ZoomScintilla1O := ErrorLevel
 			SendMessage, SCI_GETZOOM, 0, 0,, % "ahk_id " hScintilla2
 			ZoomScintilla2O := ErrorLevel
 
+		; ZoomLevels anpassen
 			If (ZoomScintilla1O <> ZoomLevel_Sci1)
 				SendMessage, SCI_SETZOOM	, % ZoomLevel_Sci1, 0,, % "ahk_id " hScintilla1
 			If (ZoomScintilla2O <> ZoomLevel_Sci2)
 				SendMessage, SCI_SETZOOM	, % ZoomLevel_Sci2, 0,, % "ahk_id " hScintilla2
 
-			WinMaximize, % "ahk_class SciTEWindow",, 0, 0
+		; Output pane: horizontal oder vertikal je nach Orientierung des Monitors einstellen
+			If hScintilla2 {
+				Sci1Pos          	:= GetWindowSpot(hScintilla1)
+				Sci2Pos          	:= GetWindowSpot(hScintilla2)
+				isVerticalPane   	:= (Sci1Pos.X = Sci2Pos.X)	? false : true
+				isVerticalMon	:= (SctM.W > SctM.H)       	? false : true
+				If (isVerticalMon && isVerticalPane) || (!isVerticalMon && !isVerticalPane)
+					SendMessage, 0x111, % SCI_TOGGLE_OUTPANE_ORIENTATION, 0,, % "ahk_id " hScite
+			}
+
+		; Output pane: Größe anpassen (funktioniert nur wenn Scite4Autohotkey im Vordergrund ist)
+			If hScintilla2 {
+
+				coordMouse  	:= A_CoordModeMouse
+				mousedelay   	:= A_MouseDelay
+
+				WinMaximize, % "ahk_id " hScite
+				CoordMode, Mouse, Screen
+				MouseGetPos, X, Y
+				SetMouseDelay, -1
+
+				Sci1Pos          	:= GetWindowSpot(hScintilla1)
+				isVerticalPane   	:= (Sci1Pos.X = Sci2Pos.X) ? false : true
+
+				If !isVerticalPane {
+					delta := Sci1Pos.H - Sci1Height, X1 := Sci1Pos.X, Y1 := Sci1Pos.Y-5, X2 := X1+Sci1Pos.W-50, X1 += 30
+					DllCall("SetCursorPos", "int", X1, "int", Y1)
+					MouseClickDrag, Left, X<X1 ? X1 : X>X2 ? X2 : X, Y1, X1, Y1+delta, 0
+					;~ SciTEOutput("delta: " delta " (" Sci1Pos.H "), Sci1X: " Sci1Pos.X ", Sci2X: " Sci2Pos.X )
+				}
+				else {
+					delta := Sci1Pos.W - Sci1Width, X1 := Sci1Pos.X-5, Y1 := Sci1Pos.Y+10, Y2 := Y1+Sci1Pos.H-50
+					DllCall("SetCursorPos", "int", X1, "int", Y1)
+					MouseClickDrag, Left, X1, Y1, X1+delta, Y1, 0
+					;~ SciTEOutput("delta: " delta " (" Sci1Pos.W "), Sci1Y: " Sci1Pos.Y ", Sci2Y: " Sci2Pos.Y )
+				}
+
+				DllCall("SetCursorPos", "int", X, "int", Y)
+				CoordMode, Mouse	, % coordMouse
+				SetMouseDelay     	, % mousedelay
+			}
+
+			;~ SciTEOutput(Sci1Pos.X "<" Sci2Pos.X "=" isVerticalPane ":" isVerticalMon)
+
+			lastScreenSize := monDim
 
 		}
 
@@ -6141,11 +6941,11 @@ InChronicList(PatID) {                                                          
 
 ;}
 
-;----------------------------------------------------------------------------------------------------------------------------------------------
+;{18. Gui's
 
-;{20. Gui's, Icons
+Auswahlbox(content)                              	{                                                 	;-- Listbox für Diagnosenauswahl
 
-Auswahlbox(content) {
+	; letzte Änderung: 21.09.2021
 
 	;{ Variablen
 		global
@@ -6161,55 +6961,70 @@ Auswahlbox(content) {
 		monNr    	:= GetMonitorAt(CaretX, CaretY)
 		Mon     	:= ScreenDims(monNr)
 		conStored	:= content
-
-		cp := GetWindowSpot(ACHwnd)
+		cp         	:= GetWindowSpot(ACHwnd)
 
 	;}
 
+	;{ content - parsen
 		LbContent	:= ""
 		If IsObject(content)
 			For idx, val in content {
 				If (idx > 1) {
-					RegExMatch(val, "i)(?<Text>.*)?\{(?<Code>[!\*]*[A-Z][\d]+\.*\d*)?[RLBAVG]*\}", ICD)
+					RegExMatch(val, "i)(?<Text>.*)?\{(?<Code>[!\*]*[A-Z][\d]+\.*\d*)?[\<\/\>RLBAVG#]*\}", ICD)
 					LbContent .= SubStr(ICDCode "          ", 1, FontSize-StrLen(ICDCode)) "`t" ICDText "|"
 				} else {
 					RegExMatch(val, "i)border=(?<Caption>[a-z]+)"                     	, Show)
 					RegExMatch(val, "i)title=(?<name>[\pL\_\-\+\~\#\s]+)"        	, gui)
-					RegExMatch(val, "i)FontSize=(?<Size>\d+)"                           	, Font)
-					RegExMatch(val, "i)FontStyle=(?<Style>[\pL\_\-\+\~\#\s]+)" 	, Font)
-					RegExMatch(val, "i)FontName=(?<Name>[a-z\s]+)"               	, Font)
+					RegExMatch(val, "i)Size=(?<Size>\d+)"                                   	, Font)
+					RegExMatch(val, "i)Style=(?<Style>[\pL\_\-\+\~\#\s]+)"         	, Font)
+					RegExMatch(val, "i)Name=(?<Name>[a-z\s]+)"                    	, Font)
 					guiname    	:= !guiname 	? "Auswahlbox"	: guiname
 					FontSize    	:= !FontSize  	? "10"           	: FontSize
 					FontStyle    	:= !FontStyle 	? "Normal"    	: FontStyle
 					FontName	:= !FontName	? "Arial"        	: FontName
 				}
 			}
+	;}
 
-		LBItems := content.MaxIndex()
+	;{ Gui
+		LBItems := content.MaxIndex() - 1
 		Gui, AWB: new		, % (ShowCaption="off" ? "-Caption":"") " -DPIScale +ToolWindow +AlwaysOnTop +HWNDhAWB"
 		Gui, AWB: Margin	, 0, 0
 		Gui, AWB: Font		, % "s" FontSize " " FontStyle, % FontName
-		Gui, AWB: Add		, Listbox, % "r" LBItems " w700 vAWBLB HWNDhAWBLb T20 Multi AltSubmit " 	, % RTrim(LbContent, "|")  ; (IsObject(content) ? "AltSubmit":"")
-		Gui, AWB: Show	, % "x" cp.X " y" cp.Y + cp.H + 2 " NA"                                                        	, % "Auswahlbox [" guiname "]"
+		Gui, AWB: Add		, Listbox, % "r" LBItems " w700 	vAWBLB HWNDhAWBLb T20 Multi AltSubmit " 	, % RTrim(LbContent, "|")
+		Gui, AWB: Font		, % "s" (FontSize-2 < 7 ? 7 : FontSize-2)
+		Gui, AWB: Add		, Button, % "xm y+2               	vAWBOk    	gAWBButtons "                            	, % "Diagnose(n) übernehmen"
+		Gui, AWB: Add		, Button, % "x+30   	             	vAWBCancel	gAWBButtons "                             	, % "Abbruch"
+		Gui, AWB: Show	, % "x" cp.X " y" cp.Y + cp.H + 2 " NA"                                                            	, % "Auswahlbox [" guiname "]"
 
 		awbG  	:= GetWindowSpot(hAWb)
 		If (awbG.Y + awbG.H > Mon.H)
 			Gui, AWB: Show	, % "x" CaretX " y" (CaretY-awbG.H-YDelta) " NA", % "Auswahlbox [" guiname "]"
+	;}
 
+	;{ Gui Hotkeys
 		HotKey, IfWinExist, % "Auswahlbox ahk_class AutoHotkeyGUI"
 		HotKey, Enter	, AWBTLB
 		Hotkey, Down  	, AWBDown
 		Hotkey, Up    	, AWBUp
 		HotKey, Esc   	, AWBGuiEscape
 		Hotkey, IfWinExist
+	;}
 
 Return
-
-AWBDown:        	;{
+AWBDown:        	;{ Zeile der Listboxauswahl verschieben
 AWBUp:
-	ControlSend,, % "{" A_ThisHotkey "}", % "ahk_id " hAWBLb
+	; Tasten an anderes Fenster senden, falls der Eingabefocus nicht bei Albis oder der Gui liegt
+	If (WinActive("ahk_class OptoAppClass") || WinActive("Auswahlbox ahk_class AutoHotkeyGUI"))
+		ControlSend,, % "{" A_ThisHotkey "}", % "ahk_id " hAWBLb
+	else
+		SendInput % "{" A_ThisHotkey "}"
 return ;}
-AWBTLB:             	;{
+AWBButtons:     	;{ Übernehmen oder Abbrechen
+	If (A_GuiControl = "AWBCancel")
+		goto AWBGuiClose
+;}
+AWBTLB:             	;{	ausgewähltes Senden
 
 	Gui, AWB: Default
 	Gui, AWB: Submit, Hide
@@ -6217,21 +7032,29 @@ AWBTLB:             	;{
 	WinWaitActive	, % "ahk_id " ACWin,, 2
 	ControlFocus, % ACControl, % "ahk_id " ACWin
 
+	Karteikartenauswahl := false
 	If IsObject(conStored)
 		For idx, item in StrSplit(AWBLb, "|") {
-			sendText := conStored[item+1]
-			SendRaw, %sendText%
+			Karteikartenauswahl := !Karteikartenauswahl && RegExMatch(conStored[item+1], "\<.*\>") ? true : false
+			SendDiagnosis(conStored[item+1])
 		}
+	If Karteikartenauswahl {
+		SendInput, {Home}
+		SendInput, {LControl Down}{Right}{LControl Up}
+	}
 
 ;}
 AWBGuiClose:  	;{
 AWBGuiEscape:
-	Gui, AWB: Destroy
+	If (WinActive("ahk_class OptoAppClass") || WinActive("Auswahlbox ahk_class AutoHotkeyGUI"))
+		Gui, AWB: Destroy
+	else
+		SendInput % "{" A_ThisHotkey "}"
 return ;}
 }
 
 ; nicht mehr Infofenster
-HotstringComboBox(con) {
+HotstringComboBox(con)                         	{
 
 	FileRead, thisScript, % A_ScriptFullPath
 	Loop, Parse, thisScript, `n, `r
@@ -6254,7 +7077,7 @@ HotstringComboBox(con) {
 return
 }
 
-AutoListview(ColStr, newline, ColSize:="", Separator:=",") {                                             	;-- eine Listview Gui zum schnellen Anzeigen von Daten
+AutoListview(ColStr, newline, ColSize:="", Separator:=",") {                           	;-- eine Listview Gui zum schnellen Anzeigen von Daten
 
 	static Init, colmax, DasLV, hALV, ALV, hDasLV
 
@@ -6337,7 +7160,7 @@ return
 
 }
 
-Calendar(feld) {                                                                                                            	;-- Ersatz für den Kalender der sich mit Shift+F3 in Albis öffnet
+Calendar(feld)                                         	{                                                	;-- Ersatz für den Kalender der sich mit Shift+F3 in Albis öffnet
 
 	;--------------------------------------------------------------------------------------------------------------------
 	; Variablen
@@ -6473,11 +7296,13 @@ Return
 
 }
 
-; - - - - - - - - - - - - - - ICONS
-Create_Addendum_ico()                         	{                                                                  	;-- erstellt das Trayicon
+;}
+
+;{19. Gui's, Icons
+Create_Addendum_ico()                         	{                                                 	;-- erstellt das Trayicon
 
 VarSetCapacity(B64, 9812 << !!A_IsUnicode)
-B64 := "AAABAAEAMDAAAAEAGACoHAAAFgAAACgAAAAwAAAAYAAAAAEAGAAAAAAAAAAAAGAAAABgAAAAAAAAAAAAAAD/////////oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//////////////oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//////oo//oo//oo//oo//oo//oo9jPSxCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdkPi3/oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo/8oI3/oo//oo//oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo9jPSxCKBdCKBdCKBf/oo//oo//oo//oo/tl4VTMyJCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo/6noxCKBdCKBdkPi3/oo//oo//oo//oo9CKBdCKBdCKBeJVkT+oo7/oo//oo//oo//oo+kZ1VCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd7TTr/oo//oo//oo//oo//oo9CKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdDKRj/oo//oo//oo//oo//oo//oo9GKhpCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo93SjlCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBf/oo/+oY7/oo//oo//oo//oo+PWUdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBduRTP/oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBd3Sjn/oo//oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo93SjlCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBf/oo/+oY7/oo//oo//oo/7oI11SDZCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdnQC/0nIn/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBd3Sjn/oo//oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo93SjlCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo//oo9aNyZCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdeOyn/oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBd3Sjn/oo//oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo93SjlCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo//oo9LLh1CKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdYNiX/oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBd3Sjn/oo//oo//oo//oo//oo//oo+QWkiQWkiQWkiQWkiQWkiRW0n/oo//oo//oo//oo//oo+QWkiQWkiQWkiQWkiQWkiQWkj/oo//oo//oo//oo//oo93SjlCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd3Sjn/oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo93SjlCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd3Sjn/oo//oo//oo//oo//oo//oo+1cmC1cmC1cmC3c2H/oo//oo//oo//oo//oo+1cmC1cmC1cmC2c2H/oo//oo//oo//oo//oo93SjlCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo+0cWBCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo9CKBdCKBdCKBdILBrkkX7/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd3Sjn/oo//oo//oo//oo//oo9UNCNCKBdCKBdCKBf/oo//oo//oo//oo//oo9CKBdCKBdCKBeeY1H/oo//oo//oo//oo93SjlCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo+rbFpCKBdCKBdCKBf/oo//oo//oo/+oY7/oo9CKBdCKBdGKhr/oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBd3Sjn/oo//oo//oo//oo//oo9NLx5CKBdCKBdlPy3/oo//oo//oo9DKRhCKBdCKBeWXk3/oo//oo//oo/7oI13SjlCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo+gZVJCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdEKhn/oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdRMiH/oo//oo//oo//oo//oo9GKxlCKBdCKBdCKBdCKBdCKBdCKBdCKBeRWkn+oY7/oo//oo//oo93SjlCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo+WXkxCKBdCKBdCKBdCKBdCKBdCKBdDKRj/oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdVNCP/oo//oo//oo//oo//oo9EKhlCKBdCKBdCKBdCKBdCKBeJVkT+oY7/oo//oo//oo93SjlCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo+MWEZCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdYNiX/oo//oo//oo//oo//oo9DKRhCKBdCKBdCKBeEUkD9oI7/oo//oo//oo93SjlCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo/9oI2BUD9CKBdCKBdCKBf/oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdcOSf/oo//oo//oo//oo//oo9CKBdCKBdCKBf7n43/oo//oo//oo93SjlCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo/7oI13SjlCKBd3Sjn/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdhOyr/oo//oo//oo//oo//oo+HVEP7n4z/oo//oo//oo93SjlCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo/7oIz/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdkPy3/oo//oo//oo//oo//oo//oo//oo/7oYx3SjlCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdoQS//oo//oo//oo//oo//oo/7oYx3SjlCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBduRTP/oo//oo//oo/7oIx3SjlCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9iPCtCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdjPSz/oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdxRzX5n4r7oIx3SjlCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo//oo//oo//oo//oo//oo//oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo//oo9CKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBf/oo/8oI3/oo//oo//oo//oo//oo//oo//oo//oo//oo9iPCtCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdCKBdjPSz/oo//oo//oo//oo//oo//oo//////oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//////////////oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo//oo////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+B64 := "AAABAAEAMDAAAAEAGACoHAAAFgAAACgAAAAwAAAAYAAAAAEAGAAAAAAAAAAAAGQAAABkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB/h3lni0pSjiNIkA9BkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNIkA9TjiRnikt/h3kAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACEhoNii0JDkQZAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBDkQZji0OFhoQAAAAAAAAAAAAAAAAAAACBh31SjiJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBRjSOBh30AAAAAAAAAAACEhoNRjSNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBRjiCFhoMAAAAAAABii0JAkQBLlhG807S5062506250625062707JVnCBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBJlg240q+506250625062506281LNopjxAkQBji0MAAAB/h3lDkQZAkQBAkQDA17f///////////////////+nyZZAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCYwID+/v/////////////////W5NRGlAlAkQBDkAZ/h3lni0pAkQBAkQBAkQBwqkfz9vT////////////////Z5tlGlApAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQHN38n////////////////+/v+ZwIFAkQBAkQBAkQBni0tSjiJAkQBAkQBAkQBAkQDC2br////////////////+/v+TvXlAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQB7sFb5+fr////////////////W49RGlAlAkQBAkQBAkQBSjiNIkA9AkQBAkQBAkQBAkQB0rU709/X////////////////M3sdBkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQC91bP////////////////+/v+ZwYFAkQBAkQBAkQBAkQBHkBBBkQNAkQBAkQBAkQBAkQBAkQDE2bv////////////////5+fp5r1RAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBYniTq8Ov////////////////W5NVGlApAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQB5r1T1+Pf///////////////+91bNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCszJ3////////////////+/v+awoNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDE2r3////////////////t8u9eoC5AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBGlArb59r////////////////X5dZGlApAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQB8sVj3+fj///////////////+uzZ9AkQBAkQBAkQBAkQBAkQBAkQBAkQBIlQzF2b7M3sbM3sbG2sBJlg5AkQBAkQBAkQBAkQBAkQBAkQBAkQCVvnv+/v/////////////+/v+bwoRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDH28D////////////////f6d9Klg9AkQBAkQBAkQBAkQBAkQBAkQBZnif1+Pn////////3+PtbnypAkQBAkQBAkQBAkQBAkQBAkQBAkQDL3sb////////////////Y5ddIlQxAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQB/s1z4+fn////////////+/v+awYNAkQBAkQBAkQBAkQBAkQBAkQBZnif1+Pn////////3+PtbnypAkQBAkQBAkQBAkQBAkQBAkQB3rlH2+Pj////////////+/v+cwoVAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQHI3ML////////////////X5dRJlg5AkQBAkQBAkQBAkQBAkQBfoS/4+fr////////5+fxiozNAkQBAkQBAkQBAkQBAkQBEkwXA17n////////////////Z5tdHlQtAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCBs2D4+vv////////////+/v/i6+TV5NLV5NLV5NLV5NLV5NLf6t7////////////////g6t/V5NLV5NLV5NLV5NLV5NLg6uH9/v7////////////+/v+dw4ZAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQHJ3ML////////////////////////////////////////////////////////////////////////////////////////////////////////a5tpIlQxAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCEtmX5+vv////////////////////////////////////////////////////////////////////////////////////////////////+/v+cw4ZAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkgLM3sb////////////////////8/P/6+v/6+v/6+v/8/P/////////////////8/P/6+v/6+v/6+v/7+//////////////////////b59pIlQxAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCHt2j7/Pz////////////9/f+RvHhhojNhojNhojOGtmn5+vz////////6+/2Jt25hojNhojNhojNqqEDl7eb////////////+/v+ew4lAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkgLN3sj///////////////+lx5JAkQBAkQBAkQBZnif1+Pn////////4+PxcoCtAkQBAkQBAkQB6sFX4+fn////////////a5tlIlQxAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCLuW77/P3////////////Z5dhHlQtAkQBAkQBZnif1+Pn////////4+PxcoCtAkQBAkQBAkQDC2Lr////////////+/v+fxIlAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBCkgPO38r////////////+/v+XwH9AkQBAkQBMlxPZ5dvm7ejm7ejb5txOmBZAkQBAkQBuqUTz9vT////////////b59lJlg1AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCMuXD7/P3////////////R4M1DkwRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQC81LH////////////+/v+fxIpAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBCkgPP4Mv////////////7/P2JuGpAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBhojHu8+/////////////b59pJlg1AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCOu3L7/P3////////////I28NAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQC10Kr////////////+/v+fxItAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBEkwXR4c7////////////3+Pl3rlJAkQBAkQBAkQBAkQBAkQBAkQBWnCHo8On////////////c6NtLlxBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCSvXj8/f7///////////+/17ZAkQBAkQBAkQBAkQBAkQBAkQCvzaD////////////+/v+gxYxAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBEkwXT4tD////////////w9PJnpjpAkQBAkQBAkQBAkQBPmRjj7OL////////////c6NtLlxBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCUvnv9/v7///////////+20alAkQBAkQBAkQBAkQCoyZb////////////+/v+hxY5AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBEkwfU49L////////////o7+pYnSNAkQBAkQBJlg7d6d3////////////f6d5MlxFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCYwIH+/v////////////+ry5tAkQBAkQCgxIz+/v/////////+/v+hxY1AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBFkwjW5NP////////////h6uFNlxRFkwjY5dX////////////e6d5MlhJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCawYL+/v/////////+/v+nyJadw4j+/v/////////+/v+jxpBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBGlArX5Nb////////////2+ff2+fb////////////d6d1MlxFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCdw4n+/v////////////////////////////+ixo9AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBHlQva5tf////////////////////////f6d5MlhJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCfw4r+/v////////////////////+kxpFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNGkA5AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBHlQva5tj////////////////f6d9MlxNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBIkQ9SjyJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCixo/+/v////////////+kx5JAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBRjSNmi0lAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBJlg7b59n////////g6eBOmBVAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBni0p/h3lCkQVAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCkx5H+/v////+myJRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBDkQZ/h3kAAABii0FAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBKlg/c6Nzf6eBPmBZAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBii0IAAAAAAACEhoNSjiJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQClyJOnyJVAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBRjiCFhoMAAAAAAAAAAACCh31RjiFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBKlg5Klg9AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBSjiKBh30AAAAAAAAAAAAAAAAAAACEhoNii0FCkQVAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBDkQZii0KEhoMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB/h3lmi0pSjiJHkA5BkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNHkA5SjiJmi0p/h3kAAAAAAAAAAAAAAAAAAAD4AAAAAB8AAOAAAAAABwAAwAAAAAADAACAAAAAAAEAAIAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAQAAgAAAAAABAADAAAAAAAMAAOAAAAAABwAA+AAAAAAfAAA="
 If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", 0, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
    Return -1
 VarSetCapacity(Dec, DecLen, 0)
@@ -6506,21 +7331,21 @@ DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Pt
 Return hIcon
 }
 
-Create_BefundImport_ico()                     	{                                                                     	;-- Icon für das InfoWindow
+Create_BefundImport_ico()                     	{                                                 	;-- Icon für das InfoWindow
 VarSetCapacity(B64, 788 << !!A_IsUnicode)
 B64 := "iVBORw0KGgoAAAANSUhEUgAAABQAAAAYCAYAAAD6S912AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAACtQAAArUBrcsL2AAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAHLSURBVDiNzZM9ixpRFIaPcU68gkHRhAUhBAbtLLYbG6spbWysFMRmy2kt/QE2tmkE21TWUZRAWjsbBZlK0WSsLgyjszPvFlmXbHb8yhrIA7c559znnvsVIiLQFVGIiIQQVK/XqVqtXiwAQK1Wi4bDIUkpf8V6vR5SqRQajQYuwXEcVCoVqKqKfr+P/W5hmiYmkwnS6TQMw4Dv+ydllmWhUCggn89jvV7DNM3nQgCYz+dQVRW1Wg2u6x6UzWYzZLNZlMtl2LYNAMFCAFgul8jlciiVSnAc54VsMBggkUjAMAx4nvcUPygEgM1mA03ToOs6pJRP8U6ng1gshm63+2Kho0IAkFJC13VomgbLstBsNpFMJjEajQKP4aQQAGzbRrFYRDweRyaTwXQ6Daw7WwgAu90O7XYblmUdrLlIeC574Zu/+l9HuLpQISIaj8e0WCxeJVqtVkREFFIUZRGJRN6+vjei7Xa7u4bnGaEjuRtmXgUlXNe9IaIfQbn//5b/zbP5gw9CiHee570/NImZP4XD4ZjjOJKIfp7q8N73/Tsi+nakke+e5zXOanlPNBr9yMyfmfmemfE4fGb+IoRQL5L9DjPfMvPXx3F7qv4BASqDqpfUXLIAAAAASUVORK5CYII="
 ;return ImageFromBase64(false, B64)
 return GdipCreateFromBase64(B64)
 }
 
-Create_PDF_ico(NewHandle := False)     	{                                                                   	;-- PDF Icon für Befundfenster
+Create_PDF_ico(NewHandle := False)     	{                                               	;-- PDF Icon für Befundfenster
 VarSetCapacity(B64, 1192 << !!A_IsUnicode)
 B64 := "AAABAAEAEBAAAAEAGABoAwAAFgAAACgAAAAQAAAAIAAAAAEAGAAAAAAAAAAAAAkAAAAJAAAAAAAAAAAAAAAFBUAKCoEEBDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKCoAHB2ENDacCAhsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBDANDa0QEMsKCoYBAQYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAhoKCnoQENAKCoAEBDIBAQcAAAAAAAAAAAAAAAAAAAAAAAADAyYFBUcCAh4AAAAAAAAAAAIHB2APD8cMDKENDa8ICGsGBkkDAyoBAQ0CAhoJCXANDa0KCoUJCXsAAAAAAAAAAAACAiAPD8EBAQ4DAyIGBkoJCXANDa0PD8YPD8UQENEPD8EPD74GBlAAAAAAAAAAAAAAAAALC44EBDUAAAAAAAAAAAAHB2APD74GBkoFBT4EBC0CAhoAAAAAAAAAAAAAAAAAAAAHB1gHB2EAAAAAAAAHB1gNDbUDAyoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBDANDaEAAAMGBk4NDbADAyYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQwPD8AICGcPD7sDAygAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALC44QEM0EBDkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQoNDawICGcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGBkcQENEHB1wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQMDKENDasHB1cAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAh0PD74JCXkFBUQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMHB1sJCXEBAQ4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf/wAAD/8AAAf/AACB+AAAwAAAAOAAAADzgQAA8x8AAPA/AADwfwAA+P8AAPH/AADx/wAA4f8AAOH/AADh/wAA"
 ;return ImageFromBase64(false, B64)
 return GdipCreateFromBase64(B64)
 }
 
-Create_Image_ico(NewHandle := False) 	{                                                                  	;-- Bilder Icon für Befundfenster
+Create_Image_ico(NewHandle := False) 	{                                              	;-- Bilder Icon für Befundfenster
 VarSetCapacity(B64, 1124 << !!A_IsUnicode)
 B64 := "AAABAAEAEA8AAAEAGAA0AwAAFgAAACgAAAAQAAAAHgAAAAEAGAAAAAAAAAAAAAgAAAAIAAAAAAAAAAAAAABNTU0REREREREREREEBAQAAAAAAAAAAAAAAAAAAAALCwsRERERERERERERERFQUFBPT08AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACmpqapqakAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABERET////6+vofHx8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQEBDd3d3///////+VlZUAAAAAAAAAAAAAAAAAAAAAAAAAAACSkpKampoKCgoEBASxsbH////////////39/caGhoAAAAAAAAAAAAAAAAAAABycnL////////f39/W1tb///////////////////+Tk5MAAAAAAAAAAAAAAABHR0f8/Pz////////////////////////////////////5+fkfHx8AAAAAAAAfHx/r6+v///////////////////////////////////////////+ampoAAAAJCQnOzs7////////////////d3d3a2tr////////////////////////9/f1paWm0tLT////////////5+flSUlIAAAAAAABGRkb19fX///////////////////////////////////////+bm5sAAAAAAAAAAAAAAAB8fHz///////////////////////////////////////9zc3MAAAAAAAAAAAAAAABMTEz///////////////////////////////////////+2trYAAAAAAAAAAAAAAACRkZH///////////////////////////////////////////+YmJgXFxcNDQ11dXX8/Pz///////////////////////////////////////////////////////////////////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
 ;return ImageFromBase64(false, B64)
@@ -6528,6 +7353,8 @@ return GdipCreateFromBase64(B64)
 }
 
 ;}
+
+;----------------------------------------------------------------------------------------------------------------------------------------------
 
 ;{21. Das Ende - OnExit Sprunglabel und OnError-Funktion
 
@@ -6538,8 +7365,7 @@ DasEnde(ExitReason, ExitCode) {
   ; Anzeigestatus des Infofenster sichern
 	If Addendum.AddendumGui {
 		admGui_SaveStatus()
-		Gui, adm: 	Destroy
-		Gui, adm2: 	Destroy
+		admGui_Destroy()
 	}
 
 	FormatTime	, Time      	, % A_Now    	, dd.MM.yyyy HH:mm:ss
@@ -6552,7 +7378,7 @@ DasEnde(ExitReason, ExitCode) {
 	Progress	, % "B2 B2 cW202842 cBFFFFFF cTFFFFFF zH25 w400 WM400 WS500"
 					, % "Addendum wird beendet."
 					, % "Addendum für AlbisOnWindows"
-					, % "by Ixiko vom " DatumVom
+					, % "Version vom " DatumVom
 					, % "Futura Bk Bt"
 
 	Loop 50 {
@@ -6565,25 +7391,6 @@ DasEnde(ExitReason, ExitCode) {
 
 ExitApp
 }
-
-istda: ;{
-
-	Progress	, % "B2 B2 cW202842 cBFFFFFF cTFFFFFF zH25 w400 WM400 WS500"
-					, % "Addendum wird beendet."
-					, % "Addendum für AlbisOnWindows"
-					, % "by Ixiko vom " DatumVom
-					, % "Futura Bk Bt"
-
-	Loop 50 {
-		Progress % (100 - (A_Index * 2))
-		Sleep 1
-	}
-
-	Progress, Off
-	Gdip_Shutdown(pToken)
-
-ExitApp
-;}
 
 ;}
 
@@ -6599,6 +7406,7 @@ ExitApp
 #Include %A_ScriptDir%\..\..\include\Addendum_Device.ahk
 #Include %A_ScriptDir%\..\..\include\Addendum_Gdip_Specials.ahk
 #Include %A_ScriptDir%\..\..\include\Addendum_Gui.ahk
+#Include %A_ScriptDir%\..\..\include\Addendum_GVU.ahk
 #Include %A_ScriptDir%\..\..\include\Addendum_Internal.ahk
 #Include %A_ScriptDir%\..\..\include\Addendum_LanCom.ahk
 #Include %A_ScriptDir%\..\..\include\Addendum_Menu.ahk
@@ -6645,6 +7453,18 @@ ExitApp
 
 ;}
 
+/*
+
+				;~ options         	:= hs.options
+				;~ replacement  	:= RegExReplace(hs.replacement, "\s{2,}")
+				; ▹ - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+				; bekannter Gruppe zuordnen
+				; ▹ - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+				else if hotstrings.haskey(hsKey) {
+					hotstrings[hsKey][Abbreviation] := {	"description"		: hs.description
+											            				,	"replacement"	: RegExReplace(hs.replacement, "\s{2,}")
+												            			,	"option"		    	: hs.options}
+				}
 
 
-
+*/

@@ -11,7 +11,7 @@
 ;
 ;	-----------------------------------------------------------------------------------------------------------------------------------
 ;	-----------------------------------------------------------------------------------------------------------------------------------
-;	                                               written by Ixiko -this version is from 05.04.2020
+;	                                               written by Ixiko -this version is from 28.07.2021
 ;	                                    please report errors and suggestions to me: Ixiko@mailbox.org
 ;	                                use subject: "Addendum" so that you don't end up in the spam folder
 ;	                                         GNU Lizenz - can be found in main directory  - 2017
@@ -21,6 +21,7 @@
 	#NoTrayIcon
 	#SingleInstance Force
 	SetBatchLines, -1
+	ListLines, Off
 	FileEncoding, UTF-8
 	OnError("FehlerProtokoll")
 
@@ -43,10 +44,11 @@
 ; -------------------------------------------------------------------------------------------------------------------------------------
 ; Addendum Datenordner anlegen falls nicht vorhanden
 ; -------------------------------------------------------------------------------------------------------------------------------------;{
-	If !Instr( FileExist(A_ScriptDir . "\logs'n'data\_DB\Labordaten"),  "D")
+	If !Instr(FileExist(A_ScriptDir "\logs'n'data\_DB"),  "D")
+		FileCreateDir, % A_ScriptDir "\logs'n'data\_DB"
+	If !Instr(FileExist(A_ScriptDir "\logs'n'data\_DB\Labordaten"),  "D")
 		FileCreateDir, % A_ScriptDir "\logs'n'data\_DB\Labordaten"
-		If !Instr( FileExist(A_ScriptDir . "\logs'n'data\_DB\Labordaten"),  "D")
-		FileCreateDir, % A_ScriptDir "\logs'n'data\_DB\Labordaten"
+
 ;}
 
 ; -------------------------------------------------------------------------------------------------------------------------------------
@@ -89,7 +91,10 @@
 				IfMsgBox, Yes
 				{
 					IniWrite, 1	, % A_ScriptDir "\Addendum.ini", AutoStartAbfrage, % CompName
-					FileCreateShortcut, % A_ScriptDir "\AddendumStarter.ahk", % AutoStartOrdner[A_Index] "\AddendumStarter.lnk", % A_ScriptDir,, % "Startet Addendum für AlbisOnWindows", % A_ScriptDir "\support\Addendum.ico"
+					FileCreateShortcut	, % A_ScriptDir "\AddendumStarter.ahk"
+												, % AutoStartOrdner[A_Index] "\AddendumStarter.lnk"
+												, % A_ScriptDir,, % "Startet Addendum für AlbisOnWindows"
+												, % A_ScriptDir "\support\Addendum.ico"
 				}
 
 				IfMsgBox, No
@@ -97,7 +102,11 @@
 
 			}
 			else if (Autostart = 1)
-				FileCreateShortcut, % A_ScriptDir "\AddendumStarter.ahk", % AutoStartOrdner[A_Index] "\AddendumStarter.lnk", % A_ScriptDir,, % "Startet Addendum für AlbisOnWindows", % A_ScriptDir "\support\Addendum.ico"
+				FileCreateShortcut	, % A_ScriptDir "\AddendumStarter.ahk"
+											, % AutoStartOrdner[A_Index] "\AddendumStarter.lnk"
+											, % A_ScriptDir
+											,, % "Startet Addendum für AlbisOnWindows"
+											, % A_ScriptDir "\support\Addendum.ico"
 
 		}
 	}
@@ -117,23 +126,30 @@
 
 	}
 
-	If !Instr( FileExist(A_AppData "\AutohotkeyH"),  "D")                                ; noch kein Verzeichnis vorhanden
-		FileCreateDir	, % A_AppData "\AutoHotkeyH"
+	AHKH_Path1 := A_AppData "\AutohotkeyH"
+	AHKH_Path2 := A_AppDataCommon "\AutohotkeyH"
 
-	If FileExist(A_ScriptDir "\include\AHK_H\AutoHotkeyH_U64.exe") {
+  ; noch kein Verzeichnis vorhanden
+	If !Instr(FileExist(AHKH_Path1),  "D") && !InStr(FileExist(AHKH_Path2, "D"))  {
+		FileCreateDir	, % AHKH_Path1
+		If ErrorLevel
+			FileCreateDir	, % AHKH_Path2
 
-		FileGetTime, installDirTime	, % A_ScriptDir "\include\AHK_H\AutoHotkeyH_U64.exe"
-		FileGetTime, AppDirTime  	, % A_AppData "\AutoHotkeyH\AutoHotkeyH_U64.exe"
-
-		If !FileExist(A_AppData "\AutohotkeyH\AutoHotkeyH_U64.exe") || (installDirTime <> AppDirTime)            ; noch keine Datei vorhanden oder wurde versehentlich gelöscht
-			FileCopy, % A_ScriptDir "\include\AHK_H\AutoHotkeyH_U64.exe", % A_AppData "\AutoHotkeyH\AutoHotkeyH_U64.exe", 1 ; 1 = überschreiben
-
+			MsgBox, % ErrorLevel ": " AHKH_Path2
 	}
+	AHKH_Path := Instr(FileExist(AHKH_Path1),  "D") ? AHKH_Path1 : Instr(FileExist(AHKH_Path2),  "D") ? AHKH_Path2 : AHKH_Path1
 
-	If FileExist(A_AppData "\AutohotkeyH\AutoHotkeyH_U64.exe")
-		AHKH_FilePath := A_AppData "\AutoHotkeyH\AutoHotkeyH_U64.exe"
+	FileGetTime, installDirTime	, % A_ScriptDir "\include\AHK_H\AutoHotkeyH_U64.exe"
+	FileGetTime, AppDirTime    	, % A_AppData "\AutoHotkeyH\AutoHotkeyH_U64.exe"
+
+  ; noch keine Datei vorhanden oder wurde versehentlich gelöscht
+	If !FileExist(AHKH_Path "\AutoHotkeyH_U64.exe") || (installDirTime <> AppDirTime)
+		FileCopy, % A_ScriptDir "\include\AHK_H\AutoHotkeyH_U64.exe", % AHKH_Path "\AutoHotkeyH_U64.exe", 1
+
+	If FileExist(AHKH_Path "\AutoHotkeyH_U64.exe")
+		AHKH_FilePath := AHKH_Path "\AutoHotkeyH_U64.exe"
 	else {
-		MsgBox, Kann keine AutohotkeyH.exe finden.
+		MsgBox, % "AutoHotkeyH konnte nicht ins Verzeichnis:`n" AHKH_Path "`nkopiert werden."
 		ExitApp
 	}
 	;}
@@ -142,10 +158,13 @@
 ; Albis starten wenn es nicht gestartet ist
 ; -------------------------------------------------------------------------------------------------------------------------------------
 	If !AlbisExist() 	{
+		RegRead, AlbisInstallPath	, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, Installationspfad
+		RegRead, AlbisLocalPath	, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, LocalPath-1
 		IniRead, AlbisDir, % A_ScriptDir "\Addendum.ini", Albis, AlbisWorkDir
 		IniRead, AlbisExe, % A_ScriptDir "\Addendum.ini", Albis, AlbisExe
-		If !InStr(AlbisDir, "Error") && !InStr(AlbisExe, "Error")
-				Run, % AlbisDir "\" AlbisExe, % "c:\albiswin.loc"
+
+		If FileExist(AlbisInstallPath "\" AlbisExe)
+			Run, % AlbisInstallPath "\" AlbisExe, % AlbisLocalPath
 	}
 
 ; -------------------------------------------------------------------------------------------------------------------------------------

@@ -1,11 +1,11 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                            	by Ixiko started in September 2017 - last change 09.09.2021 - this file runs under Lexiko's GNU Licence
+;                                            	by Ixiko started in September 2017 - last change 27.10.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; FUNKTIONEN  	|                                                 	|                                                 	|                                                 	|                                             	(24)
+; FUNKTIONEN  	|                                                 	|                                                 	|                                                 	|                                             	(27)
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; Umwandeln:		|	GetHex                                    	GetDec
 ; WinEventhook: 	|	SetWinEventHook                     	UnhookWinEvent
@@ -14,7 +14,7 @@
 ; INI: 					|	IniReadExt                                	IniAppend                                  	StrUtf8BytesToText
 ; MsgBox:				|	KurzePause	                          	Weitermachen
 ; Dateien:				|	FileIsLocked                             	FilePathCreate						    	FilePathExist                               	isFullFilePath
-;								GetAppImagePath						GetAppsInfo
+;								GetAppImagePath						GetAppsInfo                              	GetFileSize                                  	GetAlbisPaths
 ; Sonstiges:			|	IsRemoteSession                     	HasVal
 ;______________________________________________________________________________________________________________________________________________
 ; UMWANDELN (2)
@@ -180,10 +180,17 @@ return hwnd
 ; INI (3)
 IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="", convert:=true) {                             	;-- eigene IniRead funktion für Addendum
 
-	; beim ersten Aufruf der Funktion nur den Pfad und Namen zur ini Datei übergeben!
-	; die Funktion behandelt einen geschriebenen Wert der "ja" oder "nein" ist, als Wahrheitswert, also true oder false
-	; UTF-16 in UTF-8 Zeichen-Konvertierung
-	; letzte Änderung: 09.09.2021
+	/* Beschreibung
+
+		-	beim ersten Aufruf der Funktion nur den Pfad und Namen zur ini Datei übergeben!
+				workini := IniReadExt("C:\temp\Addendum.ini")
+
+		-	die Funktion behandelt einen geschriebenen Wert welcher ein "ja" oder "nein" ist, als logische Wahrheitswerte (wahr und falsch).
+		-	UTF-16-Zeichen (verwendet in .ini Dateien) werden per Default in UTF-8 Zeichen umgewandelt
+
+		letzte Änderung: 22.10.2021
+
+	 */
 
 		static admDir
 		static WorkIni
@@ -224,7 +231,8 @@ IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="", convert:=true) {   
 					TrayTip, % A_ScriptName, % "Der Defaultwert <" DefaultValue "> konnte geschrieben werden.`n`n[" WorkIni "]", 2
 			}
 			else return "ERROR"
-		else if InStr(OutPutVar, "%AddendumDir%")
+
+		If InStr(OutPutVar, "%AddendumDir%")
 				return StrReplace(OutPutVar, "%AddendumDir%", admDir)
 		else if RegExMatch(OutPutVar, "%\.exe$") && !RegExMatch(OutPutVar, "i)[A-Z]\:\\")
 				return GetAppImagePath(OutPutVar)
@@ -316,12 +324,10 @@ return LE = 32 ? true : false
 
 FilePathCreate(path) {                                                                                                              	;-- erstellt einen Dateipfad falls dieser noch nicht existiert
 
+	SplitPath, path, fname, path
 	If !FilePathExist(path) {
 		FileCreateDir, % path
-		If ErrorLevel
-			return 0
-		else
-			return 1
+		return ErrorLevel ? 0 : 1
 	}
 
 return 1
@@ -409,13 +415,26 @@ GetAppsInfo(infoType) {
    Return res
 }
 
+GetFileSize(path, units="") {                                                                                                      	;-- FileGetSize wrapper
+	FileGetSize, fSize, % path, % units
+return fSize
+}
+
+GetAlbisPaths() {                                                                                                                   	;-- Albisverzeichnisse
+
+	SetRegView	, % (A_PtrSize = 8 ? 64 : 32)
+	RegRead   	, MainPath	, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, 1-MainPath
+	RegRead    	, LocalPath 	, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, 1-LocalPath
+	RegRead   	, Exe         	, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, 1-Exe
+
+return {"MainPath":MainPath, "LocalPath":LocalPath, "Exe":Exe, "Briefe":MainPath "\Briefe", "db":MainPath "\db"}
+}
+
 ;______________________________________________________________________________________________________________________________________________
 ; SONSTIGES (1)
 IsRemoteSession() {                                                                                                                 	;-- true oder false wenn eine RemoteSession besteht
 	SysGet, SessionRS, 4096
-	If (SessionRS <> 0)
-		return true
-return false
+return SessionRS
 }
 
 HasVal(haystack, needle) {

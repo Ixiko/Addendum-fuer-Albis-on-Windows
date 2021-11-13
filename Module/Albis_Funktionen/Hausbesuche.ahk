@@ -3,29 +3,29 @@
 ;--------------------------------------------- Addendum für AlbisOnWindows -----------------------------------------------
 ;------------------------------------------------------------------------------------------------------------------------------------
 ;---------------------------------------- Modul: Formularhelfer für Hausbesuche -------------------------------------------
-															Version = vom 30.01.2019
+															Version := "19.10.2021"
 ;------------------------------------------------------------------------------------------------------------------------------------
 
-SetTitleMatchMode, 2		;Fast is default
-SetTitleMatchMode, Fast		;Fast is default
-DetectHiddenWindows, Off	;Off is default
-CoordMode, Mouse, Client
-CoordMode, Pixel, Client
-CoordMode, ToolTip, Client
-CoordMode, Menu, Client
-SetKeyDelay, -1, -1
-SetBatchLines, -1
-SetWinDelay, -1
-SetControlDelay, -1
-SendMode, Input
-AutoTrim, On
-FileEncoding, UTF-8
+SetTitleMatchMode     	, 2		;Fast is default
+SetTitleMatchMode     	, Fast		;Fast is default
+DetectHiddenWindows	, Off	;Off is default
+CoordMode, Mouse   	, Client
+CoordMode, Pixel      	, Client
+CoordMode, ToolTip 	, Client
+CoordMode, Menu    	, Client
+SetKeyDelay              	, -1, -1
+SetBatchLines               	, -1
+SetWinDelay             	, -1
+SetControlDelay        	, -1
+SendMode                	, Input
+AutoTrim                   	, On
+FileEncoding             	, UTF-8
+ListLines                    	, On
 
 #MaxHotkeysPerInterval 99000000
-#HotkeyInterval 99000000
-#KeyHistory 0
+#HotkeyInterval         	 99000000
+#KeyHistory                 	0
 
-ListLines Off
 
 ;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; Script Prozess ID feststellen
@@ -39,22 +39,22 @@ ListLines Off
 
 	OnExit, DasEnde
 
+	global AddendumDir
 	global AlbisWinID            	:= AlbisWinID()
 	global AlbisPID                	:= AlbisPID()
-	global AddendumDir			:= FileOpen("C:\albiswin.loc\AddendumDir","r").Read()
 	global AddendumDBPath 	:= AddendumDir . "\logs'n'data\_DB"
 	global hPrg2, BgColor
-	col:= Object()
-	FocusColor:= "BfD2ff"
 
-	If !AlbisWinID
-	{
-			MsgBox,, Addendum für Albis on Windows, Bitte erst Albis starten!
-			ExitApp
+	RegExMatch(A_ScriptDir, "[A-Z]\:.*?AlbisOnWindows", AddendumDir)
+	col:= Object()
+
+	If !AlbisWinID	{
+		MsgBox,, Addendum für Albis on Windows, Bitte erst Albis starten!
+		ExitApp
 	}
 
 	WinActivate, ahk_class OptoAppClass
-	Menu, Tray, Icon, % "hIcon: " Create_Hausbesuche_png(true)
+	Menu, Tray, Icon, % "hIcon: " Hausbesuche_ico()
 	gosub, InitializeWinEventHooks
 ;}
 
@@ -63,10 +63,10 @@ ListLines Off
 ;---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
 
 	;Hintergrundfarbe ------------------------------------------------------------------------------------------------------------------
-	IniRead, BgColor, % AddendumDir . "\Addendum.ini", Addendum, DefaultBgColor3
+	IniRead, BgColor, % AddendumDir "\Addendum.ini", Addendum, DefaultBgColor3
 	If InStr(ErrorLevel, "FAIL") {
-		BgColor:=  "8fA2ff"
-		IniWrite, % BgColor,  % AddendumDir . "\Addendum.ini", Addendum, DefaultBgColor3
+		BgColor:=  "8FA2FF"
+		IniWrite, % BgColor,  % AddendumDir "\Addendum.ini", Addendum, DefaultBgColor3
 	}
 	;Formularanzahl --------------------------------------------------------------------------------------------------------------------
 	IniRead, Dk, % AddendumDir . "\Addendum.ini", Addendum, Druckkopien, 3|2|1|1|1
@@ -76,12 +76,12 @@ ListLines Off
 	AlbisMonitorPos:= GetMonitorIndexFromWindow(AlbisWinID)
 	SysGet, mon, MonitorWorkArea, % AlbisMonitorPos
 	If (monRight > 1920)
-			IniKey:= "FormularhelferPos_HighDpi"
+		IniKey:= "FormularhelferPos_HighDpi"
 	else
-			IniKey:= "FormularhelferPos"
+		IniKey:= "FormularhelferPos"
 
 	;gespeicherte Fensterposition für Client einlesen -------------------------------------------------------------------------------
-	IniRead, xyPosition, % AddendumDir . "\Addendum.ini", % CompName, % Inikey, % "xCenter yCenter "
+	IniRead, xyPosition, % AddendumDir "\Addendum.ini", % CompName, % Inikey, % "xCenter yCenter "
 	RegExMatch(xyPosition, "(?<=x)\d+", fPosX)
 	RegExMatch(xyPosition, "(?<=y)\d+", fPosY)
 
@@ -96,121 +96,125 @@ ListLines Off
 	Patname	:= AlbisCurrentPatient()
 	Birth			:= AlbisPatientGeburtsdatum()
 	PatID		:= AlbisAktuellePatID()
-	If (Patname="")
-			PatLabel:= "Warte auf eine Patientenakte..."
-	else
-			PatLabel:= "ID: " PatID "          Name: " Patname "          Geburtstag: " Birth
+	PatLabel 	:= !Patname ? "Warte auf eine Patientenakte..." : "ID: " PatID "          Name: " Patname "          Geburtstag: " Birth
 ;}
 
 ; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; Formular Gui
 ; --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
+	col1X                        	:= 5
+	topY                         	:= 150
+	fields                         	:= 5
+	FocusColor               	:= "BFD2FF"
+	TasturhilfeStart          	:= "l 123456789 ik es"
+	TasturhilfeDazwischen	:= "jl 123456789 ik es"
+	TasturhilfeEnde            	:= "j 123456789 ik es"
+	Beschreibung             	=
+	(LTrim Join `n
+	Es lassen sich nur einstellige Ziffern zwischen 0-9 eingeben. Am schnellsten geht es indem man eine Zifferntaste drückt. Der Eingabefokus rückt anschliessend automatisch eine Position von links nach rechts weiter. Wenn man bei 4 Formularen ein 5.mal eine Ziffer drückt beginnt die Eingabe wieder im ganz linken Feld. Drücke ENTER um die ausgewählten Formulare ausdrucken zu lassen. Du kannst natürlich auch sofort die ENTER Taste drücken wenn schon alles richtig eingestellt ist. Warte bitte bis dieses Fenster geschlossen wurde!
+	)
 
-	col1X:= 5, 	topY:= 150, 	fields:=5
-	Beschreibung:= "In die Felder mit den Zahlen lassen sich nur einstellige Ziffern zwischen 0-9 eingeben. Am schnellsten geht es indem man eine Ziffer drückt. Der Eingabefokus rückt anschliessend automatisch eine Position von links nach rechts weiter. Wenn man bei 4 Formularen ein 5.mal eine Ziffer drückt beginnt die Eingabe wieder im ganz linken Feld. Drücke ENTER um die ausgewählten Formulare ausdrucken zu lassen. Du kannst natürlich auch sofort die ENTER Taste drücken wenn schon alles richtig eingestellt ist. Warte bitte bis dieses Fenster geschlossen wurde!"
-	TasturhilfeStart:= "l 123456789 ik es"
-	TasturhilfeDazwischen:= "jl 123456789 ik es"
-	TasturhilfeEnde:= "j 123456789 ik es"
-
-	Gui, FhHB: New, hwndhFhHb
-	Gui, FhHb: Margin, 0,0
-	Gui, FhHb: Color, % BgColor
+	Gui, HB: New    	, -DPIScale +HWNDhHB
+	Gui, HB: Margin	, 0,0
+	Gui, HB: Color   	, % BgColor , % BgColor
 
 ; --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; Kassenrezept
 ; --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	Gui, FhHb: Add, GroupBox	, % "hWndhGB1        	x" col1X " y" topY " w202 h120 Hide"
-	Gui, FhHb: Font, s36 q5 bold cWhite	, Futura Md Bk
-	Gui, FhHb: Add, Edit    			, % "hWndhE1        		x" (col1x+8) " y" (topY+38) " w30 vE1 -E0x200 Limit1", % copies[1]
-	Gui, FhHb: Add, Picture        	, % "hWndhPic1         	x" (col1x+64)  " y" (topY+38) , % "HBITMAP: " Create_Kassenrezept_png()
-	Gui, FhHb: Font, s28 q5 bold cBlack 	, Futura Bk Bt
-	Gui, FhHb: Add, Text            	, % "                          	x" (col1x+40) " y" (topY+60) " w20 h23 BackgroundTrans cBlack +0x200", X
-	Gui, FhHb: Add, UpDown     	, % "                           	x" (col1x+163 ) " y" (topY+38) " w34 h68 Range1-9 vUD1 -16", % copies[1]
+	Gui, HB: Add, GroupBox	, % "hWndhGB1        	x" col1X " y" topY " w202 h120 Hide"
+	Gui, HB: Font, s36 q5 bold cBlack	, Futura Md Bk
+	Gui, HB: Add, Edit    			, % "hWndhE1        		x" (col1x+8) " y" (topY+38) " w30 vE1 -E0x200 Limit1", % copies[1]
+	Gui, HB: Add, Picture        	, % "hWndhPic1         	x" (col1x+64)  " y" (topY+38) , % "HBITMAP: " Create_Kassenrezept_png()
+	Gui, HB: Font, s28 q5 bold cBlack 	, Futura Bk Bt
+	Gui, HB: Add, Text           	, % "                          	x" (col1x+40) " y" (topY+60) " w20 h23 BackgroundTrans cBlack +0x200", X
+	Gui, HB: Add, UpDown     	, % "                           	x" (col1x+163 ) " y" (topY+38) " w34 h68 Range1-9 vUD1 -16", % copies[1]
 ; --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; Privatrezept
 ; --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	col:= ControlGetPos(hGB1), col2X:= col["X"] + col["W"] - 5
-	Gui, FhHb: Add, GroupBox	, % "hWndhGB2	x" col2X " y" (topY+5) " w202 h" (col.H-5) " Hide"
-	Gui, FhHb: Font, s36 q5 bold cWhite, Futura Md Bk
-	Gui, FhHb: Add, Edit    			, % "hWndhE2 vE2	x" (col2X+8) " y" (topY+38) " w30 -E0x200 Limit1", % copies[2]
-	Gui, FhHb: Add, Picture        	, % "hWndhPicPrivatrezept x" (col2x+64)  " y" (topY+38) , % "HBITMAP: " hBitmapPR:= Create_Privatrezept_png()
-	Gui, FhHb: Font, s28 q5 bold cBlack, Futura Bk Bt
-	Gui, FhHb: Add, Text            	, % "x" (col2x +   40 ) " y" (topY + 60 ) " w20 h23 BackgroundTrans cBlack +0x200", X
-	Gui, FhHb: Add, UpDown     	, % "x" (col2x + 163 ) " y" (topY + 38 ) " w34 h68 Range1-9 vUD2 -16", % copies[2]
+	Gui, HB: Add, GroupBox	, % "hWndhGB2	x" col2X " y" (topY+5) " w202 h" (col.H-5) " Hide"
+	Gui, HB: Font, s36 q5 bold cBlack, Futura Md Bk
+	Gui, HB: Add, Edit    			, % "hWndhE2 vE2	x" (col2X+8) " y" (topY+38) " w30 -E0x200 Limit1", % copies[2]
+	Gui, HB: Add, Picture        	, % "hWndhPicPrivatrezept x" (col2x+64)  " y" (topY+38) , % "HBITMAP: " hBitmapPR:= Create_Privatrezept_png()
+	Gui, HB: Font, s28 q5 bold cBlack, Futura Bk Bt
+	Gui, HB: Add, Text           	, % "x" (col2x +   40 ) " y" (topY + 60 ) " w20 h23 BackgroundTrans cBlack +0x200", X
+	Gui, HB: Add, UpDown     	, % "x" (col2x + 163 ) " y" (topY + 38 ) " w34 h68 Range1-9 vUD2 -16", % copies[2]
 ; --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; Krankenhaus
 ; --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	col:= ControlGetPos(hGB2), col3X:= col["X"] + col["W"] - 5
-	Gui, FhHb: Add, GroupBox	, % "hWndhGB3	x" col3X " y" (topY+5) " w202 h179 Hide"
-	Gui, FhHb: Font, s36 q5 bold cWhite, Futura Md Bk
-	Gui, FhHb: Add, Edit    			, % "hWndhE3 vE3 x" (col3X+8) " y" (topY+38) " w30 -E0x200 Limit1", % copies[3]
-	Gui, FhHb: Add, Picture        	, % "hWndhPicKH x" (col3x+64)  " y" (topY+38) , % "HBITMAP: " hBitmapKH:= Create_KHBehandlung_png()
-	Gui, FhHb: Font, s28 q5 bold cBlack, Futura Bk Bt
-	Gui, FhHb: Add, Text            	, % "x" (col3x +   40 ) " y" (topY + 60 ) " w20 h23 BackgroundTrans cBlack +0x200", X
-	Gui, FhHb: Add, UpDown     	, % "x" (col3x + 163 ) " y" (topY + 38 ) " w34 h68 Range1-9 vUD3 -16", % copies[3]
+	Gui, HB: Add, GroupBox	, % "hWndhGB3	x" col3X " y" (topY+5) " w202 h179 Hide"
+	Gui, HB: Font, s36 q5 bold cBlack, Futura Md Bk
+	Gui, HB: Add, Edit    			, % "hWndhE3 vE3 x" (col3X+8) " y" (topY+38) " w30 -E0x200 Limit1", % copies[3]
+	Gui, HB: Add, Picture        	, % "hWndhPicKH x" (col3x+64)  " y" (topY+38) , % "HBITMAP: " hBitmapKH:= Create_KHBehandlung_png()
+	Gui, HB: Font, s28 q5 bold cBlack, Futura Bk Bt
+	Gui, HB: Add, Text            	, % "x" (col3x +   40 ) " y" (topY + 60 ) " w20 h23 BackgroundTrans cBlack +0x200", X
+	Gui, HB: Add, UpDown     	, % "x" (col3x + 163 ) " y" (topY + 38 ) " w34 h68 Range1-9 vUD3 -16", % copies[3]
 ; --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; Krankenbeförderung
 ; --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	col:= ControlGetPos(hGB3), col4X:= col["X"] + col["W"] - 5
-	Gui, FhHb: Add, GroupBox	, % "hWndhGB4	x" col4X " y" (topY+5) " w243 h179 Hide"
-	Gui, FhHb: Font, s36 q5 bold cWhite, Futura Md Bk
-	Gui, FhHb: Add, Edit    			, % "hWndhE4 vE4 x" (col4X+8) " y" (topY+38) " w30 -E0x200 Limit1", % copies[4]
-	Gui, FhHb: Add, Picture        	, % "hWndhPicKB x" (col4x+64)  " y" (topY+38) , % "HBITMAP: " hBitmapKH:= Create_Krankenbefoerderung_png()
-	Gui, FhHb: Font, s28 q5 bold cBlack, Futura Bk Bt
-	Gui, FhHb: Add, Text            	, % "x" (col4x +   40 ) " y" (topY + 60 ) " w20 h23 BackgroundTrans cBlack +0x200", X
-	Gui, FhHb: Add, UpDown     	, % "vUDKB x" (col4x + 203 ) " y" (topY + 38 ) " w34 h68 Range1-9 vUD4 -16", % copies[4]
+	Gui, HB: Add, GroupBox	, % "hWndhGB4	x" col4X " y" (topY+5) " w243 h179 Hide"
+	Gui, HB: Font, s36 q5 bold cBlack, Futura Md Bk
+	Gui, HB: Add, Edit    			, % "hWndhE4 vE4 x" (col4X+8) " y" (topY+38) " w30 -E0x200 Limit1", % copies[4]
+	Gui, HB: Add, Picture        	, % "hWndhPicKB x" (col4x+64)  " y" (topY+38) , % "HBITMAP: " hBitmapKH:= Create_Krankenbefoerderung_png()
+	Gui, HB: Font, s28 q5 bold cBlack, Futura Bk Bt
+	Gui, HB: Add, Text           	, % "x" (col4x +   40 ) " y" (topY + 60 ) " w20 h23 BackgroundTrans cBlack +0x200", X
+	Gui, HB: Add, UpDown     	, % "vUDKB x" (col4x + 203 ) " y" (topY + 38 ) " w34 h68 Range1-9 vUD4 -16", % copies[4]
 ; --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; Überweisung
 ; --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	col:= ControlGetPos(hPicKB), col5X:= col["X"] + col["W"] + 35
 	GuiH_Temp:= col["H"] + col["Y"] + 40
-	Gui, FhHb: Add, GroupBox	, % "hWndhGB5	x" col5X " y" (topY+5) " w220 h179 Hide"
-	Gui, FhHb: Font, s36 q5 bold cWhite, Futura Md Bk
-	Gui, FhHb: Add, Edit    			, % "hWndhE5 vE5 x" (col5X+8) " y" (topY+38) " w30 -E0x200 r1 Limit1", % copies[5]
-	CTLCOLORS.Attach(hE5, BgColor)
-	Gui, FhHb: Add, Picture        	, % "hWndhPicUB x" (col5x+64)  " y" (topY+38) , % "HBITMAP: " hBitmapKH:= Create_Ueberweisung_png()
-	Gui, FhHb: Font, s28 q5 bold cBlack, Futura Bk Bt
-	Gui, FhHb: Add, Text            	, % "x" (col5x +   40 ) " y" (topY + 60 ) " w20 h23 BackgroundTrans cBlack +0x200", X
-	Gui, FhHb: Add, UpDown     	, % "vUDUB x" (col5x + 202 ) " y" (topY + 38 ) " w34 h68 Range1-9 vUD5 -16", % copies[5]
+	Gui, HB: Add, GroupBox	, % "hWndhGB5	x" col5X " y" (topY+5) " w220 h179 Hide"
+	Gui, HB: Font, s36 q5 bold cBlack, Futura Md Bk
+	Gui, HB: Add, Edit    			, % "hWndhE5 vE5 x" (col5X+8) " y" (topY+38) " w30 -E0x200 r1 Limit1"            	, % copies[5]
+	;~ CtlColors.Attach(hE5, BgColor)
+	Gui, HB: Add, Picture        	, % "hWndhPicUB x" (col5x+64)  " y" (topY+38)                                                	, % "HBITMAP: " hBitmapKH:= Create_Ueberweisung_png()
+	Gui, HB: Font, s28 q5 bold cBlack, Futura Bk Bt
+	Gui, HB: Add, Text           	, % "x" (col5x+40 ) " y" (topY+60) " w20 h23 BackgroundTrans cBlack +0x200"	, X
+	Gui, HB: Add, UpDown     	, % "vUDUB x" (col5x+202 ) " y" (topY+38 ) " w34 h68 Range1-9 vUD5 -16"    	, % copies[5]
 ; --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; Überschrift, Beschreibung, anvisierter Patientenname
 ; --------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	col:= ControlGetPos(hPicUB), GuiW:= col["X"] + col["W"] + 35
 ;-: Überschrift
-	Gui, FhHb: Add, Progress, % "hWndhPrg x-2 y0 w" (GuiW+4) " h60 +C0x172046", 100
-	Gui, FhHb: Font, s36 q5 bold cWhite, Futura Md Bk
-	Gui, FhHb: Add, Text, % "x0 y5 w" GuiW " h46 +0x200 Center BackgroundTrans" , Formularhelfer Hausbesuche
-	Gui, FhHb: Add, Progress, % "hWndhPrg2 x-2 y140 w" (GuiW+4) " h30 +C0x172046", 100
-	Gui, FhHb: Font, s16 q5 Normal cWhite, Futura Md Bk
-	Gui, FhHb: Add, Text, % "vPLabel x-2 y142 w" (GuiW+4) " h28 Center BackgroundTrans", % PatLabel
+	Gui, HB: Add, Progress, % "hWndhPrg x-2 y0 w" (GuiW+4) " h60 +C0x172046", 100
+	Gui, HB: Font, s36 q5 bold cWhite, Futura Md Bk
+	Gui, HB: Add, Text, % "x0 y5 w" GuiW " h46 +0x200 Center BackgroundTrans" , Formularhelfer Hausbesuche
+	Gui, HB: Add, Progress, % "hWndhPrg2 x-2 y140 w" (GuiW+4) " h30 +C0x172046", 100
+	Gui, HB: Font, s16 q5 Normal cWhite, Futura Md Bk
+	Gui, HB: Add, Text, % "vPLabel x-2 y142 w" (GuiW+4) " h28 Center BackgroundTrans", % PatLabel
 ;-: Beschreibung
-	Gui, FhHb: Font, s12 q5 cBlack Normal, Futura Bk Bt
-	Gui, FhHb: Add, Text  			, % "x10 y64 w" (GuiW-10) " Wrap", % Beschreibung
+	Gui, HB: Font, s12 q5 cBlack Normal, Futura Bk Bt
+	Gui, HB: Add, Text  			, % "x10 y64 w" (GuiW-10) " Wrap", % Beschreibung
 ;-::ein Progress noch
-	Gui, FhHb: Add, Progress, % "hWndhPrg3 x-2 y" (GuiH_Temp - 10 ) " w" (GuiW+4) " h30 +C0x172046", 100
+	Gui, HB: Add, Progress, % "hWndhPrg3 x-2 y" (GuiH_Temp - 10 ) " w" (GuiW+4) " h30 +C0x172046", 100
 ;-: Checkbox für Patientenbox-Ausdruck
-	Gui, FhHb: Font, s18 q5 bold cBlack, Futura Bk Bt
+	Gui, HB: Font, s18 q5 bold cBlack, Futura Bk Bt
 	addRowY:= 70
-	Gui, FhHb: Add, Progress	, % "x45 y" (col.y + addRowY - 8 ) " w380 h36 +C0x172046", 100
-	Gui, FhHb: Add, Checkbox, % "HWNDhCheckPatAusweis x25 y" (col.y + addRowY) " w20 h20 "
-	Gui, FhHb: Add, Text        	, % "x45 y" (col.y + addRowY - 5) " w400 h28 BackgroundTrans cWhite +0x200", % " + Patientenstammblatt drucken"
-	Gui, FhHb: Add, Button    	, % "gPStammblatt HWNDhBPSb x" (GuiW//2 -500//2 - 20//2) " y" (GuiH_Temp + 50 - 10) " w500 Center h36 BackgroundTrans +0x200", nur das Patientenstammblatt drucken
+	Gui, HB: Add, Progress	, % "x45 y" (col.y + addRowY - 8 ) " w380 h36 +C0x172046", 100
+	Gui, HB: Add, Checkbox, % "HWNDhCheckPatAusweis x25 y" (col.y + addRowY) " w20 h20 "
+	Gui, HB: Add, Text        	, % "x45 y" (col.y + addRowY - 5) " w400 h28 BackgroundTrans cWhite +0x200", % " + Patientenstammblatt"
+	Gui, HB: Add, Button    	, % "gPStammblatt HWNDhBPSb x" (GuiW//2 -500//2 - 20//2) " y" (GuiH_Temp + 50 - 10) " w500 Center h36 BackgroundTrans +0x200", nur das Patientenstammblatt drucken
 	col:= ControlGetPos(hBPSb)
 	GuiH:= col["H"] + col["Y"] + 10
 ;-: Fokus aus dem EditControl nehmen - sieht nicht schön aus
 	ControlFocus,, ahk_id %hPrg2%
 ;-: Hintergrundfarbe der Edit Controls setzen
-	CTLCOLORS.Attach(hE1, BgColor)
-	CTLCOLORS.Attach(hE2, BgColor)
-	CTLCOLORS.Attach(hE3, BgColor)
-	CTLCOLORS.Attach(hE4, BgColor)
-	CTLCOLORS.Attach(hE5, BgColor)
 
-	If ( (fPosX+GuiW > monRight) or (fPosY+GuiH > monBottom) )
-				xyPosition:= "xCenter yCenter "
+	If (fPosX+GuiW > monRight || fPosY+GuiH > monBottom)
+		xyPosition:= "xCenter yCenter"
 
-	Gui FhHb: Show, % xyPosition "w" GuiW " h" GuiH , Addendum für Albis on Windows - Formularhelfer Hausbesuche
-	WinSet, Redraw,, ahk_id %hFhHb%
+	Gui HB: Show, % xyPosition " w" GuiW " h" GuiH , Addendum für Albis on Windows - Formularhelfer Hausbesuche
+
+	CtlColors.Attach(hE1, BgColor)
+	CtlColors.Attach(hE2, BgColor)
+	CtlColors.Attach(hE3, BgColor)
+	CtlColors.Attach(hE4, BgColor)
+	CtlColors.Attach(hE5, BgColor)
+
+	WinSet, Redraw,, % "ahk_id " hHB
 ;}
 
 ; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -221,13 +225,13 @@ ListLines Off
 	SetTimer, InputFocus, 300
 	;SetTimer, WaitInput, -50
 
-	Hotkey, IfWinActive, Formularhelfer Hausbesuche
+	Hotkey, IfWinActive, Formularhelfer Hausbesuche              	; ahk_class AutoHotkeyGUI1
 	Hotkey, Right		, goRight
 	Hotkey, Left		, goLeft
 	Hotkey, Up		, Increase
 	Hotkey, Down	, Decrease
 	Hotkey, Esc		, DasEnde
-	Hotkey, Enter		, Printf
+	Hotkey, Enter	, Printf
 	Hotkey, IfWinActive
 
 	Loop 9
@@ -235,106 +239,79 @@ ListLines Off
 
 Return
 
-FhHbGuiEscape:
-FhHbGuiClose:
+HBGuiEscape:
+HBGuiClose:
     ExitApp
 ;}
 
 
 ;{  Hotkey Labels
-goRight: ;{
+goRight: 	;{
+	flag	:= 1
 	lfs		:= FsCtl
-	If (FsCtl+1 > fields)
-		FsCtl:= 1
-	else
-		FsCtl++
-	flag:= 1
-	CTLCOLORS.Change(hE%lfs%, BgColor)
+	FsCtl	:= FsCtl+1>fields ? 1 : FsCtl+1
+	CtlColors.Change(hE%lfs%, BgColor)
 	ControlFocus,, ahk_id %hPrg2%
 return
 ;}
-goLeft: ;{
+goLeft:  	;{
+	flag	:= 1
 	lfs		:= FsCtl
-	If (FsCtl-1 < 1)
-		FsCtl:= fields
-	else
-		FsCtl--
-	CTLCOLORS.Change(hE%lfs%, BgColor)
-	flag:= 1
+	FsCtl	:= FsCtl-1< 1 ? fields : FsCtl-1
+	CtlColors.Change(hE%lfs%, BgColor)
 	ControlFocus,, ahk_id %hPrg2%
 return
 ;}
-Increase: ;{
-	GuiControlGet, copZiffer, FhHb:, % "E" FsCtl
-	If (copZiffer+1 > 9)
-		copZiffer:= 0
-	else
-		copZiffer++
-	GuiControl, FhHb:, % "E" FsCtl, % copZiffer
+Increase: 	;{
+	GuiControlGet, copZiffer, HB:, % "E" FsCtl
+	copZiffer := copZiffer+1>9 ? 0 : copZiffer+1
+	GuiControl, HB:, % "E" FsCtl, % copZiffer
 	ControlFocus,, ahk_id %hPrg2%
 return
 ;}
 Decrease: ;{
-	GuiControlGet, copZiffer,FhHb:, % "E" FsCtl
-	If (copZiffer-1 < 0)
-		copZiffer:= 9
-	else
-		copZiffer--
-	GuiControl, FhHb:, % "E" FsCtl, % copZiffer
+	GuiControlGet, copZiffer,HB:, % "E" FsCtl
+	copZiffer := copZiffer-1<0 ? 9 : copZiffer-1
+	GuiControl, HB:, % "E" FsCtl, % copZiffer
 	ControlFocus,, ahk_id %hPrg2%
 return
 ;}
-Printf: ;{
+Printf:   	;{
 
-  ;Gui Informationen abrufen
-	Gui, FhHb: Submit, NoHide
-  ;geöffnete PopUp-Fenster schließen, sonst behindern diese den Ablauf
-	AlbisCloseLastActivePopups(AlbisWinID)
-	Dk:=""
+  ; Gui Informationen abrufen
+	Gui, HB: Submit, NoHide
+
+  ; geöffnete PopUp-Fenster schließen, sonst behindern diese den Ablauf
+	Dk := ""
 	Loop, % fields
-			Dk.= E%A_Index% . "|"
-	Dk:= RTrim(Dk, "|")
+		Dk .= E%A_Index% . "|"
+
+	Dk := RTrim(Dk, "|")
+	MsgBox, 4, Addendum für Albis on Windows, % "Diese Anzahl der Formulare drucken?"
+	IfMsgBox, No
+		return
 	IniWrite, % Dk, % AddendumDir . "\Addendum.ini", Addendum, Druckkopien
-	MsgBox, 4, Addendum für Albis on Windows, Diese Anzahl an Formularen ausdrucken?
-	If MsgBox, No
-			return
-	;Aufrufen der Formulare
-	WinMinimize, Formularhelfer Hausbesuche
-	AlbisDruckeBlankoFormular("KR" E1 " PR" E2 " KH" E3 " KB" E4 " UB" E5, 0)			;wähle 0 für Drucken, 1 = ist der Spooler
-	ControlGet, isChecked	, Checked	,,, ahk_id %hCheckPatAusweis%
-	If isChecked
+
+	; Aufrufen der Formulare
+		WinMinimize, Formularhelfer Hausbesuche
+		AlbisDruckeBlankoFormular("KR" E1 " PR" E2 " KH" E3 " KB" E4 " UB" E5, 0)			; wähle 0 für Drucken, 1 = ist der Spooler
+		ControlGet, isChecked, Checked,,, % "ahk_id " hCheckPatAusweis
+		If isChecked
 			AlbisDruckePatientenAusweis()
-	;Abfragen ob Patient in die Liste der Hausbesuche aufgenommen werden soll (Menu: 33003)
-	;MsgBox, 4, Addendum für Albis on Windows, Soll dieser Patient in die Haus-`nbesuchsliste aufgenommen werden?
-	;IfMsgBox, Yes
-	;
-	ControlFocus,, ahk_id %hPrg2%
-	WinSet, Redraw,, ahk_id %hFhHb%
 
-	ExitApp
-return
+	; Abfragen ob Patient in die Liste der Hausbesuche aufgenommen werden soll (Menu: 33003)
+		;MsgBox, 4, Addendum für Albis on Windows, Soll dieser Patient in die Haus-`nbesuchsliste aufgenommen werden?
+		;IfMsgBox, Yes
+		;
+
+	ControlFocus,,    	% "ahk_id " hPrg2
+	WinSet, Redraw,,	% "ahk_id " hHB
+
+ExitApp
 ;}
 
 
 ;}
-
-AlbisDruckePatientenAusweis() {
-
-	static BM_Click	:= 0x00F5
-	AlbisCloseLastActivePopups(AlbisWinID)
-	WinMinimize, Formularhelfer Hausbesuche
-	If !WinExist("Patientenausweis")
-			PostMessage, 0x111, 33003,,, ahk_id %AlbisWinID%
-	Sleep, 2000
-	ControlGet, hPrint, HWND,, Button23, Patientenausweis
-	PostMessage, % BM_Click,,,, ahk_id %hPrint%
-	WinWaitClose, Patientenausweis,, 10
-	If WinExist("Patientenausweis")
-		MsgBox,, Addendum für Albis on Windows, Bitte das Patientenausweis-Fenster schließen,`nbevor weiter gemacht werden kann!
-	WinActivate, Formularhelfer Hausbesuche
-	return
-
-}
 
 DetectKeyButtonPress(wParam, lParam) {							;{
 
@@ -344,93 +321,83 @@ DetectKeyButtonPress(wParam, lParam) {							;{
 	If ((A_TickCount-last_key)<200)
 		return
 
-	last_key:= A_TickCount
+	last_key := A_TickCount
 
 	If !WinActive("Formularhelfer Hausbesuche")
 		return
 
 	SetFormat, Integer, Hex
-	keyname:= GetKeyName("SC" SubStr((((lParam>>16) & 0xFF)+0xF000),-2))
+	keyname := GetKeyName("SC" SubStr((((lParam>>16) & 0xFF)+0xF000),-2))
 	SetFormat, Integer, d
 
 	For key, replace in ReplaceKeys
-			If (key=keyname)
-					keyname:= StrReplace(keyname, key, replace)
+		If (key = keyname)
+			keyname := StrReplace(keyname, key, replace)
 
-	If InStr("0123456789", keyname)
-	{
-			GuiControl, FhHb:, % "E" FsCtl, % keyname
-			lfs:= FsCtl
-			If (FsCtl+1 > 5)
-				FsCtl:= 1
-			else
-				FsCtl++
-			flag:= 1
-			CTLCOLORS.Change(hE%lfs%, BgColor)
-			ControlFocus,, ahk_id %hPrg2%
+	If InStr("0123456789", keyname)	{
+		GuiControl, HB:, % "E" FsCtl, % keyname
+		lfs := FsCtl
+		FsCtl := FsCtl+1 > 5 ? 1 : FsCtl+1
+		flag := 1
+		CtlColors.Change(hE%lfs%, BgColor)
+		ControlFocus,, % "ahk_id " hPrg2
 	}
 
 
-	return
+return
 }
 ;}
 
 InputFocus: ;{
-
-	If flag
-		CTLCOLORS.Change(hE%FsCtl%, FocusColor)
-	else
-		CTLCOLORS.Change(hE%FsCtl%, BgColor)
-
-	flag:= !flag
-
+	flag := !flag
+	CtlColors.Change(hE%FsCtl%, (flag ? FocusColor : BgColor))
+	;~ SciTEOutput(hE%FsCtl% ", " (flag ? FocusColor : BgColor))
 return
 ;}
 
 PStammblatt: ;{
 
 	AlbisDruckePatientenAusweis()
-	ControlFocus,, ahk_id %hPrg2%
-	WinSet, Redraw,, ahk_id %hFhHb%
+	ControlFocus,, % "ahk_id " hPrg2
+	WinSet, Redraw,, % "ahk_id " hHB
 
 return
 ;}
 
 ;{ WinEventhook Labels
-InitializeWinEventHooks:        	;{                                                                                          	;falls ich mal speziell nur einen Hook auf Albis setzten will sollte ich eine Funktion oder ein Label bereitstellen
+InitializeWinEventHooks:        	;{
 
 	ExcludeScriptMessages = 1 ; 0 to include
 	ExcludeGuiEvents = 1 ; 0 to include
 	dwFlags := ( ExcludeScriptMessages = 1 ? 0x1 : 0x0 )
 	HookProcAdr := RegisterCallback("WinEventProc", "F")
-	hWinEventHook := SetWinEventHook( 0x00008004, 0x00008004, 0, HookProcAdr, AlbisPID, 0, dwFlags )
+	hWinEventHook := SetWinEventHook( 0x8004, 0x8004, 0, HookProcAdr, AlbisPID, 0, dwFlags )
 
 return
 ;}
 
-WinEventProc(hHook, event, hwnd, idObject, idChild, eventThread, eventTime) {		    				;im Moment werden nur sich öffnende Albisfenster abgefangen
+WinEventProc(hHook, event, hwnd, idObject, idChild, eventThread, eventTime) {		    				; im Moment werden nur sich öffnende Albisfenster abgefangen
 	Critical
 	EHookHwnd:= GetHex(hwnd)
 	SetTimer, AlbisFensterTitel_Hook,  -0
 return 0
 }
 
-AlbisFensterTitel_Hook:         	;{                                                                                            	;Eventhookhandler für popup (child) Fenster in Albis
+AlbisFensterTitel_Hook:         	;{                                                                                            	Eventhookhandler für popup (child) Fenster in Albis
 
 		Patname	:= AlbisCurrentPatient()
 		Birth			:= AlbisPatientGeburtsdatum()
 		PatID		:= AlbisAktuellePatID()
-		If (PatID!=PatID_old)
-		{
-				PatID_old:= PatID
-				If (Patname="") {
-					PatLabel:= "Warte auf eine geöffnete Patientenakte..."
-					GuiControl, FhHb:, PLabel, % PatLabel
-				} else {
-					PatLabel:= "ID: " PatID "          Name: " Patname "          Geburtstag: " Birth
-					GuiControl, FhHb:, PLabel, % PatLabel
-					WinActivate, ahk_id %hFhHb%
-				}
+		If (PatID!=PatID_old)		{
+			PatID_old:= PatID
+			If (Patname="") {
+				PatLabel:= "Warte auf eine geöffnete Patientenakte..."
+				GuiControl, HB:, PLabel, % PatLabel
+			} else {
+				PatLabel:= "ID: " PatID "          Name: " Patname "          Geburtstag: " Birth
+				GuiControl, HB:, PLabel, % PatLabel
+				WinActivate, ahk_id %hHB%
+			}
 		}
 
 Return
@@ -562,14 +529,14 @@ Create_Image(EncodedImage, Size) {
 	Return hBitmap
 }
 
-Create_Hausbesuche_png(NewHandle := False) {
-Static hBitmap := 0
+Hausbesuche_ico(NewHandle := False) {
+Static hBitmap := Hausbesuche_ico()
 If (NewHandle)
    hBitmap := 0
 If (hBitmap)
    Return hBitmap
-VarSetCapacity(B64, 2916 << !!A_IsUnicode)
-B64 := "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"
+VarSetCapacity(B64, 9812 << !!A_IsUnicode)
+B64 := "AAABAAEAMDAAAAEAGACoHAAAFgAAACgAAAAwAAAAYAAAAAEAGAAAAAAAAAAAAGMAAABjAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB0iWNYjS5IkA9BkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBGkAtTjiRtileFhoUAAAAAAAAAAAAAAAAAAACDh39WjStAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBQjiB/h3kAAAAAAAAAAACCh35MjxhAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBKjxKBhnsAAAAAAABVjihAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBUjiYAAABxiV5AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQByiWBVjihAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBNmBFNmBFQmhVZoCJZoCJZoCJZoCJZoCJYnyBNmBFNmBFJlgxAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBXjS1FjwxAkQBAkQBAkQBAkQBAkQBAkQBBkgJdoieDt1mdxnyv0ZTF3bHW58jl8Nzu9ej2+vP////////////////////////////////////////////////////////y+O7q8+Pi7tjT5sS/2qqsz5CYxHZ/tVRZoCJAkQBAkQBAkQBAkQBAkQBAkQBAkQBJkBFAkQFAkQBAkQBAkQBAkQBAkQBurD71+fH////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////z+O9urD5AkQBAkQBAkQBAkQBAkQBCkQVAkQBAkQBAkQBAkQBAkQBAkQDA26v////////////////////////////////////////////////////////h7tfF3bG21Z611JzC3K3b6s/8/fv////////////////////////////////////////////////////G3rNAkQBAkQBAkQBAkQBAkQBCkQVAkQBAkQBAkQBAkQBAkQBElAb1+fL////////////////////////////////////////////v9umbxnpSmxhAkQBAkQBAkQBAkQBAkQBAkQBIlguGul7b6s/////////////////////////////////////////////6/PhKlw1AkQBAkQBAkQBAkQBCkQVAkQBAkQBAkQBAkQBAkQBlpzL////////////////////////////////////////////M4rtQmhVAkQBAkQBBkQFzrkRzrkRzrkRzrkRBkQFAkQBAkQBDkwSgyID+//7///////////////////////////////////////9sqjtAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQCDuFr////////////////////////////////////////U5sZFlAdAkQBAkQBAkQBBkgL///////////////9BkgJAkQBAkQBAkQBAkQCgyID///////////////////////////////////////+EuFtAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQCSwG3////////////////////////////////////7/PlXnh9AkQBAkQBAkQBAkQBBkgL///////////////9BkgJAkQBAkQBAkQBAkQBBkQHb6s////////////////////////////////////+MvWVAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQCRwGz///////////////////////////////////+11JxAkQBAkQBAkQBAkQBAkQBBkgL///////////////9BkgJAkQBAkQBAkQBAkQBAkQB/tVT///////////////////////////////////+AtlVAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQCGuV3///////////////////////////////////94sUtAkQBAkQBAkQBAkQBAkQBBkgL///////////////9BkgJAkQBAkQBAkQBAkQBAkQBKlw37/fr///////////////////////////////9oqDZAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQB6sk3///////////////////////////////////9MmBBAkQCAtlWz05mz05mz05mz05r///////////////+z05qz05mz05mz05mBt1dAkQBAkQDa6c3///////////////////////////////9SmxhAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBgpCv////////////////////////////////5/PdAkQBAkQCqzo7///////////////////////////////////////////////+sz5BAkQBAkQDJ4Lf////////////////////////////q8+NBkQFAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBBkgL0+fD////////////////////////////u9ehAkQBAkQCqzo7///////////////////////////////////////////////+sz5BAkQBAkQC+2aj///////////////////////////+01JtAkQBAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQDM4rv////////////////////////////4+/VAkQBAkQCqzo7///////////////////////////////////////////////+sz5BAkQBAkQDI4Lb///////////////////////////9+tVNAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQCXw3T///////////////////////////////9Klw1AkQBxrUKZxHeZxHeZxHeaxXj///////////////+axXiZxHeZxHeZxHdyrkNAkQBAkQDY6cv////////////////////////0+fBJlgxAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBTnBr9/vz///////////////////////////9xrUJAkQBAkQBAkQBAkQBAkQBBkgL///////////////9BkgJAkQBAkQBAkQBAkQBAkQBFlAf5/Pf///////////////////////+sz5BAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQDM4rv///////////////////////////+pzYxAkQBAkQBAkQBAkQBAkQBBkgL///////////////9BkgJAkQBAkQBAkQBAkQBAkQB0r0b////////////////////////+//5coSVAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQB6sk3////////////////////////////y+O5JlgxAkQBAkQBAkQBAkQBBkgL///////////////9BkgJAkQBAkQBAkQBAkQBAkQDI4Lb///////////////////////+/2qlAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDV58f///////////////////////////+21Z5AkQBAkQBAkQBAkQBBkgL///////////////9BkgJAkQBAkQBAkQBAkQB/tVT+//7////////////////////6/PhZoCJAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBxrUH///////////////////////////////+hyYFBkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQB0r0b1+fL///////////////////////+ozYtAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCx0pf////////////////////////////////K4LhmpzNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBWnh6t0JH9/v3////////////////////////i7thHlQpAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBHlQnf7NT////////////////////////////////////g7dWt0JKUwXCGuV2FuVySwG2pzYzU5sb8/fv////////////////////////////7/fpmpzNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBZoCLn8d/////////////////////////////////////////////////////////////////////////////////////////////+//6LvGRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBWnh3V58fm8N3m8N3m8N3m8N3m8N3m8N3m8N3m8N3m8N3m8N3m8N3m8N3m8N3m8N3m8N3m8N3m8N3m8N3m8N3m8N3m8N3m8N2ZxHdAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBipC19tFJEkwVAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBzrkR3sUpAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQCex37////X6Ml3sElAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBZoCK82KX////f7NRAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQCPv2r///////////96sk1AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBDkwTx9+z////////P479AkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBxrUH////////////D3K9AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBnpzT///////////+w0pZAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBIlgv6/Pj////////7/PlXnh9AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCex33///////////+Bt1dAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDD3K/////////////A26tAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBKlw7x9+z////////3+vRLlw9AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBvrD////////////////+OvmhAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQG616P///////////+u0JNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDC3K3////////////9/vyQv2tBkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBFlAex0pf////////////w9utPmhRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBOmRPm8d7////////////////I37VlpzJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBCkgN6s07f7NT////////////9/vx3sElAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBaoCPo8uD////////////////////U5safyH9yrkNYnyBCkgNAkQBAkQBAkQBAkQBMmBBipS6Dt1mw0pbo8uD////////////////7/fqEuFtAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBQmhbH37T////////////////////////////////////4+/by+O7y+O7////////////////////////////////////m8d5wrUBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQB3sUri7tj////////////////////////////////////////////////////////////////////2+vObxnpGlAhAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFGkAxAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkgJvrD+z05nw9uv////////////////////////////////////////////6/PjI4LaFuVxJlgxAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBHkA1WjitAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBXnh97s0+bxXmnzYqz05m/2qm21Z6rz4+hyYGHul9jpS9EkwVAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBWjipyimBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBwiVwAAABVjihAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBQjiGFhoUAAACCh35MjxhAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBIkQ9/h3kAAAAAAAAAAACCh35VjilAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBOjxx+h3cAAAAAAAAAAAAAAAAAAAAAAABziWFXjSxGkA5AkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBEkAlSjyJsilSFhoUAAAAAAAAAAADwAAAAAAcAAMAAAAAAAwAAgAAAAAABAACAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAACAAAAAAAEAAMAAAAAAAwAA8AAAAAAHAAA="
 If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", 0, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
    Return False
 VarSetCapacity(Dec, DecLen, 0)
@@ -609,7 +576,7 @@ DasEnde:	;{
 	Win:= Object()
 
 
-	Win:= GetWindowInfo(hFhHb)
+	Win:= GetWindowInfo(hHB)
 	IniWrite, % "x" Win.WindowX " y" Win.WindowY " ", % AddendumDir . "\Addendum.ini", % CompName, % Inikey
 
 	Loop 9
@@ -621,12 +588,25 @@ DasEnde:	;{
 ExitApp
 ;}
 
-;{ Include
-#include %A_ScriptDir%\..\..\lib\GDIP_All.ahk
-#Include %A_ScriptDir%\..\..\include\Addendum_Functions.ahk
-#Include %A_ScriptDir%\..\..\lib\ini.ahk
-#Include %A_ScriptDir%\..\..\include\Gui\PraxTT.ahk
-#Include %A_ScriptDir%\..\..\lib\class_CtlColors.ahk
+;{ Includes
+#include %A_ScriptDir%\..\..\include\Addendum_Albis.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_Controls.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_Datum.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_DB.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_Gdip_Specials.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_Internal.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_PraxTT.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_Protocol.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_Screen.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_Window.ahk
+
+#include %A_ScriptDir%\..\..\lib\ACC.ahk
+#include %A_ScriptDir%\..\..\lib\Gdip_All.ahk
+#include %A_ScriptDir%\..\..\lib\ini.ahk
+#include %A_ScriptDir%\..\..\lib\printer.ahk
+#Include %A_ScriptDir%\..\..\lib\RemoteBuf.ahk
+#include %A_ScriptDir%\..\..\lib\SciTEOutput.ahk
+#Include %A_ScriptDir%\..\..\lib\Sift.ahk
 ;}
 
 

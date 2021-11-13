@@ -1,4 +1,13 @@
-﻿/*  Neutron.ahk v1.0.0
+﻿
+;	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠
+;
+;        							  			❗ DO NOT REPLACE THIS LIBRARY ❗
+;	         	    this library is modificated for the needs of Addendum für AlbisOnWindows
+;
+;	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠
+
+
+/*  Neutron.ahk v1.0.0
 
 	Copyright (c) 2020 Philip Taylor (known also as GeekDude, G33kDude)
 	https://github.com/G33kDude/Neutron.ahk
@@ -34,17 +43,17 @@ class NeutronWindow {
 	static VERSION := "1.0.0"
 
 	; Windows Messages
-	, WM_DESTROY := 0x02
-	, WM_SIZE := 0x05
-	, WM_NCCALCSIZE := 0x83
-	, WM_NCHITTEST := 0x84
-	, WM_NCLBUTTONDOWN := 0xA1
-	, WM_KEYDOWN := 0x100
-	, WM_KEYUP := 0x101
-	, WM_SYSKEYDOWN := 0x104
-	, WM_SYSKEYUP := 0x105
-	, WM_MOUSEMOVE := 0x200
-	, WM_LBUTTONDOWN := 0x201
+	, WM_DESTROY                 	:= 0x02
+	, WM_SIZE                        	:= 0x05
+	, WM_NCCALCSIZE          	:= 0x83
+	, WM_NCHITTEST             	:= 0x84
+	, WM_NCLBUTTONDOWN 	:= 0xA1
+	, WM_KEYDOWN              	:= 0x100
+	, WM_KEYUP                     	:= 0x101
+	, WM_SYSKEYDOWN         	:= 0x104
+	, WM_SYSKEYUP                 	:= 0x105
+	, WM_MOUSEMOVE         	:= 0x200
+	, WM_LBUTTONDOWN     	:= 0x201
 
 	; Virtual-Key Codes
 	, VK_TAB           	:= 0x09
@@ -57,13 +66,12 @@ class NeutronWindow {
 	, HT_VALUES := [[13, 12, 14], [10, 1, 11], [16, 15, 17]]
 
 	; Registry keys
-	, KEY_FBE := "HKEY_CURRENT_USER\Software\Microsoft\Internet Explorer\MAIN"
-	. "\FeatureControl\FEATURE_BROWSER_EMULATION"
+	, KEY_FBE := "HKEY_CURRENT_USER\Software\Microsoft\Internet Explorer\MAIN\FeatureControl\FEATURE_BROWSER_EMULATION"
 
 	; Undoucmented Accent API constants
 	; https://withinrafael.com/2018/02/02/adding-acrylic-blur-to-your-windows-10-apps-redstone-4-desktop-apps/
-	, ACCENT_ENABLE_BLURBEHIND := 3
-	, WCA_ACCENT_POLICY := 19
+	, ACCENT_ENABLE_BLURBEHIND 	:= 3
+	, WCA_ACCENT_POLICY          	:= 19
 
 	; Other constants
 	, EXE_NAME := A_IsCompiled ? A_ScriptName : StrSplit(A_AhkPath, "\").Pop()
@@ -256,18 +264,18 @@ class NeutronWindow {
 
 		dhw := A_DetectHiddenWindows
 		DetectHiddenWindows, On
-		ControlGet, hWnd, hWnd,, Internet Explorer_Server1, % "ahk_id" this.hWnd
-		this.hIES := hWnd
-		ControlGet, hWnd, hWnd,, Shell DocObject View1, % "ahk_id" this.hWnd
-		this.hSDOV := hWnd
-		DetectHiddenWindows, %dhw%
+		ControlGet, hWnd, hWnd,, Internet Explorer_Server1	, % "ahk_id" this.hWnd
+		this.hIES    	:= hWnd
+		ControlGet, hWnd, hWnd,, Shell DocObject View1  	, % "ahk_id" this.hWnd
+		this.hSDOV 	:= hWnd
+		DetectHiddenWindows, % dhw
 
 		this.pWndProc := RegisterCallback(this._WindowProc, "", 4, &this)
 		this.pWndProcOld := DllCall("SetWindowLong" (A_PtrSize == 8 ? "Ptr" : "")
-		, "Ptr", this.hIES     ; HWND     hWnd
-		, "Int", -4            ; int      nIndex (GWLP_WNDPROC)
-		, "Ptr", this.pWndProc ; LONG_PTR dwNewLong
-		, "Ptr") ; LONG_PTR
+													, "Ptr", this.hIES   		  	; HWND     hWnd
+													, "Int", -4      			      	; int      nIndex (GWLP_WNDPROC)
+													, "Ptr", this.pWndProc 	; LONG_PTR dwNewLong
+													, "Ptr") 							; LONG_PTR
 
 		; Stop the WebBrowser control from consuming file drag and drop events
 		this.wb.RegisterAsDropTarget := False
@@ -313,8 +321,8 @@ class NeutronWindow {
 			}
 			else if (Msg == this.WM_SIZE)		{
 				; Extract size from LOWORD and HIWORD (preserving sign)
-				this.w := w := lParam<<48>>48
-				this.h := h := lParam<<32>>48
+				this.w	:= w	:= lParam<<48>>48
+				this.h 	:= h	:= lParam<<32>>48
 
 				DllCall("MoveWindow", "UPtr", this.hWB, "Int", 0, "Int", 0, "Int", w, "Int", h, "UInt", 0)
 
@@ -410,13 +418,12 @@ class NeutronWindow {
 
 		; Otherwise (since above didn't return), pass all unhandled events to the original WindowProc.
 		Critical, Off
-		return DllCall("CallWindowProc"
-		, "Ptr", this.pWndProcOld ; WNDPROC lpPrevWndFunc
-		, "Ptr", hWnd             ; HWND    hWnd
-		, "UInt", Msg             ; UINT    Msg
-		, "UPtr", wParam          ; WPARAM  wParam
-		, "Ptr", lParam           ; LPARAM  lParam
-		, "Ptr") ; LRESULT
+		return DllCall("CallWindowProc"	, "Ptr", this.pWndProcOld 	; WNDPROC lpPrevWndFunc
+														, "Ptr", hWnd 			            ; HWND    	hWnd
+														, "UInt", Msg             			; UINT    		Msg
+														, "UPtr", wParam          		; WPARAM  	wParam
+														, "Ptr", lParam           			; LPARAM  	lParam
+														, "Ptr") 								; LRESULT
 	}
 
 
@@ -461,23 +468,23 @@ class NeutronWindow {
 
 	; Shows a hidden Neutron window.
 	Show(options:="")	{
-		w := RegExMatch(options, "w\s*\K\d+", match) ? match : this.w
-		h := RegExMatch(options, "h\s*\K\d+", match) ? match : this.h
+		w	:= RegExMatch(options, "w\s*\K\d+", match) 	? match 	: this.w
+		h	:= RegExMatch(options, "h\s*\K\d+", match)  	? match 	: this.h
+		m	:= RegExMatch(options, "i)Maximize", MinMax) 	? MinMax : ""
 
 		; AutoHotkey sizes the window incorrectly, trying to account for borders
 		; that aren't actually there. Call the function AHK uses to offset and
 		; apply the change in reverse to get the actual wanted size.
 		VarSetCapacity(rect, 16, 0)
-		DllCall("AdjustWindowRectEx"
-		, "Ptr", &rect ;  LPRECT lpRect
-		, "UInt", 0x80CE0000 ;  DWORD  dwStyle
-		, "UInt", 0 ;  BOOL   bMenu
-		, "UInt", 0 ;  DWORD  dwExStyle
-		, "UInt") ; BOOL
+		DllCall("AdjustWindowRectEx"	, "Ptr", &rect                    	;  LPRECT lpRect
+													, "UInt", 0x80CE0000    	;  DWORD  dwStyle
+													, "UInt", 0                      	;  BOOL   bMenu
+													, "UInt", 0                      	;  DWORD  dwExStyle
+													, "UInt")                         	; BOOL
 		w += NumGet(&rect, 0, "Int")-NumGet(&rect, 8, "Int")
 		h += NumGet(&rect, 4, "Int")-NumGet(&rect, 12, "Int")
 
-		Gui, % this.hWnd ":Show", % options "w" w "h" h
+		Gui, % this.hWnd ":Show", % options "w" w "h" h " " MinMax
 	}
 
 	; Loads an HTML file by name (not path).
@@ -509,12 +516,14 @@ class NeutronWindow {
 
 		; Complete the path based on compiled state
 		if A_IsCompiled
-			url := "res://" this.wnd.encodeURIComponent(A_ScriptFullPath) "/10/" fileName
+			this.wb.Navigate("res://" this.wnd.encodeURIComponent(A_ScriptFullPath) "/10/" fileName)
+		else if RegExMatch(fileName, "[A-Z]:\\")
+			this.wb.Navigate(fileName)
 		else
-			url := fileName
+			this.wb.Navigate(fileName)
 
 		; Navigate to the calculated file URL
-		this.wb.Navigate(url)
+
 
 		; Wait for the page to finish loading
 		while this.wb.readyState < 3

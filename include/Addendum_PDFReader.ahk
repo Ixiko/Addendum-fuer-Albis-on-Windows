@@ -9,7 +9,7 @@
 ;		Abhängigkeiten:	-	GettAppImagePath
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_StackifyGui last change:    	08.08.2021
+;       Addendum_StackifyGui last change:    	07.11.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
 
@@ -1081,7 +1081,7 @@ return 1
 
 FoxitReader_SignDoc(hDokSig) {		                       	                	;-- Bearbeiten des 'Dokument signieren' (Sign Document) Dialoges
 
-		; letzte Änderung: 05.03.2021
+		; letzte Änderung: 07.11.2021
 
 		static appendix := "ahk_class #32770 ahk_exe FoxitReader.exe"
 
@@ -1092,45 +1092,42 @@ FoxitReader_SignDoc(hDokSig) {		                       	                	;-- Bea
 
 	;{ Felder im Signierfenster auf die in der INI festgelegten Werte einstellen
 
-		; Signieren als -------------------------------------------------------------------------------------------------------
-			ControlFocus 	, ComboBox1                                                                 	, % "ahk_id " hDokSig
-			Control, ChooseString, % Addendum.PDF.SignierenAls , ComboBox1         	, % "ahk_id " hDokSig
-			sleep, 50
+		; Signieren als ------------------------------------------------------------------------------------------------------------
+			ControlFocus 	, ComboBox1                                                                         	, % "ahk_id " hDokSig
+			Control, ChooseString, % Addendum.PDF.SignierenAls , ComboBox1                 	, % "ahk_id " hDokSig
+			sleep, 30
 
-		; Darstellungstyp ----------------------------------------------------------------------------------------------------
-			ControlFocus 	, ComboBox4                                                                	, % "ahk_id " hDokSig
-			ControlGet, entryNr, FindString, % Addendum.PDF.Darstellungstyp
-									, ComboBox4                                                                	, % "ahk_id " hDokSig  	; prüft das Feld Signaturvorschau auf die in der ini hinterlegte Signatur
-			If !entryNr
+		; Darstellungstyp ---------------------------------------------------------------------------------------------------------
+			ControlFocus 	, ComboBox4                                                                        	, % "ahk_id " hDokSig
+			ControlGet, entryNr, FindString, % Addendum.PDF.Darstellungstyp, ComboBox4	, % "ahk_id " hDokSig  	; prüft das Feld Signaturvorschau auf die in der ini hinterlegte Signatur
+			If entryNr
+				Control, ChooseString, % Addendum.PDF.Darstellungstyp, ComboBox4        	, % "ahk_id " hDokSig
+			else
 				MsgBox, 4144, Addendum für AlbisOnWindows, % "Der gewünschte Darstellungstyp "
 																						. 	Addendum.PDF.Darstellungstyp "`n"
 																						. 	"ist nicht vorhanden"
-			else
-				Control, ChooseString, % Addendum.PDF.Darstellungstyp, ComboBox4	, % "ahk_id " hDokSig
-			Sleep, 50
+			Sleep, 30
 
-		; Ort: -----------------------------------------------------------------------------------------------------------------
-			;VerifiedSetText("Edit2", JEE_StrUtf8BytesToText(Addendum.PDF.Ort)         	, "ahk_id " hDokSig)
-			ControlFocus 	, Edit2			                                                         	    	, % "ahk_id " hDokSig
-			ControlSetText	, Edit2,  % JEE_StrUtf8BytesToText(Addendum.PDF.Ort)    	, % "ahk_id " hDokSig
-			ControlSend		, Edit2,  {Tab}	                                                            	, % "ahk_id " hDokSig
-			sleep, 100
+		; Ort: ----------------------------------------------------------------------------------------------------------------------
+			ControlFocus 	, Edit2			                                                         	            	, % "ahk_id " hDokSig
+			ControlSetText	, Edit2,  % Addendum.PDF.Ort                                                	, % "ahk_id " hDokSig  ; JEE_StrUtf8BytesToText(Addendum.PDF.Ort)
+			ControlSend		, Edit2,  {Tab}	                                                                    	, % "ahk_id " hDokSig
+			sleep, 30
 
-		; Grund: -------------------------------------------------------------------------------------------------------------
-			;VerifiedSetText("Edit3", JEE_StrUtf8BytesToText(Addendum.PDF.Grund), "ahk_id " hDokSig)
-			ControlFocus 	, Edit3		                                                             			, % "ahk_id " hDokSig
-			ControlSetText	, Edit3, % JEE_StrUtf8BytesToText(Addendum.PDF.Grund)	, % "ahk_id " hDokSig
-			ControlSend		, Edit3, {Tab}	                                                            	, % "ahk_id " hDokSig
-			sleep, 50
+		; Grund: -------------------------------------------------------------------------------------------------------------------
+			ControlFocus 	, Edit3		                                                                     			, % "ahk_id " hDokSig
+			ControlSetText	, Edit3, % Addendum.PDF.Grund                                            	, % "ahk_id " hDokSig
+			ControlSend		, Edit3, {Tab}	                                                                    	, % "ahk_id " hDokSig
+			sleep, 30
 
-		; nach der Signierung sperren: -----------------------------------------------------------------------------------
+		; nach der Signierung sperren: ----------------------------------------------------------------------------------------
 			If Addendum.PDF.DokumentSperren
 				VerifiedCheck("Button4","","", hDokSig)
-			sleep, 50
+			sleep, 30
 	;}
 
-	;{ ; Signaturfenster schliessen
-		while WinExist("ahk_id " hDokSig) {
+	;{ Signaturfenster schliessen
+		while isWindow(hDokSig) {
 			If VerifiedClick("Button5", hDokSig)
 				break
 			else If (A_Index > 10)
@@ -1154,9 +1151,9 @@ FoxitReader_SignDoc(hDokSig) {		                       	                	;-- Bea
 			IniWrite, % Addendum.PDF.SignatureCount	, % AddendumDir "\Addendum.ini", % "ScanPool", % "SignatureCount"
 			IniWrite, % Addendum.PDF.SignaturePages	, % AddendumDir "\Addendum.ini", % "ScanPool", % "SignaturePages"
 
+		; Zählerstände per ToolTip einblenden
 			foxitPos     	:= GetWindowSpot(WinExist("ahk_class classFoxitReader"))
 			foxitAFXPos 	:= Controls("AfxFrameOrView140su1", "ControlPos", "ahk_class classFoxitReader")
-
 			ToolTip, %	"Signature Nr: "   	Addendum.PDF.SignatureCount
 						. 	"`nSeitenzahl: " 	PdfPages.Max
 						. 	"`nges. Seiten: " 	Addendum.PDF.SignaturePages , foxitPos.X+foxitAFXPos.X, foxitPos.Y+foxitAFXPos.Y, 10
@@ -1164,7 +1161,7 @@ FoxitReader_SignDoc(hDokSig) {		                       	                	;-- Bea
 	;}
 
 	; Dateidialog Routinen starten
-		SetTimer, PDFNotRecentlySigned		, -5000
+		SetTimer, PDFNotRecentlySigned		, -10000
 		PraxTT("'", "off")
 
 return

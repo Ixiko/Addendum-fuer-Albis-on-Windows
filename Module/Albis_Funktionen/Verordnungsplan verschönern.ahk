@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . .
 ; . . . . . .                                                                  	VERORDNUNGSPLAN VERSCHÖNERN
-global                                                         						DatumVom:= "09.09.2021"
+global                                                         						DatumVom:= "28.09.2021"
 ; . . . . . .
 ; . . . . . .                      ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . . .                             BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -12,7 +12,7 @@ global                                                         						DatumVom:= 
 ; . . . . . .      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; . . . . . .      !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !! ATTENTION !!
 ; . . . . . .      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-; . . . . . .                                      SCRIPT ONLY WORKS WITH AUTOHOTKEY OR AUTOHOTKEY_H - V1.1.32.XX
+; . . . . . .                                   THIS SCRIPT ONLY WORKS WITH AUTOHOTKEY OR AUTOHOTKEY_H - V1.1.32.XX
 ; . . . . . .
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -57,10 +57,10 @@ global                                                         						DatumVom:= 
 	else
 		medis:=Object()
 
-	medisCount	 := medis.Count()   ; Bestand der bekannten Medikamentennamen
-	rowsToDelete := Array()
+	medisCount   	 := medis.Count()   ; Bestand der bekannten Medikamentennamen
+	rowsToDelete 	:= Array()
 
-	RemoveThatShit := {	"Aaa"                     	: ""
+	RemoveThatShit	:= {	"Aaa"                     	: ""
 								, 	"\-*1\s*A"              	: ""
 								, 	"Ab[Zz]"                 	: ""
 								, 	"Acino"                  	: ""
@@ -78,7 +78,7 @@ global                                                         						DatumVom:= 
 								, 	"Atid"                    	: ""
 								,	"Aventis*"                 	: ""
 								, 	"\bAWD\b"               	: ""
-								,	"Axcount"                  	: ""
+								,	"Axcount"                 	: ""
 								,	"Axico"                  	: ""
 								,	"Axicorp\s*P"          	: ""
 								, 	"Basics"                  	: ""
@@ -104,14 +104,15 @@ global                                                         						DatumVom:= 
 								,	"Glenmark"           	: ""
 								,	"GmbH*"               	: ""
 								,	"Hartka"                	: ""
-								,	"Henning"              	: ""
-								,	"Hennig"                	: ""
+								,	"\-Hcl"                    	: ""
+								,	"Hennin*g"               	: ""
 								,	"Heum*a*n*n*"         	: ""
+								,	"HEUMANN"         	: ""
 								,	"(\-|\s)HEXAL"          	: ""
 								,	"HEXAL"                   	: ""
 								,	"Hkp"                    	: ""
 								,	"Huebe"                	: ""
-								,	"Inject"                     	: ""
+;								,	"Inject"                     	: ""
 								,	"Inte"                     	: ""
 								,	"Isis"                      	: ""
 								,	"kohlpharma*"       	: ""
@@ -128,11 +129,11 @@ global                                                         						DatumVom:= 
 								,	"Net"                     	: ""
 								,	"Novolet"               	: ""
 								,	"Orifarm"              	: ""
-								,	"Pe\s"                    	: ""
-								,	"Pen\s"                  	: ""
+								,	"Pe"                        	: ""
+								,	"Pen"                      	: ""
 								,	"Penf*i*l*l*"               	: ""
-								,	"Phar*m*a*"          	: ""
-								,	"Ph"                          	: ""
+								,	"\bPha*r*m*a*\b"     	: ""
+								,	"\bPh\b"                  	: ""
 								,	"Protect(\d+)"        	: " $1"
 								,	"Rat"                      	: ""
 								,	"[Rr]atio*p*h*a*r*m*"	: ""
@@ -157,58 +158,59 @@ global                                                         						DatumVom:= 
 								,	"Weichkaps*e*l*n*"	: ""
 								,	"\bWinthrop\b"        	: ""
 								,	"Zentiva"               	: ""
-								,	"4Wochen"            	: "" }
+								,	"4Wochen"            	: ""
+								,	"arma"                  	: "" }
 
-	MedForm	:= {	"AMP"	: "Ampulle"
-						, 	"ATR" 	: "Augentropfen"
-						, 	"CRE"	: "Creme"
-						, 	"DOS" 	: "Dosierspray"
-						, 	"EMU"	: "Emulsion"
-						, 	"FER" 	: "Fertigspritze"
-						, 	"FLU"	: "Flüssig"
-						, 	"FTA" 	: "Tablette"
-						, 	"GEL"	: "Gel"
-						, 	"GRA"	: "Granulat"
-						, 	"HKM"	: "Kapsel"
-						, 	"HKP"	: "Kapsel"
-						, 	"HPI" 	: "Kapsel"
-						, 	"HVW"	: "Kapsel"
-						, 	"IFB"  	: "Infusionsbeutel"
-						, 	"IHP"  	: "Inhalationspack"
-						, 	"INF" 	: "Infusionslösung"
-						, 	"ILO" 	: "Injektionslösung"
-						, 	"ISU" 	: "Suspension"
-						, 	"KAP"	: "Kapsel"
-						, 	"KMP"	: "Kapsel"
-						, 	"KMR"	: "Kapsel"
-						, 	"KPG"	: "Kombipackung"
-						, 	"LOT"	: "Lotion"
-						, 	"LSE" 	: "Lösung"
-						, 	"MIL" 	: "Lotion"
-						, 	"PEN"	: "Fertigpen"
-						, 	"PFL" 	: "Pflaster"
-						, 	"PIK"  	: "Infusionslösung"
-						, 	"PLE" 	: "Pulverzubereitung"
-						, 	"PST" 	: "Paste"
-						, 	"PUL"	: "Pulver"
-						, 	"REK" 	: "Retardkapsel"
-						, 	"RET" 	: "Retardtablette"
-						, 	"SHA"	: "Shampoo"
-						, 	"SIR"  	: "Sirup"
-						, 	"SPR" 	: "Spray"
-						, 	"STI"  	: "Stift"
-						, 	"TAB"	: "Tablette"
-						, 	"TEI"  	: "Tropfen"
-						, 	"TMR"	: "Tablette"
-						, 	"TRO"	: "Tropfen"
-						, 	"UTA"	: "Tablette"
-						, 	"VGE"	: "Vaginalcreme"
-						, 	"WKA"	: "Kapsel"
-						, 	"XNC"	: "Nachtcreme"
-						, 	"ZAM"	: "Ampulle"}
+	MedForm			:= {	"AMP"	: "Ampulle"
+								, 	"ATR" 	: "Augentropfen"
+								, 	"CRE"	: "Creme"
+								, 	"DOS" 	: "Dosierspray"
+								, 	"EMU"	: "Emulsion"
+								, 	"FER" 	: "Fertigspritze"
+								, 	"FLU"	: "Flüssig"
+								, 	"FTA" 	: "Filmtablette"
+								, 	"GEL"	: "Gel"
+								, 	"GRA"	: "Granulat"
+								, 	"HKM"	: "Kapsel"
+								, 	"HKP"	: "Kapsel"
+								, 	"HPI" 	: "Kapsel"
+								, 	"HVW"	: "Kapsel"
+								, 	"IFB"  	: "Infusionsbeutel"
+								, 	"IHP"  	: "Inhalationspack"
+								, 	"INF" 	: "Infusionslösung"
+								, 	"ILO" 	: "Injektionslösung"
+								, 	"ISU" 	: "Suspension"
+								, 	"KAP"	: "Kapsel"
+								, 	"KMP"	: "Kapsel"
+								, 	"KMR"	: "Kapsel"
+								, 	"KPG"	: "Kombipackung"
+								, 	"LOT"	: "Lotion"
+								, 	"LSE" 	: "Lösung"
+								, 	"MIL" 	: "Lotion"
+								, 	"PEN"	: "Fertigpen"
+								, 	"PFL" 	: "Pflaster"
+								, 	"PIK"  	: "Infusionslösung"
+								, 	"PLE" 	: "Pulverzubereitung"
+								, 	"PST" 	: "Paste"
+								, 	"PUL"	: "Pulver"
+								, 	"REK" 	: "Retardkapsel"
+								, 	"RET" 	: "Retardtablette"
+								, 	"SHA"	: "Shampoo"
+								, 	"SIR"  	: "Sirup"
+								, 	"SPR" 	: "Spray"
+								, 	"STI"  	: "Stift"
+								, 	"TAB"	: "Tablette"
+								, 	"TEI"  	: "Tropfen"
+								, 	"TMR"	: "Tablette"
+								, 	"TRO"	: "Tropfen"
+								, 	"UTA"	: "Tablette"
+								, 	"VGE"	: "Vaginalcreme"
+								, 	"WKA"	: "Kapsel"
+								, 	"XNC"	: "Nachtcreme"
+								, 	"ZAM"	: "Ampulle"}
 
-	Hinweise	:= {1: 	"• Einnahme der Kapseln mit Flüssigkeit zur selben Tageszeit, unabhängig von den Mahlzeiten "
-							.	"• Kapseln nicht zerkauen oder zerstoßen • nicht zusammen mit Grapefruitsaft einnehmen"}
+	Hinweise          	:= {1: 	"• Einnahme der Kapseln mit Flüssigkeit zur selben Tageszeit, unabhängig von den Mahlzeiten "
+				           			.	"• Kapseln nicht zerkauen oder zerstoßen • nicht zusammen mit Grapefruitsaft einnehmen"}
 
 ;}
 
@@ -242,7 +244,7 @@ global                                                         						DatumVom:= 
 			vopln    	:= oWord.Documents.Item(A_Index)
 
 			oWord.Documents(A_Index).Activate
-			docNr:= A_Index
+			docNr := A_Index
 			break
 		}
 

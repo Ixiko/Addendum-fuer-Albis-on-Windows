@@ -1,5 +1,4 @@
-class Cert
-{
+class Cert {
     ;   Encoding Types
 static X509_ASN_ENCODING    := 0x00000001
     ,  PKCS_7_ASN_ENCODING  := 0x00010000
@@ -213,7 +212,7 @@ static STORE_ADD_NEW                                 := 1
                 Doman:              "DC"
             )}
             static CERT_X500_NAME_STR := 3, Q := """" ; For readability.
-            
+
             if IsObject(Props)
             {
                 ; Build name string from caller-supplied object.
@@ -230,7 +229,7 @@ static STORE_ADD_NEW                                 := 1
             }
             else
                 name_string := Props
-            
+
             Loop 2
             {
                 if A_Index=1
@@ -261,8 +260,8 @@ static STORE_ADD_NEW                                 := 1
             NumPut(pbEncoded, NumPut(cbEncoded, this.p := this.GetAddress("blob")))
         }
     }
-    
-    
+
+
     ;
     ;   Certificate Store
     ;
@@ -291,7 +290,7 @@ static STORE_ADD_NEW                                 := 1
             ctx.p := 0 ; Above freed it already.
             return certs
         }
-        
+
         AddCertificate(Certificate, dwAddDisposition)
         {
             if !DllCall("Crypt32\CertAddCertificateContextToStore"
@@ -303,18 +302,18 @@ static STORE_ADD_NEW                                 := 1
             global Cert
             return pStoreContext ? new Cert.Context(pStoreContext) : 0
         }
-        
+
         __New(handle)
         {
             this.h := handle
         }
-        
+
         __Delete()
         {
             if this.h && DllCall("Crypt32\CertCloseStore", "ptr", this.h, "uint", 0)
                 this.h := 0
         }
-        
+
         static Dispose := Cert.Store.__Delete ; Alias
     }
 
@@ -328,13 +327,13 @@ static STORE_ADD_NEW                                 := 1
         {
             this.p := ptr
         }
-        
+
         __Delete()
         {
             if this.p && DllCall("Crypt32\CertFreeCertificateContext", "ptr", this.p)
                 this.p := 0
         }
-        
+
         ; CertGetNameString
         ;   http://msdn.microsoft.com/en-us/library/aa376086
         GetNameString(dwType, dwFlags=0, pvTypePara=0)
@@ -348,7 +347,7 @@ static STORE_ADD_NEW                                 := 1
             DllCall("Crypt32\CertGetNameString", "ptr", this.p, "uint", dwType, "uint", dwFlags, "ptr", pvTypePara, "str", name, "uint", cc)
             return name
         }
-        
+
         ; CertDuplicateCertificateContext
         ;   http://msdn.microsoft.com/en-us/library/aa376045
         Duplicate()
@@ -356,7 +355,7 @@ static STORE_ADD_NEW                                 := 1
             return this.p && (p := DllCall("Crypt32\CertDuplicateCertificateContext", "ptr", this.p))
                 ? new this.base(p) : p
         }
-        
+
         static Dispose := Cert.Context.__Delete ; Alias
     }
 
@@ -377,8 +376,7 @@ static STORE_ADD_NEW                                 := 1
 ; Internal
 ;
 
-Cert_GetStoreNames_Callback(pvSystemStore, dwFlags, pStoreInfo, pvReserved, pvArg)
-{
+Cert_GetStoreNames_Callback(pvSystemStore, dwFlags, pStoreInfo, pvReserved, pvArg){
     Object(pvArg).Insert(StrGet(pvSystemStore, "utf-16"))
     return true
 }

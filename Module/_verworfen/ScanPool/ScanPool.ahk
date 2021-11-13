@@ -4874,6 +4874,45 @@ StrSplitEx(str, nr=1, splitchar:="|") {                                         
 	splitArr:= StrSplit(str, splitchar)
 return Trim(splitArr[nr])
 }
+
+ExceptionHelper(libPath, SearchCode, ErrorMessage, codeline) { 					;-- searches for the given SearchCode in an uncompiled script as a help to throw exceptions
+
+	If !A_IsCompiled {
+
+	;Fehlerfunktion bei Eingabe eines falschen Parameter
+		FileRead, Pfunc, % AddendumDir "\" libPath
+		FileOpen(AddendumDir "\" libPath, "r", "UTF-8").Read()
+		For idx, line in StrSplit(Pfunc, "`n", "`r") {
+			If Instr(line, SearchCode) {
+				scriptline	:= A_Index
+				ScriptText	:= line
+				break
+			}
+		}
+
+		Exception(ErrorMessage)
+
+	} else {
+
+		msg=
+		(Ltrim
+		This message is shown, because the script wanted
+		to call a function that works only in uncompiled scripts.
+
+		A function was called to show a runtime error.
+		This function was called from %A_ScriptName%
+		at line: %codeline%. The code to show ist:
+		%SearchCode%
+		with the following error-message:
+		%ErrorMessage%
+		)
+
+		MsgBox, % "Addendum für AlbisOnWindows - " A_ScriptName,  % msg
+
+	}
+
+}
+
 ; -----------------------------------------------------------------------------------------------------------------------------------------------
 ; -----------------------------------------------------------------------------------------------------------------------------------------------
 

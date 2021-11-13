@@ -358,18 +358,18 @@ DateValidator(dateString, interpolateCentury:="") {                             
 
 	/*  	DateValidator() by Ixiko 2021
 
-			* die Funktion ist für den Abgleich/Überprüfung von OCR-Texten geschrieben worden
+			* die Funktion ist für den Abgleich/Überprüfung von Datumszahlen aus OCR-Texten geschrieben worden
 
 			erkennt ein Datum in deutscher Schreibweise:
 
 				dd[.,;:]\s*(Monatsname lang|Montagsname kurz|MM)[.,;:]*\s+(yy|yyyy)  / Jahr 2 oder 4 stellig
 				z.B. 12.Dezember 2020, 12. Dez. 20, 12.12.2020 oder 12.12.20
-				die RegEx Strings habe ich auf einer Internetseite gefunden und sind in der Lage völlig falsche Tageszahlen zu erkennen
-				oder besser auszuschließen. Ein Datum wie 32.04.2021 wird nicht als Datum erkannt.
+				die RegEx Strings habe ich auf einer Internetseite gefunden. Es lassen nicht plausible Daten wie z.B. der 32.04.2021
+				als Datum ausschließen.
 
 			Rückgabewert:
 
-				ein Datum der Schreibweisen Tageszahl.Monatsname.Jahreszahl wird in ein reines "Zahlen"-Datum umgewandelt
+				ein Schreibweisen Tageszahl.Monatsname Jahreszahl wird in ein reines "Zahlen"-Datum umgewandelt
 				aus dem 12.Dezember 2020 wird der 12.12.2020
 
 			optionale Änderung:
@@ -391,18 +391,19 @@ DateValidator(dateString, interpolateCentury:="") {                             
 				Was wird für interpolateCentury = 219 berechnet?
 				Antwort: der 12.12.120
 
-			**letzte Änderung: 14.03.2021
+			**letzte Änderung: 06.11.2021
 
 	 */
 
 	; RegEx Strings
-		static global rxMonths:=	"Jan*u*a*r*|Feb*r*u*a*r*|Mä*a*rz|Apr*i*l*|Mai|Jun*i*|Jul*i*|Aug*u*s*t*|Sept*e*m*b*e*r*|Okt*o*b*e*r*|Nov*e*m*b*e*r*|Deze*m*b*e*r*"
-		static rxDateOCRrpl	:= "[,;:]"
-		static rxDateValidator	:= [ 	"^(?<D>[0]?[1-9]|[1|2][0-9]|[3][0|1]).(?<M>[0]?[1-9]|[1][0-2]).(?<Y>[0-9]{4}|[0-9]{2})$"
-											,	"^(?<D>[0]?[1-9]|[1|2][0-9]|[3][0|1])[.;,\s]+(?<M>" rxMonths ")[.;,\s]+(?<Y>[0-9]{4}|[0-9]{2})$"]
+		static global rxMonths	:= "Jan*u*a*r*|Feb*r*u*a*r*|Mä*a*rz|Apr*i*l*|Mai|Jun*i*|Jul*i*|Aug*u*s*t*|Sept*e*m*b*e*r*|Okt*o*b*e*r*|Nov*e*m*b*e*r*|Deze*m*b*e*r*"
+		static rxDateOCRrpl   	:= "[,;:\s]+"
+		static rxDateValidator 	:= [ 	"^(?<D>[0]?[1-9]|[1|2][0-9]|[3][0|1]).(?<M>[0]?[1-9]|[1][0-2]).(?<Y>[0-9]{4}|[0-9]{2})$"
+										    	,	"^(?<D>[0]?[1-9]|[1|2][0-9]|[3][0|1])[.;,\s]+(?<M>" rxMonths ")[.;,\s]+(?<Y>[0-9]{4}|[0-9]{2})$"]
 
 	; OCR Korrektur ausführen und erste Evaluierung (Format ist korrekt) durchführen
-		dateString := RegExReplace(Trim(dateString), rxDateOCRrpl, ".")
+		dateString := Trim(dateString)
+		dateString := RegExReplace(dateString, rxDateOCRrpl, ".")
 		If !RegExMatch(dateString, rxDateValidator[1], d)
 			If !RegExMatch(dateString, rxDateValidator[2], d)
 				return
@@ -417,11 +418,9 @@ DateValidator(dateString, interpolateCentury:="") {                             
 
 	; das Jahrhundert interpolieren
 		If RegExMatch(interpolateCentury, "^\d+$") && (StrLen(interpolateCentury) > StrLen(dY)) && (StrLen(dY) = 2) {
-
 			refYear 	:= SubStr(interpolateCentury, -1)	; die letzten 2 Stellen
 			refCentury	:= SubStr(interpolateCentury, 1, StrLen(interpolateCentury) - 2)
 			dY          	:= (dY > refYear ? refCentury-1 : refCentury) dY
-
 		}
 
 return SubStr("0" dD, -1) "." SubStr("0" dM, -1) "." dY	; Rückgabe immer im Format dd.mm.yy oder dd.mm.yyyy
@@ -491,39 +490,48 @@ WeekOfYear(dateStr) {
 return SubStr(weekOfYear, 5, 2)
 }
 
-DateAddEx(vDate, vDiff){
+DateAddEx(vDate, vDiff, AddOrSub:="add") {
 
 	; from jeeswig - https://www.autohotkey.com/boards/viewtopic.php?t=59825
-	;vDiff expects 1 to 6 space-separated digit sequences (any non-spaces/non-digits are ignored)
-	;e.g. MsgBox, % JEE_DateAddFriendly(20010101, "3y")					;20040101000000
-	;e.g. MsgBox, % JEE_DateAddFriendly(20010101, "3y 3m 3d")			;20040404000000
-	;e.g. MsgBox, % JEE_DateAddFriendly(20010101, "3y 3m 3d 8h 8m 8s")	;20040404080808
+	; vDiff expects 1 to 6 space-separated digit sequences (any non-spaces/non-digits are ignored)
+	; e.g. MsgBox, % DateAddEx(20010101, "3y")		            			; 20040101000000
+	; e.g. MsgBox, % DateAddEx(20010101, "3y 3m 3d")		         	; 20040404000000
+	; e.g. MsgBox, % DateAddEx(20010101, "3y 3m 3d 8h 8m 8s")	; 20040404080808
 
 	local
 	static date := "date"
 
 	vDate 	:= FormatTime(vDate, "yyyyMMddHHmmss")
-	vTemp	:= RegExReplace(vDiff, "[^\d ]") " 0 0 0 0 0"
-	oTemp	:= StrSplit(vTemp, " ")
+	SciTEOutput("1: " vDate)
 	vMonth	:= SubStr(vDate, 5, 2)
+	oTemp	:= StrSplit((RegExReplace(vDiff, "[^\d ]") . " 0 0 0 0 0"), " ")
+	vDate  += (vMonth+oTemp.2 > 12) ? ((oTemp.2-12)*100000000 + (oTemp.1+1)*10000000000) : (oTemp.2*100000000 + oTemp.1*10000000000)
+	SciTEOutput("2: " vDate)
 
-	if (vMonth+oTemp.2 > 12)
-		vDate += (oTemp.2-12) * 100000000 + (oTemp.1+1) * 10000000000
-	else
-		vDate += oTemp.2 * 100000000 + oTemp.1 * 10000000000
+	Loop 3 {
 
-	Loop, 3
-		;if JEE_StrIsType(vDate, "date")
 		if vDate is %date%
 			break
-		else
-			vDate -= 1000000
+		vDate -= 1000000
 
-return DateAdd(vDate, oTemp.3*86400+oTemp.4*3600+oTemp.5*60+oTemp.6, "S")
+		;~ If (AddOrSub = "add")
+		;~ else
+			;~ vDate += 1000000
+
+	}
+
+	SciTEOutput("3: " vDate ", " oTemp.3*86400+oTemp.4*3600+oTemp.5*60+oTemp.6)
+
+return AddOrSub = "add" ? DateAdd(vDate, oTemp.3*86400+oTemp.4*3600+oTemp.5*60+oTemp.6, "S") : DateSub(vDate, oTemp.3*86400+oTemp.4*3600+oTemp.5*60+oTemp.6, "S")
 }
 
 DateAdd(DateTime, Time, TimeUnits){
-	EnvAdd DateTime, %Time%, %TimeUnits%
+	EnvAdd DateTime, % Time, % TimeUnits
+return DateTime
+}
+
+DateSub(DateTime, Time, TimeUnits){
+	EnvSub DateTime, % Time, % TimeUnits
 return DateTime
 }
 
@@ -536,7 +544,7 @@ FormatSeconds(timestr, formatstring:="hh:mm:ss")  {                             
     return hhmmss
 }
 
-FormatTime(YYYYMMDDHH24MISS:="", Format:=""){
+FormatTime(YYYYMMDDHH24MISS:="", Format:="") {                                        	;-- FormatTime wrapper
 	local OutputVar
 	FormatTime OutputVar, %YYYYMMDDHH24MISS%, %Format%
 	return OutputVar

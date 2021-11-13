@@ -3,7 +3,7 @@
 ;----------------------------------------------	Addendum für Albis on Windows ---------------------------------------------
 ;------------------------------------------------------------------------------------------------------------------------------------
 ;------------------------------------------------------ Modul: Schulzettel -------------------------------------------------------
-															           Version:= "V0.9"
+															         Version:= "V0.91"
 ;------------------------------------------------------------------------------------------------------------------------------------
 ;{      			Ein Skript zur einfachen Erstellung einer Schulbefreiung und/oder Sportbefreiung
 ;
@@ -34,7 +34,7 @@
 ;
 ;}
 ;------------------------------------------------------------------------------------------------------------------------------------
-;------------------------------------- written by Ixiko -this version is from 27.08.2019 ------------------------------------
+;------------------------------------- written by Ixiko -this version is from 19.10.2021 ------------------------------------
 ;------------------------------------------------------------------------------------------------------------------------------------
 ;------------------------------- please report errors and suggestions to me: Ixiko@mailbox.org ------------------------
 ;---------------------------- use subject: "Addendum" so that you don't end up in the spam folder ---------------------
@@ -53,20 +53,27 @@
 		#NoEnv
 		#SingleInstance, Force
 		;#NoTrayIcon
-		SetBatchLines, -1
-		SetWinDelay, -1
-		SetControlDelay, -1
-		CoordMode, ToolTip, Screen
-		FileEncoding, UTF-8
+		SetBatchLines        	, -1
+		SetWinDelay         	, -1
+		SetControlDelay    	, -1
+		CoordMode, ToolTip	, Screen
+		FileEncoding         	, UTF-8
+
+	; Tray Icon erstellen
+		If (hIcon := Schulzettel_ico())
+			Menu, Tray, Icon, % "hIcon: " hIcon
 	;}
+
 	;--------------------------------------------------------------------------------------------------------------------
 	;	globale Variablen festlegen
 	;-------------------------------------------------------------------------------------------------------------------- ;{
 		;- die zwei wichtigsten Variablen erstellen -
-		global AddendumDir		:= FileOpen("C:\albiswin.loc\AddendumDir","r").Read()
-		global AlbisWinID			:= WinExist("ahk_class OptoAppClass")
-		global CompName		:= StrReplace(A_ComputerName, "-")
+		global AddendumDir
+		global AlbisWinID  	:= WinExist("ahk_class OptoAppClass")
+		global CompName	:= StrReplace(A_ComputerName, "-")
+		RegExMatch(A_ScriptDir, "[A-Z]\:.*?AlbisOnWindows", AddendumDir)
 	;}
+
 	;--------------------------------------------------------------------------------------------------------------------
 	;	Schulzetteltexte
 	;-------------------------------------------------------------------------------------------------------------------- ;{
@@ -76,62 +83,59 @@
 		vombis		    		:= "vom M1 bis zum M2"
 		timeFormat	    	:= "ddd.', dem' dd.MM.yyyy"
 	;}
+
 	;--------------------------------------------------------------------------------------------------------------------
 	;	andere Variablen, Drucker ermitteln
 	;-------------------------------------------------------------------------------------------------------------------- ;{
-		;- Vorname und Nachname des Patienten ermitteln -
+	  ;- Vorname und Nachname des Patienten ermitteln -
 		namen := StrSplit(AlbisCurrentPatient(), ",")
-		;- den Drucker ermitteln den der Skript ausführende Clientrechner normalerweise nutzt - evtl. Nutzer fragen -
+	  ;- den Drucker ermitteln den der Skript ausführende Clientrechner normalerweise nutzt - evtl. Nutzer fragen -
 		IniRead, Schulzettel_DefaultPrinter, % AddendumDir "\Addendum.ini", % CompName, Schulzettel_DefaultPrinter
 		If (DefaultPrinter = "ERROR")
 				DefaultPrinter := DefaultPrinter("Schulzettel")
 		IniRead, SchulzettelDoc, % AddendumDir "\Addendum.ini", % "Addendum", SchulzettelDokument
 		;- Ersteinstellungen vervollständigen
-		If InStr(SchulzettelDoc, "ERROR")
-		{
-				stammverzeichnis:
-				IniRead, AlbisWorkDir, % AddendumDir "\Addendum.ini", Albis, AlbisWorkDir
-				If InStr(AlbisWorkDir, "ERROR")
-				{
-						FileSelectFolder, AlbisWorkDir,, 0, % "Bitte wählen Sie zunächst das Albis Stammverzeichnis (meist \\Server\albiswin)"
-						If ErrorLevel
-						{
-								MsgBox, 4, Addendum für Albis on Windows, % "Sie haben nichts ausgewählt.`nSoll das Skript abgebrochen werden?"
-								IfMsgBox, Yes
-										ExitApp
-						}
-
-						AlbisWorkDir := RegExReplace(AlbisWorkDir, "\\$")
-						If !InStr(FileExist(AlbisWorkDir "\TVL") , "D")
-						{
-								PraxTT("Dies ist nicht das Albisstammverzeichnis.", "6 3")
-								goto stammverzeichnis
-						}
-
-						IniWrite, % AlbisWorkDir, % AddendumDir "\Addendum.ini", Albis, AlbisWorkDir
-				}
-
-				schulzettelDoc:
-				FileSelectFile, schulzettelDoc, 1, % AlbisWorkDir "\TVL", % "Bitte wählen Sie hier Ihr Word-Dokument für den Schulzettel aus!", *.doc;*.docx
-				If ErrorLevel
-				{
-						MsgBox, 4, Addendum für Albis on Windows, % "Sie haben nichts ausgewählt.`nSoll das Skript abgebrochen werden?"
-						IfMsgBox, Yes
-								ExitApp
-				}
-
-				msgText = (LTrim
-								Beachten Sie bitte das in Ihrer Schulzettel Vorlage
-								die richtigen Seiteneinstellungen abgespeichert sind.
-								Das Skript kann die Größe des Ausdruckes (z.B. A5)
-								nicht wissen!
-								)
-
-				MsgBox, 4, Addendum für Albis on Windows, % "Gewähltes Dokument:`n" SchulzettelDoc "`nMit 'Ja' wird dieses Dokument in die Einstellungen übernommen.`n`n" msgText
-				IfMsgBox, No
+		If InStr(SchulzettelDoc, "ERROR")		{
+			stammverzeichnis:
+			IniRead, AlbisWorkDir, % AddendumDir "\Addendum.ini", Albis, AlbisWorkDir
+			If InStr(AlbisWorkDir, "ERROR")				{
+				FileSelectFolder, AlbisWorkDir,, 0, % "Bitte wählen Sie zunächst das Albis Stammverzeichnis (meist \\Server\albiswin)"
+				If ErrorLevel						{
+					MsgBox, 4, Addendum für Albis on Windows, % "Sie haben nichts ausgewählt.`nSoll das Skript abgebrochen werden?"
+					IfMsgBox, Yes
 						ExitApp
+				}
 
-				IniWrite, % SchulzettelDoc, % AddendumDir "\Addendum.ini", % "Addendum", SchulzettelDokument
+				AlbisWorkDir := RegExReplace(AlbisWorkDir, "\\$")
+				If !InStr(FileExist(AlbisWorkDir "\TVL") , "D")						{
+					PraxTT("Dies ist nicht das Albisstammverzeichnis.", "6 3")
+					goto stammverzeichnis
+				}
+
+				IniWrite, % AlbisWorkDir, % AddendumDir "\Addendum.ini", Albis, AlbisWorkDir
+			}
+
+			schulzettelDoc:
+			FileSelectFile, schulzettelDoc, 1, % AlbisWorkDir "\TVL", % "Bitte wählen Sie hier Ihr Word-Dokument für den Schulzettel aus!", *.doc;*.docx
+			If ErrorLevel				{
+				MsgBox, 4, Addendum für Albis on Windows, % "Sie haben nichts ausgewählt.`nSoll das Skript abgebrochen werden?"
+				IfMsgBox, Yes
+						ExitApp
+			}
+
+			msgText =
+			(LTrim
+				Beachten Sie bitte das in Ihrer Schulzettel Vorlage
+				die richtigen Seiteneinstellungen abgespeichert sind.
+				Das Skript kann die Größe des Ausdruckes (z.B. A5)
+				nicht wissen!
+			)
+
+			MsgBox, 4, Addendum für Albis on Windows, % "Gewähltes Dokument:`n" SchulzettelDoc "`nMit 'Ja' wird dieses Dokument in die Einstellungen übernommen.`n`n" msgText
+			IfMsgBox, No
+					ExitApp
+
+			IniWrite, % SchulzettelDoc, % AddendumDir "\Addendum.ini", % "Addendum", SchulzettelDokument
 
 		}
 
@@ -155,24 +159,24 @@ Calendar:	         	;{ Gui für die schnelle Eingabe zum Erstellen einer Schulbe
 	;--------------------------------------------------------------------------------------------------------------------
 	;	Berechnungen für Datumsfokus
 	;-------------------------------------------------------------------------------------------------------------------- ;{
-		FormatTime, datum, %A_Now%, % timeFormat
-		day:= SubStr(datum, 1, 2), month:= SubStr(datum, 3, 2), year:= SubStr(datum, 5, 4)
+		FormatTime, datum, % A_Now, % timeFormat
+		day := SubStr(datum, 1, 2), month := SubStr(datum, 3, 2), year := SubStr(datum, 5, 4)
 		if (month-1 < 1)
-				month:= SubStr( "00" . (12 + month - 1), -1), year -= 1
+			month := SubStr( "00" (12+month-1), -1), year -= 1
 		else
-				month := SubStr("00" . (month - 1), -1)
-		FormatTime, begindate, % year . month . day, yyyyMMdd
+			month := SubStr("00" (month-1), -1)
+		FormatTime, begindate, % year month day, yyyyMMdd
 	;}
 	;--------------------------------------------------------------------------------------------------------------------
 	;	Erste Textersetzungen
 	;-------------------------------------------------------------------------------------------------------------------- ;{
-		ScBf:= StrReplace(schulbefreiung, "<Vorname>", Trim(namen.2))
-		ScBf:= StrReplace(ScBf, "<Zeitraum>", StrReplace(am, "M1", datum))
+		ScBf := StrReplace(schulbefreiung, "<Vorname>", Trim(namen.2))
+		ScBf := StrReplace(ScBf, "<Zeitraum>", StrReplace(am, "M1", datum))
 		If InStr(daten[3], "w")
-				SpBf:= StrReplace(Sportbefreiung, "<KontextAnrede>", "sie")
+			SpBf := StrReplace(Sportbefreiung, "<KontextAnrede>", "sie")
 		else
-				SpBf:= StrReplace(Sportbefreiung, "<KontextAnrede>", "er")
-		SpBf:= StrReplace(SpBf, "<Zeitraum>", StrReplace(am, "M1", datum))
+			SpBf := StrReplace(Sportbefreiung, "<KontextAnrede>", "er")
+		SpBf := StrReplace(SpBf, "<Zeitraum>", StrReplace(am, "M1", datum))
 	;}
 	;--------------------------------------------------------------------------------------------------------------------
 	;	Kalender Gui
@@ -270,13 +274,11 @@ Enabler:				;{ schaltet die zwei Kalender frei, je nachdem was gebraucht wird
 
 		ControlGet, isChecked, Checked,,, % "ahk_id " h%A_GuiControl%
 		RegExMatch(A_GuiControl, "\d", nr)
- 		If isChecked
-		{
+ 		If isChecked		{
 			Control, Enable,,, % "ahk_id " hmyCal%nr%
 			Control, Enable,,, % "ahk_id " hZsZ%nr%
 		}
-		else
-		{
+		else		{
 			Control, Disable,,, % "ahk_id " hmyCal%nr%
 			Control, Disable,,, % "ahk_id " hZsZ%nr%
 		}
@@ -295,19 +297,20 @@ DatePicker:			;{ zeigt bei jedem Auswählen eines Datums oder Datumbereiches zur
 		FormatTime, CalM2, % StrSplit(%A_GuiControl%,"-").2, % timeFormat
 		;- liest hier den zugehörigen Text aus dem Editcontrol mit der zuvor ermittelten Nummer ein -
 		GuiControlGet, inhalt1,, Zsz%nr% ;%nr%
+
 	;--------------------------------------------------------------------------------------------------------------------
 	;	liegt der Befreiungszeitraum innerhalb desselben Jahres, entfernt er beim vom Datum das Jahr
 	;	sieht optisch besser aus
 	;--------------------------------------------------------------------------------------------------------------------;{
-		If ( CalM1 != CalM2 )
-		{
-				equal:= false
-				RegExMatch(CalM1,"\d+$", year1)
-				RegExMatch(CalM2,"\d+$", year2)
-				If ( year1 = year2 )
-						CalM1:= RTrim(StrReplace(CalM1, year1), A_Space)
+		If ( CalM1 != CalM2 )		{
+			equal:= false
+			RegExMatch(CalM1,"\d+$", year1)
+			RegExMatch(CalM2,"\d+$", year2)
+			If ( year1 = year2 )
+				CalM1:= RTrim(StrReplace(CalM1, year1), A_Space)
 		}
 	;}
+
 	;--------------------------------------------------------------------------------------------------------------------
 	;	sucht nach den Key-Worten: am, vom, bis und ersetzt diese Bereiche durch <Zeitraum>
 	;	danach wird dort wieder entsprechend dem Ausgewählten der Text smart ersetzt
@@ -318,6 +321,7 @@ DatePicker:			;{ zeigt bei jedem Auswählen eines Datums oder Datumbereiches zur
 			inhalt:= RegExReplace(inhalt1, "i)vom\s\w+\.\,\sdem\s[\d\.]+\sbis\szum\s\w+\.\,\sdem\s[\d\.]+", "<Zeitraum>")
 		;ToolTip, % A_GuiControl "`n" CalM1 "`n" CalM2 "`n" inhalt, % oWinA.WindowX + oWinA.WindowW + 5, % oWinA.WindowY
 	;}
+
 	;--------------------------------------------------------------------------------------------------------------------
 	;	<Zeitraum> wird mit den neuen Tagen ersetzt, nutzt als Template die zuvor definierten
 	;	Variablen am und vombis
@@ -327,6 +331,7 @@ DatePicker:			;{ zeigt bei jedem Auswählen eines Datums oder Datumbereiches zur
 		else
 			GuiControl,, % zsz%nr%, % StrReplace(inhalt, "<Zeitraum>", StrReplace(StrReplace(vombis, "M1", CalM1), "M2", CalM2))
 	;}
+
 	;--------------------------------------------------------------------------------------------------------------------
 	;	enthält die Sportbefreiung eines der Stichwörter: "Anschließend",  wird automatisch das
 	;	Anfangsdatum auf den folgenden Werktag gesetzt im Kalender für die Sportbefreiung gesetzt
@@ -339,7 +344,7 @@ return
 
 CalendarOK:		;{ Schulzettel drucken wurde gewählt - es werden alle Daten zusammengestellt und dann das Dokument ausgedruckt
 
-		Gui, newCal: Submit, NoHide
+		Gui, newCal: Submit, NoHide+
 	;--------------------------------------------------------------------------------------------------------------------
 	;	liest beide Kalender aus und formatiert das Datum ins deutsche Format
 	;--------------------------------------------------------------------------------------------------------------------;{
@@ -352,69 +357,64 @@ CalendarOK:		;{ Schulzettel drucken wurde gewählt - es werden alle Daten zusamm
 		FormatTime, CalM4, % StrSplit(MyCal2,"-").2, % timeFormat
 		FormatTime, CalW4, % StrSplit(MyCal2,"-").2, dd.MM.yyyy
 	;}
+
 	;--------------------------------------------------------------------------------------------------------------------
 	;	liest den Inhalt der Edit-Felder, wenn die zugehörige Checkbox gesetzt wurde, erstellt
 	;	Eintragungen für die Akte je nach gewählten Daten
 	;--------------------------------------------------------------------------------------------------------------------;{
 		Entschuldigung:=[], Akteneintrag:="", checkedWas:= []
-		Loop, 2
-		{
-				ControlGet, isChecked, Checked,,, % "ahk_id " hChb%A_Index%
-				If !isChecked
-				{
-							checkedWas[A_Index] 		:= 0
-							Entschuldigung[A_Index]	:= ""
-				}
-				else
-				{
-							checkedWas[A_Index] 		:= 1
-							GuiControlGet, tmptext,, Zsz%A_Index%
-							Entschuldigung[A_Index]	:= tmptext
+		Loop, 2		{
+			ControlGet, isChecked, Checked,,, % "ahk_id " hChb%A_Index%
+			If !isChecked{
+				checkedWas[A_Index] 		:= 0
+				Entschuldigung[A_Index]	:= ""
+			}
+			else		{
 
-							If (A_Index=1)
-							{
-										If (CalM1=CalM2)
-										{
-												Akteneintrag .= "Schulbefreiung (1 Tag) am " CalM1
-										}
-										else
-										{
-												Tage:= DateDiff("DD", CalW2, CalW1) + 1
-												RegExMatch(CalM1,"\d+$", year1)
-												RegExMatch(CalM2,"\d+$", year2)
-												If ( year1 = year2 )
-														CalM1:= RTrim(StrReplace(CalM1, year1), A_Space)
-												Akteneintrag .= "Schulbefreiung für " Tage " Tage vom " CalM1 " bis " CalM2
-										}
-							}
-							else if (A_Index=2)
-							{
-										If (CalM3=CalM4)
-										{
-												If (checkedWas[1] = 1)
-													Akteneintrag .= ", Sportbefreiung nur am " CalM3
-												else
-													Akteneintrag .=   "Sportbefreiung nur am " CalM3
-										}
-										else
-										{
-												Tage:= DateDiff("DD", CalW4, CalW3) + 1
-												If (checkedWas[1] = 1)
-													Akteneintrag .= ", Sportbefreiung für " Tage " Tage vom " CalM3 " bis " CalM4
-												else
-													Akteneintrag .=   "Sportbefreiung für " Tage " Tage vom " CalM3 " bis " CalM4
-										}
-							}
+				checkedWas[A_Index] 		:= 1
+				GuiControlGet, tmptext,, Zsz%A_Index%
+				Entschuldigung[A_Index]	:= tmptext
+
+				If (A_Index=1) {
+					If (CalM1=CalM2){
+						Akteneintrag .= "Schulbefreiung (1 Tag) am " CalM1
+					}
+					else	{
+						Tage:= DateDiff("DD", CalW2, CalW1) + 1
+						RegExMatch(CalM1,"\d+$", year1)
+						RegExMatch(CalM2,"\d+$", year2)
+						If ( year1 = year2 )
+								CalM1:= RTrim(StrReplace(CalM1, year1), A_Space)
+						Akteneintrag .= "Schulbefreiung für " Tage " Tage vom " CalM1 " bis " CalM2
+					}
 				}
+				else if (A_Index=2)				{
+					If (CalM3=CalM4)							{
+						If (checkedWas[1] = 1)
+							Akteneintrag .= ", Sportbefreiung nur am " CalM3
+						else
+							Akteneintrag .=   "Sportbefreiung nur am " CalM3
+					}
+					else							{
+						Tage:= DateDiff("DD", CalW4, CalW3) + 1
+						If (checkedWas[1] = 1)
+							Akteneintrag .= ", Sportbefreiung für " Tage " Tage vom " CalM3 " bis " CalM4
+						else
+							Akteneintrag .=   "Sportbefreiung für " Tage " Tage vom " CalM3 " bis " CalM4
+					}
+				}
+			}
 		}
 	;}
+
 	;--------------------------------------------------------------------------------------------------------------------
 	;	prüft ob Albis läuft und wenn das es auch antwortet, schliessen blockierender Fenster
 	;--------------------------------------------------------------------------------------------------------------------;{
-			Gui, newCal: Show, Hide                                                                                                                                                        	;erst jetzt wird die Gui versteckt
-			AlbisStatus()
-			AlbisIsBlocked(AlbisWinID)                                                                                                                                                     	;autoclose blockierender Fenster ist default
+		Gui, newCal: Show, Hide                                                                                                                                                        	;erst jetzt wird die Gui versteckt
+		AlbisStatus()
+		AlbisIsBlocked(AlbisWinID)                                                                                                                                                     	;autoclose blockierender Fenster ist default
 	;}
+
 	;--------------------------------------------------------------------------------------------------------------------
 	;	öffnet das Schulzetteldokument in Word, setzt Eintragungen für die Akte
 	;--------------------------------------------------------------------------------------------------------------------;{
@@ -427,6 +427,7 @@ CalendarOK:		;{ Schulzettel drucken wurde gewählt - es werden alle Daten zusamm
 		;- wartet auf das sich öffnende Wordfenster -
 			WinWaitActive, ahk_class OpusApp, 10
 	;}
+
 	;--------------------------------------------------------------------------------------------------------------------
 	;	Verbindung zu Word herstellen und falls mehrere Word-Dokumente geöffnet sind,
 	;	muss das richtige Dokument gefunden werden
@@ -438,12 +439,10 @@ CalendarOK:		;{ Schulzettel drucken wurde gewählt - es werden alle Daten zusamm
 			Sleep, 2000
 
 		;- das richtige Word Dokument heraussuchen und nach vorne holen
-			Loop, % oWord.Documents.Count
-			{
+			Loop, % oWord.Documents.Count			{
 					Content:= oWord.Documents.Item(A_Index).Content.Text
 				;- Übereinstimmung anhand der speziellen Schlüsselwörter und des Patientennamen wird überprüft
-					If ( InStr(Content, "<Entschuldigung1>") and InStr(Content, namen[1]) and InStr(Content, namen[2]) )
-					{
+					If ( InStr(Content, "<Entschuldigung1>") and InStr(Content, namen[1]) and InStr(Content, namen[2]) )					{
 						;- gefunden, dann wird genau dieses Dokument zum aktiven Dokument gemacht
 							oWord.Documents(A_Index).Activate
 							docNr:= A_Index
@@ -453,8 +452,7 @@ CalendarOK:		;{ Schulzettel drucken wurde gewählt - es werden alle Daten zusamm
 			}
 
 		;- falls kein passendes Dokument geöffnet wird, erfolgt ein Hinweis und das Skript-Gui wird wieder angezeigt
-			If !docNr
-			{
+			If !docNr			{
 					MsgBox, 4, Addendum für Albis on Windows,
 													(LTrim
 													Scheinbar konnte das Dokument `"%SchulzettelDoc%`"
@@ -474,6 +472,7 @@ CalendarOK:		;{ Schulzettel drucken wurde gewählt - es werden alle Daten zusamm
 
 			}
 		;}
+
 	;--------------------------------------------------------------------------------------------------------------------
 	;	im Dokument werden die Schlüsselwörter durch die erstellten Texte ersetzt und das
 	;	Dokument wird gedruckt, gespeichert und geschlossen, das Skript wird anschliessend beendet
@@ -505,11 +504,8 @@ ExitApp
 ;}
 
 
-
-
-
 ;------------------------------------------------------------------------------------------------------------------------------------
-;---------------------------------- Funktionen die nur in diesem Skript benötigt werden ----------------------------------
+;------------------------------- Funktionen welche nur von diesem Skript benötigt werden -------------------------------
 ;------------------------------------------------------------------------------------------------------------------------------------;{
 Edit_GetMargins(hEdit,ByRef r_LeftMargin="",ByRef r_RightMargin="") {
     Static EM_GETMARGINS:=0xD4
@@ -517,7 +513,7 @@ Edit_GetMargins(hEdit,ByRef r_LeftMargin="",ByRef r_RightMargin="") {
     r_LeftMargin :=ErrorLevel & 0xFFFF      ;-- LOWORD of result
     r_RightMargin:=ErrorLevel>>16           ;-- HIWORD of result
     Return r_LeftMargin  ; ##### --------------------------------------- Really?
-    }
+}
 
 MSWord_FindAndReplace(obj, search, replace) {
 	obj.Selection.Find.ClearFormatting
@@ -593,20 +589,62 @@ return DefaultPrinter
 DPCancel:
 ExitApp
 }
+
+Schulzettel_ico(NewHandle := False) {
+Static hBitmap := Schulzettel_ico()
+If (NewHandle)
+   hBitmap := 0
+If (hBitmap)
+   Return hBitmap
+VarSetCapacity(B64, 9812 << !!A_IsUnicode)
+B64 := "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kQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBwrUDc69D////////////////////////////////////////////////////+//6/2qlYnyBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBOmRO31p/+//7////////////////////////////////////////////////////////////////4+/WSwG5AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDQ5MD////////////////////////////////////r8+Tt9ef///////////////////////////////////+EuFtAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQB+tVO41qBdoidAkQBAkQDB26z////////////////////////////D3K9hpCxAkQBAkQBmpzPM4rv///////////////////////////+z05pAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDy+O7///+Ww3NAkQBAkQCrz4/////////////////////W58huqz1AkQBAkQBAkQBAkQBAkQBAkQB0r0bb6s////////////////////+jyoRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDg7db///9yrkNAkQBAkQCVwnL////////////l8NyBt1dBkQFAkQBAkQBAkQBJlgxIlgtAkQBAkQBAkQBBkgKGuV3o8uD///////////+SwG1AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDN4rz///9lpjFAkQBAkQCAtlX////r8+SOvmhEkwVAkQBAkQBAkQBjpS/I4Lb+//76/PjF3bFjpS9AkQBAkQBAkQBGlAiXw3Ty+O7///99tFFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQC516L///9ZnyFAkQBAkQBipC2Ww3NHlQlAkQBAkQBAkQBXnh+516L9/v3////////////////9/v2516JWnh5AkQBAkQBAkQBNmBGZxHdKlw1AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCly4f///9Xnh9AkQBAkQBAkQBAkQBAkQBAkQBOmROqzo76/Pj////////////////////////////////5/PemzIhLlw9AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCYw3X///9yrkNAkQBAkQBAkQBAkQBHlQqbxnr0+fD////////////////////////////////////////////////w9uuSwG1EkwVAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCZxHf///+EuFtAkQBAkQBDkwSMvWbs9OX////////////////////////////////////////////////////////////////j79p+tVNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCNvWf///90r0ZAkQBzrkTd7NL////////////////////////////////////////////////////////////////////////////////W58huqz1AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCQv2v///+rz4/U5sb////////////////////////////////////////////////////////////////////////////////////////////+//6/2qpaoCNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCdxnz////////////////////////////////////////////////////////////////////////////////////////////////////////////////7/Pmrz49NmRJAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBNmBGmzIj6/Pj////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////y+O6ZxHdGlAhAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBFlAeWw3Py+O7////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////n8d+Dt1lBkQFAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQDB26z///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////+516JAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQCGuV3p8uL////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////m8N10r0VAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBBkgJ6sk3U5sX////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////Z6cyGul5CkgNAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBmpzO516L8/fv////////////////////////////////////////////////////////////////////////////////////////////////////////9/v3G3rNrqjlAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBZnyGmzIjz+O/////////////////////////////////////////////////////////////////////////////////////////1+fKt0JFXnh9AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBKlw6TwW/p8uH////////////////////////////////////////////////////////////////////////n8d+ZxHdNmBFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkgJ6sk3U5sb////////////////////////////////////////////////////////a6c2Gul5DkwRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBuqz3C3K79/v3////////////////////////////////9/vzB26xrqjpAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBZoCKt0JH3+vT////////////////2+vOz05ldoidAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBNmBGRwGzF3bHM4ruYxHZMmBBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFGkAxAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBHkA1WjitAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBWjipyimBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBwiVwAAABVjihAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBQjiGFhoUAAACCh35MjxhAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBIkQ9/h3kAAAAAAAAAAACCh35VjilAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBOjxx+h3cAAAAAAAAAAAAAAAAAAAAAAABziWFXjSxGkA5AkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBEkAlSjyJsilSFhoUAAAAAAAAAAADwAAAAAAcAAMAAAAAAAwAAgAAAAAABAACAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAACAAAAAAAEAAMAAAAAAAwAA8AAAAAAHAAA="
+If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", 0, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+   Return False
+VarSetCapacity(Dec, DecLen, 0)
+If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", &Dec, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+   Return False
+; Bitmap creation adopted from "How to convert Image data (JPEG/PNG/GIF) to hBITMAP?" by SKAN
+; -> http://www.autohotkey.com/board/topic/21213-how-to-convert-image-data-jpegpnggif-to-hbitmap/?p=139257
+hData := DllCall("Kernel32.dll\GlobalAlloc", "UInt", 2, "UPtr", DecLen, "UPtr")
+pData := DllCall("Kernel32.dll\GlobalLock", "Ptr", hData, "UPtr")
+DllCall("Kernel32.dll\RtlMoveMemory", "Ptr", pData, "Ptr", &Dec, "UPtr", DecLen)
+DllCall("Kernel32.dll\GlobalUnlock", "Ptr", hData)
+DllCall("Ole32.dll\CreateStreamOnHGlobal", "Ptr", hData, "Int", True, "PtrP", pStream)
+hGdip := DllCall("Kernel32.dll\LoadLibrary", "Str", "Gdiplus.dll", "UPtr")
+VarSetCapacity(SI, 16, 0), NumPut(1, SI, 0, "UChar")
+DllCall("Gdiplus.dll\GdiplusStartup", "PtrP", pToken, "Ptr", &SI, "Ptr", 0)
+DllCall("Gdiplus.dll\GdipCreateBitmapFromStream",  "Ptr", pStream, "PtrP", pBitmap)
+DllCall("Gdiplus.dll\GdipCreateHICONFromBitmap", "Ptr", pBitmap, "PtrP", hBitmap, "UInt", 0)
+DllCall("Gdiplus.dll\GdipDisposeImage", "Ptr", pBitmap)
+DllCall("Gdiplus.dll\GdiplusShutdown", "Ptr", pToken)
+DllCall("Kernel32.dll\FreeLibrary", "Ptr", hGdip)
+DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
+Return hBitmap
+}
 ;}
 
 
 ;------------------------------------------------------------------------------------------------------------------------------------
 ;------------------------------------------------------- Includes ------------------------------------------------------------------
 ;------------------------------------------------------------------------------------------------------------------------------------;{
-#include %A_ScriptDir%\..\..\include\Addendum_Functions.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_Albis.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_Controls.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_Datum.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_DB.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_Gdip_Specials.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_Internal.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_PraxTT.ahk
 #include %A_ScriptDir%\..\..\include\Addendum_Protocol.ahk
-#include %A_ScriptDir%\..\..\include\Gui\PraxTT.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_Screen.ahk
+#include %A_ScriptDir%\..\..\include\Addendum_Window.ahk
 
-#include %A_ScriptDir%\..\..\lib\Gdip_All.ahk
-#include %A_ScriptDir%\..\..\lib\printer.ahk
-#include %A_ScriptDir%\..\..\lib\ini.ahk
 #include %A_ScriptDir%\..\..\lib\ACC.ahk
+#include %A_ScriptDir%\..\..\lib\Gdip_All.ahk
+#include %A_ScriptDir%\..\..\lib\ini.ahk
+#include %A_ScriptDir%\..\..\lib\printer.ahk
+#Include %A_ScriptDir%\..\..\lib\RemoteBuf.ahk
+#include %A_ScriptDir%\..\..\lib\SciTEOutput.ahk
+#Include %A_ScriptDir%\..\..\lib\Sift.ahk
 
 ;}
 
