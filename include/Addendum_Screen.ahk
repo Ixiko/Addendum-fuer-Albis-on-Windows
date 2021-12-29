@@ -1,7 +1,7 @@
 ﻿;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                              	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                             	by Ixiko started in September 2017 - last change 18.09.2021 - this file runs under Lexiko's GNU Licence
+;                             	by Ixiko started in September 2017 - last change 16.11.2021 - this file runs under Lexiko's GNU Licence
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ;	MONITOR / SCREEN                                                                                                                                                                    	(10)
@@ -126,6 +126,7 @@ IsInsideVisibleArea(x, y, w, h, ByRef CoordInjury) {
 
 	;~ if (x+w > Monitor%A_Index%Left) && (x < Monitor%A_Index%Right) && (y > Monitor%A_Index%Top) && (y+h < Monitor%A_Index%Bottom)
     ;~ SysGet, Monitor%A_Index%, MonitorWorkArea, % A_Index
+
 return CoordInjury  ? false : true
 }
 
@@ -196,10 +197,7 @@ DPIFactor() {
 RegRead, DPI_value, HKEY_CURRENT_USER, Control Panel\Desktop\WindowMetrics, AppliedDPI
 ; the reg key was not found - it means default settings
 ; 96 is the default font size setting
-if (errorlevel=1) OR (DPI_value=96 )
-	return 1
-else
-	Return  DPI_Value/96
+return (errorlevel=1 || DPI_value=96 ) ? 1 : DPI_Value/96
 }
 
 DPI(in="",setdpi=1) 	{
@@ -247,7 +245,6 @@ DPI(in="",setdpi=1) 	{
 
 	 Loop, parse, in, %A_Space%%A_Tab%
 	 {
-
 		 option := A_LoopField
 		 if RegExMatch(option,"i)(w0|h0|h-1|xp|yp|xs|ys|xm|ym)$") || RegExMatch(option,"i)(icon|hwnd)") ; these need to be bypassed
 			out .= option A_Space
@@ -255,8 +252,8 @@ DPI(in="",setdpi=1) 	{
 			out .= StrReplace(option, number, Round(number*factor)) A_Space
 		 else ; the rest can be bypassed as well (variable names etc)
 			out .= option A_Space
-
 	}
 
 Return Trim(out)
 }
+

@@ -4,8 +4,9 @@
 ;      Funktion:           	- 	schnellerer Überblick über die Laborwerte der letzten Tage in Tabellenform mit farblicher Hervorhebung.
 ;									- 	nur relevante Werte kommen zur Anzeige
 ;									- 	gesondert zu behandelnde Laborparameter können angegeben werden
-;										Kategorien: 	immer	:	Parameter welche unabhängig der Höhe der Normwertüber- oder unterschreitung angezeigt werden z.B. Troponin
-;															exklusiv	:	werden immer angezeigt, ob auffällig oder nicht z.B. COVID-PCR o. HIV
+;										Kategorien: 	immer	:	Parameter die unabhängig der von der Größe ihrer Über- oder Unterschreitung des Normwertes
+;                                                                        	angezeigt werden z.B. Na oder Kalium (werden immer angezeigt wenn pathologisch)
+;															exklusiv	:	werden immer angezeigt, ob auffällig oder nicht z.B. COVID-PCR o. HIV (exklusive Anzeige - das eigentliche immer)
 ;															nie		:	Parameter die nicht in der Tabelle erscheinen sollen
 ;
 ;
@@ -17,16 +18,17 @@
 ;		Abhängigkeiten:	siehe includes
 ;
 ;	                    			Addendum für Albis on Windows
-;                        			by Ixiko started in September 2017 - last change 07.11.2021 - this file runs under Lexiko's GNU Licence
+;                        			by Ixiko started in September 2017 - last change 28.12.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   ; Einstellungen
 	#NoEnv
 	#Persistent
-	#KeyHistory, Off
+	#SingleInstance               	, Force
+	#KeyHistory                  	, Off
 
-	SetBatchLines, -1
-	ListLines    	, Off
+	SetBatchLines                	, -1
+	ListLines                         	, Off
 
 	global LabJ := Object()
 	global adm := Object()
@@ -53,6 +55,10 @@
 
 	workini := IniReadExt(adm.Ini)
 
+  ; Tray Icon erstellen
+	hIconLabJournal	:= Laborjournal_ico()
+   	Menu, Tray, Icon, % (hIconLabJournal ? "hIcon: " hIconLabJournal : adm.Dir "\assets\ModulIcons\LaborJournalS.ico")
+
  ; Einstellungen in der Addendum.ini anlegen
 	If !IniReadExt("LaborJournal", "") {
 		backupfailure := 0
@@ -70,6 +76,16 @@
 			(LTrim
 			[Laborjournal]
 			htmlresource=%A_ScriptDir%\resources
+			LabParam_letztesUpdate=
+			Warnen_Nie=
+			Warnen_Immer=
+			Warnen_Exklusiv_Bezeichnung=
+			Warnen_Exklusiv1=
+			Warnen_Exklusiv2=
+			Warnen_Exklusiv3=
+			Warnen_Exklusiv4=
+			Warnen_Exklusiv5=
+			Warnen_Exklusiv6=
 
 			[B----
 			)
@@ -82,58 +98,35 @@
 
   ; Einstellungen laden
 	adm.LabJ := Object()
-	adm.LabJ.htmlresource	:= IniReadExt("Laborjournal", "htmlresource", A_ScriptDir "\resources") "\Laborjournal.html"
+	adm.LabJ.htmlresource	:= IniReadExt("Laborjournal", "htmlresource", adm.Dir "\include\Gui") "\Laborjournal.html"
 	adm.LabJ.lastupdate 	:= IniReadExt("Laborjournal", "LabParam_letztesUpdate", "10000001")
 	If !RegExMatch(adm.LabJ.lastupdate, "^\d{8}$") {
 		adm.LabJ.lastupdate := "10000001"
 		IniWrite, % "10000001", % adm.Ini, % "Laborjournal", % "LabParam_letztesUpdate"
 	}
 
-  ; Tray Icon erstellen
-	hIconLabJournal	:= Laborjournal_ico()
-   	Menu, Tray, Icon, % (hIconLabJournal ? "hIcon: " hIconLabJournal : adm.Dir "\assets\ModulIcons\LaborJournalS.ico")
+  ; Parametereinstellungen
+	Warnen := Object()
 
-  ; hier alle Parameter eintragen, welche gesondert behandelt werden sollen
-
-						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-						  ; nie         	= werden nie angezeigt
-						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	Warnen	:= {	  "nie"    	: 	"CHOL,LDL,TRIG,HDL,LDL/HD,HBA1CIFC,nicht au,AUFTRAG,Sprosspilz,Erreger"
-
-						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-						  ; immer 	 	= nur wenn pathologisch
-						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-					    	, "immer" 	: 	"NA,K,BNP,NTBNP,CK,CKMB,HBK-ST,DDIM-CP,PROCAL"
-
-						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-						  ; exklusiv 	= wenn pathologisch und bei negativen Befund (z.B. COVIA, HIV)
-						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-											; 	Leukozytenveränderungen
-							, "exklusiv"	: 	"ALYMP,ALYMPDIFF,ALYMPH,ALYMPNEO,ALYMPREA,ALYMPRAM,KERNS,METAM,MYELOC,PROMY,HLAMBDA,"
-											; 	Erythrozytenveränderungen
-											.	"DIFANISO,DIFPOLYC,DIFPOIKL,DIFHYPOC,DIFMIKRO,DIFMAKRO,DIFOVALO,DIFECHIN,"
-											; 	Infektionen
-											.	"COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,COVMU484,COVMU501,COVM6970,HIV,"
-											; 	Herz
-											. 	"TropIs,TROPI,TROPT,TROP,TROPOIHS,"
-											; 	Tumor
-											.	"KAP,KAP-U,LAM,LAM-U,"
-											; 	sonstige
-											.	"I"                        ; I = ikterisch
-						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-						  ; Gruppierungen
-						  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-							, "Gruppe"   	: {"atyp. Leuko"	: "ALYMP,ALYMPDIFF,ALYMPH,ALYMPNEO,ALYMPREA,"
-																		. "ALYMPRAM,KERNS,METAM,MYELOC,PROMY,HLAMBDA,"
-												,	"atyp. Ery" 	: "DIFANISO,DIFPOLYC,DIFPOIKL,DIFHYPOC,DIFMIKRO,DIFMAKRO,DIFOVALO,DIFECHIN"
-												,	"COVID-19"	: "COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,COVMU484,COVMU501,COVM6970"}}
+  ; Warnen_Exklusiv laden
+	Loop 6 {
+		iniVal := IniReadExt("Laborjournal", "Warnen_Exklusiv" A_Index)
+		If iniVal && !InStr(iniVal, "ERROR")
+			tmp .= iniVal ","
+	}
+	Warnen.exklusiv 	:= RTrim(tmp, ",")
+	Warnen.nie       	:= IniReadExt("Laborjournal", "Warnen_Nie"    	, "CHOL,HBA1CIFC")
+	Warnen.immer  	:= IniReadExt("Laborjournal", "Warnen_Immer"	, "NA,K,BNP,NTBNP,CK,CKMB,HBK-ST,HBK2-ST,DDIM-CP,PROCAL")
+	Warnen.Gruppe	:= { "atyp. Leuko"	: "ALYMP,ALYMPDIFF,ALYMPH,ALYMPNEO,ALYMPREA,ALYMPRAM,KERNS,METAM,MYELOC,PROMY,HLAMBDA"
+									,	"atyp. Ery" 	: "DIFANISO,DIFPOLYC,DIFPOIKL,DIFHYPOC,DIFMIKRO,DIFMAKRO,DIFOVALO,DIFECHIN"
+									,	"COVID-19"	: "COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,COVMU371,COVMU452,COVMU484,COVMU501,COVM6970"}
 
   ; load_Bar anzeigen
 	LoadBar_Gui()
 
  ; Patientendaten laden
 	load_Bar.Set(0, "lade Patientendatenbank")
-	PatDB 	:= ReadPatientDBF(adm.AlbisDBPath, ["NR", "NAME", "VORNAME", "GEBURT"])
+	PatDB 	:= ReadPatientDBF(adm.AlbisDBPath) ;, ["NR", "NAME", "VORNAME", "GEBURT"])
 	load_Bar.Set(1, "Patientendatenbank geladen")
 
   ; Laborjournal anzeigen
@@ -217,7 +210,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 				PDays   	:= PDays + Wochen*2                       	; + die Zahl der Wochenendtage der ganzen Wochen
 				PDaysW	:= Floor(PDays/7)                               	; mehr als 7 Tage dann ist mindestens ein Wochende enthalten
 				DaysPlus	:= PDays + 2*PDaysW + Tage
-				Von      	+= -1*(DaysPlus), Days
+				Von     	  += -1*(DaysPlus), Days
 				Von 	    	:= SubStr(Von, 1, 8)
 
 				ViewStart 	:= FormatDate(Von, "YMD", "dd.MM.yyyy")
@@ -314,22 +307,24 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 						continue
 
 				; NORMWERTGRENZE - AUSWERTEN
-				; PV kann > oder < sein, PSU - unterer Grenzwert, PSO - oberer Grenzwert
+				; PV1 kann > oder < sein, PSU - unterer Grenzwert, PSO - oberer Grenzwert
 				; 	Beispiele aus der LABBLATT.dbf - Spalte Normwerte
 				; 		1. Beispiel: "0,02 - 0,08"	 --> PSU="0,02" u. PSO="0,08"
 				; 		2. Beispiel: "< 0,01"  		 --> PV="<" u. PSO="0,01"     (path. ist alles darüber)
 				; 		3. Beispiel: "> 1,04"	    	 --> PV=">" u. PSU=1,04       (path. ist alles darunter)
 					data.NORMWERT := RegExReplace(data.NORMWERT, "[a-z]+$")  ; entfernt nicht auswertbare Buchstaben
 				  ; Normwert-String mit RegEx aufsplitten
-					RegExMatch(data.NORMWERT, "(?<V>[\<\>])*(?<SU>[\d,\.]+)[\-\s]*(?<SO>[\d,\.]+)*", P)
+					RegExMatch(data.NORMWERT, "(?<V>[\<\>])*(?<SU>[\d,\.]+)\s*(?<V2>\-)*\s*(?<SO>[\d,\.]+)*", P)
 
 					PSU  	:= StrReplace(PSU	, ",", ".")                        	; unterer Grenzwert
 					PSO  	:= StrReplace(PSO, ",", ".")                        	; oberer Grenzwert
 					PSO  	:= !PSO ? PSU : PSO                              	; wenn kein oberer Grenzwert vorhanden ist, dann ist es ein Cut-Wert
+					PV    	:= PV1 ? PV1 : PV2                               	; "<", ">" oder "-"
 					If (PV = "<")
 						PSO := PSU ? PSU : PSO
 					else if (PV = ">")
 						PSU := PSO ? PSO : PSU
+
 
 					OD    	:= lab.params[PN].OD                          	; durchschn. Abweichung v. d. oberen Normwertgrenze (oberer Durchschnitt in Prozent)
 					UD	  	:= lab.params[PN].UD                            	; durchschn. Abweichung v. d. unteren Normwertgrenze (unterer Durchschnitt in Prozent)
@@ -357,16 +352,15 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 						If (plus <= 100)
 							PNImmer := false
 
-
 				}
 
-			; Laborwert liegt über der Grenzwert-Abweichung oder gehört zu einer Filterliste
+			; Laborwert liegt über der Grenzwertabweichung (GWA) oder gehört zu einer Filterliste
 				If (plus > GWA || PNImmer || PNExklusiv) {
 
 					PatID 	:= data.PATNR
 					Datum 	:= data.Datum
 					PW    	:= RegExReplace(PW, "(\.[0-9]+[1-9])0+$", "$1")        ; Parameter Wert
-					AN    	:= LabPat[Datum][PatID][PN].AN
+					AN    	:= LabPat[Datum][PatID][PN].AN                             	; Anforderungsnummer?
 					AN    	:= !RegExMatch(AN, "\b" data["ANFNR"] "\b") ? AN "," data["ANFNR"] : AN
 
 				; Subobjekte anlegen
@@ -382,7 +376,6 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 						LabPat[Datum][PatID]["ANFNR"] := data["ANFNR"] " " data["BEFUND"] ", "
 
 					PL 	:= ONG > 0 ? "+" Round(ONG/100, 1)	: (UNG > 0 ? "-" Round(UNG/100,1)   	: "")
-					PD	:= ONG > 0 ? "+" Round(ONG - labOD)	: (UNG > 0 ? "-" Round(UNG - labUD)	: "")
 
 					LabPat[Datum][PatID][PN].PatID	:= PatID                                                             	; Patienten-ID
 					LabPat[Datum][PatID][PN].AN  	:= LTrim(AN, ",")                                                  	; Labor Anforderungsnummer
@@ -394,7 +387,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 					LabPat[Datum][PatID][PN].PE		:= PE                                                                  	; Parameter - Einheit
 					LabPat[Datum][PatID][PN].PB   	:= LabDic[PN].1                                                   	; Parameter - Bezeichnung (Langtext)
 					LabPat[Datum][PatID][PN].PL 		:= PL                                                                   	; proz. Abweichung v.d. Norm (beide Richtungen)
-					LabPat[Datum][PatID][PN].PD		:= PD                                                                  	;
+					LabPat[Datum][PatID][PN].NG 	:= PV                                                                 	; Normgrenzenart (<,>,-,bool)
 
 				}
 
@@ -485,12 +478,6 @@ AlbisLaborwertGrenzen(LbrFilePath, Anzeige=true) {                              
 				else If (PW <= PSU)
 					UNG := Floor(Round((PSU * 100)/PW, 3))
 
-				;~ If (PN = "NA" && PW < 130 ) {
-					;~ dcount ++
-					;~ SciTEOutput( "D: " data["DATUM"] " | P: " data["PARAM"] " | E: " PW " | N: "  data["NORMWERT"]
-									;~ . 	" | U: " PSU " | O: " PSO " | UG: " UNG " | OG: " ONG )
-				;~ }
-
 				If !ONG && !UNG
 					continue
 
@@ -501,7 +488,7 @@ AlbisLaborwertGrenzen(LbrFilePath, Anzeige=true) {                              
 									, 	"O" 	: 0			; Summe d. prozentualen Abweichung vom oberen Grenzwert
 									, 	"OI"	: 0			; Abweichungszähler (obere Grenzwerte)
 									, 	"OD"	: 0			; durchschnittliche prozentuale Abweichung vom oberen Grenzwert (O/OI)
-									, 	"OM": 0    		; maximale prozentuale Abweichung an der Obergrenze
+									, 	"OM": 0    		; maximale prozentuale Abweichung o Obergrenze
 									,	"N"	: 0          	; Summe der Normwerte
 									,	"NI"	: 0			; Normalwertzähler
 									,	"ND"	: 0			; Normalwertdurchschnitt
@@ -623,7 +610,6 @@ AlbisLabParam(cmd:="load", data:="short", Anzeige:=false) {                     
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 LaborJournal(LabPat, Anzeige=true) {
 
-
 	; letzte Fensterposition laden
 		IniRead, winpos, % adm.ini, % adm.compname, LaborJournal_Position
 		If (InStr(winpos, "ERROR") || StrLen(winpos) = 0)
@@ -632,39 +618,49 @@ LaborJournal(LabPat, Anzeige=true) {
 	; Variablen bestücken                                	;{
 		srchdrecords  	:= LTrim(labJ.srchdrecords, "0")
 		dbrecords     	:= labJ.records
-		Tagesanzeige	:= LabJ.Tagesanzeige
+		Tagesanzeige	:= labJ.Tagesanzeige
 		iconpath        	:= adm.Dir "\assets\ModulIcons\Laborjournal2.svg"
+		logo               	:= Labjournal_Logo()
 	;}
 
 	; HTML Vorbereitungen 	                              	;{
-		static TDC     	:= "<TD style='text-align:Right; border-right:1px'>"                                                        	;
-		static TDJ      	:= "<TD style='text-align:Justify; border-right:1px'>"
-		static TDL      	:= "<TD style='text-align:Left'>"                                                                                                 	; Textausrichtung links
-		static TDL1     	:= "<TD style='text-align:Left; border-left:0px solid; '>"                                                                 	; Textausrichtung links kein Rand links
-		static TDLR1     	:= "<TD style='text-align:Left; border-right:0px solid; border-left:0px solid; '>"                               	; Textausrichtung links, kein Rand rechts
-		static TDR      	:= "<TD style='text-align:Right; border-right:0px solid border-left:1px solid; '>"                           	; Textausrichtung rechts
-		static TDR1     	:= "<TD style='text-align:Right; border-right:0px solid; '>"                                                            	; Textausrichtung rechts, kein Rand rechts
-		static TDR2a     	:= "<TD style='text-align:Right; border-right:1px; '>"
-		static TDR2b     	:= "<TD style='text-align:Right; border-right:1px; border-top:0px; border-bottom:0px; '>"             	; Tooltip
-		static TDR3      	:= "<TD class='tooltip' data-tooltip='#TT1#' onclick='ahk.LabJournal_MoreTips(" q "#TT2#" q  ")' style='text-align:Center;'>"                                            	; Param
+		static TDC     	:= "<TD style='text-align:Right;	border-right:1px; '>"                                                        	;
+		static TDJ      	:= "<TD style='text-align:Justify;border-right:1px; '>"
+		static TDL      	:= "<TD style='text-align:Left; '>"                                                                               	; Textausrichtung links
+		static TDL1     	:= "<TD style='text-align:Left; 	border-left:0px solid; '>"                                           	; Textausrichtung links kein Rand links
+		static TDLR1     	:= "<TD style='text-align:Left; 	border-right:0px solid; border-left:0px solid; '>"        	; Textausrichtung links, kein Rand rechts
+		static TDAB      	:= "<TD style='text-align:Right; border-right:0px solid; border-left:0px solid; '>"        	; Textausrichtung rechts
+		static TDR1     	:= "<TD style='text-align:Right;	border-right:0px solid; '>"                                        	; Textausrichtung rechts, kein Rand rechts
+		static TDR2a     	:= "<TD style='text-align:Right;	border-right:1px; '>"
+		static TDR2b     	:= "<TD style='text-align:Right;	border-right:1px;       	border-top:0px;"
+								.	 " border-bottom:0px; '>"                                                                                     	; Tooltip
+		static TDR3      	:= "<TD class='tooltip' data-tooltip='#TT1#'"                                                           	; Param
+									. " onclick='ahk.LabJournal_MoreTips(" q "#TT2#" q  ")'"
+									. " style='text-align:Center; '>"
 
-		static cColW    	:= ["color:Red; font-weight:bold"
-									, "color:BlueViolet; font-weight:bold"
-									, "color:DarkTeal; font-weight:bold; font-family: sans-serif"
-									, "color:Blue;	font-weight:normal"
-									, "color:FireBrick; font-weight:normal"
-									, "color:Black; font-weight:normal; font-size:smaller"]
+		static cColW    	:= ["color:Red;         	font-weight:bold; "
+									, "color:BlueViolet;	font-weight:bold; "
+									, "color:DarkTeal; 	font-weight:bold;   	font-family: sans-serif; "
+									, "color:Blue;        	font-weight:normal; "
+									, "color:FireBrick;  	font-weight:normal; "
+									, "color:Black;       	font-weight:normal; 	font-size:smaller; "
+									, "color:BlueViolet;	font-weight:normal; "]
 
-	; HTML Seitendaten
+	; HTML Seitendaten id='\d+_.*'>[a-zA-ZÄÖÜäöüß\s\-]+,[a-zA-ZÄÖÜäöüß\s\-]+|\[\d-]\)
 		htmlheader := FileOpen(A_ScriptDir "\assets\LaborjournalN.html", "r", "UTF-8").Read()
-		htmlheader := StrReplace(htmlheader, "##01##", iconpath)
+		htmlheader := StrReplace(htmlheader, "##01##", "`n" logo "`n")
+		htmlheader := StrReplace(htmlheader, "##svgoptions##", "style='width:32px; height:24px; padding-top:2px;margin-left:5px;'")
 		htmlheader := StrReplace(htmlheader, "##02##", Tagesanzeige)
+		htmlheader := StrReplace(htmlheader, "##03##", "`n")
+
 		htmlbody =
 		(
 
 			<div style='overflow-x:scroll; width:100`%; height:100`%;'>
-			<table id='LabJournal_Table'>
 
+		 <div class="table-FixHead">
+			<table id='LabJournal_Table'>
+				<thead>
 				<tr>
 					<th style='text-align:Right'>Datum</th>
 					<th style='text-align:Center' colspan='3'>[NR] Name, Vorname  Geburtsdatum</th>
@@ -675,22 +671,21 @@ LaborJournal(LabPat, Anzeige=true) {
 					<th style='text-align:Right'>+/-</th>
 					<th style='text-align:Right'>⍉ Abw.</th>
 				</tr>
-
-			<div style='overflow-y: scroll;'>
+				</thead>
+			<!-- div style='overflow-y: scroll;' -->
 
 		)
 
 		For lineNr, line in StrSplit(htmlbody, "`n", "`r")
 			htmlbody1 .= RegExReplace(line, "^\s{3}") "`n"
 		html := htmlheader . htmlbody
-		;~ html := RegExReplace(htmlheader . htmlbody, "^\s{16}(.*[\n\r]+)", "$1")
 
 		load_Bar.Set(percent+2, "erstelle die Journalanzeige")
 	;}
 
 	; HTML Tabelle wird erstellt                         	;{
 
-		trIDf      	:= false                    	; alternierende Farbanzeige
+		trlDf      	:= false                    	; alternierende Farbanzeige
 		sortDatum	:= Array()
 		For Datum, Patients in LabPat
 			sortDatum.InsertAt(1, Datum)
@@ -713,7 +708,7 @@ LaborJournal(LabPat, Anzeige=true) {
 					PatGeburt	:= ConvertDBASEDate(PatDB[PatID].GEBURT)
 					ANFNR  	:= RTrim(parameter["ANFNR"], ", ")
 					PatIDLast	:= PatID
-					trIDf      	:= !trIDf                                                                        	; alternierende Änderung der Hintergrundfarbe
+					trlDf      	:= !trlDf                                                                        	; alternierende Änderung der Hintergrundfarbe
 				}
 
 			; ―――――――――――――――――――――――――――――――――――――――――――――――――――
@@ -728,37 +723,42 @@ LaborJournal(LabPat, Anzeige=true) {
 				  ;  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
 				  ; Tabelle  ‧  ‧  ‧ 	einzelne Zellen vorbereiten (CSS Styles den Tabellenfelder zuordnen)
 				  ;  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
-
 				  ; temporäre Variablen
-					TDPATBUTTONS 	:= (Patient  	? (trIdf ? " class='table-btn1'" : " class='table-btn2'") " onclick='ahk.LabJournal_KarteiKarte(event)'" : "")
-					TDR4	            	:= StrReplace(TDR3, "#TT1#", PN.PB)         ; Beschreibung des Laborparameter (PB = Parameterbeschreibung)
-					TDR4	            	:= StrReplace(TDR4, "#TT2#", "event")         ; Beschreibung des Laborparameter (PB = Parameterbeschreibung)
-					;~ TDR4	            	:= StrReplace(TDR4, "#TT2#", "'" PN.PB "'")         ; Beschreibung des Laborparameter (PB = Parameterbeschreibung)
+					TDPATBUTTONS 	:= (Patient ? (trlDf ? " class='table-btn1'" : " class='table-btn2'") " onclick='ahk.LabJournal_KarteiKarte(event)'" : "")
+					TDR4	            	:= StrReplace(TDR3, "#TT1#", PN.PB)         	; Beschreibung des Laborparameter (PB = Parameterbeschreibung)
+					TDR4	            	:= StrReplace(TDR4, "#TT2#", "event")         	; Beschreibung des Laborparameter (PB = Parameterbeschreibung)
 					html_ID              	:= PatID "_" Patient
 
 				  ; Datum                                      Hintergrund=Farbe1        Farbe2
-					TRDAT    	:= "<TR" (UDatum 	? (trIdf ? " id='td1a'" : " id='td2a'") : (trIdf ? " id='td1b'" : " id='td2b'") ) ">"
-					TDRDX		:= UDatum ? TDR2a : TDR2b
-				  ; ID
-					TDPATNR 	:= RTrim(TDLR1, ">") TDPATBUTTONS "; id='" html_ID "'>"
-				  ; Patientenname
-					TDPAT     	:= RTrim(TDLR1, ">")  TDPATBUTTONS "; id='" html_ID "'>"
-				  ; Parameter Name                             PN.CV = CAVE
-					TDR1X     	:= PN.CV = 0 ? TDR4 	: (PN.CV = 1 ? StrReplace(TDR4, "'>"	, cColW.1 "'>")	: StrReplace(TDR4 	, "'>", cColW.2 "'>"))
-				  ; Parameter Wert
-					TDR2X     	:= PN.CV = 0
-									? 	(PN.PL 	> 0 ? StrReplace(TDR, "'>", cColW.5 "'>") : StrReplace(TDR, "'>", cColW.4 "'>"))
-									: 	(PN.CV = 1 ? StrReplace(TDR, "'>", cColW.1 "'>") : StrReplace(TDR, "'>", (PN.PW = "NEGATIV" ? cColW.6 : cColW.2) "'>"))
-				  ; Parameter Normwerte
-					TDR3X     	:= PN.CV = 0 ? TDR1	: (PN.CV = 1 ? StrReplace(TDR1, "'>"	, cColW.1 "'>")	: StrReplace(TDR1	, "'>", cColW.2 "'>"))
-				  ; Parameter Einheit
-					TDL1X     	:= PN.CV = 0 ? TDL1	: (PN.CV = 1 ? StrReplace(TDL1	, "'>"	, cColW.1 "'>")	: StrReplace(TDL1	, "'>", cColW.2 "'>"))
-				  ; Parameter Lage (Hinweiszeichen)
-					TDCX      	:= PN.CV = 0 ? TDC 	: (PN.CV = 1 ? StrReplace(TDC	, "'>"	, cColW.1 "'>")	: StrReplace(TDC 	, "'>", cColW.2 "'>"))
+					TRDAT    	:= "<TR" (UDatum 	? (trlDf ? " id='td1a'" : " id='td2a'") : (trlDf ? " id='td1b'" : " id='td2b'") ) ">"
+					TDAFN		:= UDatum ? TDR2a : TDR2b
 
-				; Abweichung oberhalb der Norm und PN.CV (CAVE) negativ (CV - wenn wahr dann andere Farbkennzeichnung)
+				  ; ID & Patientenname
+					TDPAT := TDPATNR 	:= RTrim(TDLR1, ">") TDPATBUTTONS "; id='" html_ID "'>"
+
+				  ; Parameter Name        PN.CV = CAVE          1=red    2=blueviolet bold   3=     4=blue    5=thin red   6=black      7=blueviolet normal
+				  ; für ungruppierte Laborwerte (wenn es nur einen Grenzwert gibt) wenn Wert größer ist aber normalerweiser kleiner sein sollte oder umgekehrt
+				  ; dann mit rot pathologisch kennzeichnen
+					colNr1      := PN.CV = 0 ? (PN.PL > 0 ? 5 : 4) : (PN.CV = 1 ? 1 : 2)
+					colNr3   	:= colNr1 = 2 ? 7 : colNr1
+					TDPN     	:= StrReplace(TDR4, "'>", cColW[colNr1] "'>")
+
+				  ; Parameter Wert
+					colNr2       := PN.CV = 0 ? (PN.PL > 0 ? 5 : 4) : PN.CV = 1 ? 1 : PN.PW = "NEGATIV" ? 6 : 2
+					TDPW		:= StrReplace(TDAB, "'>", cColW[colNr2] "'>")
+
+				  ; Parameter Normwerte
+					TDPNW   	:= StrReplace(TDR1, "'>" , cColW[colNr3] "'>")
+
+				  ; Parameter Einheit
+					TDPE     	:= StrReplace(TDL1, "'>" , cColW[colNr3] "'>")
+
+				  ; Parameter Lage (Hinweiszeichen)
+					TDPL     	:= StrReplace(TDC, "'>" , cColW[colNr3] "'>")
+
+				; Abweichung oberhalb der Norm und PN.CV (CAVE) nicht wahr (CV - wenn wahr dann andere Farbkennzeichnung)
 					If (PN.PL > 250 && !PN.CV) {
-						TDRX      	:= StrReplace(TDR 	, ">"	, " " cColW.3 "'>")
+						TDAB      	:= StrReplace(TDAB 	, ">"	, " " cColW.3 "'>")
 						TDR1X     	:= StrReplace(TDR1	, ">"	, " " cColW.3 "'>")
 						TDCX      	:= StrReplace(TDC	, ">"	, " " cColW.3 "'>")
 						TDL1X     	:= StrReplace(TDL1	, ">"	, " " cColW.3 "'>")
@@ -775,17 +775,17 @@ LaborJournal(LabPat, Anzeige=true) {
 					tbDatum	:= UDatum ? SubStr(UDatum, 1, 6) : ""
 
 					html .= "`t"   	TRDAT                                                                  "`n"
-							.  	"`t`t "	TDRDX  	. 	tbDatum                             	"</TD>`n"	; Abnahmedatum                	[Datum]
+							.  	"`t`t "	TDAFN  	. 	tbDatum                             	"</TD>`n"	; Abnahmedatum                	[Datum]
 							. 	"`t`t "	TDPATNR	. 	(PatID ? "[" PatID "]" : "")         	"</TD>`n"	; Patientennummer                [Patient]
 							. 	"`t`t "	TDPAT     	.	Patient             	                  	"</TD>`n"	; Patientenname                    [Patient]
 							. 	"`t`t "	TDPAT     	.	PatGeburt        	                  	"</TD>`n"	; Patientengeburtstag           	[Patient]
-							. 	"`t`t "	TDRDX     	.	ANFNR          	                  	"</TD>`n"	; Anforderungsnummer       	[Patient]
-							. 	"`t`t "	TDR1X     	.	PN.PN                                 	"</TD>`n"	; Parameter Name              	[Param]
-							. 	"`t`t "	TDR2X    	.	PN.PW                               	"</TD>`n"	; Parameter Wert               	[Wert]
-							.	"`t`t "	TDR3X    	.	PN.PV			                     	"</TD>`n"	; Parameter Normwerte        	[Normalwerte]
-							.	"`t`t "	TDL1X     	.	PE                                       	"</TD>`n"	; Parameter Einheit                [      ]
-							. 	"`t`t "	TDCX    	.	(PN.PL	? PN.PL "x" 	: "")     	"</TD>`n"	; Parameter Lage                   [+/-]
-							. 	"`t`t "	TDR       	.	(PA   	? PA " " PE  	: "") 		"</TD>`n"	; Parameter Abweichung     	[⍉ Abw.]
+							. 	"`t`t "	TDAFN    	.	ANFNR          	                  	"</TD>`n"	; Anforderungsnummer       	[Patient]
+							. 	"`t`t "	TDPN     	.	PN.PN                                 	"</TD>`n"	; Parameter Name              	[Param]
+							. 	"`t`t "	TDPW    	.	PN.PW                               	"</TD>`n"	; Parameter Wert               	[Wert]
+							.	"`t`t "	TDPNW   	.	PN.PV			                     	"</TD>`n"	; Parameter Normwerte        	[Normalwerte]
+							.	"`t`t "	TDPE     	.	PE                                       	"</TD>`n"	; Parameter Einheit                [      ]
+							. 	"`t`t "	TDPL     	.	(PN.PL	? PN.PL "x" 	: "")     	"</TD>`n"	; Parameter Lage                   [+/-]
+							. 	"`t`t "	TDAB       	.	(PA   	? PA " " PE  	: "") 		"</TD>`n"	; Parameter Abweichung     	[⍉ Abw.]
 							. 	"`t</TR>`n`n"
 
 					PE := PA := UDatum := PatID := Patient := PatGeburt := ANFNR := ""
@@ -803,9 +803,7 @@ LaborJournal(LabPat, Anzeige=true) {
 		;}
 
 	; erstellte HTML Seite anzeigen               		;{
-		FileOpen(A_Temp "\Laborjournal.html", "w", "UTF-8").Write(html)
-		neutron := new NeutronWindow("","","","Laborjournal" LabJ.maxrecords ")", "+AlwaysOnTop minSize1040x800")
-		neutron.Load(A_Temp "\Laborjournal.html")
+		neutron := new NeutronWindow(html,"","","Laborjournal" LabJ.maxrecords ")", "+AlwaysOnTop minSize1040x300")
 		neutron.Gui("+LabelNeutron")
 		neutron.Show(winpos)
 		hLJ := WinExist("A")
@@ -820,13 +818,13 @@ LaborJournal(LabPat, Anzeige=true) {
 
 		npos	:= PosStringToObject(winpos)
 		npos.W := npos.W	< 1040	 ? 1040	: npos.W
-		npos.H	:= npos.H 	< 800   	 ? 800   	: npos.H
+		npos.H	:= npos.H 	< 300   	 ? 300   	: npos.H
 		winpos :=	"x" npos.X " y" npos.Y " w " npos.W " h" npos.H
 		If !npos.Maximize && !(isInside := IsInsideVisibleArea(npos.X, npos.Y, npos.W, npos.H, CoordInjury)) {
 			winpos :=	"x" 	(InStr(CoordInjury, "x") ? "0"     	: npos.X)
 						. 	" y" 	(InStr(CoordInjury, "y") ? "0"     	: npos.Y)
 						. 	" w" 	(npos.W	< 1040	 ? 1040	: npos.W)
-						.	" h" 	(npos.H 	< 800   	 ? 800   	: npos.H)
+						.	" h" 	(npos.H 	< 300   	 ? 300   	: npos.H)
 		}
 
 		neutron.Show(winpos " ")
@@ -1039,6 +1037,76 @@ Local Enc := 0x557CF400 | Round({"bmp":0, "jpg":1,"jpeg":1,"gif":2,"tif":5,"tiff
   E[3] := pBM ? DllCall("gdiplus\GdipSaveImageToFile", "Ptr",pBM, "WStr",sFile, "Ptr",&V, "UInt",0) : 1
   E[4] := pBM ? DllCall("gdiplus\GdipDisposeImage", "Ptr",pBM) : 1
 Return E[1] ? 0 : E[2] ? -1 : E[3] ? -2 : E[4] ? -3 : 1
+}
+
+Labjournal_Logo() {                                                                                           	;-- animiertes Logo
+
+	svg =
+	(
+	<!-- Created with enve https://maurycyliebner.github.io -->
+	<svg viewBox="0 0 48 48" ##svgoptions##>
+	 <g transform="translate(140.233 188.648)">
+	  <g transform="translate(-109.802 -160.482)">
+	   <g transform="rotate(0)">
+		<g transform="scale(5.2 5.25)">
+		 <g transform="skewX(0) skewY(0)">
+		  <g transform="translate(-140.233 -188.648)" opacity="1">
+		   <g>
+			<g transform="translate(140.233 188.648)">
+			 <g transform="translate(0 0)">
+			  <g transform="rotate(0)">
+			   <g transform="scale(1 1)">
+				<g transform="skewX(0) skewY(0)">
+				 <g transform="translate(-140.233 -188.648)" opacity="1">
+				  <path stroke-width="0.229718" fill="#a29f9f" stroke="none">
+				   <animate attributeName="d" keyTimes="0;0.15;0.295;0.35;0.65;0.725;1" keySplines="0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1;0 0 1 1" calcMode="spline" dur="8.33333s" values="M140.944 185.562C140.944 185.562 140.974 185.996 140.974 185.996C141.513 187.487 142.107 188.937 142.616 190.18C142.769 190.554 142.752 190.933 142.562 191.28C142.382 191.581 142.102 191.681 141.779 191.732C141.779 191.732 141.654 191.734 141.654 191.734C141.654 191.734 138.767 191.734 138.767 191.734C138.767 191.734 138.642 191.732 138.642 191.732C137.867 191.658 137.567 190.911 137.814 190.187C138.446 188.732 139.096 187.207 139.698 185.959C139.698 185.959 139.713 185.562 139.713 185.562C140.162 185.618 140.499 185.562 140.944 185.562Z;M140.944 185.562C140.944 185.562 140.974 185.996 140.974 185.996C141.513 187.487 142.107 188.937 142.616 190.18C142.769 190.554 142.752 190.933 142.562 191.28C142.382 191.581 142.102 191.681 141.779 191.732C141.779 191.732 141.654 191.734 141.654 191.734C141.654 191.734 138.767 191.734 138.767 191.734C138.767 191.734 138.642 191.732 138.642 191.732C137.867 191.658 137.567 190.911 137.814 190.187C138.446 188.732 139.096 187.207 139.698 185.959C139.698 185.959 139.713 185.562 139.713 185.562C140.162 185.618 140.499 185.562 140.944 185.562Z;M142.251 189.057C142.251 189.057 142.417 189.29 142.417 189.29C142.651 189.778 142.789 190.216 142.964 190.681C143.041 190.887 143.09 191.066 142.9 191.413C142.72 191.714 142.102 191.681 141.779 191.732C141.779 191.732 141.654 191.734 141.654 191.734C141.654 191.734 138.767 191.734 138.767 191.734C138.767 191.734 138.642 191.732 138.642 191.732C137.867 191.658 137.407 191.625 137.31 191.273C137.24 190.997 137.587 190.267 137.713 190.064C137.713 190.064 138.242 189.11 138.242 189.11C139.452 189.379 141.254 189.375 142.251 189.057Z;M142.772 190.382C142.772 190.382 143.001 190.545 143.001 190.545C143.119 190.652 143.085 190.699 143.134 190.868C143.177 191.013 143.218 191.116 143.028 191.463C142.848 191.764 142.102 191.681 141.779 191.732C141.779 191.732 141.654 191.734 141.654 191.734C141.654 191.734 138.767 191.734 138.767 191.734C138.767 191.734 138.642 191.732 138.642 191.732C137.867 191.658 137.884 191.724 137.657 191.513C137.627 191.422 137.461 191.268 137.427 190.955C137.427 190.955 137.656 190.456 137.656 190.456C139.155 190.805 141.565 190.822 142.772 190.382Z;M142.772 190.382C142.772 190.382 143.001 190.545 143.001 190.545C143.119 190.652 143.085 190.699 143.134 190.868C143.177 191.013 143.218 191.116 143.028 191.463C142.848 191.764 142.102 191.681 141.779 191.732C141.779 191.732 141.654 191.734 141.654 191.734C141.654 191.734 138.767 191.734 138.767 191.734C138.767 191.734 138.642 191.732 138.642 191.732C137.867 191.658 137.884 191.724 137.657 191.513C137.627 191.422 137.461 191.268 137.427 190.955C137.427 190.955 137.656 190.456 137.656 190.456C139.155 190.805 141.565 190.822 142.772 190.382Z;M140.944 185.562C140.944 185.562 140.974 185.996 140.974 185.996C141.513 187.487 142.107 188.937 142.616 190.18C142.769 190.554 142.752 190.933 142.562 191.28C142.382 191.581 142.102 191.681 141.779 191.732C141.779 191.732 141.654 191.734 141.654 191.734C141.654 191.734 138.767 191.734 138.767 191.734C138.767 191.734 138.642 191.732 138.642 191.732C137.867 191.658 137.567 190.911 137.814 190.187C138.446 188.732 139.096 187.207 139.698 185.959C139.698 185.959 139.713 185.562 139.713 185.562C140.162 185.618 140.499 185.562 140.944 185.562Z;M140.944 185.562C140.944 185.562 140.974 185.996 140.974 185.996C141.513 187.487 142.107 188.937 142.616 190.18C142.769 190.554 142.752 190.933 142.562 191.28C142.382 191.581 142.102 191.681 141.779 191.732C141.779 191.732 141.654 191.734 141.654 191.734C141.654 191.734 138.767 191.734 138.767 191.734C138.767 191.734 138.642 191.732 138.642 191.732C137.867 191.658 137.567 190.911 137.814 190.187C138.446 188.732 139.096 187.207 139.698 185.959C139.698 185.959 139.713 185.562 139.713 185.562C140.162 185.618 140.499 185.562 140.944 185.562Z" repeatCount="indefinite"/>
+				  </path>
+				 </g>
+				</g>
+			   </g>
+			  </g>
+			 </g>
+			</g>
+		   </g>
+		  </g>
+		 </g>
+		</g>
+	   </g>
+	  </g>
+	 </g>
+	 <g transform="translate(138.992 187.889)">
+	  <g transform="translate(-115.018 -163.912)">
+	   <g transform="rotate(0)">
+		<g transform="scale(5.2 5.25)">
+		 <g transform="skewX(0) skewY(0)">
+		  <g transform="translate(-138.992 -187.889)" opacity="1">
+		   <g>
+			<g transform="translate(138.992 187.889)">
+			 <g transform="translate(0 0)">
+			  <g transform="rotate(0)">
+			   <g transform="scale(1 1)">
+				<g transform="skewX(0) skewY(0)">
+				 <g transform="translate(-138.992 -187.889)" opacity="1">
+				  <path stroke-width="0.229718" d="M134.684 183.47C134.62 183.47 134.569 183.522 134.569 183.585L134.531 192.192C134.53 192.255 134.582 192.307 134.645 192.306L137.089 192.307C136.799 192.192 136.749 192.101 136.631 191.937C134.861 191.937 136.523 191.937 134.9 191.937L134.939 183.876L138.669 183.876C138.688 183.712 138.49 183.586 138.466 183.47L134.684 183.47ZM138.669 184.479L135.32 184.48L135.32 184.874L138.669 184.874L138.669 184.479ZM138.669 185.808L135.321 185.809L135.321 186.203L138.556 186.203L138.669 185.994L138.669 185.808ZM137.901 187.415L135.321 187.414L135.321 187.814L137.698 187.815L137.901 187.415ZM136.988 189.251L135.32 189.251L135.321 189.663L136.784 189.663L136.988 189.251ZM136.308 190.986L135.32 190.985L135.32 191.38C135.32 191.38 136.224 191.381 136.35 191.381C136.284 191.187 136.308 190.986 136.308 190.986L136.308 190.986ZM138.982 183.47L139.315 183.813L139.315 185.994C138.618 187.254 137.962 188.599 137.379 189.776L137.097 190.354L137.058 190.441C136.909 190.814 136.949 191.262 137.053 191.578C137.26 192.057 137.642 192.262 138.132 192.304L138.205 192.306L142.197 192.306L142.27 192.304C142.783 192.301 143.114 192.022 143.349 191.578C143.504 191.201 143.476 190.818 143.344 190.441L143.304 190.354L143.067 189.81C142.402 188.35 141.885 187.303 141.31 185.994L141.31 183.813L141.631 183.48L141.643 183.47L138.982 183.47ZM140.878 184.006L140.878 185.981C141.418 187.473 142.003 188.945 142.513 190.187C142.666 190.561 142.752 190.933 142.562 191.28C142.382 191.581 142.102 191.681 141.779 191.732L141.654 191.734L138.767 191.734L138.642 191.732C137.867 191.658 137.655 190.911 137.902 190.187C138.534 188.732 139.184 187.229 139.786 185.981L139.786 184.006C140.235 184.063 140.439 184.076 140.878 184.006L140.878 184.006Z" fill="#d9d9d9" stroke="none"/>
+				 </g>
+				</g>
+			   </g>
+			  </g>
+			 </g>
+			</g>
+		   </g>
+		  </g>
+		 </g>
+		</g>
+	   </g>
+	  </g>
+	 </g>
+	 <defs/>
+	</svg>
+
+	)
+
+return svg
 }
 
 Laborjournal_ico(NewHandle := False) {                                                            	;-- Skript-Icon

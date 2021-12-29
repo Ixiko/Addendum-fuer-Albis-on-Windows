@@ -10,7 +10,7 @@
 ;		Abhängigkeiten: 	-	siehe #includes
 ;
 ;	                    				Addendum für Albis on Windows
-;                        				by Ixiko started in September 2017 - last change 18.10.2021 - this file runs under Lexiko's GNU Licence
+;                        				by Ixiko started in September 2017 - last change 21.11.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;	Version 1.01
 
@@ -733,7 +733,7 @@ GetCheckedFilter()                                             	{
 
 
 ;--- Dokumente auflisten        	;{
-Dokumente_Show(row)                                                                          	{
+Dokumente_Show(row)                                                                                       	{
 
 	; Variablen [PatDok]
 		global DPGS_init, PatChoosed, DXP, DXP_DLV
@@ -749,6 +749,7 @@ Dokumente_Show(row)                                                             
 		If !RegExMatch(Pat.NR, "\d+") {
 			MsgBox, % (msg := "Patient auswählen um Dokumente anzeigen zulassen.")
 			SB_SetText(msg, 4)
+			DimmerGui("off")
 			return
 		}
 
@@ -997,7 +998,6 @@ Dokumente_Export(Patient:="")                            	{	;-- exportiert ausge
 		while (row := LV_GetNext(row, "C")) {
 			LV_GetText(LFDNR, row, 7)                                                	; LFDNR = LaufendeNummer - Bezeichnung aus Albis-Datenbank BEFUND.DBF
 			dokumente.Push(PatDok[Pat.NR][LFDNR])
-			;~ SciTEOutput(LFDNR "|" PatDok[Pat.NR][LFDNR])
 		}
 
 	; Exportvorgang ausführen
@@ -1057,7 +1057,6 @@ Dokumente_Print()                                                               
 	; Variablen
 		global SecureGOText
 		row := checkedRows := pages := 0
-		files := Array()
 
 	; Drucker
 		Gui, DXP: Submit, NoHide
@@ -1069,12 +1068,17 @@ Dokumente_Print()                                                               
 	; Patient
 		Pat := LV_GetPatient()
 
+	; Statusbar Informationen erneuern
+		SB_SetText("PatNR: " Pat.NR, 3)
+		SB_SetText("Anzahl Patienten in PatDOK: " PatDok.Count(), 4)
+
 	; abgehackte Einträge einsammeln
 		Gui, DXP: ListView, DXP_DLV
-		Loop % LV_GetCount() {
+		;~ Loop % LV_GetCount() {
+			;~ If !(row := LV_GetNext(row, "Checked"))
+				;~ break
 
-			If !(row := LV_GetNext(row, "Checked"))
-				break
+		while (row := LV_GetNext(row, "C")) {
 
 			checkedRows ++
 			LV_GetText(LFDNR, row, 7)
@@ -1082,25 +1086,25 @@ Dokumente_Print()                                                               
 			pages += (RegExMatch(pagecount, "^\d+$") ? pagecount : 1)  ; Bilddateien werden als einseitige Dokumente gerechnet
 
 			If PATDok[Pat.NR][LFDNR].print {
-
 				MsgBox, 0x4, DocPrinz, % PATDok[Pat.NR][LFDNR].Bezeichnung "`nwurde schon gedruckt. Soll das Dokument erneut gedruckt werden?"
 				IfMsgBox, No
 					continue
-
 			}
 
 			filepath := AlbisPath "\Briefe\" PATDok[Pat.NR][LFDNR].filename
 			RegExMatch(filepath, "\.(?<ext>[a-z]+)$", file)
 
 			Switch fileext {
-
 				Case "pdf":
-					If (Sumatra_PrintPDF(filepath, Printer) = 1)
-						PATDok[Pat.NR][LFDNR].print := true
-
+					printresult := Sumatra_PrintPDF(filepath, Printer)
 			}
 
+			PATDok[Pat.NR][LFDNR].print := print := printresult = 1 ? true : false
+			SB_SetText("Druckauftrag: " (print ? "":"nicht ") "gesendet, " PATDok[Pat.NR][LFDNR].filename
+						  . (print ? " [" pagecount " Seite" (pagecount >1 ? "n" : "") "]"))
+
 		}
+
 
 	; Gebührentext erstellen
 		GOText := pages > 0 ? AlbisKopiekosten(DXP_ABRP, pages, true) : ""                                ; gibt nur den Gebührentext zurück
@@ -1108,7 +1112,6 @@ Dokumente_Print()                                                               
 
 	; Listview aktivieren
 		GuiControl, DXP: Enable, DXP_DLV
-
 		SecureGOText := false
 
 }

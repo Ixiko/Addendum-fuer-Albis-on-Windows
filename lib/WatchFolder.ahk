@@ -85,62 +85,67 @@ WatchFolder(Folder, UserFunc, SubTree := False, Watch := 0x03) {
    ; ======================================================
    If (Folder = TimerID)    { ; called by timer
 
-		  If (ObjCount := EventArray.Length()) && !Paused		  {
-			 ObjIndex := DllCall("WaitForMultipleObjects", "UInt", ObjCount, "Ptr", &WaitObjects, "Int", 0, "UInt", 0, "UInt")
-			 While (ObjIndex >= 0) && (ObjIndex < ObjCount)			{
-					FolderName := WatchedFolders[ObjIndex + 1]
-					D := WatchedFolders[FolderName]
+		If (ObjCount := EventArray.Length()) && !Paused		  {
+			ObjIndex := DllCall("WaitForMultipleObjects", "UInt", ObjCount, "Ptr", &WaitObjects, "Int", 0, "UInt", 0, "UInt")
+			While (ObjIndex >= 0) && (ObjIndex < ObjCount)			{
+				FolderName := WatchedFolders[ObjIndex + 1]
+				D := WatchedFolders[FolderName]
 
-					If DllCall("GetOverlappedResult", "Ptr", D.Handle, "Ptr", D.OVLAddr, "UIntP", BytesRead, "Int", True)					{
-						   Changes := []
-						   FNIAddr := D.FNIAddr
-						   FNIMax := FNIAddr + BytesRead
-						   OffSet := 0
-						   PrevIndex := 0
-						   PrevAction := 0
-						   PrevName := ""
-						   Loop
-						   {
-									  FNIAddr += Offset
-									  OffSet := NumGet(FNIAddr + 0, "UInt")
-									  Action := NumGet(FNIAddr + 4, "UInt")
-									  Length := NumGet(FNIAddr + 8, "UInt") // 2
-									  Name   := FolderName . "\" . StrGet(FNIAddr + 12, Length, "UTF-16")
-									  IsDir  := InStr(FileExist(Name), "D") ? 1 : 0
+				If DllCall("GetOverlappedResult", "Ptr", D.Handle, "Ptr", D.OVLAddr, "UIntP", BytesRead, "Int", True)	{
 
-									  If (Name = PrevName)
-									  {
-												 If (Action = PrevAction)
-															Continue
-												 If (Action = 1) && (PrevAction = 2)
-												 {
-															PrevAction := Action
-															Changes.RemoveAt(PrevIndex--)
-															Continue
-												 }
-									  }
+					   Changes 	:= []
+					   FNIAddr 	:= D.FNIAddr
+					   FNIMax  	:= FNIAddr + BytesRead
+					   OffSet    	:= 0
+					   PrevIndex 	:= 0
+					   PrevAction 	:= 0
+					   PrevName 	:= ""
 
-									If (Action = 4)
-												PrevIndex := Changes.Push({Action: Action, OldName: Name, IsDir: 0})
-									Else If (Action = 5) && (PrevAction = 4)
-									{
-													Changes[PrevIndex, "Name"] := Name
-													Changes[PrevIndex, "IsDir"] := IsDir
-									}
-									Else
-											PrevIndex := Changes.Push({Action: Action, Name: Name, IsDir: IsDir})
-								  PrevAction := Action
-								  PrevName := Name
-						   } Until (Offset = 0) || ((FNIAddr + Offset) > FNIMax)
-						   If (Changes.Length() > 0)
-							  D.Func.Call(FolderName, Changes)
-						   DllCall("ResetEvent", "Ptr", EventArray[D.Index])
-						   DllCall("ReadDirectoryChangesW", "Ptr", D.Handle, "Ptr", D.FNIAddr, "UInt", SizeOfFNI, "Int", D.SubTree
-														  , "UInt", D.Watch, "UInt", 0, "Ptr", D.OVLAddr, "Ptr", 0)
+					Loop 		   {
+
+						FNIAddr += Offset
+						OffSet 	:= NumGet(FNIAddr + 0, "UInt")
+						Action 	:= NumGet(FNIAddr + 4, "UInt")
+						Length	:= NumGet(FNIAddr + 8, "UInt") // 2
+						Name  	:= FolderName . "\" . StrGet(FNIAddr + 12, Length, "UTF-16")
+						IsDir   	:= InStr(FileExist(Name), "D") ? 1 : 0
+
+						If (Name = PrevName)	{
+							If (Action = PrevAction)
+								Continue
+							If (Action=1 && PrevAction=2) {
+								PrevAction := Action
+								Changes.RemoveAt(PrevIndex--)
+								Continue
+							}
 						}
-						ObjIndex := DllCall("WaitForMultipleObjects", "UInt", ObjCount, "Ptr", &WaitObjects, "Int", 0, "UInt", 0, "UInt")
-						Sleep, 0
-					 }
+
+						If (Action = 4)
+							PrevIndex := Changes.Push({Action: Action, OldName: Name, IsDir: 0})
+						Else If (Action=5 && PrevAction=4) 		{
+							Changes[PrevIndex, "Name"]	:= Name
+							Changes[PrevIndex, "IsDir"] 	:= IsDir
+						}
+						Else
+							PrevIndex := Changes.Push({Action: Action, Name: Name, IsDir: IsDir})
+
+						PrevAction	:= Action
+						PrevName	:= Name
+
+					} Until (Offset = 0) || ((FNIAddr + Offset) > FNIMax)
+
+					If (Changes.Length() > 0)
+						D.Func.Call(FolderName, Changes)
+
+					DllCall("ResetEvent", "Ptr", EventArray[D.Index])
+					DllCall("ReadDirectoryChangesW"	, "Ptr", D.Handle, "Ptr", D.FNIAddr, "UInt", SizeOfFNI, "Int", D.SubTree
+																		, "UInt", D.Watch, "UInt", 0, "Ptr", D.OVLAddr, "Ptr", 0)
+
+					}
+					ObjIndex := DllCall("WaitForMultipleObjects", "UInt", ObjCount, "Ptr", &WaitObjects, "Int", 0, "UInt", 0, "UInt")
+					Sleep 0
+
+				 }
 		  }
    }
    Else If (Folder = "**PAUSE") { ; called to pause/resume watching
@@ -201,12 +206,13 @@ WatchFolder(Folder, UserFunc, SubTree := False, Watch := 0x03) {
          }
       }
 
-      If (RebuildWaitObjects) {
-         VarSetCapacity(WaitObjects, MAXIMUM_WAIT_OBJECTS * A_PtrSize, 0)
-         OffSet := &WaitObjects
-         For Index, Event In EventArray
-            Offset := NumPut(Event, Offset + 0, 0, "Ptr")
+	If (RebuildWaitObjects) {
+		VarSetCapacity(WaitObjects, MAXIMUM_WAIT_OBJECTS * A_PtrSize, 0)
+		OffSet := &WaitObjects
+		For Index, Event In EventArray
+			Offset := NumPut(Event, Offset + 0, 0, "Ptr")
       }
+
    }
 
    If (EventArray.Length() > 0)

@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                            	by Ixiko started in September 2017 - last change 27.10.2021 - this file runs under Lexiko's GNU Licence
+;                                            	by Ixiko started in September 2017 - last change 27.12.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -334,9 +334,10 @@ return 1
 }
 
 FilePathExist(path) {                                                                                                                 	;-- prüft ob ein Dateipfad vorhanden ist
-	If InStr(FileExist(RTrim(path, "\") . "\"), "D")
-		return true
-return false
+	; akzeptiert keine leeren Pfade
+	If (!path || !InStr(FileExist(RTrim(path, "\") . "\"), "D"))
+		return false
+return true
 }
 
 isFullFilePath(path) {                                                                                                               	;-- prüft Pfadstring auf die Angabe eines Laufwerkes
@@ -427,7 +428,7 @@ GetAlbisPaths() {                                                               
 	RegRead    	, LocalPath 	, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, 1-LocalPath
 	RegRead   	, Exe         	, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, 1-Exe
 
-return {"MainPath":MainPath, "LocalPath":LocalPath, "Exe":Exe, "Briefe":MainPath "\Briefe", "db":MainPath "\db"}
+return {"MainPath":MainPath, "LocalPath":LocalPath, "Exe":Exe, "Briefe":MainPath "\Briefe", "db":MainPath "\db", "Vorlagen":"\tvl"}
 }
 
 ;______________________________________________________________________________________________________________________________________________

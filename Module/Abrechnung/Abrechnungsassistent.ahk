@@ -1106,7 +1106,7 @@ ZiffernauswahlEintragen(DateChoosed, lvPatID, lvPatName)                        
 
 	; Ziffern eintragen                                                                                        	;{
 
-		; aktivieren
+		; Aktivieren
 			AlbisActivate(1)
 
 		; aktuelles Programmdatum lesen
@@ -1119,7 +1119,7 @@ ZiffernauswahlEintragen(DateChoosed, lvPatID, lvPatName)                        
 				If !AlbisKarteikarteZeigen() {
 					BlockInput, Off
 					HandsOff(false)
-					MsgBox, Die Karteikarte hat sich nicht anzeigen lassen.
+					MsgBox, 0x1000, Fehler, Die Karteikarte hat sich nicht anzeigen lassen.
 					return 0
 				}
 

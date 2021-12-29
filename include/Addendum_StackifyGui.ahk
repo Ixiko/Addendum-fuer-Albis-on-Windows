@@ -3,22 +3,27 @@
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;		Verwendung:	   	-	Multi Debug-Consolenklasse für Kontrollausgaben für Addendum
 ;
-; 		Beschreibung:       -	kann als eigener Thread per AutohotkeyH betrieben oder als eigenständiges Skript betrieben werden
-;									-	Datenaustausch erfolgt über Autohotkey COM Variante von Lexikos
+; 		Beschreibung:       -	kann als Library eingebunden werden
+;                                	- 	aber auch als Thread mit AutohotkeyH
+;									-	oder als eigenständiges Skript betrieben werden
+;									-	Datenaustausch kann direkt über das Klassenobjekt oder über das von der Klasse erstellte
+;										COM-Objekt erfolgen (CLSID: {6B39CAA1-A320-4CB0-8DB4-352AA81E460E})
 ;
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_StackifyGui started:         	09.12.2020
-;       Addendum_StackifyGui last change:    	09.12.2020
+;       Addendum_StackifyGui started:          	09.12.2020
+;       Addendum_StackifyGui last change:    	15.12.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-   debugv := new StackifyGui("debugv")
+   debugv := new StackifyGui("Stackify TestGui")
 
-   for name, obj in StackifyGui.GetActiveObjects()
-         list .= name " -- " ComObjType(obj, "Name") "`n"
-   MsgBox % list
-
+   for name, obj in StackifyGui.GetActiveObjects() {
+		nametyp := name SubStr("                        ", -1*(50-StrLen(name))) "`t " ComObjType(obj, "Name")
+         list .= nametyp "`n"
+		 debugv.Notify(nametyp)
+		 Sleep 1500
+	}
 
 
 
@@ -27,179 +32,214 @@ ExitApp
 
 class StackifyGui   {
 
-      __New(GuiName, Options="Font:s10 q5, Calibri ", SizePosition="Auto", COMIntegration=true) {
+	  __New(GuiName, Options="Font:s10 q5, Calibri ", Position="Auto", COMIntegration=true) {
 
-            global
+			global
 
-          this.stackifyIsMinimized:= false
-          This.userWantsExitApp:= false
-          This.width:= 550
-          This.x:= 1400, This.y:= 100
-          This.dbgV := Array()
+			this.stackifyIsMinimized:= false
+			this.userWantsExitApp:= false
+			this.width:= 850
+			this.x:= 1400, This.y:= 100
+			this.dbgV := Array()
 
-          Gui, Sfy: New, -Caption +ToolWindow -DPISCale AlwaysOnTop -MinimizeBox -Border HWNDhStacker Resize
-          Gui, Sfy: Margin, 0, 0
-          Gui, Sfy: Color, c5151B7
-          Gui, Sfy: Font, s7 cWhite
-          Gui, Sfy: Add, Button, % "x" width-40 " y2 gStackifyMin vStackifyMin hwndhStackifyMin", _
-          Gui, Sfy: Add, Button, % "x" width-20 " y2 gStackifyQuit vStackifyQuit hwndhStackifyQuit", X
-          Gui, Sfy: Font, s10 cWhite
-          Gui, Sfy: Add, Edit, % "x0 w" width " r50 -Border -VScroll vStackify hwndhStackifyEdit"
-          Gui, Sfy: Add, Text, % "x0 y2 BackgroundTrans", % Format("0x{:x}", hStackifyEdit) "                                    "
-          CtlColors.Attach(hStackifyEdit      	, "111177", "FFFFFF")
-          Gui, Sfy: Show, % "x" x " y" y " Hide NA", Stackify
+			Gui, New, -Caption +ToolWindow -DPIScale AlwaysOnTop -MinimizeBox -Border HWNDhwnd Resize
 
-          WinSet, ExStyle	, 0x00000000 	, % "ahk_id " hStackifyEdit
-          WinSet, Style   	, +0x100      	, % "ahk_id " hStackifyEdit
+			Gui, %hwnd%: Margin, 0, 0
+			Gui, %hwnd%: Color, c5151B7, c172842
 
-          Gui, Sfy: Show, NoActivate
+			Gui, %hwnd%: Font, s10 cWhite bold
+			Gui, %hwnd%: Add, Text, % "x0 y2 w400 BackgroundTrans vStTitle"
 
-          WinSet, Transparent, off 	, % "ahk_id " hStacker
-          WinSet, Transparent, 180	, % "ahk_id " hStacker
+			Gui, %hwnd%: Font, s7 cWhite Normal, Consolas
+			Gui, %hwnd%: Add, Button, % "x" this.width-40 " y2 gStackifyMin vStackifyMin hwndhStackifyMin", _
+			Gui, %hwnd%: Add, Button, % "x" this.width-20 " y2 gStackifyQuit vStackifyQuit hwndhStackifyQuit", X
+			;~ fnQuit := Func("Destroy")
+			;~ GuiControl, %hwnd%: +g, StackifyQuit,
 
-         OnMessage(0x0201, "WM_LBUTTONDOWN")
+			Gui, %hwnd%: Font, s10 cWhite
+			Gui, %hwnd%: Add, Edit, % "x0 w" this.width " r30 -Border -VScroll vStackify hwndhStackifyEdit"
 
-         this.ObjRegisterActive(this, "{6B39CAA1-A320-4CB0-8DB4-352AA81E460E}")
-         this.OnExit("Revoke")
+			Gui, %hwnd%: Show, % "x" this.x " y" this.y " Hide NA", Stackify_%hwnd%
 
-      }
+			this.Hwnd	:= hwnd
+			this.hEdit 	:= Format("0x{:X}", hStackifyEdit)
 
-      Revoke() {
-         ; This "revokes" the object, preventing any new clients from connecting
-         ; to it, but doesn't disconnect any clients that are already connected.
-         ; In practice, it's quite unnecessary to do this on exit.
-         this.ObjRegisterActive(This, "")
-      return
-      }
+  		  ; Enable shadow
+			VarSetCapacity(margins, 16, 0)
+			NumPut(1, &margins, 0, "Int")
+			DllCall("Dwmapi\DwmExtendFrameIntoClientArea", "UPtr", hwnd, "UPtr", &margins)
 
-      AddDebugView(DbgVName, DbgTitle, Options) {
+			GuiControl, %hwnd%: , StTitle, % GuiName "           | hwnd output: "  this.hEdit
 
-         viewfound := false
-         For dbgIndex, obj in This.dbgV {
-               If (obj.name = DbgVName) {
-                     viewfound := true
-                     break
-               }
-         }
+			WinSet, ExStyle	, 0x00000000 	, % "ahk_id " this.hEdit
+			WinSet, Style   	, +0x100      	, % "ahk_id " this.hEdit
 
-         If !viewfound {
+			Gui, %hwnd%: Show, NoActivate
 
-             this.dbgV.Push{"name": DbgVName, "title":Tile, "options":Options}
+			WinSet, Transparent, off  	, % "ahk_id " this.Hwnd
+			WinSet, Transparent, 180	, % "ahk_id " this.Hwnd
 
-         }
+			OnMessage(0x0201, "WM_LBUTTONDOWN")
 
-      }
+			this.ObjRegisterActive(this, "{6B39CAA1-A320-4CB0-8DB4-352AA81E460E}")
+			this.OnExit("Revoke")
 
+	  }
 
-       class StackifyObject {
-                ; Simple message-passing example.
-                Message(Data) {
-                    MsgBox Received message: %Data%
-                    return 42
-                }
-                ; "Worker thread" example.
-                static WorkQueue := []
-                BeginWork(WorkOrder) {
-                    this.WorkQueue.Insert(WorkOrder)
-                    SetTimer Work, -100
-                    return
-                    Work:
-                    ActiveObject.Work()
-                    return
-                }
-                Work() {
-                    work := this.WorkQueue.Remove(1)
-                    ; Pretend we're working.
-                    Sleep 5000
-                    ; Tell the boss we're finished.
-                    work.Complete(this)
-                }
-                Quit() {
-                    MsgBox Quit was called.
-                    DetectHiddenWindows On  ; WM_CLOSE=0x10
-                    PostMessage 0x10,,,, ahk_id %A_ScriptHwnd%
-                    ; Now return, so the client's call to Quit() succeeds.
-                }
-      }
+	Hide() {
+		Gui, % this.hwnd ": Show", % "Hide NA"
+	}
 
+	Destroy() {
+		Gui, % this.hwnd ": Destroy"
+	}
 
+	Show() {
+		Gui, % this.hwnd ": Show", % "NA"
+	}
 
-      ObjRegisterActive(Object, CLSID, Flags:=0) {
+	Notify(msg) {
 
-       /*
-          ObjRegisterActive(Object, CLSID, Flags:=0)
+		; make ShowInfos global in your script to handle output to this gui
+		msg := RegExReplace(msg, "[\n\r]+")
+		If (StrLen(msg) > 0) {
+			Edit_prepend(this.hEdit, msg)
+			ControlSend,, {Enter}, % "ahk_id " this.hEdit
+		}
 
-              Registers an object as the active object for a given class ID.
-              Requires AutoHotkey v1.1.17+; may crash earlier versions.
+	return
+	}
 
-          Object:
-                  Any AutoHotkey object.
-          CLSID:
-                  A GUID or ProgID of your own making.
-                  Pass an empty string to revoke (unregister) the object.
-          Flags:
-                  One of the following values:
-                    0 (ACTIVEOBJECT_STRONG)
-                    1 (ACTIVEOBJECT_WEAK)
-                  Defaults to 0.
+	Revoke() {
+		 ; This "revokes" the object, preventing any new clients from connecting
+		 ; to it, but doesn't disconnect any clients that are already connected.
+		 ; In practice, it's quite unnecessary to do this on exit.
+		 this.ObjRegisterActive(This, "")
+	  return
+	  }
 
-          Related:
-              http://goo.gl/KJS4Dp - RegisterActiveObject
-              http://goo.gl/no6XAS - ProgID
-              http://goo.gl/obfmDc - CreateGUID()
+	AddDebugView(DbgVName, DbgTitle, Options) {
 
-      */
+		 viewfound := false
+		 For dbgIndex, obj in This.dbgV {
+			   If (obj.name = DbgVName) {
+					 viewfound := true
+					 break
+			   }
+		 }
 
-          static cookieJar := {}
-          if (!CLSID) {
-              if (cookie := cookieJar.Remove(Object)) != ""
-                  DllCall("oleaut32\RevokeActiveObject", "uint", cookie, "ptr", 0)
-              return
-          }
-          if cookieJar[Object]
-              throw Exception("Object is already registered", -1)
-          VarSetCapacity(_clsid, 16, 0)
-          if (hr := DllCall("ole32\CLSIDFromString", "wstr", CLSID, "ptr", &_clsid)) < 0
-              throw Exception("Invalid CLSID", -1, CLSID)
-          hr := DllCall("oleaut32\RegisterActiveObject"
-              , "ptr", &Object, "ptr", &_clsid, "uint", Flags, "uint*", cookie
-              , "uint")
-          if hr < 0
-              throw Exception(format("Error 0x{:x}", hr), -1)
-          cookieJar[Object] := cookie
-      }
+		 If !viewfound {
 
-      ; http://ahkscript.org/boards/viewtopic.php?f=6&t=6494
-      GetActiveObjects(Prefix:="", CaseSensitive:=false) {                                ; GetActiveObjects v1.0 by Lexikos
-          objects := {}
-          DllCall("ole32\CoGetMalloc", "uint", 1, "ptr*", malloc) ; malloc: IMalloc
-          DllCall("ole32\CreateBindCtx", "uint", 0, "ptr*", bindCtx) ; bindCtx: IBindCtx
-          DllCall(NumGet(NumGet(bindCtx+0)+8*A_PtrSize), "ptr", bindCtx, "ptr*", rot) ; rot: IRunningObjectTable
-          DllCall(NumGet(NumGet(rot+0)+9*A_PtrSize), "ptr", rot, "ptr*", enum) ; enum: IEnumMoniker
-          while DllCall(NumGet(NumGet(enum+0)+3*A_PtrSize), "ptr", enum, "uint", 1, "ptr*", mon, "ptr", 0) = 0 ; mon: IMoniker
-          {
-              DllCall(NumGet(NumGet(mon+0)+20*A_PtrSize), "ptr", mon, "ptr", bindCtx, "ptr", 0, "ptr*", pname) ; GetDisplayName
-              name := StrGet(pname, "UTF-16")
-              DllCall(NumGet(NumGet(malloc+0)+5*A_PtrSize), "ptr", malloc, "ptr", pname) ; Free
-              if InStr(name, Prefix, CaseSensitive) = 1 {
-                  DllCall(NumGet(NumGet(rot+0)+6*A_PtrSize), "ptr", rot, "ptr", mon, "ptr*", punk) ; GetObject
-                  ; Wrap the pointer as IDispatch if available, otherwise as IUnknown.
-                  if (pdsp := ComObjQuery(punk, "{00020400-0000-0000-C000-000000000046}"))
-                      obj := ComObject(9, pdsp, 1), ObjRelease(punk)
-                  else
-                      obj := ComObject(13, punk, 1)
-                  ; Store it in the return array by suffix.
-                  objects[SubStr(name, StrLen(Prefix) + 1)] := obj
-              }
-              ObjRelease(mon)
-          }
-          ObjRelease(enum)
-          ObjRelease(rot)
-          ObjRelease(bindCtx)
-          ObjRelease(malloc)
-          return objects
-      }
+			 this.dbgV.Push({"name": DbgVName, "title":Tile, "options":Options})
 
+		 }
+
+	  }
+
+	class StackifyObject {
+			 ; Simple message-passing example.
+			 Message(Data) {
+				 ;~ SciTEOutput("received message: " Data)
+				 return 42
+			 }
+			 ; "Worker thread" example.
+			 static WorkQueue := []
+			 BeginWork(WorkOrder) {
+				 this.WorkQueue.Insert(WorkOrder)
+				 SetTimer Work, -100
+				 return
+				 Work:
+				 ActiveObject.Work()
+				 return
+			 }
+			 Work() {
+				 work := this.WorkQueue.Remove(1)
+				 ; Pretend we're working.
+				 Sleep 5000
+				 ; Tell the boss we're finished.
+				 work.Complete(this)
+			 }
+			 Quit() {
+				 MsgBox Quit was called.
+				 DetectHiddenWindows On  ; WM_CLOSE=0x10
+				 PostMessage 0x10,,,, % "ahk_id " A_ScriptHwnd
+				 ; Now return, so the client's call to Quit() succeeds.
+			 }
+	  }
+
+	ObjRegisterActive(Object, CLSID, Flags:=0) {
+
+	   /*
+		  ObjRegisterActive(Object, CLSID, Flags:=0)
+
+			  Registers an object as the active object for a given class ID.
+			  Requires AutoHotkey v1.1.17+; may crash earlier versions.
+
+		  Object:
+				  Any AutoHotkey object.
+		  CLSID:
+				  A GUID or ProgID of your own making.
+				  Pass an empty string to revoke (unregister) the object.
+		  Flags:
+				  One of the following values:
+					0 (ACTIVEOBJECT_STRONG)
+					1 (ACTIVEOBJECT_WEAK)
+				  Defaults to 0.
+
+		  Related:
+			  http://goo.gl/KJS4Dp - RegisterActiveObject
+			  http://goo.gl/no6XAS - ProgID
+			  http://goo.gl/obfmDc - CreateGUID()
+
+	  */
+
+		  static cookieJar := {}
+		  if (!CLSID) {
+			  if (cookie := cookieJar.Remove(Object)) != ""
+				  DllCall("oleaut32\RevokeActiveObject", "uint", cookie, "ptr", 0)
+			  return
+		  }
+		  if cookieJar[Object]
+			  throw Exception("Object is already registered", -1)
+		  VarSetCapacity(_clsid, 16, 0)
+		  if (hr := DllCall("ole32\CLSIDFromString", "wstr", CLSID, "ptr", &_clsid)) < 0
+			  throw Exception("Invalid CLSID", -1, CLSID)
+		  hr := DllCall("oleaut32\RegisterActiveObject", "ptr", &Object, "ptr", &_clsid, "uint", Flags, "uint*", cookie, "uint")
+		  if hr < 0
+			  throw Exception(format("Error 0x{:x}", hr), -1)
+		  cookieJar[Object] := cookie
+	  }
+
+	GetActiveObjects(Prefix:="", CaseSensitive:=false) {                                ; GetActiveObjects v1.0 by Lexikos
+		; http://ahkscript.org/boards/viewtopic.php?f=6&t=6494
+		  objects := {}
+		  DllCall("ole32\CoGetMalloc", "uint", 1, "ptr*", malloc) ; malloc: IMalloc
+		  DllCall("ole32\CreateBindCtx", "uint", 0, "ptr*", bindCtx) ; bindCtx: IBindCtx
+		  DllCall(NumGet(NumGet(bindCtx+0)+8*A_PtrSize), "ptr", bindCtx, "ptr*", rot) ; rot: IRunningObjectTable
+		  DllCall(NumGet(NumGet(rot+0)+9*A_PtrSize), "ptr", rot, "ptr*", enum) ; enum: IEnumMoniker
+		  while DllCall(NumGet(NumGet(enum+0)+3*A_PtrSize), "ptr", enum, "uint", 1, "ptr*", mon, "ptr", 0) = 0 ; mon: IMoniker
+		  {
+			  DllCall(NumGet(NumGet(mon+0)+20*A_PtrSize), "ptr", mon, "ptr", bindCtx, "ptr", 0, "ptr*", pname) ; GetDisplayName
+			  name := StrGet(pname, "UTF-16")
+			  DllCall(NumGet(NumGet(malloc+0)+5*A_PtrSize), "ptr", malloc, "ptr", pname) ; Free
+			  if InStr(name, Prefix, CaseSensitive) = 1 {
+				  DllCall(NumGet(NumGet(rot+0)+6*A_PtrSize), "ptr", rot, "ptr", mon, "ptr*", punk) ; GetObject
+				  ; Wrap the pointer as IDispatch if available, otherwise as IUnknown.
+				  if (pdsp := ComObjQuery(punk, "{00020400-0000-0000-C000-000000000046}"))
+					  obj := ComObject(9, pdsp, 1), ObjRelease(punk)
+				  else
+					  obj := ComObject(13, punk, 1)
+				  ; Store it in the return array by suffix.
+				  objects[SubStr(name, StrLen(Prefix) + 1)] := obj
+			  }
+			  ObjRelease(mon)
+		  }
+		  ObjRelease(enum)
+		  ObjRelease(rot)
+		  ObjRelease(bindCtx)
+		  ObjRelease(malloc)
+		  return objects
+	  }
 
 }
 
@@ -260,12 +300,12 @@ Notify(msg) {
 return
 }
 
-Edit_Prepend( hEdit, Text ) { ;www.autohotkey.com/community/viewtopic.php?p=565894#p565894
-iPos:= DllCall( "SendMessage", UInt,hEdit, UInt,0x0E	, UInt,0 , UInt,0 ) ; WM_GetTextLength
-;iPos:= ErrorLevel
-DllCall( "SendMessage", UInt,hEdit, UInt,0xB1	, UInt,iPos , UInt,iPos ) ; EM_SETSEL
-DllCall( "SendMessage", UInt,hEdit, UInt,0xC2, UInt,0 	, UInt,&Text ) ; EM_REPLACESEL
-DllCall( "SendMessage", UInt,hEdit, UInt,0xB1	, UInt,0 	, UInt,0 ) ; EM_SETSEL
+Edit_Prepend(hEdit, Text) { ;www.autohotkey.com/community/viewtopic.php?p=565894#p565894
+iPos:= DllCall( "SendMessage", UInt,hEdit, UInt,0x0E	, UInt,0 , UInt,0 ) 	; WM_GetTextLength
+DllCall( "SendMessage", UInt,hEdit, UInt,0xB1	, UInt,iPos , UInt,iPos )    	; EM_SETSEL
+DllCall( "SendMessage", UInt,hEdit, UInt,0xC2, UInt,0 	, UInt,&Text ) 	; EM_REPLACESEL
+iPos:= DllCall( "SendMessage", UInt,hEdit, UInt,0x0E	, UInt,0 , UInt,0 ) 	; WM_GetTextLength
+DllCall( "SendMessage", UInt,hEdit, UInt,0xB1	, UInt,iPos	, UInt,iPos )       	; EM_SETSEL
 }
 
 Class CtlColors {

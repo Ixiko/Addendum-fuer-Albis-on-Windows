@@ -1,6 +1,6 @@
-﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;     	Addendum_PDFReader
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;		Verwendung:	    	-	RPA Funktionen PDF Anzeigeprogramme für
 ;	                                   	1. Sumatra PDF V3.1,3.2 und 3.3
 ;	                                  	2. FoxitReader ab V9+
@@ -9,8 +9,8 @@
 ;		Abhängigkeiten:	-	GettAppImagePath
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_StackifyGui last change:    	07.11.2021
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;       Addendum_StackifyGui last change:    	23.12.2021
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
 
 ; -------------------------------------------------------------
@@ -439,20 +439,18 @@ return {"disp":PageDisp, "max":PageMax}
 Sumatra_PrintPDF(filepath:="", Printer:="")  {                              	;-- Pdf per commandline drucken
 
 	global SumatraCMD, SumatraExist
-	static smtracmdline
-
-	If  !smtracmdline
-		smtracmdline := "-print-to " q "#printer#" q " -print-settings " q "duplex" q " -exit-when-done " ; Dateiname
 
 	If !SumatraCMD {
 		SumatraCMD := GetAppImagePath("SumatraPDF")
-		If (StrLen(SumatraCMD) > 0) && FileExist(SumatraCMD)
+		If SumatraCMD && FileExist(SumatraCMD)
 			SumatraExist := true
 	}
 
 	If SumatraCMD {
 
-		stdoutCMD := SumatraCMD " " StrReplace(smtracmdline, "#printer#", Printer) " " q . filepath . q
+		smtracmdline	:= "-print-to " q "#printer#" q " -print-settings " q "fit,duplex" q " -exit-when-done " ; Dateiname
+		stdoutCMD    	:= SumatraCMD " " StrReplace(smtracmdline, "#printer#", Printer) " " q . filepath . q
+		SciTEOutput(A_ThisFunc "`n" stdoutCMD)
 		If (stdout := StdoutToVar(stdoutCMD))
 			SciTEOutput(stdout)
 
@@ -1099,7 +1097,7 @@ FoxitReader_SignDoc(hDokSig) {		                       	                	;-- Bea
 
 		; Darstellungstyp ---------------------------------------------------------------------------------------------------------
 			ControlFocus 	, ComboBox4                                                                        	, % "ahk_id " hDokSig
-			ControlGet, entryNr, FindString, % Addendum.PDF.Darstellungstyp, ComboBox4	, % "ahk_id " hDokSig  	; prüft das Feld Signaturvorschau auf die in der ini hinterlegte Signatur
+			ControlGet, entryNr, FindString, % Addendum.PDF.Darstellungstyp, ComboBox4	, % "ahk_id " hDokSig  	; prüft Feld Signaturvorschau auf hinterlegte Signatur
 			If entryNr
 				Control, ChooseString, % Addendum.PDF.Darstellungstyp, ComboBox4        	, % "ahk_id " hDokSig
 			else
@@ -1127,6 +1125,7 @@ FoxitReader_SignDoc(hDokSig) {		                       	                	;-- Bea
 	;}
 
 	;{ Signaturfenster schliessen
+		SetTimer, PDFHelpCloseSaveDialogs, 100
 		while isWindow(hDokSig) {
 			If VerifiedClick("Button5", hDokSig)
 				break
@@ -1154,34 +1153,36 @@ FoxitReader_SignDoc(hDokSig) {		                       	                	;-- Bea
 		; Zählerstände per ToolTip einblenden
 			foxitPos     	:= GetWindowSpot(WinExist("ahk_class classFoxitReader"))
 			foxitAFXPos 	:= Controls("AfxFrameOrView140su1", "ControlPos", "ahk_class classFoxitReader")
-			ToolTip, %	"Signature Nr: "   	Addendum.PDF.SignatureCount
-						. 	"`nSeitenzahl: " 	PdfPages.Max
-						. 	"`nges. Seiten: " 	Addendum.PDF.SignaturePages , foxitPos.X+foxitAFXPos.X, foxitPos.Y+foxitAFXPos.Y, 10
+			ToolTip, %	"Signature Nr: "   	Addendum.PDF.SignatureCount "`n"
+						. 	"Seitenzahl: "     	PdfPages.Max                          	"`n"
+						. 	"ges. Seiten: "    	Addendum.PDF.SignaturePages , foxitPos.X+foxitAFXPos.X, foxitPos.Y+foxitAFXPos.Y, 10
 
 	;}
 
 	; Dateidialog Routinen starten
-		SetTimer, PDFNotRecentlySigned		, -10000
+		SetTimer, PDFNotRecentlySigned		, -20000
 		PraxTT("'", "off")
 
 return
 
 PDFHelpCloseSaveDialogs:            	;{ - Notfalllösung für die immer noch unsichere Dialogerkennung
-	If (hwnd := WinExist("Speichern unter " appendix, "Speichern")) {
+	If !WinExist("Speichern unter bestätigen " appendix) && (hwnd := WinExist("Speichern unter " appendix, "Speichern")) {
 		SetTimer, PDFHelpCloseSaveDialogs, Off
 		VerifiedClick("Speichern", hwnd)                                                                 	; Speichern Button drücken
-		WinWait, % "Speichern unter bestätigen " appendix,, 2
-		If !ErrorLevel
-			return VerifiedClick("Ja", "Speichern unter bestätigen " appendix,,, true)    	; mit 'Ja' bestätigen
-		Addendum.PDF.RecentlySigned := false
+		WinWait, % "Speichern unter bestätigen " appendix,, 4
+	}
+	If WinExist("Speichern unter bestätigen " appendix) {
+		VerifiedClick("Ja", "Speichern unter bestätigen " appendix,,, true)    	; mit 'Ja' bestätigen
+		If !WinExist("Speichern unter bestätigen " appendix) && !WinExist("Speichern unter " appendix) {
+			Addendum.PDF.RecentlySigned := false
+			SetTimer, PDFHelpCloseSaveDialogs,  Off
+		}
 	}
 return ;}
 
 PDFNotRecentlySigned: ;{
 	Addendum.PDF.RecentlySigned	:= false
-	Addendum.SaveAsInvoked     	:= false
 	SetTimer, PDFHelpCloseSaveDialogs,  Off
-	Tooltip,,,, 10
 return ;}
 }
 

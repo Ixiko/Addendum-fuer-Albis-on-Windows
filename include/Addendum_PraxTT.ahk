@@ -251,20 +251,6 @@ return
 ;}
 }
 
-/* Hades
-		Loop, Parse, TextMsg, `n
-If      	(A_Index > 1) && (StrLen(printline) > 0)
-				linespace := Floor(cFontSize * 0.2)
-			else if 	(A_Index > 1) && (StrLen(printline) = 0)
-				linespace := Floor(cFontSize * 0.5) 	; unsinnig?
-
-If RegExMatch(printline, "(?<=#)\-*\d+", plusSize)
-				printline := StrReplace(printline, "#" plusSize, "")
-			else
-				plusSize := 0
-
-*/
-
 OSDTIP_Pop(P*) {                                                                                                       	;-- OSDTIP_Pop v0.55 by SKAN on D361/D36E @ tiny.cc/osdtip
 Local
 Static FN:="", ID:=0, PM:="", PS:=""

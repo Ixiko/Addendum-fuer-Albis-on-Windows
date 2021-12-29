@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <!--
+    The IE Compatibility flag, while not always necessary, makes sure your page
+    will always load in IE11+ rendering mode instead of being limited to IE7
+    features and behaviors. While IE11 is still relatively old as a rendering
+    engine, it supports the most fundamental parts needed for modern webpages to
+    function correctly.
+
+    Neutron will do its best to enable IE11+ rendering mode regardless of this
+    tag, but in current releases pages will not render correctly when compiled
+    unless this tag is present. Because of that and other edge cases, any page
+    you write to load in Neutron should contain this meta tag.
+  -->
+  <meta charset="utf-8">  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+html {
+    width: 100%;
+    height: 100%;
+    padding: 0em;
+    margin: 0em;
+    font-family: Futura Bk Bt;
+    font-size: 9pt;
+}
+   
+body {
+    display: flex;
+    flex-direction: column;
+    background: #e6e6e6;
+    }
+      
+.row {
+    /* A row is basically just a flexbox container */
+    display: flex;
+    flex-wrap: wrap;
+    margin-left:5px;
+    margin-bottom:.25em;
+}    
+.rowtext {
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: black;
+    vertical-align: middle;
+    margin-right:.2em;
+    margin-top:.3em;
+}
+
+.statetext {
+    font-size: 1rem;
+    font-weight: 400;
+    width: 100%;
+    margin-right:.2em;
+    vertical-align: baseline;
+    text-align: center;
+    color: black;
+    background-color: white;
+    border: none; 
+    border-radius: 5px; 
+}
+.statetext:hover {
+    cursor:default;
+    font-weight: 600;
+}
+
+
+.btn {
+    
+    height: 28px;
+    font-size: 1.2rem;
+    font-weight: 400;
+
+    padding-left: .5em;
+    padding-right: .5em;
+    margin-right: .2em;
+
+    color: #424242;
+    background-color: transparent;
+    background-color:rgb(255, 247, 172);
+    border: 1px solid;
+    border-radius: .25rem;
+    border-style:outset;
+    text-align: center;
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+    transition: color .15s ease-in-out, background-color .2s ease-in-out, border-color .15s ease-in-out, box-shadow .25s ease-in-out;
+}
+.btn:hover {
+    color: #272727;
+    text-decoration: none;
+    box-shadow: .1rem .2rem 0 .2rem rgba(78, 78, 78, 0.25);
+    cursor: pointer;
+}
+.btn.focus,
+.btn:focus {
+    border-radius: .25rem;
+    color: #e2e2e2;
+    border-style:inset;
+    background-color:rgb(90, 89, 60);
+    box-shadow: 0 0 0 0.0rem rgba(100, 100, 100, 0.25);
+}
+
+
+.form-control {
+    width: 100%;
+    padding: .375rem .375rem;
+    font-size: 1.2rem;
+    font-weight: 400;
+
+    width:calc(6*1.1em); 
+
+    margin-right:.2em;
+    margin-bottom:.25em;
+
+    color: #333333;
+    background-color: rgb(255, 253, 234);
+    background-clip: padding-box;
+    border: 1px solid #2c2c2c;
+    border-color: transparent;
+    border-radius: .25rem;
+
+    transition: all 0.5s ease-out;
+}
+.form-control:hover, focus {
+    color: #000000;
+    background-color: rgb(255, 250, 194);
+    border-color: #494949;
+    box-shadow: 0 0 0 .2rem rgba(78, 78, 78, 0.25);
+}
+
+table 			    {    
+    margin-right:0px;
+    margin-left:2px;
+    font-family: Futura Bk Bt;
+    font-size: 9pt;
+    font-weight: 200;
+    border: 1px solid black;
+	border-radius: .5em;
+    border-collapse:separate;
+    background:rgb(227, 233, 209);
+    overflow:hidden;
+    transition: .25s;
+}
+thead tr            { 
+    text-align: left;
+    color:white;
+    background:rgb(43, 46, 33);
+}
+td 				  	{ 
+    text-align:center;
+    border-color:white;
+    background-color:rgb(191, 201, 161);
+    transition: .25s;
+}
+td:hover            {
+    background-color:rgb(209, 218, 185);
+    color: rgb(0, 120, 213);
+    font-weight: 600;
+    overflow: hidden;
+}
+th 				 	{ 
+    text-align:center;
+    padding-left:.5em;
+    padding-right:.5em;
+    background:rgb(68, 73, 52);
+    cursor:default;
+}
+th:hover   	 	{ 
+    color: lightyellow;
+    background: rgb(75, 80, 58);
+}
+.thleft             {
+     border-radius: .35em 0em 0em 0em;
+}
+.thright            {
+     border-radius: 0em .35em 0em 0em;
+}
+.col1               {
+    text-align:right;
+    padding-right:.25em;
+    background:rgb(211, 218, 183);
+    color:black;
+    cursor:pointer;
+    transition: .25s;
+}
+.col1:hover         {
+    background:rgb(216, 219, 202);
+}
+.col1left           {
+    text-align:right;
+    padding-right:.25em;
+    background:rgb(211, 218, 183);
+    color:black;
+    cursor:pointer;
+    transition: .25s;
+    border-radius: 0em 0em 0em .35em;
+}
+.col1right           {
+
+    border-radius: 0em 0em .35em 0em;
+    }
+.emptycell          {
+    background-color:rgb(227, 233, 209);
+    transition: .25s;    
+}
+.emptycell:hover    {
+    background-color:rgb(227, 233, 209);    
+}
+
+progress {
+    -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
+    width: 88%; 
+    height: 10px; 
+    margin-right:5px;
+        
+    border: none; 
+    border-radius: 5px; 
+    color: rgb(0, 120, 215);
+    background-size: 35px 20px, 100% 100%, 100% 100%;
+    transition: color .15s ease-in-out, background-color .2s ease-in-out, border-color .15s ease-in-out, box-shadow .25s ease-in-out;
+}
+progress:hover {
+    border-color: #98a7fa;
+    color: rgb(40, 158, 255);   
+}
+.progresstext {
+    font-size: 1rem;
+    font-weight: 200;
+    width: calc(3*1em);
+    vertical-align: baseline;
+    text-align: right;
+   
+}
+
+    </style>
+</head>
+
+<body>
+  
+    <div class="row">
+        <button type="button" class="btn" id="vaccountstart" onclick="ahk.ExecuteFunc(event)">Impfstatistik</button>
+        <div class="rowtext">für den</div>        
+        <input  type="date" class="form-control" id="vacdate" name="vacdate">
+    </div>
+
+    <div class="row">
+        <progress id="vacstatsprogress" max="100" value="0"></progress>
+        <div class="progresstext" id="stopwatch"></div>
+    </div>
+
+    <div class="statetext" id="vacstate">COVID19-IMPFSTATISTIK</div> 
+
+    <table>
+        <thead>
+          <tr>
+            <th class="thleft">Hersteller [Impfstoff]</th>
+            <th>Erstimpfung</th>
+            <th>Abschlussimpfung</th>
+            <th>Auffrischimpfung</th>
+            <th class="thright">gesamt</th>
+          </tr>
+        <thead>
+        <tbody>
+          <tr>
+            <td class="col1">Biontech[Comirnaty]</td>
+            <td id="tB1"></td>
+            <td id="tB2"></td>
+            <td id="tB3"></td>
+            <td id="tBs"></td>
+          </tr>
+             <tr>
+            <td class="col1">Moderna[Spikevax]</td>
+            <td id="tM1"></td>
+            <td id="tM2"></td>
+            <td id="tM3"></td>
+            <td id="tMs"></td>
+          </tr>
+             <tr>
+            <td class="col1">Astrazeneca[Astrafax]</td>
+            <td id="tA1"></td>
+            <td id="tA2"></td>
+            <td id="tA3" class="emptycell"></td>
+            <td id="AMs"></td>
+          </tr>
+             <tr>
+            <td class="col1">Johnson[Johnson]</td>
+            <td id="tJ1" class="emptycell"></td>
+            <td id="tJ2"></td>
+            <td id="tJ3" class="emptycell"></td>
+            <td id="tJs"></td>
+          </tr>
+        </tbody>
+        <thead>
+            <tr>
+              <th>Altersgruppe</th>
+              <th></th>
+              <th></th>
+              <th></th>
+              <th></th>
+            </tr>
+        <thead>
+        <tbody>
+            <tr>
+                <td class="col1">> 60</td>
+                <td id="tAO1"></td>
+                <td id="tAO1"></td>
+                <td id="tAO3"></td>
+                <td id="tAOs"></td>
+            </tr>
+                <tr>
+                <td class="col1">< 18</td>
+                <td id="tAJ1"></td>
+                <td id="tAJ2"></td>
+                <td id="tAJ3"></td>
+                <td id="tAJs"></td>
+            </tr>
+                <tr>
+                <td class="col1">18-59</td>
+                <td id="tAM1"></td>
+                <td id="tAM2"></td>
+                <td id="tAM3"></td>
+                <td id="tAMs"></td>
+            </tr>
+            <tr>
+                <td class="col1left">alle</td>
+                <td id="tS1"></td>
+                <td id="tS2"></td>
+                <td id="tS3"></td>
+                <td class="col1right" id="tSs"></td>
+                </tr>
+            </tbody>
+    </table>
+
+    
+
+</body>
+
+</html>

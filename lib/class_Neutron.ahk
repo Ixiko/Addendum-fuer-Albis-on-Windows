@@ -7,7 +7,7 @@
 ;	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠
 
 
-/*  Neutron.ahk v1.0.0
+/*  Neutron.ahk v1.0.0 adm
 
 	Copyright (c) 2020 Philip Taylor (known also as GeekDude, G33kDude)
 	https://github.com/G33kDude/Neutron.ahk
@@ -38,9 +38,9 @@ class NeutronWindow {
 
 	static TEMPLATE := ""
 
-	; --- Constants ---
+	;{ --- Constants ---
 
-	static VERSION := "1.0.0"
+	static VERSION := "1.0.0 adm"
 
 	; Windows Messages
 	, WM_DESTROY                 	:= 0x02
@@ -111,9 +111,9 @@ class NeutronWindow {
 		}
 	}
 	)
+	;}
 
-
-	; --- Properties ---
+	;{ --- Properties ---
 
 	; Get the JS DOM object
 	doc[]	{
@@ -130,7 +130,7 @@ class NeutronWindow {
 			return this.wb.Document.parentWindow
 		}
 	}
-
+	;}
 
 	; --- Construction, Destruction, Meta-Functions ---
 
@@ -146,9 +146,26 @@ class NeutronWindow {
 		for i, message in this.LISTENERS
 			OnMessage(message, this.bound._OnMessage)
 
+		; gui size and pos
+		this.x := RegExMatch(options, "i)(^|\s)w(?<X>\d+)", gui)  	? guiX : 0
+		this.y := RegExMatch(options, "i)(^|\s)w(?<Y>\d+)", gui)  	? guiY : 0
+		;~ this.w := RegExMatch(options, "i)(^|\s)w(?<W>\d+)", gui)	? guiW : 800
+		;~ this.h := RegExMatch(options, "i)(^|\s)w(?<H>\d+)", gui)  	? guiH : 600
+
+		; Get MinSize if avaible
+		If RegExMatch(options, "i)(^|\s)MinSize\d+x\d+", MinSize)
+			options := StrReplace(options, MinSize)
+
+		; embed neutron gui
+		RegExMatch(options, "i)(^|\s)[\+\-]Parent[0-9a-fx]+", Parent)
+
+		; Gui resize options
+		If !RegExMatch(options, "i)(^|\s)[\+\-]Resize", GuiResize)
+			GuiResize := "+Resize"
+
 		; Create and save the GUI
 		; TODO: Restore previous default GUI
-		Gui, New, +hWndhWnd +Resize -DPIScale
+		Gui, New, % "+hWndhWnd -DPIScale " GuiResize " " MinSize " " Parent
 		this.hWnd := hWnd
 
 		; Enable shadow
@@ -228,7 +245,7 @@ class NeutronWindow {
 
 		RegRead, fbe, % this.KEY_FBE, % this.EXE_NAME
 		RegWrite, REG_DWORD, % this.KEY_FBE, % this.EXE_NAME, 0
-		Gui, Add, ActiveX, vwb hWndhWB x0 y0 w800 h600, about:blank
+		Gui, Add, ActiveX, % "vwb hWndhWB x" this.x " y" this.y " w" this.w " h" this.h, about:blank
 		if (fbe = "")
 			RegDelete, % this.KEY_FBE, % this.EXE_NAME
 		else
@@ -250,8 +267,8 @@ class NeutronWindow {
 		this.doc.close()
 
 		; Inject the AHK objects into the JS scope
-		this.wnd.neutron := this
-		this.wnd.ahk := new this.Dispatch(this)
+		this.wnd.neutron 	:= this
+		this.wnd.ahk     	:= new this.Dispatch(this)
 
 		; Wait for the page to finish loading
 		while wb.readyState < 4
@@ -270,7 +287,7 @@ class NeutronWindow {
 		this.hSDOV 	:= hWnd
 		DetectHiddenWindows, % dhw
 
-		this.pWndProc := RegisterCallback(this._WindowProc, "", 4, &this)
+		this.pWndProc    	:= RegisterCallback(this._WindowProc, "", 4, &this)
 		this.pWndProcOld := DllCall("SetWindowLong" (A_PtrSize == 8 ? "Ptr" : "")
 													, "Ptr", this.hIES   		  	; HWND     hWnd
 													, "Int", -4      			      	; int      nIndex (GWLP_WNDPROC)
@@ -282,9 +299,11 @@ class NeutronWindow {
 		DllCall("ole32\RevokeDragDrop", "UPtr", this.hIES)
 	}
 
-	; Show an alert for debugging purposes when the class gets garbage collected
+	; Show an alert for debugging purposes when the class gets garbage collected*
+	; (* happens when you empty the object)
 	 __Delete() {
-	 	MsgBox, __Delete
+	 	;MsgBox, __Delete
+		this.Closed := true
 	}
 
 
@@ -441,10 +460,7 @@ class NeutronWindow {
 
 	; Maximize the Neutron window. Best used in your title bar's maximize button's onclick attribute.
 	Maximize()	{
-		if DllCall("IsZoomed", "UPtr", this.hWnd)
-			Gui, % this.hWnd ":Restore"
-		else
-			Gui, % this.hWnd ":Maximize"
+		Gui, % this.hWnd (DllCall("IsZoomed", "UPtr", this.hWnd) ? ":Restore" : ":Maximize")
 	}
 
 	; Closes the Neutron window. Best used in your title bar's close button's onclick attribute.
@@ -468,23 +484,28 @@ class NeutronWindow {
 
 	; Shows a hidden Neutron window.
 	Show(options:="")	{
-		w	:= RegExMatch(options, "w\s*\K\d+", match) 	? match 	: this.w
+
+		w	:= RegExMatch(options, "w\s*\K\d+", match)  	? match 	: this.w
 		h	:= RegExMatch(options, "h\s*\K\d+", match)  	? match 	: this.h
 		m	:= RegExMatch(options, "i)Maximize", MinMax) 	? MinMax : ""
+
+		options := RegExReplace(options, "w\s*\K\d+")
+		options := RegExReplace(options, "h\s*\K\d+")
+
 
 		; AutoHotkey sizes the window incorrectly, trying to account for borders
 		; that aren't actually there. Call the function AHK uses to offset and
 		; apply the change in reverse to get the actual wanted size.
 		VarSetCapacity(rect, 16, 0)
-		DllCall("AdjustWindowRectEx"	, "Ptr", &rect                    	;  LPRECT lpRect
-													, "UInt", 0x80CE0000    	;  DWORD  dwStyle
-													, "UInt", 0                      	;  BOOL   bMenu
-													, "UInt", 0                      	;  DWORD  dwExStyle
-													, "UInt")                         	; BOOL
+		DllCall("AdjustWindowRectEx"	, "Ptr", &rect                    	; 	LPRECT lpRect
+													, "UInt", 0x80CE0000    	; 	DWORD  dwStyle
+													, "UInt", 0                      	; 	BOOL   bMenu
+													, "UInt", 0                      	; 	DWORD  dwExStyle
+													, "UInt")                         	;	BOOL
 		w += NumGet(&rect, 0, "Int")-NumGet(&rect, 8, "Int")
 		h += NumGet(&rect, 4, "Int")-NumGet(&rect, 12, "Int")
 
-		Gui, % this.hWnd ":Show", % options "w" w "h" h " " MinMax
+		Gui, % this.hWnd ":Show", % "w" w " h" h " " m	; " " options
 	}
 
 	; Loads an HTML file by name (not path).
@@ -530,8 +551,8 @@ class NeutronWindow {
 			Sleep, 50
 
 		; Inject the AHK objects into the JS scope
-		this.wnd.neutron := this
-		this.wnd.ahk := new this.Dispatch(this)
+		this.wnd.neutron 	:= this
+		this.wnd.ahk     	:= new this.Dispatch(this)
 
 		; Wait for the page to finish loading
 		while this.wb.readyState < 4
@@ -594,8 +615,8 @@ class NeutronWindow {
 				. "<input type='text' name='field3' value='Three'>"
 				. "</form>")
 			neutron.Show()
-			formElement := neutron.doc.querySelector("form") ; Grab 1st form on page
-			formData := neutron.GetFormData(formElement) ; Get form data
+			formElement	:= neutron.doc.querySelector("form")      	; Grab 1st form on page
+			formData  	:= neutron.GetFormData(formElement)  	; Get form data
 			MsgBox, % formData.field2 ; Pull a single field
 			for name, element in formData ; Iterate all fields
 				MsgBox, %name%: %element%
@@ -604,32 +625,30 @@ class NeutronWindow {
 		formData := new this.FormData()
 
 		for i, field in this.Each(formElement.elements)		{
-			; Discover the field's name
+		  ; Discover the field's name
 			name := ""
 			try ; fieldset elements error when reading the name field
 				name := field.name
 			if (name == "" && useIdAsName)
 				name := field.id
 
-			; Filter against fields which should be omitted
-			if (name == "" || field.disabled
-				|| field.type ~= "^file|reset|submit|button$")
+		  ; Filter against fields which should be omitted
+			if (name == "" || field.disabled || field.type ~= "^file|reset|submit|button$")
 				continue
 
-			; Handle select-multiple variants
-			if (field.type == "select-multiple")
-			{
+		  ; Handle select-multiple variants
+			if (field.type == "select-multiple")	{
 				for j, option in this.Each(field.options)
 					if (option.selected)
 						formData.add(name, option.value)
 				continue
 			}
 
-			; Filter against unchecked checkboxes and radios
+		  ; Filter against unchecked checkboxes and radios
 			if (field.type ~= "^checkbox|radio$" && !field.checked)
 				continue
 
-			; Return the field values
+		  ; Return the field values
 			formData.add(name, field.value)
 		}
 
@@ -706,8 +725,8 @@ class NeutronWindow {
 
 		DocumentComplete(wb)		{
 			; Inject the AHK objects into the JS scope
-			wb.document.parentWindow.neutron := this.parent
-			wb.document.parentWindow.ahk := new this.parent.Dispatch(this.parent)
+			wb.document.parentWindow.neutron	:= this.parent
+			wb.document.parentWindow.ahk    	:= new this.parent.Dispatch(this.parent)
 		}
 	}
 
@@ -743,8 +762,8 @@ class NeutronWindow {
 
 		; This collection allows duplicate keys and enumerates key value pairs in
 		; the order they were added.
-		names := []
-		values := []
+		names 	:= []
+		values	:= []
 
 		; Add a field to the FormData structure.
 		Add(name, value)		{

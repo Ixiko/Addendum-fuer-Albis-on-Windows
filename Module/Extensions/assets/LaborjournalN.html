@@ -1,293 +1,301 @@
 ﻿<!DOCTYPE html>
 <html lang="de">
+
 <head>
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=6.1, user-scalable=yes">
-<meta charset="utf-8">
-<title>Laborjournal</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=6.1, user-scalable=yes">
+    <meta charset="utf-8">
+    <title>Laborjournal</title>
 
-<!-- HEADER UND BODY -->
-<style>
+    <!-- HEADER UND BODY -->
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+        }
+        
+        header {
+            display: flex;
+            background: #6e6c6c;
+            font-family: Segoe UI;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .header-bar {
+            overflow: hidden;
+            font-family: Segoe UI;
+            flex-grow: 1;
+        }
+        
+        .header-txt {
+            font-family: Segoe Script;
+            color: #D9D8D8;
+            margin-top: 2px;
+            vertical-align: right;
+        }
+        
+        .header-btn {
+            padding: 0.35em 0.2em;
+            cursor: pointer;
+            vertical-align: bottom;
+            font-family: Webdings;
+            font-size: 11pt;
+        }
+        
+        .header-btn:hover {
+            background: rgba(0, 0, 0, .2);
+        }
+        
+        .header-btn-close:hover {
+            background: #dc3545;
+        }
+        
+        .header-menu {
+            cursor: pointer;
+            vertical-align: bottom;
+            font-family: Segoe Script;
+            font-size: 9pt;
+            background: #999898;
+            padding-left: 12px;
+            padding-right: 12px;
+            margin-bottom: 1px;
+            margin-top: 3px;
+            border-radius: 8px;
+            transition-timing-function: ease-in-out;
+        }
+        
+        .header-menu-btn1 {
+            position: absolute;
+            left: 70px;
+        }
+        
+        .header-menu-btn2 {
+            position: absolute;
+            left: 194px;
+        }
+        
+        .header-menu-btn3 {
+            position: absolute;
+            left: 266px;
+        }
+        
+        .header-menu-btn4 {
+            position: absolute;
+            left: 430px;
+            background: #898888;
+            vertical-align: center;
+            text-align: center;
+            margin-top: 2px;
+            padding-top: 2px;
+            padding-bottom: 2px;
+            padding-left: 4px;
+            padding-right: 4px;
+            line-height: 1.00;
+        }
+        
+        .header-menu-btn4-btext {
+            font-size: 8pt;
+        }
+        
+        .header-menu-btn4-stext {
+            font-size: 6pt;
+        }
+        
+        .header-menu-active {
+            background-color: #70A0A6;
+        }
+        
+        .header-menu:hover {
+            background: #AEACAC;
+        }
+    </style>
 
-html, body {
-	width: 			100%;
-	height: 		100%;
-	margin: 		0;
-	padding: 		0;
-	font-family: 	sans-serif;
-}
+    <!-- TABLE -->
+    <style>
+        .table-btn1 {
+            background: #FFDEAD;
+        }
+        
+        .table-btn1:hover {
+            background: rgba(0, 0, 0, .2);
+            cursor: pointer;
+        }
+        
+        .table-btn2 {
+            background: #F0F0F0;
+        }
+        
+        .table-btn2:hover {
+            background: rgba(0, 0, 0, .2);
+            cursor: pointer;
+        }
+        
+        .table-btn3a {
+            background: #FFDEAD;
+        }
+        
+        .table-btn3a:hover {
+            cursor: pointer;
+        }
+        
+        .table-btn3b {
+            background: #f0f0c0;
+        }
+        
+        .table-btn3b:hover {
+            cursor: pointer;
+        }
+        
+        .table-FixHead {
+            overflow-y: fixed;
+            margin-top: 0px;
+        }
+        
+        .table-FixHead th {
+            position: sticky;
+            font-size: 12pt;
+            top: 0px;
+            padding-left: 2px;
+            padding-right: 2px;
+            z-index: 4;
+            border: 1px solid #636363;
+            background-color: #70A0A6;
+        }
+        
+        table {
+            font-family: Segoe UI, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+            heigth: 100%;
+        }
+        
+        td {
+            padding-right: 4px;
+            padding-left: 4px;
+            font-size: 90%;
+        }
+        
+        #td1a {
+            background-color: #FFDEAD;
+            padding-top: 18px;
+            padding-bottom: 2px;
+            border-top: 3px solid #555555;
+            border-bottom: 0px solid #888888;
+        }
+        
+        #td1b {
+            background-color: #FFDEAD;
+            padding-top: 2px;
+            padding-bottom: 2px;
+            border-top: 0px solid #555555;
+            border-bottom: 0px solid #888888;
+        }
+        
+        #td2a {
+            background-color: #F0F0F0;
+            padding-top: 18px;
+            padding-bottom: 2px;
+            border-top: 3px solid #555555;
+            border-bottom: 0px solid #888888;
+        }
+        
+        #td2b {
+            background-color: #F0F0F0;
+            padding-top: 2px;
+            border-bottom: 0px solid #888888;
+        }
+    </style>
 
-header	{
-	width:        	100%;
-	display:       	flex;
-	background:  	#6e6c6c;
-	font-family: 	Segoe UI;
-	margin:     	0;
-	padding:    	0;
-}
-
-.title-bar {
-	overflow: 		hidden;
-	font-family: 	Segoe UI;
-	flex-grow: 		1;
-	font-size: 		100%;
-}
-
-.title-txt {
-	font-family: 	Segoe Script;
-	color:			#D9D8D8;
-	margin-top:		2px;
-	vertical-align: center;
-}
-
-.title-btn {
-	padding: 0.35em 1.0em;
-	cursor: pointer;
-	vertical-align: bottom;
-	font-family: Webdings;
-	font-size: 11pt;
-}
-
-.title-btn:hover {
-  background: rgba(0, 0, 0, .2);
-}
-
-.title-btn-close:hover {
-  background: #dc3545;
-}
-
-.title-menu {
-	float:            		left;
-	cursor:           		pointer;
-	vertical-align:    	bottom;
-	font-family:       	Segoe Script;
-	font-size:        		10pt;
-	background:     	#999898;
-	padding-left:      	12px;
-	padding-right:    	12px;
-	margin-bottom: 	1px;
-	margin-top:      	3px;
-	border-radius:    	8px;
-	transition-timing-function: ease-in-out;
-}
-
-.title-menu-btn1 {
-	position: absolute;
-	left: 70px;
-}
-
-.title-menu-btn2 {
-	position: absolute;
-	left: 194px;
-}
-
-.title-menu-btn3 {
-	position: absolute;
-	left: 266px;
-}
-
-.title-menu-btn4 {
-	position:          		absolute;
-	left:             			430px;
-	background:     	#898888;
-	vertical-align:    	center;
-	text-align:       		center;
-	margin-top:      	2px;
-	padding-top:      	2px;
-	padding-bottom:  	2px;
-	padding-left:      	4px;
-	padding-right:    	4px;
-	line-height:       	1.00;
-}
-
-.title-menu-btn4-btext {
-	font-size:        		8pt;
-}
-
-.title-menu-btn4-stext {
-	font-size:        		6pt;
-}
-
-.title-menu-active {
-	background-color: #70A0A6;
-}
-
-.title-menu:hover {
-  background: #AEACAC;
-}
-</style>
-
-<!-- TABLE -->
-<style>
-
-table {
-	font-family: Segoe UI, sans-serif;
-	border-collapse: collapse;
-	width: 100%;
-	heigth: 100%;
-}
-
-.table-btn1 {
-	background: #FFDEAD;
-}
-
-.table-btn1:hover {
-	background: rgba(0, 0, 0, .2);
-	cursor: pointer;
-}
-
-.table-btn2 {
-  background: #F0F0F0;
-}
-
-.table-btn2:hover {
-	background: rgba(0, 0, 0, .2);
-	cursor: pointer;
-}
-
-.table-btn3a {
-  background: #FFDEAD;
-}
-
-.table-btn3a:hover {
-	cursor: info;
-}
-
-.table-btn3b {
-  background: #f0f0c0;
-}
-
-.table-btn3b:hover {
-	cursor: info;
-}
-
-th {
-	border:               	1px solid #888888;
-	background:     	#70A0A6;
-	text-align:         	left;
-	padding:           	4px;
-	font-size:           	11;
-}
-
-td {
-	padding-right:   	4px;
-	padding-left:     	4px;
-	font-size:            	90%;
-}
-
-#td1a {
-	background-color:	#FFDEAD;
-	padding-top:        	18px;
-	padding-bottom: 	2px;
-	border-top:        	3px solid #555555;
-	border-bottom: 	0px solid #888888;
-}
-
-#td1b {
-	background-color: #FFDEAD;
-	padding-top: 		2px;
-	padding-bottom: 	2px;
-	border-top:  			0px solid #555555;
-	border-bottom: 	0px solid #888888;
-}
-
-#td2a {
-	background-color:	#F0F0F0;
-	padding-top: 		18px;
-	padding-bottom: 	2px;
-	border-top: 			3px solid #555555;
-	border-bottom: 	0px solid #888888;
-}
-
-#td2b {
-	background-color: #F0F0F0;
-	padding-top:     	2px;
-	border-bottom: 	0px solid #888888;
-}
-</style>
-
-<!-- TABLE TOOLTIPS -->
-<style>
-
-TD.tooltip {
-	cursor:                      	help;
-	position:                    	relative;
-	text-decoration:            	none;
-}
-
-TD.tooltip:hover {
-	background:             	rgba(0, 0, 0, .1);
-	visibility: 	    				visible;
-	opacity: 						1;
-	transition :                 	all 0.4s ease;
-}
-
-TD.tooltip:after {
-	content:                    	attr(data-tooltip);
-	font-family:                	Segoe UI, sans-serif;
-	font-style:                    	normal;
-	font-weight:                	normal;
-	font-size:                    	80%;
-	position:                   	absolute;
-	left:                              	0%;
-	bottom:                        	0%;
-	background:                	#ffcb66;
-	padding:                    	3px 8px;
-	color:                         	black;
-	-webkit-border-radius:  	10px;
-	-moz-border-radius:     	10px;
-	border-radius:              	10px;
-	white-space:                 	nowrap;
-	opacity:                     	0;
-	-webkit-transition:        	all 0.4s ease;
-	-moz-transition:            	all 0.4s ease;
-	transition:                 	all 0.4s ease;
-	transition: 					opacity 1s;
-}
-
-TD.tooltip:before {
-	content:                     	attr(data-tooltip);
-	position:                     	absolute;
-	border-top:                 	10px solid #ffcb66;
-	border-left:                 	10px solid transparent;
-	border-right:                	10px solid transparent;
-	-webkit-transition:     		all 0.4s ease;
-	-moz-transition:       		all 0.4s ease;
-	transition:                 	all 0.4s ease;
-	opacity:                     	0;
-	transition: 					opacity 1s;
-}
-
-
-TD.tooltip:hover:after, a:hover:before {
-	opacity: 						1;
-	transition: 					opacity 1s;
-	-webkit-transition:     		all 0.4s ease;
-	-moz-transition:        		all 0.4s ease;
-}
-
-<!-- bottom:                     	80%; -->
-<!-- 	bottom:                     	120%; -->
-
-</style>
+    <!-- TABLE TOOLTIPS -->
+    <style>
+        TD.tooltip {
+            cursor: help;
+            position: relative;
+            text-decoration: none;
+        }
+        
+        TD.tooltip:hover {
+            background: rgba(0, 0, 0, .1);
+            visibility: visible;
+            opacity: 1;
+            transition: all 0.4s ease;
+        }
+        
+        TD.tooltip:after {
+            content: attr(data-tooltip);
+            font-family: Segoe UI, sans-serif;
+            font-style: normal;
+            font-weight: normal;
+            font-size: 80%;
+            position: absolute;
+            left: 0%;
+            bottom: 0%;
+            background: #ffcb66;
+            padding: 3px 8px;
+            color: black;
+            -webkit-border-radius: 10px;
+            -moz-border-radius: 10px;
+            border-radius: 10px;
+            white-space: nowrap;
+            opacity: 0;
+            -webkit-transition: all 0.4s ease;
+            -moz-transition: all 0.4s ease;
+            transition: all 0.4s ease;
+            transition: opacity 1s;
+        }
+        
+        TD.tooltip:before {
+            content: attr(data-tooltip);
+            position: absolute;
+            border-top: 10px solid #ffcb66;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            -webkit-transition: all 0.4s ease;
+            -moz-transition: all 0.4s ease;
+            transition: all 0.4s ease;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        
+        TD.tooltip:hover:after,
+        a:hover:before {
+            opacity: 1;
+            transition: opacity 1s;
+            -webkit-transition: all 0.4s ease;
+            -moz-transition: all 0.4s ease;
+        }
+        
+        <!-- bottom: 80%;
+        --><!-- bottom: 120%;
+        -->
+    </style>
 
 </head>
 
 <header id='LaborJournal_Header'>
-	<img src='##01##' alt='HTML5 Icon'  style='width:32px;height:24px;margin-top:2px;margin-left:5px;'>
-	<div class='title-bar' onmousedown='neutron.DragTitleBar()'>            </div>
-	<div class='title-menu title-menu-btn1' onclick='ahk.Menu_LabJournal()'>Laborjournal</div>
-	<div class='title-menu title-menu-btn2' onclick='neutron.Menu_LabJ_Suche()'>Suche</div>
-	<div class='title-menu title-menu-btn3' onclick='neutron.Menu_LabJ_Props()'>Einstellungen</div>
-	<div class='title-menu title-menu-btn4' onclick='ahk.LabJournal_Grenzen()'>
-		<div class='title-menu-btn4-btext'> Laborwertgrenzen</div>
-		<div class='title-menu-btn4-stext'>neu berechnen</div>
-	</div>
-	<div class='title-txt'>##02##</div>
-	<div class='title-btn' onclick='neutron.Minimize()'>0</div>
-	<div class='title-btn' onclick='neutron.Maximize()'>1</div>
-	<div class='title-btn title-btn-close' onclick='ahk.LabJournal_Close()'>r</div>
+
+    <!-- <img src='--01##' alt='HTML5 Icon'  style='width:32px;height:24px;margin-top:2px;margin-left:5px;'> -->
+    ##01##
+    <div class='header-bar' onmousedown='neutron.DragTitleBar()'> </div>
+    <div class='header-menu header-menu-btn1' onclick='ahk.Menu_LabJournal()'>Laborjournal</div>
+    <div class='header-menu header-menu-btn2' onclick='neutron.Menu_LabJ_Suche()'>Suche</div>
+    <div class='header-menu header-menu-btn3' onclick='neutron.Menu_LabJ_Props()'>Einstellungen</div>
+    <div class='header-menu header-menu-btn4' onclick='ahk.LabJournal_Grenzen()'>
+        <div class='header-menu-btn4-btext'>Laborwertgrenzen</div>
+        <div class='header-menu-btn4-stext'>neu berechnen</div>
+    </div>
+    <div class='header-txt'>##02##</div>
+    <div class='header-btn' onclick='neutron.Minimize()'>0</div>
+    <div class='header-btn' onclick='neutron.Maximize()'>1</div>
+    <div class='header-btn header-btn-close' onclick='ahk.LabJournal_Close()'>r</div>
+
 </header>
 
 <body>
 
+    ##03##

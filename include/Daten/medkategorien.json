@@ -107,6 +107,10 @@
         "ingredient": "Atorvastatin",
         "use": "Cholesterin"
     },
+    "Atorvastatin PUREN": {
+        "ingredient": "Atorvastatin",
+        "use": "Cholesterin"
+    },
     "Atozet": {
         "ingredient": "Atorvastatin und Ezetimib",
         "use": "Cholesterin"
@@ -267,6 +271,10 @@
         "ingredient": "Enoxaparin",
         "use": "Thromboseprophylaxe"
     },
+    "Clonazepam Neurax": {
+        "ingredient": "Clonazepam",
+        "use": "REM-Schlaf-Verhaltensstörung"
+    },
     "Clonid": {
         "ingredient": "Clonidin-Hcl",
         "use": "Auge"
@@ -327,9 +335,17 @@
         "ingredient": "Propanolol",
         "use": "Tremor"
     },
+    "Donepezil Hcl": {
+        "ingredient": "Donepezil",
+        "use": "Psyche"
+    },
     "Dorzocomp": {
         "ingredient": "Dorzolamid",
         "use": "grüner Star"
+    },
+    "Dosierung": {
+        "ingredient": "",
+        "use": ""
     },
     "Doxazosin": {
         "ingredient": "Doxazosin",
@@ -708,6 +724,10 @@
         "ingredient": "Melperon",
         "use": "Schlafverbesserung"
     },
+    "Melperon": {
+        "ingredient": "Melperon",
+        "use": "Erregungs- und Spannungszustände"
+    },
     "Mesala": {
         "ingredient": "Mesalazin",
         "use": "Darmentzündung"
@@ -774,6 +794,10 @@
     },
     "Metoprololsuc": {
         "ingredient": "Metoprolol",
+        "use": "Blutdruck"
+    },
+    "Metoprololsucc": {
+        "ingredient": "Metoprololsuccinat",
         "use": "Blutdruck"
     },
     "Metoprololsuccinat": {
@@ -865,6 +889,10 @@
         "ingredient": "Olmesartan",
         "use": "Bluthochdruck"
     },
+    "Olmesartan/Amlo": {
+        "ingredient": "Olmesarrtan/Amlodipin",
+        "use": "Hypertonie"
+    },
     "Olmesartan/Amlo Hex": {
         "ingredient": "Olmesartan und Amlodipin",
         "use": "Bluthochdruck"
@@ -924,6 +952,14 @@
     "Pantozol": {
         "ingredient": "Pantoprazol",
         "use": "Magen"
+    },
+    "Penicillin San": {
+        "ingredient": "Penicillin ",
+        "use": "Infektion"
+    },
+    "Plavix": {
+        "ingredient": "Clopidogrel",
+        "use": "Gerinnung/Herz"
     },
     "Pradaxa": {
         "ingredient": "Dabigatran",
@@ -1194,6 +1230,10 @@
     "Tilidin Comp": {
         "ingredient": "Tilidin und Naloxon",
         "use": "Schmerzen"
+    },
+    "Tilidin Plus": {
+        "ingredient": "Tilidin und Naloxon",
+        "use": "Schmerzen [Morphin]"
     },
     "Torasemid": {
         "ingredient": "Torasemid",

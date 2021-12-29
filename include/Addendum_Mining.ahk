@@ -8,7 +8,7 @@
 ;       Abhängigkeiten:		Addendum_Gui.ahk, Addendum.ahk
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_Calc started:    	17.07.2021
+;       Addendum_Calc started:    	21.11.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -50,18 +50,19 @@ FindDocStrings()                                                             	{ 
 	global rxYear3			:=	"(?<Jahr>(\d{4}|\d{2}))"                                                                         	; Jahr= 1985 o. 85
 
 	global rxPerson     	:= 	"[A-ZÄÖÜ][\pL]+([\-\s][A-ZÄÖÜ][\pL]+)*"
-	global rxPerson1    	:= 	"(?<Name1>" rxPerson                                                                             	; ?<Name1>Müller-Wachtendónk*
-	global rxPerson2    	:= 	"(?<Name2>" rxPerson                                                                              	; ?<Name2>Müller-Wachtendónk*
+	global rxPerson1    	:= 	"(?<Name1>" rxPerson ")"                                                                            	; ?<Name1>Müller-Wachtendónk*
+	global rxPerson2    	:= 	"(?<Name2>" rxPerson ")"                                                                            	; ?<Name2>Müller-Wachtendónk*
 	global rxPerson3   	:= 	"[A-ZÄÖÜ][\pL]+([\-\s][A-ZÄÖÜ][\pL]+)*"                                                    	; Müller Wachtendonk*
 	global rxPerson4    	:= 	"(?<Name>[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*)"		                                 	; ?<Name>Müller Wachtendonk*
 
-	global rxName1    	:= 	"(?<Name2>" rxPerson	  ")" . rx . "(?<Name1>" 	rxPerson 	")"
-	global rxName2    	:= 	"(?<Name2>" rxPerson2 ")" . rx . "(?<Name1>" 	rxPerson2	")"
+	global rxName1    	:= 	"(?<Name2>" rxPerson	  ")" . rx . "(?<Name1>"	rxPerson ")"                         	; <Name2>Hoffmann, <Name1>Heinrich
+	global rxName2    	:= 	rxPerson2 . rx . 	rxPerson1	                                                                          	; <Name2>Hoffmann, <Name1>Heinrich
+	global rxName3    	:= 	rxPerson1 . rx . 	rxPerson2	                                                                          	; <Name1>Heinrich <Name2>Hoffmann
 
 	global rxDatum	    	:= 	"\d{1,2}" rx "\w+" rx "\d{2,4}"                                                                     	; 12. Juli 1981 oder 12.7.1981
 	global rxDatumLang 	:= 	"\d{1,2}" rx "(" rxMonths ")" rx "\d{2,4}"                                                        	; 12. Jul. 81
 	global rxGb1	    	:= 	"(geb\.*o*r*e*n*\s*a*m*|Geb(urts)*" rx "Datu*m*|\*" rx ")"                              	; geb. am o. Geb. Dat. usw
-	global rxGb2        	:= 	"(geboren\sam|geb\.\sam|geb\.*o*r*e*n*|Geburtsdatum|\*)"
+	global rxGb2        	:= 	"(geboren\sam|geb\.\sam|geb\.*o*r*e*n*|Geburtsdatum|\*)"                    	;
 
 	global GName      	:= 	"Geb\.\sName|Geburtsname"
 	global rxAnrede     	:= 	"(Betrifft)*"
@@ -70,16 +71,17 @@ FindDocStrings()                                                             	{ 
 	global rxAnredeXL 	:=	"(Versicherter*|Betrifft|Her(rn|m|r)|Patiente*n*|Frau|Patientin)"
 	global rxVorname  	:= 	"[VY]o(rn|m)ar*me"
 	global rxNachname	:= 	"([Ff]amilien)*([Nn]ach)*[Nn]ame"
+	global rxVorUnd     	:= 	rxVorname "\s+und\s+" rxNachname
 	global rxNameW    	:= 	"[Nn]ame[\w]*"
 
 	global RxNames     	:= [	rxAnredeXL  	. 	rx	. 	rxName1  .	rx  	.	rxGb1   . 	ry  .  rxDatum        	; 01	Betrifft: Marx, Karl, geb. am: 14.03.1818
-							    		,	rxAnredeXL  	.	rx	. 	rxName2	.	rx  	.	rxGb1   . 	ry                         	; 02
-							    		,	rxName1     	.	rx	.	rxGb1   	.	rs                          	.   rxDatum          	; 03
-							    		,	rxName2     	.	rx	.	rxGb1     	.	rs                             	.   rxDatum          	; 04
-							    		,	rxName1     	.	rx	.	rxGName	.	rp2	.	rxGb1 	.	rx	.	rxDatum        	; 05
-							    		,	rxName2     	.	rx	.	rxGName	.	rz  	.	rxGb1 	.	rx	.	rxDatum        	; 06	Müller-Wachtendonk, Marie-Luise, Geburtsname: Müller, geb. am 12.11.1964
+							    		,	rxAnredeXL  	.	rx	. 	rxName2	.	rx  	.	rxGb1   . 	ry                         	; 02	Betrifft: Marx, Karl, Geburtsdatum:
+							    		,	rxName1     	.	rx	.	rxGb1   	.	rs                          	.   rxDatum          	; 03 <Name2>Hoffmann, <Name1>Heinrich, Geb.Datum 13.06.1809
+							    		,	rxName1     	.	rx	.	rxGName	.	rp2	.	rxGb1 	.	rx	.	rxDatum        	; 04 <Name2>Hoffmann, <Name1>Heinrich, geb. am 13.06.1809
+							    		,	rxName2     	.	rx	.	rxGName	.	rz  	.	rxGb1 	.	rx	.	rxDatum        	; 05	Müller-Wachtendonk, Marie-Luise, Geburtsname: Müller, geb. am 12.11.1964
+							    		,	rxVorUnd     	.	rx	. rxAnredeXL . 	rx 	. 	rxName3 	                               	; 06 Vorname und Name:  Herrn <Name1>Heinrich <Name2>Hoffmann
 
-							    		,	rxAnredeXL   	. 	rx  .  ryNL      	.	rxName2                                         	; 07	Versicherte`nMüller-Wachtendonk, Marie-Luise
+							    		,	rxAnredeXL  	. 	rx  .  ryNL      	.	rxName2                                          	; 07	Versicherte`n Müller-Wachtendonk, Marie-Luise
 							    		,	rxAnredeM 	. 	rx  .  rxName2                                                               	; 08	Herr Karl Marx o. Patient Marx, Karl
 							    		,	rxAnredeF 	. 	rx  .  rxName2                                                                 	; 09	Frau Marie-Luise Müller-Wachtendonk
 							    		,	rxAnredeM 	. 	rx  .  rxName2  .	rx 	.	rxGb2  	.	rx	.	rxDatum       	; 10	Patient Marx, Karl, * 14.03.1818
@@ -95,9 +97,9 @@ FindDocStrings()                                                             	{ 
 	global RxNames2  	:= [	rxNachname	. 	rx	. 	rxPerson2                            										; 01 	Nachname: Müller(-Wachtendonk)*
 								    	,	rxVorname	. 	rx	.	rxPerson1]                          										; 02	Vorname: Marie(-Luise)*
 
-	global rxVNR          	:= [ "i)(VNR|Versicherten[\s\-]*N[ume]*r" . rx ")(?<VNR>[A-Z][\s\d]+)"]          	; 01  Versicherten-Nr. G 666 999 666
+	global rxVNR          	:= [ "i)(VNR|Versicherten[\s\-]*N[ume]*r" . rx ")(?<VNR>[A-Z][\s\d]+)"]           	; 01  Versicherten-Nr. G 666 999 666
 
-	global rxDates       	:= [	"(?<Tag>\d{1,2})[.,;](?<Monat>\d{1,2})[.,;]" rxYear3 "([^\d]|$)"           	; 01	12.11.64 o. 12.11.1964 o. 2.1.(19)*64
+	global rxDates       	:= [	"(?<Tag>\d{1,2})[.,;/](?<Monat>\d{1,2})[.,;/]" rxYear3 "([^\d]|$)"         	; 01	12.11.64 o. 12.11.1964 o. 2.1.(19)*64
 								    	,	"i)(?<Tag>\d{1,2})" rx . rxMonths2 . rx . rxYear3 "([^\d]|$)"                  	; 02	12. November (19)64
 								    	,	"(" rxGb1 ")"	rx  ".{0,20}?" . rxDay . rx . rxMonths2 . rx . rxYear]              	; 03   Geburtsdatum: .*(20 beliebige Zeichen) 12. Nov. 1964
 
@@ -114,10 +116,10 @@ FindDocStrings()                                                             	{ 
 											. 	"Behandlung\s+vom|Ebenen\s+vom|Ebenen\/axial\s+vom|"
 											.	"Echokardiografie vom|Konsil\s+vom|Labor\s+vom|Laborblatt\s+vom|Nachricht\s+vom|"
 											. 	"Startzeit|Aufgezeichnet|Erstellt\s+am|Eing[.,\-\s]+Dat[.,-]+|Ausg[.,\-\s]+Dat[.,-]+"
-											.	"Labor(blatt)*\svom"
+											.	"Labor(blatt)*\svom|festgestellt\s+am\s*"
 										,	2:	"Behandlung|haben wir.*|sich"}
 
-	global rxBehandlung	:= [	"i)(" rxTags[2] ")\s+vom\s+(?<Datum1>[\d.]+)\s+(bis\s*z*u*m*|\-)\s+(?<Datum2>[\d.]+)"                	; 	1| (haben wir ...| sich) vom .... bis (zum) .....
+	global rxBehandlung	:= [	"i)(" rxTags[2] ")\s+vom\s+(?<Datum1>[\d.]+)\s+(bis\s*z*u*m*|\-)\s+(?<Datum2>[\d.]+)"     	; 	1| (haben wir ...| sich) vom .... bis (zum) .....
 										, 	"i)(" rxTags[2] ")\svom\s(?<Datum1>[\d.]+)\s*(\-)\s*(?<Datum2>[\d.]+)"]                                 	; 	2| (haben wir ...| sich) vom ..... - .......
 
 	global rxDokDatum	:=[	"i)\s*(" rxTags[1] ")" rx "(" rxWDay ")*[.,;\s]+(?<Datum1>\d+\.\d+\.\d+)"                                  	;   1| Erstellungszeitpunkt: Do, 02.01.2020

@@ -1,7 +1,7 @@
 ![Addendum.svg](assets/AddendumLogo2021-2.svg)
 #### Extends the possibilities through surface analysis and manipulation
 
-### Release Version 1.67 vom 10.11.2021
+### Release Version 1.68 vom 05.12.2021
 lauffähig ausschließlich nur mit *Autohotkey_H ab V1.1.33+ Unicode 64bit*,
 geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 
@@ -33,7 +33,8 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 - automatische **Texterkennung** mit Tesseract (Hotfolder)      
 - **Autonaming** Assistent
 - **Vereinfachung des manuellen Umbennens** einer Datei durch Dateivorschau
-- **Versand von Labordaten** an Patienten über die in Albis hinterlegte E-Mailadresse
+- **EMail Versand von Labordaten** an Patienten über die in Albis hinterlegte E-Mailadresse
+- **Impfstatistik** für das RKI
 
 ### &#10042; weitere Funktionen
 
@@ -76,6 +77,7 @@ geschrieben für Albis ab Version 18.40 (Windows XP,8,10)
 - **Protokoll**: Tagesprotokoll aller geöffneten Karteikarten.
 - **Netzwerk:** direkter Start einer Remotedesktopsitzung per Klick 
 - **Extras**: häufiger benötigte Programme/Skripte lassen sich im Infofenster anzeigen und von dort aus auch starten
+- **Impfen**: Statistik für COVID19-Impfungen per Knopfdruck ins KBV/RKI Formular eintragen lassen 
 
 ### &#9733; Texterkennung
 
@@ -340,7 +342,11 @@ Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter ande
 
 ![Infofenster](Docs/Infofenster.gif)
 
+## ![InfoIcon](Docs/Icons/Infofenster.png) Impfen
 
+**schnellere Erstellung als mit ALBIS. Ausgabe der Daten in einer Tabelle. Optional können die zusammengestellten Daten ins KBV/RKI Formular eingetragen werden** 
+
+![Impfstatistikvergleich](Docs/Impfstatistikvergleich2.gif)
 
 <img src="Docs/TrennerSchmal.png" style="zoom:50%;" />
 

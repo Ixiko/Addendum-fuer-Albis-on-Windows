@@ -36,7 +36,7 @@
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
 ;       Addendum_DBASE begonnen am:          	12.11.2020
-;       Addendum_DBASE letzte Änderung am: 	08.07.2021
+;       Addendum_DBASE letzte Änderung am: 	09.12.2021
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
@@ -85,8 +85,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 						this.connected           	:= {	"DBFilePath"	: (this.dBASEPath "\BEFTEXTE.dbf")
 																 ,	"baseField"	: "TEXTDB"
 																 ,	"linkField"  	: "LFDNR"}
-								                				;~ , 	"FieldLinks"  	: ["TEXTDB", "LFDNR", "POS"]
-											                	;~ , 	"append"    	: ["INHALT", "TEXT"]}
+
 					Case "PATIENT":
 						this.headerrecordgap	:= 0
 				}
@@ -220,10 +219,10 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 					  ; for debugging
 					  ; ――――――――――――――――――――――――――――――――――――――――――――
 						 If (this.debug = 4)
-							x .= " > Pos: " SubStr("000" fpos, -2) "-" SubStr("000" fpos+flen-1, -2) " (" SubStr("00" flen, -1) ") [" ftype "]  - " flabel "`n"
+							x .= " > Pos: " SubStr("000" fpos+1, -2) "-" SubStr("000" fpos+1+flen, -2) " (" SubStr("00" flen, -1) ") [" ftype "]  - " flabel "`n"
 
 					  ; ――――――――――――――――――――――――――――――――――――――――――――
-					  ; start position of next field in record set
+					  ; char position of next field in record set
 					  ; ――――――――――――――――――――――――――――――――――――――――――――
 						fpos += flen
 
@@ -465,7 +464,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 			}
 
 		; for debugging
-			If RegExMatch(this.debug, "i)\bRxStr\b")
+			If (RegExMatch(this.debug, "i)\bRxStr\b") || opt.debug&0x1)
 				SciTEOutput(A_ThisFunc " - RegExStr: " rxStr)
 
 		; seek if parameter is greater than zero
@@ -483,7 +482,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 			; debugging and callback function to show progress
 				If (Mod(setNR := A_Index, this.ShowAt) = 0) {
-					If (this.debug = 1)
+					If (this.debug = 1 || opt.debug&0x2)
 						ToolTip, % "Search rx: " rxStr "`n" SubStr("00000000" A_Index, this.slen) "/" SubStr("00000000" this.records, this.slen)
 					If (StrLen(callbackFunc) > 0)
 						%callbackFunc%(setNR, this.records, this.slen, matches.MaxIndex())
@@ -498,13 +497,13 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 					MSets.Write(set "`n")
 
 			; temp object collects dataset field data
-				strobj    	:= Object()
-				flagged  	:= SubStr(set, 1, 1)
+				strobj             	:= Object()
+				flagged         	:= SubStr(set, 1, 1)
 				strobj.removed	:= SubStr(set, 1, 1) = "*" ? true : false
 				set                 	:= Substr(set, 2, StrLen(set)-1)
 				strobj.recordNr	:= Floor((this.dbf.Tell() - this.headerlen) / this.lendataset)
 
-				;~ If strobj.removed
+			; a recordset with flag is counted
 				If Trim(flagged)
 					this.flagged ++
 
@@ -543,7 +542,8 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 			}
 
 		; close MSets fileaccess
-			MSets.Close()
+			If IsObject(MSets)
+				MSets.Close()
 
 		; indicates that the end of the file has been reached
 			this.breakrec	:= "!"
@@ -718,7 +718,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 			; comparison is possible for dates with ranges, for everything else comparison will use Instr() operation. One date can be compared with another
 			; by only showing the dates that are greater, less or equal. This also works with pure numerical values.
 
-				static matches, recordbuf, recordpos
+				static recordbuf, recordpos
 
 				If !IsObject(pattern)
 					throw "Parameter: pattern must be an object"
@@ -741,6 +741,9 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 							outfields := ""
 						this.retSubs := this.BuildSubstringData(outfields)
 				}
+
+			; more options
+				andlogic := options.LogicalComparison = "and" ? true : false
 
 			; return data sets with delete flag, default is false
 				ReturnDeleted := RegExMatch(options, "i)return_Deleted_Records") ? true : false
@@ -789,10 +792,14 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 							}
 						}
 
-						If (hits = pattern.Count()) {
+						If (!andlogic && hits > 0) || (andlogic && hits = pattern.Count()) {
 							matches.Push(this.GetSubData(set, this.retSubs))
 							matches[matches.MaxIndex()].removed := removed
 						}
+
+						If options.maxMatches
+							If matches.Count() >= options.maxMatches
+								break
 
 				}
 
@@ -1041,38 +1048,30 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 	; ⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌
 	; ⚌                                                      	  CREATES OWN INDEX FILE BASED ON PARAMETERS                                                        	⚌
 	; ⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌;{
-		CreateIndex(IndexFilePath, IndexFieldName:="", IndexMode:="", ReIndex:=false) {
+		CreateIndex(IndexFilePath, IndexField:="", IndexMode:="", ReIndex:=false) {
 
 			; creates or updates an index file with fileseek positions at the first occurrence of a certain string (date, string, quarter)
 			; the function currently only indexes by quarters
 			; if an index file exists, it only updates the index from the last entry
-			; IndexFieldName:		The database field name which is indexed. At the moment only fields with date strings can be processed.
+			; IndexField:		The database field name which is indexed. At the moment only fields with date strings can be processed.
 
 				;IndexMode := "quarter"
 
 			; check indexFilePath and throw error if not valid or if it doesn't exist
-				If !RegExMatch(IndexFilePath, "i)[A-Z]\:\\")
+				If !RegExMatch(IndexFilePath, "i)[A-Z]:\\")
 					throw A_ThisFunc ": Parameter [indexFilepath] is not valid!`n" IndexFilePath
 				SplitPath, IndexFilePath, idxFName, idxFDir
 				If !InStr(FileExist(idxFDir "\"), "D")
 					throw A_ThisFunc ": The file path does not exist!`n" idxFDir
 
 			; create new index if doesn't exist or get's last indexed fileposition
-				If !FileExist(IndexFilePath) || (ReIndex = true) {
-
-					ReIndex     	:= true
-					startrecord	:= 0
-					startfilepos	:= 0
-					iFile          	:= Object()
-
+				If !(FileExist(IndexFilePath) || ReIndex) {
+					ReIndex := true, startrecord := 0, startfilepos := 0, iFile := Object()
 				} else {
-
 					iFile := JSON.Load(FileOpen(indexFilePath, "r", "UTF-8").Read())
-					For QZ, StartRecord in iFile
+					For quarter, StartRecord in iFile
 						continue
 					startfilepos := this._GetFilePosFromRecord(StartRecord)
-					;SciTEOutput("QZ: " QZ ", seek: " seekpos, "StartRecord: " StartRecord)
-
 				}
 
 			; Establish read access if not already done
@@ -1082,11 +1081,17 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 				}
 
 			; indexing is only possible for one condition
-				FStart	:= this.dbfields[IndexFieldName].start
-				FLen 	:= this.dbfields[IndexFieldName].len
+				FStart	:= this.dbfields[IndexField].start
+				FStart 	:= this.baseName = "BEFGONR" ? FStart+1 : FStart
+				FLen 	:= this.dbfields[IndexField].len
 				KeyN	:= "QNow"
-				If (FStart = 0 || FLen = 0)
-					throw A_ThisFunc ": Database [" this.dbname "]`nhas no field named <" IndexFieldName ">"
+				If (!FStart || !FLen)
+					throw A_ThisFunc ": Database [" this.baseName "]`nhas no field named <" IndexField ">!"
+				If RegExMatch(this.debug, "^(1|4)$") {
+					SciTEOutput("DB: " this.baseName)
+					SciTEOutput("letztes Quartal: " quarter ", seek: " startfilepos ", startrecord: " StartRecord)
+					SciTEOutput("IndexField: " IndexField "`nFStart: " FStart ", FLen: " FLen)
+				}
 
 			; start indexing
 				maxRecs := SubStr("00000000" this.records, this.slen)
@@ -1096,42 +1101,41 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 					; reads a data set raw mode and converts it to a readable text format
 						bytes	:= this.dbf.RawRead(recordbuf, this.lendataset)
 						set 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
+						;~ set	:= SubStr(set, 2, StrLen(set)-1)                      ; deletes remove flag from set
 						val   	:= SubStr(set, FStart, FLen)
 
 					; mode driven indexing, calculates dates to quarter
-						If (IndexMode = "DateToQuarter") {
-							IdxKey	:= "#" SubStr(val, 1, 4) . Ceil(Substr(val, 5, 2)/3)
-						} else If (IndexMode = "QYYtoYYQ" && IndexFieldName = "QUARTAL"){
-							IdxKey	:= "#" SubStr(val, 2, 2) SubStr(val, 1, 1)
-						} else {
-							idxKEy	:= val
-						}
+						If (IndexMode = "DateToQuarter")
+							indexKey	:= "#" SubStr(val, 1, 4) . Ceil(Substr(val, 5, 2)/3)
+						else If (IndexMode = "QYYtoYYQ" && IndexField = "QUARTAL")
+							indexKey	:= "#" SubStr(val, 2, 2) . SubStr(val, 1, 1)
+						 else
+							indexKey	:= val
 
 					; Multi-debugging output: SciteWindow console or external gui
-						If (this.debug > 0) && (Mod(A_Index, this.ShowAt) = 0) {
+						If (IsObject(this.debugGui) && Mod(A_Index, this.ShowAt) = 0) {
 
-							If (this.debug = 1) {
-								thispos := SubStr("00000000" A_Index + StartRecord, this.slen)
-								ToolTip, % "DB"       	": "	dbname                	"`n"
-											.	KeyN     	": " 	idxKEy                    	"`n"
-											.	"Position"	":" 	thispos "/" maxRecs
-							}
-							else if (this.debugGui.Control = "Statusbar") {
+							if (this.debugGui.Control = "Statusbar") {
 								If (this.debugGui.sbNR > 0)
 									SB_SetText("`t`t" Round(( (A_Index + StartRecord)/this.records)*100), this.debugGui.sbNR)
 								else if StrLen(this.debugGui.sbNR = 0)
 									SB_SetText(" " SubStr("00000000" A_Index + StartRecord, this.slen) "/" SubStr("00000000" this.records, this.slen) )
 							}
-
 						}
 
-						If (IdxKey = 0 || StrLen(IdxKey) = 0 || IdxKey = idxKEy_old)
+						If (indexKey = 0 || StrLen(indexKey) = 0 || indexKey = indexKey_old)
 							continue
-						idxKEy_old := IdxKey
+						indexKey_old := indexKey
 
-						If !iFile.haskey(IdxKey)
-							iFile[IdxKey] := [this._GetRecordFromFilepos(this.dbf.Tell())-1 , this.dbf.Tell()] 	   ; record nr, filepointer position
-
+					; add new index position
+						If !iFile.haskey(indexKey) {
+							iFile[indexKey] := [this._GetRecordFromFilepos(this.dbf.Tell())-1 , this.dbf.Tell()] 	   ; recordnr-1, filepointer position
+							If RegExMatch(this.debug, "^(1|4)$") {
+								thispos := SubStr("00000000" A_Index + StartRecord, this.slen)
+								SciTEOutput(" #" set "#")
+								SciTEOutput(KeyN	": " indexKey ", Pos: " iFile[indexKey].1 "/" maxRecs)
+							}
+						}
 				}
 
 			; file access is automatically terminated if the function established this independently
@@ -1270,7 +1274,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 	; converts the nr of record to file position
 	_GetFilePosFromRecord(nr) {
-		return Floor(this.recordsStart + (nr * this.lendataset))
+	return Floor(this.recordsStart + (nr*this.lendataset))
 	}
 
 	; converts seekpos address to nr of record

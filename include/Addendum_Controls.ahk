@@ -1,24 +1,24 @@
-﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 23.10.2021 - this file runs under Lexiko's GNU Licence
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                                                            	by Ixiko started in September 2017 - last change 27.11.2021 - this file runs under Lexiko's GNU Licence
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
 return
-; CONTROLS                                                                                                                                                                                                                                        	(35)
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; GetClassName                                	Control_GetClassNN                     	GetClassNN                                  	GetFocusedControl                        	GetFocusedControlHwnd
-; GetFocusedControlClassNN            	GetChildHWND                            	GetControls                                  	GetButtonType                                	Controls
-; ControlFind                                     	ControlGet                                    	ControlGetText                              	ControlGetFocus                            	GuiControlGet
-; ControlGetFont									WinSaveCheckboxes                        	Toolbar_GetRect
-; ControlGetTabs                               	TabCtrl_GetCurSel                          	TabCtrl_GetItemText
-; VerifiedClick                                    	VerifiedCheck                                	VerifiedChoose                              	VerifiedSetFocus                            	VerifiedSetText
+; CONTROLS                                                                                                                                                                                                                              	(35)
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; GetClassName                              	Control_GetClassNN                    	GetClassNN                           	GetFocusedControl                        	GetFocusedControlHwnd
+; GetFocusedControlClassNN           	GetChildHWND                           	GetControls                             	GetButtonType                                	Controls
+; ControlFind                                   	ControlGet                                  	ControlGetText                        	ControlGetFocus                            	GuiControlGet
+; ControlGetFont								WinSaveCheckboxes                    	Toolbar_GetRect
+; ControlGetTabs                             	TabCtrl_GetCurSel                       	TabCtrl_GetItemText
+; VerifiedClick                                  	VerifiedCheck                             	VerifiedChoose                       	VerifiedSetFocus                            	VerifiedSetText
 ; UpSizeControl
-; LVM_GetNext                                   	LV_Select                                        	LV_SortArrow									LV_GetColWidth                            	LV_EX_GetTopIndex
+; LVM_GetNext                                 	LV_Select                                     	LV_SortArrow							LV_GetColWidth                            	LV_EX_GetTopIndex
 ; LV_GetScrollViewPos
 ; CaretPos
 ; KeyValueObjectFromLists
-;_________________________________________________________________________________________________________________________________________________________
+;___________________________________________________________________________________________________________________________________________________
 return
 ; 01
 GetClassName(hwnd) {                                                                                 	;-- returns HWND's class name without its instance number, e.g. "Edit" or "SysListView32"
@@ -60,18 +60,15 @@ GetClassNN_EnumChildProc(hwnd, lparam) {
 }
 ; 04
 GetFocusedControl()  {                                                                                  	;-- retrieves the ahk_id (HWND) of the active window's focused control.
-
-   ; This script requires Windows 98+ or NT 4.0 SP3+.
-   VarSetCapacity(guiThreadInfo, (guiThreadInfoSize := 8+6*A_PtrSize+16), 0)
-   NumPut(GuiThreadInfoSize, GuiThreadInfo, 0)
-   ; DllCall("RtlFillMemory" , "PTR", &guiThreadInfo, "UInt", 1 , "UChar", guiThreadInfoSize)   ; Below 0xFF, one call only is needed
-   if (DllCall("GetGUIThreadInfo" , "UInt", 0, "PTR", &guiThreadInfo) = 0) {   ; Foreground thread
+	; last modification: 27.11.2021
+	static guiThreadInfoSize:=8+(A_PtrSize*6)+16, hwndCaret:=8+A_PtrSize*5
+   	VarSetCapacity(guiThreadInfo, guiThreadInfoSize, 0)
+   	NumPut(GuiThreadInfoSize, GuiThreadInfo, 0)
+   	if (DllCall("GetGUIThreadInfo", "UInt", 0, "PTR", &guiThreadInfo) = 0) {   ; Foreground thread
 		ErrorLevel := A_LastError   ; Failure
 		Return 0
-   }
-
-; *(addr + 12) + (*(addr + 13) << 8) +  (*(addr + 14) << 16) + (*(addr + 15) << 24)
-Return Format("0x{:X}", NumGet(guiThreadInfo, 8+A_PtrSize, "Ptr"))
+   	}
+Return Format("0x{:X}", NumGet(guiThreadInfo, hwndCaret, "Ptr"))
 }
 ; 05
 GetFocusedControlHwnd(hwnd:="A") {
@@ -204,7 +201,7 @@ GetButtonType(hwndButton) {                                                     
  return types[1+(btnStyle & 0xF)]
 }
 ; 10
-GetHeaderInfo(hHeader) {                                                                                	;-- Returns an object containing the text and width of each item of a remote SysHeader32 control
+GetHeaderInfo(hHeader) {                                                                               	;-- Returns object containing the text and width of items of a remote SysHeader32 control
 
 	; from WinSpy
 
@@ -264,7 +261,7 @@ GetHeaderInfo(hHeader) {                                                        
 Return HDInfo
 }
 ; 11
-Controls(Control="",cmd="",WinTitle="",HidT=1,HidW=1,MMSpeed="slow") {   	;-- Universalfunktion für Steuerelemente
+Controls(Control="",cmd="",WinTitle="",HidT=1,HidW=1,MMSpeed="slow") {  	;-- Universalfunktion für Steuerelemente
 
 	;  ********	    ********		Function grows and thrives, watered at the 25.03.2021
 	; ***	     *    ***	    ***	dependencies: 	Function: ClientToScreen()
@@ -1096,7 +1093,7 @@ VerifiedSetText(CName="", NewText="", WTitle="", delay=100, WText="") {    	;-- 
 return (ControlGetText(CName, WTitle, WText) = NewText ? true : false)
 }
 ; 27
-UpSizeControl(WinTitle, WinClass, UpSizedControl, ExpandDown                      	;-- changes width and height of a control element and repositions the controls below and to the right of it
+UpSizeControl(WinTitle, WinClass, UpSizedControl, ExpandDown                      	;-- changes width and height of a control and repositions it below and to the right of it
 , ExpandRight, CenterToWin:=0) {
 
 		static lastSizedWin
@@ -1272,7 +1269,7 @@ return, CaretPos
 ; Hilfsfunktionen
 ; 35
 KeyValueObjectFromLists(keyList, valueList, delimiter:="`n"
-, IncludeKeys:="", KeyREx:="", IncludeValues:="", ValueREx:="") {                	;-- Funktion um z.B. zwei Listen aus WinGet zusammenzuführen
+, IncludeKeys:="", KeyREx:="", IncludeValues:="", ValueREx:="") {                     	;-- Funktion um z.B. zwei Listen aus WinGet zusammenzuführen
 
 	keyArr:= valueArr:= []
 	merged:= Object()
