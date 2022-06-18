@@ -44,11 +44,11 @@
 
 ### 🗃 <u>Karteikarte</u>
 
-- ![inWindow.svg](Docs\Icons\inWindow.svg)integriertes **Addendum Arbeitsfenster**
+- ![inWindow.svg](Docs\Icons\inWindow.svg) integriertes **Addendum Arbeitsfenster**
 - 🖨 direkter **Dokumentexport** und **-druck**
 - ![Rezepthelferlein.svg](Docs\Icons\Rezepthelferlein.svg) **Rezepthelfer**
 - 📝 **Kontextsensitive Texterweiterungen**: Diagnosen, Gebühren, ...
-- 🗓 ![AU BEscheinigung.svg](Docs\Icons\AU BEscheinigung.svg) **Arbeitsunfähigkeitsbescheinigung**: Anzeige von Beginn und Ende der Lohnfortzahlung
+- ![AUBEscheinigung.svg](Docs\Icons\AUBEscheinigung.svg) **Arbeitsunfähigkeitsbescheinigung**: Anzeige von Beginn und Ende der Lohnfortzahlung
 
 
 
