@@ -11,7 +11,7 @@
 
 ![](Docs/TrennerExtraBreit.svg)
 
-## ![Addendum.png](Docs/Icons/Addendum48x48.png)ddendum
+## ![Addendum.png](Docs/Icons/Addendum48x48.png)ddendum Funktionen
 
 
 
