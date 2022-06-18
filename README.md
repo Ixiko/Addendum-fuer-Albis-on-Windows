@@ -22,12 +22,12 @@
 
 
 
-### ![AlbisIcon.svg](Docs\Icons\AlbisIcon.svg)<u>Albis</u>
+### ![AlbisIcon.svg](Docs/Icons/AlbisIcon.svg)<u>Albis</u>
 
 - Auto-Login
 - Suche im Albismenu
 - ⌨ Vereinfachung der Bedienung durch logische Tastenkombinationen
-- ![AED.svg](Docs\Icons\AED.svg) **Albis Reanimator**: ein abgestürztes Albis und/oder seine Komponeten beenden und neustarten
+- ![AED.svg](Docs/Icons/AED.svg) **Albis Reanimator**: ein abgestürztes Albis und/oder seine Komponeten beenden und neustarten
 - 💾 **Patientendatenexport**
 
 
@@ -36,7 +36,7 @@
 
 - 💡 **Auto-OCR** mit Tesseract
 - 👪 automatische Erkennung von Patientennamen und des Dokumentdatums aus dem Dokumenttext
-- ![rename.svg](Docs\Icons\rename.svg) **Autonaming** für Dokumente (automatische Klassifizierung von PDF-Dokumenten)
+- ![rename.svg](Docs/Icons/rename.svg) **Autonaming** für Dokumente (automatische Klassifizierung von PDF-Dokumenten)
 - ✍ Unterstützung für **PDF-Signierung**
 - **Dokument Finder** - Volltextsuche in PDF-Dokumenten
 
@@ -44,11 +44,11 @@
 
 ### 🗃 <u>Karteikarte</u>
 
-- ![inWindow.svg](Docs\Icons\inWindow.svg) integriertes **Addendum Arbeitsfenster**
+- ![inWindow.svg](Docs/Icons/inWindow.svg) integriertes **Addendum Arbeitsfenster**
 - 🖨 direkter **Dokumentexport** und **-druck**
-- ![Rezepthelferlein.svg](Docs\Icons\Rezepthelferlein.svg) **Rezepthelfer**
+- ![Rezepthelferlein.svg](Docs/Icons/Rezepthelferlein.svg) **Rezepthelfer**
 - 📝 **Kontextsensitive Texterweiterungen**: Diagnosen, Gebühren, ...
-- ![AUBEscheinigung.svg](Docs\Icons\AUBEscheinigung.svg) **Arbeitsunfähigkeitsbescheinigung**: Anzeige von Beginn und Ende der Lohnfortzahlung
+- ![AUBEscheinigung.svg](Docs/Icons/AUBEscheinigung.svg) **Arbeitsunfähigkeitsbescheinigung**: Anzeige von Beginn und Ende der Lohnfortzahlung
 
 
 
@@ -74,10 +74,10 @@ Erkennen Sie dringende Anrufe und rufen Sie die Anrufer zurück!<br>
 
 
 
-####  ![coding.svg](Docs\Icons\coding.svg) <u>Funktionsbibliotheken</u>
+####  ![coding.svg](Docs/Icons/coding.svg) <u>Funktionsbibliotheken</u>
 
 - ⌨ Funktionen für die Albismanipulation
-- ![Calculator.svg](Docs\Icons\Calculator.svg) **medizinische Berechnungen**
+- ![Calculator.svg](Docs/Icons/Calculator.svg) **medizinische Berechnungen**
 - 📀 **dBase**: native Funktionsklasse zum Lesen von Daten
 - ⚗ **Addendum_LDT** - dekodiert Dateien der elektronischen Labordatenübertragung (LDT-Format), hilfreich um nicht importierte Labordaten aufzufinden
 
@@ -104,7 +104,7 @@ Erkennen Sie dringende Anrufe und rufen Sie die Anrufer zurück!<br>
 ###  ⛽ <u>weiteres</u>
 
 - 📧 **Outlook** **Anhänge** extrahieren
-- ![Telegram.svg](Docs\Icons\Telegram.svg) **PushToTelegram** - EMails an den beliebten Messenger senden
+- ![Telegram.svg](Docs/Icons/Telegram.svg) **PushToTelegram** - EMails an den beliebten Messenger senden
 - 🔎 **QuickSearch**: Analyse und Suche von Daten in allen Albis (dBase) Dateien
 - 👪 **Patientensuche**: beliebige Kriterien für die Suche nach Patienten
 
@@ -143,7 +143,7 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
 
 ![](Docs/TrennerExtraBreit.svg)
 
-<br><br><img src="Docs\Addendum-Infofenster.svg" alt="Addendum-Infofenster.svg"/><br>
+<br><br><img src="Docs/Addendum-Infofenster.svg" alt="Addendum-Infofenster.svg"/><br>
 
 <br>
 
