@@ -138,7 +138,7 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
 ![](Docs/TrennerExtraBreit.svg)
 <br>
 
-![](Docs/Addendum Funktionen.svg)
+![Addendum-Funktionen](Docs/Addendum-Funktionen.svg)
 
 ![](Docs/TrennerExtraBreit.svg)
 
@@ -175,7 +175,7 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
 
 
 
-![Texterweiterung Diagnosen](Docs/Texterweiterung Diagnosen.svg)
+![Texterweiterung-Diagnosen](Docs/Texterweiterung-Diagnosen.svg)
 
 
 
@@ -198,7 +198,7 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
 <img src="Docs/TrennerExtraBreit.svg" style="zoom:100%;" />
 
 <br>
-![](Docs/Laborjournal.svg)
+![Laborjournal](Docs/Laborjournal.svg)
 
 - ***Responsives interaktives Webinterface*** (Basis: Internet Explorers).
 
