@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   version="1.1"
+   id="svg824"
+   width="1200"
+   height="28"
+   viewBox="0 0 1200 28"
+   sodipodi:docname="TrennerExtraBreit.svg"
+   inkscape:version="1.1 (c68e22c387, 2021-05-23)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs828">
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter17673"
+       x="-0.003132428"
+       y="-0.44151513"
+       width="1.0062649"
+       height="1.8830303">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="1.55892"
+         id="feGaussianBlur17675" />
+    </filter>
+  </defs>
+  <sodipodi:namedview
+     id="namedview826"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     showgrid="false"
+     inkscape:zoom="16"
+     inkscape:cx="1174.8437"
+     inkscape:cy="40.84375"
+     inkscape:current-layer="svg824"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     inkscape:snap-bbox="true"
+     inkscape:bbox-paths="true"
+     inkscape:bbox-nodes="true"
+     inkscape:snap-bbox-edge-midpoints="true"
+     inkscape:snap-bbox-midpoints="true"
+     inkscape:object-paths="true"
+     inkscape:snap-intersection-paths="true"
+     inkscape:snap-smooth-nodes="true"
+     inkscape:snap-midpoints="true"
+     inkscape:snap-object-midpoints="true"
+     inkscape:snap-center="true"
+     inkscape:snap-text-baseline="true"
+     inkscape:snap-page="true"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0">
+    <sodipodi:guide
+       position="562.8128,12.866571"
+       orientation="1,0"
+       id="guide4197" />
+    <sodipodi:guide
+       position="1196.6643,3.4356286"
+       orientation="1,0"
+       id="guide17859" />
+  </sodipodi:namedview>
+  <rect
+     style="mix-blend-mode:normal;fill:#000000;fill-opacity:0.65;fill-rule:evenodd;stroke:none;stroke-width:0.199663;stroke-linejoin:bevel;stroke-miterlimit:0;paint-order:stroke fill markers;filter:url(#filter17673)"
+     id="rect1016-3"
+     width="1194.4115"
+     height="8.47402"
+     x="1.25"
+     y="16.57807"
+     rx="5.9306469"
+     ry="4.23701"
+     transform="matrix(1.0000292,0,0,1.0000548,0.56198802,-0.79507602)" />
+  <rect
+     style="fill:#020100;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.200276;stroke-linejoin:bevel;stroke-miterlimit:0;paint-order:stroke fill markers"
+     id="rect1016"
+     width="1196.6007"
+     height="6.9971089"
+     x="0.063603275"
+     y="14.806883"
+     rx="5.9830031"
+     ry="3.4985545" />
+</svg>

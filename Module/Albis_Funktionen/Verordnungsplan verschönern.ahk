@@ -53,7 +53,7 @@ global                                                         						DatumVom:= 
 	userMedDB	:= AddendumDir "\include\Daten\medkategorien.json"
 
 	If FileExist(userMedDB)
-		medis := JSON.Load(FileOpen(userMedDB, "r").Read())
+		medis := JSONData.Load(userMedDB, "", "UTF-8")
 	else
 		medis:=Object()
 
@@ -211,6 +211,9 @@ global                                                         						DatumVom:= 
 
 	Hinweise          	:= {1: 	"• Einnahme der Kapseln mit Flüssigkeit zur selben Tageszeit, unabhängig von den Mahlzeiten "
 				           			.	"• Kapseln nicht zerkauen oder zerstoßen • nicht zusammen mit Grapefruitsaft einnehmen"}
+
+	JSONData.save(AddendumDir "\include\Daten\MedRegEx1.json", RemoveThatShit, true,, 1, "UTF-8")
+	JSONData.save(AddendumDir "\include\Daten\MedRegEx2.json", MedForm, true,, 1, "UTF-8")
 
 ;}
 

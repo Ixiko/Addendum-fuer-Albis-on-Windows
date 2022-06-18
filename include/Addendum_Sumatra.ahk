@@ -7,305 +7,8 @@
 ;          	FÜR DAS AIS-ADDON: "ADDENDUM FÜR ALBIS ON WINDOWS"
 ;    		BY IXIKO STARTED IN SEPTEMBER 2017 - LAST CHANGE 04.02.2021 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+MsgBox, % SumatraGetDocumentFilepath()
 return
-
-;Sumatra PDF Viewer
-SumatraInvoke(command, SumatraID="") {                                                                     	;-- wm_command wrapper for SumatraPDF V3.1 & 3.2
-
-	/* DESCRIPTION of FUNCTION:  SumatraInvoke()
-
-		                                                                               by Ixiko (version 30.11.2020)
-		---------------------------------------------------------------------------------------------------
-		a wm_command wrapper for SumatraPdf V3.1 & V3.2
-		...........................................................
-		Remark:
-		- SumatraPDF has changed all wm_command codes from V3.1 to V3.2
-		- the script tries to automatically recognize the version of the addressed
-		  SumatraPDF process in order to send the correct commands
-		- maybe not all commands are listed !
-		---------------------------------------------------------------------------------------------------
-		Parameters:
-		- command:	the names are borrowed from menu or toolbar names. However,
-							no whitespaces or hyphens are used, only letters
-		- SumatraID:	by use of a valid handle, this function will post your command to
-							Sumatra. Otherwise by use of a version string ("3.1" or "3.2") this
-							function returns the wm_command code.
-		...........................................................
-		Rersult:
-		- You have to control the success of postmessage command yourself!
-		---------------------------------------------------------------------------------------------------
-
-		---------------------------------------------------------------------------------------------------
-		      EXAMPLES - EXAMPLES - EXAMPLES - EXAMPLES - EXAMPLES - EXAMPLES
-
-		SumatraInvoke("ShowToolbar", "3.2")      SumatraInvoke("DoublePage", SumatraID)
-		.................................................       ...................................................................
-		this one only returns the Sumatra              sends the command "DoublePage" to
-        command-code                                             your specified Sumatra process using
-																 parameter 2 (SumatraID) as window handle.
-															 		          command-code will be returned too
-		---------------------------------------------------------------------------------------------------
-
-	*/
-
-		static	SumatraCmds
-		local	SumatraPID
-
-		If !IsObject(SumatraCmds) {
-
-			SumatraCmds := Object()
-			SumatraCmds["3.1"] := { 	"NewWindow":                      	0      	; not available in this version -dummy command
-												, 	"Open":                                 	400  	; File
-												,	"Close":                                 	401  	; File
-												,	"ShowInFolder":                        	0      	; not available in this version -dummy command
-												,	"SaveAs":                               	402  	; File
-												,	"Rename":                              	580  	; File
-												,	"Print":                                   	403  	; File
-												,	"SendMail":                           	408  	; File
-												,	"Properties":                           	409  	; File
-												,	"OpenLast1":                         	510  	; File
-												,	"OpenLast2":                         	511  	; File
-												,	"OpenLast3":                         	512  	; File
-												,	"Exit":                                    	405  	; File
-												,	"SinglePage":                         	410  	; View
-												,	"DoublePage":                       	411  	; View
-												,	"BookView":                           	412  	; View
-												,	"ShowPagesContinuously":     	413  	; View
-												,	"MangaMode":                       	0      	; not available in this version -dummy command
-												,	"TurnCounterclockwise":         	415  	; View
-												,	"RotateLeft":                           	415  	; View
-												,	"TurnClockwise":                    	416  	; View
-												,	"RotateRight":                          	416  	; View
-												,	"Presentation":                        	418  	; View
-												,	"Fullscreen":                           	421  	; View
-												,	"Bookmark":                          	000  	; View - do not use! empty call!
-												,	"ShowToolbar":                      	419  	; View
-												,	"SelectAll":                             	422  	; View
-												,	"CopyAll":                              	420  	; View
-												,	"NextPage":                           	430  	; GoTo
-												,	"PreviousPage":                      	431  	; GoTo
-												,	"FirstPage":                            	432  	; GoTo
-												,	"LastPage":                            	433  	; GoTo
-												,	"GotoPage":                          	434  	; GoTo
-												,	"Back":                                  	558  	; GoTo
-												,	"Forward":                             	559  	; GoTo
-												,	"Find":                                   	435  	; GoTo
-												,	"FitASinglePage":                    	[410, 440] ; to hat V3.2 function (not tested)
-												,	"FitPage":                              	440  	; Zoom
-												,	"ActualSize":                          	441  	; Zoom
-												,	"FitWidth":                             	442  	; Zoom
-												,	"FitContent":                          	456  	; Zoom
-												,	"CustomZoom":                     	457  	; Zoom
-												,	"Zoom6400":                        	443  	; Zoom
-												,	"Zoom3200":                        	444  	; Zoom
-												,	"Zoom1600":                        	445  	; Zoom
-												,	"Zoom800":                          	446  	; Zoom
-												,	"Zoom400":                          	447  	; Zoom
-												,	"Zoom200":                          	448  	; Zoom
-												,	"Zoom150":                          	449  	; Zoom
-												,	"Zoom125":                          	450  	; Zoom
-												,	"Zoom100":                          	451  	; Zoom
-												,	"Zoom50":                            	452  	; Zoom
-												,	"Zoom25":                            	453  	; Zoom
-												,	"Zoom12.5":                          	454  	; Zoom
-												,	"Zoom8.33":                          	455  	; Zoom
-												,	"AddPageToFavorites":           	560  	; Favorites
-												,	"RemovePageFromFavorites": 	561  	; Favorites
-												,	"ShowFavorites":                    	562  	; Favorites
-												,	"CloseFavorites":                    	1106  	; Favorites
-												,	"CurrentFileFavorite1":           	600  	; Favorites
-												,	"CurrentFileFavorite2":           	601  	; Favorites -> I think this will be increased with every page added to favorites
-												,	"ChangeLanguage":               	553  	; Settings
-												,	"Options":                             	552  	; Settings
-												,	"AdvancedOptions":               	597  	; Settings
-												,	"VisitWebsite":                        	550  	; Help
-												,	"Manual":                              	555  	; Help
-												,	"CheckForUpdates":               	554  	; Help
-												,	"About":                                	551}  	; Help
-			SumatraCmds["3.2"] := { 	"NewWindow":                      	450  	; File
-												, 	"Open":                                 	400  	; File
-												,	"Close":                                 	404  	; File
-												,	"ShowInFolder":                        	410  	; File
-												,	"SaveAs":                               	406  	; File
-												,	"Rename":                              	610  	; File
-												,	"Print":                                   	408  	; File
-												,	"SendMail":                           	418  	; File
-												,	"Properties":                           	420  	; File
-												,	"OpenLast1":                         	570  	; File
-												,	"OpenLast2":                         	571  	; File
-												,	"OpenLast3":                         	572  	; File
-												,	"Exit":                                    	412  	; File
-												,	"SinglePage":                         	422  	; View
-												,	"DoublePage":                       	423  	; View
-												,	"BookView":                           	424  	; View
-												,	"ShowPagesContinuously":     	425  	; View
-												,	"MangaMode":                       	426  	; View
-												,	"RotateLeft":                              	432  	; View
-												,	"RotateRight":                            	434  	; View
-												,	"Presentation":                        	438  	; View
-												,	"Fullscreen":                          	444  	; View
-												,	"Bookmark":                          	000  	; View - do not use! empty call!
-												,	"ShowToolbar":                      	440  	; View
-												,	"SelectAll":                             	446  	; View
-												,	"CopyAll":                              	442  	; View
-												,	"NextPage":                           	460  	; GoTo
-												,	"PreviousPage":                      	462  	; GoTo
-												,	"FirstPage":                            	464  	; GoTo
-												,	"LastPage":                            	466  	; GoTo
-												,	"GotoPage":                          	468  	; GoTo
-												,	"Back":                                  	596  	; GoTo
-												,	"Forward":                             	598  	; GoTo
-												,	"Find":                                   	470  	; GoTo
-												,	"FindNext":                             	472  	; Toolbar
-												,	"FindPrevious":                          	474  	; Toolbar
-												,	"MatchCase":                          	476  	; Toolbar
-												,	"FitWithContinuously":               	3026	; Toolbar
-												,	"FitASinglePage":                    	3027	; Toolbar
-												,	"ZoomIn":                               	3012	; Toolbar
-												,	"ZoomOut":                            	3013	; Toolbar
-												,	"FitPage":                              	480  	; Zoom
-												,	"ActualSize":                          	481  	; Zoom
-												,	"FitWidth":                             	482  	; Zoom
-												,	"FitContent":                          	496  	; Zoom
-												,	"CustomZoom":                     	497  	; Zoom
-												,	"Zoom6400":                        	483  	; Zoom
-												,	"Zoom3200":                        	484  	; Zoom
-												,	"Zoom1600":                        	485  	; Zoom
-												,	"Zoom800":                          	486  	; Zoom
-												,	"Zoom400":                          	487  	; Zoom
-												,	"Zoom200":                          	488  	; Zoom
-												,	"Zoom150":                          	489  	; Zoom
-												,	"Zoom125":                          	490  	; Zoom
-												,	"Zoom100":                          	491  	; Zoom
-												,	"Zoom50":                            	492  	; Zoom
-												,	"Zoom25":                            	493  	; Zoom
-												,	"Zoom12.5":                          	494  	; Zoom
-												,	"Zoom8.33":                          	495  	; Zoom
-												,	"AddPageToFavorites":           	600  	; Favorites
-												,	"RemovePageFromFavorites": 	602  	; Favorites
-												,	"ShowCloseFavorites":               	604  	; Favorites
-												,	"CurrentFileFavorite1":           	700  	; Favorites
-												,	"CurrentFileFavorite2":           	701  	; Favorites -> I think this will be increased with every page added to favorites
-												,	"ChangeLanguage":               	588  	; Settings
-												,	"Options":                             	586  	; Settings
-												,	"AdvancedOptions":               	632  	; Settings
-												,	"VisitWebsite":                        	582  	; Help
-												,	"Manual":                              	592  	; Help
-												,	"CheckForUpdates":               	590  	; Help
-												,	"About":                                	584  	; Help
-												,	"HighlightLinks":                       	616  	; Debug
-												,	"ToggleEBookUI":                     	624  	; Debug
-												,	"MuiDebugPaint":                     	626  	; Debug
-												,	"MuiDebugPaint":                     	626  	; Debug
-												,	"AnnotationFromSelection":      	628  	; Debug
-												,	"DownloadSymbols":                 	630}  	; Debug
-
-		}
-
-	; ---------------------------------------------------------------------------------------------------------------------
-	; try to determine the version of the running SumatraPDF  process from the passed window handle
-	; ---------------------------------------------------------------------------------------------------------------------
-	; parts of following code was taken from WinSpy
-
-		WinGetClass, class, % "ahk_id " SumatraID
-		If InStr(class, "SUMATRA_PDF_FRAME") {
-
-			WinGet SumatraPID, PID, % "ahk_id " SumatraID
-			Enum := ComObjGet("winmgmts:").ExecQuery("SELECT * FROM Win32_Process WHERE ProcessId=" SumatraPID)._NewEnum
-			If (Enum[Process])
-				FileGetVersion ProgVer, % Process.ExecutablePath
-
-			RegExMatch(ProgVer, "\d\.\d", VSumatra)
-
-			If (SumatraCmds[VSumatra][command] = 0)
-				return "" 																	;return on dummy command
-			else If !SumatraCmds[VSumatra].haskey(command)
-				throw "Parameter #1 [" command "] unknown in SumatraPDF version " VSumatra
-
-			If IsObject(SumatraCmds[VSumatra][command]) {
-
-				wmcmds := SumatraCmds[VSumatra][command]
-				For i, cmd in wmcmds {
-					PostMessage, 0x111, % cmd,,, % "ahk_id " SumatraID
-					If (i < wmcmds.Count())
-						Sleep, 300                 ; I think a little delay is necessary here
-				}
-
-			}
-			else
-				PostMessage, 0x111, % SumatraCmds[VSumatra][command],,, % "ahk_id " SumatraID
-
-		}
-		else {
-
-			If RegExMatch(SumatraID, "\d\.\d", VSumatra) {
-
-				If (SumatraCmds[VSumatra][command] = 0)
-					return "" 																	;return on dummy command
-				else If !SumatraCmds[VSumatra].haskey(command)
-					throw "Parameter #1 [" command "] unknown in SumatraPDF version " VSumatra
-				else
-					return SumatraCmds[VSumatra][command]
-			}
-			else
-				throw "Parameter #2 invalid! The passed SumatraID was neither a correct window handle nor a valid string for a program version."
-
-		}
-
-}
-
-Sumatra_GetPages(SumatraID="") {                                                                                	;-- aktuelle und maximale Seiten des aktuellen Dokumentes ermitteln
-
-	If !SumatraID
-		SumatraID := WinExist("ahk_class SUMATRA_PDF_FRAME")
-
-	ControlGetText, PageDisp, Edit3 	, % "ahk_id " SumatraID
-	ControlGetText, PageMax, Static3	, % "ahk_id " SumatraID
-	RegExMatch(PageMax, "\s*(?<Max>\d+)", Page)
-
-return {"disp":PageDisp, "max":PageMax}
-}
-
-Sumatra_ToPrint(SumatraID="", Printer="") {                                                                     	;-- Druck Dialoghandler - Ausdruck auf übergebenen Drucker
-
-		; druckt das aktuell angezeigte Dokument
-		; abhängige Biblitheken: LV_ExtListView.ahk
-
-		static sumatraprint	:= "i)[(Print)|(Drucken)]+ ahk_class i)#32770 ahk_exe i)SumatraPDF.exe"
-
-		rxPrinter:= StrReplace(Trim(Printer), " ", "\s")
-		rxPrinter:= StrReplace(rxPrinter, "(", "\(")
-		rxPrinter:= StrReplace(rxPrinter, ")", "\)")
-
-		OldMatchMode := A_TitleMatchMode
-		SetTitleMatchMode, RegEx                                                              	; RegEx Fenstervergleichsmodus einstellen
-
-		SumatraInvoke("Print", SumatraID)                                                  	; Druckdialog wird aufgerufen
-		WinWait, % sumatraprint,, 6                                                             	; wartet 6 Sekunden auf das Dialogfenster
-		hSumatraPrint := GetHex(WinExist(sumatraprint))                               	; 'Drucken' - Dialog handle
-		ControlGet, hLV, Hwnd,, SysListview321, % "ahk_id " hSumatraPrint    	; Handle der Druckerliste (Listview) ermittlen
-		sleep 200                                                                                       	; Pause um Fensteraufbau abzuwarten
-		ControlGet, Items	, List  , Col1 	,, % "ahk_id " hLV                             	; Auslesen der vorhandenen Drucker
-		ItemNr := 0                                                                                    	; ItemNr auf 0 setzen
-		Loop, Parse, Items, `n                                                                    	; Listview Position des Standarddrucker suchen
-			If RegExMatch(A_LoopField, "i)^" rxPrinter) {                                	; Standarddrucker gefunden
-				ItemNr := A_Index                                                                	; nullbasierende Zählung in Listview Steuerelementen
-				break
-			}
-		If ItemNr {                                                                                    	; Drucker in der externen Listview auswählen
-			objLV := ExtListView_Initialize(sumatraprint)                                	; Initialisieren eines externen Speicherzugriff auf den Sumatra-Prozeß
-			ControlFocus,, % "ahk_id " objLV.hlv                                            	; Druckerauswahl fokussieren
-			err	 := ExtListView_ToggleSelection(objLV, 1, ItemNr - 1)            	; gefundenes Listview-Element (Drucker) fokussieren und selektieren
-			ExtListView_DeInitialize(objLV)                                                     	; externer Speicherzugriff muss freigegeben werden
-			Sleep 200
-			err	:= VerifiedClick("Button13", hSumatraPrint)                           	; 'Drucken' - Button wählen
-			WinWaitClose, % "ahk_id " hSumatraPrint,, 3                              	; wartet max. 3 Sek. bis der Dialog geschlossen wurde
-		}
-
-		SetTitleMatchMode, % OldMatchMode                                            	; TitleMatchMode zurückstellen
-
-return {"DialogID":hSumatraPrint, "ItemNr":ItemNr}                                 	; für Erfolgskontrolle und eventuelle weitere Abarbeitungen
-}
 
 ; ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; this functions are stolen from github.com/nod5/HighlightJump
@@ -336,7 +39,6 @@ SumatraCreateSmxWithHeader(vFile) {											     								;-- function: create 
   timestamp = %vTimestamp%
   )
 
-
   FileAppend, % vSmxHeader, % vFile ".smx", UTF-8-RAW
 }
 
@@ -347,17 +49,17 @@ SumatraSaveSmx(vFile, vSmx) {																							;-- function: save new highl
   FileDelete, % vFile ".smx"
   FileAppend, % vSmx, % vFile ".smx", UTF-8-RAW
 
-  RefreshSumatraDocument()
+  SumatraRefreshDocument()
 }
 
-SumatraRefreshSumatraDocument() {																					;-- function: reload active SumatraPDF document, keeps current page view
+SumatraRefreshDocument() {							               														;-- function: reload active SumatraPDF document, keeps current page view
 
 	; https://github.com/sumatrapdfreader/sumatrapdf/blob/master/src/resource.h
 	; IDM_REFRESH  := 406
 	; WM_COMMAND   := 0x111
 
 	vWinId := WinExist("A")
-	SendMessage, 0x111, 406,0,, % "ahk_class SUMATRA_PDF_FRAME ahk_id " vWinId
+	SendMessage, 0x111, 406,0,, % "ahk_class SUMATRA_PDF_FRAME1 ahk_id " vWinId
 
 }
 
@@ -554,23 +256,20 @@ SumatraGetDocumentFilepath() {																						;-- function: get filepath f
 	; - IDC_REPLY_FILE_PATH = 1500
 	; - Works in SumatraPDF 32bit/64bit and AutoHotkey 32bit/64bit unicode, all combinations
 
-	  DetectHiddenWindows, On
-	  if !WinActive("ahk_class SUMATRA_PDF_FRAME")
-		Return
-	  vWinId := WinExist("A")
-
+  if !WinActive("ahk_class SUMATRA_PDF_FRAME")
+    Return
+  vWinId := WinExist("A")
+  DetectHiddenWindows, On
   ; start listener for WM_COPYDATA that SumatraPDF will send after we first call
-	OnMessage(0x4a, "Receive_WM_COPYDATA")
-
+  OnMessage(0x4a, "Receive_WM_COPYDATA")
   ; clear super-global variable
-	vFilepathReturn := ""
-
+  vFilepathReturn := ""
   ; make first call to SumatraPDF
   ; - 0x111 is WM_COMMAND
   ; - IDM_COPY_FILE_PATH = 1500
   ; - A_SCriptHwnd is Hwnd to this script's hidden window
   ;   Note: A_SCriptHwnd is hex, WinTitle ahk_id accepts both hex and dec values
-	SendMessage, 0x111, 1500, A_ScriptHwnd, , % "ahk_id " vWinId
+  SendMessage, 0x111, 1500, A_ScriptHwnd, , % "ahk_id " vWinId
 
   ; todo test more if this delays operation and/or improves stability
   ; wait for message up to 250 ms
@@ -579,11 +278,10 @@ SumatraGetDocumentFilepath() {																						;-- function: get filepath f
   ;    sleep 5
 
   ; after Receive_WM_COPYDATA has reacted, stop listener
-	OnMessage(0x4a, "Receive_WM_COPYDATA", 0)
-
+  OnMessage(0x4a, "Receive_WM_COPYDATA", 0)
   ; check for \ to ensure filepath an not only filename
-	If InStr(vFilepathReturn, "\")
-		return vFilepathReturn
+  If InStr(vFilepathReturn, "\")
+    return vFilepathReturn
 }
 
 SumatraRemoveAnnotationAtCursor() {																				;-- function: remove annotation in active SumatraPDF window
@@ -703,8 +401,7 @@ SumatraPrepareForCanvasPosCheck() {																				;-- function: prepare Sum
 SumatraGetCanvasPosFromNotification(ByRef x, Byref y) {													;-- function: Read SumatraPDF notification to get mouse position in canvas pt units
 
   ; get mouse position in SumatraPDF canvas in pt units (one decimal)
-	ControlGetText, vPos, SUMATRA_PDF_NOTIFICATION_WINDOW1, A
-
+  ControlGetText, vPos, SUMATRA_PDF_NOTIFICATION_WINDOW1, A
   ; extract X Y pos with decimals and round later
 
   ; - Do not use the ":" in regex because not present in all translations
@@ -721,17 +418,14 @@ SumatraGetCanvasPosFromNotification(ByRef x, Byref y) {													;-- function
   ; ": 4.401 000,3 x 341,000.3 pt"
   ; "a 4.401 000,3 x 341,000.3 pt"
   ; regex pattern match
-	  vPattern := "\D ([\d \.,]+)[\.,](\d+) x ([\d \.,]+)[\.,](\d+) pt$"
-	  RegExMatch(vPos, vPattern, vPos)
-
+  vPattern := "\D ([\d \.,]+)[\.,](\d+) x ([\d \.,]+)[\.,](\d+) pt$"
+  RegExMatch(vPos, vPattern, vPos)
   ; remove separators to get integers
-	vPos1 := RegExReplace(vPos1, "[ \.,]", "")
-	vPos3 := RegExReplace(vPos3, "[ \.,]", "")
-
+  vPos1 := RegExReplace(vPos1, "[ \.,]", "")
+  vPos3 := RegExReplace(vPos3, "[ \.,]", "")
   ; concatenate (integer)(dot-separator)(fraction)
-	x := vPos1 "." vPos2
-	y := vPos3 "." vPos4
-
+  x := vPos1 "." vPos2
+  y := vPos3 "." vPos4
 }
 
 SumatraGetDocumentFilepathFromTitle() {																			;-- function: Get document filepath by parsing window title
@@ -775,8 +469,3 @@ SumatraGetDocumentFilepathFromTitle() {																			;-- function: Get docu
   If InStr(vFile, ":\") and FileExist(vFile)
     Return vFile
 }
-
-
-
-
-

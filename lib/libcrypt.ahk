@@ -157,24 +157,18 @@ LC_CalcHexHash(hexstring, algid) {
 LC_CalcFileHash(filename, algid, continue = 0, byref hash = 0, byref hashlength = 0) {
 	fpos := ""
 	if (!(f := FileOpen(filename, "r")))
-	{
 		return
-	}
 	f.pos := 0
 	if (!continue && f.length > 0x7fffffff)
-	{
 		return
-	}
-	if (!continue)
-	{
+	if (!continue)	{
 		VarSetCapacity(data, f.length, 0)
 		f.rawRead(&data, f.length)
 		f.pos := oldpos
 		return LC_CalcAddrHash(&data, f.length, algid, hash, hashlength)
 	}
 	hashlength := 0
-	while (f.pos < f.length)
-	{
+	while (f.pos < f.length)	{
 		readlength := (f.length - fpos > continue) ? continue : f.length - f.pos
 		VarSetCapacity(data, hashlength + readlength, 0)
 		DllCall("RtlMoveMemory", "Ptr", &data, "Ptr", &hash, "Ptr", hashlength)
@@ -194,15 +188,13 @@ LC_CRC32(string, encoding = "UTF-8") {
 	CRC := SubStr(CRC32 | 0x1000000000, -7)
 	DllCall("User32.dll\CharLower", "Str", CRC)
 	SetFormat, Integer, %A_FI%
-	return CRC, DllCall("Kernel32.dll\FreeLibrary", "Ptr", hMod)
+return CRC, DllCall("Kernel32.dll\FreeLibrary", "Ptr", hMod)
 }
 LC_HexCRC32(hexstring) {
 	length := StrLen(hexstring) // 2
 	VarSetCapacity(data, length, 0)
 	loop % length
-	{
 		NumPut("0x" SubStr(hexstring, 2 * A_Index -1, 2), data, A_Index - 1, "Char")
-	}
 	hMod := DllCall("Kernel32.dll\LoadLibrary", "Str", "Ntdll.dll")
 	SetFormat, Integer, % SubStr((A_FI := A_FormatInteger) "H", 0)
 	CRC32 := DllCall("Ntdll.dll\RtlComputeCrc32", "UInt", 0, "UInt", &data, "UInt", length, "UInt")
@@ -216,9 +208,8 @@ LC_FileCRC32(sFile := "", cSz := 4) {
 	cSz := (cSz < 0 || cSz > 8) ? 2**22 : 2**(18 + cSz)
 	VarSetCapacity(Buffer, cSz, 0)
 	hFil := DllCall("Kernel32.dll\CreateFile", "Str", sFile, "UInt", 0x80000000, "UInt", 3, "Int", 0, "UInt", 3, "UInt", 0, "Int", 0, "UInt")
-	if (hFil < 1)	{
+	if (hFil < 1)
 		return hFil
-	}
 	hMod := DllCall("Kernel32.dll\LoadLibrary", "Str", "Ntdll.dll")
 	CRC32 := 0
 	DllCall("Kernel32.dll\GetFileSizeEx", "UInt", hFil, "Int64", &Buffer), fSz := NumGet(Buffer, 0, "Int64")
@@ -237,8 +228,7 @@ LC_FileCRC32(sFile := "", cSz := 4) {
 LC_To_Dec(b, n) { ; 1 < b <= 36, n >= 0
 	d:=0
 	StringUpper,n,n
-	loop % StrLen(n)
-	{
+	loop % StrLen(n)	{
 		d *= b, k:=SubStr(n,A_Index,1)
 		if k is not Integer
 			k:=Asc(k)-55
@@ -253,7 +243,7 @@ LC_From_Dec(b,n) { ; 1 < b <= 36, n >= 0
 		m := (d < 10 ? d : Chr(d+55)) . m
 		IfLess n,1, Break
 	}
-	Return m
+Return m
 }
 LC_Dec2Hex(x) {
 	return LC_From_Dec(16,x)
@@ -282,12 +272,10 @@ LC_Numvert(num,from,to) { ; from joedf : http://ahkscript.org/boards/viewtopic.p
 LC_Div2_encode(input, WithAutoTrim:=1, numproc:=1) {
 	if (WithAutoTrim)
 		StringReplace,input,input,%A_Space%,_,A
-	loop, %numproc%
-	{
+	loop %numproc%	{
 		final:="", inputlen := StrLen(input)
 		divmax := ceil((0.5 * inputlen) + 1)
-		loop, %inputlen%
-		{
+		loop %inputlen%		{
 			temp := SubStr(input,A_Index,1)
 			q := inputlen + 1 - A_Index
 			temp2 := SubStr(input,q,1)
@@ -306,18 +294,15 @@ LC_Div2_encode(input, WithAutoTrim:=1, numproc:=1) {
 LC_Div2_decode(input, WithAutoTrim:=1, numproc:=1) {
 	if (WithAutoTrim)
 		StringReplace,input,input,%A_Space%,_,A
-	loop, %numproc%
-	{
+	loop %numproc%	{
 		i := 1, final:="", inputlen := StrLen(input)
-		loop, % loopc := ceil(inputlen * (1/2))
-		{
+		loop % loopc := ceil(inputlen * (1/2))		{
 			if (i <= inputlen)
 				final .= SubStr(input,i,1)
 			i += 2
 		}
 		i := inputlen
-		loop, %loopc%
-		{
+		loop %loopc%		{
 			if (i <= inputlen) {
 				if (mod(SubStr(i,0,1)+0,2)==1) {
 					if (i != 1)
@@ -343,9 +328,7 @@ LC_HMAC(Key, Message, Algo := "MD5") {
 	static iconst := 0x36
 	static oconst := 0x5C
 	if (!(Algorithms.HasKey(Algo)))
-	{
 		return ""
-    }
 	Hash := KeyHashLen := InnerHashLen := ""
 	HashLen := 0
 	AlgID := Algorithms[Algo].ID
@@ -355,38 +338,31 @@ LC_HMAC(Key, Message, Algo := "MD5") {
 	VarSetCapacity(K, KeyLen + 1, 0)
 	StrPut(Key, &K, KeyLen, "UTF-8")
 	if (KeyLen > BlockSize)
-    {
 		LC_CalcAddrHash(&K, KeyLen, AlgID, KeyHash, KeyHashLen)
-	}
 
 	VarSetCapacity(ipad, BlockSize + MsgLen, iconst)
 	Addr := KeyLen > BlockSize ? &KeyHash : &K
 	Length := KeyLen > BlockSize ? KeyHashLen : KeyLen
 	i := 0
-	while (i < Length)
-	{
+	while (i < Length)	{
 		NumPut(NumGet(Addr + 0, i, "UChar") ^ iconst, ipad, i, "UChar")
 		i++
 	}
 	if (MsgLen)
-	{
 		StrPut(Message, &ipad + BlockSize, MsgLen, "UTF-8")
-	}
 	LC_CalcAddrHash(&ipad, BlockSize + MsgLen, AlgID, InnerHash, InnerHashLen)
 
 	VarSetCapacity(opad, BlockSize + InnerHashLen, oconst)
 	Addr := KeyLen > BlockSize ? &KeyHash : &K
 	Length := KeyLen > BlockSize ? KeyHashLen : KeyLen
 	i := 0
-	while (i < Length)
-	{
+	while (i < Length)	{
 		NumPut(NumGet(Addr + 0, i, "UChar") ^ oconst, opad, i, "UChar")
 		i++
 	}
 	Addr := &opad + BlockSize
 	i := 0
-	while (i < InnerHashLen)
-	{
+	while (i < InnerHashLen)	{
 		NumPut(NumGet(InnerHash, i, "UChar"), Addr + i, 0, "UChar")
 		i++
 	}
@@ -457,18 +433,15 @@ LC_nnnik21_decryptStr(str="",pass=""){
 }
 LC_nnnik21_encryptbin(pBin1,sBin1,pBin2,sBin2){
 	b:=0
-	Loop % sBin1/4
-	{
+	Loop % (sBin1/4) {
 		a:=numget(pBin1+0,sBin1-A_Index*4,"uint")
 		numput(a+b,pBin1+0,sBin1-A_Index*4,"uint")
 		b:=(a+b)*a
 	}
-	Loop % sBin2/4
-	{
+	Loop % (sBin2/4)	{
 		c:=numget(pBin2+0,(A_Index-1)*4,"uint")
 		b:=0
-		Loop % sBin1/4
-		{
+		Loop % (sBin1/4) 	{
 			a:=numget(pBin1+0,(A_Index-1)*4,"uint")
 			numput((a+b)^c,pBin1+0,(A_Index-1)*4,"uint")
 			b:=(a+b)*a
@@ -476,20 +449,17 @@ LC_nnnik21_encryptbin(pBin1,sBin1,pBin2,sBin2){
 	}
 }
 LC_nnnik21__decryptbin(pBin1,sBin1,pBin2,sBin2){
-	Loop % sBin2/4
-	{
+	Loop % sBin2/4	{
 		c:=numget(pBin2+0,sBin2-A_Index*4,"uint")
 		b:=0
-		Loop % sBin1/4
-		{
+		Loop % sBin1/4		{
 			a:=numget(pBin1+0,(A_Index-1)*4,"uint")
 			numput(a:=(a^c)-b,pBin1+0,(A_Index-1)*4,"uint")
 			b:=(a+b)*a
 		}
 	}
 	b:=0
-	Loop % sBin1/4
-	{
+	Loop % sBin1/4	{
 		a:=numget(pBin1+0,sBin1-A_Index*4,"uint")
 		numput(a:=a-b,pBin1+0,sBin1-A_Index*4,"uint")
 		b:=(a+b)*a
@@ -592,8 +562,7 @@ LC_SecureSalted(salt, message, algo := "md5") {
 	saltedHash := %algo%(message . salt)
 	saltedHashR := %algo%(salt . message)
 	len := StrLen(saltedHash)
-	loop % len / 2
-	{
+	loop % len/2 	{
 		byte1 := "0x" . SubStr(saltedHash, 2 * A_index - 1, 2)
 		byte2 := "0x" . SubStr(saltedHashR, 2 * A_index - 1, 2)
 		SetFormat, integer, hex
@@ -659,8 +628,7 @@ LC_UriEncode(Uri, RE="[0-9A-Za-z]") {
 }
 LC_UriDecode(Uri) {
 	Pos := 1
-	While Pos := RegExMatch(Uri, "i)(%[\da-f]{2})+", Code, Pos)
-	{
+	While Pos := RegExMatch(Uri, "i)(%[\da-f]{2})+", Code, Pos)	{
 		VarSetCapacity(Var, StrLen(Code) // 3, 0), Code := SubStr(Code,2)
 		Loop, Parse, Code, `%
 			NumPut("0x" A_LoopField, Var, A_Index-1, "UChar")

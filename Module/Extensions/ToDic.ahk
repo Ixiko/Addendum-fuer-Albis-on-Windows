@@ -7,7 +7,7 @@
 ;		Abhängigkeiten: 	-	siehe #includes
 ;
 ;	                    				Addendum für Albis on Windows
-;                        				by Ixiko started in September 2017 - last change 27.02.2021 - this file runs under Lexiko's GNU Licence
+;                        				by Ixiko started in September 2017 - last change 10.02.2022 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;
 
@@ -50,9 +50,9 @@
 		MFreq 	:= {}, maxMFreq	:= 0, minMFreq:= 10000000
 		SFreq	:= {}, maxSFreq	:= 0, minSFreq	:= 10000000
 
-		Medical	:= FileExist(medicalWords) 	? JSONData.Load(medicalWords	, "", "UTF-8")	: Object()
-		Others   	:= FileExist(othersWords)    	? JSONData.Load(othersWords  	, "", "UTF-8") 	: Object()
-		FilesP    	:= FileExist(FilesProcessed)    	? JSONData.Load(FilesProcessed	, "", "UTF-8")	: Array()
+		Medical	:= FileExist(medicalWords) 	? cJSON.Load(FileOpen(medicalWords, "r"	, "UTF-8").Read())	: Object()
+		Others   	:= FileExist(othersWords)    	? cJSON.Load(FileOpen(othersWords, "r"	, "UTF-8").Read()) 	: Object()
+		FilesP    	:= FileExist(FilesProcessed)    	? cJSON.Load(FileOpen(FilesProcessed, "r"	, "UTF-8").Read())	: Array()
 
 		removedOthers := 0
 		For word, wcount in Medical {
@@ -106,36 +106,9 @@ AlbisPDFOdner:	; Albis PDF Ordner , PDF -> Text	;{
 
 		noOCRspath := adm.DBPath "\Dictionary\albisDir_NoOCR_PDF.json"
 		OCRspath		:= adm.DBPath "\Dictionary\albisDir_OCR_PDF.json"
+		FilesT        	:= FileExist(OCRspath) ? cJSON.Load(FileOpen(OCRspath, "r"	, "UTF-8").Read()) : Array()
 
-		;~ If FileExist(noOCRspath)
-			;~ FilesNT := JSONData.Load(noOCRspath,, "UTF-8")
-		;~ else
-			;~ FilesNT	:= Array()
-
-		If FileExist(OCRspath)
-			FilesT 	:= JSONData.Load(OCRspath,, "UTF-8")
-		else
-			FilesT	:= Array()
-
-	return
-
-		;~ FilesT:= Array()
-		;~ For oidx, ofile in FilesO {
-			;~ FileFound := false
-			;~ For pidx, pfile in FilesP
-			;~ If (pfile = ofile) {
-				;~ FileFound := true
-				;~ break
-			;~ }
-			;~ If !FileFound
-				;~ FilesT.Push(ofile)
-
-			;~ If Mod(oidx, 100) = 0
-				;~ ToolTip, % "erstelle Dateiliste`n" oidx "/" FilesO.Count() "`nDateien aufgenommen`n" FilesT.Count()
-
-		;~ }
-		;~ FilesNT := FilesO := ""
-		;~ ToolTip
+return
 
 
 		FilesT		:= Array()
@@ -361,8 +334,6 @@ ClickWord:
 
 return
 
-
-
 DIC_LV: ;{
 
 
@@ -456,8 +427,6 @@ addToDic: ;{
 	;~ WBStats()
 	;~ LoadText()
 return ;}
-
-
 
 DIC_BTNS: ;{
 
@@ -780,8 +749,12 @@ CollectWords(filepath, debug:=false) {
 	while (spos := RegExMatch(text, "\s(?<Name>[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*)", P, spos)) {
 
 			takeword := 1
-			ToolTip, % "Position: " spos "/" tLen, 900, 1
+			If (Mod(spos, 10) = 0)
+				ToolTip, % "Position: " spos "/" tLen, 900, 1
 			spos += StrLen(PName)
+
+			If (StrLen(PName) < 4)
+				continue
 
 		; wenn ein Wort in einem der beiden Wörterbücher vorkommt
 			if Medical.haskey(PName) {
@@ -794,7 +767,7 @@ CollectWords(filepath, debug:=false) {
 			}
 
 		; ausgeschlossene Buchstabenkombinationen - kommen gleich ins Others Wörterbuch
-			If RegExMatch(PName, "[a-zäöüß\-][A-ZÄÖÜ]{2,}") {
+			If RegExMatch(PName, "([a-zäöüß\-][A-ZÄÖÜ]{2,}|^[A-ZÄÖÜß]+$)") {
 				Others[PName] := !Others.haskey[PName] ? 1 : Others[PName]+1
 				continue
 			}
@@ -1182,5 +1155,6 @@ return props
 
 
 
+#include %A_ScriptDir%\..\..\lib\class_cJSON.ahk
 #include %A_ScriptDir%\..\..\lib\class_JSON.ahk
 #include %A_ScriptDir%\..\..\lib\SciTEOutput.ahk

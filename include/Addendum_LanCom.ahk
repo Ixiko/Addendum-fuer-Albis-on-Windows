@@ -1,89 +1,76 @@
-﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
-;                                                                                  Funktionsbibliothek für TCP - LAN Komunikation - benötigt class_TCP-UDP.ahk
-;                                                                              	!diese Bibliothek enthält Funktionen für Einstellungen des Addendum Hauptskriptes!
-;                                                            	by Ixiko started in September 2017 - last change 27.05.2021 - this file runs under Lexiko's GNU Licence
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                     	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
+;                                       Funktionsbibliothek für TCP - LAN Komunikation - benötigt lib\class_socket.ahk
+;                  	   by Ixiko started in September 2017 - last change 21.12.2021 - this file runs under Lexiko's GNU Licence
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-admStartServer() {
+TCPStartServer()                                                          	{
 
-		;~ global DC_SERV 	:= True
-		;~ global DC_CLI  	:= False
-		global rmsgQueue
-		;global admServer
+	global connections
 
-		SciTEOutput("LAN Port: " Addendum.LAN.admServer.ip)
+	If !IsObject(connections)
+		connections := Object()
 
-	; admServer muss im aufrufenden Skript gobal gemacht worden sein
-		rmsgQueue	:= Object()
-		admServer	:= new SocketTCP()
-
-		admServer.Bind(["addr_any", Addendum.LAN.admServer.Port])
-		admServer.Listen()
-		admServer.OnAccept := Func("admOnAccept")
+	Server := Addendum.LAN.Server.IamServer
+	connections.Server := new SocketTCP()
+	connections.Server.props := {"name":Server, "ip":Addendum.LAN.Server.ip, "port":Addendum.LAN.Server.port}
+	connections.Server.bind("addr_any", 12345) ; Addendum.LAN.admServer
+	connections.Server.listen()
+	connections.Server.onAccept := Func("TCPServerAccept")
+	connections.Server.onDisconnect("TCPServerDisconnect")
 
 }
 
-admOnAccept(){
-		newTcp := admServer.accept()
-		newTcp.sendText("Hello Client!")
-		MsgBox, % newTcp.recvText()
+TCPServerAccept(this)                                                  	{
+
+	global connections
+
+	If !IsObject(connections.Server.clients)
+		connections.Server.clients := Array()
+
+	CI := connections.Server.clients.Push(this.accept())
+	connections.Server.clients[CI].onrecv := Func("TCPReceive")
+	msg := {"from":"Server", "cmd":"tell_props", "txt":CI}
+	connections.Server.clients[CI].sendText(JSON.Dump(msg))
+
 }
 
+TCPServerDisconnect(client:="")                                   	{
 
-admOnAcceptX() {
+	global admClients
 
-		;global admServer
-		global rmsgQueue
-		;~ global DC_SERV
-		;~ global DC_CLI
+}
 
-		newTCP := admServer.accept()
-		newTCP.SendText("Successful Connection!")
-		SciTEOutput("received: " newTCP.RecvText())
-		/*
-		if IsObject(newTCP) {
+TCPConnectTo(machine, ip, port)                                  	{
 
-			For key, val in newTCP {
+	global DC_SERV, DC_CLI
+	global connections
 
-				t.= A_Index ": " key ", values: "
-				If IsObject(val) {
+	If !IsObject(connections[machine]) {
 
-					t.= "isOBject with " val.Length() " key`n"
-					For valkey, obj in val
-						t.= "`t" valkey ", value: " (!IsObject(obj) ? obj : "isobject") "`n"
+		connections[machine] := new SocketTCP()
 
-				} else
-					t .= val "`n"
-			}
-
-		SciTEOutput(t)
+	  ; Verbindung hergestellt
+		If (connected := connections[machine].connect(ServerIP, ServerPort)) {
+			connections[machine].onrecv := Func("TCPReceive").bind(machine)
 		}
-		 */
-		;SciTEOutput("ProtocolID: " newTCP.ProtocolID ", newTCPType: " newTCP.SocketType)
+	  ; keine Verbindung - Objekt wieder entfernen
+		else
+			connections[machine] := ""
+	}
 
-		rmsg	:= StrSplit(newTCP.RecvText(), "|")
-		SciTEOutput("recv: " rmsg.Count())
-
-		If IsFunc("adm" rmsg.1) {
-
-			fnCall	:= Func("adm" rmsg.1).Bind(rmsg.2, rmsg.3, rmsg.4)
-			SetTimer, % fnCall, -0
-
-		} else if InStr(rmsg.1, "answer") {
-
-			; rmsg.2 - Funktionsname welche die Anfrage gestellt hat
-			SciTEOutput(rmsg.2 "|" rmsg.3 "|" rmsg.4)
-			rmsgQueue.Push(rmsg.2 "|" rmsg.3 "|" rmsg.4 )
-
-		}
-
-		;newTCP.Disconnect()
-
-return
+return connections[machine]
 }
 
-admStatus(cmd, more, from) {
+TCPReceive(machine, answer)                                       	{                 	; empfängt Netzwerknachrichten
+
+	msg := JSON.Load(answer.recvText(),, "UTF-8")
+	SciTEOutput(" [" msg.from "] " msg.cmd ", " msg.txt)
+	;~ SciTEOutput(" [LAN] recv " answer.recv())
+
+}
+
+TCPGetStates(cmd, more, from)                                 	{
 
 
 	switch cmd {
@@ -95,24 +82,20 @@ admStatus(cmd, more, from) {
 
 	}
 
-	admSendText(from, answer)
+	TCPSendTextTo(from, answer)
 
 }
 
-admSendText(to, Text) {
+TCPSendTextTo(machine, Text)                                   	{
 
 	global DC_SERV
 	global DC_CLI
 
-	x := new SocketTCP()
-	Connected := x.Connect([to, 13337])
-	x.SendText(Text)
-	x.Disconnect()
-
-	If Connected
-		SciTEOutput("connected to: " to " (" Text ")")
-	else
-		SciTEOutput("can't connected to: " to)
+	Server := Addendum.LAN.Server
+	If (compname<>Server.IamServer)
+		connection := TCPConnectTo(Server, Server.ip, Server.port)
+	msg := JSON.Dump({"to":machine, "txt":Text},, "UTF-8")
+	connection.sendText(msg)
 
 }
 

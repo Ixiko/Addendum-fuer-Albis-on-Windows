@@ -1,14 +1,15 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                              by Ixiko started in September 2017 - last change 06.10.2021 - this file runs under Lexiko's GNU Licence
+;                                              by Ixiko started in September 2017 - last change 27.11.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
 ; FENSTER                                                                                                                                                                                            	(46)
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; ----- Get -----
-; GetAncestor                                	GetLastActivePopup                   	GetParentList	                            	GetParent                                 	GetNextWindow
-; GetWindowInfo								GetWindowSpot							GetWindow									FindChildWindow							FindWindow
+; GetAncestor                                	GetLastActivePopup                   	GetParentList	                            	GetParentClassList                        	GetParent
+; GetNextWindow                           	GetWindowInfo								GetWindowSpot							GetWindow
+; FindChildWindow							FindWindow
 ; WinForms_GetClassNN               	WinForms_GetElementID
 ; ClientToScreen								RectOverlapsRect
 ; IsClosed											IsResizable									IsWindow                                    	IsWindowVisible                        	CheckWindowStatus
@@ -40,41 +41,28 @@ GetLastActivePopup(hwnd) {                                                      
 GetParentList(ChildHwnd) {                                                                                                        	;-- comma separated WinTitles and WinClasses of all parent windows
 
 	;15.05.2019: Code shortend - using extra functions and while loop
-	while, (pHwnd:= GetParent(ChildHwnd)) {
-			List .= WinGetTitle(pHwnd) " - " WinGetClass(pHwnd) ","
-			ChildHwnd:= pHwnd
+	while (pHwnd:= GetParent(ChildHwnd)) {
+		List .= WinGetTitle(pHwnd) " - " WinGetClass(pHwnd) ","
+		ChildHwnd:= pHwnd
 	}
 
 return List
 }
-GetParentClassList(ChildHwnd, WinHwnd) {                                                                                  	;-- comma separated WinTitles and WinClasses of all parent windows
 
-	;15.05.2019: Code shortend - using extra functions and while loop
-	List := Control_GetClassNN(WinHwnd, ChildHwnd) "|"
-	while, (pHwnd:= GetParent(ChildHwnd)) {
-			List := List . Control_GetClassNN(WinHwnd, pHwnd) "|"
-			ChildHwnd:= pHwnd
+GetParentClassList(ChildHwnd, WinHwnd) {                                                                                  	;-- list of WinClasses of all parent windows/controls
+
+	; 27.11.2021
+	parentlist 	:= ""
+	while (pHwnd := GetParent(ChildHwnd)) {
+		parentlist .= Control_GetClassNN(WinHwnd, ChildHwnd) ","
+		ChildHwnd := pHwnd
 	}
 
-return RTrim(List, "|")
-}
-_GetParentList(ChildHwnd) {                                                                                                      	;-- comma separated WinTitles and WinClasses of all parent windows
-
-	Loop {
-			pHwnd:= GetParent(ChildHwnd)
-			If !pHwnd
-					break
-			WinGetTitle	, WTitle		, % "ahk_id " pHwnd
-			WinGetClass	, WClass	, % "ahk_id " pHwnd
-			List.= WTitle . " - " . WClass "`,"
-			ChildHwnd:= pHwnd
-	}
-
-return List
+return RTrim(parentlist, ",")
 }
 
 GetParent(hWnd) {                                                                                                                     	;-- ermittelt das Parent Fenster
-	return GetHex(DllCall("GetParent", "Ptr", hWnd, "Ptr"))
+return GetHex(DllCall("GetParent", "Ptr", hWnd, "Ptr"))
 }
 
 GetNextWindow(hwnd, wCmd) {                                                                                                	;-- ermittelt die Fenster-Z Ordnung
@@ -87,7 +75,37 @@ GetNextWindow(hwnd, wCmd) {                                                     
 }
 
 GetWindow(hWnd, uCmd) {
-	return DllCall( "GetWindow", "Ptr", hWnd, "uint", uCmd, "Ptr")
+	/*
+
+		Value								Meaning
+
+		GW_CHILD						The retrieved handle identifies the child window at the top of the Z order, if the specified window is a parent window; otherwise,
+		5										the retrieved handle is NULL. The function examines only child windows of the specified window. It does not examine descendant windows.
+
+		GW_ENABLEDPOPUP		The retrieved handle identifies the enabled popup window owned by the specified window (the search uses the first such window found using GW_HWNDNEXT);
+		6										 otherwise, if there are no enabled popup windows, the retrieved handle is that of the specified window.
+
+		GW_HWNDFIRST				The retrieved handle identifies the window of the same type that is highest in the Z order.
+		0										If the specified window is a topmost window, the handle identifies a topmost window. If the specified window is a top-level window,
+												the handle identifies a top-level window. If the specified window is a child window, the handle identifies a sibling window.
+
+		GW_HWNDLAST				The retrieved handle identifies the window of the same type that is lowest in the Z order.
+		1										If the specified window is a topmost window, the handle identifies a topmost window. If the specified window is a top-level window,
+												the handle identifies a top-level window. If the specified window is a child window, the handle identifies a sibling window.
+
+		GW_HWNDNEXT				The retrieved handle identifies the window below the specified window in the Z order.
+		2                                      If the specified window is a topmost window, the handle identifies a topmost window. If the specified window is a top-level window,
+												the handle identifies a top-level window. If the specified window is a child window, the handle identifies a sibling window.
+
+		GW_HWNDPREV				The retrieved handle identifies the window above the specified window in the Z order.
+		3                                      If the specified window is a topmost window, the handle identifies a topmost window. If the specified window is a top-level window,
+												the handle identifies a top-level window. If the specified window is a child window, the handle identifies a sibling window.
+
+		GW_OWNER					The retrieved handle identifies the specified window's owner window, if any. For more information, see Owned Windows.
+		4
+
+	*/
+return DllCall( "GetWindow", "Ptr", hWnd, "uint", uCmd, "Ptr")
 }
 
 GetWindowInfo(hWnd) {                                                                                                            	;-- returns an Key:Val Object with informations about a window
@@ -133,6 +151,160 @@ GetWindowSpot(hWnd) {                                                           
 	wi.A    	:= NumGet(WININFO, 56, "UShort")
     wi.V    	:= NumGet(WININFO, 58, "UShort")
 Return wi
+}
+
+GetGUIThreadInfo(retVal:="", idThread:=0)  {                                                                            	;-- calls the GetGUIThreadInfo function
+
+	/* 			‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹‹›‹›‹‹›‹›‹›‹›‹›‹›‹›
+																 CAPTURE MOUSE- AND KEYBOARD FOCUS
+					‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹‹›‹›‹‹›‹›‹›‹›‹›‹›‹›
+
+						Get information about the current mouse or keyboard focus in the foreground or a selected window thread.
+						The function is based on the previous ♻ work 👷 of possibly Thalon and Philo.
+						(see here: ➩ https://www.autohotkey.com/board/topic/952-controlgetfocus-disables-doubleclick/page-2).
+						The function takes all information from the guiThreadInfo struct and transfers it into an autohotkey object.
+
+
+						edited by:          	IXIKO
+						licence:              	feel free to use
+						last modified on: 	27.11.2021
+					‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹‹›‹›‹‹›‹›‹›‹›‹›‹›‹›
+
+
+					       				━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+					       				📖 typedef struct tag GUITHREADINFO {
+					       				━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+			link:              	➩ https://docs.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-guithreadinfo
+
+			offset typedef    ahk   struct                           description
+			───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+				  0 DWORD [UInt] cbSize;                       	The size of this structure, in bytes. The caller must set this member to sizeof(GUITHREADINFO).
+				  4 DWORD [UInt] flags;                        	The thread state. This member can be one or more of the following values.
+
+																					Value										Meaning
+																					──────────────────────────────────────────────────────────────────────
+																					GUI_CARETBLINKING				The caret's blink state. This bit is set if the
+																					0x00000001								caret is visible.
+
+																					GUI_INMENUMODE					The thread's menu state. This bit is set if the
+																					0x00000004                           	thread is in menu mode.
+
+																					GUI_INMOVESIZE						The thread's move state. This bit is set if the
+																					0x00000002                           	thread is in a move or size loop.
+
+																					GUI_POPUPMENUMODE			The thread's pop-up menu state. This bit is
+																					0x00000010                            	set if the thread has an active pop-up menu.
+
+																					GUI_SYSTEMMENUMODE			The thread's system menu state. This bit is set
+																					0x00000008                           	if the thread is in a system menu mode.
+
+				  8 HWND [Ptr]  	hwndActive;             		A handle to the active window within the thread.
+				16 HWND [Ptr]  	hwndFocus;                  	A handle to the window that has the keyboard focus.
+				24 HWND [Ptr]  	hwndCapture;            	A handle to the window that has captured the mouse.
+				32 HWND [Ptr]  	hwndMenuOwner;     	A handle to the window that owns any active menus.
+				40 HWND [Ptr]  	hwndMoveSize;           	A handle to the window in a move or size loop.
+				48 HWND [Ptr]  	hwndCaret;               	A handle to the window that is displaying the caret.
+				56 RECT    [    ]  	rcCaret;                     	The caret's bounding rectangle, in client coordinates, relative to the window
+																				specified by the hwndCaret member.
+				72 bit structsize (ahk 64bit)
+
+			} GUITHREADINFO, *PGUITHREADINFO, *LPGUITHREADINFO;
+
+
+								━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+								📖 GetGuiThreadInfo(idThread, PGUITHREADINFO)
+								━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+		link:              	➩ https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getguithreadinfo
+
+		parameter: 		idThread (Type: DWORD)
+								The identifier for the thread for which information is to be retrieved. To retrieve this value,
+								use the GetWindowThreadProcessId function. If this parameter is NULL, the function returns
+								information for the foreground thread.
+
+								PGUITHREADINFO pgui (Type: LPGUITHREADINFO)
+								A pointer to a GUITHREADINFO structure that receives information describing the thread.
+								Note that you must set the cbSize member to sizeof(GUITHREADINFO) before calling this function.
+
+		return value:		Type: BOOL
+								If the function succeeds, the return value is nonzero.
+								If the function fails, the return value is zero. To get extended error information, call GetLastError.
+
+		‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗
+
+		                        ╔═════════════════════════════════════════════════════════╗
+		   	         📖 ═══╣   Description of GetGuiThreadInfo(retVal := "", idThread := 0)    ╠════ 📖
+		                        ╚═════════════════════════════════════════════════════════╝
+
+		parameter: 		idThread (integer)
+								Leave zero if you want to get informations about the active windowthread, otherwise
+								specifies the id of the guiThread whose information you need.
+
+								retVal (string)
+								Leave it empty if you want to get all information from the window thread. Otherwise
+								pass the name of a member of the guiThreadInfo structure. This way the function
+								can be used in IF queries without detours. Like here:
+
+									hFocus := GetGuiThreadInfo("hFocus")
+									While (GetGUIThreadInfo("hFocus") = hFocus)
+										sleep 50
+									MsgBox, The input focus has been removed!
+
+		return values:	returns an object containing all informations from the guiThreadInfo struct or if
+								retVal is a valid member name of the guiThreadInfo struct it will return only the
+								value of the member.
+								For better usability the returned object contains a list of thread states which are
+								hidden in the member flags. In this list each item except the last is terminated by
+								a linefeed (`n). Change the linefeed here in the function to get an otherwise
+								separated list.
+
+
+	 */
+
+		static guiThreadInfoSize	:= 8+(A_PtrSize*6)+16
+		static hwndCaret        	:= 8+A_PtrSize*5
+		static gTInfoStates        	:= {	"0x1":"GUI_CARETBLINKING", "0x2":"GUI_INMOVESIZE", "0x4":"GUI_INMENUMODE"
+							                	, 	"0x8":"GUI_SYSTEMMENUMODE", "0x10":"GUI_POPUPMENUMODE"}
+
+     	VarSetCapacity(guiThreadInfo, guiThreadInfoSize, 0)
+    	NumPut(guiThreadInfoSize, guiThreadInfo, 0)
+
+		 ;~ vTID := DllCall("GetWindowThreadProcessId", "Ptr", hwnd, "Ptr", 0, "UInt")
+
+    	if (DllCall("GetGUIThreadInfo", "UInt", idThread, "PTR", &guiThreadInfo) = 0) {   	; Foreground thread if idThread is zero
+			ErrorLevel := A_LastError   ; Failure
+			Return 0
+    	}
+
+		gTInfo := {	"flags"           	: Format("0x{:X}", NumGet(guiThreadInfo,   4, "Uint"))
+			        	,	"hActive"          	: Format("0x{:X}", NumGet(guiThreadInfo,   8, "Ptr"))
+			        	,	"hFocus"          	: Format("0x{:X}", NumGet(guiThreadInfo, 16, "Ptr"))
+			        	,	"hCapture"     	: Format("0x{:X}", NumGet(guiThreadInfo, 24, "Ptr"))
+			        	,	"hMenuOwner" 	: Format("0x{:X}", NumGet(guiThreadInfo, 32, "Ptr"))
+			        	,	"hMoveSize"     	: Format("0x{:X}", NumGet(guiThreadInfo, 40, "Ptr"))
+			        	,	"hCaret"          	: Format("0x{:X}", NumGet(guiThreadInfo, 48, "Ptr"))
+			        	,	"CaretX"          	: NumGet(guiThreadInfo, 56, "Int")
+			        	,	"CaretY"          	: NumGet(guiThreadInfo, 60, "Int")
+			        	,	"CaretW"          	: NumGet(guiThreadInfo, 64, "Int")
+			        	,	"CaretH"          	: NumGet(guiThreadInfo, 68, "Int")}
+
+		gTInfo.CaretW := gTInfo.CaretW 	- gTInfo.CaretX
+		gTInfo.CaretH := gTInfo.CaretH 	- gTInfo.CaretY
+
+		hits := 0, states := ""
+		For hexState, state in gTInfoStates
+			If (hexState & gTInfo.flags) {
+				hits += 1
+				states .= (hits>1 ? "`n":"") . state
+			}
+		If states
+			gTInfo.states := states
+
+		If retVal
+			return gTInfo[retVal]
+
+Return gTInfo
 }
 
 FindChildWindow(Parent, Child, DetectHiddenWindow="On") {                                                  	;{-- finds childWindow Hwnds of the parent window
@@ -304,10 +476,8 @@ ClientToScreen(hwnd, ByRef x, ByRef y) {
 RectOverlapsRect(vX1, vY1, vW1, vH1, vX2, vY2, vW2, vH2, vOpt="") {                                          	;-- check if rectangles (windows) overlap
 
 		/*    	DESCRIPTION
-
-				Link:             https://autohotkey.com/boards/viewtopic.php?t=30809
-				Author:        	jeeswg 20 Apr 2017, 11:43
-
+			Link:             https://autohotkey.com/boards/viewtopic.php?t=30809
+			Author:        	jeeswg 20 Apr 2017, 11:43
 		*/
 
 	;if (A is left of B) [rightmost A is left of leftmost B]
@@ -316,41 +486,41 @@ RectOverlapsRect(vX1, vY1, vW1, vH1, vX2, vY2, vW2, vH2, vOpt="") {             
 	;|| (A is is below B) [top of A is is below bottom of B]
 	;then A and B do not overlap
 
-	if InStr(vOpt, "x") ;reduce width and height values by 1
+	if InStr(vOpt, "x") ; reduce width and height values by 1
 		vW1 -= 1, vH1 -= 1, vW2 -= 1, vH2 -= 1
 
-	if InStr(vOpt, "e") ;(A = B) A equals B
-		if !(vX1 = vX2) || !(vY1 = vY2) || !(vW1 = vW2) || !(vH1 = vH2)
-			return 0
-		else
-			return 1
+	if InStr(vOpt, "e") ; (A = B) A equals B
+		return (vX1 != vX2 || vY1 != vY2 || vW1 != vW2 || vH1 != vH2) 	? 0 : 1
 
-	if InStr(vOpt, "r") ;coordinates are XYRB 'RECT style'
+	if InStr(vOpt, "r") ; coordinates are XYRB 'RECT style'
 		vR1 := vW1, vB1 := vH1, vR2 := vW2, vB2 := vH2
 	else
 		vR1 := vX1+vW1, vB1 := vY1+vH1, vR2 := vX2+vW2, vB2 := vY2+vH2
 
-	if InStr(vOpt, "c") ;(A contains B) A contains all of or is equal to B
-		if (vX2 < vX1) || (vY2 < vY1) || (vR2 > vR1) || (vH2 > vH1)
-			return 0
-		else
-			return 1
+	if InStr(vOpt, "c") ; (A contains B) A contains all of or is equal to B
+		return (vX2 < vX1|| vY2 < vY1 || vR2 > vR1 || vH2 > vH1)       	? 0 : 1
 
-	if InStr(vOpt, "w") ;(A within B) A is within or is equal to B
-		if (vX1 < vX2) || (vY1 < vY2) || (vR1 > vR2) || (vH1 > vH2)
-			return 0
-		else
-			return 1
+	if InStr(vOpt, "w") ; (A within B) A is within or is equal to B
+		return (vX1 < vX2 || vY1 < vY2 || vR1 > vR2 || vH1 > vH2)     	? 0 : 1
 
-	;(A overlaps B)
-	if (vR1 < vX2) || (vX1 > vR2) || (vB1 < vY2) || (vY1 > vB2)
-		return 0
-	else
-		return 1
+	; els (A overlaps B)
+	return (vR1 < vX2 || vX1 > vR2 || vB1 < vY2 || vY1 > vB2)          	? 0 : 1
+
+}
+
+OverlappingWindows(HWND1, HWND2) {                                                                                   	;-- hope its faster
+  ; // modified from:    http://www.autohotkey.com/community/viewtopic.php?f=2&t=86283
+	VarSetCapacity(RECT1, 16, 0)
+	VarSetCapacity(RECT2, 16, 0)
+	PtrType := A_PtrSize ? "Ptr" : "UInt" ; AHK_L : AHK_Basic
+	DllCall("User32.dll\GetWindowRect", PtrType, HWND1, PtrType, &RECT1)
+	DllCall("User32.dll\GetWindowRect", PtrType, HWND2, PtrType, &RECT2)
+  ; http://msdn.microsoft.com/en-us/library/dd145001(VS.85).aspx
+return DllCall("User32.dll\IntersectRect", PtrType, &RECT2, PtrType, &RECT1, PtrType, &RECT2, "UInt") ? true : false
 }
 
 IsClosed(win, wait) {                                                                                                                  	;-- waits until the specific window is closed
-	WinWaitClose, ahk_id %win%,, %wait%
+	WinWaitClose, % "ahk_id " win,, % wait
 	return ((ErrorLevel = 1) ? False : True)
 }
 
@@ -386,8 +556,8 @@ return !zoomed && !iconic ? "" : zoomed ? "z" : "i"
 }
 
 WinGetTitle(hwnd) {                                                                                                                   	;-- schnellere Fensterfunktion
-	;if (hwnd is not Integer)
-	;		hwnd :=GetDec(hwnd)
+	if (hwnd is not Integer)
+		hwnd :=GetDec(hwnd)
 	vChars := DllCall("user32\GetWindowTextLengthW", "Ptr", hWnd) + 1
 	VarSetCapacity(sClass, vChars << !!A_IsUnicode, 0)
 	DllCall("user32\GetWindowTextW", "UInt", hWnd, "Str", sClass, "Int", VarSetCapacity(sClass) + 1)
@@ -396,12 +566,11 @@ Return wtitle
 }
 
 WinGetClass(hwnd) {                                                                                                                	;-- schnellere Fensterfunktion
-	;if (hwnd is not Integer)
-	;		hwnd :=GetDec(hwnd)
+	if (hwnd is not Integer)
+		hwnd := GetDec(hwnd)
 	VarSetCapacity(sClass, 80, 0)
 	DllCall("GetClassNameW", "UInt", hWnd, "Str", sClass, "Int", VarSetCapacity(sClass)+1)
-	wclass := sClass
-	sClass =
+	wclass := sClass, sClass := ""
 Return wclass
 }
 
@@ -474,7 +643,7 @@ SetWindowPos(hWnd, x, y, w, h, hWndInsertAfter := 0, uFlags := 0x40) {          
 	SWP_NOMOVE                 	:= 0x0002	; Retains the current position (ignores X and Y parameters).
 	SWP_NOZORDER              	:= 0x0004	; Retains the current Z order (ignores the hWndInsertAfter parameter).
 	SWP_NOREDRAW             	:= 0x0008	; Does not redraw changes.
-	SWP_NOACTIVATE   	       	:= 0x0010	; Does not activate the window.
+	SWP_NOACTIVATE   	         	:= 0x0010	; Does not activate the window.
 	SWP_DRAWFRAME            	:= 0x0020	; Draws a frame (defined in the window's class description) around the window.
 	SWP_FRAMECHANGED     	:= 0x0020	; Applies new frame styles set using the SetWindowLong function.
 	SWP_SHOWWINDOW        	:= 0x0040	; Displays the window.
@@ -492,15 +661,16 @@ Return DllCall("SetWindowPos", "Ptr", hWnd, "Ptr", hWndInsertAfter, "Int", x, "I
 }
 
 WinMoveZ(hWnd, C, X, Y, W, H, Redraw:=0) {                                                                           	;-- WinMoveZ v0.5 by SKAN on D35V/D361 @ tiny.cc/winmovez
-Local V:=VarSetCapacity(R,48,0), A:=&R+16, S:=&R+24, E:=&R, NR:=&R+32, TPM_WORKAREA:=0x10000
-  C:=( C:=Abs(C) ) ? DllCall("SetRect", "Ptr",&R, "Int",X-C, "Int",Y-C, "Int",X+C, "Int",Y+C) : 0
-  DllCall("SetRect", "Ptr",&R+16, "Int",X, "Int",Y, "Int",W, "Int",H)
-  DllCall("CalculatePopupWindowPosition", "Ptr",A, "Ptr",S, "UInt",TPM_WORKAREA, "Ptr",E, "Ptr",NR)
-  X:=NumGet(NR+0,"Int"),  Y:=NumGet(NR+4,"Int")
+	; https://www.autohotkey.com/boards/viewtopic.php?f=6&t=76745&hilit=WinMoveZ
+	Local V:=VarSetCapacity(R,48,0), A:=&R+16, S:=&R+24, E:=&R, NR:=&R+32, TPM_WORKAREA:=0x10000
+	C:=( C:=Abs(C) ) ? DllCall("SetRect", "Ptr",&R, "Int",X-C, "Int",Y-C, "Int",X+C, "Int",Y+C) : 0
+	DllCall("SetRect", "Ptr",&R+16, "Int",X, "Int",Y, "Int",W, "Int",H)
+	DllCall("CalculatePopupWindowPosition", "Ptr",A, "Ptr",S, "UInt",TPM_WORKAREA, "Ptr",E, "Ptr",NR)
+	X:=NumGet(NR+0,"Int"),  Y:=NumGet(NR+4,"Int")
 Return DllCall("MoveWindow", "Ptr",hWnd, "Int",X, "Int",Y, "Int",W, "Int",H, "Int",Redraw)
 }
 
-MoveWinToCenterScreen(hWin) {                                                                                               	;-- moves a window to center of screen if its position is outside the visible screen area
+MoveWinToCenterScreen(hWin) {                                                                                               	;-- moves a window to center of screen if its outside the visible area
 
 	 /*  dependencies:
 
@@ -606,34 +776,40 @@ WFNPUPWTT:
 return
 }
 
-Redraw( hwnd ) {                                                                                                                       	;-- redraw's a window
-   static RDW_ALLCHILDREN	:= 0x80, RDW_ERASE    	:= 0x4  , RDW_ERASENOW	:=0x200, RDW_FRAME                 	:=0x400	, RDW_INTERNALPAINT	:=0x2   	, RDW_INVALIDATE	:=0x1
-   static RDW_NOCHILDREN	:= 0x40, RDW_NOERASE 	:= 0x20, RDW_NOFRAME 	:=0x800, RDW_NOINTERNALPAINT	:=0x10 	, RDW_UPDATENOW	:=0x100	, RDW_VALIDATE  	:=0x8
+Redraw(hwnd) {                                                                                                                           	;-- redraw's a window
 
-   style := RDW_INVALIDATE | RDW_ERASE  | RDW_FRAME | RDW_INVALIDATE | RDW_ERASENOW | RDW_UPDATENOW | RDW_ALLCHILDREN
-   return DllCall("RedrawWindow", "uint", hwnd, "uint", 0, "uint", 0, "uint", style)
+   static 	RDW_ALLCHILDREN      	:= 0x80	, RDW_ERASE             	:= 0x4    	, RDW_ERASENOW	:= 0x200
+		, 	RDW_FRAME                    	:= 0x400	, RDW_INTERNALPAINT	:= 0x2   	, RDW_INVALIDATE	:= 0x1
+    	, 	RDW_NOCHILDREN     	:= 0x40	, RDW_NOERASE      	:= 0x20	, RDW_NOFRAME 	:= 0x800
+		, 	RDW_NOINTERNALPAINT	:= 0x10 	, RDW_UPDATENOW	:= 0x100	, RDW_VALIDATE  	:= 0x8
+
+   style := RDW_INVALIDATE | RDW_ERASE  | RDW_FRAME |  RDW_ERASENOW | RDW_UPDATENOW | RDW_ALLCHILDREN
+
+return DllCall("RedrawWindow", "uint", hwnd, "uint", 0, "uint", 0, "uint", style)
 }
 
-UpdateWindow(hwnd) {                                                                                                                	;-- sends WM_Paint to Update a window
+UpdateWindow(hwnd) {                                                                                                               	;-- sends WM_Paint to update a window
 return dllcall("UpdateWindow", "Ptr", hwnd)
 }
 
 VerifiedWindowClose(hwnd) {
 
-	If WinExist("ahk_id " hwnd)	{
+	wtitle 	:= WinGetTitle(hwnd)
+	wclass 	:= WinGetClass(hwnd)
+	If WinExist(wtitle " ahk_class " wclass)	{                                	; das WinExist mit hwnd funktioniert nicht immer oder nie?
 		WinClose, % "ahk_id " hwnd
 		WinWaitClose, % "ahk_id " hwnd,, 2
 		If ErrorLevel {
-			SendMessage 0x112, 0xF060,,, % "ahk_id " hwnd 		; WMSysCommand + SC_Close
-			WinWaitClose                         , % "ahk_id " hwnd,, 2
+			SendMessage 0x112, 0xF060,,, % "ahk_id " hwnd 	    	; WMSysCommand + SC_Close
+			WinWaitClose, % "ahk_id " hwnd,, 2
 			If ErrorLevel {
-				SendMessage 0x10, 0,,,        % "ahk_id " hwnd         ; WM_Close
-				WinWaitClose                  	  , % "ahk_id " hwnd,, 2
+				SendMessage 0x10, 0,,,% "ahk_id " hwnd                	; WM_Close
+				WinWaitClose, % "ahk_id " hwnd,, 2
 				If ErrorLevel {
-					SendMessage 0x2, 0,,,     	% "ahk_id " hwnd 	   	; WM_Destroy
-					WinWaitClose              	  , % "ahk_id " hwnd,, 2
+					SendMessage 0x2, 0,,,% "ahk_id " hwnd 	        	; WM_Destroy
+					WinWaitClose, % "ahk_id " hwnd,, 2
 					If ErrorLevel
-						Process, Close          	  , % "ahk_id " hwnd
+						Process, Close, % "ahk_id " hwnd
 				}
 			}
 		}

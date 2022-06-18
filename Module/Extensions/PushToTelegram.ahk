@@ -34,7 +34,8 @@ Public Sub PushToTelegram()
 
     Dim retVal
 
-    PushToPath = "C:\Program Files\AutoHotkey\Autohotkey.exe /f ""M:\Praxis\Skripte\Skripte Neu\Addendum für AlbisOnWindows\Module\Extensions\PushToTelegram.ahk"" "
+    PushToPath = "C:\Program Files\AutoHotkey\Autohotkey.exe /f ""M:\Praxis\Skripte\Skripte Neu\"
+						&  "Addendum für AlbisOnWindows\Module\Extensions\PushToTelegram.ahk"" "
 
     For Each msg In Application.ActiveExplorer.Selection
 
@@ -64,7 +65,8 @@ Public Sub AutoPushToTelegram(mail As Outlook.MailItem)
 
     Set mAtts = mail.Attachments
 
-    text = " ""EMail von: " & msg.SenderEmailAddress & " [" & msg.SenderName & " " & msg.Sender & "]" & vbCrLf & "erhalten um:" & vbTab & Now & vbCrLf & "Betreff:   " & vbTab & msg.Subject & vbCrLf & "Body:      " & vbTab & msg.Body & ""
+    text = " ""EMail von: " & msg.SenderEmailAddress & " [" & msg.SenderName & " " & msg.Sender & "]" & vbCrLf & "erhalten um:"
+				& vbTab & Now & vbCrLf & "Betreff:   " & vbTab & msg.Subject & vbCrLf & "Body:      " & vbTab & msg.Body & ""
 
     'Send Message to AHK Script
     cmdln = PushToPath & "" & text & ""
@@ -75,12 +77,13 @@ End Sub
 
 
 	begonnen am: 03.11.2021
-	letzte Änderung: 03.11.2021
+	letzte Änderung: 19.01.2022
 
  */
 
  ; Variablen Albis Datenbankpfad / Addendum Verzeichnis                     	;{
 
+	#NoEnv
 	#SingleInstance               	, Force
 	#MaxThreads                  	, 200
 	#MaxThreadsBuffer       	, On
@@ -138,11 +141,11 @@ End Sub
 			ExitApp
 		}
 
+
+		/*
 		files := Array()
 		Loop, Files, % FolderToMoveFrom . "Fax *.pdf"
 			files.Push(A_LoopFileFullPath)
-
-		/*
 		For idx, filepath in files {
 
 			SplitPath, filePath, fName, fPath, fExt, fNoExt
@@ -173,12 +176,12 @@ End Sub
 				}
 
 			}
+			FileMove, % filepath, % filePathMoveTo
+			TrayTip, PushToTelgram, % "Ein Fax mit dem Namen: " fname "`n nach " adm.BefundOrdner " verschoben.", 2
+
+			}
 			 */
 
-		FileMove, % filepath, % filePathMoveTo
-		TrayTip, PushToTelgram, % "Ein Fax mit dem Namen: " fname "`n nach " adm.BefundOrdner " verschoben.", 2
-
-		;~ }
 
 		ExitApp
 	}
@@ -187,11 +190,11 @@ End Sub
 	MailBot := LoadMailBot()
 
   ; Mail Daten und Betreff und Text für Lesbarkeit umformen
-	messageToSend := TransformMailToTelgram(messageToSend)
+	messageToSend := TransformEMail(messageToSend)
 
  ; Mailinhalt senden und das wars auch schon
-	Telegram.SendText(adm.Telegram.MailBot.Token, adm.Telegram.MailBot.ChatId, messageToSend)
-
+	response := Telegram.SendText(adm.Telegram.MailBot.Token, adm.Telegram.MailBot.ChatId, messageToSend)
+	;~ SciTEOutput(response)
 
 ExitApp
 
@@ -229,7 +232,8 @@ LoadMailBot()                                                                   
 		InputBox, BotToken, % A_ScriptName, % "Jetzt brauche ich das BotToken",, 400, 150,,, % BotToken
 		If (!RegExMatch(BotToken, "i)\d+\:[\w_\-\:\;\.\\+,]{20,}$") || StrLen(BotToken) < 30) {
 			msg1 := "Mit Deinem BotToken stimmt etwas nicht: " (StrLen(BotToken) < 30 ?  "es ist zu kurz" : "die vewendeten Zeichen entsprechen nicht den Vorgaben")
-			msg2 := fail = 1 ? "So kommen wir nicht voran. Das Token muss korrekt sein!" : "Das Token sieht in etwa so aus: 831435972:HGABRALFIG3nmCia8sp3lirvfX_Sk3RUE4Az."
+			msg2 := fail = 1 ? "So kommen wir nicht voran. Das Token muss korrekt sein!" : "Das Token sieht in etwa so aus: "
+										. " 831435972:HGABRALFIG3nmCia8sp3lirvfX_Sk3RUE4Az."
 			msg3 := fail = 1 ? "So wirst Du nie fertig. Konzentration!" : "Okay noch eine Runde!"
 			MsgBox, 0x1003, % A_ScriptName, % msg1 "`n"
 																.	msg2 "`n "
@@ -244,12 +248,14 @@ LoadMailBot()                                                                   
 		}
 		IniWrite, BotToken, % adm.Ini, % "Telegram", % BotName "_BotToken"
 
-		msg1 := fail = 1 ? "besteht sie doch nur aus Zahlen" : fail = 2 ? "besteht sie doch nur aus 0,1,2,3....9" : "errinnert Sie uns doch an unseren Bankkontostand (1435454534)."
+		msg1 := fail = 1 ? "besteht sie doch nur aus Zahlen" : fail = 2 ? "besteht sie doch nur aus 0,1,2,3....9" : "errinnert Sie uns doch an unseren "
+									. "Bankkontostand (1435454534)."
 		ChatID:
 		InputBox, ChatID, % A_ScriptName, % "Nichts leichter als eine ChatID, ",, 400, 150,,, % ChatID
 		If (!RegExMatch(ChatID, "i)^\d+$") || StrLen(ChatID) < 8) {
 			msg1 := "Mit Deiner ChatID stimmt etwas nicht: " (StrLen(ChatID) < 8 ?  "sie ist zu kurz!" : "Du hast nicht nur Zahlen verwendet!")
-			msg2 := fail = 1 ? "So kommen wir nicht voran. Die ChatID muss korrekt sein!" : fail = 2 ? "Ist nicht allzu schwer" : "Okay, " fail ". Fail-Runde,  ich glaub weiter an Dich!"
+			msg2 := fail = 1 ? "So kommen wir nicht voran. Die ChatID muss korrekt sein!" : fail = 2 ? "Ist nicht allzu schwer" : "Okay, " fail ". Fail-Runde,"
+										. "  ich glaub weiter an Dich!"
 			msg3 := fail = 1 ? "So wirst Du nie fertig. Konzentration!" : fail = 2 ? "Nochmal!" : fail= 2 ? "Du hast es drauf!" : "0123456789 ich hab Geduld!"
 			MsgBox, 0x1003, % A_ScriptName, % msg1 "`n"
 																.	msg2 "`n "
@@ -309,32 +315,175 @@ return {	"BotName"            	: BotName
 }
 
 
-TransformMailToTelgram(messageToSend) 												{
+TransformEMail(messageToSend) 												{
+
+	/*
+
+	<b>bold</b>, <strong>bold</strong>
+	<i>italic</i>, <em>italic</em>
+	<u>underline</u>, <ins>underline</ins>
+	<s>strikethrough</s>, <strike>strikethrough</strike>, <del>strikethrough</del>
+	<b>bold <i>italic bold <s>italic bold strikethrough</s> <u>underline italic bold</u></i> bold</b>
+	<a href="http://www.example.com/">inline URL</a>
+	<a href="tg://user?id=123456789">inline mention of a user</a>
+	<code>inline fixed-width code</code>
+	<pre>pre-formatted fixed-width code block</pre>
+	<pre><code class="language-python">pre-formatted fixed-width code block written in the Python programming language</code></pre>
+
+	 */
+
+	;~ CRLF :="`n`r"
+	CRLF :="`n`r"
+
+  ; Namen des Absenders lesen
+	RegExMatch(messageToSend, "i)EMail\s*von:\s+(?<address>.*?)\s*\[(?<name>.*?)\]", sender)
+
+  ; Sonderzeichen und doppelte Absendernamen entfernen
+	sendername 	:= RegExReplace(sendername, "[^\pL\s@\.\-]+", " ")  ;EMail bleibt
+	sendername 	:= RegExReplace(sendername, "\s+", " ")
+	sendername	:= StrReplace(sendername, " ", "`n")
+	Sort, sendername, U
+	sn := StrReplace(sendername, "`n", " ")
+	sn := sn=senderaddress ? "" : "[" sn "]"
+	messageToSend := RegExReplace(messageToSend, "i)(EMail\s*von:.*)\[.*\]", "$1[" sn "]")
+	sendername 	:= StrSplit(sendername, "`n")
 
   ; mehrfache Folgen von Zeilenendezeichen entfernen
-	messageToSend := RegExReplace(messageToSend, "[\n\r]{2}[\n\r]{2}")
-	messageToSend := RegExReplace(messageToSend, "([\n\r]{1,})[\n\r]{1,}", "$1")
-	messageToSend := RegExReplace(messageToSend, "erhalten um:\s*", "`nerhalten um: ")
-	messageToSend := RegExReplace(messageToSend, "Betreff:\s*", "`nBetreff: ")
-	messageToSend := RegExReplace(messageToSend, "Body:\s*", "**`nBody:`n`n")
+	messageToSend := RegExReplace(messageToSend, ",([^\s])", ", $1")
+	messageToSend := RegExReplace(messageToSend, "EMail\s+von:\s*", "*EMail von:* ")
+	messageToSend := RegExReplace(messageToSend, "erhalten um:\s*", "*erhalten um:* ")
+	messageToSend := RegExReplace(messageToSend, "Betreff:\s*", "*Betreff:* ")
+	messageToSend := RegExReplace(messageToSend, "Body:\s*", "`n`r")
 
-return messageToSend
+  ; löscht Datenschutzhinweise, woher oder von was gesendet, versucht die Unterschrift im Text der Mail zu erkennen  ...
+  ; Zeile für Zeile durchsuchen und nur die Zeile nehmen in welcher der Name des Absenders am Ende der Zeile steht
+	msg := "", ws := "                                                                                                                                        "
+	msgLines := StrSplit(messageToSend, "`n", "`r")
+	For lineNr, line in msgLines {
+
+		upperwords := lineend	:= namesfound := 0, namematch := ""
+		msg .= line . CRLF
+		If (StrLen(line)=0) {
+			continue
+		}
+		else If (RegExMatch(line, "i)(EMail\svon|Betreff|Body|erhalten\sum)\s*:") || RegExMatch(line, "[,;:]\s*$")) {
+			continue
+		}
+		else {
+
+		 ; nur die letzten Worte vergleichen max. 2 mehr als der Absendername enthält
+			lword 	:= hammer(line)
+			startIdx	:= lword.Count()-sendername.Count()-2 <=0 ? 1 : lword.Count()-sendername.Count()-2
+			Loop % lword.Count()-startIdx+1 {
+				lpos	:= A_Index + startIdx - 1
+				word	:= lword[lpos]
+				upperwords += RegExMatch(word, "^[A-ZÄÖÜ]") ? 1 : -1
+				upperwords := upperwords < 0 ? 0 : upperwords > 3 ? 3 : upperwords
+				For sindex, name in sendername {
+					matched     	:= RegExMatch(word, "i)" name) ? 1 : 0
+					namesfound += matched
+					namematch 	.= matched ? name " " : ""
+					lineend      	:= matched ? lword.Count() - lpos : lineend
+				}
+			}
+
+		}
+
+		;~ pline := SubStr(line, 1, 20)
+		;~ SciTEOutput(lineNr ": (" lword.Count() "|" startIdx ") " pline "`t[lwords: " lword.Count() ", matches: " namesfound "|" namematch ", epos: " lineend "]")
+
+		If (namesfound = sendername.Count() && namematch && lineend <= 2)  {
+			SciTEOutput("break 1")
+			linef := 1
+			break
+		}
+		else if (upperwords > 2 && lword.Count() <= upperwords+2) {
+			SciTEOutput("break 2 ")
+			linef := 2
+			break
+		}
+
+	}
+	SciTEOutput(lword.Count() "<=" upperwords " in Zeile: " lineNr-3 )
+	Clipboard := messageToSend "`n"  msg
+
+return msg
 }
+
+hammer(string) {
+	string := RegExReplace(string, "[^\pL\s]+", " ")
+	string := RegExReplace(string, "\s{2,}", " ")
+return StrSplit(string, A_Space)
+}
+
 class Telegram 																							{        	;-- mini Telegramklasse - finde meine andere nicht
 
 	SendText(telegramBotKey, telegramChatId, textMessage) {				                    			;-- another way to send a message
 
 		WinHTTP := ComObjCreate("WinHTTP.WinHttpRequest.5.1")
-		WinHTTP.Open("POST", Format("https://api.telegram.org/bot{1}/sendMessage?chat_id={2}&text={3}", telegramBotKey, telegramChatId, uriencode(textMessage)), 0)
-		;WinHTTP.SetRequestHeader("Content-Type", "application/json")
+		WinHTTP.Open("POST"	, url := Format("https://api.telegram.org/bot{1}/sendMessage?chat_id={2}&text={3}&parse_mode=markdown"  ; &parse_mode=html
+											, telegramBotKey, telegramChatId, URIEncode(textMessage)), 0)
 		WinHTTP.Send()
 		response := WinHTTP.responseText
 
-		TrayTip,  % "Mail an " adm.Telegram.MailBot.BotName " weitergeleitet!", % "Telegram hat geantwortet: `n" response, 4
 
 	Return response
 	}
 
+}
+
+EncodeHTML(String, Flags := 1) {
+    SetBatchLines, -1
+    static TRANS_HTML_NAMED := 1
+    static TRANS_HTML_NUMBERED := 2
+    static ansi := ["euro", "#129", "sbquo", "fnof", "bdquo", "hellip", "dagger", "Dagger", "circ", "permil", "Scaron", "lsaquo", "OElig", "#141", "#381", "#143", "#144", "lsquo", "rsquo"
+						, "ldquo", "rdquo", "bull", "ndash", "mdash", "tilde", "trade", "scaron", "rsaquo", "oelig", "#157", "#382", "Yuml", "nbsp", "iexcl", "cent", "pound", "curren", "yen", "brvbar"
+						, "sect", "uml", "copy", "ordf", "laquo", "not", "shy", "reg", "macr", "deg", "plusmn", "sup2", "sup3", "acute", "micro", "para", "middot", "cedil", "sup1", "ordm", "raquo"
+						, "frac14", "frac12", "frac34", "iquest", "Agrave", "Aacute", "Acirc", "Atilde", "Auml", "Aring", "AElig", "Ccedil", "Egrave", "Eacute", "Ecirc", "Euml", "Igrave", "Iacute", "Icirc"
+						, "Iuml", "ETH", "Ntilde", "Ograve", "Oacute", "Ocirc", "Otilde", "Ouml", "times", "Oslash", "Ugrave", "Uacute", "Ucirc", "Uuml", "Yacute", "THORN", "szlig", "agrave"
+						, "aacute", "acirc", "atilde", "auml", "aring", "aelig", "ccedil", "egrave", "eacute", "ecirc", "euml", "igrave", "iacute", "icirc", "iuml", "eth", "ntilde", "ograve", "oacute", "ocirc"
+						, "otilde", "ouml", "divide", "oslash", "ugrave", "uacute", "ucirc", "uuml", "yacute", "thorn", "yuml"]
+    static unicode := {0x20AC:1, 0x201A:3, 0x0192:4, 0x201E:5, 0x2026:6, 0x2020:7, 0x2021:8, 0x02C6:9, 0x2030:10, 0x0160:11, 0x2039:12, 0x0152:13, 0x2018:18
+						, 0x2019:19, 0x201C:20, 0x201D:21, 0x2022:22, 0x2013:23, 0x2014:24, 0x02DC:25, 0x2122:26, 0x0161:27, 0x203A:28, 0x0153:29, 0x0178:32}
+
+    if !A_IsUnicode && !(Flags & TRANS_HTML_NAMED)
+        throw Exception("Parameter #2 must be omitted or 1 in the ANSI version.", -1)
+
+    out  := ""
+    for i, char in StrSplit(String)    {
+        code := Asc(char)
+        switch code        {
+            case 10: out .= "<br>`n"
+            case 34: out .= "&quot;"
+            case 38: out .= "&amp;"
+            case 60: out .= "&lt;"
+            case 62: out .= "&gt;"
+            default:
+            if (code >= 160 && code <= 255)            {
+                if (Flags & TRANS_HTML_NAMED)
+                    out .= "&" ansi[code-127] ";"
+                else if (Flags & TRANS_HTML_NUMBERED)
+                    out .= "&#" code ";"
+                else
+                    out .= char
+            }
+            else if (A_IsUnicode && code > 255)            {
+                if (Flags & TRANS_HTML_NAMED && unicode[code])
+                    out .= "&" ansi[unicode[code]] ";"
+                else if (Flags & TRANS_HTML_NUMBERED)
+                    out .= "&#" code ";"
+                else
+                    out .= char
+            }
+            else            {
+                if (code >= 128 && code <= 159)
+                    out .= "&" ansi[code-127] ";"
+                else
+                    out .= char
+            }
+        }
+    }
+    return out
 }
 
 
@@ -346,7 +495,7 @@ URIEncode(str, encoding := "UTF-8")  														{
       bool := (code > 0x7F || code < 0x30 || code = 0x3D)
       UrlStr .= bool ? "%" . Format("{:02X}", code) : Chr(code)
    }
-   Return UrlStr
+Return UrlStr
 }
 CreateFormData(ByRef retData, ByRef retHeader, objParam) 						{
 	New CreateFormData(retData, retHeader, objParam)

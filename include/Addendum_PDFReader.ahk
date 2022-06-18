@@ -1,16 +1,16 @@
-﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;     	Addendum_PDFReader
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;		Verwendung:	    	-	RPA Funktionen PDF Anzeigeprogramme für
 ;	                                   	1. Sumatra PDF V3.1,3.2 und 3.3
 ;	                                  	2. FoxitReader ab V9+
 ;
 ;
-;		Abhängigkeiten:	-	GettAppImagePath
+;		Abhängigkeiten:	-	Addendum_Internal, Addendum_Controls, Addendum_Window
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_StackifyGui last change:    	07.11.2021
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;       Addendum_StackifyGui last change:    	20.02.2022
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
 
 ; -------------------------------------------------------------
@@ -66,7 +66,7 @@ PdfSaveAs(PdfFullFilePath,PDFViewerClass, PDFViewerHwnd) {       	;-- Callback F
 			WinWait, % foxitSaveAs,, 6                                       	; wartet 6 Sekunden auf das Dialogfenster
 			If !(hSaveAs := GetHex(WinExist(foxitSaveAs)))        	; 'Speichern unter' - Dialog handle
 				return
-			VerifiedSetText("Edit1", PdfFullFilePath , hSaveAs)     	; Speicherpfad eingeben
+			VerifiedSetText("Edit1", PdfFullFilePath, hSaveAs)      	; Speicherpfad eingeben
 			VerifiedClick("Button3", hSaveAs,,, true)                   	; Speichern Button drücken
 			FoxitInvoke("Close", PDFViewerHwnd)                        	; dieses Dokument schließen
 
@@ -77,7 +77,7 @@ PdfSaveAs(PdfFullFilePath,PDFViewerClass, PDFViewerHwnd) {       	;-- Callback F
 			WinWait, % sumatraSaveAs,, 6                                  	; wartet 6 Sekunden auf das Dialogfenster
 			If !(hSaveAs := GetHex(WinExist(sumatraSaveAs)))     	; 'Speichern unter' - Dialog handle
 				return
-			VerifiedSetText("Edit1", PdfFullFilePath , hSaveAs)     	; Speicherpfad eingeben
+			VerifiedSetText("Edit1", PdfFullFilePath, hSaveAs)      	; Speicherpfad eingeben
 			VerifiedClick("Button2", hSaveAs,,, true)                  	; Speichern Button drücken
 			SumatraInvoke("Close", PDFViewerHwnd)                  	; dieses Dokument schließen
 
@@ -93,49 +93,50 @@ PdfSaveAs(PdfFullFilePath,PDFViewerClass, PDFViewerHwnd) {       	;-- Callback F
 return FExists
 }
 
+
 ; -------------------------------------------------------------
 ; SUMATRA PDF
 ; -------------------------------------------------------------
-SumatraInvoke(command, SumatraID="") {                                  	;-- wm_command wrapper for SumatraPDF V3.1-3.3
+SumatraInvoke(command, hSumatra="", ShowExceptions:=true) {  	;-- wm_command wrapper for SumatraPDF V3.1-3.3
 
 	/* DESCRIPTION of FUNCTION:  SumatraInvoke()
 
-		                                                                               by Ixiko (version 30.11.2020)
-		---------------------------------------------------------------------------------------------------
-		a wm_command wrapper for SumatraPdf V3.1 & V3.2
-		...........................................................
+		                                                                               by Ixiko (version 19.02.2022)
+		..............................................................................................................................
+		a wm_command wrapper for SumatraPdf V3.1-V3.3
+		..............................................................................................................................
 		Remark:
-		- SumatraPDF has changed all wm_command codes from V3.1 to V3.2
-		- the script tries to automatically recognize the version of the addressed
-		  SumatraPDF process in order to send the correct commands
-		- maybe not all commands are listed !
-		---------------------------------------------------------------------------------------------------
+		- SumatraPDF has changed all wm_command codes from V3.1 to V3.3
+		- the script tries to automatically recognize the version of the addressed SumatraPDF
+		  process in order to send the correct commands
+		- maybe not all commands are listed!
+		-----------------------------------------------------------------------------------------------------
 		Parameters:
-		- command:	the names are borrowed from menu or toolbar names. However,
-							no whitespaces or hyphens are used, only letters
-		- SumatraID:	by use of a valid handle, this function will post your command to
-							Sumatra. Otherwise by use of a version string ("3.1" or "3.2") this
-							function returns the wm_command code.
+		- command:        	the names are borrowed from menu or toolbar names. However,
+					        		no whitespaces or hyphens are used, only letters
+		- hSumatra:       	by use of a valid handle, this function will post your command to
+					        		Sumatra. Otherwise by use of a version string ("3.1", "3.2", "3.3")
+				        			this function returns the wm_command code.
+		- ShowExceptions:	you can suppress the throwing of exceptions by this function
 		...........................................................
-		Rersult:
+		Result:
 		- You have to control the success of postmessage command yourself!
 		---------------------------------------------------------------------------------------------------
 
 		---------------------------------------------------------------------------------------------------
 		      EXAMPLES - EXAMPLES - EXAMPLES - EXAMPLES - EXAMPLES - EXAMPLES
 
-		SumatraInvoke("ShowToolbar", "3.2")      SumatraInvoke("DoublePage", SumatraID)
+		SumatraInvoke("ShowToolbar", "3.2")      SumatraInvoke("DoublePage", hSumatra)
 		.................................................       ...................................................................
-		this one only returns the Sumatra              sends the command "DoublePage" to
+		this one only returns the Sumatra                    sends the command "DoublePage" to
         command-code                                             your specified Sumatra process using
-																 parameter 2 (SumatraID) as window handle.
+																   parameter 2 (hSumatra) as window handle.
 															 		          command-code will be returned too
 		---------------------------------------------------------------------------------------------------
 
 	*/
 
 		static	SumatraCmds
-		local	SumatraPID
 
 	; Sumatra wm_commands
 		If !IsObject(SumatraCmds) {
@@ -227,7 +228,7 @@ SumatraInvoke(command, SumatraID="") {                                  	;-- wm_
 												,	"ShowPagesContinuously":     	425  	; View
 												,	"MangaMode":                       	426  	; View
 												,	"RotateLeft":                              	432  	; View
-												,	"RotateRight":                            	434  	; View
+												,	"RotateRight":                           	434  	; View
 												,	"Presentation":                        	438  	; View
 												,	"Fullscreen":                          	444  	; View
 												,	"Bookmark":                          	000  	; View - do not use! empty call!
@@ -243,7 +244,7 @@ SumatraInvoke(command, SumatraID="") {                                  	;-- wm_
 												,	"Forward":                             	598  	; GoTo
 												,	"Find":                                   	470  	; GoTo
 												,	"FindNext":                             	472  	; Toolbar
-												,	"FindPrevious":                          	474  	; Toolbar
+												,	"FindPrevious":                         	474  	; Toolbar
 												,	"MatchCase":                          	476  	; Toolbar
 												,	"FitWithContinuously":               	3026	; Toolbar
 												,	"FitASinglePage":                    	3027	; Toolbar
@@ -304,7 +305,7 @@ SumatraInvoke(command, SumatraID="") {                                  	;-- wm_
 												,	"ShowPagesContinuously":     	218  	; View
 												,	"MangaMode":                       	219  	; View
 												,	"RotateLeft":                              	220  	; View
-												,	"RotateRight":                            	221  	; View
+												,	"RotateRight":                           	221  	; View
 												,	"Presentation":                        	224  	; View
 												,	"Fullscreen":                          	223  	; View
 												,	"Bookmark":                          	000  	; View - do not use! empty call!
@@ -320,7 +321,7 @@ SumatraInvoke(command, SumatraID="") {                                  	;-- wm_
 												,	"Forward":                             	598  	; GoTo
 												,	"Find":                                   	245  	; GoTo
 												,	"FindNext":                             	243  	; Toolbar
-												,	"FindPrevious":                          	244  	; Toolbar
+												,	"FindPrevious":                         	244  	; Toolbar
 												,	"MatchCase":                          	476  	; Toolbar
 												,	"FitWithContinuously":               	3026	; Toolbar
 												,	"FitASinglePage":                    	3027	; Toolbar
@@ -359,7 +360,6 @@ SumatraInvoke(command, SumatraID="") {                                  	;-- wm_
 												,	"HighlightLinks":                       	616  	; Debug
 												,	"ToggleEBookUI":                     	624  	; Debug
 												,	"MuiDebugPaint":                     	626  	; Debug
-												,	"MuiDebugPaint":                     	626  	; Debug
 												,	"AnnotationFromSelection":      	628  	; Debug
 												,	"DownloadSymbols":                 	630}  	; Debug
 
@@ -369,188 +369,57 @@ SumatraInvoke(command, SumatraID="") {                                  	;-- wm_
 	; try to determine the version of the running SumatraPDF process from the passed window handle
 	; ---------------------------------------------------------------------------------------------------------------------
 	; parts of following code are taken from WinSpy
-
-		WinGetClass, class, % "ahk_id " SumatraID
+		WinGetClass, class, % "ahk_id " hSumatra
 		If InStr(class, "SUMATRA_PDF_FRAME") {
 
 		; get version of running sumatra.exe
-			WinGet SumatraPID, PID, % "ahk_id " SumatraID
+			WinGet SumatraPID, PID, % "ahk_id " hSumatra
 			Enum := ComObjGet("winmgmts:").ExecQuery("SELECT * FROM Win32_Process WHERE ProcessId=" SumatraPID)._NewEnum
 			If (Enum[Process])
 				FileGetVersion ProgVer, % Process.ExecutablePath
-			RegExMatch(ProgVer, "\d\.\d", VSumatra)
+			RegExMatch(ProgVer, "\d\.\d", version)
 
 		; prevent failures
-			If (SumatraCmds[VSumatra][command] = 0)
+			If (SumatraCmds[version][command] = 0)
 				return "" 														         			; return on dummy command
-			else If !SumatraCmds[VSumatra].haskey(command)
-				throw "Parameter #1 [" command "] unknown in SumatraPDF version " VSumatra
+			else If !SumatraCmds[version].haskey(command) {
+				If ShowExceptions
+					throw "Parameter #1 [" command "] unknown in SumatraPDF version " version
+			}
 
 		; execute stream-like commands
-			If IsObject(SumatraCmds[VSumatra][command]) {
-				wmcmds := SumatraCmds[VSumatra][command]
-				For i, cmd in wmcmds {
-					PostMessage, 0x111, % cmd,,, % "ahk_id " SumatraID
-					If (i < wmcmds.Count())
-						Sleep, 300                                                               	; I think a little delay is necessary here
+			If IsObject(SumatraCmds[version][command]) {
+				For cmdindex, cmd in SumatraCmds[version][command] {
+					PostMessage, 0x111, % cmd,,, % "ahk_id " hSumatra
+					If (cmdindex < wmcmds.Count())
+						Sleep, 300                                                               	; I think a delay is necessary here
 				}
 			}
 		; execute single command
 			else
-				PostMessage, 0x111, % SumatraCmds[VSumatra][command],,, % "ahk_id " SumatraID
+				PostMessage, 0x111, % SumatraCmds[version][command],,, % "ahk_id " hSumatra
 
 		}
 	; returns wm_command code for this Sumatra Programmversion
 		else {
 
-			If RegExMatch(SumatraID, "\d\.\d", VSumatra) {
-				If (SumatraCmds[VSumatra][command] = 0)
+			If RegExMatch(hSumatra, "\d\.\d", version) {
+				If (SumatraCmds[version][command] = 0) {
 					return "" 															    		; return on dummy command
-				else If !SumatraCmds[VSumatra].haskey(command)
-					throw "Parameter #1 [" command "] unknown in SumatraPDF version " VSumatra
-				else
-					return SumatraCmds[VSumatra][command]
+				} else If !SumatraCmds[version].haskey(command) {
+					If ShowExceptions
+						throw "Parameter #1 [" command "] unknown in SumatraPDF version " version
+				} else
+					return SumatraCmds[version][command]
 			}
 			else
-				throw "Parameter #2 invalid! The passed SumatraID was neither a correct window handle nor a valid string for a program version."
+				If ShowExceptions
+					throw 	"Parameter #2 invalid!`n"
+							. 	"The passed handle of Sumatra PDF was neither a correct`n"
+							. 	"window handle nor a valid string for a program version."
 
 		}
 
-}
-
-Sumatra_Close(PID, ID="") {                                                         	;-- beendet einen Sumatra Prozeß
-	Process, Close, % PID
-	If !ErrorLevel
-		SumatraInvoke("Exit", ID)
-}
-
-Sumatra_GetPages(SumatraID="") {                                             	;-- aktuelle und maximale Seiten des aktuellen Dokumentes ermitteln
-
-	If !SumatraID
-		SumatraID := WinExist("ahk_class SUMATRA_PDF_FRAME")
-
-	ControlGetText, PageDisp, Edit3 	, % "ahk_id " SumatraID
-	ControlGetText, PageMax, Static3	, % "ahk_id " SumatraID
-	RegExMatch(PageMax, "\s*(?<Max>\d+)", Page)
-
-return {"disp":PageDisp, "max":PageMax}
-}
-
-Sumatra_PrintPDF(filepath:="", Printer:="")  {                              	;-- Pdf per commandline drucken
-
-	global SumatraCMD, SumatraExist
-	static smtracmdline
-
-	If  !smtracmdline
-		smtracmdline := "-print-to " q "#printer#" q " -print-settings " q "duplex" q " -exit-when-done " ; Dateiname
-
-	If !SumatraCMD {
-		SumatraCMD := GetAppImagePath("SumatraPDF")
-		If (StrLen(SumatraCMD) > 0) && FileExist(SumatraCMD)
-			SumatraExist := true
-	}
-
-	If SumatraCMD {
-
-		stdoutCMD := SumatraCMD " " StrReplace(smtracmdline, "#printer#", Printer) " " q . filepath . q
-		If (stdout := StdoutToVar(stdoutCMD))
-			SciTEOutput(stdout)
-
-	}
-
-return stdout ? stdout : 1
-}
-
-Sumatra_Show(filepath, winParams:="") {                                      	;--	 Dokument mit Sumatra anzeigen
-
-	static SumatraCMD
-	static cmdl1 := q "-new-window -view " q "single page" q " -zoom " q "fit page" q
-	static cmdl2 := q "-view " q "single page" q " -zoom " q "fit page" q
-
-	If !SumatraCMD
-		SumatraCMD := GetAppImagePath("SumatraPDF")
-
-	IF !(hSumatra := WinExist("ahk_class SUMATRA_PDF_FRAME")) {
-
-		cmdline := q SumatraCMD q " " (winParams ? winParams : cmdl1) " " q filePath q
-		Run, % cmdline,,  UseErrorLevel, PIDSumatra  ; Hide
-
-		WinWait, % "ahk_class SUMATRA_PDF_FRAME",, 6
-		hSumatra := WinExist("ahk_class SUMATRA_PDF_FRAME")
-		WinGet, SumatraPID	, PID	, % "ahk_id " hSumatra
-		WinWaitActive, % "ahk_class SUMATRA_PDF_FRAME",, 6
-
-	}
-	else {
-
-		WinGet      	, SumatraPID, PID	, % "ahk_id " hSumatra
-		WinGetTitle	, smtraTitleO	     	,  % "ahk_id " hSumatra
-		smtraTitle := smtraTitleO
-
-	  ; Datei per DDE Befehl laden lassen
-		SumatraDDE(hSumatra, "OpenFile", filepath, 0, 0, 0)
-
-	  ; Änderung des Fenstertitel abwarten
-		while (smtraTitle = smtraTitleO) {
-			WinGetTitle, smtraTitle, % "ahk_id " hSumatra
-			If (A_Index > 100)
-				return 0
-			Sleep 50
-		}
-
-	}
-
-	ControlGet, hSumatraCnvs, HWND,, SUMATRA_PDF_CANVAS1, % "ahk_id " hSumatra
-	s	:= GetWindowSpot(hSumatra)
-	c	:= GetWindowSpot(hSumatraCnvs)
-
-	; Einrichten der Ansicht
-	SumatraDDE(hSumatra, "SetView", filepath, "single page", "-1") 	; -1 = fit page
-	;~ SumatraInvoke("ShowToolbar", hSumatra)
-
-
-return {"viewer": "SumatraPDF", "AR":c.CW/c.CH, "ID":hSumatra, "PID":SumatraPID, "x":s.X, "y":s.Y, "w":s.W, "h":s.H}
-}
-
-Sumatra_ToPrint(SumatraID="", Printer="") {                                 	;-- Druck Dialoghandler - Ausdruck auf übergebenen Drucker
-
-		; druckt das aktuell angezeigte Dokument
-		; abhängige Biblitheken: LV_ExtListView.ahk
-
-		static sumatraprint	:= "i)[(Print)|(Drucken)]+ ahk_class i)#32770 ahk_exe i)SumatraPDF.exe"
-
-		rxPrinter:= StrReplace(Trim(Printer), " ", "\s")
-		rxPrinter:= StrReplace(rxPrinter, "(", "\(")
-		rxPrinter:= StrReplace(rxPrinter, ")", "\)")
-
-		OldMatchMode := A_TitleMatchMode
-		SetTitleMatchMode, RegEx                                                              	; RegEx Fenstervergleichsmodus einstellen
-
-		SumatraInvoke("Print", SumatraID)                                                  	; Druckdialog wird aufgerufen
-		WinWait, % sumatraprint,, 6                                                             	; wartet 6 Sekunden auf das Dialogfenster
-		hSumatraPrint := GetHex(WinExist(sumatraprint))                               	; 'Drucken' - Dialog handle
-		ControlGet, hLV, Hwnd,, SysListview321, % "ahk_id " hSumatraPrint    	; Handle der Druckerliste (Listview) ermittlen
-		sleep 200                                                                                       	; Pause um Fensteraufbau abzuwarten
-		ControlGet, Items	, List  , Col1 	,, % "ahk_id " hLV                             	; Auslesen der vorhandenen Drucker
-		ItemNr := 0                                                                                    	; ItemNr auf 0 setzen
-		Loop, Parse, Items, `n                                                                    	; Listview Position des Standarddrucker suchen
-			If RegExMatch(A_LoopField, "i)^" rxPrinter) {                                	; Standarddrucker gefunden
-				ItemNr := A_Index                                                                	; nullbasierende Zählung in Listview Steuerelementen
-				break
-			}
-		If ItemNr {                                                                                    	; Drucker in der externen Listview auswählen
-			objLV := ExtListView_Initialize(sumatraprint)                                	; Initialisieren eines externen Speicherzugriff auf den Sumatra-Prozeß
-			ControlFocus,, % "ahk_id " objLV.hlv                                            	; Druckerauswahl fokussieren
-			err	 := ExtListView_ToggleSelection(objLV, 1, ItemNr - 1)            	; gefundenes Listview-Element (Drucker) fokussieren und selektieren
-			ExtListView_DeInitialize(objLV)                                                     	; externer Speicherzugriff muss freigegeben werden
-			Sleep 200
-			err	:= VerifiedClick("Button13", hSumatraPrint)                           	; 'Drucken' - Button wählen
-			WinWaitClose, % "ahk_id " hSumatraPrint,, 3                              	; wartet max. 3 Sek. bis der Dialog geschlossen wurde
-		}
-
-		SetTitleMatchMode, % OldMatchMode                                            	; TitleMatchMode zurückstellen
-
-return {"DialogID":hSumatraPrint, "ItemNr":ItemNr}                                 	; für Erfolgskontrolle und eventuelle weitere Abarbeitungen
 }
 
 SumatraDDE(hSumatra, cmd, params*) {                                  		;-- Befehle an Sumatra per DDE schicken
@@ -622,31 +491,350 @@ SumatraDDE(hSumatra, cmd, params*) {                                  		;-- Befe
 
 	 */
 
-		static dwData := 0x44646557
+	static dwData := 0x44646557
 
-														; p1=filepath, p2=newwindow, p3=1 for focus, p4=1 for force refresh
-		lpData := { 	"OpenFile"         	: ("[Open(""_p1"",_p2,_p3,_p4)]")
+    														; p1=filepath, p2=newwindow, p3=1 for focus, p4=1 for force refresh
+	static lpData := { 	"OpenFile"         	: ("[Open(""_p1"",_p2,_p3,_p4)]")
 
-														; [p1=filepath,] p2=sourcefilepath, p3=line, p4=column[, p5=1 for new window, p6=1 to set focus]
-						,	"ForwardSearch" 	: ("[ForwardSearch(""_p1"",""_p2"",_p3,_p4,_p5,_p6)]")
+	    													; [p1=filepath,] p2=sourcefilepath, p3=line, p4=column[, p5=1 for new window, p6=1 to set focus]
+		    				,	"ForwardSearch" 	: ("[ForwardSearch(""_p1"",""_p2"",_p3,_p4,_p5,_p6)]")
 
-														; p1=filepath, p2=destination name
-						,	"GotoNamedDest"	: ("[GotoNamedDest(""_p1"",""_p2"")]")
+			    											; p1=filepath, p2=destination name
+		    				,	"GotoNamedDest"	: ("[GotoNamedDest(""_p1"",""_p2"")]")
 
-														; p1=filepath, p2=PageNr
-						,	"GotoPage"        	: ("[GotoPage(""_p1"",_p2)]")
+		    												; p1=filepath, p2=PageNr
+		    				,	"GotoPage"        	: ("[GotoPage(""_p1"",_p2)]")
 
-														; p1=filepath, p2=view mode, p3=zoom level [, p4=scrollX, p5=scrollY>]
-						,	"SetView"           	: ("[SetView(""_p1"",""_p2"",_p3,_p4,_p5)]")}
+		    												; p1=filepath, p2=view mode, p3=zoom level [, p4=scrollX, p5=scrollY>]
+		    				,	"SetView"           	: ("[SetView(""_p1"",""_p2"",_p3,_p4,_p5)]")}
 
-		For index, param in params
-			lpData[cmd] := StrReplace(lpData[cmd], "_p" index, param)
+	lpDataSend := lpData[cmd]
 
-		lpData[cmd] := RegExReplace(lpData[cmd], ",""*_p\d""*")
+	For index, param in params
+		lpDataSend := StrReplace(lpDataSend, "_p" index, param)
+	;~ SciTEOutput("lpdata: " lpDataSend)
 
-		;SciTEOutput(" " lpData[cmd])
+	lpDataSend := RegExReplace(lpDataSend, ",""*_p\d""*")
+	;~ SciTEOutput("lpdata: " lpDataSend)
 
-return Send_WM_COPYDATA_EX(hSumatra, dwData, lpData[cmd])
+return Send_WM_COPYDATA_EX(hSumatra, dwData, lpDataSend)
+}
+
+Sumatra_Close(hSumatra) {                                                       	;-- beendet einen Sumatra Prozeß
+	WinGet, SumatraPID, PID, % "ahk_id " hSumatra
+	Process, Close, % SumatraPID
+	If ErrorLevel
+		return 1
+	else if !ErrorLevel && hSumatra {
+		WinGetClass, wclass, % "ahk_id " hSumatra
+		If InStr(wclass, "SUMATRA_PDF_FRAME") {
+			SumatraInvoke("Exit", hSumatra, false)
+			WinGetClass, wclass, % "ahk_id " hSumatra
+			return InStr(wclass, "SUMATRA_PDF_FRAME") ? 0 : 1
+		}
+	}
+return 0
+}
+
+Sumatra_Embed(hparent, x, y, w, h) {                                        	;-- Einbetten von Sumatra PDF READER in eine AutoHotkey Gui
+
+	/* Hinweise
+
+		Funktion für das Einbetten eines Sumatra PDF READER Fensters in eine AutoHotkey Gui .
+
+			-	Breite und Höhe aller Steuerelemente bis auf den des Renderbereiches werden auf 0 verkleinert
+			-	Nutzer können somit prinzipiell nicht mehr mit Sumatra PDF interagieren
+			-	Interaktion ist weiterhin über cmdline Aufrufe und DDE-Kommandos möglich
+			-	damit das eingebette Fenster nach den Veränderungen neu gezeichnet wird, muss zuvor das
+				Elternfenster angezeigt werden. Danach muss das Sumatra PDF Fenster einmalig in der
+				Höhe verändert werden um ein Neuzeichnen und dann Sichtbarkeit zu erreichen. Dafür wird
+				die zugehörige 2.Funktion (Sumatra_EmbedFinalize()) ausgeführt.
+				Rückgabeparameter ist ein Objekt mit dem hwnd des Sumatra PDF Fensters, der Prozeß-ID (PID)
+				und dem Handle des Renderbereiches.
+				Beispiel:
+
+				smtra := Sumatra_Embed(hparent, smtraX, smtraY, smtraW, smtraH)
+				Gui, Show, % "w" smtraX+smtraW+2*GuiMarginX, embedded Sumatra PDF gui
+				Sumatra_EmbedFinalize(hparent, smtra.hwnd)
+
+				Achtung: 	-	getestet nur mit Sumatra PDF Version 3.3
+								-	es wird eine installierte Sumatra PDF Version benötigt
+								-	Skript legt eine Arbeitskopie der Sumatra Einstellungen in einem lokalen Unter-
+									verzeichnis (/resources) an, damit die durch das Skript gemachten Änderungen
+									an den Einstellungen nur für das eingebundene Sumatra Fenster gelten
+
+	*/
+
+		static 	SmtraExist := false, SmtraInit := true
+		static 	SumatraCMD
+		static 	SmtraClass := "ahk_class SUMATRA_PDF_FRAME"
+
+		If SmtraInit {
+			SmtraInit := false
+			SumatraCMD := GetAppImagePath("SumatraPDF")
+			If (!SumatraCMD) || !FileExist(SumatraCMD)
+				return "Sumatra_fails"
+		}
+
+		lDetectHiddenWin	:= A_DetectHiddenWindows
+		lDetectHiddenText	:= A_DetectHiddenText
+		DetectHiddenWindows	, On
+		DetectHiddenText      	, On
+
+	; Sumatra PDF per Console starten
+		AppDataPath := A_AppData "\SumatraPDF\SumatraPDF-settings.txt"
+		If !FileExist(A_ScriptDir "\resources\SumatraPDF-settings.txt") {
+			If !InStr(FileExist(A_ScriptDir "\resources"), "D")
+				FileCreateDir, % A_ScriptDir "\resources"
+			If InStr(FileExist(A_ScriptDir "\resources"), "D")
+				FileCopy, % AppDataPath, A_ScriptDir "\resources\SumatraPDF-settings.txt"
+		}
+		Run, % q SumatraCMD q " -appdata " q A_ScriptDir "\resources" q ,, Hide UseErrorLevel, PIDSumatra   ; -new-window
+		WinWait, % SmtraClass,, 12
+
+	; Sumatra Fenster Handle und erste Größenanpassung
+		hSumatra := WinExist(SmtraClass)
+		WinMove, % "ahk_id " hSumatra,,,, % w, % h
+
+	; Sumatra Fenster einbinden
+		DllCall("SetParent", "uint", hSumatra, "uint", hparent)
+		WinMove, % "ahk_id " hSumatra,, % x, % y, % w, % h
+		WinActivate, % "ahk_id " hSumatra
+
+	; zunächst rahmenlosen Stil einrichten
+		WinSet, Style		, 0x56000000, % "ahk_id " hSumatra
+		WinSet, ExStyle	, 0x00000000, % "ahk_id " hSumatra
+
+	; Toolbar ausblenden
+		Sumatra_ShowToolbar(hSumatra, false)
+
+	; Ansichtseinstellungen
+		SumatraInvoke("SinglePage"  	, hSumatra, false)
+		Sleep 100
+		SumatraInvoke("FitPage"       	, hSumatra, false)
+		Sleep 100
+
+	; Window ClientEdge
+		WinSet, ExStyle	, 0x00020000, % "ahk_id " hSumatra
+
+	; weitere ID's für die Rückgabe
+		WinGet     	,	SumatraPID, PID, % "ahk_id " hSumatra
+		ControlGet	,	hCanvas, HWND,, SUMATRA_PDF_CANVAS1, % "ahk_id " hSumatra
+
+		DetectHiddenWindows	, % lDetectHiddenWin
+		DetectHiddenText      	, % lDetectHiddenText
+
+return {"PID":SumatraPID, "Path":SumatraCMD, "hwnd":hSumatra, "hCanvas":hCanvas}
+}
+
+Sumatra_EmbedFinalize(hparent, hSumatra) {                             	;-- letzte Anpassung des eingebundenen Sumatra PDF Fensters
+
+	; Modi ändern
+		lDetectHiddenWin	:= A_DetectHiddenWindows
+		lDetectHiddenText	:= A_DetectHiddenText
+		DetectHiddenWindows	, Off
+		DetectHiddenText      	, Off
+
+		WinActivate, % "ahk_id " hSumatra
+		ControlGet, hCanvas, hwnd,, SUMATRA_PDF_CANVAS1                            	, % "ahk_id " hSumatra
+
+	; eingebundes Sumatra Fenster vergrößern
+		ControlGetPos,smtrX, smtrY, smtrW, smtrH, SUMATRA_PDF_CANVAS1        	, % "ahk_id " hSumatra
+		ControlMove, SUMATRA_PDF_FRAME1	,,,, % smtrH+29                            	, % "ahk_id " hSumatra
+
+	; Menu- und Sysmenu Button verstecken
+		ControlGet, hcuca	, hwnd,, CustomCaption1, % "ahk_id " hSumatra
+		WinHide, % "ahk_id " hcuca
+		WinGet, cuca, ControlListHwnd, % "ahk_id " hcuca
+		For each, hwnd in StrSplit(cuca, "`n") {
+			WinGet, Style, Style, % "ahk_id " hwnd
+			if (Style & 0x10000000)                              ; nur wenn sichtbar
+				WinMove, % "ahk_id " hwnd,,,, 0, 0
+		}
+
+	; Canvas-Steuerelement verschieben
+		ControlGetPos	, cnvsY, cnvsY, cnvsW, cnvsH, SUMATRA_PDF_CANVAS1       	, % "ahk_id " hSumatra
+		ControlMove 	, SUMATRA_PDF_CANVAS1, 0, 0, % cnvsW+2, % cnvsH+56	, % "ahk_id " hSumatra
+		WinMove 	, % "ahk_id " hCanvas,, 0, 1
+		ControlGetPos	, cnvsY, cnvsY, cnvsW, cnvsH, SUMATRA_PDF_CANVAS1       	, % "ahk_id " hSumatra
+
+	; Modi wiederherstellen
+		DetectHiddenWindows	, % lDetectHiddenWin
+		DetectHiddenText      	, % lDetectHiddenText
+
+return {"hwnd":hCanvas, "X":cnvsX, "Y":cnvsY, "W":cnvsW, "H":cnvsH}
+}
+
+Sumatra_GetActiveTab(hSumatra, cmd:="name") {                     	;-- ermittelt den Namen der aktuell angezeigten Datei
+	ControlGet, hTab, Hwnd,, SysTabControl321, % "ahk_id " hSumatra
+	TabIndex  	:= TabCtrl_GetCurSel(hTab)
+	If RegExMatch(cmd, "i)(name|tabs)")
+		tabs := ControlGetTabs(hTab)
+return cmd="TabIndex" ? TabIndex : cmd="name" ? tabs[TabIndex] : tabs
+}
+
+Sumatra_GetPages(hSumatra="") {                                             	;-- aktuelle und maximale Seiten des aktuellen Dokumentes ermitteln
+
+	If !hSumatra
+		hSumatra := WinExist("ahk_class SUMATRA_PDF_FRAME")
+
+	ControlGetText, PageDisp, Edit3 	, % "ahk_id " hSumatra
+	ControlGetText, PageMax, Static3	, % "ahk_id " hSumatra
+	RegExMatch(PageMax, "\s*(?<Max>\d+)", Page)
+
+return {"disp":PageDisp, "max":PageMax}
+}
+
+Sumatra_PrintPDF(filepath:="", Printer:="")  {                              	;-- Pdf per commandline drucken
+
+	global SumatraCMD, SumatraExist
+
+	If !SumatraCMD {
+		SumatraCMD := GetAppImagePath("SumatraPDF")
+		If SumatraCMD && FileExist(SumatraCMD)
+			SumatraExist := true
+	}
+
+	If SumatraCMD {
+
+		smtracmdline	:= "-print-to " q Printer q " -print-settings " q "fit,duplex" q " -exit-when-done" ; Dateiname
+		stdoutCMD    	:= SumatraCMD " " smtracmdline " " q . filepath . q
+		;~ SciTEOutput(A_ThisFunc "`n" stdoutCMD)
+		If (stdout := StdoutToVar(stdoutCMD))
+			SciTEOutput(stdout)
+
+	}
+
+return stdout ? stdout : 1
+}
+
+Sumatra_Show(filepath:="", winParams:="", hparent:=0) {           	;-- SumatraPDF starten und Dokument anzeigen
+
+	; hparent benutzen wenn das Sumatra PDF Fenster in eine Gui eingebettet ist
+	; letzte Änderung: 19.02.2022
+
+	static SumatraCMD
+	;~ static cmdl1 := q "-new-window -view " q "single page" q " -zoom " q "fit page" q
+	;~ static cmdl2 := q "-view " q "single page" q " -zoom " q " fit page" q
+	static cmdl1 := q "-new-window -view single page -zoom fit page" q
+	static cmdl2 := q "-view single page -zoom fit page" q
+
+	If hparent
+		ControlGet, hSumatra, hwnd,, SUMATRA_PDF_FRAME1, % "ahk_id " hparent
+	else
+		hSumatra := WinExist("ahk_class SUMATRA_PDF_FRAME")
+
+  ; Sumatra PDF starten
+	If !hSumatra {
+
+		SumatraCMD	:= !SumatraCMD ? GetAppImagePath("SumatraPDF") : SumatraCMD
+		cmdoptions   	:= (winParams ? winParams : cmdl1)
+		cmdline         	:= filepath && FileExist(filepath) ? cmdoptions " " q filePath q : ""
+		Run, % q SumatraCMD q " " cmdline,,  UseErrorLevel, PIDSumatra  ; Hide
+
+		WinWait, % "ahk_class SUMATRA_PDF_FRAME",, 6
+		hSumatra := WinExist("ahk_class SUMATRA_PDF_FRAME")
+		WinGet, SumatraPID, PID, % "ahk_id " hSumatra
+		WinWaitActive, % "ahk_class SUMATRA_PDF_FRAME",, 6
+
+	}
+  ; Dateipfad an Sumatra PDF übergeben
+	else {
+
+		If filepath && FileExist(filepath) {
+
+			WinGet, SumatraPID, PID, % "ahk_id " hSumatra
+			smtraTab := smtraTabO := Sumatra_GetActiveTab(hSumatra)
+
+		  ; Datei per DDE Befehl laden lassen
+			SumatraDDE(hSumatra, "OpenFile", filepath, 0, 0, 1)
+
+		  ; Änderung des Fenstertitel abwarten
+			while (smtraTab = smtraTabO) {
+				smtraTab := Sumatra_GetActiveTab(hSumatra)
+				If (A_Index > 200)     ; ~4s
+					return 0
+				Sleep 20
+			}
+
+		}
+
+	}
+
+	ControlGet, hSumatraCnvs, HWND,, SUMATRA_PDF_CANVAS1, % "ahk_id " hSumatra
+	s	:= GetWindowSpot(hSumatra)
+	c	:= GetWindowSpot(hSumatraCnvs)
+
+  ; Einrichten der Ansicht
+	SumatraDDE(hSumatra, "SetView", filepath, "single page", "-1") 	; -1 = fit page
+	;~ SumatraInvoke("ShowToolbar", hSumatra)
+
+
+return {"viewer": "SumatraPDF", "AR":c.CW/c.CH, "hwnd":hSumatra, "ID":hSumatra, "PID":SumatraPID, "x":s.X, "y":s.Y, "w":s.W, "h":s.H}
+}
+
+Sumatra_ShowToolbar(hSumatra, showTb:=true) {                      	;-- die Toolbar ein- oder ausblenden
+
+	ControlGet, hReBar, hwnd,, ReBarWindow321, % "ahk_id " hSumatra
+	WinGet, Style, Style, % "ahk_id " hReBar
+	TbExist := (Style & 0x10000000) ? 1 : 0
+	If !(showTb & TbExist) {
+		SumatraInvoke("ShowToolbar", hSumatra, false)
+		UserTbState := false
+		while (!UserTbState && A_Index < 10) {                                         	; ~100ms
+			If (A_Index > 1)
+				Sleep 10
+			ControlGet, hReBar, hwnd,, ReBarWindow321, % "ahk_id " hSumatra
+			WinGet, Style, Style, % "ahk_id " hReBar
+			TbExist := (Style & 0x10000000) ? 1 : 0
+			UserTbState := showTb & TbExist
+		}
+		If !UserTbState
+			SumatraInvoke("ShowToolbar", hSumatra, false)
+	}
+
+return UserTbState
+}
+
+Sumatra_ToPrint(SumatraID="", Printer="") {                                 	;-- Druck Dialoghandler - Ausdruck auf übergebenen Drucker
+
+		; druckt das aktuell angezeigte Dokument
+		; abhängige Biblitheken: LV_ExtListView.ahk
+
+		static sumatraprint	:= "i)[(Print)|(Drucken)]+ ahk_class i)#32770 ahk_exe i)SumatraPDF.exe"
+
+		rxPrinter:= StrReplace(Trim(Printer), " ", "\s")
+		rxPrinter:= StrReplace(rxPrinter, "(", "\(")
+		rxPrinter:= StrReplace(rxPrinter, ")", "\)")
+
+		OldMatchMode := A_TitleMatchMode
+		SetTitleMatchMode, RegEx                                                              	; RegEx Fenstervergleichsmodus einstellen
+
+		SumatraInvoke("Print", SumatraID)                                                  	; Druckdialog wird aufgerufen
+		WinWait, % sumatraprint,, 6                                                             	; wartet 6 Sekunden auf das Dialogfenster
+		hSumatraPrint := GetHex(WinExist(sumatraprint))                               	; 'Drucken' - Dialog handle
+		ControlGet, hLV, Hwnd,, SysListview321, % "ahk_id " hSumatraPrint    	; Handle der Druckerliste (Listview) ermittlen
+		sleep 200                                                                                       	; Pause um Fensteraufbau abzuwarten
+		ControlGet, Items	, List  , Col1 	,, % "ahk_id " hLV                             	; Auslesen der vorhandenen Drucker
+		ItemNr := 0                                                                                    	; ItemNr auf 0 setzen
+		Loop, Parse, Items, `n                                                                    	; Listview Position des Standarddrucker suchen
+			If RegExMatch(A_LoopField, "i)^" rxPrinter) {                                	; Standarddrucker gefunden
+				ItemNr := A_Index                                                                	; nullbasierende Zählung in Listview Steuerelementen
+				break
+			}
+		If ItemNr {                                                                                    	; Drucker in der externen Listview auswählen
+			objLV := ExtListView_Initialize(sumatraprint)                                	; Initialisieren eines externen Speicherzugriff auf den Sumatra-Prozeß
+			ControlFocus,, % "ahk_id " objLV.hlv                                            	; Druckerauswahl fokussieren
+			err	 := ExtListView_ToggleSelection(objLV, 1, ItemNr - 1)            	; gefundenes Listview-Element (Drucker) fokussieren und selektieren
+			ExtListView_DeInitialize(objLV)                                                     	; externer Speicherzugriff muss freigegeben werden
+			Sleep 200
+			err	:= VerifiedClick("Button13", hSumatraPrint)                           	; 'Drucken' - Button wählen
+			WinWaitClose, % "ahk_id " hSumatraPrint,, 3                              	; wartet max. 3 Sek. bis der Dialog geschlossen wurde
+		}
+
+		SetTitleMatchMode, % OldMatchMode                                            	; TitleMatchMode zurückstellen
+
+return {"DialogID":hSumatraPrint, "ItemNr":ItemNr}                                 	; für Erfolgskontrolle und eventuelle weitere Abarbeitungen
 }
 
 Send_WM_COPYDATA_EX(hWin, dwData, lpData) 	{                     	;-- für die Kommunikation zwischen Sumatra und Autohotkey Skripten
@@ -658,7 +846,7 @@ Send_WM_COPYDATA_EX(hWin, dwData, lpData) 	{                     	;-- für die K
     NumPut(&lpData	, COPYDATASTRUCT, 2*A_PtrSize)
 	SendMessage, 0x4a, 0, &COPYDATASTRUCT,, % "ahk_id " hWin ; 0x4a WM_COPYDATA
 
-return ErrorLevel == "FAIL" ? false : true
+return ErrorLevel ;== "FAIL" ? false : true
 }
 
 
@@ -927,6 +1115,18 @@ FoxitReader_GetPages(FoxitID="") {                                              
 return {"disp":1, "max":1} ; wenigsten eine 1 zurückgeben wenn nichts ermittelt werden konnte
 }
 
+FoxitReader_GetPDFPath() {                                                         	;-- den aktuellen Dokumentenpfad im 'Speichern unter' Dialog auslesen
+
+	foxitSaveAs := "Speichern unter ahk_class #32770 ahk_exe FoxitReader.exe"
+	If WinExist(foxitSaveAs) {
+		WinGetText, allText, % foxitSaveAs
+		RegExMatch(allText, "(?<Name>[\w+\s_\-\,]+\.pdf)\n.*Adresse\:\s*(?<Path>[A-Z]\:[\\\w\s_\-]+)\n", File)
+		return FilePath "\" FileName
+	}
+
+return
+}
+
 FoxitReader_ToPrint(FoxitID="", Printer="") {                                 	;-- Druck Dialoghandler - Ausdruck auf übergebenen Drucker
 
 		static foxitprint    	:= "i)[(Print)|(Drucken)]+ ahk_class i)#32770 ahk_exe i)FoxitReader.exe"
@@ -1099,7 +1299,7 @@ FoxitReader_SignDoc(hDokSig) {		                       	                	;-- Bea
 
 		; Darstellungstyp ---------------------------------------------------------------------------------------------------------
 			ControlFocus 	, ComboBox4                                                                        	, % "ahk_id " hDokSig
-			ControlGet, entryNr, FindString, % Addendum.PDF.Darstellungstyp, ComboBox4	, % "ahk_id " hDokSig  	; prüft das Feld Signaturvorschau auf die in der ini hinterlegte Signatur
+			ControlGet, entryNr, FindString, % Addendum.PDF.Darstellungstyp, ComboBox4	, % "ahk_id " hDokSig  	; prüft Feld Signaturvorschau auf hinterlegte Signatur
 			If entryNr
 				Control, ChooseString, % Addendum.PDF.Darstellungstyp, ComboBox4        	, % "ahk_id " hDokSig
 			else
@@ -1127,6 +1327,7 @@ FoxitReader_SignDoc(hDokSig) {		                       	                	;-- Bea
 	;}
 
 	;{ Signaturfenster schliessen
+		SetTimer, PDFHelpCloseSaveDialogs, 100
 		while isWindow(hDokSig) {
 			If VerifiedClick("Button5", hDokSig)
 				break
@@ -1154,49 +1355,37 @@ FoxitReader_SignDoc(hDokSig) {		                       	                	;-- Bea
 		; Zählerstände per ToolTip einblenden
 			foxitPos     	:= GetWindowSpot(WinExist("ahk_class classFoxitReader"))
 			foxitAFXPos 	:= Controls("AfxFrameOrView140su1", "ControlPos", "ahk_class classFoxitReader")
-			ToolTip, %	"Signature Nr: "   	Addendum.PDF.SignatureCount
-						. 	"`nSeitenzahl: " 	PdfPages.Max
-						. 	"`nges. Seiten: " 	Addendum.PDF.SignaturePages , foxitPos.X+foxitAFXPos.X, foxitPos.Y+foxitAFXPos.Y, 10
+			ToolTip, %	"Signature Nr: "   	Addendum.PDF.SignatureCount "`n"
+						. 	"Seitenzahl: "     	PdfPages.Max                          	"`n"
+						. 	"ges. Seiten: "    	Addendum.PDF.SignaturePages , foxitPos.X+foxitAFXPos.X, foxitPos.Y+foxitAFXPos.Y, 10
 
 	;}
 
 	; Dateidialog Routinen starten
-		SetTimer, PDFNotRecentlySigned		, -10000
+		SetTimer, PDFNotRecentlySigned		, -20000
 		PraxTT("'", "off")
 
 return
 
 PDFHelpCloseSaveDialogs:            	;{ - Notfalllösung für die immer noch unsichere Dialogerkennung
-	If (hwnd := WinExist("Speichern unter " appendix, "Speichern")) {
+	If !WinExist("Speichern unter bestätigen " appendix) && (hwnd := WinExist("Speichern unter " appendix, "Speichern")) {
 		SetTimer, PDFHelpCloseSaveDialogs, Off
 		VerifiedClick("Speichern", hwnd)                                                                 	; Speichern Button drücken
-		WinWait, % "Speichern unter bestätigen " appendix,, 2
-		If !ErrorLevel
-			return VerifiedClick("Ja", "Speichern unter bestätigen " appendix,,, true)    	; mit 'Ja' bestätigen
-		Addendum.PDF.RecentlySigned := false
+		WinWait, % "Speichern unter bestätigen " appendix,, 4
+	}
+	If WinExist("Speichern unter bestätigen " appendix) {
+		VerifiedClick("Ja", "Speichern unter bestätigen " appendix,,, true)    	; mit 'Ja' bestätigen
+		If !WinExist("Speichern unter bestätigen " appendix) && !WinExist("Speichern unter " appendix) {
+			Addendum.PDF.RecentlySigned := false
+			SetTimer, PDFHelpCloseSaveDialogs,  Off
+		}
 	}
 return ;}
 
 PDFNotRecentlySigned: ;{
 	Addendum.PDF.RecentlySigned	:= false
-	Addendum.SaveAsInvoked     	:= false
 	SetTimer, PDFHelpCloseSaveDialogs,  Off
-	Tooltip,,,, 10
 return ;}
-}
-
-FoxitReader_GetPDFPath() {                                                         	;-- den aktuellen Dokumentenpfad im 'Speichern unter' Dialog auslesen
-
-	foxitSaveAs := "Speichern unter ahk_class #32770 ahk_exe FoxitReader.exe"
-	If WinExist(foxitSaveAs) {
-
-		WinGetText, allText, % foxitSaveAs
-		RegExMatch(allText, "(?<Name>[\w+\s_\-\,]+\.pdf)\n.*Adresse\:\s*(?<Path>[A-Z]\:[\\\w\s_\-]+)\n", File)
-		return FilePath "\" FileName
-
-	}
-
-return ""
 }
 
 JEE_StrUtf8BytesToText(vUtf8) {                                                    	;-- wandelt UTF8Bytes in Text (ini Dateien)

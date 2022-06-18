@@ -182,7 +182,9 @@ tessOCRPdf(PDFName, params)                                         	{          
 		FileDelete, % tess.tempPath "\work*.*"
 		FileDelete, % tess.tempPath "\conv*.*"
 		FileDelete, % tess.tempPath "\in.pdf"
+		FileDelete, % tess.tempPath "\merged.pdf"
 		FileDelete, % tess.tempPath "\out*.*"
+		Sleep 10000
 	;}
 
 	; Verzeichnisoperationen             	;{
@@ -196,7 +198,7 @@ tessOCRPdf(PDFName, params)                                         	{          
 	; Seitenbilder extrahieren            	;{
 
 		; Seitenzahl der PDF ermitteln
-			PageMax := PDFGetPages(tess.tempPath "\in.pdf")
+			PageMax := PDFGetPages(tess.tempPath "\in.pdf", tess.qpdfPath)
 			If (params.debug > 0)
 				SciTEOutput(sep "`n  # [" PageMax "] Seite" (PageMax>1?"n":"") ": \" PDFName ".pdf")
 
@@ -270,11 +272,12 @@ tessOCRPdf(PDFName, params)                                         	{          
 					SciTEOutput("  - Preprocessing: cmdline Ausgabe`n    `t[" preprocess "]" (StrLen(stdOut) > 0 ? "`n" stdOut : ""))
 
 			; bearbeitete Dateinamen erfassen
-				If (PageMax > 1)
+				If (PageMax > 1) {
 					Loop % PageMax
 						workimgs .= tess.tempPath "\work-" (A_Index-1) "." workExt "`n"
-					else
+				} else {
 						workimgs := tess.tempPath "\work." workExt "`n"
+				}
 
 		}
 
@@ -320,10 +323,7 @@ tessOCRPdf(PDFName, params)                                         	{          
 		if InStr(stdOut, "Error") {
 			SciTEOutput("  - Texterkennung: Fehlerhaft. Versuche dennoch die Dateien zu verbinden.")
 			RegExReplace(stdout, "i)error", errorCount)
-			If (errorCount > 1)
-				ocrfailure := true
-			else
-				ocrfailure := false
+			ocrfailure := errorCount+0 > 1 ? true : false
 		}
 
 		If (params.debug > 1)
@@ -393,7 +393,7 @@ return PdfText
 ;--------------------------------- file system
 PDFisSearchable(pdfFilePath)                                                	{              	;-- durchsuchbare PDF Datei?
 
-	; letzte Änderung 08.02.2021 : neuer Matchstring
+	; letzte Änderung 13.06.2022 : IFilter falls Funktion fehlschlägt
 
 	If !(fobj := FileOpen(pdfFilePath, "r", "CP1252"))
 		return 0
@@ -411,50 +411,40 @@ PDFisSearchable(pdfFilePath)                                                	{  
 
 	fobj.Close()
 
-return 0
+  ; als Alternative: ist Text extrahierbar
+	return StrLen(IFilter(pdfFilePath)) > 0 ? true : false
 }
 
-PDFGetPages(pdfFilePath)                                                     	{              	;-- gibt die Anzahl der Seiten einer PDF zurück
+PDFGetPages(pdfFilePath , qpdfPath:="")                           	{               	;-- gibt die Anzahl der Seiten einer PDF zurück
 
-	; last change 30.11.2020
+	; last change 25.11.2021
+		pages := ""
 
-	; PDFs are written in ANSI
-		If !(fileobject := FileOpen(pdfFilePath, "r", "CP0"))
+	; PDF's are written in ANSI
+		If !(fobj := FileOpen(pdfFilePath, "r", "CP0"))
 			return 0
 
 	; search string(s) that contain/s/ing page data
-		while !fileobject.AtEof {
-
-			line := fileobject.ReadLine()
-			If RegExMatch(line, "i)\/Count\s(?<ages>\d+)\/*", p) {
-				fileObject.Close()
+		while !fobj.AtEof {
+			line := fobj.ReadLine()
+			If RegExMatch(line, "i)\/(Count|Pages)\s+(?<ages>\d+)\/", p)
 				break
-			}
-			else If RegExMatch(line, "i)\/Pages\s(?<ages>\d+)\/", p) {
-				fileObject.Close()
-				break
-			}
-			else if RegExMatch(line,"i)Type\s+\/Pages.*?\/Count\s(?<ages>\d+)\/*", p) {
-				fileObject.Close()
-				break
-			}
-			else If RegExMatch(line, "Length\s(?<seek>\d+)", file)
-				fileobject.seek(fileseek, 1)
-
+			else If RegExMatch(line, "Length\s+(?<seek>\d+)", file)
+				fobj.seek(fileseek, 1)
 		}
-		fileObject.Close()
+		fobj.Close()
 
-	; and sometimes there's nothing to count
-	; using qpdf, if XREF table is encoded
-		If !RegExMatch(pages, "\d+") || (pages = 0) {
-			stdOut := StdoutToVar(tess.qpdf " --show-npages " q pdfFilePath q)
-			If RegExMatch(stdOut, "\d+", qpages)
+	; sometimes it detects 3 million pages - so qpdf will be used in this case
+		If RegExMatch(pages, "\d+")
+			If (pages > 0 && pages < 10000)
+				return pages
+
+	; #### if there's no match, sometimes the PDF XREF table is encoded/compressed - qpdf will be used
+		If qpdfPath {
+			qpdfPages := StdoutToVar(qpdfPath "\qpdf.exe --show-npages " q pdfFilePath q)
+			If RegExMatch(qpdfPages, "\d+", qpages)
 				return qpages
-			else
-				return 0
 		}
-		else
-			return pages
 
 return 0
 }
@@ -569,6 +559,93 @@ PDFObjectSearch(pdfFilePath,mstring)                                   	{       
 
 return 0
 
+}
+
+IFilter(file, searchstring:="")                                             	{               	;-- Textsuche/Textextraktion in PDF/Word Dokumenten
+
+	static cchBufferSize              	:= 4 * 1024
+	static resultstriplinebreaks   	:= false
+
+	static CHUNK_TEXT 	:= 1
+	static STGM_READ 	:= 0
+	static IFILTER_INIT_CANON_PARAGRAPHS	    	:= 1
+	static IFILTER_INIT_HARD_LINE_BREAKS        		:= 2
+	static IFILTER_INIT_CANON_HYPHENS 	        	:= 4
+	static IFILTER_INIT_CANON_SPACES	            	:= 8
+	static IFILTER_INIT_APPLY_INDEX_ATTRIBUTES	:= 16
+	static IFILTER_INIT_APPLY_OTHER_ATTRIBUTES	:= 32
+	static IFILTER_INIT_INDEXING_ONLY           		:= 64
+	static IFILTER_INIT_SEARCH_LINKS	                	:= 128
+	static IFILTER_INIT_APPLY_CRAWL_ATTRIBUTES	:= 256
+	static IFILTER_INIT_FILTER_OWNED_VALUE_OK	:= 512
+	static IFILTER_INIT_FILTER_AGGRESSIVE_BREAK	:= 1024
+	static IFILTER_INIT_DISABLE_EMBEDDED	       	:= 2048
+	static IFILTER_INIT_EMIT_FORMATTING	        	:= 4096
+
+	static S_OK   	:= 0
+	static FILTER_S_LAST_TEXT 	     	:= 268041
+	static FILTER_E_NO_MORE_TEXT 	:= -2147215615
+
+	if (!A_IsUnicode)
+		throw A_ThisFunc ": The IFilter APIs appear to be Unicode only. Please try again with a Unicode build of AHK."
+
+	if (!file)
+		return -99
+
+	SplitPath, file,,, ext
+	VarSetCapacity(FILTERED_DATA_SOURCES, 4*A_PtrSize, 0)
+	NumPut(&ext, FILTERED_DATA_SOURCES,, "Ptr")
+	VarSetCapacity(FilterClsid, 16, 0)
+
+	; Adobe workaround
+	if (job := DllCall("CreateJobObject", "Ptr", 0, "Str", "filterProc", "Ptr"))
+		DllCall("AssignProcessToJobObject", "Ptr", job, "Ptr", DllCall("GetCurrentProcess", "Ptr"))
+
+	FilterRegistration := ComObjCreate("{9E175B8D-F52A-11D8-B9A5-505054503030}", "{c7310722-ac80-11d1-8df3-00c04fb6ef4f}")
+	if (DllCall(NumGet(NumGet(FilterRegistration+0)+3*A_PtrSize), "Ptr", FilterRegistration, "Ptr", 0, "Ptr", &FILTERED_DATA_SOURCES, "Ptr", 0, "Int", false, "Ptr", &FilterClsid, "Ptr", 0, "Ptr*", 0, "Ptr*", IFilter) != 0 ) ; ILoadFilter::LoadIFilter
+		throw A_ThisFunc ": can't load IFilter"
+
+	ObjRelease(FilterRegistration)
+
+	if (DllCall("shlwapi\SHCreateStreamOnFile", "Str", file, "UInt", STGM_READ, "Ptr*", iStream) != 0 )
+		throw A_ThisFunc ": can't open filepath"
+
+	PersistStream := ComObjQuery(IFilter, "{00000109-0000-0000-C000-000000000046}")
+	if (DllCall(NumGet(NumGet(PersistStream+0)+5*A_PtrSize), "Ptr", PersistStream, "Ptr", iStream) != 0 ) ; ::Load
+		throw A_ThisFunc ": can't load filestream"
+
+	ObjRelease(iStream)
+
+	status := 0
+	MY_IFILTER := IFILTER_INIT_CANON_PARAGRAPHS | IFILTER_INIT_HARD_LINE_BREAKS | IFILTER_INIT_CANON_HYPHENS | IFILTER_INIT_CANON_SPACES  | IFILTER_INIT_EMIT_FORMATTING
+	if (DllCall(NumGet(NumGet(IFilter+0)+3*A_PtrSize), "Ptr", IFilter, "UInt", MY_IFILTER, "Int64", 0, "Ptr", 0, "Int64*", status) != 0 ) ; IFilter::Init
+		throw A_ThisFunc ": can't init IFilter"
+
+	VarSetCapacity(STAT_CHUNK, A_PtrSize == 8 ? 64 : 52)
+	VarSetCapacity(buf, (cchBufferSize * 2) + 2)
+
+	while (DllCall(NumGet(NumGet(IFilter+0)+4*A_PtrSize), "Ptr", IFilter, "Ptr", &STAT_CHUNK) == 0) { ; ::GetChunk
+		if (NumGet(STAT_CHUNK, 8, "UInt") & CHUNK_TEXT) {
+			while (DllCall(NumGet(NumGet(IFilter+0)+5*A_PtrSize), "Ptr", IFilter, "Int64*", (siz := cchBufferSize), "Ptr", &buf) != FILTER_E_NO_MORE_TEXT) { ; ::GetText
+				text .= StrGet(&buf,, "UTF-16")
+				if (resultstriplinebreaks)
+					text := StrReplace(text, "`r`n")
+				If searchstring && (strpos := RegExMatch(text, searchstring))
+					break
+
+			}
+		}
+	}
+
+	ObjRelease(PersistStream)
+	ObjRelease(iFilter)
+	if (job)
+		DllCall("CloseHandle", "Ptr", job)
+
+	If (strpos > 0)
+		return strpos
+
+return searchstring ? "" : Text
 }
 
 FileIsLocked(FullFilePath)                     	                            	{                 	;-- ist die Datei gesperrt?

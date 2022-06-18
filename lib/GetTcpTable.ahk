@@ -25,6 +25,8 @@ GetTcpTable()
 
 for i, v in GetTcpTable()
    FileAppend, % v.LocalIP ":" v.LocalPort "   ->   " v.RemoteIP ":" v.RemotePort "    (" v.State ")", TcpTable.txt
+
+  Run % TcpTable.txt
 ; 192.168.0.1:445    ->    8.8.8.8:445    (2)
 
 ExitApp

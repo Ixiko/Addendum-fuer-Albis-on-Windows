@@ -106,8 +106,7 @@ class tcp {
   recvBinary(byref buffer, wait=1) {
     while ((wait) && ((length := this.msgSize())=0))
       sleep, 50
-    if (length)
-    {
+    if (length)    {
       VarSetCapacity(buffer, length)
       if ((r := DllCall("ws2_32\recv", "ptr", this.socket, "ptr", &buffer, "int", length, "int", 0))<=0)
         return 0
@@ -248,8 +247,7 @@ class udp {
 
 __nw_initWinsock() {
   static init
-  if (!init)
-  {
+  if (!init)  {
     DllCall("LoadLibrary", "str", "ws2_32", "ptr")
     VarSetCapacity(wsadata, 394+A_PtrSize)
     DllCall("ws2_32\WSAStartup", "ushort", 0x0000, "ptr", &wsadata)

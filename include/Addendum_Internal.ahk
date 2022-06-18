@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                            	by Ixiko started in September 2017 - last change 27.10.2021 - this file runs under Lexiko's GNU Licence
+;                                            	by Ixiko started in September 2017 - last change 27.12.2021 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -38,13 +38,13 @@ UnhookWinEvent(hWinEventHook, HookProcAdr) {                                    
 }
 
 ;______________________________________________________________________________________________________________________________________________
-; PROZESSE (4)
+; PROZESSE (5)
 StdoutToVar(sCmd, sEncoding:="UTF-8", sDir:="", ByRef nExitCode:=0) {                               	;-- cmdline Ausgabe in einen String umleiten
 
     DllCall( "CreatePipe"					, "PtrP"	,hStdOutRd, "PtrP",hStdOutWr, "Ptr",0, "UInt",0 )
     DllCall( "SetHandleInformation"	, "Ptr"	,hStdOutWr, "UInt"	,1, "UInt",1)
 
-            VarSetCapacity( pi, (A_PtrSize == 4) ? 16 : 24,  0 )
+               VarSetCapacity( pi, (A_PtrSize == 4) ? 16 : 24,  0 )
     siSz := VarSetCapacity( si, (A_PtrSize == 4) ? 68 : 104, 0 )
     NumPut( siSz,         si,  0,                                      		"UInt" )
     NumPut( 0x100,     si,  (A_PtrSize == 4) ? 44 : 60, 	"UInt" )
@@ -233,11 +233,11 @@ IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="", convert:=true) {   
 			else return "ERROR"
 
 		If InStr(OutPutVar, "%AddendumDir%")
-				return StrReplace(OutPutVar, "%AddendumDir%", admDir)
+			OutPutVar :=  StrReplace(OutPutVar, "%AddendumDir%", admDir)
 		else if RegExMatch(OutPutVar, "%\.exe$") && !RegExMatch(OutPutVar, "i)[A-Z]\:\\")
-				return GetAppImagePath(OutPutVar)
+			return GetAppImagePath(OutPutVar)
 		else if RegExMatch(OutPutVar, "i)^\s*(ja|nein)\s*$", bool)
-				return (bool1= "ja") ? true : false
+			return (bool1= "ja") ? true : false
 
 return Trim(OutPutVar)
 }
@@ -323,19 +323,19 @@ return LE = 32 ? true : false
 }
 
 FilePathCreate(path) {                                                                                                              	;-- erstellt einen Dateipfad falls dieser noch nicht existiert
-
-	SplitPath, path, fname, path
 	If !FilePathExist(path) {
 		FileCreateDir, % path
 		return ErrorLevel ? 0 : 1
 	}
-
 return 1
 }
 
 FilePathExist(path) {                                                                                                                 	;-- prüft ob ein Dateipfad vorhanden ist
-	If InStr(FileExist(RTrim(path, "\") . "\"), "D")
-		return true
+	; akzeptiert keine leeren Pfade
+	If (StrLen(path)>0)
+		If (StrLen(pathExist := FileExist(path)) > 0)
+			If InStr(pathExist, "D")
+				return true
 return false
 }
 
@@ -427,7 +427,7 @@ GetAlbisPaths() {                                                               
 	RegRead    	, LocalPath 	, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, 1-LocalPath
 	RegRead   	, Exe         	, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, 1-Exe
 
-return {"MainPath":MainPath, "LocalPath":LocalPath, "Exe":Exe, "Briefe":MainPath "\Briefe", "db":MainPath "\db"}
+return {"MainPath":MainPath, "LocalPath":LocalPath, "Exe":Exe, "Briefe":MainPath "\Briefe", "db":MainPath "\db", "Vorlagen":MainPath "\tvl"}
 }
 
 ;______________________________________________________________________________________________________________________________________________
@@ -445,6 +445,7 @@ HasVal(haystack, needle) {
         throw Exception("Bad haystack!", -1, haystack)
     return 0
 }
+
 
 
 

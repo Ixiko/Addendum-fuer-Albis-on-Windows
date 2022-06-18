@@ -37,7 +37,7 @@
 	#NoEnv
 	SetBatchLines, -1
 
-	global adm
+	global adm, mon1
 
 	RegExMatch(A_ScriptDir, ".*(?=\\Module)", AddendumDir)
 	adm := AddendumBaseProperties(AddendumDir)
@@ -46,6 +46,23 @@
 	adm.ReanimatorLog := true
 
 	Menu, Tray, Icon, % adm.Dir "\assets\ModulIcons\AlbisReanimator.ico"
+
+	mon1 := ScreenDims(1)
+	btt("Albis Reanimator wurde gestartet.`nuntersuche laufende Prozesse...", mon1.W-500, 20,, {Border:5
+																																			, Rounded:15
+																																			, Margin:10
+																																			, BorderColor:0xffaabbcc
+																																			, TextColor:0xff112233
+																																			, BackgroundColor:0xff778899
+																																			, BackgroundColorLinearGradientStart:0xffF4CFC9
+																																			, BackgroundColorLinearGradientEnd:0xff8DA5D3
+																																			, BackgroundColorLinearGradientDirection:1
+																																			, BackgroundColorLinearGradientAngle:135
+																																			, Font:"Futura Bk Bt"
+																																			, FontSize:28
+																																			, FontRender:5
+																																			, FontStyle:"Normal"})
+		Sleep 4000
 
 	AlbisReanimator()
 
@@ -64,7 +81,7 @@ AlbisReanimator(AlbisMainPath:="", AlbisLocalPath:="", AlbisExe:="") {          
 					continue
 
 			; Information
-				btt(procView . "Process " proc.Name "[" proc.PID "] wird beendet", A_ScreenWidth-500, 20,, "Style4")
+				btt(procView . "Process " proc.Name "[" proc.PID "] wird beendet", mon1.W-500, 20,, "Style4")
 
 			; Versuch per Process WaitClose
 				Process, WaitClose, % proc.PID, 5
@@ -91,7 +108,7 @@ AlbisReanimator(AlbisMainPath:="", AlbisLocalPath:="", AlbisExe:="") {          
 
 			; Fortschritt anzeigen
 				procView .=  "Process " proc.Name "[" proc.PID "]" (ProcExist ? " konnte nicht beendet werden" : " wurde beendet") "`n"
-				btt(procView, A_ScreenWidth-500, 20,, "Style4")
+				btt(procView, mon1.W-500, 20,, "Style4")
 
 		}
 
@@ -362,6 +379,22 @@ GetAppsInfo(infoType) {
       DllCall("Ole32\CoTaskMemFree", Ptr, pData)  ; not sure, whether it's needed
    }
    Return res
+}
+
+ScreenDims(MonNr:=1) {	                                                       		;-- returns a key:value pair of screen dimensions
+
+	Sysget, MonitorInfo, Monitor, % MonNr
+	X	:= MonitorInfoLeft
+	Y	:= MonitorInfoTop
+	W	:= MonitorInfoRight   	- MonitorInfoLeft
+	H 	:= MonitorInfoBottom 	- MonitorInfoTop
+
+	DPI    	:= A_ScreenDPI
+	Orient	:= (W>H)?"L":"P"
+	yEdge	:= DllCall("GetSystemMetrics", "Int", SM_CYEDGE)
+	yBorder	:= DllCall("GetSystemMetrics", "Int", SM_CYBORDER)
+
+ return {X:X, Y:Y, W:W, H:H, DPI:DPI, OR:Orient, yEdge:yEdge, yBorder:yBorder}
 }
 
 #include %A_ScriptDir%\..\..\lib\class_BTT.ahk

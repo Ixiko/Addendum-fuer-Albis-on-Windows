@@ -1,29 +1,29 @@
-﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 23.10.2021 - this file runs under Lexiko's GNU Licence
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                                                            	by Ixiko started in September 2017 - last change 23.02.2022 - this file runs under Lexiko's GNU Licence
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
 return
-; CONTROLS                                                                                                                                                                                                                                        	(35)
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; GetClassName                                	Control_GetClassNN                     	GetClassNN                                  	GetFocusedControl                        	GetFocusedControlHwnd
-; GetFocusedControlClassNN            	GetChildHWND                            	GetControls                                  	GetButtonType                                	Controls
-; ControlFind                                     	ControlGet                                    	ControlGetText                              	ControlGetFocus                            	GuiControlGet
-; ControlGetFont									WinSaveCheckboxes                        	Toolbar_GetRect
-; ControlGetTabs                               	TabCtrl_GetCurSel                          	TabCtrl_GetItemText
-; VerifiedClick                                    	VerifiedCheck                                	VerifiedChoose                              	VerifiedSetFocus                            	VerifiedSetText
+; CONTROLS                                                                                                                                                                                                                              	(35)
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; GetClassName                              	Control_GetClassNN                    	GetClassNN                           	GetFocusedControl                        	GetFocusedControlHwnd
+; GetFocusedControlClassNN           	GetChildHWND                           	GetControls                             	GetButtonType                                	Controls
+; ControlFind                                   	ControlGet                                  	ControlGetText                        	ControlGetFocus                            	GuiControlGet
+; ControlGetFont								WinSaveCheckboxes                    	Toolbar_GetRect
+; ControlGetTabs                             	TabCtrl_GetCurSel                       	TabCtrl_GetItemText
+; VerifiedClick                                  	VerifiedCheck                             	VerifiedChoose                       	VerifiedSetFocus                            	VerifiedSetText
 ; UpSizeControl
-; LVM_GetNext                                   	LV_Select                                        	LV_SortArrow									LV_GetColWidth                            	LV_EX_GetTopIndex
+; LVM_GetNext                                 	LV_Select                                     	LV_SortArrow							LV_GetColWidth                            	LV_EX_GetTopIndex
 ; LV_GetScrollViewPos
 ; CaretPos
 ; KeyValueObjectFromLists
-;_________________________________________________________________________________________________________________________________________________________
+;___________________________________________________________________________________________________________________________________________________
 return
 ; 01
 GetClassName(hwnd) {                                                                                 	;-- returns HWND's class name without its instance number, e.g. "Edit" or "SysListView32"
 		;https://autohotkey.com/board/topic/45515-remap-hjkl-to-act-like-left-up-down-right-arrow-keys/#entry283368
-	VarSetCapacity( buff, 256, 0 )
+	VarSetCapacity(buff, 256, 0)
 	DllCall("GetClassName", "uint", hwnd, "str", buff, "int", 255 )
 return buff
 }
@@ -60,18 +60,15 @@ GetClassNN_EnumChildProc(hwnd, lparam) {
 }
 ; 04
 GetFocusedControl()  {                                                                                  	;-- retrieves the ahk_id (HWND) of the active window's focused control.
-
-   ; This script requires Windows 98+ or NT 4.0 SP3+.
-   VarSetCapacity(guiThreadInfo, (guiThreadInfoSize := 8+6*A_PtrSize+16), 0)
-   NumPut(GuiThreadInfoSize, GuiThreadInfo, 0)
-   ; DllCall("RtlFillMemory" , "PTR", &guiThreadInfo, "UInt", 1 , "UChar", guiThreadInfoSize)   ; Below 0xFF, one call only is needed
-   if (DllCall("GetGUIThreadInfo" , "UInt", 0, "PTR", &guiThreadInfo) = 0) {   ; Foreground thread
+	; last modification: 27.11.2021
+	static guiThreadInfoSize:=8+(A_PtrSize*6)+16, hwndCaret:=8+A_PtrSize*5
+   	VarSetCapacity(guiThreadInfo, guiThreadInfoSize, 0)
+   	NumPut(GuiThreadInfoSize, GuiThreadInfo, 0)
+   	if (DllCall("GetGUIThreadInfo", "UInt", 0, "PTR", &guiThreadInfo) = 0) {   ; Foreground thread
 		ErrorLevel := A_LastError   ; Failure
 		Return 0
-   }
-
-; *(addr + 12) + (*(addr + 13) << 8) +  (*(addr + 14) << 16) + (*(addr + 15) << 24)
-Return Format("0x{:X}", NumGet(guiThreadInfo, 8+A_PtrSize, "Ptr"))
+   	}
+Return Format("0x{:X}", NumGet(guiThreadInfo, hwndCaret, "Ptr"))
 }
 ; 05
 GetFocusedControlHwnd(hwnd:="A") {
@@ -204,7 +201,7 @@ GetButtonType(hwndButton) {                                                     
  return types[1+(btnStyle & 0xF)]
 }
 ; 10
-GetHeaderInfo(hHeader) {                                                                                	;-- Returns an object containing the text and width of each item of a remote SysHeader32 control
+GetHeaderInfo(hHeader) {                                                                               	;-- Returns object containing the text and width of items of a remote SysHeader32 control
 
 	; from WinSpy
 
@@ -264,9 +261,9 @@ GetHeaderInfo(hHeader) {                                                        
 Return HDInfo
 }
 ; 11
-Controls(Control="",cmd="",WinTitle="",HidT=1,HidW=1,MMSpeed="slow") {   	;-- Universalfunktion für Steuerelemente
+Controls(Control="",cmd="",WinTitle="",HidT=1,HidW=1,MMSpeed="slow") {  	;-- Universalfunktion für Steuerelemente
 
-	;  ********	    ********		Function grows and thrives, watered at the 25.03.2021
+	;  ********	    ********		Function grows and thrives, watered at the 16.04.2022
 	; ***	     *    ***	    ***	dependencies: 	Function: ClientToScreen()
 	; ***            ***      ***                        	Function: KeyValueObjectFromLists()
 	; ***            ***      ***                         	Function: VerifiedSetText() - [ ControlGetText() ]
@@ -335,7 +332,7 @@ Controls(Control="",cmd="",WinTitle="",HidT=1,HidW=1,MMSpeed="slow") {   	;-- Un
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 	; Befehlsbereich -
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-		cmd := Trim(cmd)
+		;~ cmd := Trim(cmd)
 	    if        RegExMatch(cmd	, "i)^\s*(Hwnd|ID)"              	)         	{   	; returns the handle for a ClassNN
 
 				; empty Control parameter returns the array with class
@@ -490,45 +487,40 @@ Controls(Control="",cmd="",WinTitle="",HidT=1,HidW=1,MMSpeed="slow") {   	;-- Un
 		}
 		else if RegExMatch(cmd	, "i)^\s*GetControls"         	)         	{   	; try's to return all subcontrol hwnds (no treeversal)
 
-				Childs := Array(), found := false, HiddenControls := true
+			Childs := Array(), HiddenControls := true
 
-				If !RegExMatch(cmd, ".*\+Hidden") {
-					GCHiddenTextStatus      := A_DetectHiddenText
-					GCHiddenWinStatus      := A_DetectHiddenWindows
-					DetectHiddenText      	, Off
-					DetectHiddenWindows	, Off
-					HiddenControls := false
+			If !RegExMatch(cmd, ".*\+Hidden") {
+				GCHiddenTextStatus      := A_DetectHiddenText
+				GCHiddenWinStatus      := A_DetectHiddenWindows
+				DetectHiddenText      	, Off
+				DetectHiddenWindows	, Off
+				HiddenControls := false
+			}
+			If Control {
+				found := false
+				For ControlClass, ControlHwnd in Ctrl
+					If InStr(ControlClass, Control) || InStr(ControlGetText(ControlHwnd), Control) {
+						WinTitle := "ahk_id " ControlHwnd
+						found := true
+						break
 				}
+				If !found
+					return 0
+			}
 
-				If (StrLen(Control) > 0) {
+			WinGet, childList, ControlListHwnd, % WinTitle
+			For each, childhwnd in StrSplit(childList, "`n") 	{
+				; auch verborgene Steuerelemente einsammeln
+					If HiddenControls
+						Childs.Push(childhwnd)
+					else if IsWindowVisible(childhwnd) ; oder nur sichtbare
+						Childs.Push(childhwnd)
+			}
 
-					For ControlClass, ControlHwnd in Ctrl
-						If InStr(ControlClass, Control) || InStr(ControlGetText(ControlHwnd), Control) {
-							WinTitle := "ahk_id " ControlHwnd, found := true
-							break
-					}
+			DetectHiddenText      	, % GCHiddenText=true ? "On":"Off"
+			DetectHiddenWindows	, % GCHiddenWin=true ? "On":"Off"
 
-					If !found
-						return 0
-
-				}
-
-				WinGet, childList, ControlListHwnd, % WinTitle
-
-				Loop, Parse, childList, `n
-				{
-					; auch verborgene Steuerelemente einsammeln
-						If HiddenControls
-							Childs.Push(A_LoopField)
-						else if IsWindowVisible(A_LoopField) ; oder nur sichtbare
-							Childs.Push(A_LoopField)
-				}
-
-				DetectHiddenText      	, % GCHiddenText=true ? "On":"Off"
-				DetectHiddenWindows	, % GCHiddenWin=true ? "On":"Off"
-
-				return Childs
-
+		return Childs
 		}
 		else if RegExMatch(cmd	, "i)^\s*GetFocus"             	)          	{   	; finds the focused control and returns it's ControlClassNN
 
@@ -542,7 +534,7 @@ Controls(Control="",cmd="",WinTitle="",HidT=1,HidW=1,MMSpeed="slow") {   	;-- Un
 			return cFocus
 
 		}
-		else if RegExMatch(cmd	, "i)^\s*GetText"                   	)         	{   	; get text from any control
+		else if RegExMatch(cmd	, "i)^\s*GetText"                  	)         	{   	; get text from any control
 
 			If (StrLen(Ctrl[Control]) = 0)
 				return ""
@@ -842,31 +834,30 @@ Return Tabs
 TabCtrl_GetCurSel(HWND) {                             		                                    	;-- index number of active tab in a gui
    ; Returns the 1-based index of the currently selected tab
    Static TCM_GETCURSEL := 0x130B
-   SendMessage, TCM_GETCURSEL, 0, 0, , ahk_id %HWND%
-   Return (ErrorLevel + 1)
+   SendMessage, TCM_GETCURSEL, 0, 0,, % "ahk_id " HWND
+Return (ErrorLevel+1)
 }
 ; 22
 TabCtrl_GetItemText(HWND, Index=0) {                                                        	;-- returns text of a tab
 
-   Static TCM_GETITEM  := A_IsUnicode ? 0x133C : 0x1305 ; TCM_GETITEMW : TCM_GETITEMA
-   Static TCIF_TEXT := 0x0001
-   Static TCTXTP := (3 * 4) + (A_PtrSize - 4)
-   Static TCTXLP := TCTXTP + A_PtrSize
-   ErrorLevel := 0
-   If (Index = 0)
+	Static TCM_GETITEM	:= A_IsUnicode ? 0x133C : 0x1305 ; TCM_GETITEMW : TCM_GETITEMA
+	Static TCIF_TEXT    	:= 0x0001
+	Static TCTXTP        	:= (3*4) + (A_PtrSize-4)
+	Static TCTXLP        	:= TCTXTP + A_PtrSize
+
+	ErrorLevel := 0
+	If (Index = 0)
       Index := TabCtrl_GetCurSel(HWND)
-   If (Index = 0)
+	If (Index = 0)
       Return SetError(1, "")
-   VarSetCapacity(TCTEXT, 256 * SizeT, 0)
-    VarSetCapacity(TCITEM, (5 * 4) + (2 * A_PtrSize) + (A_PtrSize - 4), 0)
-   NumPut(TCIF_TEXT, TCITEM, 0, "UInt")
-   NumPut(&TCTEXT, TCITEM, TCTXTP, "Ptr")
-   NumPut(256, TCITEM, TCTXLP, "Int")
-   SendMessage, TCM_GETITEM, --Index, &TCITEM, , ahk_id %HWND%
-   If !(ErrorLevel)
-      Return SetError(1, "")
-   Else
-      Return SetError(0, StrGet(NumGet(TCITEM, TCTXTP, "UPtr")))
+	VarSetCapacity(TCTEXT, 256*SizeT, 0)
+	VarSetCapacity(TCITEM, (5*4)+(2*A_PtrSize)+(A_PtrSize-4), 0)
+	NumPut(TCIF_TEXT, TCITEM, 0, "UInt")
+	NumPut(&TCTEXT, TCITEM, TCTXTP, "Ptr")
+	NumPut(256, TCITEM, TCTXLP, "Int")
+	SendMessage, % TCM_GETITEM, % Index-1, &TCITEM,, % "ahk_id " HWND
+
+return !ErrorLevel ? SetError(1, "") : SetError(0, StrGet(NumGet(TCITEM, TCTXTP, "UPtr")))
 }
 ;{ sub of TabCtrl_GetItemText
 SetError(ErrorValue, ReturnValue) {                                                                                             	;--belongs to TabCtrl functions
@@ -877,7 +868,7 @@ SetError(ErrorValue, ReturnValue) {                                             
 
 ;\/\/\/\ Funktionen prüfen die erfolgreiche Durchführung ihrer Interaktion mit Steuerelementen /\/\/\/
 ; 23
-VerifiedClick(CName, WTitle="", WText="", WinID="", WaitClose=false) {         	;-- 4 verschiedene Methoden um auf ein Control zu klicken
+VerifiedClick(CName, WTitle="", WText="", WinID="", WaitClose=false) {       	;-- 4 verschiedene Methoden um auf ein Control zu klicken
 
 	; WaitClose eine Zahl größer 0 für die maximale Zeit die gewartet werden darf
 	; eventuell vorhandene Kürzelzeichen <&> im Buttonnamen werden entfernt damit ein Vergleich Treffer erzielt
@@ -899,8 +890,8 @@ VerifiedClick(CName, WTitle="", WText="", WinID="", WaitClose=false) {         	
 			If (EL := ErrorLevel) {
                	SendMessage, 0x0201, 1, 0, % CName, % WTitle, % WText                 	;0x0201 - WM_Click
 				EL := ErrorLevel = "FAIL" ? 1 : 0
-				If (EL) {
-					BlockInput, On
+				If EL {
+					BlockInput, On                                                                       	; funktioniert nur mit Systemrechten
 					WinGetPos    	, wx, wy,,, % WTitle, % WText
                    	ControlGetPos	, cx, cy, cw, ch, % CName, % WTitle, % WText
                    	MouseGetPos	, mx, my
@@ -920,12 +911,11 @@ VerifiedClick(CName, WTitle="", WText="", WinID="", WaitClose=false) {         	
 return (EL = 0 ? 1 : 0)
 }
 ; 24
-VerifiedCheck(CName, WTitle="", WText="", WinID="", CheckIt=true) {          	;-- Fensteraktivierung + ControlDelay auf -1 + Kontrolle ob das Control wirklich checked ist jetzt
+VerifiedCheck(CName, WTitle="", WText="", WinID="", CheckIt=true) {          	;-- prüft den checked Status
 
-	; die Funktion prüft nicht, ob das Setzen oder Entfernen überhaupt notwendig ist, wenn es schon gesetzt oder nicht gesetzt ist
-	; wenn nur die WinID und kein CName, WTitle und WText übergeben wird, dann WinID als das Steuerelementhandle interpretiert
-	; 02.08.2018 - neuer Parameter: CheckIt. Wenn dieser true, also gesetzt ist, wird ein Häkchen gesetzt , mit 'false' entfernt.
-	; 23.09.2021 -
+	; falls nur die WinID und kein Steuerelement Name (CName), Fenstertitel (WTitle) oder Fenstertext (WText) übergeben wird,
+	; dann wird WinID als das Steuerelementhandle interpretiert
+	; CheckIt: bei 'true' wird ein Häkchen gesetzt , bei 'false' entfernt.
 
 		CName := RegExReplace(CName, "[\&]", "")
 
@@ -935,7 +925,9 @@ VerifiedCheck(CName, WTitle="", WText="", WinID="", CheckIt=true) {          	;-
 			WinID := WinExist(WTitle, WText)
 		else if !CName && !WTitle && !WText && WinID
 			hCName := WinID
-		WText := "", WTitle := "ahk_id " WinID
+
+		WTitle := "ahk_id " WinID
+		WText := ""
 
 		If CName && !hCName
 			ControlGet, hCName, hwnd,, % Trim(CName), % WTitle
@@ -944,13 +936,10 @@ VerifiedCheck(CName, WTitle="", WText="", WinID="", CheckIt=true) {          	;-
 		If !RegExMatch(ButtonType, "Autocheckbox|Checkbox|Radio")	{
 			If !CName
 				ControlGetText, CName,, % WTitle
-			PraxTT("Fehler in der Funktion VerifiedCheck()`n`nDas angesprochene Steuerelement (" CName ")`nist keine Standard-Checkbox!", "1 0")
+			PraxTT := "PraxTT"
+			If IsFunc(PraxTT)
+				%PraxTT%("Fehler in der Funktion VerifiedCheck()`nDas angesprochene Steuerelement (" CName ")`nist keine Standard-Checkbox [ " ButtonType " ]!", "1 0")
 			return 0
-		}
-
-		If !WinActive(WTitle) {
-			WinActivate	 , % WTitle
-			WinWaitActive, % WTitle,, 1
 		}
 
 		Loop {
@@ -1028,9 +1017,10 @@ VerifiedSetFocus(CName, WTitle="", WText="", WinID="", activate=false) {       	
 			tms := A_TitleMatchModeSpeed
 			SetTitleMatchMode, Slow
 		}
-		ControlID := WinID && !CName ? WinID : ""
-		WinID := WinID ? WinID : RegExMatch(WTitle, "i)^(0x[A-F\d]+|\d+)$") ? GetHex(WinTitle) : WTitle ? WinExist(WTitle, WText)
-		WTitle := ("ahk_id " WinID), WText := ""
+		ControlID	:= WinID && !CName ? WinID : ""
+		WinID    	:= WinID ? WinID : RegExMatch(WTitle, "i)^(0x[A-F\d]+|\d+)$") ? GetHex(WinTitle) : WTitle ? WinExist(WTitle, WText)
+		WTitle    	:= ("ahk_id " WinID)
+		WText   	:= ""
 
 	; Fenster aktivieren nach Bedarf
 		if activate {
@@ -1072,7 +1062,7 @@ VerifiedSetText(CName="", NewText="", WTitle="", delay=100, WText="") {    	;-- 
 
 	; kontrolliert ob der Text tatsächlich eingefügt wurde und man kann noch eine Verzögerung übergeben
 	; delay = Zeit in ms zwischen den Versuchen
-		abb:= delay > 2000 ? 20 : Floor(2000//delay)	; höchsten 2 Sekunden wird versucht Text in das Control einzutragen
+		abb	 := delay > 2000 ? 20 : Floor(2000//delay)	; maximal 2 Sekunden wird versucht Text in das Steuerelement einzutragen
 		delay -= 40
 
 	; leeren des Fenster-Titel und Textes wenn ein Handle übergeben wurde
@@ -1081,22 +1071,36 @@ VerifiedSetText(CName="", NewText="", WTitle="", delay=100, WText="") {    	;-- 
 		else if RegExMatch(WTitle, "^\d+$", digits)
 			WTitle	:= StrLen(WTitle) = StrLen(digits)     	? "ahk_id " digits 	: WTitle
 		else
-			WTitle:= "ahk_id " WinID := GetHex(WinExist(WTitle, WText))
+			WTitle	:= "ahk_id " (WinID := GetHex(WinExist(WTitle, WText)))
 
-	Loop 	{
-		If (A_Index >= abb)
-              return 0
-		ControlSetText, % CName, % NewText, % WTitle, % WText
-		sleep 40
-		If (ControlGetText(CName, WTitle, WText) = NewText)
-			return true
-		sleep % delay
-	} until (ControlGetText(CName, WTitle, WText) = NewText)
+	; WText wird nicht mehr benötigt
+		WText := ""
 
-return (ControlGetText(CName, WTitle, WText) = NewText ? true : false)
+	; eintragen
+		while (ControlGetText(CName, WTitle) <> NewText) 	{
+
+			If (A_Index >= abb)
+				  return 0
+			else if (A_Index > 1)
+				sleep % delay
+
+			ControlSetText, % CName, % NewText, % WTitle
+			If !ErrorLevel    	; schläft ein extra Ründchen
+				sleep 40
+			else {
+				If VerifiedSetFocus(CName, WTitle) {
+					ControlSendRaw, % CName, % NewText, % WinTitle
+					;~ SciTEOutput(A_ThisFunc ": ControlSendRaw !" )
+					Sleep 70
+				}
+			}
+
+		}
+
+return ControlGetText(CName, WTitle) = NewText ? true : false
 }
 ; 27
-UpSizeControl(WinTitle, WinClass, UpSizedControl, ExpandDown                      	;-- changes width and height of a control element and repositions the controls below and to the right of it
+UpSizeControl(WinTitle, WinClass, UpSizedControl, ExpandDown                      	;-- changes width and height of a control and repositions it below and to the right of it
 , ExpandRight, CenterToWin:=0) {
 
 		static lastSizedWin
@@ -1255,24 +1259,80 @@ LV_GetScrollViewPos(hwnd) {
 	}
 
 }
-; 34
-CaretPos(ControlId) {                                                                                      	;-- Get start and End Pos of the selected string - Get Caret pos if no string is selected
-	;https://autohotkey.com/boards/viewtopic.php?p=27979#p27979
-	DllCall("User32.dll\SendMessage", "Ptr", ControlId, "UInt", 0x00B0, "UIntP", Start, "UIntP", End, "Ptr")
-	SendMessage, 0xB1, -1, 0, , % "ahk_id" ControlId
-	DllCall("User32.dll\SendMessage", "Ptr", ControlId, "UInt", 0x00B0, "UIntP", CaretPos, "UIntP", CaretPos, "Ptr")
-	if (CaretPos = End)
-		SendMessage, 0xB1, % Start, % End, , % "ahk_id" ControlId	;select from left to right ("caret" at the End of the selection)
-	else
-		SendMessage, 0xB1, % End, % Start, , % "ahk_id" ControlId	;select from right to left ("caret" at the Start of the selection)
-	CaretPos++	;force "1" instead "0" to be recognised as the beginning of the string!
-return, CaretPos
+
+;\/\/\/\/\/\/\/\/\/\/ Listbox Control Funktionen \/\/\/\/\/\/\/\/\/\/
+;34
+LBEX_CalcIdealWidthEx(hLB,cnt="",dlm="|",fopt="",fname="",rows=0) {	;-- zum Berechnen der optimalen Breite einer Listbox
+
+		static SM_CVXSCROLL
+		DestroyGui := MaxW := 0
+
+		If !SM_CVXSCROLL
+			SysGet, SM_CVXSCROLL, 2                                        	; width of a vertical scrollbar
+
+		If !hLB	{
+			  If (StrLen(Trim(cnt, dlm)) = 0)
+				 Return -1
+			  Gui, LB_EX_CalcContentWidthGui: New	, % "+Delimiter" dlm
+			  Gui, LB_EX_CalcContentWidthGui: Font	, % fopt, % fname
+			  Gui, LB_EX_CalcContentWidthGui: Add	, ListBox, % "+HWNDhLB " (rows = 0 ? "" : "r" rows), % cnt
+			  DestroyGui := True
+		}
+
+		ControlGet, cnt, List,,, % "ahk_id " hLB                            	; Inhalt ermitteln
+		Items 	:= StrSplit(cnt, "`n")
+
+		SendMessage, 0x31, 0, 0,, % "ahk_id " hLB                     	; WM_GETFONT
+		hFont	:= ErrorLevel
+
+		hDC  	:= DllCall("User32.dll\GetDC", "Ptr", hLB, "UPtr")
+		DllCall("Gdi32.dll\SelectObject", "Ptr", hDC, "Ptr", hFont)
+
+		;~ VarSetCapacity(SIZE, 8, 0)
+		For each, item In items	{
+			DllCall("Gdi32.dll\GetTextExtentPoint32", "Ptr", HDC, "Ptr", &Item, "Int", StrLen(Item), "UIntP", Width)
+			MaxW := Width > MaxW ? Width : MaxW
+		}
+
+		DllCall("User32.dll\ReleaseDC", "Ptr", hLB, "Ptr", hDC)
+
+	; einfachste Umsetzung um einfach nur herauszufinden ob eine vertikale Scrollbar existiert
+		SBVERT_Exist := (Items.MaxIndex() > rows) ? true : false
+		If (DestroyGui)
+			Gui, LB_EX_CalcContentWidthGui: Destroy
+
+Return MaxW + (SBVERT_Exist = true ? SM_CVXSCROLL : 0) + 8 ; + 8 for the margins
 }
 
-; Hilfsfunktionen
+
+;\/\/\/\/\/\/\/\/\/\/ Edit Control Funktionen \/\/\/\/\/\/\/\/\/\/
 ; 35
+CaretPos(hwnd) {                                                                                        	;-- Get start and End Pos of the selected string - Get Caret pos if no string is selected
+	If !hwnd
+		return 0
+	;https://autohotkey.com/boards/viewtopic.php?p=27979#p27979
+	DllCall("User32.dll\SendMessage", "Ptr", hwnd, "UInt", 0x00B0, "UIntP", Start, "UIntP", End, "Ptr")
+	SendMessage, 0xB1, -1, 0,, % "ahk_id" hwnd
+	DllCall("User32.dll\SendMessage", "Ptr", hwnd, "UInt", 0x00B0, "UIntP", CaretPos, "UIntP", CaretPos, "Ptr")
+	SendMessage, 0xB1, % (CaretPos=End ? Start : End), % (CaretPos=End ? End : Start),, % "ahk_id" hwnd	; select from left to right ("caret" at the End of the selection)
+	CaretPos++	; force "1" instead "0" to be recognised as the beginning of the string!
+return, CaretPos
+}
+; 36
+Edit_Append(hEdit, txt) {                                                                                 	;-- Modified version by SKAN
+	Local        ; Original by TheGood on 09-Apr-2010 @ autohotkey.com/board/topic/52441-/?p=328342
+	L :=	DllCall("SendMessage", "Ptr",hEdit, "UInt",0x0E, "Ptr",0 , "Ptr",0)     	; WM_GETTEXTLENGTH
+	    	DllCall("SendMessage", "Ptr",hEdit, "UInt",0xB1, "Ptr",L , "Ptr",L)       	; EM_SETSEL
+	    	DllCall("SendMessage", "Ptr",hEdit, "UInt",0xC2, "Ptr",0, "Str",txt )   	; EM_REPLACESEL
+	If RegExMatch(txt, "[\n\r]+$")
+		ControlSend,, {Enter}, % "ahk_id " hEdit
+}
+
+
+; Hilfsfunktionen
+; 37
 KeyValueObjectFromLists(keyList, valueList, delimiter:="`n"
-, IncludeKeys:="", KeyREx:="", IncludeValues:="", ValueREx:="") {                	;-- Funktion um z.B. zwei Listen aus WinGet zusammenzuführen
+, IncludeKeys:="", KeyREx:="", IncludeValues:="", ValueREx:="") {                     	;-- Funktion um z.B. zwei Listen aus WinGet zusammenzuführen
 
 	keyArr:= valueArr:= []
 	merged:= Object()

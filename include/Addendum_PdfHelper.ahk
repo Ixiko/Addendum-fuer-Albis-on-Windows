@@ -8,19 +8,19 @@
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;
 ;	 	Addendum für Albis on Windows
-;   	by Ixiko started in September 2017 - last change 31.05.2021 - this file runs under Lexiko's GNU Licence
+;   	by Ixiko started in September 2017 - last change 25.11.2021 - this file runs under Lexiko's GNU Licence
 ;
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
 return
 
 ;----------------------------------------------------------------------------------------------------------------------------------------------
-; native PDF Funktionen
+; native PDF functions
 ;----------------------------------------------------------------------------------------------------------------------------------------------
 PDFGetPages(pdfFilePath , qpdfPath:="")                           	{               	;-- gibt die Anzahl der Seiten einer PDF zurück
 
-	; last change 09.01.2021
-		pages := 0
+	; last change 25.11.2021
+		pages := ""
 
 	; PDF's are written in ANSI
 		If !(fobj := FileOpen(pdfFilePath, "r", "CP0"))
@@ -29,32 +29,24 @@ PDFGetPages(pdfFilePath , qpdfPath:="")                           	{            
 	; search string(s) that contain/s/ing page data
 		while !fobj.AtEof {
 			line := fobj.ReadLine()
-			If RegExMatch(line, "i)\/Count\s(?<ages>\d+)\/", p)
+			If RegExMatch(line, "i)\/(Count|Pages)\s+(?<ages>\d+)\/", p)
 				break
-			else If RegExMatch(line, "i)\/Pages\s(?<ages>\d+)\/", p)
-				break
-			else If RegExMatch(line, "Length\s(?<seek>\d+)", file)
+			else If RegExMatch(line, "Length\s+(?<seek>\d+)", file)
 				fobj.seek(fileseek, 1)
 		}
-
 		fobj.Close()
 
+	; sometimes it detects 3 million pages - so qpdf will be used in this case
+		If RegExMatch(pages, "\d+")
+			If (pages > 0 && pages < 10000)
+				return pages
+
 	; #### if there's no match, sometimes the PDF XREF table is encoded/compressed - qpdf will be used
-		If (StrLen(qpdfPath) > 0) {
+		If qpdfPath {
 			qpdfPages := StdoutToVar(qpdfPath "\qpdf.exe --show-npages " q pdfFilePath q)
 			If RegExMatch(qpdfPages, "\d+", qpages)
 				return qpages
 		}
-
-	; sometimes it detects 3 million pages - so qpdf will be used in this case
-		If RegExMatch(pages, "\d+")
-			If (pages > 0) && (pages < 1000)
-				return pages
-
-	; if there's no match, sometimes the PDF XREF table is encoded/compressed - qpdf will be used
-		If (StrLen(qpdfPath) > 0)
-			If RegExMatch(StdoutToVar(qpdfPath "\qpdf.exe --show-npages " q pdfFilePath q), "\d+", qpages)
-				return qpages
 
 return 0
 }
@@ -73,7 +65,7 @@ return InStr(StrGet(&EndOfFile, 5, "CP0"), "EOF") ? false : true
 
 PDFisSearchable(pdfFilePath)                                          	{               	;-- durchsuchbare PDF Datei?
 
-	; letzte Änderung 08.02.2021 : neuer Matchstring
+	; letzte Änderung 25.11.2021 : neuer Matchstring
 
 	If !(fobj := FileOpen(pdfFilePath, "r", "CP1252"))
 		return 0
@@ -81,9 +73,8 @@ PDFisSearchable(pdfFilePath)                                          	{        
 	while !fobj.AtEof {
 		line := fobj.ReadLine()
 		If RegExMatch(line, "i)(Font|ToUnicode|Italic)") {
-			filepos := fobj.pos
 			fobj.Close()
-			return filepos
+			return true
 		}
 		else If RegExMatch(line, "Length\s(?<seek>\d+)", file)     	; binären Inhalt überspringen
 			fobj.seek(fileseek, 1)                                                   	; •1 (SEEK_CUR): Current position of the file pointer.
@@ -136,9 +127,9 @@ PDFGetXREF(pdfFilePath, EOLBytes=0)                           	{               	
 		fobj.RawRead(bytes, EOLBytes)
 		fobj.seek(-1 * EOLBytes, 1)
 		rbytes := Format("{:02X}", NumGet(bytes, 0, "Char"))
-		t := (Mod(A_Index, 5 ) = 0 ? SubStr("00" A_Index, -1) " - " SubStr("0000000" fobj.Tell(), -7) "`n" : "")
-				. (EOLBytes = 2 ? Format("{:02X}", NumGet(bytes, 0, "Char")) " " Format("{:02X}", NumGet(bytes, 1, "Char")) : Format("{:02X}", NumGet(bytes, 0, "Char")))
-				. (Mod(A_Index - 1, 5 ) = 0 ? "`n`n" : " ") . t
+		t := 	(Mod(A_Index, 5 ) = 0   	? SubStr("00" A_Index, -1) " - " SubStr("0000000" fobj.Tell(), -7) "`n" : "")
+			. 	(EOLBytes = 2               	? Format("{:02X}", NumGet(bytes, 0, "Char")) " " Format("{:02X}", NumGet(bytes, 1, "Char")) : Format("{:02X}", NumGet(bytes, 0, "Char")))
+			.	(Mod(A_Index - 1, 5 ) = 0	? "`n`n" : " ") . t
 		If rbytes in 0A,0D
 			break
 		If (A_Index > 50) {
@@ -148,7 +139,7 @@ PDFGetXREF(pdfFilePath, EOLBytes=0)                           	{               	
 
 	}
 
-	; calculate lenght of startxref pointer
+	; calculate length of startxref pointer
 	LENfpxref :=  endxref - (fobj.Tell() + EOLBytes)
 	VarSetCapacity(fpxref, LENfpxref)
 	fobj.seek(EOLBytes, 1)
@@ -175,7 +166,7 @@ PDFGetXREF(pdfFilePath, EOLBytes=0)                           	{               	
 	MsgBox, % "Table: n=" n " objects=" NrObjects "`n" t
 }
 
-PDFObjectSearch(pdfFilePath,mstring)                            	{                	;-- Suchen in den Objekteigenschaften
+PDFObjectSearch(pdfFilePath, mstring)                            	{                	;-- freie Suche in Objekteigenschaften
 
 	; mstring = matchstring
 
@@ -255,7 +246,7 @@ IFilter(file, searchstring:="")                                             	{  
 	ObjRelease(iStream)
 
 	status := 0
-	MY_IFILTER := IFILTER_INIT_CANON_PARAGRAPHS | IFILTER_INIT_HARD_LINE_BREAKS | IFILTER_INIT_CANON_HYPHENS | IFILTER_INIT_CANON_SPACES
+	MY_IFILTER := IFILTER_INIT_CANON_PARAGRAPHS | IFILTER_INIT_HARD_LINE_BREAKS | IFILTER_INIT_CANON_HYPHENS | IFILTER_INIT_CANON_SPACES  | IFILTER_INIT_EMIT_FORMATTING
 	if (DllCall(NumGet(NumGet(IFilter+0)+3*A_PtrSize), "Ptr", IFilter, "UInt", MY_IFILTER, "Int64", 0, "Ptr", 0, "Int64*", status) != 0 ) ; IFilter::Init
 		throw A_ThisFunc ": can't init IFilter"
 
@@ -265,7 +256,7 @@ IFilter(file, searchstring:="")                                             	{  
 	while (DllCall(NumGet(NumGet(IFilter+0)+4*A_PtrSize), "Ptr", IFilter, "Ptr", &STAT_CHUNK) == 0) { ; ::GetChunk
 		if (NumGet(STAT_CHUNK, 8, "UInt") & CHUNK_TEXT) {
 			while (DllCall(NumGet(NumGet(IFilter+0)+5*A_PtrSize), "Ptr", IFilter, "Int64*", (siz := cchBufferSize), "Ptr", &buf) != FILTER_E_NO_MORE_TEXT) { ; ::GetText
-				text := StrGet(&buf,, "UTF-16")
+				text .= StrGet(&buf,, "UTF-16")
 				if (resultstriplinebreaks)
 					text := StrReplace(text, "`r`n")
 				If searchstring && (strpos := RegExMatch(text, searchstring))
@@ -290,7 +281,7 @@ return searchstring ? "" : Text
 ;----------------------------------------------------------------------------------------------------------------------------------------------
 ; xpdf wrapper
 ;----------------------------------------------------------------------------------------------------------------------------------------------
-PdfToText(PdfPath, pages, enc="UTF-8", SaveToFile="")   	{                 	;-- using xpdf's pdftotext, function catches the stdout
+PdfToText(PdfPath, pages="", enc="UTF-8", SaveToFile="") 	{                 	;-- using xpdf's pdftotext, function catches the stdout
 
 	; Link	: https://autohotkey.com/boards/viewtopic.php?t=15880&start=20
 	; By	: kon - 16.4.2016 modified from: Ixiko
@@ -351,8 +342,7 @@ PdfInfo(PdfPath, opt:="", lastpage:=1)                               	{	        
 	; Link:               	https://autohotkey.com/boards/viewtopic.php?f=9&t=59294&hilit=pdfinfo
 
 		static qq			:= Chr(0x22)
-		static PdfResults
-		static PdfPath_old
+		static PdfResults, PdfPath_old
 
 		If !(PdfPath_old = PdfPath)	{
 			PdfResults    	:= Object()

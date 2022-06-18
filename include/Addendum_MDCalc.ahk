@@ -26,7 +26,7 @@
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
 ;       Addendum_Calc started:           	13.01.2021
-;       Addendum_Calc last change:    	16.04.2021
+;       Addendum_Calc last change:    	05.04.2022
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /* 	MDRD
@@ -211,7 +211,7 @@ class MDCalc {
 	return Round(KOF, precision)  ; KOF [m²]
 	}
 
-	LabUnitsConverter(Lab, LabVal, Unit, Precision:=3, lang:="") {                        	;-- laboratory units converter
+	LabUnits(unitName, Labvalue, Unit:="", Precision:=2, lang:="") {                               	;-- laboratory units converter
 
 		/* Description for LabUnitsConverter()
 
@@ -219,11 +219,11 @@ class MDCalc {
 				⚕	laboratory unit converting function
 			――――――――――――――――――――――――――――――――――――――――――――――――
 				⊛ Parameters:
-					⚬ Lab    	= name of laboratory unit (can be english or german)
-					⚬ LabVal 	= value to convert
-					⚬ Unit   	= unit to convert from (can be Standard International Unit (SI) or Conventional Unit (C))
-					⚬ Precision= how many decimal places should the conversion value have (rounded)
-					⚬ lang   	= use this for a formatted output of the unit in another language
+					⚬ unitName  	= name of laboratory unit (can be english or german)
+					⚬ LabValue  	= value to convert
+					⚬ Unit        	= unit to convert to (if there's only one choice, leave this parameter empty)
+					⚬ Precision	= how many decimal places should the conversion value have (rounded)
+					⚬ lang   		= use this for a formatted output of the unit in another language
 
 				⊛ Conversion:
 					⚬ Conventional units to SI units:  	C unit is multiplied with the Conversion-Factor (CF)
@@ -246,12 +246,15 @@ class MDCalc {
 
 		*/
 
-		static CFactors := {1: {	"Kreatinin" 	: "de", "Krea"  	: "de-s",	"Creatinine"	: "eng", "SI" 	: "µmol/l" , "C" 	: "mg/dl", "CF" : 88.4}
-								,	 2: {	"Harnstoff"		: "de", "HST"   	: "de-s", "Urea"			: "eng", "SI"	: "mmol/l", "C"	: "mg/dl", "CF" : 0.357}
-								,	 3: {	"Glucose"		: "de", "Glucose": "de-s", "Glucose" 		: "eng", "SI"	: "mmol/l", "C"	: "mg/dl", "CF" : 0.0555}}
+		static CFactors := {1: {	"Kreatinin"     	: "de", "Krea"  	: "de-s",	"Creatinine"     	: "eng", "Crea"  	: "eng-s", "SI" : "µmol/l" , "C" : "mg/dl"	, "CF" : 88.4}
+								,	 2: {	"Harnstoff"	    	: "de", "HST"   	: "de-s", "Urea"    			: "eng", "Urea"	: "eng-s", "SI" : "mmol/l", "C" : "mg/dl"	, "CF" : 0.357}
+								,	 3: {	"Glucose"	    	: "de", "Glucose": "de-s", "Glucose" 	    	: "eng", "Gluc"   	: "eng-s", "SI" : "mmol/l", "C" : "mg/dl"	, "CF" : 0.0555}}
+								,	 3: {	"Hämoglobin"	: "de", "Hb"     	: "de-s", "Haemoglobin"	: "eng", "Hb"     	: "eng-s", "SI" : "mmol/l", "C" : "g/dl"   	, "CF" : ‭1.6103059581320450885668276972625‬}}
+
+		RegExMatch(Labvalue, "O)(?<value>[\d+\.\,])\s*(?<unit>[A-Za-zµΩω\/]+)", lab_)
 
 		For CFIndex, oLab in CFactors
-			If oLab.haskey(Lab) {
+			If oLab.haskey(unitName)
 				If (!StrLen(lang) > 0) {
 					return (Unit = "SI") ?	{"LabVal":Round(LabVal/oLab.CF, 3), "Unit":oLab.C, "CF":oLab.CF}
 												:	{"LabVal":Round(LabVal*oLab.CF, 2), "Unit":oLab.SI, "CF":oLab.CF}
@@ -261,7 +264,7 @@ class MDCalc {
 						If (val = lang)
 							return key
 				}
-			}
+
 
 	}
 
@@ -374,18 +377,31 @@ class MDCalc {
 	ConvertHbA1c(percent:="", mmolmol:="", precision:=2) {                                 	;-- converts HbA1c mmol/mol <--> mg/dl
 
 		; used formula:   HbA1c [mmol/mol] = (HbA1c [%] - 2,15) x 10,929
-		; https://www.bbraun.de/de/produkte-und-therapien/diabetes/omnitest/blutzuckerlangzeitwert-berechnen.html
+		; Take the appropriate parameter so that the correct conversion formula is used,
+		; so to convert a HbA1c with percentage to mg/dl write 'ConvertHbA1c(9.7, "")'.
+		; mmol/mol to mg/dl then works like 'ConvertHbA1c("", 3.2).
+		; The units for the values are logically omitted.
+		; Link: https://www.bbraun.de/de/produkte-und-therapien/diabetes/omnitest/blutzuckerlangzeitwert-berechnen.html
 
-		If percent
-			converted := (percent - 2.15) * 10.929
-		else if mmolmol
-			converted := (mmolmol / 10.929) + 2.15
+		converted := percent ? (percent - 2.15) * 10.929 : (mmolmol / 10.929) + 2.15
 
 		If precision
 			return Round(converted, precision)
 
 	return converted
 	}
+
+	Ganzoni(ActualHb, TargetHb, Weight) {                                                            	;-- Ganzoni Equation for Iron Deficiency Anemia
+
+		; Calculates iron deficit for dosing iron.
+		; Ganzoni gives us the formula to use with haemoglobin units of g/l or g/dl.
+		; I'm working daily with mmol/l. And this function automatically converts the values to a suitable format if necessary.
+		; You pass the values in convenient notation e.g. irondeficit := Ganzoni("7.7 mmol/l", "9.2 mmol/l", "64kg") or also irondeficit := Ganzoni("12.4 g/dl", "14.8 g/dl", "64kg").
+
+	}
+
+
+
 
 }
 

@@ -1133,6 +1133,21 @@ GetWindowPos(hWnd, ByRef X, ByRef Y, ByRef W, ByRef H) {
     H := NumGet(RECT, 12, "Int") - Y
 }
 
+_GetParentList(ChildHwnd) {                                                                                                      	;-- comma separated WinTitles and WinClasses of all parent windows
+
+	Loop {
+		pHwnd:= GetParent(ChildHwnd)
+		If !pHwnd
+				break
+		WinGetTitle	, WTitle		, % "ahk_id " pHwnd
+		WinGetClass	, WClass	, % "ahk_id " pHwnd
+		List.= WTitle . " - " . WClass "`,"
+		ChildHwnd:= pHwnd
+	}
+
+return List
+}
+
 ;}
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1513,6 +1528,28 @@ istda: ;{
 
 ExitApp
 ;}
+
+HotstringComboBox(con)                         	{
+
+	FileRead, thisScript, % A_ScriptFullPath
+	Loop, Parse, thisScript, `n, `r
+	{
+			If (collecting = 1) && RegExMatch(A_LoopField, "^#If$")
+				collecting:= 0
+			If (collecting = 1) 	{
+					rpos:= RegExMatch(A_LoopField, "(?<=.:)\w+", HStr)
+					If RegExMatch(A_LoopField, "(?<=\w.:)[\w\d\{\}\s\,\.\;]+(?=\s*;)", TextToSend)					{
+							null := zero
+					}
+
+			}
+			If RegExMatch(A_LoopField, "^#If.*""contraction"".*" con)
+					collecting:= 1
+
+	}
+
+return
+}
 
 ;}
 
@@ -2629,7 +2666,6 @@ RNGuiChoose:                                  	;{   mit den Pfeiltasten zwischen
 
 return
 ;}
-}
 
 admGui_ASDDShow()                                                             	{
 	global hadmRN
@@ -2637,6 +2673,27 @@ admGui_ASDDShow()                                                             	{
 	ToolTip, % GetHex(hadmRN) " - " GetHex(hASDD)
 return hASDD ? true : false
 }
+
+admGui_InfoText(TabTitel)                                             	{               	; Zusammenfassungen aktualisieren
+
+	; letzte Änderung: 17.05.2021
+
+	global adm, admButton1, admButton2
+	global admJournalTitle, admPatientTitle, admTProtokollTitel, TProto
+
+	Gui, adm: Default
+
+	If (TabTitel = "Journal") || (TabTitel = "Patient")	{
+		Journal.InfoText()
+		Journal.ShowImportStatus(false)
+	}
+	else If InStr(TabTitel, "TProtokoll")
+		GuiControl, adm: , admTProtokollTitel, % "[" TProto.MaxIndex() " Patienten]"
+
+}
+
+
+;}
 
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

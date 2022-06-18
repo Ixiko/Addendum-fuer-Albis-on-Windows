@@ -163,8 +163,7 @@
     VarSetCapacity(hints, 16+(4*A_PtrSize), 0)
     NumPut(this.__socketType, hints, 8, "int")
     NumPut(this.__protocolId, hints, 12, "int")
-    if ((r := DllCall("ws2_32\getaddrinfo", "astr", host, "astr", port, "ptr", &hints, "ptr*", next))!=0)
-    {
+    if ((r := DllCall("ws2_32\getaddrinfo", "astr", host, "astr", port, "ptr", &hints, "ptr*", next))!=0)    {
       this.lastError := DllCall("ws2_32\WSAGetLastError")
       return 0
     }
@@ -195,6 +194,8 @@ SocketEventProc(wParam, lParam, msg, hwnd) {
 
   static a := []
   Critical
+
+  ;~ SciTEOutput("SocketEvent: wParam = " GetHex(wParam) ", lParam = " GetHex(lParam) ", msg: " msg ", hwnd: " GetHex(hwnd))
 
   if (msg="register")
     return a
@@ -250,3 +251,4 @@ class SocketUDP extends Socket {
   }
 
 }
+

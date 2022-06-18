@@ -8,18 +8,18 @@
 ;       Abhängigkeiten:		Addendum_Gui.ahk, Addendum.ahk
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_Calc started:    	17.07.2021
+;       Addendum_Calc started:    	31.05.2022
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+return
 
 FindDocStrings()                                                             	{                	;-- RegExStrings für alles
 
-	; ‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿
+	; ‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿‿
 	;
 	;                  REGEX-STRINGS FÜR DAS FINDEN VON PERSONENNAMEN UND DATUMSZAHLEN IN EPIKRISEN, UNTERSUCHUNGSBEFUNDEN, BRIEFEN
 	;				   jede Funktion kann durch globales Deklarieren Zugriff nur auf die benötigten Variablen erhalten
 	;
-	;⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀
+	;⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀⁀
 	global FindDocStrings_Init := false
 	If FindDocStrings_Init
 		return
@@ -32,92 +32,99 @@ FindDocStrings()                                                             	{ 
 	global excludeIDs  	:= 	"2"
 
 	global rx               	:= 	"[;,:.\s]+"
-	global rx1               	:= 	"[;,:.\s]"
+	global rx1             	:= 	"[;,:.\s]"
+	global rxStar            	:= 	"[;,:.\s]*"
 	global ry               	:= 	"[,:.;\s\n\r\f]+"
-	global ryNL              	:= 	"[\s\n\r]+"
+	global ryNL           	:= 	"[\s\n\r]+"
 	global rz               	:= 	"[.,;\s]+.*?"
 	global rs               	:= 	"\s+"
-	global rp1              	:= 	".*"
-	global rp2              	:= 	".*?"
+	global rp1             	:= 	".*"
+	global rp2             	:= 	".*?"
 
 	global rxDay         	:= 	"(?<D>[12]*[0-9])"
 	global rxWDay       	:= 	"Mon*t*a*g*|Die*n*s*t*a*g*|Mi*t*t*w*o*c*h*|Do*n*n*e*r*s*t*a*g*|Fr*e*i*t*a*g*|Son*n*a*b*e*n*d*|Sam*s*t*a*g*|Son*n*t*a*g*"
 	global rxWDay2     	:= 	"(?<WD>" rxWDay ")"
 	global rxMonths     	:=	"Jan*u*a*r*|Feb*r*u*a*r*|Mä*a*rz|Apr*i*l*|Mai|Jun*i*|Jul*i*|Aug*u*s*t*|Sept*e*m*b*e*r*|Okt*o*b*e*r*|Nov*e*m*b*e*r*|Deze*m*b*e*r*"
 	global rxMonths2   	:=	"(?<Monat>" rxMonths ")"
-	global rxYear			:=	"(?<Jahr>([12][0-9])*[0-9]{2})"                                                                  	; Jahr=(19)*85
-	global rxYear2			:=	"(?<JH>[12][0-9])*(?<JZ>[0-9]{2})"                                                            	; JH=19*,  JZ=85
-	global rxYear3			:=	"(?<Jahr>(\d{4}|\d{2}))"                                                                         	; Jahr= 1985 o. 85
+	global rxYear        	:=	"(?<Jahr>([12][0-9])*[0-9]{2})"                                                                  	; Jahr=(19)*85
+	global rxYear2      	:=	"(?<JH>[12][0-9])*(?<JZ>[0-9]{2})"                                                            	; JH=19*,  JZ=85
+	global rxYear3      	:=	"(?<Jahr>(\d{4}|\d{2}))"                                                                         	; Jahr= 1985 o. 85
 
 	global rxPerson     	:= 	"[A-ZÄÖÜ][\pL]+([\-\s][A-ZÄÖÜ][\pL]+)*"
-	global rxPerson1    	:= 	"(?<Name1>" rxPerson                                                                             	; ?<Name1>Müller-Wachtendónk*
-	global rxPerson2    	:= 	"(?<Name2>" rxPerson                                                                              	; ?<Name2>Müller-Wachtendónk*
+	global rxPerson1    	:= 	"(?<Name1>" rxPerson ")"                                                                            	; ?<Name1>Müller-Wachtendónk*
+	global rxPerson2    	:= 	"(?<Name2>" rxPerson ")"                                                                            	; ?<Name2>Müller-Wachtendónk*
 	global rxPerson3   	:= 	"[A-ZÄÖÜ][\pL]+([\-\s][A-ZÄÖÜ][\pL]+)*"                                                    	; Müller Wachtendonk*
 	global rxPerson4    	:= 	"(?<Name>[A-ZÄÖÜ][\pL]+(\-[A-ZÄÖÜ][\pL]+)*)"		                                 	; ?<Name>Müller Wachtendonk*
 
-	global rxName1    	:= 	"(?<Name2>" rxPerson	  ")" . rx . "(?<Name1>" 	rxPerson 	")"
-	global rxName2    	:= 	"(?<Name2>" rxPerson2 ")" . rx . "(?<Name1>" 	rxPerson2	")"
+	global rxNames1    	:= 	"(?<Name2>" rxPerson	  ")" . rx . "(?<Name1>"	rxPerson ")"                         	; <Name2>Hoffmann, <Name1>Heinrich
+	global rxNames2    	:= 	rxPerson2 . rx . 	rxPerson1	                                                                          	; <Name2>Hoffmann, <Name1>Heinrich
+	global rxNames3    	:= 	rxPerson1 . rx . 	rxPerson2	                                                                          	; <Name1>Heinrich <Name2>Hoffmann
 
-	global rxDatum	    	:= 	"\d{1,2}" rx "\w+" rx "\d{2,4}"                                                                     	; 12. Juli 1981 oder 12.7.1981
-	global rxDatumLang 	:= 	"\d{1,2}" rx "(" rxMonths ")" rx "\d{2,4}"                                                        	; 12. Jul. 81
-	global rxGb1	    	:= 	"(geb\.*o*r*e*n*\s*a*m*|Geb(urts)*" rx "Datu*m*|\*" rx ")"                              	; geb. am o. Geb. Dat. usw
-	global rxGb2        	:= 	"(geboren\sam|geb\.\sam|geb\.*o*r*e*n*|Geburtsdatum|\*)"
+	;~ global rxDatum	    	:= 	"\d{1,2}" rx "[\wäöü]+" rx "(\d{4}|\d{2})"                                                     	; 12. Juli 1981 o. 12.7.1981 o. 12.07.1981
+	global rxDatum	    	:= 	"(\d{1,2})" rx "(0[123456789]|1[012]|[a-zäöüß]+)" rx "(\d{4}|\d{2})"          	; 12. Juli 1981 o. 12.7.1981 o. 12.07.1981
+	global rxDatumLang	:= 	"\d{1,2}" rx "(" rxMonths ")" rx "\d{2,4}"                                                        	; 12. Jul. 81
+	global rxGb1        	:= 	"(geb\.*(oren)*\s*(am)*|Geb(urts)*" rxStar "Datu*m*|\*" rxStar ")"                   	; geb. am o. Geb. Dat.   und mehr
+	global rxGb2        	:= 	"(geboren\s*am|geb\.\s*am|geb\.*o*r*e*n*|Geburtsdatum|\*)"                    	;
 
 	global GName      	:= 	"Geb\.\sName|Geburtsname"
-	global rxAnrede     	:= 	"(Betrifft)*"
+	global rxAnrede     	:= 	"Betrifft"
 	global rxAnredeM   	:= 	"(Her(rn|m|r)|Patient|Patienten)"
 	global rxAnredeF   	:= 	"(Frau|Patientin)"
-	global rxAnredeXL 	:=	"(Versicherter*|Betrifft|Her(rn|m|r)|Patiente*n*|Frau|Patientin)"
+	global rxAnredeXL 	:=	"(Versicherter*|Mitglied|Betrifft|Her(rn|m|r)|Patiente*n*|Frau|Patientin)"
 	global rxVorname  	:= 	"[VY]o(rn|m)ar*me"
 	global rxNachname	:= 	"([Ff]amilien)*([Nn]ach)*[Nn]ame"
+	global rxVorUnd     	:= 	rxVorname "\s+und\s+" rxNachname
 	global rxNameW    	:= 	"[Nn]ame[\w]*"
 
-	global RxNames     	:= [	rxAnredeXL  	. 	rx	. 	rxName1  .	rx  	.	rxGb1   . 	ry  .  rxDatum        	; 01	Betrifft: Marx, Karl, geb. am: 14.03.1818
-							    		,	rxAnredeXL  	.	rx	. 	rxName2	.	rx  	.	rxGb1   . 	ry                         	; 02
-							    		,	rxName1     	.	rx	.	rxGb1   	.	rs                          	.   rxDatum          	; 03
-							    		,	rxName2     	.	rx	.	rxGb1     	.	rs                             	.   rxDatum          	; 04
-							    		,	rxName1     	.	rx	.	rxGName	.	rp2	.	rxGb1 	.	rx	.	rxDatum        	; 05
-							    		,	rxName2     	.	rx	.	rxGName	.	rz  	.	rxGb1 	.	rx	.	rxDatum        	; 06	Müller-Wachtendonk, Marie-Luise, Geburtsname: Müller, geb. am 12.11.1964
+	global RxNames     	:= [	rxAnredeXL  	. 	rx	. 	rxNames1  .	rx  	.	rxGb1   . 	ry  .  rxDatum        	; 01	Betrifft: Marx, Karl, geb. am: 14.03.1818
+							    		,	rxAnredeXL  	.	rx	. 	rxNames2	.	rx  	.	rxGb1   . 	ry                         	; 02	Versicherter: Marx, Karl, Geburtsdatum:
+							    		,	rxNames1    	.	rx	.	rxGb1   	.	rs                          	.   rxDatum          	; 03 <Name2>Hoffmann, <Name1>Heinrich, Geb.Datum 13.06.1809
+							    		,	rxNames1    	.	rx	.	rxGName	.	rp2	.	rxGb1 	.	rx	.	rxDatum        	; 04 <Name2>Hoffmann, <Name1>Heinrich, geb. am 13.06.1809
+							    		,	rxNames2    	.	rx	.	rxGName	.	rz  	.	rxGb1 	.	rx	.	rxDatum        	; 05	Müller-Wachtendonk, Marie-Luise, Geburtsname: Müller, geb. am 12.11.1964
+							    		,	rxVorUnd     	.	rx	. rxAnredeXL . 	rx 	. 	rxNames3 	                           	; 06 Vorname und Name:  Herrn <Name1>Heinrich <Name2>Hoffmann
 
-							    		,	rxAnredeXL   	. 	rx  .  ryNL      	.	rxName2                                         	; 07	Versicherte`nMüller-Wachtendonk, Marie-Luise
-							    		,	rxAnredeM 	. 	rx  .  rxName2                                                               	; 08	Herr Karl Marx o. Patient Marx, Karl
-							    		,	rxAnredeF 	. 	rx  .  rxName2                                                                 	; 09	Frau Marie-Luise Müller-Wachtendonk
-							    		,	rxAnredeM 	. 	rx  .  rxName2  .	rx 	.	rxGb2  	.	rx	.	rxDatum       	; 10	Patient Marx, Karl, * 14.03.1818
-							    		,	rxAnredeF 	. 	rx  .  rxName2  .	rx 	.	rxGb2  	.	rx	.	rxDatum       	; 11	Patientin Luxemburg, Rosa, * 05.03.1871
-							    		,	rxAnrede   	. 	rx  .  rxName2                                                                 	; 12	Betrifft: Müller-Wachtendonk, Marie-Luise
+							    		,	rxAnredeXL  	. 	rx  .  ryNL      	.	rxNames2                                          	; 07	Versicherte`n Müller-Wachtendonk, Marie-Luise
+							    		,	rxAnredeM 	. 	rx  .  rxNames2                                                               	; 08	Herr Karl Marx o. Patient Marx, Karl
+							    		,	rxAnredeF 	. 	rx  .  rxNames2                                                                	; 09	Frau Marie-Luise Müller-Wachtendonk
+							    		,	rxAnredeM 	. 	rx  .  rxNames2  .	rx 	.	rxGb2  	.	rx	.	rxDatum       	; 10	Patient Marx, Karl, *14.03.1818
+							    		,	rxAnredeF 	. 	rx  .  rxNames2  .	rx 	.	rxGb2  	.	rx	.	rxDatum       	; 11	Patientin Luxemburg, Rosa, * 05.03.1871
 
-							    		,	rxNameW		.	rx	.	rxName1                                                                 	; 13
-							    		,	rxNachname	. 	rx	. 	rxPerson2	.	".*?" 	.	rxVorname	. rx . rxPerson1     	; 14	Nachname: Karl, Versichertennummer: 12345678, Vorname: Marx
-							    		,	rxVorname	. 	rx	. 	rxPerson2	.	".*?"	.	rxNachname	. rx . rxPerson2     	; 15	Vorname: Marx, Versichertennummer: 12345678, Nachname: Karl
+							    		,	rxNameW		.	rx	.	rxNames1                                                                	; 12	Name: Marx, Karl
+							    		,	rxNachname	. 	rx	. 	rxPerson2	.	".*?" 	.	rxVorname	. rx . rxPerson1     	; 13	Nachname: Karl, Versichertennummer: 12345678, Vorname: Marx
+							    		,	rxVorname	. 	rx	. 	rxPerson2	.	".*?"	.	rxNachname	. rx . rxPerson2     	; 14	Vorname: Marx, Versichertennummer: 12345678, Nachname: Karl
 
-							    		,	"^\s*" rxName2 "\s"]	                                                                              	; 16	^ Muster, Max  ....
+										,	rxNames2   	.	rx .	rxGb1   	.	rx 	.	rxDatum                                 	; 15	Karl Marx, geb. 14.03.1818
+										,	rxNames2   	. ".*?[\n\r]+.*"   	.	rxNachname	.	rx	.	rxVorname			; 16	Karl Marx \n\r Name, Vorname
+										,	rxNames2   	.	rx .	rxDatum                                                               	; 17	Karl Marx 14.03.1818
+										,	rxNames1   	.	rx .	rxDatum                                                               	; 18	Marx Karl 14.03.1818
 
-	global RxNames2  	:= [	rxNachname	. 	rx	. 	rxPerson2                            										; 01 	Nachname: Müller(-Wachtendonk)*
-								    	,	rxVorname	. 	rx	.	rxPerson1]                          										; 02	Vorname: Marie(-Luise)*
+							    		,	"^\s*" rxNames2 "\s"]	                                                                           	; 18	^ Muster, Max  ....
 
-	global rxVNR          	:= [ "i)(VNR|Versicherten[\s\-]*N[ume]*r" . rx ")(?<VNR>[A-Z][\s\d]+)"]          	; 01  Versicherten-Nr. G 666 999 666
+	;~ global RxNames2  	:= [	rxNachname	. 	rx	. 	rxPerson2                            										; 01 	Nachname: Müller(-Wachtendonk)*
+								    	;~ ,	rxVorname	. 	rx	.	rxPerson1]                          										; 02	Vorname: Marie(-Luise)*
 
-	global rxDates       	:= [	"(?<Tag>\d{1,2})[.,;](?<Monat>\d{1,2})[.,;]" rxYear3 "([^\d]|$)"           	; 01	12.11.64 o. 12.11.1964 o. 2.1.(19)*64
+	global rxVNR          	:= [ "i)(VNR|Versicherten[\s\-]*N[ume]*r" . rx ")(?<VNR>[A-Z][\s\d]+)"]           	; 01  Versicherten-Nr. G 666 999 666
+
+	global rxDates       	:= [	"(?<Tag>\d{1,2})[.,;/](?<Monat>\d{1,2})[.,;/]" rxYear3 "([^\d]|$)"         	; 01	12.11.64 o. 12.11.1964 o. 2.1.(19)*64
 								    	,	"i)(?<Tag>\d{1,2})" rx . rxMonths2 . rx . rxYear3 "([^\d]|$)"                  	; 02	12. November (19)64
 								    	,	"(" rxGb1 ")"	rx  ".{0,20}?" . rxDay . rx . rxMonths2 . rx . rxYear]              	; 03   Geburtsdatum: .*(20 beliebige Zeichen) 12. Nov. 1964
-
 
 	global rxContinue  	:= "(Nachname|Vor[nm]ame|Geburtsdatum)"
 
 	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	; REGEXSTRINGS FÜR DOKUMENTDATUM (FindDocDate)
 	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	global rxTags	       	:= {	1:	"Druckdatum|Erstellungszeitpunkt|Dokumentdatum|D[ae]tum|Beginn|ausgedruckt|"
+	global rxTags	       	:= {	1:	"Druckdatum|Erstellungszeitpunkt|Dokumentdatum|D[ae]tum|Beginn|"
 											. 	"Probenentnahmedatu*m*|Abnahmedatu*m*|Berichtsdatu*m*|Eingangsdatu*m*|"
-											. 	"Eingang\s+am|gedruckt\s+am|angelegt|angelegt\s+am|"
+											. 	"Eingang\s+am|gedruckt\s+am|angelegt|angelegt\s+am|Ausgedruckt\s*a*m*|"
 											.	"Anfrage\s+vom|Arztbrief\s+vom|Befund\s+vom|Befundbericht\s+vom|"
 											. 	"Behandlung\s+vom|Ebenen\s+vom|Ebenen\/axial\s+vom|"
 											.	"Echokardiografie vom|Konsil\s+vom|Labor\s+vom|Laborblatt\s+vom|Nachricht\s+vom|"
 											. 	"Startzeit|Aufgezeichnet|Erstellt\s+am|Eing[.,\-\s]+Dat[.,-]+|Ausg[.,\-\s]+Dat[.,-]+"
-											.	"Labor(blatt)*\svom"
+											.	"Labor(blatt)*\svom|festgestellt\s+am\s*|Aufnahme\s*vom.*?|festgestellt\s*am"
 										,	2:	"Behandlung|haben wir.*|sich"}
 
-	global rxBehandlung	:= [	"i)(" rxTags[2] ")\s+vom\s+(?<Datum1>[\d.]+)\s+(bis\s*z*u*m*|\-)\s+(?<Datum2>[\d.]+)"                	; 	1| (haben wir ...| sich) vom .... bis (zum) .....
+	global rxBehandlung	:= [	"i)(" rxTags[2] ")\s+vom\s+(?<Datum1>[\d.]+)\s+(bis\s*z*u*m*|\-)\s+(?<Datum2>[\d.]+)"     	; 	1| (haben wir ...| sich) vom .... bis (zum) .....
 										, 	"i)(" rxTags[2] ")\svom\s(?<Datum1>[\d.]+)\s*(\-)\s*(?<Datum2>[\d.]+)"]                                 	; 	2| (haben wir ...| sich) vom ..... - .......
 
 	global rxDokDatum	:=[	"i)\s*(" rxTags[1] ")" rx "(" rxWDay ")*[.,;\s]+(?<Datum1>\d+\.\d+\.\d+)"                                  	;   1| Erstellungszeitpunkt: Do, 02.01.2020
@@ -144,9 +151,17 @@ FindDocStrings()                                                             	{ 
 
 }
 
-FindDocNames(Text, debug:=false)                                  	{               	;-- sucht Namen von Patienten im Dokument
+FindDocNames(Text, debug:=false, callbackFunc:="")       	{               	;-- sucht Namen von Patienten im Dokument
 
-	; letzte Änderung: 26.02.2021
+	; letzte Änderung: 31.05.2022 - Methode 4 hinzugefügt, debug Ausgabe erweitert und Fortschrittsanzeige per callback ermöglicht
+
+		static methode := ["Methode 1: finden über RegEx Strings"
+								, 	"Methode 2: finden über Geburtstage"
+								, 	"Methode 3: finden über Namensvergleich"
+								, 	"Methode 4: finden über Adressen (cPat Objekt wird benötigt)"]
+
+		words := StrSplit(Text, A_Space)
+		wordsCount := words.Count()
 
 	; ---------------------------------------------------------------------------------------------------------------------------------------------------
 	; RegEx-Strings zusammenstellen
@@ -165,7 +180,7 @@ FindDocNames(Text, debug:=false)                                  	{            
 			global rxDatum, rxDates                                                                                                         	; Komplett
 			global rxGb1, rxGb2                                                                                                    	; Startstrings
 		; ----------------------------- Eigen- oder Personennamen
-			global rxPerson, rxPerson1, rxPerson2, rxPerson3, rxPerson4, rxName1, rxName2                      	; Teile
+			global rxPerson, rxPerson1, rxPerson2, rxPerson3, rxPerson4, rxNames1, rxNames2                      	; Teile
 			global RxNames, RxNames2                                                                                                  	; Komplett
 			global GName, rxAnrede, rxAnredeM, rxAnredeF, rxVorname, rxNachname, rxNameW				; Startstrings
 		; ----------------------------- sonstige
@@ -187,7 +202,7 @@ FindDocNames(Text, debug:=false)                                  	{            
 	; Methode 1:	RegEx Strings nutzen
 	; ---------------------------------------------------------------------------------------------------------------------------------------------------;{
 		If debug
-		  SciTEOutput("`n  --------------------------------------`n {Methode 1}")
+		  SciTEOutput("`n  --------------------------------------`n {" methode.1 "}")
 
 	; - benutzt RegEx-Strings aus RxNames um Patientennamen zu finden
 		For RxStrIndex, rxNameStr in RxNames {
@@ -204,17 +219,15 @@ FindDocNames(Text, debug:=false)                                  	{            
 					else if (debug = 1)
 						SciTEOutput("    [" RxStrIndex "]  " PatName2 ", " PatName1  " / " spos " (" Pat ")")
 
+
 				; Unpassendes entfernen
 					PatName1 := StrReplace(PatName1, " "), PatName2 := StrReplace(PatName2, " ")
 					If RegExMatch(PatName1, rxContinue) || RegExMatch(PatName2, rxContinue)
 						continue
 
 				  ; schaut ob der gefundene Name in der Datenbank ist
-					If RegExMatch(rxNameStr, rxAnredeM)
-						sex := "m"
-					else if RegExMatch(rxNameStr, rxAnredeF)
-						sex := "w"
-					matches 	:= admDB.StringSimilarityEx(PatName1, PatName2, 0.11)
+					sex        	:= RegExMatch(rxNameStr, rxAnredeM) ? "m" : RegExMatch(rxNameStr, rxAnredeF) ? "w" : ""
+					matches	:= admDB.StringSimilarityEx(PatName1, PatName2, 0.11)
 					mdiff     	:= matches.Delete("diff")
 					If IsObject(matches)
 						For PatID, Pat in matches {
@@ -227,21 +240,17 @@ FindDocNames(Text, debug:=false)                                  	{            
 								If !PatBuf.haskey(PatID) {
 
 									PatBuf[PatID] := {"Nn":Pat.Nn, "Vn":Pat.Vn, "Gd":Pat.Gd, "hits":1, "method":1}
-									If (StrLen(sex) > 0) && (Pat.Gt = sex)
-										PatBuf[PatID].hits := 2
+									PatBuf[PatID].hits := StrLen(sex)>0 && Pat.Gt=sex ? 2 : PatBuf[PatID].hits
 									If debug
 										SciTEOutput("   ++" PatID " , hits: " PatBuf[PatID].hits ", Name: " PatBuf[PatID].Nn ", "PatBuf[PatID].Vn ", " PatBuf[PatID].Gd)
 
 								}
 								else {
 
-									If (StrLen(sex) > 0) && (Pat.Gt = sex)
-										PatBuf[PatID].hits += 2
-									else
-										PatBuf[PatID].hits += 1
-
+									PatBuf[PatID].hits +=  (StrLen(sex) > 0) && (Pat.Gt = sex) ? 2 : 1
 									If debug
 										SciTEOutput("    +" PatID " , hits: " PatBuf[PatID].hits ", Name: " PatBuf[PatID].Nn ", "PatBuf[PatID].Vn ", " PatBuf[PatID].Gd)
+
 								}
 
 						}
@@ -258,12 +267,12 @@ FindDocNames(Text, debug:=false)                                  	{            
 	  ; Methode 1a: zähle die im Text vorhandenen Geburtstage der Patienten (PatBuf) und entferne diese
 	  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
 		If debug && (PatBuf.Count() > 0)
-			SciTEOutput(" {Methode 1a}")
+			SciTEOutput(" {Methode 1a: Geburtstage der Patienten finden}")
 
 		GdCountSum := 0
 		For PatID, Pat in PatBuf {
 
-			rxGeburtsdatum := StrReplace(Pat.Gd, ".", "[.,;]")
+			rxGeburtsdatum := StrReplace(Pat.Gd, ".", "[\.\,\;]")
 			text := RegExReplace(text, rxGeburtsdatum, "", GdCount)
 			PatBuf[PatID].hits += (GdCount * 2)
 			GdCountSum += GdCount
@@ -311,14 +320,16 @@ FindDocNames(Text, debug:=false)                                  	{            
 	; Methode 2:	Suche nach Patientennamen über gefundene Geburtstage
 	; ---------------------------------------------------------------------------------------------------------------------------------------------------;{
 		If debug
-		  SciTEOutput(" {Methode 2}")
-		spos := 1
+		  SciTEOutput(" {" methode.2 "}")
+
 		For rxDateIdx, rxDateString in rxDates {
 
 			spos := 1
 			while (spos := RegExMatch(text, rxDateString, D, spos)) {
 
 				spos += StrLen(D)
+				If IsFunc(callbackFunc)
+					%callbackFunc%(methode.2, spos, StrLen(Text))
 
 			  ; Monat wurde als Wort geschrieben, dann die Nummer des Monats ermitteln
 				If !RegExMatch(DMonat, "\d{1,2}")
@@ -337,11 +348,12 @@ FindDocNames(Text, debug:=false)                                  	{            
 					DJahr := SubStr("00" (ThousandYear - 1), -1) . DJahr
 				}
 
-			  ; sucht nach Patienten mit passenden Geburtstagen
+			  ; Korrektur des Datums auf dd.mm.yyyy
 				Datum := SubStr("00" DTag, -1) "." SubStr("00" DMonat, -1) "." DJahr
 				If debug
 					SciTEOutput("    [" rxDateIdx "]  " DTag "." DMonat "." DJahr  "  (" Datum ")")
 
+			  ; sucht nach Patienten mit passenden Geburtstagen
 				matches := admDB.MatchID("gd", Datum), pidx := 1
 				If IsObject(matches)
 					For PatID, Pat in matches {
@@ -353,10 +365,7 @@ FindDocNames(Text, debug:=false)                                  	{            
 					; PatID ist bekannt, Zähler erhöhen
 						If PatBuf.haskey(PatID) {
 							; bekommt zwei Treffer-Punkte wenn zuvor die PatID mit Methode1 gefunden wurde
-								If (PatBuf[PatID].method = 1)
-									PatBuf[PatID].hits += 2
-								else
-									PatBuf[PatID].hits += 1
+								PatBuf[PatID].hits += PatBuf[PatID].method=1 ? 2 : 1
 						}
 						else { ; PatID ist unbekannt
 							PatBuf[PatID] := {"Nn":Pat.Nn, "Vn":Pat.Vn, "Gd":Pat.Gd, "hits":1, "method":2}
@@ -413,8 +422,10 @@ FindDocNames(Text, debug:=false)                                  	{            
 	;               	und vergleicht diese per StringSimiliarity-Algorithmus mit den Namen in der Addendum-Patientendatenbank
 	; ---------------------------------------------------------------------------------------------------------------------------------------------------;{
 		If debug
-		  SciTEOutput(" {Methode 3}")
+		  SciTEOutput(" {" methode.3 "}")
+
 		ExclBuf := ""
+
 		If (PatBuf.Count() = 0) {
 
 			spos := 1
@@ -423,6 +434,9 @@ FindDocNames(Text, debug:=false)                                  	{            
 				; überflüssige Zeichen entfernen
 					name1 := RegExReplace(name1, "[\s\n\r\f]")
 					name2 := RegExReplace(name2, "[\s\n\r\f]")
+
+					If IsFunc(callbackFunc)
+						%callbackFunc%(methode.3, spos, StrLen(Text))
 
 				; Bindestrichworte ignorieren
 					If RegExMatch(name1, "\-$") {
@@ -493,6 +507,73 @@ FindDocNames(Text, debug:=false)                                  	{            
 
 	;}
 
+	; ---------------------------------------------------------------------------------------------------------------------------------------------------
+	; Methode 4:	finden über Adressen
+	; ---------------------------------------------------------------------------------------------------------------------------------------------------;{
+		If debug
+		  SciTEOutput(" {" methode.4 "}")
+
+		If (PatBuf.Count() = 0 && IsObject(cPat)) {
+
+			PatIDs := cPat.GetPatIDsAll()
+			For each, PatID in PatIDs {
+
+				If PatID in %excludeIDs%
+					continue
+
+				If debug {
+					If (Mod(each, 300) = 0)
+						ToolTip, % "Methode 4:  Patient " each "/" PatIDs.Count() " verarbeitet"
+				}
+
+				If (IsFunc(callbackFunc) && Mod(each, 300) = 0)
+					%callbackFunc%(methode.4, each, PatIDs.Count())
+
+
+				If !(Strasse 	:= cPat.Get(PatID, "STRASSE"))
+					continue
+
+				Hausnr	:= cPat.Get(PatID, "HAUSNUMMER")
+				Ort   	:= cPat.Get(PatID, "ORT")
+				PLZ   	:= cPat.Get(PatID, "PLZ")
+
+
+				If RegExMatch(Hausnr, "Oi)(?<Zahl>\d+)\s*(?<Zusatz>[a-zäöü]{1,2})", Hnr)
+					HausNr := Hnr.Zahl "\s*" Hnr.Zusatz
+
+				If (RegExMatch(text, strasse "\s*" Hausnr) && InStr(Text, Ort) && InStr(Text, PLZ)) {
+
+					If !PatBuf.haskey(PatID) {
+						PatBuf[PatID]	:= {	"Nn"	: cPat.Get(PatID, "NAME")
+												, 	"Vn"	: cPat.Get(PatID, "VORNAME")
+												, 	"Gd"	: cPat.Get(PatID, "GEBURT")
+												, 	"hits"	: 1, "method":4}
+					}
+
+					If InStr(Text, Ort)
+						PatBuf[PatID].hits += 1
+					If InStr(Text, PLZ)
+						PatBuf[PatID].hits += 1
+					If InStr(Text, cPat.Get(PatID, "GEBURT"))
+						PatBuf[PatID].hits += 1
+					If InStr(Text, cPat.Get(PatID, "NAME"))
+						PatBuf[PatID].hits += 1
+					If InStr(Text, cPat.Get(PatID, "VORNAME"))
+						PatBuf[PatID].hits += 1
+
+
+					If debug
+						SciTEOutput(strasse ", " Hausnr ", " PLZ " " Ort ":   [" PatID "] " PatBuf[PatID].Nn ", " PatBuf[PatID].Vn " *" PatBuf[PatID].Gd  " , hits: " PatBuf[PatID].hits)
+
+				}
+
+			}
+
+			ToolTip
+
+		}
+	;}
+
 	; höchste Trefferzahl ermitteln ;{
 		maxHits := 0, BestHits := Object()
 		For PatID, Pat in PatBuf {
@@ -527,6 +608,7 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 		global excludeIDs				                    				; Ausschluß von bestimmten Patientennummern (PatID)
 		global rxBehandlung, rxDokDatum, rxDatumLang  	; Datum
 
+		debug := false
 		If debug
 		  SciTEOutput("`n  --------------------------------------`n {FindDocDates}")
 
@@ -1003,8 +1085,6 @@ GetTextDates(txt) 																{
 
 return dates
 }
-
-
 
 
 

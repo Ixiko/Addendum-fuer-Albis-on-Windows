@@ -15,7 +15,7 @@
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
 ;
-;       Addendum_PopUpMenu started: 20.06.2020 | last change: 21.04.2021
+;       Addendum_PopUpMenu started: 20.06.2020 | last change: 09.02.2022
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Addendum_PopUpMenu(hWin, hMenu) {                                                                               	;-- fügt neue Menupunkte dem Rechtsklickmenu der Karteikarte hinzu
 
@@ -93,7 +93,7 @@ Addendum_PopUpMenu(hWin, hMenu) {                                               
 						cmd := ExtMenu[filter1][A_Index].cmd
 						If InStr(cmd, "tgram") && !oPat[PatID].tgChatID
 							continue
-						else if InStr(cmd, "fax") && InStr(Addendum.Drucker.FAX, "ERROR")
+						else if InStr(cmd, "fax") && (InStr(Addendum.Drucker.FAX, "ERROR") || StrLen(Addendum.Drucker.FAX) = 0)
 							continue
 
 						pm.menu.Push({ 	"filter"	: filter1                                         	; Karteikartenkürzel der Auswahl
@@ -187,13 +187,41 @@ admMenu_scan(cmd, pm) {                                                         
 												,	"Pages_Range"       	: "Button16"
 												,	"Pages_Range_Edit"	: "Edit4"
 												,	"Printers"               	: "ComboBox1"}}
-
-	KKDatum := ""
-
-	If InStr(cmd, "show") {
-		SendInput, {F3}
+	
+	; liest zunächst die Karteikartenzeile aus
+	If RegExMatch(cmd, "i)^(export1|export2|print|fax)$") 	{                                                       
+	
+		AlbisActivate(1)
+		BlockInput, On                                                                                                            	; Nutzerinteraktion verhindern
+		res := AlbisLeseDatumUndBezeichnung(pm.MouseX, pm.MouseY)                                 	; holt sich das Zeilendatum und den eingetragenen Text
+		SendInput, {Escape}       
+		If !IsObject(res) {                                                                                                        	; Fehlerbehandlung
+			BlockInput, Off
+			PraxTT("Der Karteikartentext konnte nicht ermittelt werden.`nDer Dokumentdruck ist fehlgeschlagen", "3 0")
+			return
+		}
+		
+		; Patientendaten zusammenstellen
+			PatNamePath := Addendum.ExportOrdner "\" "(" 
+								. 	 (PatID      	:= AlbisAktuellePatID()) ") " 
+								. 	 (PatName	:= AlbisCurrentPatient())
+			
+		; Karteikartentext von Patientennamen und anderem befreien
+			PdfTitle := RegExReplace(res.Text	, "i)" StrSplit(PatName, ", ").1 ".*?" StrSplit(PatName, ", ").2)
+			PdfTitle := RegExReplace(PdfTitle 	, "i)" StrSplit(PatName, ", ").2 ".*?" StrSplit(PatName, ", ").1)
+			PdfTitle := RegExReplace(PdfTitle 	, "([a-zäöüß])([A-ZÄÖÜ])", "$1 $2" )
+			PdfTitle := RegExReplace(PdfTitle 	, "\.pdf")
+			
+		; Jahr.Monat.Tag - Befunde lassen sich im Explorer nach Datum sortieren
+			KKDatum 	:= ConvertToDBASEDate(res.Datum)                                 
+		
 	}
-	else if InStr(cmd, "export1") {                                                                                              	; zum Exportieren in den Versandordner
+
+	If InStr(cmd, "show")                                                   	{
+		SendInput, {F3}
+		return
+	}
+	else if InStr(cmd, "export1")                                          	{                                                   	; Exportieren in den Versandordner
 
 		/* Beschreibung "export1"
 
@@ -207,31 +235,12 @@ admMenu_scan(cmd, pm) {                                                         
 
 		*/
 
-		; Patientendaten zusammenstellen
-			PatID            	:= AlbisAktuellePatID()
-			PatName      	:= StrReplace(AlbisCurrentPatient(), ", ", ",")
-			PatNamePath	:= Addendum.ExportOrdner "\" "(" PatID ") " PatName
-
 		; Export Ordner anlegen für diesen Patienten falls nicht vorhanden
 			If !InStr(FileExist(PatNamePath), "D")
 				FileCreateDir % PatNamePath
 
-		; Pdf (Dokument) Bezeichnung aus der Karteikarte holen
-			BlockInput, On                                                                                                                            	; Nutzerinteraktion verhindern
-			AlbisActivate(1)
-			res := AlbisLeseDatumUndBezeichnung(pm.MouseX, pm.MouseY)                                                 	; holt sich das Zeilendatum und den eingetragenen Text
-			If !IsObject(res) {                                                                                                                        	; Fehlerbehandlung
-				BlockInput, Off
-				PraxTT(	"Der Karteikartentext konnte nicht ermittelt werden.`n"
-						. 	"Der Befundexport ist fehlgeschlagen!", "3 0")
-				SendInput, {Escape}
-				return
-			}
-			SendInput, {Escape}                                                                                                                   	; Zeile wieder freigeben
-
 		; anderen Dateinamen geben, falls der Name schon vergeben wurde
-			KKDatum       	:= SubStr(res.Datum, 7, 4) "." SubStr(res.Datum, 4, 2) "." SubStr(res.Datum, 1, 2)  	; Jahr.Monat.Tag - Befunde lassen sich im Explorer nach Datum sortieren
-			PdfFullFilePath 	:= PatNamePath "\" KKDatum "-" RegExReplace(res.Text, "\.pdf") ".pdf"           		 	; eventuell noch vorhandene pdf Endung aus dem Karteikartentext entfernen
+			PdfFullFilePath := PatNamePath "\" KKDatum " - " PdfTitle ".pdf"                                         		 	
 			while FileExist(PdfFullFilePath)                                                                                                       	; sucht einen noch nicht vorhandenen Dateinamen
 				PdfFullFilePath := RegExReplace(PdfFullFilePath, "\(*\d*\)*\.pdf$", "(" A_Index ").pdf")
 
@@ -242,34 +251,19 @@ admMenu_scan(cmd, pm) {                                                         
 			BlockInput, Off
 
 	}
-	else if InStr(cmd, "export2") {                                                                                              	; zum Exportieren eines unter falschem Namen abgelegten Dokumentes
+	else if InStr(cmd, "export2")                                          	{                                                     	; Exportieren eines unter falschem Patienten abgelegten Dokumentes
 
-		/* Beschreibung export2
+		/* 	Beschreibung export2
 
-			- Funktionsweise in etwa wie bei "export1" beschrieben
-			- Dokument wird aber in den BefundOrdner gespeichert
-			- der Karteikarteneintrag wird nicht automatisch entfernt
-			- das mit neuem Namen versehene Dokument wird nicht automatisch in eine andere Karteikarte importiert!
+			- 	Funktionsweise in etwa wie bei "export1" beschrieben
+			- 	Dokument wird aber in den BefundOrdner gespeichert
+			- 	der Karteikarteneintrag wird nicht automatisch entfernt
+			- 	das mit neuem Namen versehene Dokument wird nicht automatisch in eine andere Karteikarte importiert!
 
 		*/
-
-		; Pdf (Dokument) Bezeichnung aus der Karteikarte holen
-			BlockInput, On                                                                                                            	; Nutzerinteraktion verhindern
-			AlbisActivate(1)
-			result := AlbisLeseDatumUndBezeichnung(pm.MouseX, pm.MouseY)                             	; holt sich das Zeilendatum und den eingetragenen Text
-			If !IsObject(result) {                                                                                                    	; Fehlerbehandlung
-				BlockInput, Off
-				PraxTT("Der Karteikartentext konnte nicht ermittelt werden.`nDer Befundexport ist fehlgeschlagen", "3 0")
-				SendInput, {Escape}
-				return
-			}
-			PdfTitel  	:= result.Text                                                                                              	; eventuell noch vorhandene pdf Endung aus dem Karteikartentext entfernen
-			KKDatum	:= result.Datum
-			KKDatum 	:= SubStr(KKDatum, 7, 4) "." SubStr(KKDatum, 4, 2) "." SubStr(KKDatum, 1, 2)	; Jahr.Monat.Tag - Befunde lassen sich im Explorer nach Datum sortieren
-			SendInput, {Escape}                                                                                                   	; Zeile wieder freigeben
-			BlockInput, Off
-
+		
 		; Patientennamen abfragen (Zeilimit der Inputbox - falls Nutzer den Dialog nicht beachtet)
+			BlockInput, Off
 			prompt :=	"  DOKUMENT UNTER ANDEREM PATIENTENNAMEN SPEICHERN`n`n"
 			.	"Geben Sie dem Dokument den zugehörigen Namen des Patienten.`n"
         	. 	"benutzen Sie folgende Schreibweise: Nachname, Vorname"
@@ -282,52 +276,25 @@ admMenu_scan(cmd, pm) {                                                         
 		; Mauspfeil auf den Karteikarteneintrag bewegen
 			BlockInput, On
 			AlbisActivate(1)
-			MouseClick, Left, pm.MouseX, pm.MouseY                                                                   	; ein Mausklick über der alten Position sollte den ursprünglichen Eintrag wieder selektieren
+			MouseClick, Left, pm.MouseX, pm.MouseY                                                                   	; ein Mausklick über der alten Position selektiert den ursprünglichen Eintrag
 			Sleep, 200
 			SendInput, {Escape}                                                                                                   	; nur einfaches Auswählen (blau hinterlegter Eintrag)
+			sleep, 200
 
-		; enthält der Karteikarteneintrag kein Datum wird das Zeilendatum dem Dateinamen hinzugefügt
-			If RegExMatch(PdfTitel, "\d{1,2}\.\d{1,2}\.\d{2,4}")
-				PdfFullFilePath := Addendum.BefundOrdner "\" PatName ", " PdfTitel ".pdf"
-			else
-				PdfFullFilePath := Addendum.BefundOrdner "\" PatName ", " PdfTitel " vom " KKDatum ".pdf"
-
-		; gespeichert wird in den Ordner für Befundeingänge
-			Addendum.PopUpMenuCallback := "admMenu_PdfSaveAs|" PdfFullFilePath
+		; gespeichert wird in den Ordner für Befundeingänge (Callback Funktionsaufruf in Addendum.ahk)
+			Addendum.PopUpMenuCallback := "admMenu_PdfSaveAs|" Addendum.BefundOrdner "\" PatName ", " PdfTitle 
+																. (!RegExMatch(PdfTitle, "\d{1,2}\.\d{1,2}\.(\d{4}|\d{2})") ? " vom " KKDatum : "") ".pdf"
 			SendInput, {F3}
 			BlockInput, Off
 
 	}
-	else if InStr(cmd, "print") {                                                                                                    	; drucken einer PDF-Datei
-
-			BlockInput, On                                                                                                            	; Nutzerinteraktion verhindern
-			result := AlbisLeseDatumUndBezeichnung(pm.MouseX, pm.MouseY)                             	; holt sich das Zeilendatum und den eingetragenen Text
-			If !IsObject(result) {                                                                                                    	; Fehlerbehandlung
-				BlockInput, Off
-				PraxTT("Der Karteikartentext konnte nicht ermittelt werden.`nDer Dokumentdruck ist fehlgeschlagen", "3 0")
-				SendInput, {Escape}
-				return
-			}
+	else if RegExMatch(cmd, "i)(print|fax)$")                         	{                                                     	; Drucken oder Faxversand einer PDF-Datei
 
 		; der Callback Funktion wird Text für die Protokollierung und der Name des Standard-A4 Druckers übergeben
-			Addendum.PopUpMenuCallback := "admMenu_PdfPrint|(Karteikartendatum: " result.Datum ", Dokumentname: " result.Text ")#" Addendum.Drucker.StandardA4
+			Addendum.PopUpMenuCallback := "admMenu_PdfPrint|(Karteikartendatum: " res.Datum ", Dokumentname: " res.Text ")"
+																. "#" (cmd = "print" ? Addendum.Drucker.StandardA4 : Addendum.Drucker.FAX)
 			SendInput, {F3}
 			BlockInput, Off                                                                                                            	; Nutzerinteraktion zulassen
-
-	}
-	else if InStr(cmd, "fax") {                                                                                                     	; Drucken per Fax Druckertreiber
-
-			BlockInput, On                                                                                                            	; Nutzerinteraktion verhindern
-			result := AlbisLeseDatumUndBezeichnung(pm.MouseX, pm.MouseY)                             	; holt sich das Zeilendatum und den eingetragenen Text
-			If !IsObject(result) {                                                                                                    	; Fehlerbehandlung
-				BlockInput, Off
-				PraxTT("Der Karteikartentext konnte nicht ermittelt werden.`nDas Versenden des Dokumentes als Fax ist fehlgeschlagen", "3 0")
-				SendInput, {Escape}
-				return
-			}
-			Addendum.PopUpMenuCallback := "admMenu_PdfPrint|(Karteikartendatum: " result.Datum ", Dokumentname: " result.Text ")#" Addendum.Drucker.FAX
-			SendInput, {F3}
-			BlockInput, Off
 
 	}
 
@@ -402,10 +369,8 @@ admMenu_PdfSaveAs(PdfFullFilePath, PDFViewerClass, PDFViewerHwnd) {             
 
 	; Hinweis über Erfolg oder Mißerfolg
 		SplitPath, PdfFullFilePath, OutFileName, OutDir
-		If FExists
-			PraxTT("(" FExists ") Der Befund wurde im Verzeichnis:`n" OutDir "`nunter dem Namen:`n" OutFileName "`ngespeichert." , "8 0")
-		else
-			PraxTT("Der Befund konnte nicht exportiert werden!. `nOutput: " FExists , "6 0")
+		PraxTT(FExists 	? "(" FExists ") Der Befund wurde im Verzeichnis:`n" OutDir "`nunter dem Namen:`n" OutFileName "`ngespeichert." 
+								: "Der Befund konnte nicht nach`n" OutDir "`nexportiert werden!.", "6 0")
 
 }
 
@@ -428,7 +393,7 @@ admMenu_PdfPrint(Param, PDFViewerClass, PDFViewerHwnd) {                        
 }
 
 ; ~~~~~ zusätzliche Funktionen ~~~~~~~~~
-AutoSizeInputBox() {                                                                                                                	;-- eine Standardinputbox wird mittag innterhalb des Albisfenster zentriert
+AutoSizeInputBox() {                                                                                                                	;-- eine Standardinputbox wird mittig innerhalb des Albisfenster zentriert
 
 	local a, i, hwnd
 
