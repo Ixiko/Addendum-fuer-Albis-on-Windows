@@ -123,13 +123,25 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
 
 <br>
 
+<<<<<<< Updated upstream
 ![](Docs/TrennerExtraBreit.png)
+=======
+![](Docs/Addendum-Funktionen.svg)
+
+![](Docs/TrennerExtraBreit.svg)
+
+<br><br><img src="Docs/Addendum-Infofenster.svg" alt="Addendum-Infofenster.svg"/><br>
+>>>>>>> Stashed changes
 
 <br>
 
 ## ![](Docs/Icons/Addendum.png) <u>Dauermedikamentenfenster</u>
 
+<<<<<<< Updated upstream
 ![](Docs/Dauermedikamente.png) 
+=======
+![Texterweiterung-Diagnosen](Docs/Texterweiterung-Diagnosen.svg)
+>>>>>>> Stashed changes
 
 Auswahlmöglichkeit aus voreingestellten Kategorien (in Patienten verständlichem Deutsch). Erreichbar nach Drücken (#) der ![](Docs/Icons/Raute.png) Taste in einer geöffneten Zeile. Die Kategorien lassen sich im Quelltext des Addendum.ahk-Skriptes jederzeit ändern. (an einer komfortableren Lösung wird gearbeitet). Mit der Tastenkombination (![](Docs\Icons\Key-White_Strg-Links.png)+ ![](Docs\Icons\hoch.png)oder![](Docs\Icons\runter.png)) lassen sich alle Einträge innerhalb der Ansicht verschieben.
 
@@ -155,6 +167,7 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
 
 ## ![Hotkey](Docs/Icons/Hotkey.png) <u>sinnvollere Albiskürzel</u>
 
+<<<<<<< Updated upstream
 - **Kopieren**, **Ausschneiden** und **Einfügen** ist mit den üblichen Kürzeln überall in Albis möglich <br>
     - **Kopieren:**                                      ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![c](Docs/Icons/Key-White-c.png)
     - **Ausschneiden:**                            ![Strg](Docs/Icons/Key-White_Strg-Links.png)+![x](Docs/Icons/X.png)
@@ -164,6 +177,41 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
   - **Laborblatt zeigen:**                      ![Alt](Docs/Icons/Alt.png)+![Rechts](Docs/Icons/Rechts.png) 
   - **Karteikarte zeigen:**                    ![Alt](Docs/Icons/Alt.png)+![Links](Docs/Icons/Links.png) 
   - **Einstellen des aktuellen Tagesdatums:**   ![Alt](Docs/Icons/Alt.png)+![F5](Docs/Icons/F5.png) 
+=======
+<br>
+![Laborjournal](Docs/Laborjournal.svg)
+
+- ***Responsives interaktives Webinterface*** (Basis: Internet Explorers).
+
+- ***Gruppierung der Laborparameter*** nach klinischer Bedeutung, erkennbar durch die dickere Schrift und die unterschiedliche farbliche Hervorhebung.
+
+  ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) ’‘**immer**‘’ (Anzeige: immer (nur) wenn pathologisch) und ![#9400D3](https://via.placeholder.com/15/9400D3/000000?text=+) ‘’**exklusiv**‘’ (Anzeige: auch bei Normwert).
+
+- ***durchschnittliche Über- oder Unterschreitung:***
+
+  - Berechnet die durchschnittliche prozentuale Über- bzw. Unterschreitung der Normwertgrenzen je Laborparameter.
+  - Für eventuelle Anpassungen wird die maximale Über- oder Unterschreitung als Einzelwert gespeichert.
+  - Durch Nutzung eines Faktors (Prozentwert) erscheinen mir, die durch Annährung erreichten "Warngrenzen", auch bei unterschiedlichen			Einheiten und altersabhängigen Normwertgrenzen klinisch bedeutsame Laborwertveränderungen sicher herauszufiltern.
+
+- **PCR Abstrich Statistik**:
+
+  - zeigt aktuelle pos. SARS-CoV-PCR-Fälle (Anzeigezeitraum) und
+  - Zahlen seit Beginn der Pandemie
+
+
+
+<img src="Docs/TrennerExtraBreit.svg" style="zoom:80%;" />
+
+
+
+![](Docs/Dokument-Finder.svg)
+
+- kleines Skript hilft Dokumente wiederzufinden
+
+- Skript hat bisher nur wenige Funktionen. Ausgewählte Dokumente werden als Vorschau angezeigt. Dazu ist der Sumatra PDF Reader in die Skript- oberfläche integriert
+
+  [Keine Indexerstellung! Die Suchgeschwindigkeit ist daher sehr langsam!]
+>>>>>>> Stashed changes
   
   
 
