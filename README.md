@@ -3,7 +3,6 @@
 
 ### V2.0 vom 17.06.2022
 
-![Trenner](Docs/TrennerExtraBreit.svg)
 
 ### DIES IST KEINE OFFIZIELLE ERWEITERUNG FÜR ALBIS!
 ##### Der Hersteller der Praxissoftware Albis*, die Compugroup AG, hat mit dieser Software nichts zu tun, geschweige denn, wurde diese offiziell durch die CompuGroup AG legitimiert!
