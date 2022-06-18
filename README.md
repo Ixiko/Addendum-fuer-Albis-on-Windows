@@ -223,7 +223,7 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
 
 
 
-![](Docs/Dokument Finder.svg)
+![Dokument-Finder](Docs/Dokument-Finder.svg)
 
 - kleines Skript hilft Dokumente wiederzufinden
 
