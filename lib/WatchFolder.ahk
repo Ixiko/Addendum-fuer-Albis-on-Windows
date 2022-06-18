@@ -1,67 +1,54 @@
-﻿/*; =====================================================================
-; Function:       Notifies about changes within folders.
-;                       This is a rewrite of HotKeyIt's WatchDirectory() released at
-;                       http://www.autohotkey.com/board/topic/60125-ahk-lv2-watchdirectory-report-directory-changes/
-; Tested with:    AHK 1.1.23.01 (A32/U32/U64)
-; Tested on:      Win 10 Pro x64
-; Usage:           WatchFolder(Folder, UserFunc[, SubTree := False[, Watch := 3]])
-;
-; Parameters:
-;     Folder        The full qualified path of the folder to be watched.
-;                       Pass the string "**PAUSE" and set UserFunc to either True or False to pause respectively resume watching.
-;                       Pass the string "**END" and an arbitrary value in UserFunc to completely stop watching anytime.
-;                       If not, it will be done internally on exit.
-;     UserFunc    -  The name of a user-defined function to call on changes. The function must accept at least two parameters:
-;                       1: The path of the affected folder. The final backslash is not included even if it is a drive's root
-;                       directory (e.g. C:).
-;                       2: An array of change notifications containing the following keys:
-;                       Action:  		One of the integer values specified as FILE_ACTION_... (see below).
-;                                			In case of renaming Action is set to FILE_ACTION_RENAMED (4).
-;                       Name:    		The full path of the changed file or folder.
-;                       OldName: 	The previous path in case of renaming, otherwise not used.
-;                       IsDir:   True if Name is a directory; otherwise False. In case of Action 2 (removed) IsDir is always False.
-;                       Pass the string "**DEL" to remove the directory from the list of watched folders.
-;     SubTree     -  Set to true if you want the whole subtree to be watched (i.e. the contents of all sub-folders).
-;                       D efault: False - sub-folders aren't watched.
-;     Watch        -  The kind of changes to watch for. This can be one or any combination of the FILE_NOTIFY_CHANGES_...
-;                           values specified below.
-;                       Default: 0x03 - FILE_NOTIFY_CHANGE_FILE_NAME + FILE_NOTIFY_CHANGE_DIR_NAME
-; Return values:
-;     Returns True on success; otherwise False.
-; Change history:
-;     1.0.02.00/2016-11-30/just me        -  bug-fix for closing handles with the '**END' option.
-;     1.0.01.00/2016-03-14/just me        -  bug-fix for multiple folders
-;     1.0.00.00/2015-06-21/just me        -  initial release
-; License:
-;     The Unlicense -> http://unlicense.org/
-; Remarks:
-;     Due to the limits of the API function WaitForMultipleObjects() you cannot watch more than MAXIMUM_WAIT_OBJECTS (64)
-;     folders simultaneously.
-; MSDN:
-;     ReadDirectoryChangesW          msdn.microsoft.com/en-us/library/aa365465(v=vs.85).aspx
-;     FILE_NOTIFY_CHANGE_FILE_NAME   	= 1		(0x00000001) : Notify about renaming, creating, or deleting a file.
-;     FILE_NOTIFY_CHANGE_DIR_NAME    	= 2   	(0x00000002) : Notify about creating or deleting a directory.
-;     FILE_NOTIFY_CHANGE_ATTRIBUTES  	= 4   	(0x00000004) : Notify about attribute changes.
-;     FILE_NOTIFY_CHANGE_SIZE               = 8   	(0x00000008) : Notify about any file-size change.
-;     FILE_NOTIFY_CHANGE_LAST_WRITE 	= 16  	(0x00000010) : Notify about any change to the last write-time of files.
-;     FILE_NOTIFY_CHANGE_LAST_ACCESS= 32  	(0x00000020) : Notify about any change to the last access time of files.
-;     FILE_NOTIFY_CHANGE_CREATION    	= 64  	(0x00000040) : Notify about any change to the creation time of files.
-;     FILE_NOTIFY_CHANGE_SECURITY      = 256	(0x00000100) : Notify about any security-descriptor change.
-;     FILE_NOTIFY_INFORMATION        											msdn.microsoft.com/en-us/library/aa364391(v=vs.85).aspx
-;     FILE_ACTION_ADDED                        	= 1   	(0x00000001) : The file was added to the directory.
-;     FILE_ACTION_REMOVED                   	= 2   	(0x00000002) : The file was removed from the directory.
-;     FILE_ACTION_MODIFIED                   	= 3   	(0x00000003) : The file was modified.
-;     FILE_ACTION_RENAMED                   	= 4   	(0x00000004) : The file was renamed (not defined by Microsoft).
-;     FILE_ACTION_RENAMED_OLD_NAME	= 4   	(0x00000004) : The file was renamed and this is the old name.
-;     FILE_ACTION_RENAMED_NEW_NAME= 5   	(0x00000005) : The file was renamed and this is the new name.
-;     GetOverlappedResult            													msdn.microsoft.com/en-us/library/ms683209(v=vs.85).aspx
-;     CreateFile                     															msdn.microsoft.com/en-us/library/aa363858(v=vs.85).aspx
-;     FILE_FLAG_BACKUP_SEMANTICS     	= 		(0x02000000)
-;     FILE_FLAG_OVERLAPPED           			= 		(0x40000000)
-; =====================================================================
-*/
+﻿
+
 
 WatchFolder(Folder, UserFunc, SubTree := False, Watch := 0x03) {
+
+   ;{ =====================================================================
+   ; Function:       Notifies about changes within folders.
+   ;                       This is a rewrite of HotKeyIt's WatchDirectory() released at
+   ;                       http://www.autohotkey.com/board/topic/60125-ahk-lv2-watchdirectory-report-directory-changes/
+   ; Tested with:    AHK 1.1.23.01 (A32/U32/U64)
+   ; Tested on:      Win 10 Pro x64
+   ; Usage:           WatchFolder(Folder, UserFunc[, SubTree := False[, Watch := 3]])
+   ;
+   ; Parameters:
+   ;     Folder        The full qualified path of the folder to be watched.
+   ;                       Pass the string "**PAUSE" and set UserFunc to either True or False to pause respectively resume watching.
+   ;                       Pass the string "**END" and an arbitrary value in UserFunc to completely stop watching anytime.
+   ;                       If not, it will be done internally on exit.
+   ;     UserFunc    -  The name of a user-defined function to call on changes. The function must accept at least two parameters:
+   ;                       1: The path of the affected folder. The final backslash is not included even if it is a drive's root
+   ;                       directory (e.g. C:).
+   ;                       2: An array of change notifications containing the following keys:
+   ;                       Action:  		One of the integer values specified as FILE_ACTION_... (see below).
+   ;                                			In case of renaming Action is set to FILE_ACTION_RENAMED (4).
+   ;                       Name:    		The full path of the changed file or folder.
+   ;                       OldName: 	The previous path in case of renaming, otherwise not used.
+   ;                       IsDir:   True if Name is a directory; otherwise False. In case of Action 2 (removed) IsDir is always False.
+   ;                       Pass the string "**DEL" to remove the directory from the list of watched folders.
+   ;     SubTree     -  Set to true if you want the whole subtree to be watched (i.e. the contents of all sub-folders).
+   ;                       D efault: False - sub-folders aren't watched.
+   ;     Watch        -  The kind of changes to watch for. This can be one or any combination of the FILE_NOTIFY_CHANGES_...
+   ;                           values specified below.
+   ;                       Default: 0x03 - FILE_NOTIFY_CHANGE_FILE_NAME + FILE_NOTIFY_CHANGE_DIR_NAME
+   ; Return values:
+   ;     Returns True on success; otherwise False.
+   ; Change history:
+   ;     1.0.02.00/2016-11-30/just me        -  bug-fix for closing handles with the '**END' option.
+   ;     1.0.01.00/2016-03-14/just me        -  bug-fix for multiple folders
+   ;     1.0.00.00/2015-06-21/just me        -  initial release
+   ; License:
+   ;     The Unlicense -> http://unlicense.org/
+   ; Remarks:
+   ;     Due to the limits of the API function WaitForMultipleObjects() you cannot watch more than MAXIMUM_WAIT_OBJECTS (64)
+   ;     folders simultaneously.
+   ; MSDN:
+   ;     ReadDirectoryChangesW          msdn.microsoft.com/en-us/library/aa365465(v=vs.85).aspx
+   ;     FILE_NOTIFY_CHANGE_FILE_NAME   	= 1		(0x00000001) : Notify about renaming, creating, or deleting a file.
+   ;     FILE_NOTIFY_CHANGE_DIR_NAME    	= 2   	(0x00000002) : Notify about creating or deleting a directory.
+   ;     FILE_NOTIFY_CHANGE_ATTRIBUTES  	= 4   	(0x00000004) : Notify about attribute changes.
+   ;     FILE_NOTIFY_CHANGE_SIZE               = 8   	(0x00000008) : Notify about any file-size change.
+   ;} =====================================================================
 
    Static MAXIMUM_WAIT_OBJECTS := 64
    Static MAX_DIR_PATH := 260 - 12 + 1

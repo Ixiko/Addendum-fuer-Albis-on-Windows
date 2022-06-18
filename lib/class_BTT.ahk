@@ -21,20 +21,20 @@
 */
 btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInOptionOrOptions:="") {
   static BTT
-       , Style1 := {TextColor:0xffeef8f6
+       , Style1 	:= {TextColor:0xffeef8f6
                    , BackgroundColor:0xff1b8dff
                    , FontSize:14}
-       , Style2 := {Border:1
+       , Style2 	:= {Border:1
                    , Rounded:8
                    , TextColor:0xfff4f4f4
                    , BackgroundColor:0xaa3e3d45
                    , FontSize:14}
-       , Style3  := {Border:2
+       , Style3 	:= {Border:2
                    , Rounded:0
                    , TextColor:0xffF15839
                    , BackgroundColor:0xffFCEDE6
                    , FontSize:14}
-       , Style4  := {Border:5
+       , Style4 	:= {Border:5
                    , Rounded:15
                    , BorderColor:0xff503a68
                    , TextColor:0xffF3AE00
@@ -44,14 +44,28 @@ btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInO
                    , FontSize:16
 				   , FontRender:5
                    , FontStyle:"Bold Italic"}
-       , Style5  := {Border:0
+       , Style5 	:= {Border:0
                    , Rounded:5
                    , TextColor:0xffeeeeee
 				   , FontRender:5
                    , BackgroundColorLinearGradientStart:0xff134E5E
                    , BackgroundColorLinearGradientEnd:0xff326f69
                    , BackgroundColorLinearGradientDirection:1}
-       , Style99 :=  {Border:20
+       , Style98:=  {Border:5
+                    , Rounded:15
+                    , Margin:10
+                    , BorderColor:0xffaabbcc
+                    , TextColor:0xff112233
+                    , BackgroundColor:0xff778899
+                    , BackgroundColorLinearGradientStart:0xffF4CFC9
+                    , BackgroundColorLinearGradientEnd:0xff8DA5D3
+                    , BackgroundColorLinearGradientDirection:1
+					, BackgroundColorLinearGradientAngle:135
+                    , Font:"Futura Bk Bt"
+                    , FontSize:14
+                    , FontRender:5
+                    , FontStyle:"Normal"}
+        , Style99:=  {Border:20
                     , Rounded:30
                     , Margin:30
                     , BorderColor:0xffaabbcc

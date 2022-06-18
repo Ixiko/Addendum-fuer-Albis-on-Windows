@@ -1,27 +1,45 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;                                 	Addendum Laborjournal
+;                                 		Addendum Laborjournal
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;
-;      Funktion:           	- 	schnellerer Überblick über die Laborwerte der letzten Tage in Tabellenform mit farblicher Hervorhebung.
-;									- 	nur relevante Werte kommen zur Anzeige
+;      Funktion:           	- 	schneller Überblick über die Laborwerte der letzten Tage in Tabellenform mit farblicher Hervorhebung als Webanwendung.
+;									- 	nur klinisch relevante Werte kommen zur Anzeige
 ;									- 	gesondert zu behandelnde Laborparameter können angegeben werden
-;										Kategorien: 	immer	:	Parameter die unabhängig der von der Größe ihrer Über- oder Unterschreitung des Normwertes
-;                                                                        	angezeigt werden z.B. Na oder Kalium (werden immer angezeigt wenn pathologisch)
-;															exklusiv	:	werden immer angezeigt, ob auffällig oder nicht z.B. COVID-PCR o. HIV (exklusive Anzeige - das eigentliche immer)
-;															nie		:	Parameter die nicht in der Tabelle erscheinen sollen
+;										Kategorien: 	immer   	 :	wenn pathologisch anzeigen
+;                                                                             	Parameter die unabhängig von der Höhe ihrer Über- oder Unterschreitung des Grenzwertes angezeigt werden
+;                                                                           	z.B. Na oder Kalium
+;															exklusiv 	 :	werden stets angezeigt, da die klinische Relevanz unabhängig vom Ergebniswert ist
+;                                                                            	z.B. COVID-PCR, HIV, Troponine oder pathologische Leukozytenformen
+;															nie			 :	Parameter welche nie angezeigt werden sollen
+;                                                                             	z.B. Quick (da der INR relevanter ist)
+;                                                       	LaborTexte :	Parameter, deren Ergebnisse in der LABTEXT.dbf gespeichert werden, da diese mehrere Ergebnisse enthalten
+;                                                                             	z.B. bei Untersuchungen auf Erreger und Resistenz
+;                                                                             	Da jedes Labor andere Texte verschicken wird, bleibt nur die Verwendung von individuellen RegEx-Zeichenketten,
+;                                                                           	um hier ohne Anpassung des Skriptes Daten extrahieren und weiterverarbeiten zu können.
+;                                                                              	Die Regeln werden bei jedem Skriptstart aus der Addendum.ini gelesen und automatisch angewendet.
+;                                                                              	[Funktion ist mit Daten eines Fremdlabores bisher nicht getestet]
+;									- 	hat 3 Filtermodi implementiert. Durch die Modi schaltet man sich mit einem Klick auf das Corona-Virus:
+;										Modus 1 :	alle Ergebnisse
+;										Modus 2 :	nur Corona-Abstrich-/Blutergebnisse
+;	                               		Modus 3 : alle Ergebnisse außer jene zu Corona
 ;
 ;
-;		Hinweis:				Nichts ist ohne Fehler. Auch das hier sicher nicht. Nicht drauf verlassen! Skript soll nur eine Unterstützung sein!
-;									Das Skript filtert noch keine Werte heraus die nur positiv oder negativ sein können (z.B. SARS-CoV-2 PCR)
+;
+;		Hinweis:				Nichts ist ohne Fehler. Auch dies hier sicher nicht. Also nicht auf die Ausgaben verlassen! Das Skript soll unterstützen und Denken nicht ersetzen!
 ;									INR Werte werden angezeigt, wenn ein Pat. Falithrom/Marcumar nimmt, der Wert aber nicht als therapeutischer INR gespeichert wurde.
-;									Im Moment müssen Einstellungen noch direkt im Skript vorgenommen werden, wie z.B. die gesondert zu behandelnden Laborparameter
+;									Im Moment müssen Einstellungen noch direkt im Skript oder in der Addendum.ini vorgenommen werden, wie z.B. die gesondert zu
+;                                  	behandelnden Laborparameter
 ;
 ;		Abhängigkeiten:	siehe includes
 ;
 ;	                    			Addendum für Albis on Windows
-;                        			by Ixiko started in September 2017 - last change 28.12.2021 - this file runs under Lexiko's GNU Licence
+;                        			by Ixiko started in September 2017 - last change 15.06.2022 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  ; Einstellungen
+
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ; Skripteinstellungen
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
 	#NoEnv
 	#Persistent
 	#SingleInstance               	, Force
@@ -30,55 +48,84 @@
 	SetBatchLines                	, -1
 	ListLines                         	, Off
 
-	global LabJ := Object()
-	global adm := Object()
-	global load_Bar, percent
-	global PatDB
-	global q := Chr(0x22)
+	SetKeyDelay, -1, -1
+	SetMouseDelay, -1
+	SetDefaultMouseSpeed, 0
+	SetWinDelay, -1
+	SetControlDelay, -1
+	SendMode Input
+
 
   ; startet Windows Gdip
    	If !(pToken:=Gdip_Startup()) {
 		MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
 		ExitApp
 	}
+	;}
 
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ; Variablen / Einstellungen
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
   ; Albis Datenbankpfad / Addendum Verzeichnis
 	RegRead, AlbisPath, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, Installationspfad
 	RegExMatch(A_ScriptDir, "[A-Z]\:.*?AlbisOnWindows", AddendumDir)
+
+	global LabJ := Object()
+	global adm := Object()
+	global load_Bar, percent
+	global PatDB
+	global neutron
+	global Warnen
+	global q := Chr(0x22)
 
 	adm.Dir            	:= AddendumDir
 	adm.Ini              	:= AddendumDir "\Addendum.ini"
 	adm.DBPath      	:= AddendumDir "\logs'n'data\_DB"
 	adm.LabDBPath   	:= AddendumDir "\logs'n'data\_DB\LaborDaten"
 	adm.AlbisDBPath 	:= AlbisPath "\DB"
+
+	adm.iconpath      	:= adm.Dir "\assets\ModulIcons\Laborjournal2.svg"
+
+	adm.PathLabj     	:= A_Temp "\labjournal_" A_YYYY "-" A_MM "-" A_DD ".html"
+	adm.LabPat      	:= A_Temp "\labPat_" A_YYYY "-" A_MM "-" A_DD ".json"
+	adm.LabTexte      	:= A_Temp "\labTexte_" A_YYYY "-" A_MM "-" A_DD ".json"
+	adm.COVIDStats  	:= A_Temp "\COVIDStats_" A_YYYY "-" A_MM "-" A_DD ".json"
+
 	adm.compname	:= StrReplace(A_ComputerName, "-")                                                    	; der Name des Computer auf dem das Skript läuft
 
 	workini := IniReadExt(adm.Ini)
+	If !Instr(FIleExist(adm.AlbisDBPath), "D")
+		adm.AlbisDBPath 	:= IniReadExt("Albis", "AlbisWorkDir") "\Db"
 
   ; Tray Icon erstellen
 	hIconLabJournal	:= Laborjournal_ico()
    	Menu, Tray, Icon, % (hIconLabJournal ? "hIcon: " hIconLabJournal : adm.Dir "\assets\ModulIcons\LaborJournalS.ico")
 
- ; Einstellungen in der Addendum.ini anlegen
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ;  Einstellungsbereich in der Addendum.ini anlegen
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ;{
 	If !IniReadExt("LaborJournal", "") {
-		backupfailure := 0
+		backupfailure := ""
 		If !FilePathCreate(adm.Dir "\_backup") {
-			backupfailure ++
+			backupfailure := "Der Backup-Pfad konnte nicht angelegt werden.`n<<" adm.Dir "\_backup>> "
 			PraxTT("Der Backup-Pfad konnte nicht angelegt werden!", "4 1")
 		}
 		else {
 			FileCopy, % adm.ini, % adm.Dir "\_backup\" A_YYYY A_MM A_DD "Addendum.ini", 1
 			If ErrorLevel
-				backupfailure ++
+				backupfailure := "Die Addendum.ini konnte nicht nach \_backup\" A_YYYY A_MM A_DD "Addendum.ini kopiert werden."
 		}
 		If !backupfailure {
 			labjournalIni =
 			(LTrim
 			[Laborjournal]
 			htmlresource=%A_ScriptDir%\resources
-			LabParam_letztesUpdate=
+
+			;-: verschiedene Warnstufen und Anzeigebedingungen für Laborparameter
 			Warnen_Nie=
 			Warnen_Immer=
+			Warnen_Hoch=
+			Warnen_Niedrig=
 			Warnen_Exklusiv_Bezeichnung=
 			Warnen_Exklusiv1=
 			Warnen_Exklusiv2=
@@ -87,51 +134,246 @@
 			Warnen_Exklusiv5=
 			Warnen_Exklusiv6=
 
+			Warnen_Gruppe1=atyp. Leuko::ALYMP,ALYMPDIFF,ALYMPH,ALYMPNEO,ALYMPREA,ALYMPRAM,KERNS,METAM,MYELOC,PROMY,HLAMBDA
+			Warnen_Gruppe2=atyp. Ery::DIFANISO,DIFPOLYC,DIFPOIKL,DIFHYPOC,DIFMIKRO,DIFMAKRO,DIFOVALO,DIFECHIN
+			Warnen_Gruppe3=COVID-19::COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,COVMU371,COVMU452,COVMU484,COVMU501,COVM6970
+
+			;-: Laborkürzel deren Labortexte geladen werden sollen, um diese mit dem Laborjournal anzuzeigen oder zu verarbeiten
+			;-: Autohotkey RegEx Strings um gekürzte Ausgaben der Labortexte zu erhalten z.B. mit Regex: "i)(?<TXT>Ct\s(?<Wert>\d+))",
+			;-: Ct wird aus SARS-CoV-2-spezifische RNA nachgewiesen, Ct 25.
+			;-: Ein String (Ct-TXT: "Ct 25") für die Ausgabe extrahiert und ein Wert (Ct-Wert: 25) gleichzeitig ausgelesen.
+			;-: mehrere RegExStrings sind mit ## voneinander zu trennen
+			Warnen_LabText1=
+
+			;-: vordefinierte Filtergruppen zum Ein- und Ausblenden nach bereits erstellter Anzeige
+			Tabellenfilter1=Abstriche::COV[\w\-]+
+			Tabellenfilter2=Vitamine::VD25
+
+			;-: die Variantenbezeichnungen werden von Labor zu Labor variieren
+			SARS-CoV-WHO-Namen=Alpha,Beta,Gamma,Delta,Omikron,Lambda,My
+			SARS-CoV-Varianten=COVM6970:Beta,COVMU501:Beta,COVMU452:Delta,COVMU371:Omikron,COVMU484:Beta
+
+			;-: sonstiges
+			Statistik_Param=
+			LabParam_letztesUpdate=
+			Datenabgleich_LaborAbruf=
+
 			[B----
 			)
 			inifull := FileOpen(adm.ini, "r", "UTF-8").Read()
 			inifull := RegExReplace(inifull, "\[B\-{4}", labjournalIni)
 			FileOpen(adm.ini, "w", "UTF-8").Write(inifull)
+			inifull := ""
+		}
+		else {
+			MsgBox, 0x1000, Laborjournal, % "Die Erstellung eines Backup der Addendum.ini ist aus folgenden Grund fehlgeschlagen:`n" backupfailure
+			ExitApp
 		}
 
 	}
 
-  ; Einstellungen laden
+  ;}
+
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ;   Laden der HTML-Vorlage und des Zeitstempel des Parameterupdates
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ;{
 	adm.LabJ := Object()
-	adm.LabJ.htmlresource	:= IniReadExt("Laborjournal", "htmlresource", adm.Dir "\include\Gui") "\Laborjournal.html"
-	adm.LabJ.lastupdate 	:= IniReadExt("Laborjournal", "LabParam_letztesUpdate", "10000001")
-	If !RegExMatch(adm.LabJ.lastupdate, "^\d{8}$") {
-		adm.LabJ.lastupdate := "10000001"
-		IniWrite, % "10000001", % adm.Ini, % "Laborjournal", % "LabParam_letztesUpdate"
-	}
+	adm.LabJ.htmlresource	:= IniReadExt("Laborjournal", "htmlresource", adm.Dir "\include\Gui") "\LaborjournalN.html"
 
-  ; Parametereinstellungen
+	; Prüfen der HTML Datei
+	If !FileExist(adm.LabJ.htmlresource)
+		throw "Webinterface Datei nicht vorhanden.`n" adm.LabJ.htmlresource
+	;}
+
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ;   Laden der "Warnen - Laborparameter"
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ;{
 	Warnen := Object()
-
-  ; Warnen_Exklusiv laden
 	Loop 6 {
 		iniVal := IniReadExt("Laborjournal", "Warnen_Exklusiv" A_Index)
 		If iniVal && !InStr(iniVal, "ERROR")
 			tmp .= iniVal ","
 	}
+
 	Warnen.exklusiv 	:= RTrim(tmp, ",")
 	Warnen.nie       	:= IniReadExt("Laborjournal", "Warnen_Nie"    	, "CHOL,HBA1CIFC")
-	Warnen.immer  	:= IniReadExt("Laborjournal", "Warnen_Immer"	, "NA,K,BNP,NTBNP,CK,CKMB,HBK-ST,HBK2-ST,DDIM-CP,PROCAL")
+	Warnen.immer  	:= IniReadExt("Laborjournal", "Warnen_Immer"	, "NA,K,HBK-ST,HBK2-ST,PROCAL")
+	Warnen.hoch    	:= IniReadExt("Laborjournal", "Warnen_Hoch" 	, "BNP,NTBNP,CK,CKMB,CKMM,CKBB,DDIM-CP")
+	Warnen.niedrig  	:= IniReadExt("Laborjournal", "Warnen_Niedrig"	, "FOLS,VB12")
+
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ; Gruppen - Laborparameter für Anzeige zusammenfassen
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	Warnen.Gruppe	:= { "atyp. Leuko"	: "ALYMP,ALYMPDIFF,ALYMPH,ALYMPNEO,ALYMPREA,ALYMPRAM,KERNS,METAM,MYELOC,PROMY,HLAMBDA"
-									,	"atyp. Ery" 	: "DIFANISO,DIFPOLYC,DIFPOIKL,DIFHYPOC,DIFMIKRO,DIFMAKRO,DIFOVALO,DIFECHIN"
-									,	"COVID-19"	: "COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,COVMU371,COVMU452,COVMU484,COVMU501,COVM6970"}
+			    					,	"atyp. Ery" 	: "DIFANISO,DIFPOLYC,DIFPOIKL,DIFHYPOC,DIFMIKRO,DIFMAKRO,DIFOVALO,DIFECHIN"
+						    		,	"COVID-19"	: "COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,COVMU371,COVMU452,COVMU484,COVMU501,COVM6970"}
+
+	tmp := Array()
+	For groupName, groupParameters in Warnen.Gruppe
+		tmp.Push(groupName "::" groupParameters)
+
+	Loop {
+		iniVal := IniReadExt("Laborjournal", "Warnen_Gruppe" A_Index)
+		If (!iniVal || InStr(iniVal, "ERROR"))
+			break
+		iniVal := StrSplit(iniVal, "::")
+		Warnen.Gruppe[iniVal.1] := iniVal.2
+	}
+  ;}
+
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ;   Laden der "Warnen - LabText Parameter" und von Statistikdaten
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ;{
+	Warnen.LabText     	:= Object()
+	Warnen.SaveLabText	:= "("
+
+	Loop {
+
+		iniVal := IniReadExt("Laborjournal", "Warnen_LabText" A_Index)
+		If (!iniVal || InStr(iniVal, "ERROR"))
+			break
+
+	  ; z.B. COVID::^COV[\w\-]+::i)Ct\s+(?<CtWert>\d+)#i)(Verdacht.*?SARS.*?[CoOV\s\-2]+\-.*?Variante)\s+(\(VOC\))*\s*(?<Mutant>[\pL\d\-\.]+).*(?<MutantEx>[A-Z]\.\d+\.\s*\d+\.\s*\d+)
+		RegExMatch(iniVal, "^(?<Name>.*?)::(?<Param>.*?)::(?<Filter>.*)$", rxLab)
+
+	 ; Filter werden als Array gespeichert
+		filter := StrSplit(rxLabFilter, "#")
+		Warnen.LabText[rxLabName] := {"rxParam":rxLabParam, "rxFilter":(!IsObject(filter) ? [filter] : filter)}
+
+	  ; alle RegExStrings die Parameter mit Labortexten erfassen in einen RegExString zusammenfassen
+		Warnen.SaveLabText .= rxLabParam ? (StrLen(Warnen.SaveLabText)>1 ? "|" : "") rxLabParam : ""
+	}
+
+	If (Warnen.LabText.Count() > 0)
+		Warnen.SaveLabText .= ")"
+	else
+		Warnen.SaveLabText := ""
+
+  ; Nutzern eigene Statistiken (Zählungen) ermöglichen
+    tmp := IniReadExt("Laborjournal", "Statistik_Parameter")
+	tmp := "COVIPC-A:::Es wurden # PCR-Abstriche eingesendet§§COVIPC-A:i)(POSITIV|NEGATIV):i)POSITIV:Bei # lag ein positives Ergebnis vor."
+
+	If !InStr(tmp, "Error") {
+		tmp := StrSplit(tmp, "§§")
+		Warnen.LabStats 	:= Object()
+		Warnen.LabStatsKeys :="i)("
+		For index, param in tmp {
+			split := StrSplit(param, ":")
+			key := split.1
+			index := 1
+			while IsObject(Warnen.LabStats[key index])
+				index := A_Index + 1
+			Warnen.LabStats[key index] := {"countIf": split.2, "matchif":split.3, "output":split.4}
+			Warnen.LabStatsKeys .= !RegExMatch(Warnen.LabStatsKeys, "\b" key "\b") ? key  "|" : ""
+		}
+		Warnen.LabStatsKeys := RTrim(Warnen.LabStatsKeys, "|") ")"
+	}
+
+	;}
+
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ;   Laden der "Tabellenfilter"
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ;{
+		inipointer := 0
+		Loop {
+			iniVal := IniReadExt("Laborjournal", "Tabellenfilter" A_Index)
+			If (iniVal && !InStr(iniVal, "ERROR")) {
+				inipointer := 0
+				If !IsObject(Warnen.Filter)
+					Warnen.Filter := Object()
+				iniVal := StrSplit(iniVal, "::")
+				Warnen.Filter[iniVal.1] :={"rxFilter":iniVal.2, "state":0}
+			}
+			else {
+				inipointer ++
+				If (inipointer > 5)  ; 5 Zahlen Abstand können bei der Nummerierung gemacht werden
+					break
+			}
+		}
+
+	;}
+
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ;   Laden von SARS-CoV-Bezeichnungen
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ;{
+	Warnen.Covid := Object()
+	Warnen.Covid.Varianten := Object()
+
+	iniVal := IniReadExt("Laborjournal", "SARS-CoV-WHO-Namen")
+	If iniVal && !InStr(iniVal, "ERROR")
+		Warnen.Covid.WHONamen := StrReplace(iniVal, ",", "|")
+
+	iniVal := IniReadExt("Laborjournal", "SARS-CoV-Varianten")
+	If iniVal && !InStr(iniVal, "ERROR")
+		For each, mutant in StrSplit(iniVal, ",")
+			Warnen.Covid.Varianten[StrSplit(mutant, ":").1] := StrSplit(mutant, ":").2
+  ;}
+
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ;   prüfen auf neue Labordaten
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ;{
+	adm.Labj.Override := Labjournal_NewLabData()
+  ;}
+
+	tmp:=key:=index:=mutant:=param:=iniVal:=inifull:=labjournalIni:=backupfailure:=filter:=rxLabParam:=rxLabName:=rxLabFilter:=""
+	;}
+
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ; Skriptstart mit Parameter (Parsen der Parameter)
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	If IsObject(A_Args) {
+
+		For ArgIndex, arg in A_Args
+			If RegExMatch(arg, "i)preRender\s*\=\s*(Yes|Ja|true|1)")
+				adm.LabJ.preRender := true
+
+		If adm.LabJ.preRender && !adm.Labj.Override
+			ExitApp
+
+	}
 
   ; load_Bar anzeigen
-	LoadBar_Gui()
+	If (!adm.LabJ.preRender), LoadBar_Gui()
 
- ; Patientendaten laden
-	load_Bar.Set(0, "lade Patientendatenbank")
-	PatDB 	:= ReadPatientDBF(adm.AlbisDBPath) ;, ["NR", "NAME", "VORNAME", "GEBURT"])
-	load_Bar.Set(1, "Patientendatenbank geladen")
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ; Patientendaten laden
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
+	If (!adm.LabJ.preRender), load_Bar.Set(0, "lade Patientendatenbank")
+	filter  	:= ["NR", "PRIVAT", "GESCHL", "NAME", "VORNAME", "GEBURT", "PLZ", "ORT", "STRASSE", "HAUSNUMMER", "TELEFON", "TELEFON2", "TELEFAX"]
+	PatDB 	:= ReadPatientDBF(adm.AlbisDBPath, filter, "allData")
+	If (!adm.LabJ.preRender), load_Bar.Set(1, "Patientendatenbank geladen")
+  ;}
 
-  ; Laborjournal anzeigen
-	LabPat	:= AlbisLaborJournal("", "", Warnen, 140, true)
-	LaborJournal(LabPat, true)
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ; bereits erstellte Tagesdaten lesen
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	cJSON.EscapeUnicode := "UTF-8"
+	If FileExist(adm.LabPat) && !adm.Labj.preRender && !adm.Labj.Override {
+		LabPat 	    	:= cJSON.Load(FileOpen(adm.LabPat        	, "r", "UTF-8").Read())
+		load_Bar.Set(Percent:=50, "Labordaten geladen")
+
+		COVID     	:= cJSON.Load(FileOpen(adm.COVIDStats	, "r", "UTF-8").Read())
+		load_Bar.Set(Percent:=60, "COVID-Statistik geladen")
+
+		COVIDStats 	:= LabJournal_CovidStats(COVID)
+		load_Bar.Set(Percent:=70, "COVID-Statistik aufbereitet")
+		adm.filtering	:= 0
+
+		Properties  	:= LabPat.Delete("Properties")
+		adm.LabJ.Tagesanzeige := Properties.Tagesanzeige
+	}
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  ; Journal neu zusammenstellen
+  ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	else {
+		LabPat	     	:= AlbisLaborJournal("", "", Warnen, 140, true)
+		COVIDStats 	:= AlbisLabCOVID19()
+		IniWrite, % adm.Labj.lastUpdate, % adm.Ini, % "Laborjournal", % "letztes_Journalupdate"
+	}
+
+ ; Laborjournal anzeigen
+	LaborJournal(LabPat, true, Warnen, COVIDStats)
+
 
 return
 
@@ -145,26 +387,56 @@ return ;}
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Berechnungen
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           	;--  sehr abweichender Laborwerte
+AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           	;--  klinisch auffällige Werte der letzten Blutabnahmen bereitstellen
 
-	/*  Parameter
+	/*  Parameterbeschreibung
 
 		Von       	-	Anfangsdatum, leerer String oder Zahl
 							eine Zahl als Wert wird als Anzahl der Werktage die rückwärtig vom aktuellem Tagesdatum angezeigt werden soll gewertet
 		Bis         	-	Enddatum oder leer
 
+		Warnen  	-	ein AHK Objekt mit Namen von Laborparametern für die Zuordnung zu einer Warnstufe
+
+		GWA    	- 	(G)renz(w)ert(a)bweichung als absoluter Prozentwert
+							wird mit der prozentualen (Normal-/) Grenzwertüber- oder unterschreitung verglichen
+							nur Laborergebnisse welche größer oder gleich dieses Wertes sind werden erfasst
+							ACHTUNG: bei einem zu hoch eingestellten GWA werden eventuell alarmierend hohe Laborwerte nicht erfasst!
+											   ein guter GWA, möglichweise gilt das nur für mein Labor oder/und Einzugsbereich, liegt bei 140(%)
+											   der Standardwert ist deshalb auf 100(%) eingestellt
+
 	*/
 
-		global LabDic
+	; Variablen                                                                                                         	;{
 
+		global LabDic
 		static Lab
 
-	; Variablen                                                                                                         	;{
-		LabPat := Object()
-		nieWarnen    	:= "i)\b(" StrReplace(Warnen.nie      	, ","	, "|") ")\b"
-		immerWarnen 	:= "i)\b(" StrReplace(Warnen.immer 	, ","	, "|") ")\b"
-		exklusivWarnen	:= "i)\b(" StrReplace(Warnen.exklusiv	, ","	, "|") ")\b"
-		skipErgebnis		:= "i)(Siehe un|Material)"
+		LabPat          	:= Object()
+		LabTexte       	:= Object()
+		nieWarnen    	:= "i)\b(" 	StrReplace(Warnen.nie       	, ","	, "|"	) 	")\b"
+		immerWarnen 	:= "i)\b(" 	StrReplace(Warnen.immer  	, ","	, "|"	) 	")\b"
+		niedrigWarnen 	:= "i)\b(" 	StrReplace(Warnen.niedrig  	, ","	, "|"	) 	")\b"
+		hochWarnen 	:= "i)\b(" 	StrReplace(Warnen.hoch    	, ","	, "|"	) 	")\b"
+		exklusivWarnen	:= "i)\b(" 	StrReplace(Warnen.exklusiv	, ","	, "|"	) 	")\b"
+
+		If (Warnen.LabText.Count() > 0) {
+			WarnLabTexte	:= true
+			SaveLabText   	:= "i)" Warnen.SaveLabText
+			SkipIfNotDigit	:= "\d+"
+			lbarBase1 := 50
+			lbarBase2 := 30
+		}
+
+		If !WarnLabTexte
+			lbarBase1 := 80, lbarBase2 := 0
+
+	  ; dies ist ein RegEx Pattern für Laborergebnisse meines Labors (nicht allgemein anwendbar)
+		rxlabtxt 	:= 	{"probe": 	"Material.*?[\n\r]+(?<Material>.*)"
+										. 	"(MIKROSKOPISCH.*?[\n\r]+(?<Mikroskopisch>.*))"
+										.	"ERREGER.*?[\n\r]+(?<Erreger>.*)"
+										. 	"Verfahren:.*?[\n\r](?<Verfahren>.*)"
+										. 	"ANTIBIOGRAMM\sLegende:(?<Antibiogramm>.*)"}
+
 	;}
 
 	; durchschnittliche Abweichung von den Normwertgrenzen laden oder berechnen 	;{
@@ -174,24 +446,26 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 				Lab := AlbisLaborwertGrenzen(adm.LabDBPath "\Laborwertgrenzen.json", Anzeige)
 			} else {
 				load_Bar.Set(1, "lade Laborwertgrenzen ...")
-				Lab := JSONData.Load(adm.LabDBPath "\Laborwertgrenzen.json", "", "UTF-8")
+				Lab := cJSON.Load(FileOpen(adm.LabDBPath "\Laborwertgrenzen.json"	, "r", "UTF-8").Read())
 			}
 		}
-		load_Bar.Set(5, "Laborwertgrenzen geladen")
+
+		If (!adm.LabJ.preRender), load_Bar.Set(5, "Laborwertgrenzen geladen")
 	;}
 
 	; Laborparameter lange Bezeichnungen laden                                                     	;{
-		load_Bar.Set(6, "lade Bezeichnungen der Laborparameter")
+		If (!adm.LabJ.preRender), load_Bar.Set(6, "lade Bezeichnungen der Laborparameter")
 		LabDic := AlbisLabParam("load", "short")
-		load_Bar.Set(7, "Bezeichnungen der Laborparameter geladen")
+		If (!adm.LabJ.preRender), load_Bar.Set(7, "Bezeichnungen der Laborparameter geladen")
 	;}
 
 	; Suchzeitraum                                                                                                  	;{
 
-		load_Bar.Set(8, "berechne den Suchzeitraum")
+		If (!adm.LabJ.preRender), load_Bar.Set(8, "berechne den Suchzeitraum")
 
-		; Von enthält kein Datum
+		; Von enthält kein Datum, dann werden bei Variablen geleert
 			RegExMatch(Von, "^\d+$", Tage)
+
 			Von 	:= Tage ? "" : Von
 			Bis 	:= Tage ? "" : Bis
 
@@ -215,7 +489,8 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 
 				ViewStart 	:= FormatDate(Von, "YMD", "dd.MM.yyyy")
 				WTag    	:= GetWeekDay(ViewStart)
-				LabJ.Tagesanzeige :=  "ab " WTag ", " StrReplace(ViewStart, A_YYYY) " (" Tage " Werktage)"
+
+				adm.LabJ.Tagesanzeige :=  "ab " WTag ", " StrReplace(ViewStart, A_YYYY) " (" Tage " Werktage)"
 
 				FormatTime, Von, % Von, yyyyMMdd
 				VB	:= "Von"
@@ -224,7 +499,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 			else
 				VB := (Von && !Bis) ? "Von" : (!Von && Bis) ? "Bis" : "VonBis"
 
-		load_Bar.Set(8, "LABBLATT.dbf: öffnen")
+		If (!adm.LabJ.preRender), load_Bar.Set(8, "LABBLATT.dbf: öffnen")
 	;}
 
 	; Albis: Datenbank laden und entsprechend des Datums die Leseposition vorrücken	;{
@@ -252,9 +527,11 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 		}
 	;}
 
+	; Laborwerte: klinisch interessante Werte finden                                                    	;{
 		t :=  nieWarnen "`n" exklusivWarnen "`n" immerWarnen "`n`n"
-		ShowAt := Floor(labDB.records/80)
-		load_Bar.Set(9, "LABBLATT.dbf: lade neue Laborwerte")
+		;~ ShowAt := Floor(labDB.records/80)
+		ShowAt := StrLen(labDB.records)-2 > 0 ? 10**(StrLen(labDB.records)-2) : Floor(labDB.records/10)
+		If (!adm.LabJ.preRender), load_Bar.Set(9, "LABBLATT.dbf: lade neue Laborwerte")
 
 	; filtert nach Datum und ab einer Überschreitung von der durchschnittlichen Abweichung von den Grenzwerten anhand
 	; der zuvor für jeden Laborwert berechneten durchschnittlichen prozentualen Überschreitung des Grenzwertes aus den
@@ -262,14 +539,14 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 		while !(labDB.dbf.AtEOF) {
 
 			; Daten zeilenweise auslesen
-				data := labDB.ReadRecord(["PATNR", "ANFNR", "DATUM", "BEFUND", "PARAM", "ERGEBNIS", "EINHEIT", "GI", "NORMWERT"])
+				data := labDB.ReadRecord(["PATNR", "ANFNR", "DATUM", "BEFUND", "PARAM", "ERGEBNIS", "EINHEIT", "GI", "NORMWERT", "TXTHINW", "ERGTXT", "TEXTE"])
 
 			; Fortschritt
-				If Anzeige && (Mod(A_Index, ShowAt) = 0) {
+				If !adm.LabJ.preRender && Anzeige && (Mod(A_Index, ShowAt) = 0) {
 					tt := "lade neue Laborwerte  [" ConvertDBASEDate(data.Datum) "]  "
 						. 	SubStr("00000000" labDB.recordnr, -5) "/"
 						. 	SubStr("00000000" labDB.records, -5)
-					percent := Floor(((labDB.recordnr*100)/labDB.records)*0.8)
+					percent := Round(lbarBase1*(labDB.recordnr/labDB.records),1)
 					load_Bar.Set(9+percent, tt)
 				}
 
@@ -286,35 +563,73 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 							continue
 				}
 
+			; IDs zu Texthinweisen bei bestimmten Laborwerten sichern ;{
+				PN := data.PARAM
+				If WarnLabTexte && RegExMatch(PN, SaveLabText) {
+
+					If !IsObject(LabTexte[PATNR := data.PATNR]) {
+						LabTexte[PATNR] := Object()
+						LabTexte[PATNR].Ref := Object()
+					}
+					If !IsObject(LabTexte[PATNR][ANFNR	:= data.ANFNR])
+						LabTexte[PATNR][ANFNR] := Object()
+					If !IsObject(LabTexte[PATNR][ANFNR][PN])
+						LabTexte[PATNR][ANFNR][PN] := Object()
+
+					LabTexte[PATNR].Ref[data.TEXTE]     	:= [ANFNR, PN, "TEXTE"]
+					LabTexte[PATNR].Ref[data.ERGTXT]  	:= [ANFNR, PN, "ERGTXT"]
+					LabTexte[PATNR].Ref[data.TXTHINW]	:= [ANFNR, PN, "TXTHINW"]
+				 }
+			;}
+
 			; kein pathologischer Wert und in keiner Filterliste dann weiter ;{
-				PNImmer := PNExklusiv := false
-				If RegExMatch((PN := data.PARAM ), nieWarnen)  	; Parameter nieWarnen
+				PNImmer := PNExklusiv := PNLow := PNHigh := false
+				If RegExMatch(PN, nieWarnen)                   {        	; Parameter nieWarnen
 					continue
-				else if RegExMatch(PN, exklusivWarnen)               	; Parameter exklusivWarnen
-					PNExklusiv := true
-				else if RegExMatch(PN, immerWarnen)                  	; Parameter immerWarnen
-					If RegExMatch(data.GI, "(\+|\-)")                      	; und Wert ist pathologisch
-						PNImmer 	:= true
-					else
-						continue
+				}
+				else if RegExMatch(PN, exklusivWarnen)  	{        	; Parameter exklusivWarnen
+					PNExklusiv 	:= true
+				}
+				else if RegExMatch(data.GI, "[\+\-\!]", GI) 	{ 			; Parameter immer,niedrig und hochWarnen
+
+					If RegExMatch(PN, immerWarnen)      	{
+						PNImmer	:= true
+					}
+					else if RegExMatch(PN, niedrigWarnen)	{
+						If !(PNLow := (GI="-") ? true : false)
+							continue
+					}
+					else if RegExMatch(PN, hochWarnen)  	{
+						If !(PNHigh := (GI="+")	? true : false)
+							continue
+					}
+
+				}
+				else if !RegExMatch(data.GI, "[\+\-\!]")
+					continue
+
 			;}
 
 			; Strings lesbarer machen (oder auch nicht)                        	;{
 
-				; Laborergebnis oder Wert
-					PW    	:= StrReplace(data.ERGEBNIS	, ",", ".")        	; Parameter - Wert
-					If RegExMatch(PW, skipErgebnis)
+				; Laborergebnis oder (P)arameter(W)ert
+					PWo	:= PW := StrReplace(data.ERGEBNIS, ",", ".")        	; Parameter - Wert
+					If !RegExMatch(PW, "i)(\d|positiv|negativ)")                             	;
 						continue
+					RegExMatch(PW, "[\<\>]+", PWco)                              	; PW cutoff - ein cutoff Ergebnis
+					PW	:= RegExReplace(PW, "[\<\>\s]+", "")
+					PW	:= PWco ="<" ? 0 : PW
 
 				; NORMWERTGRENZE - AUSWERTEN
 				; PV1 kann > oder < sein, PSU - unterer Grenzwert, PSO - oberer Grenzwert
 				; 	Beispiele aus der LABBLATT.dbf - Spalte Normwerte
-				; 		1. Beispiel: "0,02 - 0,08"	 --> PSU="0,02" u. PSO="0,08"
-				; 		2. Beispiel: "< 0,01"  		 --> PV="<" u. PSO="0,01"     (path. ist alles darüber)
-				; 		3. Beispiel: "> 1,04"	    	 --> PV=">" u. PSU=1,04       (path. ist alles darunter)
-					data.NORMWERT := RegExReplace(data.NORMWERT, "[a-z]+$")  ; entfernt nicht auswertbare Buchstaben
+				; 		1. Beispiel: 0,02 - 0,08	 --> PSU	= 0,02	u. PSO=0,08
+				; 		2. Beispiel: 	<	0,01  	 --> PV 	= "<" 	u. PSO=0,01 	(path. ist alles darüber)
+				; 		3. Beispiel: 	>	1,04    	 --> PV 	= ">" 	u. PSU=1,04   	(path. ist alles darunter)
+
 				  ; Normwert-String mit RegEx aufsplitten
-					RegExMatch(data.NORMWERT, "(?<V>[\<\>])*(?<SU>[\d,\.]+)\s*(?<V2>\-)*\s*(?<SO>[\d,\.]+)*", P)
+					data.NORMWERT := RegExReplace(data.NORMWERT, "[a-z]+$")  ; entfernt nicht auswertbare Buchstaben
+					RegExMatch(data.NORMWERT, "(?<V1>[\<\>])*(?<SU>[\d,\.]+)\s*(?<V2>\-)*\s*(?<SO>[\d,\.]+)*", P)
 
 					PSU  	:= StrReplace(PSU	, ",", ".")                        	; unterer Grenzwert
 					PSO  	:= StrReplace(PSO, ",", ".")                        	; oberer Grenzwert
@@ -324,7 +639,6 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 						PSO := PSU ? PSU : PSO
 					else if (PV = ">")
 						PSU := PSO ? PSO : PSU
-
 
 					OD    	:= lab.params[PN].OD                          	; durchschn. Abweichung v. d. oberen Normwertgrenze (oberer Durchschnitt in Prozent)
 					UD	  	:= lab.params[PN].UD                            	; durchschn. Abweichung v. d. unteren Normwertgrenze (unterer Durchschnitt in Prozent)
@@ -348,9 +662,14 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 					else if (UNG > 0 )                                             	; UNG überschritten
 						plus := Floor(Round((UNG*100)/UD,1))           	; Unterschreitung der UNG in Prozent
 
-					If PNImmer
-						If (plus <= 100)
-							PNImmer := false
+					If PNImmer && (plus <= 100)                              	; nur aufnehmen bei Überschreitung einer Normgrenzen
+						PNImmer := false
+					else if PNLow && (plus <= 100)							; werden einfach über PNImmer eingeschleust
+						continue
+					else if PNHigh && (plus <= 100)
+						continue
+
+					PW := PWco ? PWo : PW
 
 				}
 
@@ -359,6 +678,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 
 					PatID 	:= data.PATNR
 					Datum 	:= data.Datum
+					TH    	:= data.TXTHINW  (data.TEXTE ? "," data.TEXTE : "")  (data.ERGTXT ? "," data.ERGTXT : "")
 					PW    	:= RegExReplace(PW, "(\.[0-9]+[1-9])0+$", "$1")        ; Parameter Wert
 					AN    	:= LabPat[Datum][PatID][PN].AN                             	; Anforderungsnummer?
 					AN    	:= !RegExMatch(AN, "\b" data["ANFNR"] "\b") ? AN "," data["ANFNR"] : AN
@@ -393,20 +713,117 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 
 		}
 
-	; Lesezugriff beenden
+	;}
+
+	; Lesezugriff beenden                                                                                         	;{
 		labDB.CloseDBF()
 		LabDB := ""
 		If Anzeige
 			ToolTip
-		percent := percent + 9
 
-		;~ FileOpen(A_Temp "\labdata.txt", "w", "UTF-8").Write(t)
-		;~ Run, % A_Temp "\labdata.txt"
+		percent := 9+percent + 1
+		If (!adm.LabJ.preRender), load_Bar.Set(percent, "Labortexte auslesen")
+	;}
+
+	; LabTexte: auslesen                                                                                          	;{
+		If WarnLabTexte {
+
+			PatIDs := "^("
+			For PatID, labtext in LabTexte
+				PatIDs .= PatID "|"
+			PatIDs := RTrim(PatIDs, "|") ")$"
+
+		; Labtexte.dbf: zum Lesen bereit machen
+			labDB := new DBASE(adm.AlbisDBPath "\LABTEXTE.dbf", 0)
+			labDB.OpenDBF()
+			ShowAt := StrLen(labDB.records)-2 > 0 ? 10**(StrLen(labDB.records)-2) : Floor(labDB.records/10)
+
+		; LabTexte: Daten auslesen
+			while !(labDB.dbf.AtEOF) {
+
+			; Daten zeilenweise auslesen
+				data := labDB.ReadRecord(["PATNR", "ID", "POS", "TEXT"])
+				If (Mod(labDB.recordnr, ShowAt) = 0)
+					load_Bar.Set(percent+Round(lbarBase2*(labDB.recordnr/labDB.records), 1), "Labortexte werden gelesen")
+
+			; Textlinks vergleichen
+				PATNR := data.PATNR
+				If (PN := LabTexte[PATNR].Ref[data.ID].2) {
+					ANFNR	:= LabTexte[PATNR].Ref[data.ID].1
+					FLabel 	:= LabTexte[PATNR].Ref[data.ID].3
+					txt := RegExReplace(data.Text, "([^\w])[\r\n]+", "$1")
+					txt := RegExReplace(txt, "[\r\n]+", " ")
+					txt := RegExReplace(txt, "([a-zäöüß])([A-ZÄÖÜ])", "$1 $2")
+					txt := RegExReplace(txt, "\.([A-ZÄÖÜ])", ". $1")
+					LabTexte[PATNR][ANFNR][PN][FLabel] .= txt
+				}
+
+			}
+
+		; Labtexte: aufräumen
+			For PATNR, obj in LabTexte
+				obj.Delete("Ref")
+
+		; LabTexte: Lesezugriff beenden
+			labDB.CloseDBF()
+			labDB := ""
+
+		; Fortschritt
+			percent += lbarBase2
+			If (!adm.LabJ.preRender), load_Bar.Set(percent, "Labortexte ausgelesen")
+
+		; Fortschritt
+			percent += 1
+			If (!adm.LabJ.preRender), load_Bar.Set(percent, "Labortexte gesichert")
+
+		; LabTexte: hinzufügen
+			For Datum, Patients in LabPat
+				For PATNR, LabParams in Patients {
+					For PN, Labval in LabParams {
+						IF (PN = "ANFNR") && !RegExMatch(PN, SaveLabText)
+							continue
+						ANFNR := LabVal.AN
+						If IsObject(LabTexte[PATNR][ANFNR][PN]) {
+							LabPat[Datum][PATNR][PN].TH := LabTexte[PATNR][ANFNR][PN]
+							LabTexte[PATNR][ANFNR].Delete(PN)
+							If !LabTexte[PATNR][ANFNR].Count()
+								LabTexte[PATNR].Delete(ANFNR)
+						}
+					}
+				}
+
+		}
+
+		; Labtexte: aufräumen
+			For PATNR, obj in LabTexte {
+
+				If !obj.MaxIndex() {
+					LabTexte[PATNR] := ""
+					LabTexte.Delete(PATNR)
+					continue
+				}
+
+				For ANFNR, val in obj
+					If !val.Count()
+						obj.Delete(ANFNR)
+
+			}
+
+		percent += 1
+		If (!adm.LabJ.preRender), load_Bar.Set(percent, "Datenausgabe erstellt")
+	;}
+
+	; LabPat für erneutes Laden ohne Neuberechnung speichern
+		LabPat.Properties := Object()
+		LabPat.Properties.Tagesanzeige := adm.LabJ.Tagesanzeige
+		FileOpen(adm.LabTexte	, "w", "UTF-8").Write(cJSON.Dump(LabTexte, 1))
+		FileOpen(adm.LabPat	, "w", "UTF-8").Write(cJSON.Dump(LabPat, 1))
+		IniWrite, % adm.Labj.lastUpdate, % adm.Ini, % "Laborjournal", % "letztes_Journalupdate"
 
 return LabPat
 }
 
-AlbisLaborwertGrenzen(LbrFilePath, Anzeige=true) {                                              	;-- Berechnung der durchschnittlichen Abweichung v. Grenzwert
+AlbisLaborwertGrenzen(LbrFilePath, Anzeige=true) {                                             	;-- Berechnung der durchschnittlichen Abweichung v. Grenzwert
 
 	/* 	Beschreibung - AlbisLaborwertGrenzen()
 
@@ -442,6 +859,7 @@ AlbisLaborwertGrenzen(LbrFilePath, Anzeige=true) {                              
 	; Variablen
 		Lab  	:= Object()
 		seeks:= Object()
+		cJSON.EscapeUnicode := "UTF-8"
 
 	; Albis Datenbank laden und entsprechend des Datums die Leseposition vorrücken
 		labDB := new DBASE(adm.AlbisDBPath "\LABBLATT.dbf", Anzeige)
@@ -532,8 +950,8 @@ AlbisLaborwertGrenzen(LbrFilePath, Anzeige=true) {                              
 			Labwrite.seeks[QJ] := filepos
 
 	; Speichern der Daten
-		JSONData.Save(LbrFilePath "\Laborwertgrenzen.json", Labwrite, true,, 1, "UTF-8")
-		JSONData.Save(LbrFilePath "\Laborwertbasis.json", Lab, true,, 1, "UTF-8")
+		FileOpen(LbrFilePath "\Laborwertgrenzen.json"	, "w", "UTF-8").Write(cJSON.Dump(Labwrite, 1))
+		FileOpen(LbrFilePath "\Laborwertbasis.json"    	, "w", "UTF-8").Write(cJSON.Dump(Lab, 1))
 
 		ToolTip
 
@@ -542,19 +960,25 @@ return Labwrite
 
 AlbisLabParam(cmd:="load", data:="short", Anzeige:=false) {                               	;-- Laborparameter als Excel (.csv) Datei speichern
 
+		cJSON.EscapeUnicode := "UTF-8"
+
 	; LABPARAM.dbf wurde verändert dann müssem Inhalte neu erstellt werden
-		LabDB := new DBASE(adm.AlbisDBPath "\LABPARAM.dbf", Anzeige)
-		If (adm.LabJ.lastupdate <> LabDB.lastupdatedBase) {
-			IniWrite, % LabDB.lastupdatedBase, % adm.Ini, % "Laborjournal", % "LabParam_letztesUpdate"
-			adm.LabJ.lastupdate := LabDB.lastupdatedBase
-			cmd := "rewrite"
-			load_Bar.Set(7, "Bezeichnungen der Laborparameter müssen aktualisiert werden")
+		If (filetime := Labjournal_NewLabParams()) {
+			data		:= "short"
+			cmd  	:= "rewrite"
+			LabDB	:= new DBASE(adm.AlbisDBPath "\LABPARAM.dbf", Anzeige)
+			IniWrite, % (adm.Labj.lastParams := filetime), % adm.Ini, % "Laborjournal", % "LabParam_letztesUpdate"
+			If (!adm.LabJ.preRender)
+				load_Bar.Set(7, "Bezeichnungen der Laborparameter müssen aktualisiert werden")
 		}
 
 	; Wörterbuch laden
 		If (cmd = "load") {
-			LabDic := JSONData.Load(adm.LabDBPath "\LabDictionary.json", "", "UTF-8")
-			return LabDic
+			If FileExist(adm.LabDBPath "\LabDictionary.json") {
+				LabDic := cJSON.Load(FileOpen(adm.LabDBPath "\LabDictionary.json"	, "r", "UTF-8").Read())
+				return LabDic
+			}
+			data := "short"
 		}
 
 	; Datenbank öffnen und lesen
@@ -563,6 +987,7 @@ AlbisLabParam(cmd:="load", data:="short", Anzeige:=false) {                     
 		LabDB.CloseDBF()
 		LabDB := ""
 
+	; full - ist für andere Auswertungen/Anzeigeeinstellungen gedacht
 		If (data = "full") {
 
 			For idx, line in LabParam {
@@ -575,65 +1000,183 @@ AlbisLabParam(cmd:="load", data:="short", Anzeige:=false) {                     
 			}
 			h := RTrim(h, "`t") "`n"
 
-			FileOpen(adm.LabDBPath "\LabParam.csv", "w", "UTF-8").Write(h . t)
-			JSONData.Save(adm.LabDBPath "\LabParam.json", LabParam, true,, 1, "UTF-8")
+			FileOpen(adm.LabDBPath "\LabParam.csv" 	, "w", "UTF-8").Write(h . t)
+			FileOpen(adm.LabDBPath "\LabParam.json"	, "w", "UTF-8").Write(cJSON.Dump(LabParam, 1))
 
 			return LabParam
 		}
+	  ; es wurde noch kein Wörterbuch angelegt oder es soll neu erstellt werden
+	  ; Wörterbuch besteht nur aus der Abkürzung (key) und der ausgeschriebenen Parameterbezeichnung (value)
 		else if (data = "short") {
 
-			; es wurde noch kein Wörterbuch angelegt oder es soll neu erstellt werden
-			; Wörterbuch besteht nur aus der Abkürzung (key) und der ausgeschriebenen Parameterbezeichnung (value)
-				If !FileExist(adm.LabDBPath "\LabDictionary.json") || (cmd = "rewrite") {
+			LabDic	:= Object()
+			For idx, obj in LabParam {
 
-					LabDic	:= Object()
-					For idx, obj in LabParam {
+				If !LabDic.HasKey(obj.NAME) && (StrLen(obj.BEZEICH) > 0)
+					LabDic[obj.NAME] := [obj.BEZEICH]
+				else if LabDic.HasKey(obj.NAME) && (StrLen(obj.BEZEICH) > 0)
+					LabDic[obj.NAME].Push(obj.BEZEICH)
 
-						If !LabDic.HasKey(obj.NAME) && (StrLen(obj.BEZEICH) > 0)
-							LabDic[obj.NAME] := [obj.BEZEICH]
-						else if LabDic.HasKey(obj.NAME) && (StrLen(obj.BEZEICH) > 0)
-							LabDic[obj.NAME].Push(obj.BEZEICH)
+			}
+			FileOpen(adm.LabDBPath "\LabDictionary.json"	, "w", "UTF-8").Write(cJSON.Dump(LabDic, 1))
 
-					}
-					JSONData.Save(adm.LabDBPath "\LabDictionary.json", LabDic, true,, 1, "UTF-8")
-
-				}
-
-			return LabDic
+		return LabDic
 		}
 
+}
+
+AlbisLabCOVID19(DateRegEx:="", LabParams:="") {                                          	;-- COVID19-PCR Statistik
+
+	COVID                 	:= Object()
+	COVID.day           	:= Object()
+	COVID.weeks        	:= Object()
+	COVID.PCRcount   	:= 0
+	COVID.PCRpositive  	:= 0
+	COVID.mutants     	:= {}
+	COVID.Patients     	:= {}
+	lmax := 0
+
+	Y := "202["
+	Loop % SubStr(A_YYYY, 4, 1)+1
+		Y .= A_Index - 1
+
+	DateRegEx 	:= Y "]\d\d\d\d"   ; 202[012] verlängert sich automatisch
+	LabParams 	:= !LabParams ? {"Param" : "(COVIPC-A|COVM\w+)"} : LabParams
+	mutants     	:= {"COVM6970" : "Beta", "COVMU501":"Beta", "COVMU452":"Delta", "COVMU371":"Omikron", "COVMU484":"N501Y"}
+
+  ; Datenbank öffnen, auslesen und Lesezugriff beenden
+	labDB := new DBASE(adm.AlbisDBPath "\LABBLATT.dbf", 0)
+	labDB.OpenDBF()
+	dbfdata	:= labDB.Search({"Datum" : "rx:" DateRegEx, "Param" : "rx:" LabParams.Param}, 0,, {"LogicalComparison":"and"})
+	labDB.CloseDBF()
+	LabDB := ""
+
+  ; Progressvariablen
+	maxrecords := dbfdata.Count()
+	maxLength := StrLen(maxrecords) - 1
+
+  ; Daten auswerten
+	For recordNr, m in dbfdata {
+
+		PatID      	:= m.PATNR
+		examday	:= m.DATUM
+		examyear	:= SubStr(m.Datum, 1, 4)
+		weeknr  	:= WeekOfYear(m.DATUM)
+
+	; Patienten zählen
+		If !IsObject(COVID.Patients[PatID])
+			COVID.Patients[PatID] := {"PCRcount":0}
+
+	; Tagesstatistik erweitern
+		If !IsObject(COVID.day[examday])
+			COVID.day[examday] := Object()
+		If !IsObject(COVID.day[examday][PatID])
+			COVID.day[examday][PatID] := {"PCRpositive":0}
+	; Wochenstatistik erweitern
+		If !IsObject(COVID.weeks[examyear])
+			COVID.weeks[examyear] := {"PCRcount":0, "PCRpositive":0}
+		If !IsObject(COVID.weeks[examyear][weeknr])
+			COVID.weeks[examyear][weeknr] := {"PCRcount":0, "PCRpositive":0}
+
+	 ; positive Abstriche zählen
+		If (m.Param = "COVIPC-A") {
+
+		  ; PCR Abstriche zählen
+			COVID.PCRcount += 1
+			COVID.Patients[PatID].PCRcount += 1
+			COVID.weeks[examyear].PCRcount += 1
+			COVID.weeks[examyear][weeknr].PCRcount += 1
+
+		  ; positives Testergebnis?
+			isPositive := m.ERGEBNIS="POSITIV" ? 1 : 0
+
+		  ; zählen um später Reinfektionen zu finden
+			If isPositive {
+				If !IsObject(COVID.Patients[PatID].PCRpositive)
+					COVID.Patients[PatID].PCRpositive := {m.Datum:1}
+				else If !COVID.Patients[PatID].PCRpositive[m.Datum]
+					COVID.Patients[PatID].PCRpositive[m.DATUM] := 1
+			}
+
+		 ; positive PCR Ergebnisse zählen
+			COVID.PCRpositive += isPositive
+			COVID.weeks[examyear].PCRpositive	+= isPositive
+			COVID.weeks[examyear][weeknr].PCRpositive	+= isPositive
+			COVID.day[examday][PatID].PCRpositive += isPositive
+
+		}
+	; Coronavarianten zählen
+		else if (RegExMatch(m.Param, "COVM\w+")) {
+
+			variant := mutants[m.Param]
+
+			If (m.ERGEBNIS = "POSITIV") {
+
+			  ; Jahresstatistik
+				If !IsObject(COVID.weeks[examyear].Mutants)
+					COVID.weeks[examyear].Mutants := Object()
+			  ; Wochenstatistik
+				If !IsObject(COVID.weeks[examyear][weeknr].Mutants)
+					COVID.weeks[examyear][weeknr].Mutants := Object()
+			 ; Tagesstatistik
+				If !IsObject(COVID.day[examday][PatID].Mutant)
+					COVID.day[examday][PatID].Mutant := Object()
+
+			  ; Allzeitstatistik
+				COVID.mutants[variant]  := !COVID.Mutants[variant] ?  1 : COVID.Mutants[variant] +1
+			  ; Jahresstatistik
+				COVID.weeks[examyear].Mutants[variant] := !COVID.weeks[examyear].Mutants[variant] ? 1 : COVID.weeks[examyear].Mutants[variant] + 1
+			  ; Wochenstatistik
+				COVID.weeks[examyear][weeknr].Mutants[variant] := !COVID.weeks[examyear][weeknr].Mutants[variant] ? 1 : COVID.weeks[examyear][weeknr].Mutants[variant] + 1
+			  ; Tagesstatistik
+				COVID.day[examday][PatID].Mutant[variant] := !COVID.day[examday][PatID].Mutant[variant] ? 1 : COVID.day[examday][PatID].Mutant[variant] + 1
+
+			}
+		}
+
+	}
+
+  ; COVID Objekt speichen
+	FileOpen(adm.COVIDStats, "w", "UTF-8").Write(cJSON.Dump(COVID, 1))
+
+return LabJournal_CovidStats(COVID)
 }
 
 
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; grafische Anzeige
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-LaborJournal(LabPat, Anzeige=true) {
+LaborJournal(LabPat, Anzeige=true, Warnen="", htmltable="") {                         	; erstellt die HTML Ausgabe
 
-	; letzte Fensterposition laden
-		IniRead, winpos, % adm.ini, % adm.compname, LaborJournal_Position
-		If (InStr(winpos, "ERROR") || StrLen(winpos) = 0)
-			winpos := "w1040 h500"
+	; neutron - object wurde super global gemacht
+		global srchdrecords, dbrecords, Tagesanzeige, parentNode
 
-	; Variablen bestücken                                	;{
-		srchdrecords  	:= LTrim(labJ.srchdrecords, "0")
-		dbrecords     	:= labJ.records
-		Tagesanzeige	:= labJ.Tagesanzeige
-		iconpath        	:= adm.Dir "\assets\ModulIcons\Laborjournal2.svg"
-		logo               	:= Labjournal_Logo()
+	; Filter vorbereiten                                     	;{
+		rxFilter := ""
+		For filtername, filter in Warnen.Filter
+			rxFilter .= filter.state ? (rxFilter ? "|" : "") filter.rxFilter : ""
+		rxFilter := rxFilter ? "i)^(" rxFilter ")" : ""
+
+	  ; Statistikfilter vorbereiten
+		rxCtWert   	:= Warnen.LabText.COVID.rxFilter.1
+		rxMutant   	:= Warnen.LabText.COVID.rxFilter.2
+		rxCovidFilter	:= Warnen.LabText.COVID.rxFilter
+
+	  ; HTML-Knoten nachdem Tabellenzeilen eingefügt werden
+		tbodynode := adm.tbodynode
+		FirstNodeInsert := false
 	;}
 
 	; HTML Vorbereitungen 	                              	;{
 		static TDC     	:= "<TD style='text-align:Right;	border-right:1px; '>"                                                        	;
 		static TDJ      	:= "<TD style='text-align:Justify;border-right:1px; '>"
-		static TDL      	:= "<TD style='text-align:Left; '>"                                                                               	; Textausrichtung links
-		static TDL1     	:= "<TD style='text-align:Left; 	border-left:0px solid; '>"                                           	; Textausrichtung links kein Rand links
-		static TDLR1     	:= "<TD style='text-align:Left; 	border-right:0px solid; border-left:0px solid; '>"        	; Textausrichtung links, kein Rand rechts
-		static TDAB      	:= "<TD style='text-align:Right; border-right:0px solid; border-left:0px solid; '>"        	; Textausrichtung rechts
-		static TDR1     	:= "<TD style='text-align:Right;	border-right:0px solid; '>"                                        	; Textausrichtung rechts, kein Rand rechts
+		static TDL      	:= "<TD style='text-align:Left; '>"                                                                          	; Textausrichtung links
+		static TDL1     	:= "<TD style='text-align:Left; 	 '>"                                                                       	; Textausrichtung links kein Rand links
+		static TDLR1     	:= "<TD style='text-align:Left; 	 '>"                                                                       	; Textausrichtung links, kein Rand rechts
+		static TDAB      	:= "<TD style='text-align:Right;  '>"                                                                       	; Textausrichtung rechts
+		static TDR1     	:= "<TD style='text-align:Right;	 '>"                                                                       	; Textausrichtung rechts, kein Rand rechts
 		static TDR2a     	:= "<TD style='text-align:Right;	border-right:1px; '>"
-		static TDR2b     	:= "<TD style='text-align:Right;	border-right:1px;       	border-top:0px;"
-								.	 " border-bottom:0px; '>"                                                                                     	; Tooltip
+		static TDR2b     	:= "<TD style='text-align:Right;	border-right:1px; '>"                                             	; Tooltip
 		static TDR3      	:= "<TD class='tooltip' data-tooltip='#TT1#'"                                                           	; Param
 									. " onclick='ahk.LabJournal_MoreTips(" q "#TT2#" q  ")'"
 									. " style='text-align:Center; '>"
@@ -644,54 +1187,37 @@ LaborJournal(LabPat, Anzeige=true) {
 									, "color:Blue;        	font-weight:normal; "
 									, "color:FireBrick;  	font-weight:normal; "
 									, "color:Black;       	font-weight:normal; 	font-size:smaller; "
-									, "color:BlueViolet;	font-weight:normal; "]
+									, "color:BlueViolet;	font-weight:normal; 	font-size:smaller; "]
 
-	; HTML Seitendaten id='\d+_.*'>[a-zA-ZÄÖÜäöüß\s\-]+,[a-zA-ZÄÖÜäöüß\s\-]+|\[\d-]\)
-		htmlheader := FileOpen(A_ScriptDir "\assets\LaborjournalN.html", "r", "UTF-8").Read()
-		htmlheader := StrReplace(htmlheader, "##01##", "`n" logo "`n")
-		htmlheader := StrReplace(htmlheader, "##svgoptions##", "style='width:32px; height:24px; padding-top:2px;margin-left:5px;'")
-		htmlheader := StrReplace(htmlheader, "##02##", Tagesanzeige)
-		htmlheader := StrReplace(htmlheader, "##03##", "`n")
+	  ; für die Corona-Statistiken
+		If !adm.filtering
+			COVID 	:= {"Mutation":{}, "Ct":0, "CtCount":0, "Positiv":{}, "PCR":{}, "CtMin":999, "CtMax":0}  	; COVID-19 Statistik für Rekordsammler
 
-		htmlbody =
-		(
+	; HTML/CSS - Header, Infobereich und
+		If !adm.filtering
+			html := Laborjournal_BaseHTML(htmltable)
 
-			<div style='overflow-x:scroll; width:100`%; height:100`%;'>
-
-		 <div class="table-FixHead">
-			<table id='LabJournal_Table'>
-				<thead>
-				<tr>
-					<th style='text-align:Right'>Datum</th>
-					<th style='text-align:Center' colspan='3'>[NR] Name, Vorname  Geburtsdatum</th>
-					<th style='text-align:Left'>Anford.Nr</th>
-					<th style='text-align:Right'>Param</th>
-					<th style='text-align:Right'>Wert</th>
-					<th style='text-align:Center' colspan='2'>Normalwerte</th>
-					<th style='text-align:Right'>+/-</th>
-					<th style='text-align:Right'>⍉ Abw.</th>
-				</tr>
-				</thead>
-			<!-- div style='overflow-y: scroll;' -->
-
-		)
-
-		For lineNr, line in StrSplit(htmlbody, "`n", "`r")
-			htmlbody1 .= RegExReplace(line, "^\s{3}") "`n"
-		html := htmlheader . htmlbody
-
-		load_Bar.Set(percent+2, "erstelle die Journalanzeige")
 	;}
 
 	; HTML Tabelle wird erstellt                         	;{
-
-		trlDf      	:= false                    	; alternierende Farbanzeige
+		labstats   	:= Object()
 		sortDatum	:= Array()
+		thisrow		:= 1
+		filternumb	:= 1
+		trlDf      	:= false                                                                                                                                	; alternierende Farbanzeige
+		Firstrow 	:= true
+		NewPat 	:= false
+
+      ; nach Tagen der Blutwertbestimmungen sortieren
 		For Datum, Patients in LabPat
 			sortDatum.InsertAt(1, Datum)
 
+	; Fortschritt
+		If (!adm.LabJ.preRender), load_Bar.Set(percent+=1, "erstelle die Journalanzeige")
+		pstep := (100-percent-2)/sortDatum.Count()
+
 	; ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
-	; Journalausgabe wird mit absteigendem Datum erstellt
+	; die Journalausgabe beginnt mit dem Datum der zuletzt eingegangen Labordaten
 	; ―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 		For idx, Datum in sortDatum {
 
@@ -699,7 +1225,7 @@ LaborJournal(LabPat, Anzeige=true) {
 				UDatum := ConvertDBASEDate(Datum)
 
 		; ―――――――――――――――――――――――――――――――――――――――――――――――――――――
-		; Ausgabe der Werte nach Patient
+		; Ausgabe der Werte sortiert nach Patient
 		; ―――――――――――――――――――――――――――――――――――――――――――――――――――――
 			For PatID, parameter in LabPat[Datum] {
 
@@ -708,56 +1234,210 @@ LaborJournal(LabPat, Anzeige=true) {
 					PatGeburt	:= ConvertDBASEDate(PatDB[PatID].GEBURT)
 					ANFNR  	:= RTrim(parameter["ANFNR"], ", ")
 					PatIDLast	:= PatID
-					trlDf      	:= !trlDf                                                                        	; alternierende Änderung der Hintergrundfarbe
+					NewPat 	:= true                                                                     	; alternierende Änderung der Hintergrundfarbe
 				}
 
 			; ―――――――――――――――――――――――――――――――――――――――――――――――――――
-			; Parameter Objekt (PN) - Erstellung der Datenzeilen
+			; Parameter Objekt (PO) - Erstellen der Datenzeilen
 			; ―――――――――――――――――――――――――――――――――――――――――――――――――――
-				For key, PN in parameter {
+				For LabParam, PO in parameter {
 
-				  ; ist PN leer, einfach ignorieren
-					If !IsObject(PN)
+				  ; ist PO leer, einfach ignorieren
+					If !IsObject(PO)
+						continue
+
+				  ;  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+				  ; COVID  ‧  ‧  ‧ 	Labortexte und Statistiken
+				  ;  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧ ;{
+					If IsObject(PO.TH) {
+
+					 ; Texte zusammenfügen
+						PTEXT := ""
+						For each, txt in PO.TH
+							PTEXT .= "##" txt
+						PTEXT .= "##"
+
+						if (adm.filtering>1 && Warnen.Filter.Abstriche.state=2) {
+							RegExMatch(PTEXT, rxCtWert, Lab_)
+							LAB_TXT := LAB_CtWert ? "[" LAB_CtWert "]" : ""
+							goto checkFilter
+						}
+
+						For rxN, rxStr in rxCovidFilter {
+
+						  ; ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+						  ; Abstrich zählen
+						  ; ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+							If !COVID.PCR.HasKey(PatID) {
+								COVID.PCR[PatID] := 1
+							   ; Anforderungsnummer für Vergleich sichern
+								ANFLast := PO.PN "|" PO.AN
+							}
+						  ; ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+						  ; weiteren Abstrich im untersuchten Zeitraum gefunden
+						  ; ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+							else if (ANFLast <> PO.AN) {
+								COVID.PCR[PatID] += 1
+								ANFLast := PO.PN "|" PO.AN
+							}
+
+						  ; ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+						  ; Ct-Wert, Virusvarianten aus den Labortexten lesen
+						  ;   [LAB-CtWert, LAB_Mutant und LAB_MutantEx sind
+						  ;   die RegEx Variablen mit den Ergebnissen]
+						  ; ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+							If RegExMatch(PTEXT, rxStr, LAB_) {
+
+							  ; ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+							  ; Ct-Wert gefunden
+							  ; ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+								If LAB_CtWert {
+
+									COVID.Ct         	+=	LAB_CtWert
+									COVID.CtCount 	+=	1
+									COVID.CtMin    	:=	LAB_CtWert < COVID.CtMin 	? LAB_CtWert : COVID.CtMin
+									COVID.CtMax    	:=	LAB_CtWert > COVID.CtMax 	? LAB_CtWert : COVID.CtMax
+
+									For Laborparameter, PNdata in LabPat[Datum][PatID] {
+										If RegExMatch(labval.TXT, rxMutant, LAB_) {
+
+										  ; gefundener Name wird in die einfachere Bezeichnung der WHO umbenannt (Delta/Omikron..)
+											mutant := LAB_MUTANT ? LAB_MUTANT : LAB_MUTANTEX
+											mutant := RegExReplace(mutant, "[\n\r\s\v]")
+											mutant := Warnen.Covid.Varianten[mutant]
+
+										 ; Ct-Werrte zählen und summieren
+											If !IsObject(COVID.Mutation[mutant])
+												COVID.Mutation[mutant] := {"Ct":0, "CtCount":0, "CtMin":999, "CtMax":0, "count":0, "virus":mutant}
+											COVID.Mutation[mutant].Ct          	+= 	LAB_CtWert
+											COVID.Mutation[mutant].CtCount 	+= 	1
+											COVID.Mutation[mutant].CtMin		:= 	LAB_CtWert < COVID.Mutation[mutant].CtMin 	? LAB_CtWert : COVID.Mutation[mutant].CtMin
+											COVID.Mutation[mutant].CtMax   	:= 	LAB_CtWert > COVID.Mutation[mutant].CtMax	? LAB_CtWert : COVID.Mutation[mutant].CtMax
+										}
+									}
+
+								}
+
+							  ; ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+							  ; SARS-CoV-Variante gefunden (Alpha|Beta|Gamma|.....)
+							  ; ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+								else If LAB_MUTANT && RegExMatch(LAB_MUTANT "|" LAB_MUTANTEX, "i)(" Warnen.Covid.WHONamen ")") {
+
+									mutant := LAB_MUTANT ? LAB_MUTANT : LAB_MUTANTEX
+									mutant := RegExReplace(mutant, "[\n\r\s\v]")
+									mutant := Warnen.Covid.Varianten[mutant]
+									If !IsObject(COVID.Mutation[mutant])
+										COVID.Mutation[mutant] := {"Ct":0, "CtCount":0, "CtMin":999, "CtMax":0, "count":0, "virus":mutant}
+									COVID.Mutation[mutant].count += 1
+
+								}
+
+							  ; ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+								LAB_TXT := LAB_CtWert ?	"[" LAB_CtWert "]" : ""                		; LAB_TXT wenn Labortexte ausgegeben werden sollten
+								LAB_MUTANT := LAB_MUTANTEX := LAB_CtWert := ""
+								break
+
+							}
+
+						}
+
+					}
+
+				  ; ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+				  ; andere Statistiken und noch mehr über COVID-19
+				  ; ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+					If (Warnen.LabStatsKeys && !adm.filtering > 0) {
+						If RegExMatch(PO.PN, Warnen.LabStatsKeys) {
+							Loop {
+								key := (PO.PN) . A_Index
+								If !IsObject(Warnen.LabStats[key])
+									break
+								labstats[key] := !labstats.HasKey(key) ? 0 : labstats[key]
+								If !(countif := Warnen.LabStats[key].countif)
+									labstats[key] += 1
+								else if RegExMatch(PO.PW, countif, match)
+									If RegExMatch(match, Warnen.LabStats[key].matchif) {
+										labstats[key] += 1
+										COVID.Positiv[PatID] := !COVID.Positiv.HasKey(PatID) ? 1 : COVID.Positiv[PatID]+1
+									}
+							}
+						}
+					}
+					;}
+
+				  ; Tabelle wird gefiltert
+				  checkFilter:
+					If (adm.filtering=2 && RegExMatch(PO.PN, rxFilter, filtered))
+						continue
+					else if (adm.filtering=3 && !RegExMatch(PO.PN, rxFilter, filtered))
 						continue
 
 				  ;  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
 				  ; Tabelle  ‧  ‧  ‧ 	einzelne Zellen vorbereiten (CSS Styles den Tabellenfelder zuordnen)
-				  ;  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+				  ;  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧;{
 				  ; temporäre Variablen
-					TDPATBUTTONS 	:= (Patient ? (trlDf ? " class='table-btn1'" : " class='table-btn2'") " onclick='ahk.LabJournal_KarteiKarte(event)'" : "")
-					TDR4	            	:= StrReplace(TDR3, "#TT1#", PN.PB)         	; Beschreibung des Laborparameter (PB = Parameterbeschreibung)
+					TDPATBUTTONS 	:= (Patient ? " class='table-btn' onclick='ahk.LabJournal_KarteiKarte(event)'" : "")
+					TDR4	            	:= StrReplace(TDR3, "#TT1#", PO.PB)         	; Beschreibung des Laborparameter (PB = Parameterbeschreibung)
 					TDR4	            	:= StrReplace(TDR4, "#TT2#", "event")         	; Beschreibung des Laborparameter (PB = Parameterbeschreibung)
-					html_ID              	:= PatID "_" Patient
+					html_ID              	:= PatID "_" RegExReplace(Patient, "[,\s]+", "_")
+
+				  ; Filter anwenden um Tabellenzeilen zu kennzeichnen
+					rowID := ""
+					For filtername, filter in Warnen.Filter
+						If RegExMatch(PO.PN, "i)" filter.rxFilter) {
+							filter.count := !filter.count ? 1 : filter.count+1
+							rowID := filtername . filter.count
+							Warnen.Filter.count := !Warnen.Filter.count ? 1 : Warnen.Filter.count+1
+							break
+						}
+					rowID := !rowID ? "tblrow" . thisrow++ : rowID
 
 				  ; Datum                                      Hintergrund=Farbe1        Farbe2
-					TRDAT    	:= "<TR" (UDatum 	? (trlDf ? " id='td1a'" : " id='td2a'") : (trlDf ? " id='td1b'" : " id='td2b'") ) ">"
+					If Firstrow {
+						trdcolor := "tds"
+						trdcolor_last := "td1a"
+						Firstrow := false
+					} else if NewPat {
+						trdnr 	:= InStr(trdcolor_last, "1") ? "2" : "1"
+						trdcolor	:= "td" trdnr (UDatum ? "a": "b")
+						trdcolor_last := "td" trdnr "b"                                    ; immer randlose Zeilen nach Datumwechsel mit Rand einstellen
+						NewPat := false
+					}  else
+						trdcolor := trdcolor_last
+
+					TRDAT   	:= "<TR class='table-row " trdcolor "' id='" rowID "'>"
 					TDAFN		:= UDatum ? TDR2a : TDR2b
 
 				  ; ID & Patientenname
-					TDPAT := TDPATNR 	:= RTrim(TDLR1, ">") TDPATBUTTONS "; id='" html_ID "'>"
+					TDPAT := TDPATNR 	:= RTrim(TDLR1, ">") (TDPATBUTTONS ? TDPATBUTTONS " id='" html_ID : "") "'>"
 
-				  ; Parameter Name        PN.CV = CAVE          1=red    2=blueviolet bold   3=     4=blue    5=thin red   6=black      7=blueviolet normal
+				  ; Parameter Name        PO.CV = CAVE          1=red    2=blueviolet bold   3=     4=blue    5=thin red   6=black      7=blueviolet normal
 				  ; für ungruppierte Laborwerte (wenn es nur einen Grenzwert gibt) wenn Wert größer ist aber normalerweiser kleiner sein sollte oder umgekehrt
 				  ; dann mit rot pathologisch kennzeichnen
-					colNr1      := PN.CV = 0 ? (PN.PL > 0 ? 5 : 4) : (PN.CV = 1 ? 1 : 2)
+					colNr1      := PO.CV = 0 ? (PO.PL > 0 ? 5 : 4) : (PO.CV = 1 ? 1 : 2)
 					colNr3   	:= colNr1 = 2 ? 7 : colNr1
 					TDPN     	:= StrReplace(TDR4, "'>", cColW[colNr1] "'>")
 
 				  ; Parameter Wert
-					colNr2       := PN.CV = 0 ? (PN.PL > 0 ? 5 : 4) : PN.CV = 1 ? 1 : PN.PW = "NEGATIV" ? 6 : 2
+					colNr2       := PO.CV = 0 ? (PO.PL > 0 ? 5 : 4) : PO.CV = 1 ? 1 : PO.PW = "NEGATIV" ? 6 : 2
 					TDPW		:= StrReplace(TDAB, "'>", cColW[colNr2] "'>")
 
 				  ; Parameter Normwerte
-					TDPNW   	:= StrReplace(TDR1, "'>" , cColW[colNr3] "'>")
+					TDPNW   	:= StrReplace(TDR1, "'>" , cColW[PO.PE ? colNr2 : colNr3] "'>")
 
 				  ; Parameter Einheit
-					TDPE     	:= StrReplace(TDL1, "'>" , cColW[colNr3] "'>")
+					TDPE     	:= StrReplace(TDL1, "'>" , cColW[colNr2] "'>")
 
 				  ; Parameter Lage (Hinweiszeichen)
-					TDPL     	:= StrReplace(TDC, "'>" , cColW[colNr3] "'>")
+					TDPL     	:= StrReplace(TDC, "'>" , cColW[colNr2] "'>")
+					If (adm.filtering=3 && Warnen.Filter.Abstriche.state ) {
+						tel 	:= "Tel1: " PatDB[PatID].TELEFON "`nTel2: " PatDB[PatID].TELEFON2 "`nFax:" PatDB[PatID].TELEFAX
+						rpl	:= cColW[2] "' onclick='alert(" tel ")'>"
+						TDPL		:= StrReplace(TDC, "'>" , rpl) "▷"     ; ▽
+					}
 
-				; Abweichung oberhalb der Norm und PN.CV (CAVE) nicht wahr (CV - wenn wahr dann andere Farbkennzeichnung)
-					If (PN.PL > 250 && !PN.CV) {
+				; Abweichung oberhalb der Norm und PO.CV (CAVE) nicht wahr (CV - wenn wahr dann andere Farbkennzeichnung)
+					If (PO.PL > 250 && !PO.CV) {
 						TDAB      	:= StrReplace(TDAB 	, ">"	, " " cColW.3 "'>")
 						TDR1X     	:= StrReplace(TDR1	, ">"	, " " cColW.3 "'>")
 						TDCX      	:= StrReplace(TDC	, ">"	, " " cColW.3 "'>")
@@ -765,32 +1445,55 @@ LaborJournal(LabPat, Anzeige=true) {
 					}
 
 				; Parameterabweichung
-					If PN.PA {
-						RegExMatch(PN.PV, "(?<V>[\<\>])*(?<SU>[\d.]+)\-*(?<SO>[\d.]+)*", P)
+					If PO.PA {
+						RegExMatch(PO.PV, "(?<V>[\<\>])*(?<SU>[\d.]+)\-*(?<SO>[\d.]+)*", P)
 						PSM  	:= PSO ? PSO : PSU
-						PA     	:= RegExReplace(Round(PN.PA * (PSM/100), 1), "\.0+$")
+						PA     	:= RegExReplace(Round(PO.PA * (PSM/100), 1), "\.0+$")
 					}
 
-					PE         	:= Trim(PN.PE)	? PN.PE : "" ;" - - - - -"
+					PE         	:= Trim(PO.PE)	? PO.PE : ""                                                               	;" - - - - -"
 					tbDatum	:= UDatum ? SubStr(UDatum, 1, 6) : ""
+				;}
 
-					html .= "`t"   	TRDAT                                                                  "`n"
-							.  	"`t`t "	TDAFN  	. 	tbDatum                             	"</TD>`n"	; Abnahmedatum                	[Datum]
+				  ;  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧
+				  ; Tabelle  ‧  ‧  ‧   	eine komplette Zeile schreiben
+				  ;  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧  ‧;{
+					TRstart:= "`t"   	TRDAT                                                                  "`n"
+					htmp:=	"`t`t "	TDAFN  	. 	tbDatum                             	"</TD>`n"	; Abnahmedatum                	[Datum]
 							. 	"`t`t "	TDPATNR	. 	(PatID ? "[" PatID "]" : "")         	"</TD>`n"	; Patientennummer                [Patient]
 							. 	"`t`t "	TDPAT     	.	Patient             	                  	"</TD>`n"	; Patientenname                    [Patient]
 							. 	"`t`t "	TDPAT     	.	PatGeburt        	                  	"</TD>`n"	; Patientengeburtstag           	[Patient]
 							. 	"`t`t "	TDAFN    	.	ANFNR          	                  	"</TD>`n"	; Anforderungsnummer       	[Patient]
-							. 	"`t`t "	TDPN     	.	PN.PN                                 	"</TD>`n"	; Parameter Name              	[Param]
-							. 	"`t`t "	TDPW    	.	PN.PW                               	"</TD>`n"	; Parameter Wert               	[Wert]
-							.	"`t`t "	TDPNW   	.	PN.PV			                     	"</TD>`n"	; Parameter Normwerte        	[Normalwerte]
-							.	"`t`t "	TDPE     	.	PE                                       	"</TD>`n"	; Parameter Einheit                [      ]
-							. 	"`t`t "	TDPL     	.	(PN.PL	? PN.PL "x" 	: "")     	"</TD>`n"	; Parameter Lage                   [+/-]
+							. 	"`t`t "	TDPN     	.	PO.PN                                 	"</TD>`n"	; Parameter Name              	[Param]
+							. 	"`t`t "	TDPW    	.	PO.PW                               	"</TD>`n"	; Parameter Wert               	[Wert]
+							.	"`t`t "	TDPNW   	.	PO.PV                                	"</TD>`n"	; Parameter Normwerte        	[Normalwerte]
+							.	"`t`t "	TDPE     	.	(PE ? PE : LAB_TXT)            	"</TD>`n"	; Parameter Einheit                [      ]     o./u. Labortext (z.B. CtWert)
+							. 	"`t`t "	TDPL     	.	(PO.PL	? PO.PL "x" 	: "")     	"</TD>`n"	; Parameter Lage                   [+/-]
 							. 	"`t`t "	TDAB       	.	(PA   	? PA " " PE  	: "") 		"</TD>`n"	; Parameter Abweichung     	[⍉ Abw.]
-							. 	"`t</TR>`n`n"
+					TRend:="`t</TR>`n"
 
-					PE := PA := UDatum := PatID := Patient := PatGeburt := ANFNR := ""
+					If !adm.filtering
+						html .= TRstart . htmp . TRend
+					else {
+
+						RegExMatch(TRstart, "i)class\s*\=\s*'(?<class>.*?)'\s+id\s*\=\s*'(?<id>.*?)'", row_)
+						tr := neutron.doc.createElement("TR")
+						tr.className	:= row_class
+						tr.id            	:= row_id
+						tr.innerHTML	:= htmp
+						parentNode.appendchild(tr)
+
+					}
+
+
+				; Fortschritt
+					If (!adm.LabJ.preRender), load_Bar.Set(percent+=pstep, "erstelle die Journalanzeige")
+				;}
+
+					LAB_TXT := PE := PA := UDatum := PatID := Patient := PatGeburt := ANFNR := TRstart := htmp := TRend := tr := ""
 
 				}
+
 
 			}
 
@@ -798,39 +1501,82 @@ LaborJournal(LabPat, Anzeige=true) {
 
 		}
 
-		html .= "</div></table></div></body></html>"
+		if !adm.filtering
+			html .= "`n`t`t`t </tbody>`n`t `t </table>`n</div>`n</div>`n</body>`n`n</html>  `n`n"
 
 		;}
 
-	; erstellte HTML Seite anzeigen               		;{
-		neutron := new NeutronWindow(html,"","","Laborjournal" LabJ.maxrecords ")", "+AlwaysOnTop minSize1040x300")
-		neutron.Gui("+LabelNeutron")
-		neutron.Show(winpos)
-		hLJ := WinExist("A")
+	; Statistikausgabe erstellen                          	;{
+		if !adm.filtering {
 
-		obj := neutron.wb.document.getElementById("LaborJournal_Header")	, hcr	:= obj.getBoundingClientRect()
-		obj := neutron.wb.document.getElementById("LabJournal_Table")    	, tcr	:= obj.getBoundingClientRect()
+			virusNr := 0, arr := Array(), covtext := Array()
+			For key, val in labstats
+				If RegExMatch(key, "i)^COVI") {
+					arr.Push(val)
+					replacewith := arr.Count()=1 ? val : val . " Untersuchungen, somit in " Floor(arr.2*100/arr.1) "% aller Fälle,"
+					covtext.Push(StrReplace(Warnen.LabStats[key].output, "#", replacewith))
+				}
 
-		labJ.hwnd := hLJ
-		labJ.HeaderHeight	:= Floor(hcr.Bottom + 1)
-		labJ.TableHeight   	:= Floor(tcr.Bottom  + 1)
-		labJ.enrolled	    		:= true
+			anzahlder	:= COVID.PCR.Count()
+			Positiv     	:= COVID.Positiv.Count()
+			Mutations	:= COVID.Mutation.Count()
+			doubles 	:= arr.2 - Positiv
+			n1         	:= Positiv>1 ? "en" : ""
+			n2a        	:= Mutations>1 || Mutations=" keine" ? "n ": " "
+			n2b        	:= Mutations=" keine" ? "n ": " "
+			n3         	:= doubles = 1 ? "" : "en"
 
-		npos	:= PosStringToObject(winpos)
-		npos.W := npos.W	< 1040	 ? 1040	: npos.W
-		npos.H	:= npos.H 	< 300   	 ? 300   	: npos.H
-		winpos :=	"x" npos.X " y" npos.Y " w " npos.W " h" npos.H
-		If !npos.Maximize && !(isInside := IsInsideVisibleArea(npos.X, npos.Y, npos.W, npos.H, CoordInjury)) {
-			winpos :=	"x" 	(InStr(CoordInjury, "x") ? "0"     	: npos.X)
-						. 	" y" 	(InStr(CoordInjury, "y") ? "0"     	: npos.Y)
-						. 	" w" 	(npos.W	< 1040	 ? 1040	: npos.W)
-						.	" h" 	(npos.H 	< 300   	 ? 300   	: npos.H)
+			RegExMatch(adm.LabJ.Tagesanzeige, "(?<age>\d+)\s+Werktage", T)
+
+		; Statistiktabelle 1
+		  ; ab ##abDatum## (##Tage## Werktage)
+			html := StrReplace(html, "??", Tage)
+			html := StrReplace(html, "#cst1c2r1#", arr.2 " / " arr.1 " (" Floor(arr.2*100/arr.1) "%) [" arr.1-anzahlder " Doppeltest]" )
+			html := StrReplace(html, "#cst1c1r2#", COVID.CtCount " Ct-Werte")
+			html := StrReplace(html, "#cst1c2r2#", "min:" COVID.CtMin ", max:" COVID.CtMax ", Ø:" Floor(COVID.Ct/COVID.CtCount))
+			For mutant, virus in COVID.Mutation {
+				tinsert .= "`t`t<tr><td class='cststd1'>" (Mutations = 0 ? " keine" : Mutations) " Virusvariante" (Mutations>1 ? "n":"") ":</td>  "
+				tinsert .= "<td>" virus.count "x" mutant "`nCt:" virus.CtMin "-" virus.CtMax ", Ø:" Floor(virus.Ct/virus.CtCount) "</td></tr>`n"
+			}
+			html := StrReplace(html, "<!-- ##01t## -->", tinsert)
+
+		; als Ausgabetext
+			If opt.statstext {
+				statstext 	:= "SARS-CoV-2 Statistik des Ausgabezeitraumes:`n`n"
+				statstext 	.= "In den letzten 31 Tagen wurden " anzahlder " Personen mittels PCR-Test auf SARS-CoV-2 untersucht. "
+				statstext 	.= covtext.1 ". " covtext.2 ". "
+				statstext 	.=  doubles > 0 	? doubles " Person" n3 " wurde" n3 " doppelt/mehrfach untersucht. "
+															: "Es wurden keine Doppel-/Mehrfachuntersuchungen durchgeführt.`n"
+				statstext 	.= "In " COVID.CtCount " Fällen wurde der Ct-Wert vom Labor angegeben. "
+				statstext 	.= "Der höchste Ct-Wert lag bei " COVID.CtMax " und der niedrigste bei " COVID.CtMin " (Durchschnitt: " Floor(COVID.Ct/COVID.CtCount) ")."
+
+				statstext 	.= "Es wurde" n2a . Mutations " besorgniserregende" n2b "SARS-CoV-2-Variante" n2a "nachgewiesen.`n"
+				For mutant, virus in COVID.Mutation {
+					virusNr ++
+					statstext .= "Die " mutant "-Variante " (virusNr=1?"wurde":"") " bei " virus.count (virusNr=1?" der " anzahlder " untersuchten Patienten gefunden":" Patienten") ". ["
+					statstext .= mutant "-Werte: Ct-Wert bestimmt " virus.CtCount "x, Ct-Min " virus.CtMin ", Ct-Max " virus.CtMax ", CTAvg " Floor(virus.Ct/virus.CtCount) "]`n"
+				}
+			}
+
 		}
+	;}
 
-		neutron.Show(winpos " ")
+	; letzte Daten des Laborabrufes hinzufügen    	;{
+		if !adm.filtering {
+			abrufdaten := Labjournal_LababrufDaten()
+			html := StrReplace(html, "<!-- #02la## -->", abrufdaten)
+		}
+	;}
 
-		load_Bar.Set(100, "Das Laborjounal ist geladen!")
-		Gui, load_BarGUI: Destroy
+	; erstellte HTML Seite anzeigen               		;{
+		If (!adm.LabJ.preRender && Anzeige && !adm.filtering > 0)
+			neutron := LabJournal_Viewer(html)
+
+	; Progress beenden
+		If (!adm.LabJ.preRender) {
+			load_Bar.Set(100, "Das Laborjounal ist geladen!")
+			SetTimer, loader_BarGUIDestroy, -1500
+		}
 
 	;}
 
@@ -839,6 +1585,218 @@ LaborJournal(LabPat, Anzeige=true) {
 		;SavePicture(hBMP, A_Temp "\Laborjournal.jpg")
 		;Run % A_Temp "\Laborjournal.bmp"
 
+return
+
+loader_BarGUIDestroy:
+	Gui, load_BarGUI: Destroy
+	adm.filtering := false
+return
+}
+
+Laborjournal_Redraw(neutron, filterstate, parentNode) {                                     	; nach Einstellungsänderung z.B. Filter die Tabelle neu zeichnen lassen
+
+	global LabPat, Anzeige, Warten, COVIDStats
+
+	adm.tbodynode := parentNode
+	LaborJournal(LabPat, true, Warnen, COVIDStats)
+
+}
+
+Laborjournal_BaseHTML(htmltable) {
+
+		global srchdrecords, dbrecords, Tagesanzeige
+
+		srchdrecords  	:= LTrim(labJ.srchdrecords, "0")
+		dbrecords     	:= labJ.records
+		Tagesanzeige	:= adm.labJ.Tagesanzeige
+		logo               	:= Labjournal_Logo()
+
+	; HTML Seitendaten id='\d+_.*'>[a-zA-ZÄÖÜäöüß\s\-]+,[a-zA-ZÄÖÜäöüß\s\-]+|\[\d-]\)
+		htmlheader := FileOpen(adm.LabJ.htmlresource, "r", "UTF-8").Read()
+		htmlheader := StrReplace(htmlheader, "<!--##01##-->", "`n" logo "`n")
+		htmlheader := StrReplace(htmlheader, "##svgoptions##", "style='width:32px; height:24px; padding-top:2px;margin-left:5px;'")
+		htmlheader := StrReplace(htmlheader, "##02##", Tagesanzeige)
+		htmlheader := StrReplace(htmlheader, "<!--##03##-->", "`n")
+		htmlheader := StrReplace(htmlheader, "<!-- ##02t## -->", htmltable)
+
+		htmlbody =
+		(
+			<div style='overflow-x:scroll; overflow-y:scroll; width:100`%; height:92`%;'>
+				<div class="table-FixHead">
+					<table class='LabJ_Table'">
+						<thead>
+							<tr>
+								<th style='text-align:Right'>Datum</th>
+								<th style='text-align:Center' colspan='3'>[NR] Name, Vorname  Geburtsdatum</th>
+								<th style='text-align:Center'>Anford.Nr</th>
+								<th style='text-align:Center'>Param</th>
+								<th style='text-align:Right'>Wert</th>
+								<th style='text-align:Center' colspan='2'>Normalwerte</th>
+								<th style='text-align:Right'>+/-</th>
+								<th style='text-align:Right'>⍉ Abw.</th>
+							</tr>
+						</thead>
+
+						<tbody>
+		)
+
+return htmlheader . htmlbody
+}
+
+LabJournal_CovidStats(data) {                                                                            	; erstellt einen Teil der HTML SARS-CoV-2 Statistiken
+
+	If !IsObject(data) {
+		If !RegExMatch(data, "i)^[A-Z]:\\.*\.json$") {
+			MsgBox, 0x1000, % A_ThisFunc ": Der data-Parameter muss ein Objekt mit den statistischen Daten oder ein Pfad zu den Daten im json Format sein!"
+			ExitApp
+		}
+		data := cJSON.Load(FileOpen(data, "r", "UTF-8").Read())
+	}
+
+	COVID := data
+
+  ; Texttabelle und Teile der HTML Tabelle erstellen
+	For variant, variantCount in COVID.mutants
+		lmax := StrLen(variant) > lmax ? StrLen(variant) : lmax
+	posv := 0, cols := Object()
+	For variant, variantCount in COVID.mutants {
+		posv ++
+		cols[variant] := posv
+		th .= "`t`t`t`t<th class='" (posv=COVID.mutants.Count() ? "thr":"thc") "'>" variant "</th>`n"
+	}
+
+	totalPositive := totalPCR := 0, totalVariants := Object()
+	Loop % SubStr(A_YYYY, 4, 1)+1 {
+
+		examyear 	:= "202" A_Index-1
+
+		PercentPositive := Round(COVID.weeks[examyear].PCRpositive*100/COVID.weeks[examyear].PCRcount, 1)
+		PositiveToPCRcount := COVID.weeks[examyear].PCRpositive " / " COVID.weeks[examyear].PCRcount " (" PercentPositive "%)"
+		ws := SubStr("                 ", -1*(Floor((StrLen(PositiveToPCRcount)/4)-1)))
+
+		td .= "`t`t<tr>`n`t`t`t"
+		td .= "<td>" examyear "</td>"
+		td .= "<td>" COVID.weeks[examyear].PCRpositive "</td>"
+		td .= "<td>" COVID.weeks[examyear].PCRcount "</td>"
+
+		totalPositive 	+= COVID.weeks[examyear].PCRpositive
+		totalPCR    	+= COVID.weeks[examyear].PCRcount
+
+		Loop % COVID.mutants.Count()
+			td .= "<td>#" A_Index "#</td>"
+
+		posv := 1
+		For variant, variantCount in COVID.weeks[examyear].mutants {
+
+			If !totalVariants.HasKey(variant)
+				totalVariants[variant] := 0
+
+			totalVariants[variant] += variantCount ? variantCount : 0
+			td := StrReplace(td, "#" cols[variant] "#", variantCount)
+
+		}
+
+		td := RegExReplace(td, "(#\d+#)")
+		td .= "`n`t`t</tr>`n"
+
+	}
+
+	td .= "`t`t<tr class='tb2last'>`n`t`t`t"
+	td .= "<td></td><td>" totalPositive "</td><td>" totalPCR "</td>"
+	Loop % totalVariants.Count()
+		td .= "<td>#" A_Index "#</td>"
+	For variant, variantCount in totalVariants
+		td := StrReplace(td, "#" cols[variant] "#", variantCount)
+	td := RegExReplace(td, "(#\d+#)")
+
+	table =
+	(
+	<table class='tablecovidstats2'>
+		<thead>
+			<tr>
+				<th class='thl'>Jahr</th>
+				<th class='thc'>Positiv</th>
+				<th class='thc'>PCR's</th>
+%th%
+			</tr>
+		</thead>
+		<tbody>
+%td%
+		</tbody>
+	</table>
+
+	)
+
+return table
+}
+
+LabJournal_Viewer(html)  {                                                                                	; übergibt die HTML Daten an den Internet-Explorer
+
+	global neutron
+	static winpos
+
+  ; letzte Fensterposition laden
+	IniRead, winpos, % adm.ini, % adm.compname, LaborJournal_Position
+	If (InStr(winpos, "ERROR") || StrLen(winpos) = 0)
+		winpos := "w1050 h500"
+
+	neutron := new NeutronWindow(html, "", "", "Laborjournal" LabJ.maxrecords ")", " +AlwaysOnTop minSize1045x300")
+	neutron.Gui("+LabelNeutron")
+
+	obj := neutron.wb.document.getElementById("LaborJournal_Header")	, hcr	:= obj.getBoundingClientRect()
+	obj := neutron.wb.document.getElementById("LabJournal_Table")    	, tcr	:= obj.getBoundingClientRect()
+
+	labJ.hwnd := neutron.hwnd
+	labJ.HeaderHeight	:= Floor(hcr.Bottom + 1)
+	labJ.TableHeight   	:= Floor(tcr.Bottom  + 1)
+	labJ.enrolled	    		:= true
+
+  ; Monitordaten erfassen
+	hMonitor 	:= MonitorFromWindow(labJ.hwnd)
+	mon     	:= GetMonitorInfo(hMonitor)
+	TBHeight	:= TaskbarHeight()
+
+  ; Fensterposition anpassen
+	npos	:= PosStringToObject(winpos)
+	npos.X	:= npos.X 	< mon.L	? mon.L	: npos.X
+	npos.Y	:= npos.Y 	< mon.T	? mon.T	: npos.Y
+	npos.W := npos.W	< 1045	? 1045 	: npos.W
+	npos.H	:= npos.H 	< 600   	? 600
+				: 	 npos.H		> mon.B	? mon.B - TBHeight 	: npos.H
+	winpos :=	"x" npos.X " y" npos.Y " w" npos.W " h" npos.H
+	If !npos.Maximize && !(isInside := IsInsideVisibleArea(npos.X, npos.Y, npos.W, npos.H, CoordInjury)) {
+		winpos :=	"x" 	(InStr(CoordInjury, "x") ? "0"     	: npos.X)
+					. 	" y" 	(InStr(CoordInjury, "y") ? "0"     	: npos.Y)
+					. 	" w" 	(npos.W	< 1045	 ? 1045	: npos.W)
+					.	" h" 	(npos.H 	< 600   	 ? 600   	: npos.H)
+	}
+
+
+  ; Breite der Überschrift an die Tabellenbreite und Höhe der Tabelle 1 an Tabelle 2  anpassen
+	Table1 := neutron.wb.document.getElementsByClassName("tablecovidstats")[0]
+	tb1 := Table1.getBoundingClientRect()
+	Table2 := neutron.wb.document.getElementsByClassName("tablecovidstats2")[0]
+	tb2 := Table2.getBoundingClientRect()
+
+  ; Überschrift
+	TitleWidth	:= Floor(tb2.Right - tb1.Left)
+	innerTitle	:= neutron.wb.document.getElementsByClassName("Statistik-Title")[0]
+	innerTitle.Style.Width := TitleWidth "px"
+
+  ; Tabelle
+	Table1.Style.Height := tb2.Bottom - tb2.Top "px"
+
+  ; Anzeigen
+	Gui, load_BarGUI: Destroy
+
+	;~ SciTEOutput(A_ThisFunc "- " labJ.hwnd " = " neutron.hwnd ", " TBHeight " , "  winpos)
+	neutron.Show(winpos)
+	SetWindowPos(labJ.hwnd, npos.X, npos.Y, npos.W, npos.H)
+
+	;~ OnMessage(0x200, "LabJournal_Eyes")
+
+
+return neutron
 }
 
 LabJournal_ParamToolTip(neutron, event) {
@@ -847,13 +1805,13 @@ LabJournal_ParamToolTip(neutron, event) {
 
 }
 
-LabJournal_KarteiKarte(neutron, event) {
+LabJournal_KarteiKarte(neutron, event) {                                                               	; Neutron Klickfunktion: Karteikarte anzeigen
 
 	; event.target will contain the HTML Element that fired the event.
 	; Show a message box with its inner text.
-		RegExMatch(event.target.id, "^\s*(?<ID>\d+)?_(?<Name>.*)", thisPat)
+		RegExMatch(event.target.id, "^\s*(?<ID>\d+)?_(?<Name>.*)$", Pat)
 
-		If labJ.enrolled ="x" {
+		If (labJ.enrolled = "x") {
 
 			lj  	:= GetWindowSpot(labJ.hwnd)
 			dh	:= lj.h
@@ -868,11 +1826,128 @@ LabJournal_KarteiKarte(neutron, event) {
 
 		}
 
-		If AlbisAkteOeffnen(thisPatName, thisPatID)
+		If AlbisAkteOeffnen(PatName := StrReplace(PatName, "_", A_Space), PatID)
 			AlbisLaborBlattZeigen()
 		else
-			PraxTT("Die Patientenakte konnte nicht geöffnet werden!")
+			PraxTT("Die Patientenakte von <[" (PatID ? PatID : 0) "] " (PatName ? PatName : "---, ---") "> konnte nicht geöffnet werden!")
 
+return
+}
+
+LabJournal_Filter(neutron, event) {
+
+		global parentNode
+
+		static viruscolor 	:= ["D47A04", "E18484", "3C9F4D"]
+		static colflag  		:= 0
+
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	; COVID Filter ein- oder ausschalten
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+		colflag := colflag+1 < 3 ? colflag+1 : 0
+		Warnen.Filter.Abstriche.state := colflag
+		adm.filtering := colflag + 1
+
+	  ; ―――――――――――――――――――――――――――――――
+      ; nach dem ersten Druck trägt der Virus eine Maske sonst nicht
+	  ; ―――――――――――――――――――――――――――――――
+		mask := neutron.doc.getElementsByClassName("mask")[0]
+		try mask.Style.visibility := (colflag=1 ? "visible" : "hidden")
+		catch e
+			 MsgBox, 16,, % "Ausnahme ausgelöst!`n`nWas: " e.what "`nDatei: " e.file
+					. "`nZeile: " e.line "`nNachricht: " e.message "`nZusatz: " e.extra
+
+	  ; ―――――――――――――――――――――――――――――――
+	  ; auf rosafarbender Virus bei state=1, grün bei state = 2, sonst orange
+	  ; ―――――――――――――――――――――――――――――――
+	  ; das Gesicht
+		COVID := neutron.doc.getElementsByClassName("facecolor")[0]
+		try COVID.Style.fill := "#" viruscolor[colflag+1]
+		catch e
+			 MsgBox, 16,, % "Ausnahme ausgelöst!`n`nWas: " e.what "`nDatei: " e.file
+					. "`nZeile: " e.line "`nNachricht: " e.message "`nZusatz: " e.extra
+
+	  ; ―――――――――――――――――――――――――――――――
+	  ; und die Spikes einfärben
+	  ; ―――――――――――――――――――――――――――――――
+		Spikes := neutron.doc.getElementsByClassName("Spike")
+		Loop, % Spikes.length {
+			try Spikes[A_Index-1].Style.fill := "#" viruscolor[colflag+1]
+			catch e
+			 MsgBox, 16,, % "Ausnahme ausgelöst!`n`nWas: " A_Index-1 ": " e.what "`nDatei: " e.file
+					. "`nZeile: " e.line "`nNachricht: " e.message "`nZusatz: " e.extra
+		}
+
+	  ; ―――――――――――――――――――――――――――――――
+	  ; bei state = 2 soll er lächeln
+	  ; ―――――――――――――――――――――――――――――――
+		mouth := neutron.doc.getElementsByClassName("mouth")[0]
+		try mouth.Style.Transform := colflag = 2 ? "translateX(50px) translateY(90px) rotate(165deg)"
+																	  : "translateX(0px) translateY(0px) rotate(0deg)"
+		catch e
+			 MsgBox, 16,, % "Ausnahme ausgelöst!`n`nWas: " e.what "`nDatei: " e.file
+					. "`nZeile: " e.line "`nNachricht: " e.message "`nZusatz: " e.extra
+
+
+		;~ try mouth.Style.animation-name := colflag = 2 ? "moveMouth1" : "moveMouth"
+		;~ catch e
+			 ;~ MsgBox, 16,, % "Ausnahme ausgelöst!`n`nWas: " e.what "`nDatei: " e.file
+					;~ . "`nZeile: " e.line "`nNachricht: " e.message "`nZusatz: " e.extra
+
+
+
+		; mouth
+		;transform: translateX(50px) translateY(90px) rotate(165deg);
+		;translateX(0px) translateY(0px) rotate(0deg);
+
+		;eye-brow
+		;transform: translateX(90px) translateY(90px) rotate(175deg);
+		;transform: translateX(90px) translateY(87px) rotate(175deg);
+
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	; schnellste Methode um die komplette Tabelle zu entfernen
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+		node := neutron.doc.getElementsByClassName("table-row")[0]
+		parentNode := node.parentNode
+
+		nodelist := parentNode.querySelectorAll("TR")
+		Loop, % nodelist.length
+			parentNode.removeChild(nodelist[nodelist.length-A_Index])
+
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	 ; so und jetzt die Tabelle je nach Filtereinstellung neu aufbauen
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+		Laborjournal_Redraw(neutron, colflag, parentNode)
+
+}
+
+LabJournal_Eyes(lparam, wparam) {                                                                   	; soll den Corona-Virus animieren
+
+	global neutron, h
+	static reye, reyeX, leye, leyeY
+
+	CoordMode, Mouse, Window
+
+	win := GetWindowSpot(labJ.hwnd)
+
+	If !IsObject(reye) {
+		reye := neutron.doc.getElementsByClassName("right-eyeball")[0]
+		reyeX := reye.cx
+		;~ reyeX := reye.getBoundingClientRect().Left
+	}
+	If !IsObject(leye) {
+		leye := neutron.doc.getElementsByClassName("left-eyeball")[0]
+		leyeX := leye.cx
+		SciTEOutput("x: " leye.Count())
+	}
+
+	MouseGetPos, mx, my
+	lmx := mx > leyeX ? mx-leyeX : leyeX-mx
+	lx 	:= -1 + 6*(mx/1045)
+	rx	:= -2 + 10*(mx/1045)
+	leye.transform := "translateX(" lx "px)"
+	reye.Style.transform := "translateX(" rx "px)"
+	ToolTip %  lx "|" rx
 }
 
 LabJournal_DragTitleBar(event) {
@@ -907,8 +1982,8 @@ LabJournal_Close(event) {
 
 }
 
-LabJournal_Grenzen(event) {
-AlbisLaborwertGrenzen(adm.LabDBPath)
+LabJournal_Grenzen(event) {                                                                               	; Neutron Klickfunktion: AlbisLaborwertGrenzen
+  AlbisLaborwertGrenzen(adm.LabDBPath)
 }
 
 LabJournal_MoreTips(neutron, event) {
@@ -916,6 +1991,7 @@ LabJournal_MoreTips(neutron, event) {
 	global LabDic
 
 	LabPB 	:= LabDic[event.target.innerText].1
+	RegExMatch(LabPB, "^(?<ledge>.+?)(,|$)", Lab)
 
 	;~ Run, % "https://de.wikipedia.org/wiki/" LabPB
 	;~ SciTEOutput("url: https://de.wikipedia.org/wiki/" LabPB)
@@ -923,12 +1999,120 @@ LabJournal_MoreTips(neutron, event) {
 	;~ ToolTip, % knowledge
 	;~ SetTimer, ttaus, -6000
 
+	knowledge := DownloadToString("https://de.wikipedia.org/wiki/" LabPB)
+	If InStr(knowledge, "Diese Seite existiert nicht") {
+		ToolTip, % "Suchbegriff <" LabPB "> nicht gefunden"
+		SetTimer, ttaus, -6000
+		return
+	}
+	RegExMatch(knowledge, "\<p\>(?<PB>.+?)\<\/p\>", know)
+
+	SciTEOutput(knowledge)
 	;knowledge := RegExReplace(knowledge, "(\<.*?\>)")
 	;~ URLDownloadToFile, % "https://de.wikipedia.org/wiki/" LabPB, % A_Temp "\wikipedia.html"
 return knowledge
 ttaus:
 	ToolTip
 return
+}
+
+Labjournal_LababrufDaten() {                                                                            	; berechnet die Zeit bis zum nächsten Laborabruf
+
+	IniRead, AClient	, % adm.Ini, % "LaborAbruf"	, % "OnlyRunOnClient"
+	If InStr(AClient, "ERROR") || !AClient
+		return
+	IniRead, ATimer  	, % adm.Ini, % AClient       	, % "Laborabruf_Timer"
+
+	IniRead, LCall1  	, % adm.Ini, % "LaborAbruf"	, % "Letzter_Abruf"
+	IniRead, LCall2  	, % adm.Ini, % "LaborAbruf"	, % "Letzter_Abruf_ohne_Daten"
+	IniRead, LCall3  	, % adm.Ini, % "LaborAbruf"	, % "Letzter_Abruf_mit_Daten"
+
+	pdate 	:= A_YYYY A_MM A_DD "000000"
+	heute 	:= A_MM A_DD
+	pdate 	+= -1, days
+	gestern	:= SubStr(pdate, 5, 2) SubStr(pdate, 7, 2)
+	pdate 	+= +2, days
+	morgen	:= SubStr(pdate, 5, 2) SubStr(pdate, 7, 2)
+
+	If RegExMatch(LCall1, "(?<Y>\d{4})-(?<M>\d{2})-(?<D>\d{2})\s+(?<H>\d{2}):(?<Min>\d{2}):(?<S>\d{2})[\s\|]*", T) {
+		Abruftag := TM TD
+		lastLBCall := (	Abruftag = heute  	? "heute "
+							: 	Abruftag = gestern 	? "gestern " : TD "." TM "." )
+						. 	", " TH ":" TMin " Uhr<br>"
+						. 	(LCall1 = LCall2 ? "keine neue" : LCall1 = LCall3 ? "neue" : "??") " Daten"
+	}
+
+	If !ATimer
+		nextLBCall := "der zeitgesteuerte Abruf ist aus"
+	else {
+		IniRead, nextCall, % adm.Ini, % "LaborAbruf", % "naechster_Abruf"
+		If RegExMatch(nextCall, "(?<D>\d{2})\.(?<M>\d{2})\.(?<Y>\d{4})\s*,\s*(?<hm>\d+:\d+)", T) {
+			Abruftag 	:= TM TD
+			nextLBCall	:= ( Abruftag = heute  	? "heute "
+								: Abruftag = morgen	? "morgen " :  TD "." TM )	. ", " Thm " Uhr"
+		}
+	}
+
+	lahtml =
+	(
+		<div class="LaborAbruf">
+			<div class="laRow">
+				<tspan class='laInfo1'>letzter Abruf</tspan>
+				<br>
+				<tspan class='laInfo2'>%lastLBCall%</tspan>
+			</div>
+			<div class="laEmpty"></div>
+			<div class="laRow">
+				<tspan class='laInfo1'>nächster Abruf</tspan>
+				<br>
+				<tspan class='laInfo2'>%nextLBCall%</tspan>
+			</div>
+	  </div>
+	)
+
+
+return lahtml
+}
+
+Labjournal_NewLabData() {
+
+	FileGetTime, tmp, % adm.AlbisDBPath "\LABBLATT.dbf", M
+
+	If !adm.Labj.lastUpdate
+		adm.Labj.lastUpdate := IniReadExt("Laborjournal", "letztes_Journalupdate")
+
+	If (tmp <> adm.Labj.lastUpdate) {
+		adm.Labj.lastUpdate := tmp
+		return adm.Labj.Override := true
+	}
+
+return false
+}
+
+Labjournal_NewLabParams() {
+
+	FileGetTime, tmp, % adm.AlbisDBPath "\LABPARAM.dbf", M
+
+	If !adm.Labj.lastParams
+		adm.Labj.lastParams := IniReadExt("Laborjournal", "LabParam_letztesUpdate")
+
+	If (tmp <> adm.Labj.lastParams)
+		return tmp
+
+return false
+}
+
+Labjournal_Knowledge() {
+
+	/* vielleicht lassen sich Zusammenhänge zwischen einzelnen Veränderungen von Laborwerten analysieren
+
+		Hypalbuminämie
+		- 	wenn Albumin i. Serum erniedrigt ist, steigt die Cholinesterase (CHE) an, konsekutiv oder Angabe in Prozent findet sich in der Elektrophorese
+			je nach Erniedrigung von Albumin ein höherer Anteil von Beta- und Gamma-Globulinen
+
+
+	 */
+
 }
 
 LoadKnowlegde(LabPB) {
@@ -941,11 +2125,16 @@ LoadKnowlegde(LabPB) {
 return knowledge
 }
 
-Menu_LabJournal(event) {                                                                  	; im Moment nur Reload
-
-	global hLJ
+Menu_LabJournal(event) {                                                                                 	; im Moment nur Reload
 
 	SaveGuiPos(labJ.hwnd)
+	;~ MsgBox, 0x1004, Laborjournal, Tabelle neu erstellen?
+	;~ IfMsgBox, Yes
+	If Labjournal_NewLabData() 	{
+		FileDelete, % adm.PathLabj
+		FileDelete, % adm.LabPat
+		FileDelete, % adm.COVIDStats
+	}
 	Reload
 
 }
@@ -970,7 +2159,7 @@ PosStringToObject(string) {
 	p := Object()
 	For wIdx, coord in StrSplit("XYWH") {
 		RegExMatch(string, "i)" coord "(?<Pos>\d+)", w)
-		p[coord] := wPos
+		p[coord] := !wPos ? 100 : wPos
 	}
 
 	p.Maximize := InStr(string, "Maximize") ? true : false
@@ -1039,7 +2228,25 @@ Local Enc := 0x557CF400 | Round({"bmp":0, "jpg":1,"jpeg":1,"gif":2,"tif":5,"tiff
 Return E[1] ? 0 : E[2] ? -1 : E[3] ? -2 : E[4] ? -3 : 1
 }
 
-Labjournal_Logo() {                                                                                           	;-- animiertes Logo
+RegExMatchObject(Haystack, NeedleRegEx, StartingPos:=1) {                              	;-- wandelt RegExMatch-Objekt in ein Key:Value Objekt um
+
+	rxobj := Object()
+
+  ; O - first removes object option and then added O with or without )
+	NeedleRegEx := RegExReplace(NeedleRegEx, "^([^\(]+)O(.*\))", "$1$2")
+	NeedleRegEx	:= RegExMatch(NeedleRegEx, "^[^\(]+?\)") ? "O" : "O)"
+
+  ; builds match object
+	RegExMatch(Haystack, NeedleRegEx, Match, StartingPos)
+
+  ; converts to Autohotkey key:value object
+	Loop % Match.Count()
+		rxObj[Match.Name(A_Index)] := Match.Value(A_Index)
+
+return rxObj
+}
+
+Labjournal_Logo() {                                                                                           	;-- animiertes Logo (funktioniert nicht mit IE)
 
 	svg =
 	(
@@ -1148,7 +2355,7 @@ LoadBar_Gui(show:=1, opt:="") {
 	If !IsObject(opt)
 		opt:={"col": ["0x4D4D4D","0xFFFFFF","0xEFEFEF"], "w":320,	"h":36}
 
-	Gui, load_BarGUI: -Border -Caption +ToolWindow HWNDhLoad_BarWin
+	Gui, load_BarGUI: -Border -Caption +ToolWindow +AlwaysOnTop HWNDhLoad_BarWin
 	Gui, load_BarGUI: Color, % opt.col.1, % opt.col.2
 
 	load_Bar := new LoaderBar("load_BarGUI", 3, 3, opt.W, opt.H, "LABORJOURNAL", 1, opt.col.3)
@@ -1181,17 +2388,17 @@ class LoaderBar {
 		this.GUI_ID := GUI_ID
 		Gui, %GUI_ID%:Default
 
+		this.X        	:= x
+		this.Y        	:= y
+		this.Width 	:=w
+		this.Height	:=h
 		this.BG     	:= StrSplit(BG,"|")
 		this.BG.W  	:= w
 		this.BG.H  	:= h
-		this.Width 	:=w
-		this.Height	:=h
 		this.FG       	:= StrSplit(FG,"|")
 		this.FG.W  	:= this.BG.W - 2
 		this.FG.H   	:= (fg_h:=(this.BG.H - 2))
 		this.Percent 	:= 0
-		this.X        	:= x
-		this.Y        	:= y
 		fg_x            	:= this.X + 1
 		fg_y            	:= this.Y + 1
 		this.FontColor := FontColor
@@ -1200,7 +2407,6 @@ class LoaderBar {
 		;DescBGColor:="4D4D4D"
 		DescBGColor:="Black"
 		this.DescBGColor := DescBGColor
-
 		this.FontColorDesc := FontColorDesc
 
 		Gui,Font,s10
@@ -1209,21 +2415,21 @@ class LoaderBar {
 
 		Gui,Font,s8
 		Gui, Add, Text, % "x" x " y+1 w" w " h" h " 0xE hwndhLoaderBarBG"
-		this.ApplyGradient(this.hLoaderBarBG	:= hLoaderBarBG,this.BG.1, this.BG.2, this.BG.3,1)
+		this.ApplyGradient(this.hLoaderBarBG	:= hLoaderBarBG, this.BG.1, this.BG.2, this.BG.3,1)
 
-		Gui, Add, Text, x%fg_x% y%fg_y% w0 h%fg_h% 0xE hwndhLoaderBarFG
-		this.ApplyGradient(this.hLoaderBarFG   	:= hLoaderBarFG,this.FG.1, this.FG.2, this.FG.3,1)
+		Gui, Add, Text, % "x" fg_x " y" fg_y " w0 h" fg_h " 0xE hwndhLoaderBarFG"
+		this.ApplyGradient(this.hLoaderBarFG   	:= hLoaderBarFG, this.FG.1, this.FG.2, this.FG.3,1)
 
-		Gui, Add, Text, x%x% y%y% w%w% h%h% 0x200 border center BackgroundTrans hwndhLoaderNumber c%FontColor%, % "[ 0 % ]"
-			this.hLoaderNumber := hLoaderNumber
+		Gui, Add, Text, % "x" x " y" y " w" w " h" h " 0x200 border center BackgroundTrans hwndhLoaderNumber c" FontColor, % "[ 0 % ]"
+		this.hLoaderNumber := hLoaderNumber
 
 		if (this.ShowDesc) {
-			Gui, Add, Text, xp y+2 w%w% h16 0x200 Center border BackgroundTrans hwndhLoaderDesc c%FontColorDesc%, Loading...
-			this.hLoaderDesc := hLoaderDesc
-			this.Height:=h+18
+			Gui, Add, Text, % "xp y+2 w" w " h16 0x200 Center border BackgroundTrans hwndhLoaderDesc c" FontColorDesc, Loading...
+			this.hLoaderDesc 	:= hLoaderDesc
+			this.Height        	:= h+18
 		}
 
-		Gui,Font
+		Gui, Font
 
 		Gui, %_GUI_ID%:Default
 	}
@@ -1238,9 +2444,9 @@ class LoaderBar {
 		Gui, %GUI_ID%:Default
 		GuiControlGet, LoaderBarBG, Pos, % this.hLoaderBarBG
 
-		this.BG.W := LoaderBarBGW
-		this.FG.W := LoaderBarBGW - 2
-		this.Percent:=(p>=100) ? p:=100 : p
+		this.BG.W 	:= LoaderBarBGW
+		this.FG.W  	:= LoaderBarBGW - 2
+		this.Percent	:= (p>=100) ? p:=100 : p
 
 		PercentNum	:= Round(this.Percent,0)
 		PercentBar	:= Floor((this.Percent/100)*(this.FG.W))
@@ -1254,7 +2460,7 @@ class LoaderBar {
 
 		if (this.ShowDesc) {
 			hLoaderDesc := this.hLoaderDesc
-			GuiControl,,%hLoaderDesc%, %w%
+			GuiControl,, % hLoaderDesc, % w
 		}
 		Gui, %_GUI_ID%:Default
 	}
@@ -1302,6 +2508,59 @@ DownloadToString(url, encoding = "utf-8") {
     return o
 }
 
+GoogleApis() {
+
+	;~ #Include %A_LineFile%\..\..\Plugin.ahk
+	/*
+		Usage: Wikipedia <Search>
+		Desc: Searches wikipedia for a page and returns the first sentence plus a link
+	*/
+
+	;~ UserAgent := "GeekBot by GeekDude (Contact me on GitHub: https://github.com/G33kDude/MyRC)"
+	;~ Base := "https://ajax.googleapis.com/ajax/services/search/web?v=1.0"
+
+	;~ Google := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+	;~ Google.Open("GET", Base "&q=" UriEncode("site:en.wikipedia.org " Plugin.Param), false)
+	;~ Google.SetRequestHeader("User-Agent", UserAgent)
+	;~ Google.Send()
+
+	;~ if !(Result := Jxon_Load(Google.ResponseText).responseData.results[1])	{
+		;~ Chat(Channel, "No results found")
+		;~ ExitApp
+	;~ }
+
+	;~ Url := UriDecode(Result.Url)
+	;~ SplitPath, Url, OutFileName, OutDir, OutExtension, OutNameNoExt, OutDrive
+
+	;~ if !(OutDrive ~= "^https?://en\.wikipedia\.org")	{
+		;~ Chat(Channel, "Non wikipedia URL found: " OutDrive)
+		;~ ExitApp
+	;~ }
+
+	;~ Base := "http://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=&format=xml"
+
+	;~ Wiki := ComObjCreate("WinHttp.WinHttpRequest.5.1")
+	;~ Wiki.Open("GET", Base "&titles=" UriEncode(OutFileName), false)
+	;~ Wiki.SetRequestHeader("User-Agent", UserAgent)
+	;~ Wiki.Send()
+
+	;~ xml := ComObjCreate("MSXML2.DOMDocument")
+	;~ xml.loadXML(Wiki.ResponseText)
+
+	;~ html := ComObjCreate("htmlfile")
+	;~ html.write(xml.selectSingleNode("//extract").text)
+
+	;~ Page := html.body.innerText
+
+	;~ if (Pos := InStr(Page, "."))
+		;~ Page := SubStr(Page, 1, Pos)
+	;~ else
+		;~ Page := SubStr(Page, 1, 64)
+	;~ Chat(Channel, Page " - " Shorten(Url))
+	;~ ExitApp
+
+}
+
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ; Includes
 ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
@@ -1319,7 +2578,7 @@ DownloadToString(url, encoding = "utf-8") {
 #Include %A_ScriptDir%\..\..\include\Addendum_Window.ahk
 
 #Include %A_ScriptDir%\..\..\lib\acc.ahk
-#Include %A_ScriptDir%\..\..\lib\class_JSON.ahk
+#Include %A_ScriptDir%\..\..\lib\class_cJSON.ahk
 #Include %A_ScriptDir%\..\..\lib\class_Neutron.ahk
 #include %A_ScriptDir%\..\..\lib\GDIP_All.ahk
 #Include %A_ScriptDir%\..\..\lib\ini.ahk

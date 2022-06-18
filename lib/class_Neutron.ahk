@@ -1,13 +1,27 @@
 ﻿
-;	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠
 ;
-;        							  			❗ DO NOT REPLACE THIS LIBRARY ❗
-;	         	    this library is modificated for the needs of Addendum für AlbisOnWindows
+;		☠	        	 ☠	        	  ☠	        	  ☠          	  ☠	         	  ☠	        	  ☠	        	  ☠
+;	☠	☠	     ☠	 ☠	      ☠	  ☠	      ☠	  ☠	      ☠	  ☠	      ☠	  ☠	     ☠	  ☠	     ☠	  ☠
+;		☠	        	 ☠	        	  ☠	        	  ☠	         	  ☠		     	  ☠		    	  ☠		    	  ☠
+;		☠	        	 ☠	        	  ☠	        	  ☠	         	  ☠		     	  ☠		    	  ☠		    	  ☠
+;		☠	        	 ☠	        	  ☠	        	  ☠	         	  ☠		     	  ☠		    	  ☠		    	  ☠
+; 	‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›
 ;
-;	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠	☠
+;        	    		    		   ❗  D O   N O T   R E P L A C E   T H I S   L I B R A R Y  ❗
+;			    	￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣
+;	         	        this library is modificated for the needs of Addendum für AlbisOnWindows
+;		     		＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
+;
+; 	‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›
+;		☠	        	 ☠	        	  ☠	        	  ☠          	  ☠	         	  ☠	        	  ☠	        	  ☠
+;		☠	        	 ☠	        	  ☠	        	  ☠	         	  ☠		     	  ☠		    	  ☠		    	  ☠
+;		☠	        	 ☠	        	  ☠	        	  ☠	         	  ☠		     	  ☠		    	  ☠		    	  ☠
+;	☠	☠	     ☠	 ☠	      ☠	  ☠	      ☠	  ☠	      ☠	  ☠	      ☠	  ☠	     ☠	  ☠	     ☠	  ☠
+;		☠	        	 ☠	        	  ☠	        	  ☠	         	  ☠		     	  ☠		    	  ☠		    	  ☠
+;
 
 
-/*  Neutron.ahk v1.0.0 adm
+/*  Neutron.ahk v1.0.1 adm
 
 	Copyright (c) 2020 Philip Taylor (known also as GeekDude, G33kDude)
 	https://github.com/G33kDude/Neutron.ahk
@@ -40,7 +54,7 @@ class NeutronWindow {
 
 	;{ --- Constants ---
 
-	static VERSION := "1.0.0 adm"
+	static VERSION := "1.0.1 adm"
 
 	; Windows Messages
 	, WM_DESTROY                 	:= 0x02
@@ -244,7 +258,7 @@ class NeutronWindow {
 		 */
 
 		RegRead, fbe, % this.KEY_FBE, % this.EXE_NAME
-		RegWrite, REG_DWORD, % this.KEY_FBE, % this.EXE_NAME, 0
+		RegWrite, REG_DWORD, % this.KEY_FBE, % this.EXE_NAME, 11000
 		Gui, Add, ActiveX, % "vwb hWndhWB x" this.x " y" this.y " w" this.w " h" this.h, about:blank
 		if (fbe = "")
 			RegDelete, % this.KEY_FBE, % this.EXE_NAME
@@ -694,11 +708,11 @@ class NeutronWindow {
 
 			; Make sure enough parameters were given
 			if (params.length() < fn.MinParams)
-				throw Exception("Too few parameters given to " fn.Name ": " params.length())
+				throw Exception("Too few parameters given to " fn.Name ": " params.length() " [" fn.MinParams " parameters needed]")
 
 			; Make sure too many parameters weren't given
 			if (params.length() > fn.MaxParams && !fn.IsVariadic)
-				throw Exception("Too many parameters given to " fn.Name ": " params.length())
+				throw Exception("Too many parameters given to " fn.Name ": " params.length() " [a maximum of " fn.MaxParams " parameters is aloud]")
 
 			; Change first parameter from the function name to the neutron instance
 			params[1] := this.parent

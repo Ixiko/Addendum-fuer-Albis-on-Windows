@@ -234,7 +234,7 @@ GetGUIThreadInfo(retVal:="", idThread:=0)  {                                    
 		‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗‗
 
 		                        ╔═════════════════════════════════════════════════════════╗
-		   	         📖 ═══╣   Description of GetGuiThreadInfo(idThread := 0, retVal := "")    ╠════ 📖
+		   	         📖 ═══╣   Description of GetGuiThreadInfo(retVal := "", idThread := 0)    ╠════ 📖
 		                        ╚═════════════════════════════════════════════════════════╝
 
 		parameter: 		idThread (integer)
@@ -567,11 +567,10 @@ Return wtitle
 
 WinGetClass(hwnd) {                                                                                                                	;-- schnellere Fensterfunktion
 	if (hwnd is not Integer)
-		hwnd :=GetDec(hwnd)
+		hwnd := GetDec(hwnd)
 	VarSetCapacity(sClass, 80, 0)
 	DllCall("GetClassNameW", "UInt", hWnd, "Str", sClass, "Int", VarSetCapacity(sClass)+1)
-	wclass := sClass
-	sClass =
+	wclass := sClass, sClass := ""
 Return wclass
 }
 
@@ -644,7 +643,7 @@ SetWindowPos(hWnd, x, y, w, h, hWndInsertAfter := 0, uFlags := 0x40) {          
 	SWP_NOMOVE                 	:= 0x0002	; Retains the current position (ignores X and Y parameters).
 	SWP_NOZORDER              	:= 0x0004	; Retains the current Z order (ignores the hWndInsertAfter parameter).
 	SWP_NOREDRAW             	:= 0x0008	; Does not redraw changes.
-	SWP_NOACTIVATE   	       	:= 0x0010	; Does not activate the window.
+	SWP_NOACTIVATE   	         	:= 0x0010	; Does not activate the window.
 	SWP_DRAWFRAME            	:= 0x0020	; Draws a frame (defined in the window's class description) around the window.
 	SWP_FRAMECHANGED     	:= 0x0020	; Applies new frame styles set using the SetWindowLong function.
 	SWP_SHOWWINDOW        	:= 0x0040	; Displays the window.
@@ -662,11 +661,12 @@ Return DllCall("SetWindowPos", "Ptr", hWnd, "Ptr", hWndInsertAfter, "Int", x, "I
 }
 
 WinMoveZ(hWnd, C, X, Y, W, H, Redraw:=0) {                                                                           	;-- WinMoveZ v0.5 by SKAN on D35V/D361 @ tiny.cc/winmovez
-Local V:=VarSetCapacity(R,48,0), A:=&R+16, S:=&R+24, E:=&R, NR:=&R+32, TPM_WORKAREA:=0x10000
-  C:=( C:=Abs(C) ) ? DllCall("SetRect", "Ptr",&R, "Int",X-C, "Int",Y-C, "Int",X+C, "Int",Y+C) : 0
-  DllCall("SetRect", "Ptr",&R+16, "Int",X, "Int",Y, "Int",W, "Int",H)
-  DllCall("CalculatePopupWindowPosition", "Ptr",A, "Ptr",S, "UInt",TPM_WORKAREA, "Ptr",E, "Ptr",NR)
-  X:=NumGet(NR+0,"Int"),  Y:=NumGet(NR+4,"Int")
+	; https://www.autohotkey.com/boards/viewtopic.php?f=6&t=76745&hilit=WinMoveZ
+	Local V:=VarSetCapacity(R,48,0), A:=&R+16, S:=&R+24, E:=&R, NR:=&R+32, TPM_WORKAREA:=0x10000
+	C:=( C:=Abs(C) ) ? DllCall("SetRect", "Ptr",&R, "Int",X-C, "Int",Y-C, "Int",X+C, "Int",Y+C) : 0
+	DllCall("SetRect", "Ptr",&R+16, "Int",X, "Int",Y, "Int",W, "Int",H)
+	DllCall("CalculatePopupWindowPosition", "Ptr",A, "Ptr",S, "UInt",TPM_WORKAREA, "Ptr",E, "Ptr",NR)
+	X:=NumGet(NR+0,"Int"),  Y:=NumGet(NR+4,"Int")
 Return DllCall("MoveWindow", "Ptr",hWnd, "Int",X, "Int",Y, "Int",W, "Int",H, "Int",Redraw)
 }
 
@@ -783,7 +783,7 @@ Redraw(hwnd) {                                                                  
     	, 	RDW_NOCHILDREN     	:= 0x40	, RDW_NOERASE      	:= 0x20	, RDW_NOFRAME 	:= 0x800
 		, 	RDW_NOINTERNALPAINT	:= 0x10 	, RDW_UPDATENOW	:= 0x100	, RDW_VALIDATE  	:= 0x8
 
-   style := RDW_INVALIDATE | RDW_ERASE  | RDW_FRAME | RDW_INVALIDATE | RDW_ERASENOW | RDW_UPDATENOW | RDW_ALLCHILDREN
+   style := RDW_INVALIDATE | RDW_ERASE  | RDW_FRAME |  RDW_ERASENOW | RDW_UPDATENOW | RDW_ALLCHILDREN
 
 return DllCall("RedrawWindow", "uint", hwnd, "uint", 0, "uint", 0, "uint", style)
 }
@@ -794,20 +794,22 @@ return dllcall("UpdateWindow", "Ptr", hwnd)
 
 VerifiedWindowClose(hwnd) {
 
-	If WinExist("ahk_id " hwnd)	{
+	wtitle 	:= WinGetTitle(hwnd)
+	wclass 	:= WinGetClass(hwnd)
+	If WinExist(wtitle " ahk_class " wclass)	{                                	; das WinExist mit hwnd funktioniert nicht immer oder nie?
 		WinClose, % "ahk_id " hwnd
 		WinWaitClose, % "ahk_id " hwnd,, 2
 		If ErrorLevel {
-			SendMessage 0x112, 0xF060,,, % "ahk_id " hwnd 		; WMSysCommand + SC_Close
-			WinWaitClose                         , % "ahk_id " hwnd,, 2
+			SendMessage 0x112, 0xF060,,, % "ahk_id " hwnd 	    	; WMSysCommand + SC_Close
+			WinWaitClose, % "ahk_id " hwnd,, 2
 			If ErrorLevel {
-				SendMessage 0x10, 0,,,        % "ahk_id " hwnd         ; WM_Close
-				WinWaitClose                  	  , % "ahk_id " hwnd,, 2
+				SendMessage 0x10, 0,,,% "ahk_id " hwnd                	; WM_Close
+				WinWaitClose, % "ahk_id " hwnd,, 2
 				If ErrorLevel {
-					SendMessage 0x2, 0,,,     	% "ahk_id " hwnd 	   	; WM_Destroy
-					WinWaitClose              	  , % "ahk_id " hwnd,, 2
+					SendMessage 0x2, 0,,,% "ahk_id " hwnd 	        	; WM_Destroy
+					WinWaitClose, % "ahk_id " hwnd,, 2
 					If ErrorLevel
-						Process, Close          	  , % "ahk_id " hwnd
+						Process, Close, % "ahk_id " hwnd
 				}
 			}
 		}

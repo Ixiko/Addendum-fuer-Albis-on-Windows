@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                           	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                             	Funktionen für die Berechnung/Umwandlung von Tagesdaten, Quartalsdaten
-;                               	by Ixiko started in September 2017 - last change 18.12.2021 - this file runs under Lexiko's GNU Licence
+;                               	by Ixiko started in September 2017 - last change 27.03.2022 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; Datum berechnen
@@ -54,19 +54,19 @@ DateDiff(fnTimeUnits, fnStartDate, fnEndDate) {                                 
                      :  fnTimeUnits = "DD" ? "D"
                      :                       ""
 
-			EnvSub, TimeDifference, %StartDate%, %TimeUnit%
+			EnvSub, TimeDifference, % StartDate, % TimeUnit
 		}
 
 		; for year or month
-		FormatTime, StartYear   	, %StartDate%, yyyy
-		FormatTime, StartMonth	, %StartDate%, MM
-		FormatTime, StartDay    	, %StartDate%, dd
-		FormatTime, StartTime   	, %StartDate%, HHmmss
+		FormatTime, StartYear   	, % StartDate, yyyy
+		FormatTime, StartMonth	, % StartDate, MM
+		FormatTime, StartDay    	, % StartDate, dd
+		FormatTime, StartTime   	, % StartDate, HHmmss
 
-		FormatTime, EndYear    	, %EndDate%, yyyy
-		FormatTime, EndMonth 	, %EndDate%, MM
-		FormatTime, EndDay      	, %EndDate%, dd
-		FormatTime, EndTime    	, %EndDate%, HHmmss
+		FormatTime, EndYear    	, % EndDate, yyyy
+		FormatTime, EndMonth 	, % EndDate, MM
+		FormatTime, EndDay      	, % EndDate, dd
+		FormatTime, EndTime    	, % EndDate, HHmmss
 
 		If RegExMatch(fnTimeUnits, "MM") {
 
@@ -105,8 +105,8 @@ Return TimeDifference
 
 DaysBetween(FirstDate, LastDate) {                                                                    	;-- errechnet die Tage zwischen zwei Tagen
 
-	FirstDate	:= FirstDate	. (StrLen(FirstDate) = 14 ? ""	: SubStr("00000000000000", 1, StrLen(FirstDate)-13))
-	diff       	:= LastDate 	. (StrLen(LastDate) = 14 ? ""	: SubStr("00000000000000", 1, StrLen(LastDate)-13))
+	FirstDate	:= FirstDate	. (StrLen(FirstDate) = 14 ? "" : SubStr("00000000000000", 1, StrLen(FirstDate)-13))
+	diff       	:= LastDate 	. (StrLen(LastDate) = 14 ? "" : SubStr("00000000000000", 1, StrLen(LastDate)-13))
 	EnvSub, diff, % FirstDate, Days
 
 return diff
@@ -134,7 +134,7 @@ GetQuartal(Datum, Trenner:="") {                                                
 	; 				der Trenner kann jedes beliebige Zeichen oder auch mehrere enthalten
 
 	If InStr(Datum, "heute")
-		Monat	:= A_MM, Jahr	:= SubStr(A_Year, 3, 2) ;die letzten zwei Zeichen
+		Monat	:= A_MM, Jahr	:= SubStr(A_Year, 3, 2) ; die letzten zwei Zeichen
 	else
 		Monat	:= StrSplit(Datum, ".").2, Jahr	:= Substr(StrSplit(Datum, ".").3, StrLen(StrSplit(Datum, ".").3)-1, 2)
 
@@ -143,7 +143,7 @@ GetQuartal(Datum, Trenner:="") {                                                
 return SubStr("0" . Ceil(Monat/3), -1) . Trenner . Jahr
 }
 
-GetQuartalEx(Datum, Format:="QQYY") {                                                          	;-- flexiblere Ein-/Ausgabeformate als bei der GetQuartal Funktion
+GetQuartalEx(Datum, Format:="QQYY") {                                                          	;-- flexiblere Ein-/Ausgabeformate als bei der GetQuartal
 
 	; Funktionsbeschreibung:
 	; Datum: 	erlaubt sind folgende Datenformate dd.MM.yyyy "13.02.2017" oder dd.M.yy "13.2.17" oder yyyyMMdd "20170213"
@@ -151,7 +151,7 @@ GetQuartalEx(Datum, Format:="QQYY") {                                           
 	; Format:	möglich ist auch QYYYY o. YYYYQ, für Ausgabereihenfolge und Anzahl der Zeichen z.B. 0118 o. 012018
 	;				oder YYYY-Q - das Zeichen zwischen den Zahlen wird der Trenner 2018-1
 
-	; Format auswerten
+	; return Format auswerten
 		RegExMatch(Format, "(?<Q1>Q+)(?<T1>[^QY]*)(?<Y1>Y+)|(?<Y2>Y+)(?<T2>[^QY]*)(?<Q2>Q+)", c)
 		LenQ 	:= StrLen(cQ1) > 0	? StrLen(cQ1)	: StrLen(cQ2)
 		LenY 	:= StrLen(cY1) > 0 	? StrLen(cY1) 	: StrLen(cY2)
@@ -160,31 +160,37 @@ GetQuartalEx(Datum, Format:="QQYY") {                                           
 
 	; Monat und Jahr trennen
 		If RegExMatch(Datum, "i)(heute|today)") {
-			Monat	:= A_MM
-			Jahr		:= LenY < 3 ? SubStr(A_YYYY, 3, 2) : A_YYYY ;die letzten zwei Zeichen
+			QMonat	:= A_MM
+			QJahr	   	:= LenY < 3 ? SubStr(A_YYYY, 3, 2) : A_YYYY ; die letzten zwei Zeichen oder das 4stellige Jahr
 		}
 		else if RegExMatch(Datum, "^\d{8}$") {           ; yyyyMMdd
-			Monat 	:= SubStr(Datum, 5, 2)
-			Jahr  	:= SubStr(Datum, (LenY < 3 ? 3 : 1), (LenY < 3 ? 2 :4))
+			QMonat 	:= SubStr(Datum, 5, 2)
+			QJahr      	:= SubStr(Datum, (LenY < 3 ? 3 : 1), (LenY < 3 ? 2 :4))
 		}
 		else {
-			 If !RegExMatch(Datum, "\d{1,2}\.*(?<Monat>\d{1,2})\.*(?<Jahr>\d{2}|\d{4})", D)
+			 If !RegExMatch(Datum, "\d{1,2}\.(?<Monat>\d{1,2})\.(?<Jahr>\d{4}|\d{2})", D)
 				throw A_ThisFunc ": Ein falsches Datumsformat wurde übergeben!`nrichtig ist: D(1-2)[.]M(1-2)[.]YYYY(2-4) oder yyyyMMdd"
-			Monat 	:= DMonat
-			Jahr  	:= LenY<3 && StrLen(DJahr)=4 ? SubStr(DJahr, 3, 2) : DJahr
+
+			QMonat := DMOnat
+			QJahr  	:= LenY<3 && StrLen(DJahr)=4 ? SubStr(DJahr, 3, 2) : DJahr
 		}
 
 	; Quartalszahl erstellen
-		QZ := SubStr("00" . Ceil(Monat/3), -1*(LenQ-1))
+		QZ := SubStr("00" Ceil(QMonat/3), -1*(LenQ-1))
 
 	; Format QQYY
 		;~ If (StrLen(cQ1) > 0)
 			;~ return QZ . cT1 . Jahr
 
-return cQ1 ? QZ . cT1 . Jahr : Jahr . cT2 . QZ
+return cQ1 ? QZ . cT1 . QJahr : QJahr . cT2 . QZ
 }
 
-HowLong(Date1,Date2) {                                                                                   	;-- berechnet die Anzahl der Jahre, Monate u. Tage zw. zwei Tagen
+Trimester(month) {                                                                                            	;-- einfachste Funktion um die Trimesterzahl eines Monats im Quartal zu erhalten
+	; zurückgegeben werden nur Werte zwischen 1 bis 3
+return Mod(month+2, 3) + 1
+}
+
+HowLong(Date1, Date2) {                                                                                  	;-- berechnet die Anzahl der Jahre, Monate u. Tage zw. zwei Tagen
 
 	; Format YYYYMMDD
 	; https://www.autohotkey.com/boards/viewtopic.php?t=54796
@@ -248,7 +254,7 @@ QuartalTage(Quartal) {                                                          
 
 		;SciTEOutput("a: " Quartal.haskey(aktuell) ? Quartal.aktuell : Quartal.haskey(TDatum) ? Quartal.TDatum : Quartal)
 
-		If !IsObject(Quartal) && (Quartal != "aktuell")	{
+		If (!IsObject(Quartal) && Quartal != "aktuell")	{
 			throw Exception(A_ThisFunc " (" A_LineFile-1 ") : Fehler beim Funktionsaufruf, der übergebene Parameter ist kein Objekt!")
 			return 0
 		} else if (Quartal = "aktuell") {
@@ -328,7 +334,7 @@ QuartalTage(Quartal) {                                                          
 return Quartal
 }
 
-Vorquartal(Datum, retFormat:="YYYYQ") {                                                         	;-- gibt einen formatierten String des Vorquartal zurück
+Vorquartal(Datum, retFormat:="YYYYQ") {                                                         	;-- gibt ein Vorquartal formatiert zurück
 
 	; Beschreibung
 	; Datum: 		Formatierung siehe Funktion QuartalTage()
@@ -479,7 +485,7 @@ GetWeekday(dateStr, format="dd.MM.yyyy", NameOfDay=true, getDay="full" ) {  	;--
 return NameOfDay ? WeekDayNr(wd, full) : wd
 }
 
-WeekOfYear(dateStr) {
+WeekOfYear(dateStr) {                                                                                        	;-- die Nummer der Woche im Jahr
 
 	timestamp	:= dateStr	. (StrLen(dateStr) = 14 ? ""	: SubStr("00000000000000", 1, StrLen(dateStr)-13))
 	FormatTime weekOfYear, % timestamp, YWeek
@@ -487,7 +493,7 @@ WeekOfYear(dateStr) {
 return SubStr(weekOfYear, 5, 2)
 }
 
-DateAddEx(vDate, vDiff, AddOrSub:="add") {
+DateAddEx(vDate, vDiff, AddOrSub:="add") {                                                      	;-- erweiterte Datumaddition
 
 	; from jeeswig - https://www.autohotkey.com/boards/viewtopic.php?t=59825
 	; vDiff expects 1 to 6 space-separated digit sequences (any non-spaces/non-digits are ignored)
@@ -514,18 +520,210 @@ DateAddEx(vDate, vDiff, AddOrSub:="add") {
 return AddOrSub = "add" ? DateAdd(vDate, oTemp.3*86400+oTemp.4*3600+oTemp.5*60+oTemp.6, "S") : DateSub(vDate, oTemp.3*86400+oTemp.4*3600+oTemp.5*60+oTemp.6, "S")
 }
 
-DateAdd(DateTime, Time, TimeUnits){
+DateAdd(DateTime, Time, TimeUnits){                                                                	;-- Zeit zu einem Datum addieren
 	EnvAdd DateTime, % Time, % TimeUnits
 return DateTime
 }
 
-DateSub(DateTime, Time, TimeUnits){
+DateSub(DateTime, Time, TimeUnits){                                                                    	;-- Zeit von einem Datum abziehen
 	EnvSub DateTime, % Time, % TimeUnits
 return DateTime
 }
 
+Feiertage(jahr,land,timestrg) {                                                                               	;-- Feiertage berechnen
+
+	/* Beschreibung
+
+		;https://autohotkey.com/board/topic/97400-feiertage-berechnen-osterformel-nach-heiner-lichtenberg/
+		;https://www.excel-coach.com/excel-und-die-feiertage/
+		;https://www.dagmar-mueller.de/wdz/html/feiertagsberechnung.html
+		;https://www.ferienwiki.de/feiertage/2019/de
+		; ==============
+		;timestrg:="yyyyMMdd"
+		;timestrg:="longdate"
+
+		;Als test alle Feiertage in Deutschland mit Benennung
+		msgbox, % feiertage("2019","dl","longdate")
+
+		;Immer-Sonntage sind nicht dabei
+		msgbox, % feiertage("2019","ni","yyyyMMdd")
+
+		return
+
+	 */
+
+	; Ostersonntag
+	ttos:="`nOstersonntag:                 "
+		X := jahr                                              ; Jahreszahl, für die Ostern berechnet werden soll
+		K  := Floor(X/100)                                      ; Säkularzahl
+		M  := 15+Floor((3*K+3)/4)-Floor((8*K+13)/25)            ; säkulare Mondschaltung
+		S  := 2-Floor((3*K+3)/4)                                ; säkulare Sonnenschaltung
+		A  := Mod(X,19)                                         ; Mondparameter
+		D  := Mod(19*A+M,30)                                    ; Keim für den ersten Vollmond im Frühling
+		R  := Floor(D/29)+(Floor(D/28)-Floor(D/29))*Floor(A/11) ; kalendarische Korrekturgröße (beseitigt die Gaußschen Ausnahmeregeln)
+		OG := 21+D-R                                            ; Ostergrenze (Märzdatum des Ostervollmonds)
+		SZ := 7-Mod(X+Floor(X/4)+S,7)                           ; Erster Sonntag im März
+		OE := 7-Mod(OG-SZ,7)                                    ; Entfernung des Ostersonntag von der Ostergrenze in Tagen
+		OS := OG+OE                                             ; Märzdatum (ggf. in den April verlängert) des Ostersonntag, (32. März = 1. April usw.)
+		Os:= x . (OS > 31 ? "04" SubStr("0"OS-31,-1) : "03" OS)
+		FormatTime, oss,% os, % timestrg
+	 ; ==============
+	 ;Buß- und Bettag                                           ;Mittwoch vor dem 23. November
+	  tbbt:="`nBuß- und Bettag:             "
+	  md := OG+OE
+	  tOs:= md > 31 ? SubStr("0"md-31,-1) :  md                   ;tag des Ostersonntags für die Berechnung des Buß und Bettags https://www.dagmar-mueller.de/wdz/html/feiertagsberechnung.html
+	  tz:= md > 31 ?  Mod((30 - tos), 7)  :  Mod((33 - tos), 7)
+	  bbt:="20191122"
+	  bbt += -tz, days
+	  FormatTime, bbt,% bbt, % timestrg
+	 ; ==============
+	 ; NeuJahr
+	  tnj:="`nNeuJahr:                           "
+	  nj:=  jahr . "0101"
+	  FormatTime, nj,% nj, % timestrg
+	 ; ==============
+	 ; Heilige Drei Könige
+	   thdk:="`nHeilige Drei Könige:        "
+	   hdk:=  jahr . "0106"
+	   FormatTime, hdk,% hdk, % timestrg
+	 ; ==============
+	 ; Internationaler Frauentag (nur Berlin)
+	   tift:="`nInternationaler Frauentag:         "
+	   ift:= jahr . "0308"
+	   FormatTime, ift,% ift, % timestrg
+	 ; ==============
+	  ; Tag der Arbeit
+	   ttda:="`nTag der Arbeit:                "
+	   tda:=  jahr . "0501"
+	   FormatTime, tda,% tda, % timestrg
+	 ; ==============
+	 ;  Augsburger Friedensfest
+		taff:="`nAugsburger Friedensfest:   "
+		aff:=  jahr . "0808"
+		FormatTime, aff,% aff, % timestrg
+	 ; ==============
+	 ; Mariä Himmelfahrt
+	   tmhf:="`nMariä Himmelfahrt:            "
+	   mhf:=  jahr . "0815"
+	   FormatTime, mhf,% mhf, % timestrg
+	 ; ==============
+	 ; Tag der Deutschen Einheit
+	   ttdde:="`nTag der Deutschen Einheit:   "
+	   tdde:=  jahr . "1003"
+	   FormatTime, tdde,% tdde, % timestrg
+	 ; ==============
+	 ; Reformationstag
+	   trt:="`nReformationstag:           "
+	   rt:=  jahr . "1031"
+	   FormatTime, rt,% rt, % timestrg
+	 ; ==============
+	 ; Allerheiligen
+	   tah:="`nAllerheiligen:                "
+	   ah:=  jahr . "1101"
+	   FormatTime, ah,% ah, % timestrg
+	 ; ==============
+	 ; 1. Weihnachtsfeiertag
+	   tw1:="`n1. Weihnachtsfeiertag:        "
+	   w1:=  jahr . "1225"
+	   FormatTime, w1,% w1, % timestrg
+	 ; ==============
+	 ; 1. Weihnachtsfeiertag
+	   tw2:="`n1. Weihnachtsfeiertag:        "
+	   w2:=  jahr . "1226"
+	   FormatTime, w2,% w2, % timestrg
+	 ; ==============
+	; Karfreitag                      Freitag vor Ostersonntag                           = OS – 2
+	tkfr:="`nKarfreitag:                        "
+	  kfr:=os
+	  kfr += -2, days
+	  FormatTime, kfr,% kfr, % timestrg
+	 ; ==============
+	;Ostermontag                    Montag nach Ostersonntag                        = OS + 1
+	  tosm:="`nOstermontag:                  "
+	  osm:=os
+	  osm += 1, days
+	  FormatTime, osm,% osm, % timestrg
+	 ; ==============
+	;Christi Himmelfahrt          39 Tage nach Ostersonntag                       = OS + 39
+	  tchf:="`nChristi Himmelfahrt:       "
+	  chf:=os
+	  chf += 39, days
+	  FormatTime, chf,% chf, % timestrg
+	 ; ==============
+	;Pfingstsonntag                49 Tage nach Ostersonntag                        = OS + 49
+	  tpfs:="`nPfingstsonntag:             "
+	  pfs:=os
+	  pfs += 49, days
+	  FormatTime, pfs,% pfs, % timestrg
+	 ; ==============
+	;Pfingstmontag                 50 Tage nach Ostersonntag                        = OS + 50
+	  tpfm:="`nPfingstmontag:              "
+	  pfm:=os
+	  pfm += 50, days
+	  FormatTime, pfm,% pfm, % timestrg
+	 ; ==============
+	;Fronleichnam                   60 Tage nach Ostersonntag                       = OS + 60
+	  tfl:="`nFronleichnam:               "
+	  fl:=os
+	  fl += 60, days
+	  FormatTime, fl,% fl, % timestrg
+	 ; ==============
+
+	 ; alle (dl)
+	  ;ft:= nj "," hdk "," ift "," kfr "," os  "," osm "," tda "," chf "," pfs  "," pfm "," fl "," aff "," mhf "," tdde "," rt "," ah "," bbt ","  w1 "," w2
+	   ;ft:= tnj nj "," thdk hdk "," tift ift "," tkfr kfr "," ttos oss  "," tosm osm "," ttda tda "," tchf chf "," tpfs pfs  "," tpfm pfm "," tfl fl "," taff aff "," tmhf mhf "," ttdde tdde "," trt rt "," tah ah "," tbbt bbt ","  tw1 w1 "," tw2 w2
+	   ;return ft
+
+	if (land = "dl") ;test alle
+	  ft:= tnj nj "," thdk hdk "," tift ift "," tkfr kfr "," ttos oss  "," tosm osm "," ttda tda "," tchf chf "," tpfs pfs  "," tpfm pfm "," tfl fl "," taff aff "," tmhf mhf "," ttdde tdde "," trt rt "," tah ah "," tbbt bbt ","  tw1 w1 "," tw2 w2
+	else if (land = "bw") ;Feiertage Baden-Württemberg
+	  ft:= nj "," hdk "," kfr "," osm "," tda "," chf "," pfm "," fl  "," tdde  "," ah  ","  w1 "," w2
+	else if  (land = "by") ;Feiertage Bayern alle
+	  ft:= nj "," hdk "," kfr "," osm "," tda "," chf "," pfm "," fl "," aff "," mhf "," tdde "," rt "," ah "," bbt ","  w1 "," w2
+	else if  (land = "bya") ;Feiertage Bayern alle
+	  ft:= nj "," hdk "," kfr "," osm "," tda "," chf "," pfm "," fl "," aff "," mhf "," tdde "," rt "," ah "," bbt ","  w1 "," w2
+	else if  (land = "byk") ;Feiertage Bayern kath.
+	  ft:= nj "," hdk "," kfr "," osm "," tda "," chf "," pfm "," fl "," mhf "," tdde "," rt "," ah "," bbt ","  w1 "," w2
+	else if  (land = "byp") ;Feiertage Bayern prot.
+	  ft:= nj "," hdk "," kfr "," osm "," tda "," chf "," pfm "," fl  "," tdde "," rt "," ah "," bbt ","  w1 "," w2
+	else if  (land = "be") ;Feiertage Berlin
+	  ft:= nj "," ift "," kfr "," osm "," tda "," chf "," pfm "," tdde ","  w1 "," w2
+	else if  (land = "bb") ;Feiertage Brandenburg
+	  ft:= nj "," kfr "," osm "," tda "," chf "," pfm "," tdde "," rt ","  w1 "," w2
+	else if  (land = "hb") ;Feiertage Bremen
+	  ft:= nj "," kfr "," osm "," tda "," chf "," pfm "," tdde "," rt ","  w1 "," w2
+	else if  (land = "hh") ;Feiertage Hamburg
+	  ft:= nj "," kfr "," osm "," tda "," chf "," pfm "," tdde "," rt ","  w1 "," w2
+	else if  (land = "he") ;Feiertage Hessen
+	  ft:= nj "," kfr "," osm "," tda "," chf "," pfm "," fl "," tdde ","  w1 "," w2
+	else if  (land = "mv") ;Feiertage Mecklenburg-Vorpommern
+	  ft:= nj "," kfr "," osm "," tda "," chf "," pfm "," tdde "," rt ","  w1 "," w2
+	else if  (land = "ni") ;Feiertage Niedersachsen
+	  ft:= nj "," kfr "," osm "," tda "," chf "," pfm "," tdde "," rt ","  w1 "," w2
+	else if  (land = "nw") ;Feiertage Nordrhein-Westfalen
+	   ft:= nj "," kfr "," osm "," tda "," chf "," pfm "," fl "," tdde "," ah ","  w1 "," w2
+	else if  (land = "rp") ;Feiertage Rheinland-Pfalz
+	  ft:= nj "," kfr "," osm "," tda "," chf "," pfm "," fl "," tdde "," ah ","  w1 "," w2
+	else if  (land = "sl") ;Feiertage Saarland
+	  ft:= nj "," kfr "," osm "," tda "," chf "," pfm "," fl "," mhf "," tdde "," ah ","  w1 "," w2
+	else if  (land = "sn") ;Feiertage Sachsen
+	  ft:= nj "," hdk "," kfr "," osm "," tda "," chf "," pfm "," tdde "," rt ","  w1 "," w2
+	else if  (land = "st") ;Feiertage Sachsen-Anhalt
+	  ft:= nj "," hdk "," kfr "," osm "," tda "," chf "," pfm "," tdde "," rt ","  w1 "," w2
+	else if  (land = "sh") ;Feiertage Schleswig-Holstein
+	  ft:= nj "," kfr "," osm "," tda "," chf "," pfm "," tdde "," rt ","  w1 "," w2
+	else if  (land = "th") ;Feiertage Thüringen
+	  ft:= nj "," kfr "," osm "," tda "," chf "," pfm "," tdde "," rt ","  w1 "," w2
+
+ return ft
+}
+
 
 ; Zeit berechnen
+Clock() {                                                                                                        		;-- genaue Zeit in Millisekunden
+return DllCall("msvcrt.dll\clock")
+}
+
 FormatSeconds(timestr, formatstring:="hh:mm:ss")  {                                          	;-- Sekunden in Stunden:Minuten:Sekunden umrechnen
     atime := A_YYYY A_MM A_DD "000000"
     atime += timestr, seconds
@@ -615,7 +813,7 @@ FormatDate(timestr, timeformat:="DMY", returnformat:="dd.MM.yyyy") {
 								, 	"M"	: "(?<M>\d{1,2})"
 								, 	"Y"	: "(?<Y>\d{1,4})"}
 
-	; timeformat korrigieren
+	; "timeformat" korrigieren
 		timeformat := RegExReplace(timeformat, "[D]"	, "D")
 		timeformat := RegExReplace(timeformat, "[M]"	, "M")
 		timeformat := RegExReplace(timeformat, "[Y]" 	, "Y")
@@ -628,7 +826,7 @@ FormatDate(timestr, timeformat:="DMY", returnformat:="dd.MM.yyyy") {
 
 		rxMatch := rxMDate[TF.1] ".*?" rxMDate[TF.2] ".*?" rxMDate[TF.3]
 
-	; fehlerhaften timestr verwerfen
+	; fehlerhaften "timestr" verwerfen
 		If !RegExMatch(timestr, rxMatch, T) || (StrLen(TY) = 1) || (StrLen(TY) = 3)
 			return  ; "wrong timeformat"
 

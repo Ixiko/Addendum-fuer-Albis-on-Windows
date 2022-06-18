@@ -36,7 +36,7 @@
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
 ;       Addendum_DBASE begonnen am:          	12.11.2020
-;       Addendum_DBASE letzte Änderung am: 	09.12.2021
+;       Addendum_DBASE letzte Änderung am: 	10.03.2022
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
@@ -88,13 +88,15 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 					Case "PATIENT":
 						this.headerrecordgap	:= 0
+
+					Case "BEFGONR":
+						this.headerrecordgap	:= 0
 				}
 
 			; ――――――――――――――――――――――――――――――――――――――――――――――――
 			; closes file access on script exit to prevent file damage
 			; ――――――――――――――――――――――――――――――――――――――――――――――――
-				OnExit(ObjBindMethod(this, "_Exit"))
-
+				;OnExit(this.OnExit := ObjBindMethod(this, "_Exit"))
 			;}
 
 			; ------------------------------------------------------------------------------------------------------------------------------------------
@@ -281,13 +283,8 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 			; ------------------------------------------------------------------------------------------------------------------------------------------
 			; calculations of array size and filepointer position of first record in this database
 			; ----------------------------------------------------------------------------------------------------------------------------------------;{
-				global recordbuf
-
 				this.maxBytes	:= this.lendataset * this.records > this.maxCapacity ? this.maxCapacity : this.lendataset * this.records
 				this.recordsStart	:= this.headerlen + this.headerrecordgap
-
-				VarSetCapacity(this.recordbuf, this.lendataset, 0x20) 	; recordbuf
-				VarSetCapacity(recordbuf, this.lendataset, 0x20) 	; recordbuf
 			;}
 
 		}
@@ -297,9 +294,11 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 	  ; -------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		__Delete() {
 
-			SciTEOutput("Object: " this.baseName " was deleted.")
-			If IsObject(this.dbf)
-				this.CloseDBF()
+			If IsObject(this.dbf) {
+				this.dbf.Close()
+				this.dbf := ""
+			}
+			;SciTEOutput("access to database file finished: " this.baseName ".dbf")
 
 		}
 
@@ -321,7 +320,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 			this.dbf.Seek(this.recordsStart, 0)
 
-		return this.dbf.Tell()
+		return (this.filepos := this.dbf.Tell())
 		}
 
 	  ; -------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -370,9 +369,9 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 		*/
 
 		; Initializing vars, examining options ;{
-			static recordbuf, rxStr
+			static rxStr   ; recordbuf
 			VarSetCapacity(recordbuf	, this.lendataset, 0x20)
-			VarSetCapacity(matches	, this.maxBytes)
+			;~ VarSetCapacity(matches	, this.maxBytes)
 			matches             	:= Object()                                 	; collects the findings
 			this.flagged       	:= 0
 			this.hits              	:= 0
@@ -466,6 +465,11 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 		; for debugging
 			If (RegExMatch(this.debug, "i)\bRxStr\b") || opt.debug&0x1)
 				SciTEOutput(A_ThisFunc " - RegExStr: " rxStr)
+			else if (opt.debug&0x2) {
+				fnName := opt.OutputDebug
+				If IsFunc(fnName)
+					%fnName%(rxStr)
+			}
 
 		; seek if parameter is greater than zero
 			If (startrecord > 0) {
@@ -482,7 +486,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 			; debugging and callback function to show progress
 				If (Mod(setNR := A_Index, this.ShowAt) = 0) {
-					If (this.debug = 1 || opt.debug&0x2)
+					If (this.debug = 1 || opt.debug&0x1)
 						ToolTip, % "Search rx: " rxStr "`n" SubStr("00000000" A_Index, this.slen) "/" SubStr("00000000" this.records, this.slen)
 					If (StrLen(callbackFunc) > 0)
 						%callbackFunc%(setNR, this.records, this.slen, matches.MaxIndex())
@@ -536,7 +540,6 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 		; file access is automatically terminated if the function established this independently
 			If this.nofileaccess {
-				VarSetCapacity(recordbuf, 0)
 				this.nofileaccess := false
 				this.CloseDBF()
 			}
@@ -553,6 +556,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 			If (StrLen(callbackFunc) > 0)
 				%callbackFunc%(setNR, this.records, this.slen, matches.MaxIndex())
 
+			VarSetCapacity(recordbuf, 0)
 
 		return matches
 		}
@@ -589,7 +593,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 					throw "Parameter: pattern must be an object"
 
 			; initialize some vars
-				VarSetCapacity(matches	, this.maxBytes)
+				;~ VarSetCapacity(matches	, this.maxBytes)
 				VarSetCapacity(recordbuf	, this.lendataset*100, 0x20)
 
 				this.hits 	:= 0
@@ -638,6 +642,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 					; reads one dataset from database
 						bytes	:= this.dbf.RawRead(recordbuf, this.lendataset)
 						set 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
+						obj 	:= this.GetSubData(set, this.retSubs)
 
 					; debug some actions
 						If (StrLen(callbackFunc) > 0) && (Mod(A_Index, this.ShowAt) = 0)
@@ -649,7 +654,8 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 						pLabelHit := 0
 						For pLabel, pCondition in pattern {
 
-							val := Trim(SubStr(set, this.dbfields[pLabel].start, this.dbfields[pLabel].len))
+							;~ val := Trim(SubStr(set, this.dbfields[pLabel].start, this.dbfields[pLabel].len))
+							val := obj[pLabel]
 							If RegExMatch(pLabel, "[A-Z]+(DATUM|DATE)") {
 
 								cdhits := 0
@@ -701,10 +707,11 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 			; file access is automatically terminated if the function established this independently
 				If this.nofileaccess {
-					VarSetCapacity(recordbuf, 0)
 					this.nofileaccess := false
 					this.pos := this.CloseDBF()
 				}
+
+			VarSetCapacity(recordbuf, 0)
 
 		return matches
 		}
@@ -718,7 +725,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 			; comparison is possible for dates with ranges, for everything else comparison will use Instr() operation. One date can be compared with another
 			; by only showing the dates that are greater, less or equal. This also works with pure numerical values.
 
-				static recordbuf, recordpos
+				static recordpos  ; recordbuf
 
 				If !IsObject(pattern)
 					throw "Parameter: pattern must be an object"
@@ -727,7 +734,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 				If !RegExMatch(options, "i)\bnext\b") {
 
 					; initialize some vars
-						VarSetCapacity(matches 	, this.maxBytes)
+						;~ VarSetCapacity(matches 	, this.maxBytes)
 
 					; establish read access if not already done
 						If !IsObject(this.dbf) {
@@ -803,6 +810,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 				}
 
+			VarSetCapacity(recordbuf, 0)
 
 		return matches
 		}
@@ -853,10 +861,11 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 			; file access is automatically terminated if the function established this independently
 				If this.nofileaccess {
-					VarSetCapacity(recordbuf, 0)
 					this.nofileaccess := false
 					this.pos := this.CloseDBF()
 				}
+
+				VarSetCapacity(recordbuf, 0)
 
 				If (this.debug > 0)
 					ToolTip
@@ -871,7 +880,16 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 			; you can set seekpos by
 
-				global recordbuf
+			; buffer will be static, to release memory call this function without arguments
+				static recordbuf, init
+				If !init {
+					VarSetCapacity(recordbuf, this.lendataset, 0x20)
+					init := true
+				}
+				If !IsObject(outfields) {
+					VarSetCapacity(recordbuf, 0)
+					return
+				}
 
 			; establish read access if not already done
 				If !IsObject(this.dbf) {
@@ -903,7 +921,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 			; build key:value object
 				obj              	:= Object()
 				obj.removed	:= SubStr(readset, 1, 1) = "*" ? true : false
-				obj.recordNr	:= this.recordnr
+				obj.recordnr	:= this.recordnr
 				For index, fLabel in outfields
 					obj[flabel] := Trim(SubStr(set, this.dbfields[fLabel].start, this.dbfields[fLabel].len))
 
@@ -917,7 +935,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 			; you can set seekpos by
 
-				global recordbuf
+				VarSetCapacity(recordbuf, this.lendataset, 0x20)
 
 			; establish read access if not already done
 				If !IsObject(this.dbf) {
@@ -963,6 +981,9 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 				For index, fLabel in outfields
 					obj[flabel] := Trim(SubStr(set, this.dbfields[fLabel].start, this.dbfields[fLabel].len))
 
+			; empty recordbuf
+				VarSetCapacity(recordbuf, 0)
+
 		return obj
 		}
 
@@ -976,12 +997,12 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 			;	* 	A block is a consecutive number of records specified by the 'NrOfSets' parameter.
 			; 		'BlockNr' parameter specifies which block within the database is to be read.
 
-				static recordbuf
+				;~ static recordbuf
+				VarSetCapacity(recordbuf, this.lendataset, 0x20)
 
 			; prepares some variables
 				If !IsObject(this.data) || IsObject(getfields)  {
 
-						VarSetCapacity(recordbuf, this.lendataset, 0x20)
 						this.getfields	:= getfields
 
 					; creates an array with data for substring function retreave only fields that should be returned
@@ -1035,10 +1056,12 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 			; file access is automatically terminated if the function established this independently
 				If this.nofileaccess {
-					VarSetCapacity(recordbuf, 0)
 					this.nofileaccess := false
 					this.CloseDBF()
 				}
+
+			; empty recordbuf
+				VarSetCapacity(recordbuf, 0)
 
 		return this.matches
 		}
@@ -1053,7 +1076,11 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 			; creates or updates an index file with fileseek positions at the first occurrence of a certain string (date, string, quarter)
 			; the function currently only indexes by quarters
 			; if an index file exists, it only updates the index from the last entry
-			; IndexField:		The database field name which is indexed. At the moment only fields with date strings can be processed.
+			; IndexField:		The database field name which is indexed. At the moment only fields with date or quarter strings can be processed.
+			;
+			; return parameter: 	is an array containing two database file positions,
+			;		                        the first is the nr of the recordset und the second is the filepointer position (recordnr-1, filepointer position)
+			;                               the key name is the jumplist containing the value of the indexfields
 
 				;IndexMode := "quarter"
 
@@ -1068,7 +1095,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 				If !(FileExist(IndexFilePath) || ReIndex) {
 					ReIndex := true, startrecord := 0, startfilepos := 0, iFile := Object()
 				} else {
-					iFile := JSON.Load(FileOpen(indexFilePath, "r", "UTF-8").Read())
+					iFile := cJSON.Load(FileOpen(indexFilePath, "r", "UTF-8").Read())
 					For quarter, StartRecord in iFile
 						continue
 					startfilepos := this._GetFilePosFromRecord(StartRecord)
@@ -1082,7 +1109,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 			; indexing is only possible for one condition
 				FStart	:= this.dbfields[IndexField].start
-				FStart 	:= this.baseName = "BEFGONR" ? FStart+1 : FStart
+				FStart 	:= RegExMatch(this.baseName, "(BEFGONR|KSCHEIN|LABBUCH)") ? FStart+1 : FStart      ; das Lösch byte befindet sich am Anfang jedes Datensatzes
 				FLen 	:= this.dbfields[IndexField].len
 				KeyN	:= "QNow"
 				If (!FStart || !FLen)
@@ -1123,7 +1150,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 							}
 						}
 
-						If (indexKey = 0 || StrLen(indexKey) = 0 || indexKey = indexKey_old)
+						If (indexKey = 0 || StrLen(indexKey) = 0 || indexKey_old = indexKey)
 							continue
 						indexKey_old := indexKey
 
@@ -1132,18 +1159,18 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 							iFile[indexKey] := [this._GetRecordFromFilepos(this.dbf.Tell())-1 , this.dbf.Tell()] 	   ; recordnr-1, filepointer position
 							If RegExMatch(this.debug, "^(1|4)$") {
 								thispos := SubStr("00000000" A_Index + StartRecord, this.slen)
-								SciTEOutput(" #" set "#")
-								SciTEOutput(KeyN	": " indexKey ", Pos: " iFile[indexKey].1 "/" maxRecs)
+								SciTEOutput(KeyN	": " indexKey ", Pos: " iFile[indexKey].1 "/" maxRecs " #" SubStr(set, 1, 20))
 							}
 						}
 				}
 
 			; file access is automatically terminated if the function established this independently
 				If this.nofileaccess {
-					VarSetCapacity(recordbuf, 0)
 					this.nofileaccess := false
 					this.CloseDBF()
 				}
+
+				VarSetCapacity(recordbuf, 0)
 
 			; save index as json string
 				JSONData.Save(indexFilePath, iFile, true,, 1, "UTF-8")
@@ -1193,10 +1220,10 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 			; this function is mostly used to reduce the size of data returned
 
 			strobj := Object()
-			strobj["removed"]	:= InStr(SubStr(set, -1), "*") || InStr(SubStr(set, 1, 1), "*" ) ? true : false         	; Dataset ist removed?
+			strobj["removed"]	:= InStr(SubStr(DataSet, -1), "*") || InStr(SubStr(DataSet, 1, 1), "*" ) ? true : false         	; Dataset ist removed?
 			strobj["recordnr"]	:= Floor((this.dbf.Tell() - this.recordsStart) / this.lendataset)                       	; saves the number of record
 			For index, substring in SubstringData
-				strobj[substring.label] := Trim(SubStr(DataSet, substring.start, substring.len))
+				strobj[substring.label] := Trim(SubStr(DataSet, substring.start + (removed ? 1 : 0), substring.len))
 
 		return strobj
 		}
@@ -1229,9 +1256,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 		; 1 :	from first record
     	; 2 :	from current record
 
-		static recordbuf
-		If (VarSetCapacity(recordbuf) = 0)
-			VarSetCapacity(recordbuf, this.lendataset, 0x20)
+		VarSetCapacity(recordbuf, this.lendataset, 0x20)
 
 		If (nr > 0)
 			this.pos := this._SeekToRecord(nr, origin)
@@ -1285,8 +1310,12 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 	; OnExit function to ensure that file access to database is closed on exit
 	_Exit(ExitReason, ExitCode) {
 
-		If IsObject(this.dbf)
+		ObjRelease(this.OnExit)
+
+		If IsObject(this.dbf) {
 			this.dbf.Close()
+			this.dbf := ""
+		}
 
 	}
 

@@ -13,7 +13,7 @@
 ;       Abhängigkeiten: 	siehe includes
 ;       --------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Laborabruf_iBWC.ahk last change:    	10.12.2021
+;       Laborabruf_iBWC.ahk last change:    	18.02.2022
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; --------------------------------------------------------------------------------------------------------------------------------
@@ -27,7 +27,7 @@
 	#KeyHistory						, Off
 
 	SetBatchLines					, -1
-	ListLines    						, On
+	ListLines    						, Off
 	FileEncoding                 	, UTF-8
   ;}
 
@@ -77,9 +77,9 @@
 		adm.AlbisPath   	:= AlbisPath
 		adm.AlbisDBPath 	:= AlbisPath "\db"
 
-	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	; Backup-Ort für empfangene Labordateien auslesen. Bei Bedarf werden Verzeichnisse angelegt
-	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
 		adm.DBPath := IniReadExt("Addendum", "AddendumDBPath")           	; Datenbankverzeichnis
 		If InStr(adm.DBPath, "ERROR") {
 			MsgBox, 1024, % adm.scriptname, % "In der Addendum.ini ist kein Pfad für`n"
@@ -100,10 +100,11 @@
 		; neues Tagesdatum in die Logdatei schreiben
 		FileAppend	, % "---------------------------------------- " A_DD "." A_MM "." A_YYYY "," A_Hour ":" A_Min " ----------------------------------------`n"
 							, % adm.LogFilePath := adm.DBPath "\Labordaten\LaborabrufLog.txt"
+	;}
 
-	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	; Skripteinstellungen und Laborabrufeinstellungen
-	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
 
 		; externes Programm das für den Abruf ausgeführt werden muss
 			adm.Labor.ExecuteFile           	:= IniReadExt("LaborAbruf"	, "Laborabruf_Extern"                 	, ""                	)
@@ -216,6 +217,9 @@
 
 	;}
 
+
+	;}
+
 ; --------------------------------------------------------------------------------------------------------------------------------
 ; Laborabruf - Automatisierung (infoBoxWebClient und Labordatenimportieren)
 ; --------------------------------------------------------------------------------------------------------------------------------;{
@@ -231,10 +235,11 @@
 	; Addendum.ahk automatisiert den Laborabruf zum Teil und würde wenn die Funktionen
 	; nicht angehalten werden in fehlerhafter RPA-Ausführung enden
 	; ―――――――――――――――――――――――――――――――――――――――――――
-		If !(writeStr := LaborAbrufToggle("off")) {
-			MsgBox, 1024, % adm.scriptname, % (amsg := writeStr), 6
-			FuncExitApp()
-		}
+	; ## Laborabruf Fenster wird von Addendum erkannt. Solange also der automatisierte Abruf läuft, sind die automatischen Funktionen von Addendum ausgeschaltet.
+		;~ If !(writeStr := LaborAbrufToggle("off")) {
+			;~ MsgBox, 1024, % adm.scriptname, % (amsg := writeStr), 6
+			;~ FuncExitApp()
+		;~ }
 
 	; ―――――――――――――――――――――――――――――――――――――――――――
 	; prüfe evtl. noch geöffnete Laborabruf Dialogfenster (z.B. wurden vom Anwender nicht geschlossen)
@@ -282,23 +287,27 @@
 		If adm.hLabbuch {
 
 			; AutoLaborAbruf wiederherstellen
-				If !adm.Labor.AbrufStatus && adm.Labor.AutoAbruf
-					LaborAbrufToggle("on")
+				;~ If !adm.Labor.AbrufStatus && adm.Labor.AutoAbruf
+					;~ LaborAbrufToggle("on")
 
 			; Information ins Logfile schreiben falls der Labordatenimport ausgestellt ist
 			; ansonsten Laborblattübertragung (LaborImport - nutzt ein anderes Logfile) starten
-				amsg .= datestamp(2) "|" adm.scriptname "`t- warte auf Dialog ' Laborbuch übertragen '`n"
-				if (adm.Labor.AutoImport && adm.Labor.AbrufStatus && !adm.Labor.AutoAbruf)
-					writeStr :=  "|Laborabruf            `t- Labordatenimport nicht möglich! AutoAbruf ist in Addendum ausgeschaltet!`n"
-				else {
-					result	:= AlbisLaborAlleUebertragen()
-					writeStr := "|Laborabruf            `t- Laborbuch 'alle übertragen' ausgeführt [" result "]`n"
-				}
+				amsg 	.= datestamp(2) "|" adm.scriptname "`t- warte auf Dialog ' Laborbuch übertragen '`n"
+				result	:= AlbisLaborAlleUebertragen()
+				writeStr := "Laborabruf            `t- Laborbuch 'alle übertragen' ausgeführt [" result "]`n"
+				;~ if (adm.Labor.AutoImport && adm.Labor.AbrufStatus && !adm.Labor.AutoAbruf)
+					;~ writeStr :=  "Laborabruf            `t- Labordatenimport nicht möglich! AutoAbruf ist in Addendum ausgeschaltet!`n"
+				;~ else {
+				;~ }
 
 		} else
-			writeStr := "|Laborabruf            `t- Aufruf des Laborbuch fehlgeschlagen. Labordatenimport musste abgebrochen werden.`n"
+			writeStr := "Laborabruf            `t- Aufruf des Laborbuch fehlgeschlagen. Labordatenimport musste abgebrochen werden.`n"
 
 		FileAppend, % (amsg .= datestamp(2) "|" writeStr), % adm.LogFilePath
+
+	; ―――――――――――――――――――――――――――――――――――――――――――
+	; Laborjournal starten, wenn vorhanden und aktiviert
+	; ―――――――――――――――――――――――――――――――――――――――――――
 
 	; ―――――――――――――――――――――――――――――――――――――――――――
 	; Automatisierungsfunktionen im Hauptskript wieder anschalten
@@ -470,7 +479,7 @@ LaborAbrufGui(Title:="")                                	{
 		global
 
 	; IPC Gui erstellen
-		GuiTitle  	:= (StrLen(Title) = 0 ? adm.scriptname : Title) " - IPC Gui"
+		GuiTitle  	:= (StrLen(Title) = 0 ? RegExReplace(adm.scriptname, "i)Laborabruf[\W]*") : Title) " elektronischer Labordatenabruf"
 		AlbisWinID:= WinExist("ahk_class OptoAppClass")
 		AlbisPos	:= GetWindowSpot(AlbisWinID)
 		LCw      	:= 850, LCh := 300
@@ -598,9 +607,9 @@ FuncExitApp(ExitReason:="failure", wTime:=20)	{           ; wTime = Wartezeit bi
 
 		global func_Autoupdate, LC, hLCPrg, hLabCall, blockSendWMCOPYDATA
 
-		If (ExitReason = "failure")
-			LaborAbrufToggle("restore destroy")
-		else If (ExitReason = "skipped" && !blockSendWMCOPYDATA) {
+		;~ If (ExitReason = "failure")
+			;~ LaborAbrufToggle("restore destroy")
+		If (ExitReason = "skipped" && !blockSendWMCOPYDATA) {
 
 			eL := Send_WM_COPYDATA("AutoLaborAbruf|restart|" hLabCall, adm.ID)
 			ThreadControl := true

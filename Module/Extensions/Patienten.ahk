@@ -8,7 +8,7 @@
 ;		Abhängigkeiten:		siehe includes
 ;
 ;      	begonnen:       	    	03.05.2021
-; 		letzte Änderung:	 	18.12.2021
+; 		letzte Änderung:	 	31.05.2022
 ;
 ;	  	Addendum für Albis on Windows by Ixiko started in September 2017
 ;      	- this file runs under Lexiko's GNU Licence
@@ -20,12 +20,15 @@
 	#Persistent
 	#KeyHistory, Off
 
-	SetBatchLines    	, -1
-	ListLines             	, Off
-	SetWinDelay        	, -1
-	SetControlDelay   	, -1
-	SetKeyDelay			, 20
-	SendMode			, Input
+	SetBatchLines            	, -1
+	ListLines                    	, Off
+	SetWinDelay               	, -1
+	SetControlDelay          	, -1
+	SetKeyDelay		        	, 20
+	SendMode	    	    	, Input
+	SetTitleMatchMode    	, 2
+	SetTitleMatchMode     	, Fast
+	DetectHiddenWindows  	, On
 
 	global PatDB            	; Patientendatenbank
 	global Addendum
@@ -50,7 +53,7 @@
 	Addendum.Ini              	:= AddendumDir "\Addendum.ini"
 	Addendum.DBPath      	:= AddendumDir "\logs'n'data\_DB"
 	Addendum.DBasePath  	:= AddendumDir "\logs'n'data\_DB\DBase"
-	Addendum.AlbisDBPath	:= AlbisPath "\DB"
+	Addendum.AlbisDBPath	:= AlbisPath "\db"
 	Addendum.compname	:= StrReplace(A_ComputerName, "-")                                           	; der Name des Computer auf dem das Skript läuft
 	Addendum.propsPath 	:= A_ScriptDir "\Coronaimpfdokumentation.json"
 	Addendum.Default     	:= Object()
@@ -78,6 +81,8 @@
 	Patienten()
 
 return
+
+; Reload Hotkey
 ^!a::Reload
 
 ; - - -  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -173,9 +178,11 @@ Patienten()                                                                     
 	; Focus auf den Nachnamen
 		GuiControl, PAT: Focus, PATSF4
 
-		Hotkey, ^LButton, Namensenden
-		OnClipboardChange("CheckTelNumber")
+	; ahk_class AutoHotkeyGUI
+		Hotkey, IfWinActive, Patienten ahk_class AutoHotkeyGUI
+		Hotkey, LControl & LButton, Namensenden
 
+		OnClipboardChange("CheckTelNumber")
 
 return
 
@@ -208,7 +215,6 @@ SUCHFELD:   	        	;{
 	; Listview löschen, neuzeichen anhalten
 		GUIControl, PAT: -Redraw, PATLV
 		LV_Delete()
-
 
 	; Daten suchen
 	; benutzt die Daten aus den Feldern Telefon|Fax als Suchmuster im Suchstring (erspart das Untersuchern auf Vorwahlnummern)
@@ -291,9 +297,11 @@ SUCHFELD:   	        	;{
 	}
 	else {
 		PatVorname := PatNachname := PatGeb := PatNR := ""
-		MouseGetPos, mx, my
-		ToolTip, % "Telefonnummer im Clipboard: ist unbekannt", % mx, % my-25, 2
-		SetTimer, Toff, -5000
+		If Telsearch {
+			MouseGetPos, mx, my
+			ToolTip, % "Telefonnummer im Clipboard: ist unbekannt", % mx, % my-25, 2
+			SetTimer, Toff, -5000
+		}
 	}
 
 	Telsearch := false
@@ -310,6 +318,19 @@ LVHandler:                	;{
 return ;}
 
 Namensenden:           	;{
+
+	MouseGetPos,,, hMouseOverWin
+	mouseWinTitle 	:= WinGetTitle(hMouseOverWin)
+	mouseWinClass	:= WinGetClass(hMouseOverWin)
+
+	If (mouseWinTitle <> "Patienten" &&  mouseWinClass <> "AutoHotkeyGUI") {
+		SendInput, {LControl Down}
+		SendInput, {LButton Down}
+		SendInput, {LButton Up}
+		SendInput, {LControl Up}
+		SendInput, {LControl Up}
+		return
+	}
 
 	If !PatVorname || !PatNachname
 		return

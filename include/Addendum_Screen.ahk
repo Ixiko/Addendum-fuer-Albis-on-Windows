@@ -188,7 +188,7 @@ MonitorScreenShot(MonNr, ScriptName:="", Path:="") {              	;-- erstellt 
 }
 
 TaskbarHeight(MonNr:=1) {                                                       	;-- Höhe der Taskbar zurück (Monitorspez. ist noch nicht programmiert)
-	hMSTaskList := WinExist("ahk_class MSTaskListWClass1")
+	hMSTaskList := WinExist("ahk_class Shell_TrayWnd")
 	TaskList := GetWindowSpot(hMSTaskList)
 return TaskList.H
 }

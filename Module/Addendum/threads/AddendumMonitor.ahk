@@ -1,9 +1,9 @@
 ﻿;-----------------------------------------------------------------------------------------------------------------------------------
 ;------------------------------------------------ ADDENDUM MONITOR ----------------------------------------------------
 ;-----------------------------------------------------------------------------------------------------------------------------------
-													Version:= "1.22" , vom:= "15.12.2021"
+													Version:= "1.26" , vom:= "11.05.2022"
 ;------------------------------------------------------ Runtime-Skript ----------------------------------------------------------
-;------------------- startet Addendum bei einem Absturz oder (un-))absichtlichen Schliessen neu --------------------
+;-------------------- startet Addendum bei einem Absturz oder (un-)absichtlichen Beenden neu ----------------------
 ;-------------------------------------------- Addendum für AlbisOnWindows -----------------------------------------------
 ;-----------------------------------------------------------------------------------------------------------------------------------
 
@@ -24,6 +24,7 @@ GNU Lizenz can be found in Docs directory  - 2017
 	#Persistent
 	#SingleInstance			, Force
 	#MaxThreadsPerHotkey , 2
+	#KeyHistory              	, 0
 	SetTitleMatchMode    	, 2        	; Fast is default
 	SetTitleMatchMode    	, Fast    	; Fast is default
 	DetectHiddenWindows	, On      	; Off is default
@@ -39,135 +40,129 @@ GNU Lizenz can be found in Docs directory  - 2017
 
 ;}
 
-;{ Variablen
+  ; Variablen   ;{
 
-		global Restartscript
-		global ObservationRuns	:= false
-		global DoRestart          	:= true
-		global q                       	:= Chr(0x22)
-		global winmgmts       	:= ComObjGet("winmgmts:") 	; Get WMI service object.
-		global Addendum      	:= Object()
+	global RestartProcess
+	global ObservationRuns	:= false
+	global DoRestart          	:= true
+	global q                       	:= Chr(0x22)
+	;~ global winmgmts
+	;~ global CreateSink
+	;~ global DeleteSink
+	global Addendum      	:= Object()
+	global overwatch         	:= Array()
+	global sinks
 
-	; Addendum object ;{
-		RegExMatch(A_ScriptDir, ".*(?=\\Module)", AddendumDir)
-		Addendum.compname    	:= StrReplace(A_ComputerName, "-")
-		Addendum.ScriptName    	:= "Addendum.ahk"
-		Addendum.Dir               	:= AddendumDir
-		Addendum.Ini                	:= AddendumDir 	"\Addendum.ini"
-		Addendum.ScriptPath      	:= AddendumDir 	"\Module\Addendum\" Addendum.ScriptName
+  ; Addendum object
+	RegExMatch(A_ScriptDir, ".*(?=\\Module)", AddendumDir)
+	Addendum.compname    	:= StrReplace(A_ComputerName, "-")
+	Addendum.ScriptName    	:= "Addendum.ahk"
+	Addendum.Dir               	:= AddendumDir
+	Addendum.Ini                	:= AddendumDir 	"\Addendum.ini"
+	Addendum.ScriptPath      	:= AddendumDir 	"\Module\Addendum\" Addendum.ScriptName
 
-		If FileExist(A_AppData "\AutoHotkeyH\AutoHotkeyH_U64.exe")
-			Addendum.AHKH_exe	:= A_AppData "\AutoHotkeyH\AutoHotkeyH_U64.exe"
-		else if FileExist(AddendumDir "\include\AHK_H\x64w\AutoHotkeyH_U64.exe")
-			Addendum.AHKH_exe	:= Addendum.Dir "\include\AHK_H\x64w\AutoHotkeyH_U64.exe"
-		else
-			throw A_ScriptName ": AutohotkeyH_U64.exe ist nicht vorhanden.`nDas Skript kann nicht ausgeführt werden!"
-	;}
+	If FileExist(A_AppData "\AutoHotkeyH\AutoHotkeyH_U64.exe")
+		Addendum.AHKH_exe	:= A_AppData "\AutoHotkeyH\AutoHotkeyH_U64.exe"
+	else if FileExist(AddendumDir "\include\AHK_H\x64w\AutoHotkeyH_U64.exe")
+		Addendum.AHKH_exe	:= Addendum.Dir "\include\AHK_H\x64w\AutoHotkeyH_U64.exe"
+	else
+		throw A_ScriptName ": AutohotkeyH_U64.exe ist nicht vorhanden.`nDas Skript kann nicht ausgeführt werden!"
+  ;}
 
-	; TrayMenu ;{
-		Menu, Tray, NoStandard
-		If (StrLen(hIcon := AddendumMonitor_ico()) > 0)
-			Menu, Tray, Icon, % "HICON: " hIcon
-		else If FileExist(IconDir := Addendum.Dir "\assets\ModulIcons\AddendumMonitor.ico")
-			Menu, Tray, Icon, % IconDir
+  ; TrayMenu ;{
+	Menu, Tray, NoStandard
+	If (StrLen(hIcon := AddendumMonitor_ico()) > 0)
+		Menu, Tray, Icon, % "HICON: " hIcon
+	else If FileExist(IconDir := Addendum.Dir "\assets\ModulIcons\AddendumMonitor.ico")
+		Menu, Tray, Icon, % IconDir
 
-		;func_AddendumCheck := Func("RestartAddendum").Bind("override")
-		Menu, Tray, Add, % StrReplace(A_ScriptName, ".ahk")	, % "admMonInfo"
-		Menu, Tray, Add
-		Menu, Tray, Add, % "Addendum jetzt prüfen"            	, % "admMonCheck"
-		Menu, Tray, Add, % "Addendum (neu)starten"           	, % "admRestartNow"
-		Menu, Tray, Add
-		Menu, Tray, Add, % "Reload"		                            	, % "admMonReload"
-		Menu, Tray, Add, % "Exit"			                             	, % "admMonExitApp"
-	;}
+	;func_AddendumCheck := Func("RestartAddendum").Bind("override")
+	Menu, Tray, Add, % StrReplace(A_ScriptName, ".ahk")	, % "admMonInfo"
+	Menu, Tray, Add
+	Menu, Tray, Add, % "Addendum jetzt prüfen"            	, % "admMonCheck"
+	Menu, Tray, Add, % "Addendum (neu)starten"           	, % "admRestartNow"
+	Menu, Tray, Add, % "Überwachungsmanager öffnen"	, % "MonManager"
+	Menu, Tray, Add
+	Menu, Tray, Add, % "Reload"		                            	, % "admMonReload"
+	Menu, Tray, Add, % "Exit"			                             	, % "admMonExitApp"
+  ;}
 
-	; get data from Addendum.ini
-		IniReadExt(Addendum.Ini)
+  ; get data from Addendum.ini
+	IniReadExt(Addendum.Ini)
 
-	; Addendum DBPath und Logfile Pfad ;{
-		Addendum.DBPath := IniReadExt("Addendum", "AddendumDBPath")
-		If InStr(Addendum.DBPath, "Error") || !RegExMatch(Addendum.DBPath, "i)[a-z]\:\\") || !InStr(FileExist(Addendum.DBPath), "D")
-			Addendum.DBPath := ""
-		else
-			Addendum.MonLogPath := Addendum.DBPath 	"\sonstiges\AddendumMonitorLog.txt"
+  ; Addendum DBPath und Logfile Pfad ;{
+	Addendum.DBPath := IniReadExt("Addendum", "AddendumDBPath")
+	If InStr(Addendum.DBPath, "Error") || !RegExMatch(Addendum.DBPath, "i)[a-z]\:\\") || !InStr(FileExist(Addendum.DBPath), "D")
+		Addendum.DBPath := ""
+	else
+		Addendum.MonLogPath := Addendum.DBPath 	"\sonstiges\AddendumMonitorLog.txt"
 
-		If Addendum.DBPath && !InStr(FileExist(Addendum.DBPath "\sonstiges"), "D") {
-			FileCreateDir, % Addendum.DBPath "\sonstiges"
-			If ErrorLevel
-				Addendum.MonLogPath := ""
-		}
-	;}
+	If Addendum.DBPath && !InStr(FileExist(Addendum.DBPath "\sonstiges"), "D") {
+		FileCreateDir, % Addendum.DBPath "\sonstiges"
+		If ErrorLevel
+			Addendum.MonLogPath := ""
+	}
+;}
 
-	; Interskript communication gui ;{
-		;If !WinExist("Addendum Monitor Gui ahk_class AutoHotkeyGui") {
+  ; Interskript communication gui ;{
+	Gui, AMsg: New	, +HWNDhMsgGui +ToolWindow
+	Gui, AMsg: Add	, Edit, xm ym w100 h100 HWNDhEditMsgGui
+	Gui, AMsg: Show	, AutoSize NA Hide, % "Addendum Monitor Gui"
 
-			Gui, AMsg: New	, +HWNDhMsgGui +ToolWindow
-			Gui, AMsg: Add	, Edit, xm ym w100 h100 HWNDhEditMsgGui
-			Gui, AMsg: Show	, AutoSize NA Hide, % "Addendum Monitor Gui"
+	Addendum.hMsgGui     	:= hMsgGui
+	Addendum.hEditMsgGui	:= hEditMsgGui
 
-			Addendum.hMsgGui     	:= hMsgGui
-			Addendum.hEditMsgGui	:= hEditMsgGui
+	; starts receiving messages
+	OnMessage(0x4A	, "Receive_WM_COPYDATA")
+	OnMessage(0x404, "AHK_NOTIFYICON")
 
-			; starts receiving messages
-			OnMessage(0x4A	, "Receive_WM_COPYDATA")
-			OnMessage(0x404, "AHK_NOTIFYICON")
-
-		; }
-
-	;}
-
-	; loading Telegram BotToken and BotChatID ;{
-		BotName	:= IniReadExt("Telegram", "Bot1")
-		If !InStr(BotName, "Error") {
-				Addendum.Telegram := Object()
-				BotToken	:= IniReadExt("Telegram", BotName "_Token")
-				BotChatID	:= IniReadExt("Telegram", BotName "_ChatID")
-				Addendum.Telegram.Push({"BotName":BotName, "Token": BotToken, "ChatID": BotChatID})
-		}
-	;}
-
-	; loads restart properties (script detects high cpu usage of Addendum.ahk and will close-restart Addendum.ahk) ;{
-		Addendum.MaxAverageCPU 	:= IniReadExt("Addendum", "HighCPU_MaxAvarageCPU"	, 5)
-		Addendum.RestartAfter       	:= IniReadExt("Addendum", "HighCPU_RestartAfter"         	, 360) 	; seconds
-		Addendum.MinIdleTime     	:= IniReadExt("Addendum", "HighCPU_MinIdleTime"       	, 180)	; seconds
-		Addendum.TimedCheck     	:= IniReadExt("Addendum", "HighCPU_Timer"                    	, 180)	; seconds
-		TrTip1 := 	"CPU Last Grenze:   "    	Addendum.MaxAverageCPU 	"%`n"
-				  .		"Neustart nach:      " 		Addendum.RestartAfter        	"s`n"
-				  .		"Überprüfung alle: "   	Addendum.TimedCheck      	"s"
-		TrTip2 := 	"CPU Überlastung:  nicht geprüft`n"
-				 . 	  	"nächster Check in: "  	Addendum.TimedCheck      	"s"
-		Menu, Tray, Tip, % TrTip1 "`n" TrTip2
-		Addendum.TimerCall := A_TickCount
-	;}
+	; }
 
 ;}
 
-;{ Sink Objekte erstellen Benachrichtigung nach 5 Sekunden\ Kontrolle das Addendum läuft alle 15 Minuten
+  ; loading Telegram BotToken and BotChatID ;{
+	BotName	:= IniReadExt("Telegram", "Bot1")
+	If !InStr(BotName, "Error") {
+		Addendum.Telegram := Object()
+		BotToken	:= IniReadExt("Telegram", BotName "_Token")
+		BotChatID	:= IniReadExt("Telegram", BotName "_ChatID")
+		Addendum.Telegram.Push({"BotName":BotName, "Token": BotToken, "ChatID": BotChatID})
+	}
+  ;}
 
-	; Create sink objects for receiving event noficiations.
-		ComObjConnect(CreateSink	:= ComObjCreate("WbemScripting.SWbemSink"), "ProcessCreate_")
-		ComObjConnect(DeleteSink	:= ComObjCreate("WbemScripting.SWbemSink"), "ProcessDelete_")
+  ; loads restart properties (script detects high cpu usage of Addendum.ahk and will close-restart Addendum.ahk) ;{
+	Addendum.MaxAverageCPU 	:= IniReadExt("Addendum", "HighCPU_MaxAvarageCPU"	, 12)
+	Addendum.RestartAfter       	:= IniReadExt("Addendum", "HighCPU_RestartAfter"         	, 360) 	; seconds
+	Addendum.MinIdleTime     	:= IniReadExt("Addendum", "HighCPU_MinIdleTime"       	, 180)	; seconds
+	Addendum.TimedCheck     	:= IniReadExt("Addendum", "HighCPU_Timer"                    	, 180)	; seconds
+	TrTip1 := 	"CPU Last Grenze:   "    	Addendum.MaxAverageCPU 	"%`n"
+			  .		"Neustart nach:      " 		Addendum.RestartAfter        	"s`n"
+			  .		"Überprüfung alle: "   	Addendum.TimedCheck      	"s"
+	TrTip2 := 	"CPU Überlastung:  nicht geprüft`n"
+			 . 	  	"nächster Check in: "  	Addendum.TimedCheck      	"s"
+	Menu, Tray, Tip, % TrTip1 "`n" TrTip2
+	Addendum.TimerCall := A_TickCount
+  ;}
 
-	; Register for process deletion notifications:
-		winmgmts.ExecNotificationQueryAsync(DeleteSink
-			, "SELECT * FROM __InstanceDeletionEvent"
-			. " WITHIN " 5                                                                  	; Set event polling interval, in seconds.
-			. " WHERE TargetInstance ISA 'Win32_Process'"
-			. " AND TargetInstance.Name LIKE 'Autohotkey%'")
+  ; loads names of other scripts/processes to be monitored, prepares a part of the WQL-Statement
+	WQL := OverwatchLoad(Addendum.Ini, "AddendumMonitor")
 
-	; Timerfunktion für 15 minütige Skriptausführungskontrolle (Skript hängt oder ist abgestürzt)
-		fnADM      	:= Func("RestartAddendum").Bind(true)
-		fnADMTime 	:= Addendum.TimedCheck*1000
-		SetTimer, % fnADM, % fnADMTime
-		Addendum.TimerCall := A_TickCount
+  ; Sink Objekte erstellen
+	sinks := new SinkObjects(WQL)
+	sinks.Create()
 
-	; erster Check von Addendum.ahk
-		RestartAddendum()
+  ; Timerfunktion für 15 minütige Skriptausführungskontrolle (Skript hängt oder ist abgestürzt)
+	fnADM := Func("RestartAddendum").Bind(true)
+	SetTimer, % fnADM, % Addendum.TimedCheck*1000
+	Addendum.TimerCall := A_TickCount
 
-	; alle 8h Neustart bis ich den Verursacher für das Speicherbelegungsproblem gefunden habe
-		SetTimer, admRestartMonitor, % -1*8*60*60*1000
+  ; erster Check von Addendum.ahk
+	RestartAddendum()
 
-	;}
+  ; alle 8h Neustart bis ich den Verursacher für das Speicherbelegungsproblem gefunden habe
+	SetTimer, admRestartMonitor, % -1*8*60*60*1000
+
+	TrayTip, AddendumMonitor, Überwachung gestartet, 1
 
 return
 
@@ -197,19 +192,12 @@ return
 
 ;{ TrayLabels
 
-AHK_NOTIFYICON(wParam, lParam) {
-	if (lParam = 0x200) { ; WM_LBUTTONUP
-		SetTimer, admMonTimerInfo, -1
-	return 0
-    }
-}
-
 admMonReload:    	;{
-gosub ReleaseObjects
+sinks.Release()
 Reload  ;}
 
 admMonExitApp:    	;{
-gosub ReleaseObjects
+sinks.Release()
 ExitApp ;}
 
 admMonTimerInfo: 	;{
@@ -231,36 +219,332 @@ return ;}
 
 admRestartNow:    	;{
 
-	TrayMsg1 := "Addendum.ahk wird gleich beendet und neu gestartet!"
+	TrayMsg1 := "Addendum.ahk wird in 2s beendet und neu gestartet!"
 	TrayMsg2 := "Addendum.ahk konnte nicht beendet werden!"
 	TrayMsg3 := "Addendum.ahk ProcessID= "
 	TrayMsg3 := "Addendum.ahk konnte nicht gestartet werden!"
 
 	TrayTip, AddendumMonitor, % TrayMsg1, 2
 	Sleep 2000
-	If (Addendum.PID := AHKProcessExist(Addendum.ScriptName)) {
+
+  ; ein laufendes Addendum beenden
+	If (Addendum.PID := AHKProcessExist(Addendum.ScriptName))
 		If !ProcessClose(Addendum.PID) {
 			TrayTip, AddendumMonitor, % TrayMsg2 , 2
 			return
 		}
-	TrayTip, AddendumMonitor, 	% (PID := RestartAddendum("override") ? TrayMsg3 . PID : TrayMsg4, 2)
 
-	}
+
+  ; neu starten
+	PID := RestartAddendum("override")
+	TrayTip, AddendumMonitor, % (PID ? TrayMsg3 . PID : TrayMsg4), 2
 
 return ;}
 
 admRestartMonitor: 	;{
 	TrayTip, AddendumMonitor, Skript wird neu gestartet, 1
-	gosub ReleaseObjects
+	sinks.Release()
 	Sleep 3000
-Reload ;}
-
-ReleaseObjects:	    	;{
-	ObjRelease(winmgmts)
-	ObjRelease(createSink)
-	ObjRelease(DeleteSink)
-	winmgmts := deleteSink := ""
+	Reload
 return ;}
+
+MonManager:       	;{
+
+  ;-: Gui            	;{
+
+	If MonManagerExist {
+		Gui, MN: Show
+		return
+	}
+
+	Gui, MN:  New  	, +hwndhMn -DPIScale ;-Theme
+	Gui, MN: Margin	, 5, 5
+	Gui, MN: Font    	, s9 q5
+
+	Gui, MN: Add, ListView, xm ym w1025 r5 vMNLV hwndMNhLV AltSubmit gMNGuiHandler, Programm|Pfad|cmdline Optionen|Ausführen auf|Delay|Status
+	LV_ModifyCol(1, 130)
+	LV_ModifyCol(2, 450)
+	LV_ModifyCol(3, 150)
+	LV_ModifyCol(4, 200)
+	LV_ModifyCol(5, 40)
+	LV_ModifyCol(6, 45)
+	For each, ow in overwatch
+		LV_Add("", ow.name, ow.path, ow.opts, ow.runon, ow.delay, (ow.state?"An":"Aus"))
+
+	Gui, MN: Font, s8 q5
+	Gui, MN: Add, Text, xm y+5  BackgroundTrans vMNText1                                    	, Dateipfad des Autohotkey Skript/ausführbare Datei
+
+	Gui, MN: Font, s10 q5
+	Gui, MN: Add, Edit    	, xm y+2 			w500 	vMNPath       	ReadOnly
+	Gui, MN: Add, Text   	, x+2                                                                         		, \
+	Gui, MN: Add, Edit    	, x+2   				w150 	vMNName    	ReadOnly
+	Gui, MN: Add, Edit    	, x+5    			w75  	vMNDelay     	gMNGuiHandler
+	Gui, MN: Add, UpDown, x+5    	        			vMNDelayUD
+
+	Gui, MN: Font, s9 q5
+	Gui, MN: Add, Slider 	, x+0 yp-4   		w55 		vMNStateSL  Center NoTicks Thick30 Range0-1 AltSubmit gMNGuiHandler, 0
+	Gui, MN: Font, s12
+	Gui, MN: Add, Text    	, x+0 yp+6   	w25  	vMNState     	ReadOnly, Aus
+
+	Gui, MN: Font, s8 q5
+	Gui, MN: Add, Text   	, xm y+5  BackgroundTrans vMNText2                                    	, cmdline Optionen
+
+	Gui, MN: Font, s10 q5
+	Gui, MN: Add, Edit    	, xm y+2 			w500 	vMNOptions
+	Gui, MN: Add, Edit    	, x+2    			w500 	vMNRunOn
+
+	Gui, MN: Font, s12 q5
+	Gui, MN: Add, Text		, xm y+20 	                                            	, Überwachung
+	Gui, MN: Font, s10 q5
+	Gui, MN: Add, Button	, x+10 yp-2 	vMNNew  	gMNGuiHandler 	, Hinzufügen
+	Gui, MN: Add, Button	, x+10      	vMNDelete   	gMNGuiHandler 	, Entfernen
+	Gui, MN: Add, Button	, x+10      	vMNGo     	gMNGuiHandler 	, Änderung übernehmen
+	Gui, MN: Add, Button	, x+50      	vMNHide  	gMNGuiHandler 	, Fenster schließen
+
+	Gui, MN: Font, s8 q5
+	cp 	:= GuiControlGet("MN", "Pos", "MNText1")
+	dp 	:= GuiControlGet("MN", "Pos", "MNName")
+	Gui, MN: Add, Text, % "x" dp.X " y" cp.Y  "  BackgroundTrans" 	, Skript/Exe
+	dp 	:= GuiControlGet("MN", "Pos", "MNDelay")
+	Gui, MN: Add, Text, % "x" dp.X " y" cp.Y  "  BackgroundTrans" 	, Verzögerung
+	dp 	:= GuiControlGet("MN", "Pos", "MNStateSL")
+	Gui, MN: Add, Text, % "x" dp.X+10 " y" cp.Y  "  BackgroundTrans" 	, Überwachung ist
+
+	cp 	:= GuiControlGet("MN", "Pos", "MNText2")
+	dp 	:= GuiControlGet("MN", "Pos", "MNRunOn")
+	Gui, MN: Add, Text, % "x" dp.X " y" cp.Y  "  BackgroundTrans" 	, Ausführen auf (* auf jedem Client oder kommagetrennte Liste mit Clientnamen)
+
+	cp 	:= GuiControlGet("MN", "Pos", "MNHide")
+	dp 	:= GuiControlGet("MN", "Pos", "MNLV")
+	GuiControl, MN: Move, MNHide, % "x" dp.X+dp.W-cp.W
+
+	MNGui_EnableControls(false)
+
+	Gui, MN: Show,, [AddendumMonitor] Überwachungsmanager
+
+	MonManagerExist := hMn
+
+return ;}
+
+MNGuiHandler: 		;{
+
+	Critical
+	Gui, MN: Submit, NoHide
+
+	If (A_GuiControl = "MNLV")                    	{
+
+		If (A_GuiEvent = "Normal") {
+			row := A_EventInfo
+			If overwatch[row].name {
+				GuiControl, MN:, MNPath     	, % overwatch[row].path
+				GuiControl, MN:, MNName   	, % overwatch[row].name
+				GuiControl, MN:, MNOptions	, % overwatch[row].opts
+				GuiControl, MN:, MNRunOn 	, % overwatch[row].runon
+				GuiControl, MN:, MNDelay   	, % overwatch[row].delay
+				GuiControl, MN:, MNStateSL    	, % overwatch[row].state
+				GuiControl, MN:, MNState    	, % overwatch[row].state ? "An" : "Aus"
+
+				GuiControl, MN: Enable1, MNDelete
+				MNGui_EnableControls(true)
+			}
+			else {
+
+				GuiControl, MN: Enable0, MNDelete
+				MNGui_EnableControls(false)
+
+			}
+		}
+
+	}
+	else If (A_GuiControl = "MNGo")           	{
+
+	; schaut ob das Programm bereits überwacht wird und speichert nur Änderungen
+		foundProc := false
+		For owNr, ow in overwatch
+			If (ow.name = MNName && ow.path = MNPath) {
+				ow.opts 	:= MNOptions
+				ow.opts 	:= MNRunOn
+				ow.delay 	:= MNDelay
+				ow.state 	:= MNStateSL
+				foundProc := true
+				LV_Modify(owNr,, MNName, MNPath, MNOptions, MNRunOn, MNDelay, (MNStateSL ? "An":"Aus"))
+				break
+			}
+
+	; Programm ist noch nicht in der Überwachungsliste
+		If !foundProc {
+			LV_Add("", MNName, MNPath, MNOptions, MNRunOn, MNDelay, (MNStateSL ? "An":"Aus"))
+			overwatch.Push({"name":MNName, "path":MNPath, "opts":MNOptions, "runon":MNRunOn, "delay":MNDelay, "state":MNStateSL})
+			owNr := LV_GetCount()
+		}
+
+	; Einstellungen sichern
+		IniWrite	, % MNName "|" MNPath "|" MNOptions "|" MNRunOn "|" MNDelay "|" (MNStateSL ? "An":"Aus")
+					, % Addendum.Ini
+					, % "AddendumMonitor"
+					, % "overwatch" owNr
+
+	; Eingabefelder leeren und Interaktionsmöglichkeiten ausstellen
+		MNGui_EnableControls(false)
+
+	; WQL Query vorbereiten
+		WQL := OverwatchWQL()
+
+	; WMI Events neu starten
+		sinks := new SinkObjects(WQL)
+		sinks.Release()
+		sinks.Create(WQL)
+		TrayTip, AddendumMonitor, WMI Überwachung wurde neu gestartet, 1
+
+	}
+	else If (A_GuiControl = "MNNew")         	{
+
+		Thread, NoTimers
+		FileSelectFile, overwatchfile,, % A_ProgramFiles, Skript oder ausführbare Datei auswählen, Skript-Exe (*.ahk; *.exe)
+		Thread, NoTimers, false
+
+		If !overwatchfile
+			return
+
+		SplitPath, overwatchfile, ProcName, ProcPath
+
+		For row, ow in overwatch
+			If (ow.name = ProcName && ow.path = ProcPath) {
+				MsgBox, 0x1000, % A_ScriptName, % "Diese Datei wird schon überwacht!`nsiehe " ow.name " in Zeile " row "`nKlicken Sie auf die Zeile um die Einstellungen zu ändern!", 10
+				return
+			}
+
+		GuiControl, MN:, MNPath     	, % ProcPath
+		GuiControl, MN:, MNName  	, % ProcName
+		GuiControl, MN:, MNOptions	, % ""
+		GuiControl, MN:, MNRunOn 	, % "*"
+		GuiControl, MN:, MNDelay   	, % "0"
+		GuiControl, MN:, MNStateSL    	, % 1
+		GuiControl, MN:, MNState    	, % "An"
+
+		MNGui_EnableControls(true)
+
+		ProcName := ProcPath := overwatchfile := ""
+
+	}
+	else if (A_GuiControl = "MNStateSL")      	{
+		GuiControl, MN:, MNState, % (MNStateSL=1?"An":"Aus")
+	}
+	else If (A_GuiControl = "MNDelete")         	{
+
+	  ; sucht nach der zu löschenden Zeile
+		foundProc := false
+		For owNr, ow in overwatch
+			If (ow.name = MNName && ow.path = MNPath) {
+				MsgBox, 0x1004, % A_Scriptname, % "Überwachung von " MNName " beenden?"
+				IfMsgBox, No
+					return
+				foundProc := true
+				break
+			}
+
+	  ; LV Zeile und overwatch item entfernen
+	  ; inikeys sind durchgehend nummeriert. Lücken schließen.
+		If foundProc {
+
+			LV_Delete(owNr)
+			overwatch.RemoveAt(owNr)
+
+			; ini Reorganisieren
+			For iniIndex, ow in overwatch
+				If (iniIndex >= owNr)
+					IniWrite	, % ow.name "|" ow.path "|" ow.opts "|" ow.runon "|" ow.delay "|" (ow.state ? "An":"Aus")
+					, % Addendum.Ini
+					, % "AddendumMonitor"
+					, % "overwatch" iniIndex
+
+			; letzten IniKey löschen
+				IniDelete, % Addendum.Ini, % "AddendumMonitor", % "overwatch" iniIndex+1
+
+
+		}
+
+	}
+	else If (A_GuiControl = "MNHide")         	{
+		Gui, MN: Hide
+	}
+
+return ;}
+
+MNGuiClose:        	;{
+MNGuiEscape:
+	Gui, MN: Hide
+return ;}
+
+newline:                  	;{
+	SciTEOutput(" ")
+return ;}
+
+BTTOff:                  	;{
+BTT()
+return ;}
+
+MNGui_EnableControls(state) {
+
+	;~ state := state=true ? 1 : 0
+	GuiControl, % "MN: Enable" state, MNGo
+	GuiControl, % "MN: Enable" state, MNOptions
+	GuiControl, % "MN: Enable" state, MNRunOn
+	GuiControl, % "MN: Enable" state, MNDelay
+	GuiControl, % "MN: Enable" state, MNStateSL
+
+	If !state {
+
+		GuiControl, MN: Enable0, MNDelete
+
+		GuiControl, MN:, MNPath     	, % ""
+		GuiControl, MN:, MNName   	, % ""
+		GuiControl, MN:, MNOptions	, % ""
+		GuiControl, MN:, MNRunOn 	, % ""
+		GuiControl, MN:, MNDelay   	, % ""
+		GuiControl, MN:, MNState    	, % ""
+
+	}
+
+}
+;}
+
+class SinkObjects {
+
+	__New(WQL:="") {		; it does not create sink objects, call next method
+
+		this.WQL := WQL
+
+	}
+
+	Create() {						; this creates the SinkObjects
+
+	  ; Get WMI service object.
+		this.winmgmts  	:= ComObjGet("winmgmts:")
+
+	  ; Create sink objects for receiving event noficiations.
+		ComObjConnect(this.CreateSink	:= ComObjCreate("WbemScripting.SWbemSink"), "ProcessCreate_")
+		ComObjConnect(this.DeleteSink	:= ComObjCreate("WbemScripting.SWbemSink"), "ProcessDelete_")
+
+	  ; Register for process deletion notifications:
+		this.winmgmts.ExecNotificationQueryAsync(this.DeleteSink
+			, "SELECT * FROM __InstanceDeletionEvent"
+			. " within " 1                                                                  	; Set event polling interval, in seconds.
+			. " WHERE TargetInstance ISA 'Win32_Process'"
+			. " and TargetInstance.Name LIKE 'Autohotkey%'"
+			. WQL)
+
+	}
+
+	Release() {
+
+		ObjRelease(this.winmgmts)
+		ObjRelease(this.CreateSink)
+		ObjRelease(this.DeleteSink)
+
+	}
+
+}
 
 ;}
 
@@ -296,6 +580,13 @@ DllCall("Gdiplus.dll\GdiplusShutdown", "Ptr", pToken)
 DllCall("Kernel32.dll\FreeLibrary", "Ptr", hGdip)
 DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
 Return hBitmap
+}
+
+AHK_NOTIFYICON(wParam, lParam) {                                                	;-- OnMessage Callback
+	if (lParam = 0x200) { ; WM_LBUTTONUP
+		SetTimer, admMonTimerInfo, -1
+	return 0
+    }
 }
 
 AHKProcessExist(ProcName, cmd="") {                                                	;-- is only searching for Autohotkey processes
@@ -359,12 +650,82 @@ GetAddendumStatus() {                                                           
 
 	; versucht Addendum zur einer Antwort zu überreden (wartet max 4s auf eine Antwort)
 		MsgRec := ""
-		Send_WM_COPYDATA("Status||" Addendum.hMsgGui, GetAddendumID())
-		starttime := A_TickCount
-		while (MsgRec <> "okay") && ((recTime:=(A_TickCount-starttime)) <= 4000)
+		QPC(true)
+		Send_WM_COPYDATA("Status||" Addendum.hMsgGui, AddendumID)
+		while (MsgRec <> "okay" && (recTime:=QPC(false)) <= 4)
 			Sleep 1
 
-return (MsgRec = "okay" ? recTime : 0)
+return (MsgRec = "okay" ? Format("{1:.3f}", recTime) : 0)
+}
+
+GetAppImagePath(appname) {                                                             	;-- Installationspfad eines Programmes
+
+	headers:= {	"DISPLAYNAME"                  	: 1
+					,	"VERSION"                         	: 2
+					, 	"PUBLISHER"             	         	: 3
+					, 	"PRODUCTID"                    	: 4
+					, 	"REGISTEREDOWNER"        	: 5
+					, 	"REGISTEREDCOMPANY"    	: 6
+					, 	"LANGUAGE"                     	: 7
+					, 	"SUPPORTURL"                    	: 8
+					, 	"SUPPORTTELEPHONE"       	: 9
+					, 	"HELPLINK"                        	: 10
+					, 	"INSTALLLOCATION"          	: 11
+					, 	"INSTALLSOURCE"             	: 12
+					, 	"INSTALLDATE"                  	: 13
+					, 	"CONTACT"                        	: 14
+					, 	"COMMENTS"                    	: 15
+					, 	"IMAGE"                            	: 16
+					, 	"UPDATEINFOURL"            	: 17}
+
+   appImages := GetAppsInfo({mask: "IMAGE", offset: A_PtrSize*(headers["IMAGE"] - 1) })
+   Loop, Parse, appImages, "`n"
+	If Instr(A_loopField, appname)
+		return A_loopField
+
+return ""
+}
+
+GetAppsInfo(infoType) {                                                                     	;-- Informationen über ein installiertes Programm erhalten
+
+	static CLSID_EnumInstalledApps := "{0B124F8F-91F0-11D1-B8B5-006008059382}"
+        , IID_IEnumInstalledApps     	:= "{1BC752E1-9046-11D1-B8B3-006008059382}"
+
+        , DISPLAYNAME            	:= 0x00000001
+        , VERSION                    	:= 0x00000002
+        , PUBLISHER                  	:= 0x00000004
+        , PRODUCTID                	:= 0x00000008
+        , REGISTEREDOWNER    	:= 0x00000010
+        , REGISTEREDCOMPANY	:= 0x00000020
+        , LANGUAGE                	:= 0x00000040
+        , SUPPORTURL               	:= 0x00000080
+        , SUPPORTTELEPHONE  	:= 0x00000100
+        , HELPLINK                     	:= 0x00000200
+        , INSTALLLOCATION     	:= 0x00000400
+        , INSTALLSOURCE         	:= 0x00000800
+        , INSTALLDATE              	:= 0x00001000
+        , CONTACT                  	:= 0x00004000
+        , COMMENTS               	:= 0x00008000
+        , IMAGE                        	:= 0x00020000
+        , READMEURL                	:= 0x00040000
+        , UPDATEINFOURL        	:= 0x00080000
+
+   pEIA := ComObjCreate(CLSID_EnumInstalledApps, IID_IEnumInstalledApps)
+
+   while DllCall(NumGet(NumGet(pEIA+0) + A_PtrSize*3), Ptr, pEIA, PtrP, pINA) = 0  {
+      VarSetCapacity(APPINFODATA, size := 4*2 + A_PtrSize*18, 0)
+      NumPut(size, APPINFODATA)
+      mask := infoType.mask
+      NumPut(%mask%, APPINFODATA, 4)
+
+      DllCall(NumGet(NumGet(pINA+0) + A_PtrSize*3), Ptr, pINA, Ptr, &APPINFODATA)
+      ObjRelease(pINA)
+      if !(pData := NumGet(APPINFODATA, 8 + infoType.offset))
+         continue
+      res .= StrGet(pData, "UTF-16") . "`n"
+      DllCall("Ole32\CoTaskMemFree", Ptr, pData)  ; not sure, whether it's needed
+   }
+   Return res
 }
 
 GetProcessCpu(PID) {                                                                         	;-- CPU load (calculation with cpu cores)
@@ -468,6 +829,13 @@ GetTimestrings(ms, maxTime:="Auto") {                                           
 return {"hour":SubStr("0" hour, -1), "min":SubStr("0" min, -1), "sec":SubStr("0" sec, -1), "msec":ms}
 }
 
+GuiControlGet(guiname, cmd, vcontrol) {                                             	;-- GuiControlGet wrapper
+	GuiControlGet, cp, % guiname ": " cmd, % vcontrol
+	If (cmd = "Pos")
+		return {"X":cpX, "Y":cpY, "W":cpW, "H":cpH}
+return cp
+}
+
 MessageWorker(InComing) {                                                             	;-- handles received messages
 
 	global MsgRec
@@ -481,39 +849,110 @@ MessageWorker(InComing) {                                                       
 
 }
 
-IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="") {             	;-- IniRead function for Addendum
+IniReadExt(SectionOrFullFilePath, Key="", DefaultVal="", convert=true) { 	;-- eigene IniRead funktion für Addendum
 
-	; beim ersten Aufruf der Funktion !nur! Übergabe des ini Pfades mit dem Parameter SectionOrFullFilePath
-	; die Funktion behandelt einen geschriebenen Wert der "ja" oder "nein" ist, als Wahrheitswert, also true oder false
-	; letzte Änderung: 08.06.2020
+	/* Beschreibung
 
+		-	beim ersten Aufruf der Funktion nur den Pfad und Namen zur ini Datei übergeben!
+				workini := IniReadExt("C:\temp\Addendum.ini")
+
+		-	die Funktion behandelt einen geschriebenen Wert welcher ein "ja" oder "nein" ist, als logische Wahrheitswerte (wahr und falsch).
+		-	UTF-16-Zeichen (verwendet in .ini Dateien) werden per Default in UTF-8 Zeichen umgewandelt
+
+		letzte Änderung: 14.02.2022
+
+	 */
+
+		static admDir
 		static WorkIni
 
 	; Arbeitsini Datei wird erkannt wenn der übergebene Parameter einen Pfad ist
-		If RegExMatch(SectionOrFullFilePath, "^[A-Z]\:.*\\")	{
+		If RegExMatch(SectionOrFullFilePath, "^([A-Z]:\\|\\\\[A-Z]{2,}).*")	{
 			If !FileExist(SectionOrFullFilePath)	{
-					MsgBox,, Addendum für AlbisOnWindows, % "Die .ini Datei existiert nicht!`n`n" WorkIni "`n`nDas Skript wird jetzt beendet.", 10
-					ExitApp
+				MsgBox, 0x1024, % "Addendum für AlbisOnWindows"
+						            	 , % "Die .ini Datei existiert nicht!`n`n" WorkIni "`n`nDas Skript wird jetzt beendet.", 10
+				ExitApp
 			}
-			WorkIni := SectionOrFullFilePath
+			WorkIni	:= SectionOrFullFilePath
+			admDir	:= RegExMatch(WorkIni, "^([A-Z]:\\|\\\\[A-Z]{2,}).*?AlbisOnWindows", rxDir) ? rxDir : Addendum.Dir
 			return WorkIni
 		}
 
-	; Section, Key einlesen
+	; Workini ist nicht definiert worden, dann muss das komplette Skript abgebrochen werden
+		If !WorkIni {
+			MsgBox,, Addendum für AlbisOnWindows, %	"Bei Aufruf von IniReadExt muss als erstes`n"
+																			. 	"der Pfad zur ini Datei übergeben werden.`n"
+																			.	"Das Skript wird jetzt beendet.", 10
+			ExitApp
+		}
+
+	; Section, Key einlesen, ini Encoding in UTF.8 umwandeln
 		IniRead, OutPutVar, % WorkIni, % SectionOrFullFilePath, % Key
+		If convert
+			OutPutVar := StrUtf8BytesToText(OutPutVar)
 
 	; Bearbeiten des Wertes vor Rückgabe
-		If InStr(OutPutVar, "ERROR")
-			If (StrLen(DefaultValue) > 0) ; Defaultwert vorhanden, dann diesen Schreiben und Zurückgeben
-				IniWrite, % (OutPutVar := DefaultValue), % WorkIni, % SectionOrFullFilePath, % key
-			else
-				return "ERROR"
-		else if InStr(OutPutVar, "%AddendumDir%")
-				OutPutVar := StrReplace(OutPutVar, "%AddendumDir%", Addendum.Dir)
-		else if RegExMatch(OutPutVar, "i)^\s*(ja|nein)\s*$", bool)
-				OutPutVar := (bool1= "ja") ? true : false
+		If (InStr(OutPutVar, "ERROR") || StrLen(OutPutVar) = 0)
+			If DefaultVal  { ; Defaultwert vorhanden, dann diesen Schreiben und Zurückgeben
+				OutPutVar := DefaultVal
+				IniWrite, % DefaultVal, % WorkIni, % SectionOrFullFilePath, % key
+				If ErrorLevel
+					TrayTip, % A_ScriptName, % "Der Defaultwert <" DefaultVal "> konnte geschrieben werden.`n`n[" WorkIni "]", 2
+			}
+			else return "ERROR"
+
+		If InStr(OutPutVar, "%AddendumDir%")
+			OutPutVar :=  StrReplace(OutPutVar, "%AddendumDir%", admDir)
+		else if RegExMatch(OutPutVar, "%\.exe$") && !RegExMatch(OutPutVar, "i)[A-Z]\:\\")
+			return GetAppImagePath(OutPutVar)
+		else if RegExMatch(OutPutVar, "i)^\s*(ja|nein|An|Aus)\s*$", bool)
+			return (bool1= "ja" || bool1 = "An") ? true : false
 
 return Trim(OutPutVar)
+}
+
+StrUtf8BytesToText(vUtf8) {                                                                    	;-- Umwandeln von Text aus .ini Dateien nach UTF-8
+	if A_IsUnicode 	{
+		VarSetCapacity(vUtf8X, StrPut(vUtf8, "CP0"))
+		StrPut(vUtf8, &vUtf8X, "CP0")
+		return StrGet(&vUtf8X, "UTF-8")
+	} else
+		return StrGet(&vUtf8, "UTF-8")
+}
+
+OverwatchLoad(iniPath, iniSection) {                                                     	;--
+
+	IniRead, tmp, % iniPath, % iniSection          ; loads whole section
+	tmp := StrUtf8BytesToText(tmp)
+	If (!InStr(tmp, "ERROR") && StrLen(tmp)>0)
+		For each, keyval in StrSplit(tmp, "`n") {
+			RegExMatch(keyval, "^(?<Key>.*?)\d*=(?<Val>.*)$", Ini)
+			If (IniKey = "overwatch")
+				overwatch.Push({	"name"	: StrSplit(IniVal, "|").1
+										, 	"path"	: StrSplit(IniVal, "|").2
+										, 	"opts"	: StrSplit(IniVal, "|").3
+										, 	"runon"	: StrSplit(IniVal, "|").4
+										, 	"delay"	: StrSplit(IniVal, "|").5
+										, 	"state"	: (StrSplit(IniVal, "|").6 = "An" ? 1 : 0) })
+		}
+
+return OverwatchWQL()
+}
+
+OverwatchWQL() {                                                                              	;--
+
+	For each, ow in overwatch {
+		runon := StrReplace(ow.runon, ",", "|")
+		If RegExMatch(ow.Name, "\.exe$") && (RegExMatch(Addendum.compname, "(" runon ")") || runon = "*")
+			WQL .= " or TargetInstance.Name = '" ow.Name "'"
+	}
+
+return WQL
+}
+
+Process(Subcommand, PIDOrName:="", Value:="") {                           	;-- wrapper
+	Process, % SubCommand, % PIDOrName, % Value
+return ErrorLevel
 }
 
 ProcessClose(PID) {                                                                            	;-- force close a process, returns last PID
@@ -526,22 +965,28 @@ ProcessDelete_OnObjectReady(obj) {                                              
 	; this is prepared for multi restart purposes, but I did'nt finished it yet
 	; this can only restart one process per interval
 
-	static Restartscript
+	static RestartProcess
+	static rProcStack := Array()
 
     Process := obj.TargetInstance
 
 	;verhindert die doppelte Ausführung
-		If !RegExMatch(Process.CommandLine, "\w+\.ahk(?=\" q ")", Script) || (StrLen(Restartscript) > 0)
+		If (StrLen(RestartProcess) > 0)
 			return
 
-	; prüft ob Addendum neu gestartet werden muss
-		Restartscript := Script
-		If InStr(Restartscript, "Addendum.ahk") 	{
+		If RegExMatch(Process.Name, "i)AutoHotkey")
+			RegExMatch(Process.CommandLine, "(?<Name>[\w\-]+)\.(?<Ext>\w+)(?=\" q "\s*$)", proc)
+		else
+			RegExMatch(Process.Name, "(?<Name>[\w\-]+)\.(?<Ext>\w+)\s*$", proc)
+		RestartProcess := procName "." procExt
+
+	; prüft hier nur um Addendum.ahk neu zu starten
+		If InStr(RestartProcess, "Addendum.ahk") 	{
 			If WinExist("Addendum.ahk ahk_class #32770") 	{
 				; falls eine Autohotkey Fehlermeldung angezeigt wird, wird Addendum.ahk nicht sofort neu gestartet
 					WinGetText, wText, % "Addendum.ahk ahk_class #32770"
 					If RegExMatch(wText, "Error:\s.*Line#.*--->") {
-						RegExMatch(Process.CommandLine, "[A-Z]:[\w\\_\säöüÄÖÜ.]+\.ahk", SkriptPath)
+						RegExMatch(Process.CommandLine, "[A-Z]:[\w\\_\säöüÄÖÜß.\-]+\.ahk", SkriptPath)
 						fehler :={"Message":wText, "File":SkriptPath}
 						FehlerProtokoll(fehler, 1)
 					}
@@ -549,9 +994,26 @@ ProcessDelete_OnObjectReady(obj) {                                              
 			If !AHKProcessExist("Addendum.ahk")
 				If ShowRestartProgress("Addendum.ahk", 5)
 					RestartAddendum()
+			DoRestart := true, RestartProcess :=  ""
+			return
 		}
 
-		DoRestart := true, Restartscript :=  ""
+	; weitere zu überwachende Prozesse / Skripte
+		else {
+			If overwatch.Count()
+				For each, ow in overwatch
+					If InStr(RestartProcess, ow.name)
+						If ((procExt = "exe") && !Process("Exist", RestartProcess)) || ((procExt = "ahk") && !AHKProcessExist(RestartProcess)) {
+							TrayTip, AddendumMonitor, % "Neustart von " RestartProcess "`n in " ow.delay " Sekunden"
+							Sleep ow.delay * 1000
+							If (procExt = "exe")
+								Run, % q . ow.path "\" RestartProcess q " " ow.opts
+							else if (procExt = "ahk")
+								Run, % Addendum.AHKH_exe " /f " q . ow.path "\" RestartProcess q
+						}
+		}
+
+		DoRestart := true, RestartProcess :=  ""
 
 }
 
@@ -642,17 +1104,17 @@ ProcessDelete_OnHighCPULoad(ProcName, PID, WTime                      	;-- monit
 
 			; Information is only displayed if the client is physically inactive for 30 seconds
 				If (A_Index >= 10)  {																										;&& (IdleTime >= MinIdleTime) (A_Index >= InfoAfterLoop)
-				msg :=	"Name:                    " 	ProcName 	     		                                          	"`n"
-					.    	"PID:                        " 	PID     			                                                    	"`n"
-					. 		"IdleTime:                " 	IdleTime "s"	                                                       	"`n"
-					.		"Round:                   " 	SubStr("0000" A_Index, -3) "/" ObservationLoops	"`n"
-					.		"Process state:          " 	ProcessState	                                                    	"`n"
-					.		"Time:                      "	WTimeSec "s"                                                    	"`n"
-					.		"CPU total:              " 	SubStr("0" Round(SystemTime), -1)                        	"`n"
-					. 		"CPU usage:            " 	SubStr("0" Round(ProcessTime), -1)	                 		"`n"
-					.		"av. CPU usage:       " 	Round(AvPT, 1)                                                  	"`n"
-					.		"drop observations: "  	DropObservation                                                	"`n"
-					.		"Inactive times:        " 	InactiveObservation
+					msg :=	"Name:                    " 	ProcName 	     		                                          	"`n"
+						.    	"PID:                        " 	PID     			                                                    	"`n"
+						. 		"IdleTime:                " 	IdleTime "s"	                                                       	"`n"
+						.		"Round:                   " 	SubStr("0000" A_Index, -3) "/" ObservationLoops 	"`n"
+						.		"Process state:          " 	ProcessState	                                                    	"`n"
+						.		"Time:                      "	WTimeSec "s"                                                     	"`n"
+						.		"CPU total:              " 	SubStr("0" Round(SystemTime), -1)                        	"`n"
+						. 		"CPU usage:            " 	SubStr("0" Round(ProcessTime), -1)	                 		"`n"
+						.		"av. CPU usage:       " 	Round(AvPT, 1)                                                  	"`n"
+						.		"drop observations: "  	DropObservation                                                	"`n"
+						.		"Inactive times:        " 	InactiveObservation
 					BTT(msg, A_ScreenWidth-400, A_ScreenHeight-400,, "Style4")
 				}
 
@@ -676,18 +1138,19 @@ ProcessDelete_OnHighCPULoad(ProcName, PID, WTime                      	;-- monit
 return false
 
 ; count in advance how many time the process is not responding
-CountInactive:
+CountInactive: ;{
 
 	InactiveWait := true
 	ProcessState := GetState(PID, 200)
-	If !ProcessState
-		InactiveObservation ++
-	else
-		InactiveObservation := false
-
+	InactiveObservation := !ProcessState ? InactiveObservation+1 : 0
 	InactiveWait := false
 
-return
+return ;}
+}
+
+QPC(R := 0) {                                                                                      	;-- genaueste Zeitmessung, Rückgabe in Sekunden (floating point)
+     static P := 0, F := 0, Q := DllCall("QueryPerformanceFrequency", "Int64P", F)
+    return ! DllCall("QueryPerformanceCounter", "Int64P", Q) + (R ? (P := Q) / F : (Q - P) / F)
 }
 
 RestartAddendum(TimedCheck:=false) {                                             	;-- startet(prüft) Addendum.ahk
@@ -720,8 +1183,8 @@ RestartAddendum(TimedCheck:=false) {                                            
 			; Ausführung max. 20s
 				PID := 0
 				while (!PID && A_Index <= 200) {
-				 PID := AHKProcessExist(Addendum.ScriptName)
-				 Sleep 100
+					PID := AHKProcessExist(Addendum.ScriptName)
+					Sleep 100
 				}
 
 		return PID
@@ -729,45 +1192,53 @@ RestartAddendum(TimedCheck:=false) {                                            
 	; über 4 Sekunden die CPU-Auslastung von Addendum messen
 		else {
 
-			; eine Überwachung läuft noch dann nichts machen
-				If (TimedCheck <> "override") && ObservationRuns
-					return
+		  ; eine Überwachung läuft noch dann nichts machen
+			If (TimedCheck <> "override") && ObservationRuns
+				return
 
-			; CPU Status (CPU Auslastung überschritten) oder Addendum.ahk antwortet nicht
-				cpuStatus		:= GetCPUStatus(Addendum.PID, 10, Addendum.MaxAverageCPU)
-				admStatus 	:= GetAddendumStatus()
+			If (TimedCheck = "override")
+				TrayTip, Überprüfung von Addendum.ahk, % "Zeitdauer bis Abschluß: circa 10s", 15, 16
 
-				If (TimedCheck = "override")
-					SciTEOutput("  " TimeStamp() " | CPU: " cpuStatus.Average " | Addendum: " (admStatus ? admStatus " ms" : "no answer"))
+		  ; CPU Status (CPU Auslastung überschritten) oder Addendum.ahk antwortet nicht
+			cpuStatus		:= GetCPUStatus(Addendum.PID, 10, Addendum.MaxAverageCPU)
+			admStatus 	:= GetAddendumStatus()
 
-			; cpuStatus > 0 - Kontrollwert überschritten, admStatus = false - Addendum.ahk kann nicht antworten
-				If cpuStatus.HighLoad || !admStatus {
+			If (TimedCheck = "override") {
+				healthstate := cpuStatus.HighLoad  	? "CPU Lastüberschreitung festgestellt"
+																		: !admStatus ? "Prozeß hat sich möglicherweise aufgehängt" : "keine Probleme festgestellt"
+				TrayTip	, Überprüfung von Addendum.ahk
+							, % "abgeschlossen: " TimeStamp() "`n"
+							.	 "Bewertung: "      	healthstate "`n"
+							.    "CPU: "             	cpuStatus.Average "`n"
+							. 	 "Addendum: "    	(admStatus ? admStatus " s" : "keine Antwort"), 12, 16
+			}
 
-					; Protokoll schreiben
-						If Addendum.MonLogPath {
-							msg :=	(cpuStatus.HighLoad ? "hohe CPU Auslastung registriert (" cpuStatus.Average ")`n                                `t" : "")
-							msg .=	"Addendum: " (!admStatus ? "keine Antwort" : " Antwort brauchte " admStatus " ms")
-						}
+		  ; cpuStatus > 0 - Kontrollwert überschritten, admStatus = false = Addendum.ahk hat nicht geantwortet
+			If cpuStatus.HighLoad || !admStatus {
 
-					; Addendum sendet keinen Status zurück => Neustart!
-						msg := Trim(msg)
-						If !admStatus
-							If !ProcessClose(Addendum.PID)
-								msg := (StrLen(msg)>0 ? msg "`n" : "") "Addendum.ahk konnte nicht per Process, Close beendet werden."
-							else
-								msg := (StrLen(msg)>0 ? msg "`n" : "") "Addendum.ahk wurde durch Process, Close beendet."
-
-					; HighLoad wurde registriert, Messung der CPU-Last über mehrere Sekunden erfolgt jetzt
-						else if cpuStatus.HighLoad
-							If (procDelMsg := ProcessDelete_OnHighCPULoad(Addendum.ScriptName, Addendum.PID, Addendum.RestartAfter
-																									, 	Addendum.IdleTime, Addendum.MaxAverageCPU))
-								msg := (StrLen(msg)>0 ? msg "`n" : "") . procDelMsg
-
-					; schreibt das Protokoll
-						If (Addendum.MonLogPath & StrLen(msg) > 0)
-							FileAppend, % TimeStamp() "|`t" msg . msgEnd, % Addendum.MonLogPath, UTF-8
-
+			  ; Protokoll schreiben
+				If Addendum.MonLogPath {
+					msg :=	(cpuStatus.HighLoad ? "hohe CPU Auslastung registriert (" cpuStatus.Average ")`n                                `t" : "")
+					msg .=	"Addendum: " (!admStatus ? "keine Antwort" : "Antwort brauchte " admStatus " s")
 				}
+
+			  ; Addendum sendet keinen Status zurück => Neustart!
+				msg := (StrLen(Trim(msg))>0 ? msg "`n" : "")
+				If !admStatus
+					msg .= (!ProcessClose(Addendum.PID) 	?	"Addendum.ahk konnte nicht per Process, Close beendet werden."
+																				:	"Addendum.ahk wurde durch Process, Close beendet.")
+
+			  ; HighLoad wurde registriert, Messung der CPU-Last über mehrere Sekunden erfolgt jetzt
+				else if cpuStatus.HighLoad
+					If (procDelMsg := ProcessDelete_OnHighCPULoad(Addendum.ScriptName, Addendum.PID, Addendum.RestartAfter
+																							, 	Addendum.IdleTime, Addendum.MaxAverageCPU))
+						msg := (StrLen(msg)>0 ? msg "`n" : "") . procDelMsg
+
+			  ; schreibt das Protokoll
+				If (Addendum.MonLogPath & msg)
+					FileAppend, % TimeStamp() "|`t" msg . msgEnd, % Addendum.MonLogPath, UTF-8
+
+			}
 
 		}
 

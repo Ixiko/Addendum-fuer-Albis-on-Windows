@@ -21,7 +21,7 @@
 ;                                                                                  	------------------------
 ;                                                	FÜR DAS AIS-ADDON: "ADDENDUM FÜR ALBIS ON WINDOWS"
 ;                                                                                  	------------------------
-;    		BY IXIKO STARTED IN SEPTEMBER 2017 - LAST MODIFICATION 12.12.2021 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
+;    		BY IXIKO STARTED IN SEPTEMBER 2017 - LAST MODIFICATION 31.05.2022 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                           	|                                          	|                                          	|                                          	|
 ; ▹PatDb                                 	PatDir                                    	class admDB
@@ -90,9 +90,10 @@ PatDir(PatID)                                                                 	{
 return PatientDir
 }
 
-class admDB                                                                 	{                 	;-- AddendumDB - Klasse für Objekt Handling
+class admDB                                                                 	{                 	;-- AddendumDB - Klasse für Objekt Handling (oPat)
 
-	; das globale oPat-Objekt wird benötigt (wird per )
+	; das globale oPat Objekt wird benötigt (wird in Addendum.ahk superglobal initiiert)
+	; letzte Änderung: 31.05.2022 - Umstellung auf cJSON
 
 	; lädt Daten
 		ReadPatDB(PatDBPath:="") {
@@ -101,10 +102,7 @@ class admDB                                                                 	{  
 				PatDBPath := Addendum.DBPath "\Patienten.json"
 
 			this.PatDBPath := PatDBPath
-			If !FileExist(PatDBPath)
-				PatData := ""
-			else
-				PatData := JSONData.Load(PatDBPath,, "UTF-8")
+			PatData := FileExist(PatDBPath) ? cJSON.Load(FileOpen(PatDBPath, "r", "UTF-8").Read()) : ""
 
 			; EMail Adressen hinzufügen
 				tmp := ReadPatientDBF(Addendum.AlbisDBPath)
@@ -128,7 +126,8 @@ class admDB                                                                 	{  
 				}
 			}
 
-			JSONData.Save(PatDBPath, PatData, true,, 1, "UTF-8")
+			If IsObject(PatData)
+				FileOpen(PatDBPath, "w", "UTF-8").Write(cJSON.Dump(PatData, 1))
 
 		}
 
@@ -336,9 +335,12 @@ return false
 ;--------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
 class AlbisDB	{ 		                             	 					            		 			;-- erweitert Addendum_DBASE um zusätzliche Funktionen
 
-		; diese Klasse benötigt Addendum_DBASE.ahk, Addendum_Datum.ahk, Addendum_Internal, class_JSON.ahk
+		; enthält verschiedene Funktionen als Erweiterung für Addendum_DBASE
+
+		; diese Klasse benötigt:  	Addendum_DBASE.ahk, Addendum_Datum.ahk, Addendum_Internal, class_cJSON.ahk
 		; PatDB wird als globales Objekt benötigt. Das Objekt muss Daten der PATIENT.dbf enthalten (verwende hierfür die Funktion ReadPatientDBF())
-		; letzte Änderung: 09.12.2021
+
+		; letzte Änderung: 06.05.2022
 
 		/*  Notizen zu dBASE Feldern
 
@@ -347,7 +349,6 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 				BEFDATA		TEXTDB:	welche Daten sind hier hinterlegt
 									TYP:			steht wofür?
 									DATA:		ist eine Zahl - hat welche Bedeutung?
-
 
 		 */
 
@@ -359,6 +360,7 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 
 				global PatDB
 
+				cJSON.EscapeUnicode := "UTF-8"
 				this.debug 	:= debug
 
 			; Albisdatenbankpfad oder ein alternativer Pfad für Testversuche
@@ -374,7 +376,7 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 
 			; Addendum Datenverzeichnis
 				IniRead, admDBPath, % this.admDir "\Addendum.ini", Addendum, AddendumDBPath
-				this.DBPathAddendum	:= StrReplace(admDBPath, "%AddendumDir%", this.admDir)
+				this.DBPathAddendum := StrReplace(admDBPath, "%AddendumDir%", this.admDir)
 				If !this.CreateFilePath(this.DBPathAddendum) {
 					this.ThrowError(A_ThisFunc 	": Addendum Pfad oder die Addendum.ini Datei ist nicht korrekt!`n"
 											.	">>" A_ScriptDir " :: " this.DBPathAddendum "<<"
@@ -433,7 +435,7 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 						                    	, 	 	"#01746"	: "HKS"
 						                    	, 	 	"#01747"	: "Aorta"}
 
-				this.EBM.Chroniker 	:= {	"CHR1"       	: {"GO": "03320", "Geschlecht":"M|W", "B" : {"Alter":"0", "Abstand":"3", "ICDListe":""}}
+				this.EBM.Chroniker 	:= {	"CHR1"    	: {"GO": "03320", "Geschlecht":"M|W", "B" : {"Alter":"0", "Abstand":"3", "ICDListe":""}}
 						                    	,	 	"CHR2"    	: {"GO": "03321", "Geschlecht":"M|W", "B" : {"Alter":"0", "Abstand":"3", "GO":"CHR1", "ICDListe":""}}
 												,		"#03320"	: "CHR1"
 												,		"#03321"	: "CHR2"}
@@ -442,11 +444,14 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 				this.EBM.Pauschalen	:= "rx:(0300[0-6]|03040)"
 
 			; zusätzliche Daten/Informationen
-				this.VERSART            	:= ["Mitglied", "2", "Angehöriger", "4", "Rentner"]
+				this.VERSART            	:= ["Mitglied", "Privat1", "Angehöriger", "Privat2", "Rentner"]
 				this.ScheinN            	:= {"Abrechnung":0, "1":1 , "Überweisung":2, "3":3, "Notfall":4, "PRIVAT":5}
 				this.ScheinR             	:= {"#0":"Abrechnung", "#1":"1", "#2":"Überweisung", "#3":"3", "#4":"Notfall", "#5":"PRIVAT"}
 				this.DateLabels      	:= "(STAT_VON|STAT_BIS|DATUM|EINLESTAG|AUS2DAT|GUELTIG|GUELTVON|"
 							        			.	 "GUELTVON2|GUELTBIS|GUELTBIS2|GEBURT|VERSBEG)"
+
+			; Erstellungszeitpunkt
+				this.created             	:= A_NowUTC
 
 		}
 
@@ -564,16 +569,24 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 			/*	GetDBFData()
 
 					benötigt Addendum_DBASE.ahk
+
 					dbName	-	Name der DBASE Datenbank ohne Dateiendung
+
 					P             	- 	pattern as object ({"Quartal":"119", "KUERZEL":"lk\w"})
-					O           	- 	Array mit Feldnamen die zurück gegeben werden sollen
+
+					O           	- 	Array mit Feldnamen die zurück gegeben werden sollen, unter Opt angeben wenn ein Array
+										oder ein Objekt zurückgegeben werden sollen
+
 					S             	- 	String mit 2 Optionen:
 							    			1. seekpos	= Start an dieser Dateiposition oder
 							    			2. recordnr	= die Nummer des Datensatzes mit welchem der Lesevorgang startet
+
 					dg	    	-	Debuglevel (0 = keine Ausgabe, 1-4 sind unterschiedliche Ausgabemodi)
-					Opt	    	-	weitere Debug Optionen können hier übergeben werden:
-										callback="Name der Funktion"    	- z.B. callback="Fortschrittsanzeige"
-										gui="GuiName"                            - Ausgabe von Informationen direkt in eine Gui
+
+					Opt	    	- 	return object - ein Objekt sortiert nach dem ersten Feldnamen in O
+										wird zurück gegeben (nichts weiter angeben um einen indizierten Array zu erhalten)
+									-	callback=Name der Funktion    	- z.B. callback=Fortschrittsanzeige
+									-	gui=GuiName"                             - Ausgabe von Informationen direkt in eine Gui
 									-	verbundene Daten aus der BEFTEXT.dbf automatisch anfügen:
 										linkedData=true
 
@@ -583,17 +596,21 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 				If !(dbName := this.DBaseFileExist(dbName))
 					return 0
 
+			; return parameter Optionen
+				RegExMatch(Opt " ", "i)return\s+(?<mode>object|array)", ret)
+				retmode := retmode = "object" ? 1 : 2
+
 			; eine Callback Funktion für die Anzeige des Fortschritts kann eingerichtet werden
-				RegExMatch(Opt " ", "callback\s*\=\s*(?<Func>.*?)([^\w]|\s|$)"	, callback)
-				RegExMatch(Opt " ", "gui\s*\=\s*(?<Gui>.*?)([^\w]|\s|$)"        	, debug)
+				RegExMatch(Opt " ", "i)callback\s*\=\s*(?<Func>.*?)([^\w_@\$]|\s|$)"	, callback)
+				RegExMatch(Opt " ", "i)gui\s*\=\s*(?<Gui>.*?)([^\w]|\s|$)"                 	, debug)
 
 			; filepointer berechnen
-				startrec	:=	RegExMatch(S, "seekpos\s*\=\s*(?<pos>\d+)", seek) 	? Floor(seekpos/dbf.lendataset)-1
-								: 	RegExMatch(S, "recordnr\s*\=\s*(?<nr>\d+)", record)	? recordnr		:	0
+				startrec	:=	RegExMatch(S, "i)seekpos\s*\=\s*(?<pos>\d+)", seek) 	? Floor(seekpos/dbf.lendataset)-1
+								: 	RegExMatch(S, "i)recordnr\s*\=\s*(?<nr>\d+)", record)	? recordnr		:	0
 
 			; P - enthaltene RegEx-Strings säubern
 				For fLabel, value in P
-					If RegExMatch(P[fLabel], "^\s*rx\:") {
+					If RegExMatch(P[fLabel], "i)^\s*rx\:") {
 						useRegExSearch := true
 						break
 					}
@@ -604,8 +621,10 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 				res 	:= dbf.OpenDBF()
 
 			; Search [RegEx - Datenbanksuche durchführen] oder SearchFast [Instr - Datenbanksuche durchführen]
-				matches := useRegExSearch ? dbf.Search(P, O, startrec,, callbackFunc) : dbf.SearchFast(P, O, startrec,, callbackFunc)
-				;SciTEOutput(A_ThisFunc ": dbf.connected - " dbf.connected)
+																	; Search(P, startrec, callbackFunc, opt)
+				matches := useRegExSearch	?	dbf.Search(P, startrec, callbackFunc)
+																	; SearchFast(P, O, startrec, opt, callbackFunc)
+															:	dbf.SearchFast(P, O, startrec,, callbackFunc)
 
 			; ein paar wichtige Filepositionen sichern
 				this.DBEndFilePos := dbf.filepos
@@ -617,14 +636,36 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 					return matches
 
 			; Datenmenge schrumpfen
-				;~ data := Array()
-				;~ For midx, m in matches {
-					;~ strObj := Object()
-					;~ For cidx, k in O
-						;~ strObj[k] := m[k]
-					;~ data.Push(strObj)
-				;~ }
+				VarSetCapacity(data, (cap := ObjGetCapacity(matches)))
+				data := retmode= 1 ? Object() : Array()
 
+			; 1. als Object sortiert nach dem Namen des 1.Feldes des Feldnamen Arrays (O) zurückgeben
+				If (retmode = 1) {
+					For midx, m in matches {
+						obj := Object()
+						indexer := O.RemoveAt(1) ; entfernen um den Feldnamen zu erhalten
+						For cidx, field in O {
+							obj[field] := m[field]
+						}
+						If !IsObject(data[indexer])
+							data[indexer] := Array()
+						data[indexer].Push(obj)
+					}
+					matches := ""
+					return data
+				}
+
+			; 2. als indizierter Array zurückgeben
+				If (retmode = 2) {
+					For midx, m in matches {
+						obj := Object()
+						For cidx, field in O
+							obj[field] := m[field]
+						data.Push(obj)
+					}
+					matches := ""
+					return data
+				}
 
 			; specialist enhancement for the use with Albis databases, some values are not stored in full length in main database
 				;~ If IsObject(dbf.connected) {
@@ -737,8 +778,8 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 			; sammelt Abrechnungsdaten zu den EBM Gebühren der Vorsorgen, Chroniker- und Geriatrische Pauschalen
 
 			; wird benötigt um innerhalb dieses Zeitraumes das letzte Vorsorgedatum zu suchen (einmalige GVU)
-				global PatDB
-				static PatExtraFilePath := Addendum.DBPath "\PatData\PatExtra.ini"
+				global 	PatDB
+				static		PatExtraFilePath := Addendum.DBPath "\PatData\PatExtra.ini"
 
 			; gespeicherte Daten laden oder zunächst erstellen
 				If !ReIndex {
@@ -747,17 +788,17 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 					If IsObject(this.VSData)              ; ## Test
 						return this.VSData
 
-					;~ BaseQ := GetQuartalEx(Abrechnungsquartal, "QQYY")
+					BaseQ := LTrim(Abrechnungsquartal, "0")
 					IniRead, lastUpdate    	, % this.PathDBaseData "\class_AlbisDB.ini", % A_ThisFunc, % "lastUpdate"
 					IniRead, lastDBPos     	, % this.PathDBaseData "\class_AlbisDB.ini", % A_ThisFunc, % "lastFilePos"
 					IniRead, lastDBRecord	, % this.PathDBaseData "\class_AlbisDB.ini", % A_ThisFunc, % "lastRecord"
 					ReIndex := InStr(lastUpdate, "ERROR") ? true : ReIndex
-					;~ If (!ReIndex) && (lastUpdate = BaseQ)
-						;~ return JSONData.Load(this.PathDBaseData "\Vorsorgen.json", "", "UTF-8")
+					If (!ReIndex && lastUpdate = BaseQ)
+						return cJSON.Load(FileOpen(this.PathDBaseData "\Vorsorgen.json", "r", "UTF-8").Read())
 				}
 
 			; abgerechnete Vorsorgen/Beratungen ohne Filterung zusammenstellen
-				VSData	:= Object()
+				this.VSData	:= Object()
 				For idx, m in this.GetDBFData("BEFGONR", {"GNR":this.EBM.Vorsorgen.EBMfilter}, ["PATNR","QUARTAL", "GNR", "DATUM", "ID"], 0) {
 
 					PatID 	:= m.PATNR
@@ -765,8 +806,8 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 					YYQ 	:= this.SwapQuarterS(m.QUARTAL)
 					RegExMatch(m.GNR, "\d+", GNR)
 
-					If !IsObject(VSData[PatID])
-						VSData[PatID] := {"GESCHL":this.Geschlecht(Patient.GESCHL), "GEBURT":Patient.GEBURT, "VS":{}}
+					If !IsObject(this.VSData[PatID])
+						this.VSData[PatID] := {"GESCHL":this.Geschlecht(Patient.GESCHL), "GEBURT":Patient.GEBURT, "VS":{}}
 
 					If RegExMatch(GNR, "0322(?<N>[01])", c)                	{   	; Chroniker Pauschalen
 
@@ -776,14 +817,14 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 							IniWrite, % c              	, % PatExtraFilePath, % PatID , % "Chroniker" cN "_letzte_Ziffer"
 						}
 
-						If !IsObject(VSData[PatID].chronisch)
-							VSData[PatID].chronisch := Object()
+						If !IsObject(this.VSData[PatID].chronisch)
+							this.VSData[PatID].chronisch := Object()
 
 						cN += 1    ; RegExMatch Ergebnis ist entweder 1 oder 2
-						If !VSData[PatID].chronisch.HasKey(YYQ)
-							VSData[PatID].chronisch[YYQ] := cN
+						If !this.VSData[PatID].chronisch.HasKey(YYQ)
+							this.VSData[PatID].chronisch[YYQ] := cN
 						else
-							VSData[PatID].chronisch[YYQ] += cN
+							this.VSData[PatID].chronisch[YYQ] += cN
 
 					}
 					else If RegExMatch(GNR, "0336(?<N>[02])", c)       	{		; Geriatsche Pauschalen
@@ -794,23 +835,23 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 							IniWrite, % c              	, % PatExtraFilePath, % PatID , % "Geriatrisch" cN "_letzte_Ziffer"
 						}
 
-						If !IsObject(VSData[PatID].Geriatrisch)
-							VSData[PatID].Geriatrisch := Object()
+						If !IsObject(this.VSData[PatID].Geriatrisch)
+							this.VSData[PatID].Geriatrisch := Object()
 
 						cN += 1
-						If !VSData[PatID].Geriatrisch.HasKey(YYQ)
-							VSData[PatID].Geriatrisch[YYQ] := cN
+						If !this.VSData[PatID].Geriatrisch.HasKey(YYQ)
+							this.VSData[PatID].Geriatrisch[YYQ] := cN
 						else
-							VSData[PatID].Geriatrisch[YYQ] += cN
+							this.VSData[PatID].Geriatrisch[YYQ] += cN
 
 					}
 					else if RegExMatch(GNR, "(0300[0-6]|03040)", c)    	{		; Grundpauschalen, Ordinationsgebühr
 
-						If !IsObject(VSData[PatID].Pauschale)
-							VSData[PatID].Pauschale := Object()
-						If !IsObject(VSData[PatID].Pauschale[YYQ])
-							VSData[PatID].Pauschale[YYQ] := Object()
-						VSData[PatID].Pauschale[YYQ].Push(c)
+						If !IsObject(this.VSData[PatID].Pauschale)
+							this.VSData[PatID].Pauschale := Object()
+						If !IsObject(this.VSData[PatID].Pauschale[YYQ])
+							this.VSData[PatID].Pauschale[YYQ] := Object()
+						this.VSData[PatID].Pauschale[YYQ].Push(c)
 
 					}
 					else {
@@ -822,7 +863,7 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 							IniWrite, % GNR        	, % PatExtraFilePath, % PatID , % exam "_Ziffer"
 						}
 
-						VSData[PatID].VS[(this.EBM.Vorsorgen["#" GNR])] := {"Q":m.QUARTAL, "D":m.Datum}
+						this.VSData[PatID].VS[(this.EBM.Vorsorgen["#" GNR])] := {"Q":m.QUARTAL, "D":m.Datum}
 
 					}
 
@@ -830,51 +871,48 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 
 			  ; Speichern der Daten um diese später laden zu können
 				If save || (lastUpdate <> BaseQ) {
-					JSONData.Save(this.PathDBaseData "\Vorsorgen.json", VSData, true,, 1, "UTF-8")
+					FileOpen(this.PathDBaseData "\Vorsorgen.json", "w", "UTF-8").Write(cJSON.Dump(this.VSData, 1))
 					IniWrite, % BaseQ               	, % this.PathDBaseData "\class_AlbisDB.ini", % A_ThisFunc, % "lastUpdate"
 					IniWrite, % this.DBEndRecord	, % this.PathDBaseData "\class_AlbisDB.ini", % A_ThisFunc, % "lastRecord"
 					IniWrite, % this.DBEndFilePos	, % this.PathDBaseData "\class_AlbisDB.ini", % A_ThisFunc, % "lastFilePos"
 				}
 
-				this.VSData := VSData
-
-		return VSData
+		return this.VSData
 		}
 
 		; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-		Chroniker(Abrechnungsquartal, ReIndex:=false, save:=true)                           	{	;-- erfasst alle Patienten mit Chronikerpauschalen
+		Chroniker(Abrechnungsquartal, ReIndex:=false, save:=true)                           	{	;-- erfasst alle Patienten mit abgerechneten Chronikerpauschalen
 
 				global PatDB
 
 			; VSData laden oder neu erstellen
-				If !ReIndex && !IsObject(VSData) && FileExist(this.PathDBaseData "\Vorsorgen.json") {
-					VSData := JSONData.Load(this.PathDBaseData "\Vorsorgen.json", "", "UTF-8")
-						If !IsObject(VSData)
+				quartal	:= LTrim(Abrechnungsquartal, "0")
+				If !ReIndex && !IsObject(this.VSData) && FileExist(this.PathDBaseData "\Vorsorgen.json") {
+					this.VSData := cJSON.Load(FileOpen(this.PathDBaseData "\Vorsorgen.json", "r", "UTF-8").Read())
+						If !IsObject(this.VSData)
 							this.ThrowError("VSData konnte nicht geladen werden!", A_LineNumber-2)
 				} else
-					VSData := this.VorsorgeDaten(Abrechnungsquartal, true, true)
+					this.VorsorgeDaten(quartal, true, true)   ; erstellt this.VSData
 
 			; Chronikerpauschalen sammeln
-				For idx, m in this.GetDBFData("BEFGONR", {"GNR":"0322[01]"}, ["PATNR","QUARTAL", "GNR", "DATUM", "ID"], 0) {
+				For each, m in this.GetDBFData("BEFGONR", {"GNR":"0322[01]"}, ["PATNR", "QUARTAL", "GNR", "DATUM", "ID"], 0) {
 
 					PatID := m.PATNR
-					If !IsObject(VSData[PatID])
-						VSData[PatID] := Object()
+					If !IsObject(this.VSData[PatID])
+						this.VSData[PatID] := Object()
 					If !IsObject(this.VSData[PatID].chronisch)
-						VSData[PatID].chronisch := Array()
+						this.VSData[PatID].chronisch := Array()
 
 					quarter := this.SwapQuarter(m.QUARTAL)
 					GNR := SubStr(m.GNR, 5, 1) + 1
-					VSData[PatID].chronisch.Push(m.QUARTAL)
+					this.VSData[PatID].chronisch.Push(m.QUARTAL)
 
 				}
 
 				If save
-					JSONData.Save(this.PathDBaseData "\Vorsorgen+Chroniker.json", VSData, true,, 1, "UTF-8")
+					FileOpen(this.PathDBaseData "\Vorsorgen+Chroniker.json", "w", "UTF-8").Write(cJSON.Dump(this.VSData, 1))
 
-				this.VSData := VSData
-
-		return VSData
+		return this.VSData
 		}
 
 		; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -892,35 +930,63 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 
 			; Klarnamen der Abrechnungsscheine werden für den Vergleich in das von der Datebank genutzte Format umgewandelt
 				ksartNr	:= this.KrankenscheinArt(ksart)
-				quartal := LTrim(Abrechnungsquartal, "0")
+				quartal	:= LTrim(Abrechnungsquartal, "0")
+				QZ      	:= SubStr(quartal, 1, 1)                   	; Quartalzahl
+				YY     	:= SubStr(quartal, 2, 2)                 	; Jahr
+
+			;  Database Index laden
+				dbindex := this.IndexRead("KSCHEIN")
+				If !dbindex[quartal].1
+					dbindex := this.IndexCreate("KSCHEIN")
+				startrec := dbindex[quartal].1 ? dbindex[quartal].1 : 0
+
+			; Quartalsabhängige Speicherung der Krankenscheine
+				If !IsObject(this.KScheine)
+					this.KScheine	:= Object()
+				this.KScheine[quartal] := Object()
 
 			; Krankenscheine zusammenstellen
-				KSMatches   	:= this.GetDBFData("KSCHEIN", {"QUARTAL":quartal, "TYP":ksartNr}
-																, ["PATNR", "QUARTAL", "TYP", "VERSART", "EINLESTAG"], 0)
+				matches := this.GetDBFData("KSCHEIN"
+														, {"QUARTAL":"rx:" quartal, "TYP":"rx:" ksartNr }                     	; Suchfilter (RegExSuche ist genauer)
+														, ["PATNR", "QUARTAL", "TYP", "VERSART", "EINLESTAG"]	    	; Rückgabefilter
+														, startrec                                                                           	; Datensatz-Nr des 1.Eintrages im Quartal
+														, this.debug                                                                          	; debug Option
+														, "return array")
 
-				this.KScheine	:= Object()
-				For idx, data in KSMatches {
+				For each, m in matches {
 
 					; wenn pv = false (Privatversicherung), werden Kassenscheine nicht erfasst
-						PatID := data.PATNR
-						If (!pv && (PatDB[PatID].PRIVAT <> "f"))   ; !RegExMatch(data.TYP, ksartNr) ||
+						PatID := m.PATNR
+						If (!pv && (PatDB[PatID].PRIVAT <> "f"))   ; !RegExMatch(m.TYP, ksartNr) ||
 							continue
 
-						If !IsObject(this.KScheine[PatID]) {
-							this.KScheine[PatID] := {"VERSART"    	: this.VERSART[data.VERSART]
-															, 	 "EINLESTAG"	: data.EINLESTAG
-															, 	 "KSCHEIN"    	: this.KrankenscheinArt(data.TYP)
-															, 	 "KSCHEINTYP" 	: data.TYP
-															, 	 "PRIVAT"       	: (PatDB[PatID].PRIVAT <> "f" ? 1 : 0)
-															, 	 "GESCHL"       	: this.Geschlecht(PatDB[PatID].GESCHL)}
+						anlegequartal := Ceil(Substr(m.EINLESTAG, 5, 2)/3) SubStr(m.EINLESTAG, 3, 2)
+						If (quartal <> anlegequartal) {
+							fehler += 1
+							ToolTip, % "fehlerhaft angelegte Krankenscheine gefunden: " fehler, % A_ScreenWidth-200, 10, 11
+							SetTimer, KScheinInfoOff, -20000
+						}
+
+						If !IsObject(this.KScheine[quartal][PatID]) {
+							this.KScheine[quartal][PatID] := {"VERSART"    	: this.VERSART[m.VERSART]
+												             			, 	 "EINLESTAG"	: m.EINLESTAG
+											            				, 	 "KSCHEIN"    	: this.KrankenscheinArt(m.TYP)
+												             			, 	 "KSCHEINTYP" 	: m.TYP
+												             			, 	 "PRIVAT"       	: (PatDB[PatID].PRIVAT <> "f" ? 1 : 0)
+												            			, 	 "GESCHL"       	: this.Geschlecht(PatDB[PatID].GESCHL)}
 						}
 
 				}
 
 				If Save
-					JSONData.Save(this.PathDBaseData "\KScheine_" quartal ".json", this.KScheine, true,, 1, "UTF-8")
+					If FilePathCreate(fpath := this.PathDBaseData "\Q" YY QZ)
+						FileOpen(fpath "\KScheine_" quartal ".json", "w", "UTF-8").Write(cJSON.Dump(this.KScheine[quartal], 1))
 
-		return this.KScheine
+		return this.KScheine[quartal]
+
+		KScheinInfoOff:
+			ToolTip,,,, 11
+		return
 		}
 
 		; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -931,18 +997,24 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 
 				global PatDB
 
+				quartal  	:= LTrim(Abrechnungsquartal, "0")
+				QZ        	:= SubStr(quartal, 1, 1)                   	; Quartalzahl
+				YY        	:= SubStr(quartal, 2, 2)                 	; Jahr
+
 			; alle angelegten Krankenscheine auslesen
 				KScheine 	:= this.Krankenscheine(Abrechnungsquartal, ksart, pv, save)
-				quartal  	:= LTrim(Abrechnungsquartal, "0")
 
 			; alle abgerechneten Ziffern zusammentragen
-				this.AbrScheine 	:= Object()
-				matches            	:= this.GetDBFData("BEFGONR"
-																		, {"QUARTAL": LTrim(Abrechnungsquartal, "0")}
-																		, ["PATNR", "ARZTID", "QUARTAL", "GNR", "DATUM", "ID", "removed"], 0)
+				If !IsObject(this.AbrScheine)
+					this.AbrScheine	:= Object()
+				this.AbrScheine[quartal]	:= Object()
+
+				matches := this.GetDBFData("BEFGONR"
+														, {"QUARTAL": quartal}
+														, ["PATNR", "ARZTID", "QUARTAL", "GNR", "DATUM", "ID", "removed"], 0)
 
 			; KScheine und Ziffern zusammenführen
-				For idx, m in matches {
+				For each, m in matches {
 
 						PatID := m.PATNR
 					; wenn pv = false (Privatversicherung), werden diese Kassenscheine nicht erfasst
@@ -953,28 +1025,29 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 							continue
 
 					; neue PatID - Object erweitern
-						If !IsObject(this.AbrScheine[PatID]) {
-							this.AbrScheine[PatID] := { "VERSART"     	: KScheine[PatID].VERSART
-																, 	 "EINLESTAG"	: KScheine[PatID].EINLESTAG
-																, 	 "KSCHEINTYP" 	: KScheine[PatID].TYP
-																, 	 "PRIVAT"       	: KScheine[PatID].PRIVAT
-																, 	 "GESCHL"       	: KScheine[PatID].Geschlecht
-																,	 "GEBUEHR"    	: {}}  ; "ARZTID":0, "DATUM":[]
+						If !IsObject(this.AbrScheine[quartal][PatID]) {
+							this.AbrScheine[quartal][PatID] := { "VERSART"     	: KScheine[PatID].VERSART
+											            					, 	 "EINLESTAG"	: KScheine[PatID].EINLESTAG
+											            					, 	 "KSCHEINTYP" 	: KScheine[PatID].TYP
+											            					, 	 "PRIVAT"       	: KScheine[PatID].PRIVAT
+											            					, 	 "GESCHL"       	: KScheine[PatID].Geschlecht
+											            					,	 "GEBUEHR"    	: {}}  ; "ARZTID":0, "DATUM":[]
 						}
 
 					; Ziffer und Abrechnungsdatum hinzufügen
-						If !this.AbrScheine[PatID].GEBUEHR.HasKey("#" m.GNR)
-							this.AbrScheine[PatID].GEBUEHR["#" m.GNR] := Array()
+						If !this.AbrScheine[quartal][PatID].GEBUEHR.HasKey("#" m.GNR)
+							this.AbrScheine[quartal][PatID].GEBUEHR["#" m.GNR] := Array()
 
-						this.AbrScheine[PatID].GEBUEHR["#" m.GNR].Push({"DATUM":m.DATUM, "ARZTID":m.ARZTID, "removed":m.removed})
+						this.AbrScheine[quartal][PatID].GEBUEHR["#" m.GNR].Push({"DATUM":m.DATUM, "ARZTID":m.ARZTID, "removed":m.removed})
 
 				}
 
 			 ; Speichern
 				If Save
-					JSONData.Save(this.PathDBaseData "\AbrScheine_" quartal ".json", this.AbrScheine, true,, 1, "UTF-8")
+					If FilePathCreate(fpath := this.PathDBaseData "\Q" YY QZ)
+						FileOpen(fpath "\AbrScheine_" quartal ".json", "w", "UTF-8").Write(cJSON.Dump(this.AbrScheine[quartal], 1))
 
-		return this.AbrScheine
+		return this.AbrScheine[quartal]
 		}
 
 		; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -992,63 +1065,70 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 				QM3 	:= SubStr("0" (QM2+1), -1)              	; Monatszahl des 3.Monat im Quartal
 				rxQ   	:= (YY > SubStr(A_YYYY, 3, 2) ? "19":"20") YY "(" QM1 "|" QM2 "|" QM3 ")\d\d"   ; 2021(01|02|03)\d\d
 
+				KScheine := !IsObject(this.KScheine[quartal]) ? this.Krankenscheine(Abrechnungsquartal, ksart, pv, false) : this.KScheine[quartal]
 
-				KScheine := !IsObject(this.KScheine) ? this.Krankenscheine(Abrechnungsquartal, ksart, pv, false) : this.KScheine
+				If !isObject(this.BehTage)
+					this.BehTage := Object()
+				this.BehTage[quartal] := Object()
 
 			; alle Tage mit Kuerzeleintragungen finden (QUARTAL ist nicht verwendbar da manchmal nur eine 0 vergeben ist)
 				matches   	:= this.GetDBFData("BEFUND", {"DATUM":"rx:" rxQ, "KUERZEL":"\w"}, ["PATNR", "DATUM", "KUERZEL", "INHALT", "removed"], 0)
-				this.Behandlungstage := Object()
 				For idx, m in matches {
 
 						PatID := m.PATNR
-					; wenn pv = false (Privatversicherung), werden diese Kassenscheine nicht erfasst
-						If (!pv && PatDB[PatID].PRIVAT <> "f" || m.removed)
+					; wenn pv = false (Privatversicherung), werden diese Kassenscheine nicht erfasst, ebenso nicht wenn das Datum nicht zum Quartal passt
+						If (!pv && PatDB[PatID].PRIVAT <> "f" || m.removed) || (GetQuartalEx(m.Datum, "QYY") <> quartal)
 							continue
 
 					; Objektstruktur anlegen
-						If !IsObject(this.Behandlungstage[PATID])
-							this.Behandlungstage[PATID] := Object()
-						If !IsObject(this.Behandlungstage[PATID][m.Datum])
-							this.Behandlungstage[PATID][m.Datum] := Array()
+						If !IsObject(this.BehTage[quartal][PatID])
+							this.BehTage[quartal][PatID] := Object()
+						If !IsObject(this.BehTage[quartal][PatID][m.Datum])
+							this.BehTage[quartal][PatID][m.Datum] := Array()
 
-						this.Behandlungstage[PATID][m.Datum].Push({"KZL":m.KUERZEL, "INH":m.INHALT})
+					; Daten hinzufügen
+						this.BehTage[quartal][PatID][m.Datum].Push({"KZL":m.KUERZEL, "INH":m.INHALT})
 
 				}
 
 			; Speichern
-				If Save
-					JSONData.Save(this.PathDBaseData "\BehTage_" quartal ".json", this.Behandlungstage, true,, 1, "UTF-8")
+				If save
+					If FilePathCreate(fpath := this.PathDBaseData "\Q" YY QZ)
+						FileOpen(fpath "\BehTage_" quartal ".json", "w", "UTF-8").Write(cJSON.Dump(this.BehTage[quartal], 1))
 
-		return this.Behandlungstage
+		return this.BehTage[quartal]
 		}
 
 		; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-		VorsorgeFilter(VSData, Abrechnungsquartal, ksart="alle", pv:=true, save:=true)	{	;-- welche Vorsorgen aktuell liquidiert werden können
+		VorsorgeFilter(Vorsorgen,Abrechnungsquartal,ksart="alle", pv=true, save=true)	{	;-- welche Vorsorgen aktuell liquidiert werden können
 
 		  ; benötigt PatDB als globales Objekt!
 		  ; pv = privatversichert
 			global PatDB
 
 		  ; Fehlerhandling                                                                                                    	;{
-			If !IsObject(VSData)
-				Throw A_ThisFunc ": Parameter VSData ist kein Objekt!"
+			If !IsObject(Vorsorgen)
+				Throw A_ThisFunc ": Parameter Vorsorgen ist kein Objekt!"
 			If !RegExMatch(Abrechnungsquartal, "0*[1-4][0-9]{2}")
 				Throw A_ThisFunc ": Parameter Abrechnungsquartal " Abrechnungsquartal " hat ein falsches Format oder ist leer!"
 		  ;}
 
-		  ; Patienten mit angelegten Abrechnungsscheinen im Abrechnungsquartal ermitteln
+		  ; Patienten mit angelegten Abrechnungsscheinen des Abrechnungsquartal ermitteln
 			KScheine := this.Krankenscheine(Abrechnungsquartal, ksart, pv, save)
 
 		  ; Variablen                                                                                                            	;{
 			VSCan          	:= Object()
-			Quartal         	:= QuartalTage({"aktuell":SubStr("0" Abrechnungsquartal, -3)})
-			lastQDay      	:= Quartal.DBaseEnd
+			quartal           	:= LTrim(Abrechnungsquartal, "0")
+			dQuartal         	:= QuartalTage({"aktuell":("0" quartal)})
+			lastQDay      	:= dQuartal.DBaseEnd
 			lastCmpQDay	:= lastQDay "000000"
 			VSFilter         	:= this.EBM.Vorsorgen.VSFilter
+			QZ                	:= SubStr(quartal, 1, 1)                   	; Quartalzahl
+			YY                 	:= SubStr(quartal, 2, 2)                 	; Jahr
 		  ;}
 
-		  ; die letzten 3 Quartale darstellen                                                                            	;{
-			YYQ     	:= this.SwapQuarterS(LTrim(Abrechnungsquartal, "0"))              	; Jahr dann Quartal
+		  ; die letzten 3 Quartale als String darstellen                                                           	;{
+			YYQ     	:= this.SwapQuarterS(quartal)              	; Jahr dann Quartal
 			nYY      	:= SubStr(YYQ, 1, 2)
 			nQ        	:= SubStr(YYQ, 3, 1)
 			lQuarters	:= "("
@@ -1062,6 +1142,7 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 
 		  ; abrechenbare Untersuchungen mit Hilfe der VSFilter (Vorsorgefilter) finden
 			For PatID, q in KScheine {
+
 				If (!pv && !q.PRIVAT) && !RegExMatch(q.KSCHEINTYP, "[24]") {
 
 				  ; --------------------------------------------------------------------------------------------
@@ -1080,17 +1161,17 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 						If (age >= rule.Min && age <= rule.Max) && RegExMatch(sex, "i)(" rule.sex ")"){
 
 							; Leistung (exam) ist nur einmal (!repeat) im Arztfall abrechenbar und wurde bisher nicht angesetzt
-								If (!rule.repeat && !VSData[PatID].VS.HasKey(rule.exam)) {                                     			; z.B. rule.exam = Colo
+								If (!rule.repeat && !Vorsorgen[PatID].VS.HasKey(rule.exam)) {                                     			; z.B. rule.exam = Colo
 									pending.Push(rule.exam)
 								}
 
 							; Leistung ist alle x-Monate abrechenbar
 								else if rule.repeat {                                                                                                      	; wurde aber noch nie abgerechnet
-									If !VSData[PatID].VS.HasKey(rule.exam) {
+									If !Vorsorgen[PatID].VS.HasKey(rule.exam) {
 										pending.Push(rule.exam)
 									}
 									else {                                                                                                                    	; wurde abgerechnet - Abstand zwischen einer möglichen erneuten Abrechnung überprüfen
-										NextPossDate := DateAddEx(VSData[PatID].VS[rule.exam].D, Floor(rule.repeat/12) "y")
+										NextPossDate := DateAddEx(Vorsorgen[PatID].VS[rule.exam].D, Floor(rule.repeat/12) "y")
 										If (lastCmpQDay >= NextPossDate)
 											pending.Push(rule.exam "-" NextPossDate)
 									}
@@ -1101,17 +1182,17 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 				  ; --------------------------------------------------------------------------------------------
 				  ; EBM Regeln für Chronikerpauschalen
 				  ; --------------------------------------------------------------------------------------------
-					If !VSData[PatID].chronisch.Count()                               	; es wurde noch nie eine Chronikerpauschale berechnet
+					If !Vorsorgen[PatID].chronisch.Count()                               	; es wurde noch nie eine Chronikerpauschale berechnet
 						iscronicallysick := 0 , chronic := chronicQuarterMissed := "---"
 					else {
 					  ; chronic - 0 beide Ziffern angesetzt, 2 - es fehlt 03221, 1 - es fehlt 03220
 					  ;				3 beide Ziffern fehlen
 					  ; von den letzten 3 Quartalen muss der Patient in 2 Quartalen behandelt worden sein
 						iscronicallysick := true
-						crn        	:= VSData[PatID].chronisch[YYQ]
+						crn        	:= Vorsorgen[PatID].chronisch[YYQ]
 						chronic 	:= 3 - crn
 						notmissed := 0
-						For cQuarter, cCount in VSData[PatID].chronisch
+						For cQuarter, cCount in Vorsorgen[PatID].chronisch
 							If RegExMatch(cQuarter, lQuarters)                   ; RegExString der Form 2021(01)|(02|(03)\d\d
 								notmissed ++
 						chronicQuarterMissed := 2 - (notmissed > 2 ? 2 : notmissed) ; 0 wenn beide Ziffern abgerechnet wurden
@@ -1121,9 +1202,9 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 				  ; EBM Regel für geriatrische Basiskomplexe
 				  ; --------------------------------------------------------------------------------------------
 					geriatric := 0, isgeriatric := false
-					If (VSData[PatID].Geriatrisch.Count()>0) {
+					If (Vorsorgen[PatID].Geriatrisch.Count()>0) {
 						isgeriatric := true
-						If !VSData[PatID].Geriatrisch.HasKey(YYQ)
+						If !Vorsorgen[PatID].Geriatrisch.HasKey(YYQ)
 							geriatric := 1
 					}
 
@@ -1131,11 +1212,11 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 				  ; Grundpauschalen nicht eingetragen oder mehrfach
 				  ; --------------------------------------------------------------------------------------------;{
 					nobasefee := false
-					If !IsObject(VSData[PatID].Pauschale[YYQ])
+					If !IsObject(Vorsorgen[PatID].Pauschale[YYQ])
 						nobasefee := 2
 					else {
 						feePointer:=0
-						For feeIdx, fee in VSData[PatID].Pauschale[YYQ]
+						For feeIdx, fee in Vorsorgen[PatID].Pauschale[YYQ]
 							If RegExMatch(fee, this.EBM.Pauschalen, c)
 								feePointer ++
 						nobasefee := feepointer = 2 ? 0 : feePointer > 2 ? feePointer-2 : feepointer
@@ -1172,15 +1253,28 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 			}
 
 		; Statistik der KScheine in VorsorgeKandidaten hinterlegen (VSCandidates)
-			VSCan["_Statistik"] := {"KScheine": KScheine.Count()}
+			VSCan["_Statistik"] := {"KScheine": KScheine.Count(), "Patienten": VSCan.Count()-1}
 
 		; Liste speichern
 			If save
-				JSONData.Save(this.PathDBaseData "\VorsorgeKandidaten-" LTrim(Abrechnungsquartal, "0") ".json", VSCan, true,, 1, "UTF-8")
+				If FilePathCreate(fpath := this.PathDBaseData "\Q" YY QZ)
+					FileOpen(fpath "\VorsorgeKandidaten_" quartal ".json", "w", "UTF-8").Write(cJSON.Dump(VSCan, 1))
 
 		return VSCan
 		}
 
+		; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+		Diagnosenvergleich(Abrechnungsquartal, Diagnosenliste, opt="")                     	{	;-- findet alle Patienten mit den Diagnosen/ICD-10 Schlüsseln
+
+			global PatDB
+
+		; Klarnamen der Abrechnungsscheine werden für den Vergleich in das von der Datebank genutzte Format umgewandelt
+			ksartNr	:= this.KrankenscheinArt(ksart)
+			quartal	:= LTrim(Abrechnungsquartal, "0")
+			QZ      	:= SubStr(quartal, 1, 1)                   	; Quartalzahl
+			YY     	:= SubStr(quartal, 2, 2)                 	; Jahr
+
+		}
 
 	;―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 	; Funktionen für andere Auswertungen
@@ -1201,17 +1295,18 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 									,  "#88323":"HB1", "#88324":"HB2"
 									,  "#88350":"vCRT1", "#88351":"vCRT2", "#88352":"vCRT3"
 									,  "#88370":"gCRT1", "#88371":"gCRT2" }
-			vaccinations  := { "B"		:{"AGO":[0,0,0], "AGM":[0,0,0], "AGJ":[0,0,0], "NR":[0,0,0]}
-									,  "M"	:{"AGO":[0,0,0], "AGM":[0,0,0], "AGJ":[0,0,0], "NR":[0,0,0]}
-									,  "A"  	:{"AGO":[0,0,0], "AGM":[0,0,0], "AGJ":[0,0,0], "NR":[0,0,0]}
-									,  "J"   	:{"AGO":[0,0,0], "AGM":[0,0,0], "AGJ":[0,0,0], "NR":[0,0,0]}
-									,  "C" 	:{"AGO":[0,0,0], "AGM":[0,0,0], "AGJ":[0,0,0], "NR":[0,0,0]}
-									,  "VS" 	: [0, 0, 0] 	; Zähler für 1., 2., Auffrischungsimpfungen allr Altersgruppen
-									,  "VO"	: [0, 0, 0] 	; Zähler für 1., 2., Auffrischungsimpfungen > 60
-									,  "VM"	: [0, 0, 0] 	; Zähler für 1., 2., Auffrischungsimpfungen 18-59
-									,  "VJ"  	: [0, 0, 0] 	; Zähler für 1., 2., Auffrischungsimpfungen <18
-									, "sum"	: 0
-									, "patients" : {}}
+			vaccinations  := {	"B"		:{"AGO":[0,0,0], "AGM":[0,0,0], "AGJ":[0,0,0], "NR":[0,0,0]}
+									,	"M"    	:{"AGO":[0,0,0], "AGM":[0,0,0], "AGJ":[0,0,0], "NR":[0,0,0]}
+									,	"A"      	:{"AGO":[0,0,0], "AGM":[0,0,0], "AGJ":[0,0,0], "NR":[0,0,0]}
+									,	"J"       	:{"AGO":[0,0,0], "AGM":[0,0,0], "AGJ":[0,0,0], "NR":[0,0,0]}
+									,	"C"    	:{"AGO":[0,0,0], "AGM":[0,0,0], "AGJ":[0,0,0], "NR":[0,0,0]}
+									,	"VS"  	: [0, 0, 0] 	; Zähler für 1., 2., Auffrischungsimpfungen alle Altersgruppen
+									,	"VO" 	: [0, 0, 0] 	; Zähler für 1., 2., Auffrischungsimpfungen >= 60
+									,	"VM"  	: [0, 0, 0] 	; Zähler für 1., 2., Auffrischungsimpfungen 18-59
+									,	"VJ"    	: [0, 0, 0] 	; Zähler für 1., 2., Auffrischungsimpfungen 12-17
+									,	"VK"  	: [0, 0, 0]	; Zähler  für 1., 2., Auffrischungsimpfungen 5-11
+									, 	"sum"	: 0
+									, 	"patients" : {}}
 
 		  ; Datum ins DBASE Format wandeln
              Datum := InStr(Datum, ".") ? ConvertToDBASEDate(Datum) : Datum
@@ -1242,7 +1337,7 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 
 					PatAge   	:= this.ageYears(PatDB[PatID].GEBURT, Datum)
 					vacname 	:= vacfees["#" vacfee]
-					patgroup 	:= PatAge > 59 ? "O" : PatAge < 18 ? "J" : "M"
+					patgroup 	:= PatAge > 59 ? "O" : PatAge < 18 && PatAge > 11 ? "J" : PatAge < 12 ? "K" : "M"
 					vacgroup 	:= "AG" . patgroup
 
 					For extra, NR in vacfees.Z
@@ -1277,12 +1372,350 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 					Loop vac[group].MaxIndex()
 						vac[group "SUM"] += vac[group][A_Index]
 
-				vac.ALLSUM .= vac.AGOSUM + vac.AGMSUM + vac.AGJSUM
+				vac.ALLSUM .= vac.AGOSUM + vac.AGMSUM + vac.AGJSUM + vac.AGKSUM
 
 			}
 
+			matches := idx := m := ""
 
 		return vaccinations
+		}
+
+		EBMStatistik(Zaehle="", Wenn="", NimmNicht= "", NennEs="", Von="", Bis="")  	{	;-- Statistiken aus den BEFGONR Daten erstellen
+
+		/* Beispiel
+
+			aDB := new AlbisDB(Addendum.AlbisDBPath)
+			matches	:= aDB.EBMStatistik("GNR", "(89\d\d\d)", "8911[12]", "Impf.")
+
+		*/
+
+		  ; im Moment nur allgemeine Zusammenfassung von Daten
+			stats      	:= Object()
+			dbf       	:= new DBASE(Addendum.AlbisDBPath "\BEFGONR.dbf", 1)
+			res         	:= dbf.OpenDBF()
+			retValues	:= ["PATNR", "ARZTID", "QUARTAL", "SPOS", "DATUM", "GNRID", "GNR", "KV", "KAPBEZ"]
+			matches	:= dbf.SearchExt({(Zaehle) : "rx:" Wenn}, retValues, 0)
+			;~ matches	:= dbf.Search({(Zaehle) : "rx:" Wenn}, 0)
+			res        	:= dbf.CloseDBF()
+			dbf       	:= ""
+
+			AYY 	:= SubStr(A_YYYY, 1, 2)
+			YY 	:= SubStr(A_YYYY, 3, 2)
+			For each, m in matches {
+
+					If RegExMatch(m.GNR, NimmNicht)
+						continue
+
+					quarter	:= SubStr(m.Quartal, 1, 1)
+					year   	:= SubStr(m.QUARTAL, 2, 2)
+					year  	:= (year > YY ? AYY-1 : AYY) SubStr(year, -1)
+					PatID	:= m.PATNR
+					If !IsObject(stats[year])
+						stats[year] := {"Count":0, PatIDCount:0}
+					If !IsObject(stats[year][quarter])
+						stats[year][quarter] := {"Count":0, PatIDs:{}}
+
+					m.Delete(m.Quartal)
+					m.Delete(m.PATNR)
+
+					stats[year].Count += 1
+					stats[year][quarter].Count += 1
+					stats[year][quarter][PatID].Push(m)
+
+					If !stats[year][quarter].PatIDs.haskey(PatID) {
+						stats[year][quarter].PatIDs[PatID] := [m.GNR]
+						stats[year].PatIDCount +=1
+					}
+					else
+						stats[year][quarter].PatIDs[PatID].Push(m.GNR)
+
+
+			}
+
+			For year, stat in stats {
+
+				z 	:= year "`t" 	stat.Count
+				l	:= "Pat.`t"    	stats[year].PatIDCount
+				Loop 4 {
+					i 	:= A_Index
+					z	.= 	(!stat[i].Count ? "`t`t":"`t")          		stat[i].Count
+					l	.=	(!stat[i].PatIDs.Count()  ? "`t`t" : "`t") 	stat[i].PatIDs.Count()
+				}
+				x .= z "`n" l "`n"
+			}
+
+			SciTEOutput("Jahr`t" NennEs "`tQ1`tQ2`tQ3`tQ4`n" x)
+
+		return stats
+		}
+
+		GetPatDocs(PATNR, dokext:="", Opt:="")                                        	            	{	;-- alle Dokumente zu einer PATNR finden
+
+			ftoex 	:= Array()
+			dokext 	:= "(" (dokext ? StrReplace(dokext, ",", "|") : "pdf|doc|docx|jpg|tif|bmp|gif|png|wav|avi|mov") ")"
+
+		  ; Dateinamen suchen
+			matches2	:= this.GetDBFData("BEFTEXTE"                                                                            	; dBase
+														, {"PATNR":"rx:\s*" PATNR, "TEXT":"rx:\w+\\\w+\.[a-z]{1,4}"}     	; search pattern
+														, ["PATNR", "TEXT", "DATUM", "LFDNR"]                                       	; filter for returned parameters
+														, 0                                                                                        	; startindex
+														, 0                                                                                        	; debugoptions
+														, Opt)                                                                                      	; more options (callback..)
+			For i, m in matches2 {
+				If m.removed
+					continue
+				lfds .= (i > 1 ? "|" : "") m.LFDNR
+				m.TEXT := Trim(RTrim(m.TEXT, "`r`n"))
+				RegExMatch(m.TEXT, "i)\.(?<xt>[a-z]+)$", e)
+				If RegExMatch(ext, "i)" dokext)
+					ftoex[m.LFDNR] := {"filepath":m.TEXT, "datum":m.DATUM, "ext":ext}
+			}
+
+		  ; Bezeichnungstext in der Karteikarte
+			matches1	:= this.GetDBFData("BEFUND"                                                                             	; dBase
+														, {"PATNR": "rx:\s*" PATNR, "TEXTDB":"rx:(" lfds ")"} 	                  	; search pattern
+														, ["PATNR", "INHALT", "TEXTDB"]                                              	; filter for returned parameters
+														, 0                                                                                          	; startindex
+														, this.debug                                                                              	; debugoptions
+														, Opt)                                                                                      	; more options (callback..)
+			for each, match in matches1
+				ftoex[match.TEXTDB].filename := match.INHALT
+
+
+		return ftoex
+		}
+
+
+	;―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+	; Funktion für Datenextraktion aus den Labor-Datenbanken
+	;―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
+		; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+		LaborBuchUnbekannteID(ANFNR:="", labday:="", OPT:="")                               	{	;-- Patienten zu namenlosen Einträgen vorschlagen
+
+			/*  	BESCHREIBUNG
+
+					Funktion speichert gefundene Daten so daß nur bei neuen namenlosen Einträgen Daten gelesen werden müssen
+					letzte Änderung: 25.01.2022
+
+			*/
+
+			global PatDB
+			static unknown := Array()
+
+			labday := !labday	? A_YYYY A_MM A_DD : labday
+
+		  ; Datum ins DBASE Format wandeln
+			labday := InStr(labday, ".") ? ConvertToDBASEDate(labday) : labday
+
+		  ; Quartal errechnen
+			Quartal := "#" GetQuartalEx(labday, "YYYYQ")
+
+		  ; LABBUCH Index laden
+			dbindex := this.IndexRead("LABBUCH")
+			IF !dbindex[Quartal].1
+				dbindex := this.IndexCreate("LABBUCH")
+
+		  ; Datenbanksuche starten
+			matches   	:= this.GetDBFData("LABBUCH"                                                                                                 	; Name der Datenbank
+														, (ANFNR ? {"EINDATUM":labday, "ANFNR":ANFNR} : {"EINDATUM":labday})  	; Suchparameter
+														, ["ANFNR", "PATNR", "PATGEB", "PATNAME", "PATVORNAME"]                           	; Rückgabeparameter
+														, (dbindex[Quartal].1 ? "recordnr=" dbindex[Quartal].1 : 0)                               	; Startindex Datensatz
+														, 0                                                                                                                 	; Debugoption
+														, Opt)                                                                                                             	; weitere Optionen (Callback..)
+
+			;~ SciTEOutput("mc: " cJSON.Dump(matches))
+
+			If (matches.Count() > 0) {
+
+				If !IsObject(unknown[ANFNR])
+					unknown[ANFNR] := Object()
+				If !IsObject(unknown[ANFNR][labday])
+					unknown[ANFNR][labday] := Object()
+
+				For idx, m in matches
+					If m.PATGEB {
+						For PatID, Pat in PatDB
+							If (m.PATGEB=Pat.GEBURT && m.ANFNR=ANFNR)
+								unknown[ANFNR][labday][PatID] := "(" m.ANFNR ") " Pat.GEBURT " = " m.PATGEB
+					}
+
+				;~ SciTEOutput("ukwn: " cJSON.Dump(unknown))
+				return unknown[ANFNR][labday]
+			}
+
+			return
+		}
+
+		LaborStatistik(Zaehlen:="", DatumVon:="", DatumBis:="")                                	{	;-- Statistiken aus den Laborblatt Daten erstellen
+
+		/* Beschreibung
+
+			▫ 	die Funktion wurde für eine Studie der Charite entworfen um ein paar Fragen genauer beantworten zu können
+			▫ 	zählt die Anzahl der Anforderungen, die Menge der Blutabnahmen an wievielen Tagen bei wieviel Patienten und die dabei angeforderte Zahl von Laborwerten pro Jahr und Quartal.
+
+			▫	Rückgabeparameter:
+				  formatierte Textausgabe
+
+			▫  Beispiel Code:
+				aDB 	:= new AlbisDB(Addendum.AlbisDBPath)
+				result:= aDB.LaborStatistik()
+				aDB	:= ""
+
+		*/
+
+		  ; im Moment nur allgemeine Zusammenfassung von Daten
+
+			PatIDs       	:= Object()
+			Params     	:= Object()
+			BloodIDs     	:= Object()
+			labdays     	:= Object()
+			stats          	:= Object()
+			ANFNRcount	:= ParamCount := Blood:= GI := Valcount := 0
+
+			dbf := new DBASE(Addendum.AlbisDBPath "\LABBLATT.dbf", 0)
+			res :=  dbf.OpenDBF()
+
+			while !dbf.dbf.AtEOF {
+
+			; Daten zeilenweise auslesen
+				data := dbf.ReadRecord(["PATNR", "ANFNR", "DATUM", "BEFUND", "PARAM", "ERGEBNIS", "EINHEIT"
+													, "GI", "NORMWERT", "NORMWERTM", "TXTHINW", "ERGTXT", "TEXTE", "MIKROBIO"])
+
+			;Fortschritt
+				If (Mod(A_Index, 10000) = 0)
+					ToolTip, % A_Index "/" dbf.records
+
+				If !PatIDs.haskey(data.PATNR)
+					PatIDs[data.PATNR] := 1
+				else
+					PatIDs[data.PATNR] := +1
+
+				BloodID := data.DATUM data.ANFNR
+				thisyear := SubStr(BloodID, 1, 4)
+				If !IsObject(stats[thisyear])
+					stats[thisyear] := {BloodIDs:{}}
+				If (!stats[thisyear].BloodIDs[BloodID] && data.BEFUND = "E")
+					stats[thisyear].BloodIDs[BloodID] := 1
+
+				If (lastAFNR <> data.ANFNR) {
+					lastAFNR := data.ANFNR
+					ANFNRcount ++
+				}
+
+				If !labdays.haskey(data.Datum)
+					labdays[data.PATNR] := 1
+
+				If (!FirstDate || FirstDate > data.Datum)
+					FirstDate := data.Datum
+
+				LastDate := data.Datum
+
+				If data.Param {
+					ParamCount += data.BEFUND = "E" ? 1 : 0
+					If !Params.haskey(data.Param)
+						Params[data.Param] := 1
+					else
+						Params[data.Param] := +1
+				}
+
+			}
+
+			res := dbf.CloseDBF()
+			dbf := ""
+
+			BA := 0
+			x .=  "Blutabnahmen:`n"
+			For year, stat in stats {
+
+				BA += stat.BloodIDs.Count()
+				x .=  year ": " stat.BloodIDs.Count() "`n"
+
+
+			}
+
+			z:=            	"Patienten:            "		PatIDs.Count() "`n"
+							. 	"Anforderungen:        "	ANFNRcount "`n"
+							. 	"Blutabnahmen:         "	BA "`n"
+							. 	"Laborwerte:           "		ParamCount "`n"
+							. 	"FirstDate:            "  		ConvertDBASEDate(FirstDate) "`n"
+							. 	"LastDate:             "   	ConvertDBASEDate(LastDate) "`n"
+							. 	"Labortage:            "		labdays.Count() "`n"
+							. 	"Laborparameter:       " 	Params.Count() "`n"
+							. 	"Werte/Abnahme:   "		Round(ParamCount/BloodIDs.Count(),1) "`n"
+							. 	"Werte/Anf.:          "		Round(ParamCount/ANFNRcount,1) "`n"
+							. 	"Werte/Patient:       "		Round(ParamCount/PatIDs.Count() ,1) "`n"
+							. 	"Werte/Labortag:     "		Round(ParamCount/labdays.Count(),1) "`n"
+							. 	"Patienten/Labortag: "	Round(labdays.Count()/PatIDs.Count() ,1) "`n"
+							.	"----------------------------------------------------`n"
+							. 	x
+
+			SciTEOutput(z)
+
+		return z
+		}
+
+		LaborTagesdaten(DatumVon:="", DatumBis:="")                                            		{	;-- ##alle Daten eines Tages oder eines Datumbereiches erhalten
+
+			; funktioniert nicht
+
+			matches := Object()
+
+		  ; Datum ins DBASE Format wandeln
+			DatumVon	:= InStr(DatumVon, ".") ? ConvertToDBASEDate(DatumVon) : DatumVon
+			DatumBis   	:= InStr(DatumBis, ".") ? ConvertToDBASEDate(DatumBis) : DatumBis
+
+		 ; Quartal errechnen
+			QuartalS := "#" GetQuartalEx(DatumVon, "YYYYQ")
+
+		  ; LABBUCH Index laden
+			dbindex := this.IndexRead("LABBLATT")
+			IF !dbindex[QuartalS].1
+				dbindex := this.IndexCreate("LABBLATT")
+
+		  ; Datenbanksuche starten
+			lblatt := new DBASE(Addendum.AlbisDBPath "\LABBLATT.dbf", 0)
+			res 	:= lblatt.OpenDBF()
+						 lblatt.dbf._SeekToRecord(dbindex[QuartaSl].1 ? dbindex[QuartalS].1 : 0, 1)
+
+			SciTEOutput("lbblatt maxrecords: " lbBlatt.records)
+
+			while !lblatt.dbf.AtEOF {
+
+			; Daten zeilenweise auslesen
+				data := lblatt.ReadRecord(["PATNR", "ANFNR", "DATUM", "BEFUND", "PARAM", "ERGEBNIS", "EINHEIT"
+													, "GI", "NORMWERT", "NORMWERTM", "TXTHINW", "ERGTXT", "TEXTE", "MIKROBIO"])
+
+				ToolTip, % A_Index "/" lblatt.records
+
+			  ;Fortschritt
+				If (Mod(A_Index, 100) = 0)
+					ToolTip, % A_Index "/" lblatt.records
+
+			  ; Datum überprüfen
+				If (data.Datum >= DatumVon) {   ;  && data.Datum <= DatumBis
+
+					PatID     	:= data.PATNR
+					labday  	:= data.DATUM
+					labparam	:= data.Param
+					data.Delete("PATNR")
+					data.Delete("DATUM")
+					data.Delete("PARAM")
+					If !IsObject(matches[labday])
+						matches[labday] := {}
+					If !IsObject(matches[labday][PatID])
+						matches[labday][PatID] := {}
+					matches[labday][PatID][PARAM] := data
+
+				}
+
+			}
+
+		; Datenbankzugriff beenden
+			lblatt.CloseDBF()
+			lbBlatt := ""
+
+		return matches
 		}
 
 	;―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
@@ -1299,8 +1732,23 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 			dbf      	:= ""
 
 			For idx, filter in beftag
-				If !filter.removed
-					this.KKFilter[filter.NAME] := {"Inhalt":StrReplace(filter.inhalt, ",", ", "), "Beschr":filter.beschr}
+				this.KKFilter[filter.NAME] := {"Inhalt":StrReplace(filter.inhalt, ",", ", "), "Beschr":filter.beschr}
+
+		return this.KKFilter
+		}
+
+		KarteikartenfilterA()                                                                                           	{	;-- Karteikartenfilter auslesen (lineares Array)
+
+			this.KKFilter := Array()
+			dbf     	:= new DBase(this.DBPath "\BEFTAG.dbf", false)
+			res      	:= dbf.OpenDBF()
+			beftag	:= dbf.GetFields("alle")
+			res       	:= dbf.CloseDBF()
+			dbf      	:= ""
+
+			For idx, filter in beftag
+				this.KKFilter.Push({"name":filter.NAME, "content":StrReplace(filter.inhalt, ",", ", "), "description":filter.beschr})
+				;~ If !filter.removed
 
 		return this.KKFilter
 		}
@@ -1308,7 +1756,7 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 		; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 		class Doctors extends AlbisDB                                                                         	{ 	;-- #Daten der erfassenden Ärzte auslesen
 
-				Get(Doctor:="")                                                                                     	{	;-- Daten aller Ärzte oder nur eines Arztes erhalten
+				Get(Doctor:="")                                                                                     	{	;-- #Daten aller Ärzte oder nur eines Arztes erhalten
 
 				  ; Doctor - kann die Arzt-ID, das Kürzel oder sein Name sein
 
@@ -1317,7 +1765,7 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 					res      	:= dbf.OpenDBF()
 					match	:= dbf.GetFields("alle")
 					res       	:= dbf.CloseDBF()
-					dbf      	:= ""
+					dbf      	:= res := ""
 
 				}
 
@@ -1332,12 +1780,13 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 		}
 
 		; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-		EmptyDBData()                                                                                              	{ 	;-- löscht alle Objekte welche ausgelesene Daten enthalten
+		EmptyDBData()                                                                                              	{ 	;-- leert alle Objekte welche ausgelesene Daten enthalten können
 
 			this.VSData   	:= ""
 			this.KScheine 	:= ""
 			this.AbrScheine	:= ""
 			this.KKFilter   	:= ""
+			this.ID           	:= ""
 
 		}
 
@@ -1359,9 +1808,16 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 	; Datenobjekte speichern (auch extern bearbeitete)
 	;―――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――――
 		SaveVorsorgeKandidaten(VSCan, Abrechnungsquartal)                                   	{	;-- speichern im JSON Format
-			quartal := LTrim(Abrechnungsquartal, "0")
-			JSONData.Save(this.PathDBaseData "\VorsorgeKandidaten-" quartal ".json", VSCan, true,, 1, "UTF-8")
-			FileGetSize, filesize, % this.PathDBaseData "\VorsorgeKandidaten-" quartal ".json"
+			quartal	:= LTrim(Abrechnungsquartal, "0")
+			QZ      	:= SubStr(quartal, 1, 1)                   	; Quartalzahl
+			YY     	:= SubStr(quartal, 2, 2)                 	; Jahr
+			If FilePathCreate(fpath := this.PathDBaseData "\Q" YY QZ) {
+				FileOpen(fpath "\VorsorgeKandidaten_" quartal ".json", "w", "UTF-8").Write(cJSON.Dump(VSCan, 1))
+				FileGetSize, filesize, % fpath "\VorsorgeKandidaten-" quartal ".json"
+			}
+			else
+				this.ThrowError(A_ThisFunc ": couldn't create or write data to file Vorsorgekandidaten.json in path`n", A_LineNumber-5)
+
 		return fileSize
 		}
 
@@ -1373,10 +1829,10 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 
 			/* BESCHREIBUNG
 
-				Die Funktion erleichtert die Erstellung eines Datenbankindex durch hinterlegte Feldnamen, welche zur Indizierung herangezogen werden.
-				Ist kein Feldname für eine Datenbank hinterlegt, kann dieser über den Parameter IndexField übergeben.
-				Der übergebene Feldname wird von der Funktion vorrangig behandelt!
-				Ist ein Index-Feldname nicht vorhanden wird eine Fehlermeldung ausgeworfen.
+				Die Funktion erleichtert die Erstellung eines Datenbankindex durch bereits hinterlegte Feldnamen.  Diese können zur Indizierung
+				herangezogen werden. Ist kein Feldname für eine Datenbank hinterlegt, kann dieser über den Parameter IndexField übergeben.
+				Übergebene  Feldnamen  werden  vorrangig  behandelt!  Wird  ein  nicht  vorhandener  Index-Feldname  übergeben,  wird eine
+				Fehlermeldung ausgegeben.
 
 			 */
 
@@ -1384,10 +1840,16 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 				; Standard Indexfelder
 				static IndexFields := {"BEFUND" 	: {"IndexField":"DATUM"            	, "IndexMode":"DateToQuarter"}
 											, 	"BEFTEXTE"	: {"IndexField":"DATUM"           	, "IndexMode":"DateToQuarter"}
+											, 	"BEFMED"  	: {"IndexField":"DATUM"           	, "IndexMode":"DateToQuarter"}
 											,	"BEFGONR"	: {"IndexField":"QUARTAL"        	, "IndexMode":""}
+											,	"ICDTHESA"	: {"IndexField":"ICDCODE"        	, "IndexMode":"CharInteger"}    ; erst Buchstabe dann eine Zahl z.B. A0.9
+											,	"ICDTXT"   	: {"IndexField":"ICD"               	, "IndexMode":"CharInteger"}    ; erst Buchstabe dann eine Zahl z.B. A0.9
+											,	"KSCHEIN"	: {"IndexField":"QUARTAL"        	, "IndexMode":""}
+											,	"RGSTAT"  	: {"IndexField":"QUARTAL"        	, "IndexMode":""}
+											, 	"TERMINE" 	: {"IndexField":"EINDATUM"       	, "IndexMode":"DateToQuarter"}
 											, 	"LABORANF"	: {"IndexField":"EINDATUM"       	, "IndexMode":"DateToQuarter"}
 											, 	"LABBLATT"	: {"IndexField":"DATUM"           	, "IndexMode":"DateToQuarter"}
-											, 	"LABBUCH"	: {"IndexField":"ABNAHMDATE"	, "IndexMode":"DateToQuarter"}
+											, 	"LABBUCH"	: {"IndexField":"EINDATUM"    	, "IndexMode":"DateToQuarter"}
 											, 	"LABREAD"  	: {"IndexField":"EINDATUM"       	, "IndexMode":"DateToQuarter"}
 											, 	"LABUEBPA"	: {"IndexField":"ABDATUM"        	, "IndexMode":"DateToQuarter"}}
 
@@ -1441,7 +1903,7 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 
 			; ruft die Indizierungsfunktion auf falls ein Index noch nicht erstellt wurde
 				If FileExist(DataFilePath) && !ReIndex
-					dbIndex	:= JSONData.Load(DataFilePath, "", "UTF-8")
+					dbIndex	:= cJSON.Load(FileOpen(DataFilePath, "r", "UTF-8").Read())
 				else {
 					TrayTip, Addendum für Albis on Windows, % "Die Datenbank " dbName " wird gerade indiziert.", 4
 					dbIndex	:= this.IndexCreate(dbName, IndexField, IndexMode, ReIndex)
@@ -1708,7 +2170,7 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 				return matches
 
 			reordered := Object()
-			For mIndex, m in matches {
+			For each, m in matches {
 
 				key := m.Delete(SortByKey)
 				If !IsObject(reordered[key])
@@ -1723,28 +2185,27 @@ class AlbisDB	{ 		                             	 					            		 			;-- erwe
 		; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 		KrankenscheinArt(ksart)                                                                                  	{	;-- Computer-Mensch-Übersetzer
 
-			static ScheinN	:= {"Abrechnung":0, "1":1 , "Überweisung":2, "3":3, "Notfall":4, "Privat":5}
-			static ScheinR   	:= {"#0":"Abrechnung", "#1":"1", "#2":"Überweisung", "#3":"3", "#4":"Notfall", "#5":"PRIVAT"}
+			static ScheinN	:= {"Abrechnung":0, "1":1 , "Überweisung":2, "BG":3, "Notfall":4, "Privat":5}
+			static ScheinR   	:= {"#0":"Abrechnung", "#1":"1", "#2":"Überweisung", "#3":"BG", "#4":"Notfall", "#5":"PRIVAT"}
 
-			If RegExMatch(ksart, "\d")
+			If RegExMatch(ksart, "^\d$")
 				return ScheinR["#" ksart]
 
 			If (ksart = "alle")
 				return "\d"
 
 			rxStr := "["
-			For idx, ART in StrSplit(ksart, ",") {
+			For idx, ART in StrSplit(ksart, ",")
 				rxStr .= ScheinN[Trim(ART)]
-				}
 
 		return rxStr "]"
 		}
 
 		; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-		ThrowError(msg, errorLine:="")                                                                       	{ 	;-- "wirft" Fehlermeldungen aus
+		throwError(msg, errorLine:="")                                                                       	{ 	;-- "wirft" Fehlermeldungen aus
 			this.db.CloseDBF()
 			this.db := ""
-			throw A_ThisFunc "," errorLine ": " msg
+			throw A_ThisFunc " [line - " errorLine "]: " msg
 		}
 
 }
@@ -1759,15 +2220,13 @@ class PatDBF	{                                                                  
 			; lade nur Patienten die in den letzten 10 Jahren behandelt wurden
 			; minDate := 20100101
 			;
-			; letzte Änderung: 27.12.2021
+			; letzte Änderung: 15.06.2022
 
 			; kein basedir - sollte ..\albiswin\db\ enthalten dann wird hier versucht den Pfad aus der Windows Registry zu bekommen
 				this.Patients := Object()
 				SplitPath, basedir,, basedir
-				If (StrLen(basedir)=0 || !InStr(FileExist(basedir), "D")  || !RegExMatch(basedir, "\\db\\*.*\.*[a-z]*$")) {
+				If (StrLen(basedir)=0 || !InStr(FileExist(basedir), "D") || !RegExMatch(basedir, "\\db\\*.*\.*[a-z]*$")) {
 					Addendum.AlbisDBPath := GetAlbisPath() "\db"
-					SciTEOutput(	"BaseDir changed from " (StrLen(basedir)=0 ? " none existing path ('basedir' param was empty) ":" wrong dir <<" basedir ">>")
-									. 	" to Albis DBASE path: "  Addendum.AlbisDBPath)
 					this.basedir	:= Addendum.AlbisDBPath
 				}
 				else
@@ -1778,8 +2237,7 @@ class PatDBF	{                                                                  
 				this.moreData	:= RegExMatch(opt, "i)moreData\s*\=\s*(true|1)") 	? true    	: false
 				this.AllData   	:= RegExMatch(opt, "i)allData\s*=\s*(true|1)")     	? true     	: false
 				this.minDate   	:= RegExMatch(opt, "i)minDate\s*=\s*(?<Date>(\d{1,2}\.\d{1,2}\.(\d{4}|\d{2}))|((19|20)[0-9]{2})((0[1-9])|(1[0-2]))(0[1-9]|1[0-9]|2[0-9]|3[01]))", min) ? minDate : 0
-				SciTEOutput("this.minDate: " this.minDate)
-				;~ this.minDate 	:= InStr(this.minDate, ".") ? ConvertToDBASEDate(this.minDate) : this.minDate
+
 				If RegExMatch(this.minDate, "((?<Y1>\d{4}|\d{2})\.?<M1>\d{1,2}\.(?<D1>\d{1,2}))|((?<D2>\d{1,2})\.(?<M2>\d{1,2})\.(?<Y2>\d{4}|\d{2}))", _) {
 					Yl := StrLen(_Y1) > 0 ? StrLen(_Y1) : StrLen(_Y2)
 					If (Yl = 3)
@@ -1788,7 +2246,7 @@ class PatDBF	{                                                                  
 					this.minDate .= _Y1 && _M1 && _D1
 					                	? 	_Y1 . SubStr("00" _M1, -1) . SubStr("00" _D1, -1)
 				                  		: 	_Y2 . SubStr("00" _M2, -1) . SubStr("00" _D2, -1)
-					SciTEOutput("this.minDate: " this.minDate)
+					;~ SciTEOutput("this.minDate: " this.minDate)
 				}
 
 			; die minimal notwendigsten Daten
@@ -1796,35 +2254,48 @@ class PatDBF	{                                                                  
 					this.infilter	:= !IsObject(infilter) 	? ["NR", "NAME", "VORNAME", "GEBURT", "GESCHL", "MORTAL"
 																	,	"TELEFON", "TELEFON2", "FAX", "LAST_BEH", "RKENNZ", "NAMENORM"] : infilter
 				else
-					this.infilter	:= !IsObject(infilter) 	? ["NR", "NAME", "VORNAME", "GEBURT", "GESCHL", "NAMENORM"
+					this.infilter	:= !IsObject(infilter) 	? ["NR", "VERSART", "PRIVAT", "NAME", "VORNAME", "GEBURT", "GESCHL", "NAMENORM"
 																	, 	"TELEFON", "TELEFON2", "FAX",	"HAUSARZT", "ARBEIT", "MORTAL", "LAST_BEH", "DEL_DATE", "RKENNZ"] : infilter
+
+			; Umrechnungswerte
+				this.VERSART := ["Mitglied", "Privat1", "Angehöriger", "Privat2", "Rentner"]
+
 
 			; liest alle Patientendaten in ein temporäres Objekt
 				database 	:= new DBASE(this.basedir "\PATIENT.dbf", this.debug)
 				res        	:= database.OpenDBF()
 				matches	:= database.GetFields(this.infilter)
 				res         	:= database.CloseDBF()
+				database	:= ""
 
 			; temp. Objekt wird nach NR sortiert (Patientenindex)
 				For idx, m in matches {
 
-					; bestimmte Datensätze aussortieren (optional)
+				  ; bestimmte Datensätze aussortieren (optional)
 					If !this.AllData && InStr(m.RKENNZ, "*") || (m.LAST_BEH < this.minDate) || (!m.NAME && !m.VORNAME)
 						continue
 
-					; Sortieren und Namensnormierungen anlegen
+				  ; Sortieren und Namensnormierungen anlegen
 					strObj := Object()
 					For key, val in m
 						If (key <> "NR" && StrLen(val) > 0) {
 							strObj[key] := val
 							If (key = "NAME")
-								strObj.DiffN 	:= xstring.TransformGerman(val)
+								strObj.DiffN  	:= xstring.TransformGerman(val)
 							else if (key = "VORNAME")
-								strObj.DiffVN:= xstring.TransformGerman(val)
+								strObj.DiffVN	:= xstring.TransformGerman(val)
+							else if (key = "STRASSE" && !m.HAUSNUMMER) {
+								If !RegExMatch(val, "i)^Stra(ss|ß)e\s+\d+\s*[a-zäöü]*")
+									If RegExMatch(val, "i)\d\s*[a-zäöü]*", HNR) {
+										m.HAUSNUMMER := HNR
+										m.STRASSE := StrReplace(m.STRASSE, HNR)
+									}
 						}
 
-					; nach Patientennummern indiziertes Objekt erstellen
+				  ; nach Patientennummern indiziertes Objekt erstellen
 					this.Patients[m.NR] := strObj
+
+				}
 
 				}
 
@@ -1833,6 +2304,7 @@ class PatDBF	{                                                                  
 				res        	:= database.OpenDBF()
 				matches	:= database.GetFields(["NR", "POS", "TEXT"])      ; POS 93 enthält EMail, POS 97 Ausnahmekennziffern
 				res         	:= database.CloseDBF()
+				database	:= ""
 
 			; und hinzufügen
 				For idx, m in matches
@@ -1842,17 +2314,110 @@ class PatDBF	{                                                                  
 
 		}
 
+	;-- Metadaten
+		ItemsCount()                                                                               	{	; Anzahl der PatID's
+			return this.Patients.Count()
+		}
+
 	;-- Patientendaten
-		Get(PatID, key) {
-		return this.Patients[PatID][key]
+		GetPatDB()                                                                                	{	; das komplette Objekt zurückgeben
+		return this.Patients
 		}
 
-		GetPatID(searchobj) {
+		GetPatIDsAll()                                                                             	{  ; gibt ein Array mit allen PatNR (PatID's) zurück
 
+			PatIDs := Array()
+			For PatID, Pat in this.Patients
+				PatIDs.Push(PatID)
+
+		return PatIDs
 		}
 
-	; Patienten ID Suche per String-Similarity Funktion
-		StringSimilarityID(name1, name2, diffmin:=0.09) {
+		Get(PatID, key)                                                                          	{	; einen bestimmten Schlüssel erhalten
+		;~ return key = "Gd" ? 	SubStr(this.Patients[PatID].GEBURT, 7, 2) "." SubStr(this.Patients[PatID].Gd, 5, 2) "." SubStr(this.Patients[PatID].Gd, 1, 4)
+		return key = "Gd" ? 	ConvertDBASEDate(this.Patients[PatID].GEBURT)  : 	this.Patients[PatID][key]
+		}
+
+		GetNamesArray()                                                                       	{	; nur Nachname und Vorname als Array zurückgeben (für IAutoComplete - Datei umbenennen)
+			names:=[]
+			For PatID, Pat in this.Patients
+				names.Push(Pat.NAME ", " Pat.VORNAME)
+		return names
+		}
+
+		Exist(PatID)                                                                                 	{	; gehört die PatientenID zu einem Pat.
+		return IsObject(this.Patients[PatID]) ? true : false
+		}
+
+		PatID(searchobj, mcon="and")                                                     	{	; Suche mittels anderer Kriterien, z.B. Geburtsdatum ...
+
+			; searchobj 	- muss ein indiziertes Array sein. Jedes Element ist ein key:value Objekt z.B. [{key:"Name", value:"Lauterlach"}, {key:"VORNAME", value:"Kalle"}]
+			; mcon      	- findet entweder wenn alle stimmen ("and") oder nur ein übergebener Parameter ("or")
+			; das wichtigste Suchelement sollte das erste sein
+			; findet nur wenn alle Suchparameter passen
+
+			If !IsObject(searchobj)
+				return
+
+			PatIDs := Array()
+			For PatID, Pat in this.Patients {
+
+				found := mcon="and" ? true : false
+				For key, searchstr in searchobj {
+					If (StrLen(dbstr:=Trim(Pat[key])) = 0) {
+						found := !found
+						break
+					}
+					Switch mcon {
+						Case "and":
+							If (dbstr<>searchstr) {
+								found := !found
+								break
+							}
+						Case "or":
+							If (dbstr=searchstr) {
+								found := !found
+								break
+							}
+					}
+				}
+
+
+				If found
+					PatIDs.Push(PatID)
+
+			}
+
+		return PatIDs.Count()>0 ? PatIDs : ""
+		}
+
+		NAME(PatID, GEBURT:=false)                                                    	{ 	; zusammengesetzten Namen erstellen
+		return this.Patients[PatID].NAME ", " this.Patients[PatID].VORNAME (GEBURT ? ", *" ConvertDBASEDate(this.Patients[PatID].GEBURT) : "")
+		}
+
+		GEBURT(PatID, convert:=false)                                                   	{	; nur das Geburtsdatum
+		return convert ? ConvertDBASEDate(this.Patients[PatID].GEBURT) : this.Patients[PatID].GEBURT
+		}
+
+		TELEFON(PatID, NR:="")                                                            	{	; alle oder eine bestimmte Telefonnummer
+			NR := NR > 2 || NR < 1 ? "" : NR
+		return NR ? this.Patients[PatID]["TELEFON" NR] : [this.Patients[PatID].TELEFON1, this.Patients[PatID].TELEFON2]
+		}
+
+		LASTBEH(PatID, convert:=false)                                                     	{	; letzter Behandlungstag
+		return convert ? ConvertDBASEDate(this.Patients[PatID].LAST_BEH) : this.Patients[PatID].LAST_BEH
+		}
+
+		SEIT(PatID, convert:=false)                                                         	{	; letzter Behandlungstag
+		return convert ? ConvertDBASEDate(this.Patients[PatID].SEIT) : this.Patients[PatID].SEIT
+		}
+
+		VERSART(PatID, readable=true)                                                     {	; Versicherungsart
+			SciTEOutput("versart: " this.Patients[PatID].VERSART)
+		return readable ? this.VERSART[ (this.Patients[PatID].VERSART) ] : this.Patients[PatID].VERSART
+		}
+
+		StringSimilarityID(name1, name2, diffmin:=0.09)                       	{	; Patienten ID Suche per String-Similarity Funktion
 
 			matches	:= Array()
 			minDiff 	:= 100
@@ -1863,7 +2428,6 @@ class PatDBF	{                                                                  
 			For PatID, Patient in this.Patients {
 				DbName1 := Patient.Name, DbName2 := Patient.VORNAME
 				If (DbName1 = name1 && DbNAME2 = name2) || (DbName1 = name2 && DbNAME2 = name1) {
-					;SciTEOutput("PatDB: " PatID)
 					matches.Push(PatID)
 					return matches.1
 				}
@@ -1896,18 +2460,16 @@ class PatDBF	{                                                                  
 		return matches.1
 		}
 
-	; erweitertete Patienten ID Suche
-		StringSimilarityEx(name1, name2, diffmin:=0.09) {
+		StringSimilarityEx(name1, name2, diffmin:=0.09)                       	{	; erweitertete Patienten ID Suche
 
 			PatIDs    	:= Object()
 			minDiff 	:= 100
-			NVname 	:= RegExReplace(name1 . name2, "[,.\-\s]")
-			VNname 	:= RegExReplace(name2 . name1, "[,.\-\s]")
+			NVname 	:= RegExReplace(name1 . name2, "[,\.\-\s]")
+			VNname 	:= RegExReplace(name2 . name1, "[,\.\-\s]")
 
-			For PatID, Patient in this.Patients 		{
+			For PatID, Pat in this.Patients 		{
 
-				DbName	:= RegExReplace(Patient.Nn Patient.Vn, "[\s]")
-				If (StrLen(dbName) = 0)
+				If !(DbName	:= RegExReplace(Pat.NAME Pat.VORNAME, "[\s]"))
 					continue
 
 				DiffA	:= StrDiff(DBName, NVname), DiffB := StrDiff(DbName, VNname)
@@ -2050,7 +2612,7 @@ return data
 
 Leistungskomplexe(PatID=0, StartQuartal="2009-4", SaveToPath="") {   	;-- sammelt, erstellt eine Datenbank für den Abrechnungshelfer
 
-	; im Grunde schon obsolete Funktion ist im Abrechnungsassistenten besser gelöst
+	; im Grunde obsolete Funktion! Ist mit dem Abrechnungsassistentskript besser gelöst
 
 	; Parameter: 	Zeitraum - hilft nur die dazu passenden Eintragungen zu untersuchen
 	;					- 	das übergebene Format muss dem DBASE Format entsprechen also YYYYMMDD
@@ -2078,7 +2640,7 @@ Leistungskomplexe(PatID=0, StartQuartal="2009-4", SaveToPath="") {   	;-- sammel
 		PatAbr := Object()
 
 	; Quartalseinsprünge laden 'BEFUND.dbf'
-		BefundDBF := JSON.Load(FileOpen(Addendum.DBpath "\PatData\BEFUNDDBF.json", "r").Read())
+		BefundDBF := cJSON.Load(FileOpen(Addendum.DBPath "\PatData\BEFUNDDBF.json", "r").Read())
 
 	; Daten von allen Patienten über alle Jahre sammeln
 		befund  	:= new DBASE(Addendum.AlbisDBPath "\BEFUND.dbf", 0)
@@ -2164,16 +2726,23 @@ Leistungskomplexe(PatID=0, StartQuartal="2009-4", SaveToPath="") {   	;-- sammel
 return PatAbr
 }
 
-ReadPatientDBF(basedir="", infilter="", opt="", minDate=20100101) {       	;-- gibt nur benötigte Daten der albiswin\db\PATIENT.DBF zurück
+ReadPatientDBF(basedir="", infilter="", opt="", minDate=20100101) {      	;-- gibt nur benötigte Daten der albiswin\db\PATIENT.DBF zurück
 
 	; basedir:  	kann man leer lassen, der Albishauptpfad wird von der Funktion aus der Registry gelesen
 	; mindate:  	lade nur Patienten die in den letzten 10 Jahren behandelt wurden
 	; 					z.B. minDate := 20100101
-	; Rückgabeparameter ist ein Objekt geordnet nach Patienten Nr. und den dazu gehörenden Daten (die Schlüsselnamen sind die Feldnamen in der DBASE Datenbank)
+	;
+	;					filter   	:= ["NR", "PRIVAT", "GESCHL", "NAME", "VORNAME", "GEBURT", "PLZ", "ORT"
+	;				                 	, "STRASSE", "HAUSNUMMER", "TELEFON", "TELEFON2", "TELEFAX", "ARBEIT", "LAST_BEH", "MORTAL"]
+	;					PatDB 	:= ReadPatientDBF(adm.AlbisDBPath, filter, "allData")
+	;
+	; Rückgabeparameter ist ein Objekt sortiert nach der Nummer des Patienten und den dazu gehörenden Daten (die Schlüsselnamen sind die Feldnamen in der dBASE Datenbank)
+	;
+	; letzte Änderung 14.06.2022
 
-		local PatDB
+		local Patients
 
-		PatDB := Object()
+		Patients := Object()
 		If (StrLen(basedir) = 0) || !InStr(FileExist(basedir), "D")
 			basedir	:= GetAlbisPath() "\db"
 
@@ -2181,60 +2750,62 @@ ReadPatientDBF(basedir="", infilter="", opt="", minDate=20100101) {       	;-- g
 		If !IsObject(infilter)
 			infilter 	:= ["NR", "NAME", "VORNAME", "GEBURT", "GESCHL", "MORTAL", "LAST_BEH", "RKENNZ"]
 
-	; Optionen
-		debug := AllData := 0
-		If RegExMatch(opt, "^\d$", dbg) || RegExMatch(opt, "i)debug(?<bg>\d)\s", d)
-			debug := dbg
-		If RegExMatch(opt, "i)allData")
-			AllData := true
+	; Optionen parsen
+		RegExMatch(opt, "i)\bsaveAs\s*=\s*(?<path>[\.\_\-\pL\s\:\\]+.*?\\)(?<name>.+)+?\.(?<ext>[\w_]+)", file)
+		RegExMatch(opt, "i)EMails*\s*=\s*(?<EMails>[01]|true|false)", get)
+		getEMails	:= getEMails~="i)^(0|false|\s|)$" ? false : true
+		allData   	:= RegExMatch(opt, "i)allData") ? true : false
+		debug   	:= RegExMatch(opt, "i)(debug|dbg)\s*=\s*(?<bg>\d+)(\s|$)", d) ? dbg : false
 
 	; liest alle Patientendaten in ein temp. Objekt ein
 		database 	:= new DBASE(basedir "\PATIENT.dbf", debug)
 		res        	:= database.OpenDBF()
 		matches	:= database.GetFields(infilter)
 		res         	:= database.CloseDBF()
+		database 	:= res := ""
 
 	; temp. Objekt wird nach NR (Patientennummerierung) sortiert
 		For idx, m in matches {
 
-			If !AllData
-				If (InStr(m.RKENNZ, "*") || !m.LAST_BEH || m.LAST_BEH<minDatum || (!m.NAME && !m.VORNAME))
+			If !allData
+				If (InStr(m.RKENNZ, "*") || !m.LAST_BEH || m.LAST_BEH<minDate || (!m.NAME && !m.VORNAME))
 					continue
 
-			obj := Object()
-			For key, val in m
-				If !RegExMatch(key, "i)^(NR|removed)$") ;&& (StrLen(val) > 0)
-					obj[key] := val
-
-			PatDB[m.NR] := obj
+			PatID := m.NR
+			m.Delete("NR")
+			m.Delete("removed")
+			Patients[PatID] := m
 
 		}
+		matches := obj := idx := m := ""
 
-	; Mail Adressen aus PATEXTRA beziehen
-		database 	:= new DBASE(basedir "\PATEXTRA.dbf", debug)
-		res        	:= database.OpenDBF()
-		matches	:= database.GetFields(["NR", "POS", "TEXT"])      ; POS 93 enthält EMail, 97 Ausnahmekennziffern
-		res         	:= database.CloseDBF()
-		database 	:= ""
+	; eMail Adressen aus PATEXTRA.dbf beziehen
+		If getEMails {
 
-		For idx, m in matches
-			If (m.POS = "93") && PatDB.haskey(m.NR)
-				If RegExMatch(m.Text, "i)^.*@.*\.[a-z]+$")
-					PatDB[m.NR].EMAIL := m.Text
+			database 	:= new DBASE(basedir "\PATEXTRA.dbf", debug)
+			res        	:= database.OpenDBF()
+			matches	:= database.GetFields(["NR", "POS", "TEXT"])      ; POS 93 enthält EMail, 97 Ausnahmekennziffern
+			res         	:= database.CloseDBF()
+			database 	:= res := ""
+
+			For idx, m in matches
+				If (m.POS = "93") && Patients.haskey(m.NR)
+					If RegExMatch(m.Text, "i)^.*@.*\.[a-z]+$")
+						Patients[m.NR].EMAIL := m.Text
+
+		}
 
 	; mit opt und 'saveAs=FilePath' die extrahierte Daten speichern
 	; durch Endungserkennung können die Daten im json und csv (; getrennt) gespeichert werden
-		If RegExMatch(opt, "i)\bsaveAs\s*=\s*(?<path>[\._\-\pL\s\\:]+.*?\\)(?<name>.+)+?\.(?<ext>[\w_]+)", file) {
-			If FilePathExist(filepath)
-				If (FileExt = "json")
-					JSONData.Save(filepath . filename "." FileExt, PatDB, true,, 1, "UTF-8")
-		}
+		If (FilePathExist(filepath) && fileext = "json" && IsObject(Patients))
+			FileOpen(filepath . filename "." fileExt, "w", "UTF-8").Write(cJSON.Dump(Patients, 1))
 
+	matches := obj := idx := m := ""
 
-return PatDB
+return Patients
 }
 
-ReadDBASEIndex(admDBPath, DBASEName, ReIndex:=true) 	{              	;-- liest erstellte Indizes oder bei Bedarf eine Indexdatei
+ReadDBASEIndex(admDBPath, DBASEName, ReIndex:=true) 	{              	;-- liest oder erstellt Indizes einer .DBF Datei
 
 		DBASEName 	:= RegExReplace(DBASEName, "i)\.dbf$")
 		DBFDataPath 	:= admDBPath "\DBase"
@@ -2261,8 +2832,8 @@ Convert_IfapDB_Wirkstoffe(filepath, savePath:="")                	{             
 
 	;base:= "M:\albiswin\ifapDB\ibonus3\Datenbank"
 	If !(dbf := FileOpen(filePath, "r", "CP1252")) {
-			MsgBox, % "Dbf - file read failed.`n" filePath
-			return 0
+		MsgBox, % "Dbf - file read failed.`n" filePath
+		return 0
 	}
 
 	If !(save := FileOpen( (!savePath ? A_ScriptDir : savePath) "\Wirkstoffe.txt", "w", "UTF-8")) {
@@ -2510,10 +3081,10 @@ FuzzyFind(dict, query) {																					;-- Creates an array of match objec
 ;----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; HILFSFUNKTIONEN - STRING HANDLING
 ;--------------------------------------------------------------------------------------------------------------------------------------------------------------------;{
-class xstring                                                              	{                          	;-- wird alle String Funktionen von Addendum enthalten
+class xstring                                                             	{                          	;-- wird alle String Funktionen von Addendum enthalten
 
 	; benötigt Addendum_Datum.ak
-	; letzte Änderung 25.11.2021
+	; letzte Änderung 13.06.2022
 
 		static rx
 		RegExStrings()                                	{        	;-- erstellt die RegExString für die string Klassenbibliothek
@@ -2521,21 +3092,26 @@ class xstring                                                              	{   
 			static __ := xstring.RegExStrings()
 
 			rxb := {"S"             	: "[\s,]+"
+					, 	"W"           	: "[\pL\d\-\.\(\)]"                                                      ; Worte allgemein
 					, 	"Person1"  	: "[A-ZÄÖÜ][\pL\-]+[\-\s]*([A-ZÄÖÜ][\pL\-]+)*"
 					, 	"Person2"  	: "[A-ZÄÖÜ][\pL\-]+([\-\s]*[A-ZÄÖÜ][\pL\-]+)*"
 					,	"Date1"        	: "(?<First>(\d{1,2}\.\d{1,2}\.(\d{4}|\d{2}))|(\d{1,2}\.\d{1,2}\.)|(\d{1,2}\.))[\s\-]*(?<Last>\d{1,2}\.\d{1,2}\.(\d{4}|\d{2}))"
 					,	"fileExt"      	: "\.[A-Za-z]{,3}$"}
 
 			this.rx := {	"fileExt"	    	: rxb.FileExt
-				        	, 	"umlauts"   	: {"Ä":"Ae", "Ü":"Ue", "Ö":"Oe", "ä":"ae", "ü":"ue", "ö":"oe", "ß":"sz"}
-				        	, 	"Extract"      	: "^\s*(?<NN>" rxb.Person1 ")" rxb.S "(?<VN>" rxb.Person1 ")" rxb.S "(?<Title>.*)*"
-				        	, 	"Names1"  	: "^\s*(?<NN>" rxb.Person1 ")" rxb.S "(?<VN>" rxb.Person1 ")" rxb.S
-				        	, 	"Names2"  	: "^\s*(?<NN>" rxb.Person2 ")" rxb.S "(?<VN>" rxb.Person2 ")" rxb.S
-				        	; Addendums Dateibezeichnungsregel für Befunde: z.B. "Muster-Mann, Max-Ali, Entlassungsbrief Kardiologie v. 10.10.2020-18.10.2020"
-				        	, 	"CaseName"	: "^\s*(?<N>.*)?\s*,\s*(?<I>.*)?\s*v\.\s*(?<D1>\d+\.\d*\.*\d*)*\s*\-*\s*(?<D2>\d+.\d+.\d+)*(?<E>\s*\.[A-Za-z]+)*$"
+				        	, 	"umlauts"   	: {"Ä":"Ae", "Ü":"Ue", "Ö":"Oe", "ä":"ae", "ü":"ue", "ö":"oe", "ß":"ss"}
+				        	, 	"Extract"      	: "^\s*(?<NN>" rxb.Person1 ")\s*,\s*(?<VN>" rxb.Person1 ")\s*,\s*(?<Title>.*?)(\.(?<Ext>[A-Za-z\d_]{0,3}))*$"
+				        	, 	"Names1"  	: "^\s*(?<NN>" rxb.Person1 ")\s*,\s*(?<VN>" rxb.Person1 ")\s*,"
+				        	, 	"Names2"  	: "^\s*(?<NN>" rxb.Person2 ")\s*,\s*(?<VN>" rxb.Person2 ")\s*,"
+				        	; Addendums Dateibezeichnungsregel für Befunde: z.B. "Muster-Mann, Max-Ali, KH Am Abgrund - Kardiologie v. 10.10.-18.10.2020"
+				        	, 	"CaseName"	: "O)^\s*"
+										    		. 	"(?<N>[\pL\-\s\.]+\s*,\s*[\pL\-\s\.]+)\s*,\s*"                                                ; Nachname, Vorname,
+											    	. 	"((?<K1>[\pL\d\-\s\.']+)\-\s(?<I>[\pL\d\s\-.,']+)|(?<K2>[\pL\d\s\-\.']+))*"	; Kategorie -
+										    		. 	"\s(v\.*o*m*\s*|\s)*"                                                                                     	; (v.)*
+										    		. 	"((?<D1>\d+\.\d*\.*\s*\-\s*\d+\.\d+\.\d+)|(?<D2>\d+\.\d+\.\d+))*"   	; (Datum1-)*Datum2
 				        	,	"DocDates"  	: "i)" rxb.Date1 "?([.\sa-zß\-_]|$)"
-				        	; letztes Datum im Dateinamen (der letzte Datumsstring auf den weder ein Whitespace, Zahl, Punkt oder ein Minus folgt, oder am Ende des String steht
-				        	,	"LastDate" 	: "i)(?<Date>\d{1,2}\.\d{1,2}\.(\d{4}|\d{2})?)([^\-\d]|$)"}
+				        	; letztes Datum im Dateinamen (der letzte Datumstring auf den weder ein Whitespace, Zahl, Punkt oder ein Minus folgt, oder am Ende des String steht
+				        	,	"LastDate" 	: "([\d\.]+\-)*(?<Date>\d{1,2}\.\d{1,2}\.(\d{4}|\d{2}))"}
 
 			For key, rxString in rxb
 				If !this.rx.haskey(key)
@@ -2553,10 +3129,8 @@ class xstring                                                              	{   
 		}
 
 		Flip(str)                          	               	{        	;-- String reverse
-			VarSetCapacity(new, n:=StrLen(str))
-			Loop % n
-				new .= SubStr(str, n--, 1)
-		return new
+			DllCall("msvcrt.dll\" (A_IsUnicode ? "_wcsrev" : "_strrev"), "Ptr", &str, "CDECL")        ; fastest version
+		return str
 		}
 
 		Karteikartentext(str)                        	{        	;-- entfernt Namen, Dateierweiterung und überflüssige Leerzeichen
@@ -2567,7 +3141,7 @@ class xstring                                                              	{   
 		}
 
 		RemovePunctuation(str)                  	{	      	;-- Interpunktion entfernen
-		return RegExReplace(str, "[-,'\.;:_\+\*\(\)\{\}\[\]\/\\]")
+		return RegExReplace(str, "[;:_,'\-\.\+\*\(\)\{\}\[\]\/\\]")
 		}
 
 		TransformGerman(str)                     	{        	;-- für Stringmatching Algorithmen
@@ -2612,32 +3186,33 @@ class xstring                                                              	{   
 		}
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
-	; Funktionen für die PDF Kategorisierung von Addendum-Gui.ahk
+	; Funktionen für die Dokument Kategorisierung von Addendum_Gui.ahk
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 		ContainsName(str)                         	{       	;-- enthält Personennamen?
 			rxpos := RegExMatch(Str, this.rx.Names1)
 			return (rxpos ? rxpos : RegExMatch(Str, this.rx.Names2))
 		}
 
-		isFullNamed(str)                            	{        	;-- PDF-Bezeichnung enthält Nachname,Vorname, Dokumentbezeichung und Datum
+		isFullNamed(str)                            	{        	;-- PDF-Bezeichnung enthält Nachname, Vorname, Dokumentbezeichung und Datum
 
 			If RegExMatch(str, this.rx.CaseName, F) {
-				Part1	:= RegExReplace(FN      	, "[\s,]+$")
-				Part2	:= RegExReplace(FI       	, "[\s,]+$")
-				Part3	:= RegExReplace(FD1 FD2, "^[\s,(v\.)]+")
-				If (Part1 && Part2 && Part3)
+				Part1	:= Trim(RegExReplace(F.N                                 	, "[\s,]+$"))
+				Part2	:= Trim(RegExReplace((F.K1 ? F.K1 : F.K2) F.I     	, "[\s,]+$"))
+				Part2	:= Trim(RegExReplace(Part2                              	 	, "v[\.om\s,]*$"))
+				Part3	:= Trim(RegExReplace((F.D1 ? F.D1 : F.D2)        	, "^\s*v\.*o*m*\s*"))
+				;~ SciTEOutput("isFullNamed: " Part1 " | " Part2 " | " Part3 "`n          : " StrLen(Part1) " | " StrLen(Part2) " | " StrLen(Part3))
+				If (StrLen(Part1)>0 && StrLen(Part2)>0 && StrLen(Part3)>0)
 					return true
 			}
 
 		return false
 		}
 
-		isNamed(str)                                 	{        	;-- Dateiname enthält Nachname,Vorname und eine Datumsangabe
+		isNamed(str)                                 	{        	;-- Dateiname enthält Nachname, Vorname und eine Datumsangabe
 
 			If RegExMatch(str, this.rx.CaseName, F) {
-				Part1	:= RegExReplace(FN      	, "[\s,]+$")
-				Part2	:= RegExReplace(FI       	, "[\s,]+$")
-				Part3	:= RegExReplace(FD1 FD2, "^[\s,v\.]+")
+				Part1	:= Trim(RegExReplace(F.N                                 	, "[\s,]+$"))
+				Part3	:= Trim(RegExReplace((F.D1 ? F.D1 : F.D2)        	, "^\s*v\.*o*m*\s*"))
 				If (Part1 && Part3)
 					return true
 			}
@@ -2657,7 +3232,7 @@ class xstring                                                              	{   
 
 			Names(str)                                             	{         	;-- Personennamen zurückgeben
 				If RegExMatch(Str, this.rx.Extract, Pat)
-					return {"Nn":PatNN, "Vn":PatVN, "DokTitel":PatDokTitel}
+					return {"Nn":PatNN, "Vn":PatVN, "DocTitle":PatTitle, "Ext":PatExt}
 			}
 
 		}

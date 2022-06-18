@@ -11,6 +11,14 @@
         "ingredient": "Insulin (human), normal",
         "use": "Diabetes"
     },
+    "Actrapid nfill": {
+        "ingredient": "Insulin (human)",
+        "use": "Diabetes"
+    },
+    "Aerius": {
+        "ingredient": "",
+        "use": "Asthma"
+    },
     "Aldactone": {
         "ingredient": "Spironolacton",
         "use": "Blutdruck/Wassertabl."
@@ -88,6 +96,10 @@
         "use": "Schmerzen"
     },
     "Ass": {
+        "ingredient": "Acetylsalicylsäure",
+        "use": "Gerinnung"
+    },
+    "Ass Dexcel": {
         "ingredient": "Acetylsalicylsäure",
         "use": "Gerinnung"
     },
@@ -179,6 +191,10 @@
         "ingredient": "Candesartan",
         "use": "Blutdruck"
     },
+    "Blopress Forte": {
+        "ingredient": "Candesartan und Hydrochlorothiazid",
+        "use": "Blutdruck"
+    },
     "Brilique": {
         "ingredient": "Ticagrelor",
         "use": "KHK/Stent"
@@ -224,7 +240,7 @@
         "use": "Bluthochdruck"
     },
     "Caramlo": {
-        "ingredient": "",
+        "ingredient": "Candesartan und Amlodipin",
         "use": "Hypertonie"
     },
     "Carmen Ace": {
@@ -359,6 +375,10 @@
         "ingredient": "Urapidil",
         "use": "Bluthochdruck, ausgeprägt"
     },
+    "Eferox Jod": {
+        "ingredient": "L-Thyroxin + Jod",
+        "use": "Schilddrüse"
+    },
     "Eliquis": {
         "ingredient": "Apixaban",
         "use": "Gerinnung"
@@ -366,6 +386,10 @@
     "Elontril": {
         "ingredient": "Bupropion",
         "use": "Stimmung/Psyche"
+    },
+    "Emselex": {
+        "ingredient": "Darifenacin",
+        "use": "Blase"
     },
     "Enalagamma": {
         "ingredient": "Enalapril",
@@ -390,6 +414,10 @@
     "EplerenHEXAL": {
         "ingredient": "Eplerenon",
         "use": "Herzinsuffizienz"
+    },
+    "Eremfat": {
+        "ingredient": "Erythromycin",
+        "use": "Akne inversa"
     },
     "Escitalopram": {
         "ingredient": "Escitalopram",
@@ -434,6 +462,10 @@
     "Febuxostat": {
         "ingredient": "Febuxostat",
         "use": "Herzrhythmus"
+    },
+    "Felodipin": {
+        "ingredient": "Felodipin",
+        "use": "Hypertonie"
     },
     "Fenofibrat": {
         "ingredient": "Fenofibrat",
@@ -564,6 +596,10 @@
         "remark": "",
         "use": "Schmerzen"
     },
+    "Hydromorphon-Hcl Krug": {
+        "ingredient": "Hydromorphon",
+        "use": "Schmerzen/Morphine"
+    },
     "Hygroton": {
         "ingredient": "Chlortalidon",
         "use": "Blutdruck (Wassertbl.)"
@@ -608,6 +644,10 @@
         "ingredient": "Empagliflozin",
         "use": "Diabetes"
     },
+    "Kalinor P": {
+        "ingredient": "Kalium",
+        "use": "niedriger Kaliumspiegel im Blut"
+    },
     "Karvezide": {
         "ingredient": "",
         "use": "Blutdruck"
@@ -636,6 +676,14 @@
         "ingredient": "Levothyroxin",
         "use": "Schilddrüse"
     },
+    "Lactulose": {
+        "ingredient": "Lactulose",
+        "use": "Stuhlgang"
+    },
+    "Lactulose Sirup": {
+        "ingredient": "Lactulose",
+        "use": "Obstipation/Leber"
+    },
     "Lamotrigin": {
         "ingredient": "Lamotrigin",
         "use": "Epilepsie"
@@ -656,6 +704,10 @@
         "ingredient": "Lercanidipin",
         "use": "Bluthochdruck"
     },
+    "Lercanidipin Hcl": {
+        "ingredient": "Lercanidipin",
+        "use": "Blutdruck"
+    },
     "Lercanidipin Omniaph": {
         "ingredient": "Lercanidipin",
         "use": "Blutdruck"
@@ -665,6 +717,10 @@
         "use": "Blutdruck"
     },
     "Levetiracetam": {
+        "ingredient": "Levetiracetam",
+        "use": "Epilepsie"
+    },
+    "Levetiracetam Pharma": {
         "ingredient": "Levetiracetam",
         "use": "Epilepsie"
     },
@@ -715,6 +771,10 @@
     "Madopar": {
         "ingredient": "L-Dopa und Benserazid",
         "use": "M. Parkinson"
+    },
+    "Magnesium": {
+        "ingredient": "Magnesium",
+        "use": "Herzrhythmus"
     },
     "Marcumar": {
         "ingredient": " Phenprocoumon",
@@ -808,6 +868,10 @@
         "ingredient": "Propiverin",
         "use": "Blase"
     },
+    "Minocyclin": {
+        "ingredient": "Minocyclin",
+        "use": "Akne inversa"
+    },
     "Mirtalich": {
         "ingredient": "Mirtazapin",
         "use": "Stimmung/Psyche"
@@ -849,6 +913,10 @@
         "ingredient": "Nebivolol",
         "use": "Blutdruck/Puls"
     },
+    "Nephral": {
+        "ingredient": "Triamteren und Hydrochlorothiazid",
+        "use": "Wassertablette"
+    },
     "Nifedipin": {
         "ingredient": "Nifedipin",
         "use": "Blutdruck"
@@ -861,6 +929,10 @@
         "ingredient": "Nitrendipin",
         "use": "Bluthochdruck"
     },
+    "Nitrolingual Akut": {
+        "ingredient": "Nitrolingual",
+        "use": "Brustschmerz"
+    },
     "Novaminsulfon": {
         "ingredient": "Metamizol",
         "use": "Schmerzen"
@@ -872,6 +944,14 @@
     "Novorapid Flexpen": {
         "ingredient": "Insulin aspart",
         "use": "Diabetes"
+    },
+    "Nustendi": {
+        "ingredient": "Bempedoinsäure und Ezetimib",
+        "use": "Cholesterin"
+    },
+    "Obsidan": {
+        "ingredient": "Propranololhydrochlorid",
+        "use": "Pfortaderhochdruck"
     },
     "Oekolp Ovula": {
         "ingredient": "",
@@ -909,6 +989,10 @@
         "ingredient": "Opipramol",
         "use": "Stimmung/Psyche"
     },
+    "Oxycocomp": {
+        "ingredient": "Oxycodon und Naloxon [MORPHIN]",
+        "use": "Schmerzen"
+    },
     "Oxycodon": {
         "ingredient": "Oxycodon-Hydrochlorid",
         "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
@@ -918,6 +1002,10 @@
         "ingredient": "Oxycodon/Naloxon",
         "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
         "use": "Schmerzen/Morphin-BTM"
+    },
+    "Oxycodon Hcl": {
+        "ingredient": "Oxycodon akut",
+        "use": "Schmerzen"
     },
     "Oxycodon/Naloxon": {
         "ingredient": "Oxycodon und Naloxon",
@@ -957,6 +1045,14 @@
         "ingredient": "Penicillin ",
         "use": "Infektion"
     },
+    "Perindopril Ind": {
+        "ingredient": "Perindopril",
+        "use": "Blutdruck"
+    },
+    "Pipamperon": {
+        "ingredient": "Pipamperon",
+        "use": "Schlafen/Demenz"
+    },
     "Plavix": {
         "ingredient": "Clopidogrel",
         "use": "Gerinnung/Herz"
@@ -968,6 +1064,10 @@
     "Pramipexol": {
         "ingredient": "Pramipexol",
         "use": "Parkinson"
+    },
+    "Prasugrel": {
+        "ingredient": "Clopidogrel",
+        "use": "KHK - Prophylaxe Stents"
     },
     "Prednisolon": {
         "ingredient": "Prednisolon",
@@ -981,9 +1081,17 @@
         "ingredient": "Pregabalin",
         "use": "Schmerzen"
     },
+    "Pregabalin-Neurax": {
+        "ingredient": "Pregabalin",
+        "use": "neuropath. Schmerzen"
+    },
     "Preterax": {
         "ingredient": "",
         "use": "Blutdruck/Wassertablette"
+    },
+    "Procoralan": {
+        "ingredient": "Ivabradin",
+        "use": "Herzrhythmus"
     },
     "Progestan": {
         "ingredient": "Progesteron",
@@ -996,6 +1104,10 @@
     "Propycil": {
         "ingredient": "Propycil",
         "use": "Schilddrüse"
+    },
+    "Protaphane nfill": {
+        "ingredient": "Insulin Isophan (human)",
+        "use": "Diabetes"
     },
     "Protaphane Penfill": {
         "ingredient": "Insulin Isophan",
@@ -1033,6 +1145,10 @@
         "ingredient": "Ramipril",
         "use": "Hypertonie"
     },
+    "Ramipril Pl": {
+        "ingredient": "Ramipril und Amlodipin",
+        "use": "Blutdruck"
+    },
     "Ramipril/Amlo": {
         "ingredient": "Ramipril und Amlodipin",
         "use": "Blutdruck"
@@ -1056,6 +1172,10 @@
     "Revinty": {
         "ingredient": "Vilanterol und Fluticason furoat",
         "use": "Asthma/COPD"
+    },
+    "Revinty Ellipta": {
+        "ingredient": "Vilanterol und Fluticasonfuroat",
+        "use": "COPD/Lunge"
     },
     "Risperidon": {
         "ingredient": "Risperidon",
@@ -1098,6 +1218,10 @@
     "Sativex": {
         "ingredient": "Cannabinoide",
         "use": "Muskelkrämpfe bei neurologischer Grunderkrankung"
+    },
+    "Sativex Z Anw": {
+        "ingredient": "Cannabinoide",
+        "use": "Spastik"
     },
     "Selegilin-Neurax": {
         "ingredient": "Selegilin",
@@ -1222,6 +1346,10 @@
         "ingredient": "Alfacalcidol",
         "use": "Vitamin D und Analoga"
     },
+    "Thyronajod": {
+        "ingredient": "L-Thyroxin",
+        "use": "Schilddrüse"
+    },
     "Tilidin": {
         "ingredient": "Tilidin/Naloxon",
         "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
@@ -1234,6 +1362,10 @@
     "Tilidin Plus": {
         "ingredient": "Tilidin und Naloxon",
         "use": "Schmerzen [Morphin]"
+    },
+    "Tizanidin": {
+        "ingredient": "Tizanidin",
+        "use": "Spastik"
     },
     "Torasemid": {
         "ingredient": "Torasemid",
@@ -1286,6 +1418,10 @@
         "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
         "use": "Schmerzen"
     },
+    "Valsacor": {
+        "ingredient": "Valsartan",
+        "use": "Bluthochdruck"
+    },
     "Valsartan": {
         "ingredient": "Valsartan",
         "use": "Blutdruck"
@@ -1334,6 +1470,10 @@
         "ingredient": "Vitamin B Komplex",
         "use": "Vitamin B Mangel"
     },
+    "Vitamin B1": {
+        "ingredient": "Vitamin B1",
+        "use": "Leber"
+    },
     "Vitamin B12": {
         "ingredient": "Cyanocobalamin",
         "use": "Perniziosa (Vitamin B12 Mangelzustände)"
@@ -1354,9 +1494,17 @@
         "ingredient": "Rivaroxaban",
         "use": "Gerinnung"
     },
+    "Xarelto bis": {
+        "ingredient": "",
+        "use": ""
+    },
     "Xelevia": {
         "ingredient": "Sitagplitpin",
         "use": "Diabetes"
+    },
+    "Zanipress": {
+        "ingredient": "Enalapril / Lercanidipin",
+        "use": "Bluthochdruck"
     },
     "Zolpidem": {
         "ingredient": "Zolpidem",

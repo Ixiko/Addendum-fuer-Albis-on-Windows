@@ -27,17 +27,20 @@
 ;
 ;	                    			Addendum für Albis on Windows
 ;                        			by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;									begin: 02.04.2021,	last modification: 18.12.2021
+;									begin: 02.04.2021,	last modification: 31.05.2022
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 /*  Notizen
 
 	PATEXTRA - POS:  	EMail 				                    			= 93, 7
+								                                        				= 81
+								keinen Medplan?                 				= 82
 								Chroniker?                        				= 83
 															                    		= 84
 								Anmerkungen/weitere Info.				= 0
 															                    		= 95
 								Geb.Datum   	                    			= 99
 								Ausnahmeindikation                     		= 97
+								Geb.Datum (Rechnungsempfänger) 	= 98
 
 */
 
@@ -81,7 +84,7 @@
   ; Patientendaten laden
 	filter   	:= ["NR", "PRIVAT", "GESCHL", "NAME", "VORNAME", "GEBURT",  "PLZ", "ORT"
 					, "STRASSE", "HAUSNUMMER", "TELEFON", "TELEFON2", "TELEFAX", "ARBEIT", "LAST_BEH", "MORTAL"]
-	PatDB 	:= ReadPatientDBF(adm.AlbisDBPath,,, "allData")
+	PatDB 	:= ReadPatientDBF(adm.AlbisDBPath, filter, "allData")
 	For PatID, Pat in PatDB
 		Pat.AGE := Age(Pat.GEBURT, A_YYYY A_MM A_DD)
 ;}
@@ -90,12 +93,12 @@
 
 return
 
-^!+::Reload
-#IfWinActive Quicksearch
-Esc::ExitApp
+^!#::Reload
+#IfWinActive, Quicksearch ahk_class AutoHotkeyGUI
+^Esc::ExitApp
 #IfWinActive
 
-Quicksearch(dbname, searchstring)                                                                   	{	; Datenbanksuche + Gui Anzeige
+Quicksearch(dbname, searchstring)                                                                    	{	; Datenbanksuche + Gui Anzeige
 
 		global dbfiles, dbfdata, InCellEdit, Running
 
@@ -110,7 +113,7 @@ Quicksearch(dbname, searchstring)                                               
 	; RegEx Suchstrings erstellen
 		pattern := Object(), RegExSearch := false
 		For idx, line in StrSplit(searchstring, "`n") {
-			RegExMatch(Trim(line), "(?<field>.*)?\s*\=\s*(?<RegEx>rx:)*(?<rx>.*)$", m)
+			RegExMatch(Trim(line), "^(?<field>.*)?\s*\=\s*(?<RegEx>rx:)*(?<rx>.*)$", m)
 			If mrx
 				pattern[mfield] := mRegEx . mrx
 			if mRegEx
@@ -130,12 +133,13 @@ Quicksearch(dbname, searchstring)                                               
 																					, 	"QuickSearch_Progress")
 		}
 		else {
-		  ;                    	   Search(pattern, startrecord=0, callbackFunc="", opt="")
+		  ; Search(pattern, startrecord=0, callbackFunc="", opt="")
 			dbfdata	:= dbf.Search(pattern, 0, "QuickSearch_Progress"	, {  "SaveMatchingSets"    	: false          	; Treffer in Datei speichern
-																										, "LogicalComparison" 	: "and"         	; Treffer nur wenn das gesamte Muster übereinstimmt
-																										, "maxMatches"             	: 12000       	; maximale Übereinstimmungen die gefunden werden sollen
+																										, "LogicalComparison" 	: "and"         	; "and" = Treffer nur wenn das gesamte Muster übereinstimmt
+																										, "maxMatches"             	: 12000       	; maximale Items um RAM-Fehler zu vermeiden
 																										, "MSetsPath"               	: A_Temp "\QuickSearch_" dbname ".txt"
-																										, "debug"                      	: 1
+																										, "debug"                      	: 0x2          	; es können mehrere Debugvarianten gleichzeitig genutzt werden
+																										, "OutputDebug"          	: "QuickSearch_OutputDebug"
 																										, "ReturnDeleted"          	: QSDBRView })
 		}
 		filepos   	:= dbf.CloseDBF()
@@ -153,7 +157,6 @@ Quicksearch(dbname, searchstring)                                               
 		ShowPatNames 	:= Props.ShowPatNames()
 		AutoDateFormat 	:= Props.AutoDateFormat()
 		PATNRColumn   	:= Props.PATNRColumn()                                               	; Spaltennummer der PATNR Spalte
-
 
 	; Spalten zusammenstellen
 		equalIDs           	:= Object()
@@ -181,9 +184,11 @@ Quicksearch(dbname, searchstring)                                               
 					If AutoDateFormat && RegExMatch(flabel, "i)^(" Props.DateLabels "|DATETIME|" Props.TimeLabels ")$") {
 						if RegExMatch(flabel, "i)DATETIME")
 							FormatTime, val, % val, dd.MM.yyyy HH:mm
+						else if RegExMatch(flabel, "(" Props.DateLabels ")")
+							val := ConvertDBASEDate(val)
 						else if RegExMatch(flabel, "(" Props.TimeLabels ")") {
-								FormatTime, time, % today SubStr("0" val, -3) , HH:mm
-								val := time = "00:00" ? val : time
+							FormatTime, time, % today SubStr("0" val, -3) , HH:mm
+							val := time = "00:00" ? val : time
 						}
 						else {
 							If (dbname = "CAVE")
@@ -245,10 +250,11 @@ QuickSearch_Gui()                                                               
 		global	QSMinKBText	, QSMaxKBText		, QSFilterText                                  	; Textfelder
 		global 	QShDB         	, QShDBFL    		, QShDBR                                         ; hwnd
 		global	QSFeldWahlT	, QSFeldWahl		, QSFeldAlle			, QSFeldKeine     	, QSFelderT
+		global 	QSRXSearch
 		global	QSSearch			, QSSaveRes			, QSSaveAs			, QSSaveSearch	, QSQuit			, QSReload                	; Buttons
 		global 	QSBlockNR		, QSBlockSize		, QSLBlock			, QSNBlock
-		global 	QSEXTRANFO 	, QSEXTRAS	    	, QSXTRT          	, QSDBSSave    	, QSDBSParam	, QSDBName
-		global	QSDBSNew      	, QSDBRView     	, QSDBRPatView	, QSDBRDFormat
+		global 	QSEXTRANFO 	, QSEXTRAS	    	, QSEXTRA2      	, QSXTRT          	, QSDBSSave   	, QSDBSParam
+		global	QSDBName  	, QSDBSNew      	, QSDBRView     	, QSDBRPatView	, QSDBRDFormat
 		global 	BlockNr			, BlockSize		   	, lastBlockSize		, lastBlockNr			, dbfRecords  	, lastSavePath
 		global 	QSmrgX			, QSmrgY				, QSLvX, QSLvY, QSLvW, QSLvH
 		global	InCellEdit
@@ -307,7 +313,6 @@ QuickSearch_Gui()                                                               
 		GClientY     	:= !GClientY 	||	GClientY < 10  	? 0    	: GClientY
 		GClientW   	:= !GClientW	||	GClientW <1455	? 1455	: GClientW - 5
 		GClientH   	:= !GClientH	||	GClientH <830 	? 830 	: GClientH
-		;~ GClientW  	-= 5
 
 		If !IsInsideVisibleArea(GClientX, GClientY, GClientW, GClientH, CoordInjury)
 			GClientX := GClientY := "Center"
@@ -323,7 +328,7 @@ QuickSearch_Gui()                                                               
 
 	;}
 
-		Gui, QS: new    	, HWNDhQS -DPIScale +Resize
+		Gui, QS: new    	, HWNDhQS -DPIScale +Resize minSize1600x900
 		Gui, QS: Color  	, % "c" gcolor , % "c" tcolor
 		Gui, QS: Margin	, 5, 5
 
@@ -453,7 +458,7 @@ QuickSearch_Gui()                                                               
 		GuiControlGet, cp, QS:Pos, QSFelderT
 		GuiControlGet, dp, QS:Pos, QSFeldWahlT
 		Gui, QS: Font	, % "s" FSize+2 " q5 Italic" ColorTitles, Futura Bk Bt
-		Gui, QS: Add	, Text        	, % "x" GCol3X " y" cpY " w" DBSearchW " " BGT                                                       	, % "RegEx-Suche"
+		Gui, QS: Add	, Checkbox  	, % "x" GCol3X " y" cpY " w" DBSearchW " " BGT " vQSRXSearch gQS_Handler"           	, % "RegEx-Suche"
 
 		GuiControlGet, cp, QS:Pos, QSDB
 		GuiControlGet, dp, QS:Pos, QSDBFL
@@ -462,12 +467,11 @@ QuickSearch_Gui()                                                               
 		Gui, QS: Add	, Edit         	, % "x" dpX+dpW+5 " y" dpY 	" w" DBSearchW " h" dpH . opt                                    	, % ""
 
 		Gui, QS: Font	, % "s" FSize " q5 Normal" ColorData
-		Gui, QS: Add	, ComboBox 	, % "y+2 w" DBSearchW " r8 vQSDBSParam 	gQS_Handler"                                      	, % ""
-		;~ Gui, QS: Add	, ComboBox 	, % " x+1 y" cpY " w" dpW-cpW-2+100 " h" FSize " r8 vQSDBSParam 	gQS_Handler"  	, % ""
+		Gui, QS: Add	, ComboBox 	, % "y+2 w" DBSearchW+1 " r8 vQSDBSParam 	gQS_Handler"                                  	, % ""
 
 		GuiControlGet, cp, QS:Pos, QSDBSParam
 		Gui, QS: Font	, % "s" FSize-1 " q5 Normal" ColorData
-		Gui, QS: Add	, Button        	, % "x+1 y" cpY+1 " h" cpH-2 " vQSDBSSave    gQS_Handler"                                  	, % "Speichern"
+		Gui, QS: Add	, Button        	, % "x+5 y" cpY+1 " h" cpH-2 " vQSDBSSave    gQS_Handler"                                  	, % "Speichern"
 		Gui, QS: Add	, Button        	, % "x+3 h" cpH-2 " vQSDBSNew    gQS_Handler"                                                     	, % "neue Suche"
 
 		GuiControlGet, cp, QS:Pos, QSDBSSave
@@ -490,7 +494,13 @@ QuickSearch_Gui()                                                               
 
 		GuiControlGet	, ep           	, QS: Pos	, QSEXTRANFO
 		Gui, QS: Font	, % "s" FSize " q5 Normal" ColorData
-		Gui, QS: Add	, Edit         	, % "y+1w400 h" dpH-epH-1 " -E0x200 vQSEXTRAS"
+		Gui, QS: Add	, Edit         	, % "y+1 w400 h" dpH-epH-cpH-1 " -E0x200 vQSEXTRAS"
+		Gui, QS: Add	, Edit         	, % "y+1 w400 h" cpH " -E0x200 hwndhwnd vQSEXTRA2"
+
+	  ; Edit Banner setzen
+		banner := "kopierbare Debug-Ausgaben"
+		SendMessage, 0x1501, 1, &banner,, % "ahk_id " hwnd
+		Edit_SetMargin(hwnd, 1, 1, 1, 1)
 
 		GuiControl, % "QS:" (ExtrasStatus ? "Enable" : "Disable"), % "QSEXTRANFO"
 		GuiControl, % "QS:" (ExtrasStatus ? "Enable" : "Disable"), % "QSEXTRAS"
@@ -500,7 +510,7 @@ QuickSearch_Gui()                                                               
 
 	;-: ZEILE 2: BEFEHLE                                    	;{
 
-		GuiControlGet, cp, QS: Pos , QSEXTRAS
+		GuiControlGet, cp, QS: Pos , QSEXTRA2
 		GuiControlGet, dp, QS: Pos , QSDBSSave
 		GuiW          	:= cpX + cpW-5
 		QSEXTRASx 	:= cpX
@@ -623,7 +633,7 @@ QuickSearch_Gui()                                                               
 		wqs  	    	:= GetWindowSpot(hQS)
 		LvH           	:= wqs.CH - cpY - cpH
 
-		Gui, QS: Font	, % "s" FSize+1 " Normal" ColorData, Futura Bk Bt
+		Gui, QS: Font	, % "s" FSize " Normal" ColorData, Futura Bk Bt
 		Gui, QS: Add	, ListView    	, % "xm y" cpY+cpH+7 " w" GuiW " h" LvH " "  LVOptions3	, % "- -"
 		Props.hLV   	:= QShDBR
 
@@ -673,9 +683,10 @@ return
 
 QS_Handler: 	;{
 
+	Critical
+
 	Gui, QS: Submit, NoHide
 
-	Critical
 
 	Switch A_GuiControl	{
 
@@ -699,6 +710,9 @@ QS_Handler: 	;{
 
 		Case "QSDBR":                             	;{   	Datentabelle
 
+
+			;SciTEOutput("A_GuiControl: " A_GuiControl ", A_GuiEvent: " A_GuiEvent ", A_Eventinfo: " A_EventInfo ", PATNRCol: " Pcol := Props.PATNRColumn())
+
 			       If (A_GuiEvent = "ColClick"                  	)	{
 				colHDR := A_EventInfo
 				MouseGetPos, mx, my
@@ -706,10 +720,12 @@ QS_Handler: 	;{
 				SetTimer, QSColTipOff, -3000
 			}
 		 ; Karteikartenaufruf
-			else if (A_GuiEvent = "DoubleClick"            	) 	{
+			else if (A_GuiEvent ~= "i)^(DoubleClick|A)$") 	{
 
-				If !WinExist("ahk_class OptoAppClass") || !A_EventInfo
+				If (!WinExist("ahk_class OptoAppClass") || A_EventInfo=0) {
+					SciTEOutput(A_ThisFunc ": returning")
 					return
+				}
 
 				If (Pcol := Props.PATNRColumn()) {
 					Gui, QS: ListView, QSDBR
@@ -718,6 +734,7 @@ QS_Handler: 	;{
 					GuiControl, QS:, QST5, % "[" PATNR "] " (PatName := PatDB[PATNR].NAME ", " PatDB[PATNR].VORNAME
 														. 	" *" ConvertDBASEDate(PatDB[PATNR].GEBURT))
 					AlbisAkteOeffnen(PatName, PATNR)
+					SciTEOutput("NR Col: " Pcol " , " PatName ", " PATNR " ( PatCell: " PatCell ")")
 				}
 
 			}
@@ -738,8 +755,10 @@ QS_Handler: 	;{
 				}
 
 			 ; verlinkte Daten aus anderer Datenbank anzeigen (wenn Häkchen bei verknüpfte Daten gesetzt ist)
-				If QSXTRT && Props.LabelExist("TEXTDB")
+				If QSXTRT && Props.LabelExist("TEXTDB") ;(Props.LabelExist("TEXTDB") || Props.LabelExist("TEXT"))
 					QuickSearch_Extras(tblRow)
+				else if QSXTRT && (Props.LabelExist("TXTHINW") || Props.LabelExist("TEXTE"))
+					QuickSearch_TxtHinw(tblRow, Props.LabelExist("TXTHINW") ? "TXTHINW" : "TEXTE")
 
 			}
 		;}
@@ -839,6 +858,7 @@ QSGuiSize:    	;{
 	GuiControl, QS: MoveDraw	, QSPGS       	, % "w" QSW-10
 	GuiControl, QS: MoveDraw	, QSEXTRANFO	, % "w" (QSEXTRASw < 300 ? 300 : QSEXTRASw)
 	GuiControl, QS: MoveDraw	, QSEXTRAS   	, % "w" (QSEXTRASw < 300 ? 300 : QSEXTRASw)
+	GuiControl, QS: MoveDraw	, QSEXTRA2   	, % "w" (QSEXTRASw < 300 ? 300 : QSEXTRASw)
 	GuiControl, QS: MoveDraw	, QSReload      	, % "x" QSW-QSReloadw-5
 	GuiControl, QS: +Redraw 	, QSDBR
 	WinSet, Redraw,, % "ahk_id " QShDBR
@@ -879,16 +899,29 @@ QuickSearch_Hotkeys()                                                           
 
 	global dbname, QS, QSDBS, QSBlockNr, QSBlockSize
 
-	If !WinActive("Quicksearch ahk_class AutoHotkeyGUI") {
+  ; überprüfe nochmal welches Fenster tatsächlich aktiv ist
+	MouseGetPos,,, hMouseOverWin
+	mouseWinTitle 	:= WinGetTitle(hMouseOverWin)
+	mouseWinClass	:= WinGetClass(hMouseOverWin)
+		; oder
+	hfocus := GetFocusedControlHwnd()
+	hAncestor := GetAncestor(hfocus, 1)
+	AncestorWinTitle := WinGetTitle(hAncestor)
+	AncestorWinClass := WinGetClass(hAncestor)
+	;~ SciTEOutput("[" hfocus ", " hAncestor "] " AncestorWinTitle " ahk_class " AncestorWinClass)
+
+	If (mouseWinTitle <> "QuickSearch" && mouseWinClass <> "AutoHotkeyGUI")
+	|| (AncestorWinTitle <> "QuickSearch" && AncestorWinClass <> "AutoHotkeyGUI")
+	|| !WinActive("Quicksearch ahk_class AutoHotkeyGUI") {
 		SendInput, % "{" A_ThisHotkey "}"
 		return
 	}
 
+  ; Hotkey-Befehl ausführen
 	thisHotkey := A_ThisHotkey
 	Gui, QS: Default
 	Gui, QS: Submit, NoHide
 	GuiControlGet, gfocus, QS: FocusV
-	;SciTEOutput("Focus: " gfocus ", " thisHotkey)
 
 	Switch thisHotkey {
 
@@ -938,6 +971,11 @@ QuickSearch_Progress(index, maxIndex, len, matchcount)                          
 	GuiControl, QS:, QST1 	, % index
 	GuiControl, QS:, QST3 	, % matchcount
 
+}
+
+QuickSearch_OutputDebug(debugmsg)                                                              	{	; Debugstrings in eigener Ausgabe
+	global QS, QSEXTRA2
+	GuiControl, QS:, QSEXTRA2, % debugmsg
 }
 
 QuickSearch_Extras(tblRow, TEXTDB:=0, TEXTDate:=0)                                         	{	; verknüpfte Daten aus anderer Datenbank laden
@@ -1113,6 +1151,64 @@ QuickSearch_Extras(tblRow, TEXTDB:=0, TEXTDate:=0)                              
 		}
 
 return extra
+}
+
+QuickSearch_TxtHinw(tblRow, HeaderLabel)                                                          	{ 	; verknüpfte Texthinweise in den Labordatenbanken
+
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	; TXTHINW ist der Link zu den zusätzlichen Texten
+	; TXTHINW = LABTEXTE.dbf
+	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+		Gui, QS: ListView, QSDBR
+
+		TXTNR := Array()
+		LV_GetText(TXT, tblRow, Props.HeaderVirtualPos("TXTHINW"))
+		If TXT
+			TXTNR.Push([TXT, "TXTHINW"])
+		LV_GetText(TXT, tblRow, Props.HeaderVirtualPos("TEXTE"))
+		If TXT
+			TXTNR.Push([TXT, "TEXTE"])
+		LV_GetText(TXT, tblRow, Props.HeaderVirtualPos("ERGTXT"))
+		If TXT
+			TXTNR.Push([TXT, "ERGTXT"])
+
+		If (TXTNR.Count()=0)
+			return
+
+		TEXTE := "\b("
+		For each, nr in TXTNR
+			TEXTE .= (A_Index>1?"|":"") nr.1
+		TEXTE .= ")\b"
+
+		LV_GetText(PATID, tblRow, Props.HeaderVirtualPos("PATNR"))
+		If !RegExMatch(PatID, "^[\[\s]*(?<ID>\d+)", Pat)
+			return
+
+		dbf     	:= new DBASE(adm.AlbisDBPath "\LABTEXTE.dbf", 2)
+		records	:= dbfRecords := dbf.records
+		steps    	:= records/100
+		filepos 	:= dbf.OpenDBF()
+		items 	:= dbf.Search({"PATNR":"rx:" PATID, "ID":"rx:" TEXTE}, 0)
+		res     	:= dbf.CloseDBF()
+		dbf    	:= ""
+
+		labtxt := ""
+		For index, item in items {
+			txt :=  RegExReplace(item.TEXT, "([\r\n]+)", "$1 ")
+			If (item.pos=0)
+				For idx, nr in TXTNR
+					If (item.ID = nr.1)
+						newline := (index>1 ? "`n`n" : "") nr.2 " (" item.ID "):`n "
+			labtxt 	.= newline . txt
+			newline	:= ""
+		}
+
+		labtxt :=  RegExReplace(labtxt, "([a-zäöüß])([A-ZÄÖÜ])", "$1 $2")
+		labtxt :=  RegExReplace(labtxt, "\.([A-ZÄÖÜ])", ". $1")
+
+		GuiControl, QS:, QSEXTRANFO	, % "Texthinweise für PATNR " PATID " Eintrag Nr: " TEXTE " aus LABTEXTE.dbf"
+		GuiControl, QS:, QSEXTRAS   	, % labtxt ;"`n" JSON.DUMP(items)
+
 }
 
 QuickSearch_ListFields(dbname, step:=0)                                                             	{ 	; erstellt die Ausgabetabelle
@@ -1656,7 +1752,7 @@ class Quicksearch_Properties                                                    
 			this.DateLabels	:= "ABVERKAUF|AUS2DAT|ABDAT|ABDATUM|ABGESETZT|ABNAHMDATE|ANTRAG|AUFNAHME|ANDATUM|AUFNAME|AUSSTDAT|AUSDATUM|"
 										. "AU_DR_BIS|AU_BIS|ANLDATUM|"
 										. "BESCHSEIT|BERICHDATE|BEZAHLTAM|BEZ_AM|BIRTHDAY|BIS|"
-										. "DATUMPWD|DATUMV|DATUMVON|DATUMBIS|DATUM|DATECREATE|DATECLOSE|DATSPEIC|DATE|DRUCKDATUM|"
+										. "DATETIME|DATUMPWD|DATUMV|DATUMVON|DATUMBIS|DATECREATE|DATECLOSE|DATSPEIC|DATE|DRUCKDATUM|DATUM|"
 										. "EINAM|EINLESTAG|ENDE|ERINDAT|EDATUM|EINDATUM|FORMDATUM|FREIBIS|"
 										. "GUELTIG|GUELTVON|GUELTBIS|GUELT_VON|GUELT_BIS|GUELTBIS2|GUELTVON2|GUELTIGAB|GUELTIGVON|GUELTIGBIS|"
 										. "GEBURT|VERSBEG|GEBDATBIS|GEBDATVON|"
@@ -1666,9 +1762,9 @@ class Quicksearch_Properties                                                    
 										. "STAT_VON|STAT_BIS|STORNODATE|SEIT|"
 										. "TIMESTAMP|UNFTAG|"
 										. "VALIDFROM|VALIDUNTIL|VERSSBEG|VON|"
-										. "ZZIEL|ZIELDAT|"
-										. "DATETIME"
+										. "ZZIEL|ZIELDAT"
 			this.noDLDB   	:= "TERMINE"
+			this.HEXLabels  	:= "COLOR"
 			this.TimeLabels := "ABNAHMTIME|ZIELZEIT|ERINZEIT|TIMESEND|ZEIT|UHRZEIT|UM"
 
 		}
@@ -1840,7 +1936,7 @@ class Quicksearch_Properties                                                    
 
 		PATNRColumn()                              		{	; gibt die Spalte mit der Patientennummer in der virtuellen Listview zurück
 
-			static noPATNR := "(BGGOAE|bggoaedm|BGGOAUS|EBM_N|EBM_NDM|EBMAUS|EBMAUS_N|EBMEIN|EBMEIN_N|PATIENT|"
+			static noPATNR := "(BGGOAE|bggoaedm|BGGOAUS|EBM_N|EBM_NDM|EBMAUS|EBMAUS_N|EBMEIN|EBMEIN_N|"
 										. "PGSICH|sbartikl|SDPQ)"
 
 			If RegExMatch(this.dbname, "i)\b" noPATNR "\b") {
@@ -2250,7 +2346,9 @@ class Quicksearch_Properties                                                    
 		}
 	;}
 
-	; +++++++++ PRIVATE FUNKTIONEN ++++++++++++
+
+	; +++++++++++++++++++++++++++++++++++++
+	; +++++++++ PRIVATE FUNKTIONEN ++++++++++++   	;{
 		CheckLabel(label, FuncName)            	{
 			return
 			If (StrLen(label) = 0)
@@ -2269,6 +2367,7 @@ class Quicksearch_Properties                                                    
 			}
 		return 1
 		}
+	;}
 
 }
 

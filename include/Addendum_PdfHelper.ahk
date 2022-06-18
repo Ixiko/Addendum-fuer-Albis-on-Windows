@@ -246,7 +246,7 @@ IFilter(file, searchstring:="")                                             	{  
 	ObjRelease(iStream)
 
 	status := 0
-	MY_IFILTER := IFILTER_INIT_CANON_PARAGRAPHS | IFILTER_INIT_HARD_LINE_BREAKS | IFILTER_INIT_CANON_HYPHENS | IFILTER_INIT_CANON_SPACES
+	MY_IFILTER := IFILTER_INIT_CANON_PARAGRAPHS | IFILTER_INIT_HARD_LINE_BREAKS | IFILTER_INIT_CANON_HYPHENS | IFILTER_INIT_CANON_SPACES  | IFILTER_INIT_EMIT_FORMATTING
 	if (DllCall(NumGet(NumGet(IFilter+0)+3*A_PtrSize), "Ptr", IFilter, "UInt", MY_IFILTER, "Int64", 0, "Ptr", 0, "Int64*", status) != 0 ) ; IFilter::Init
 		throw A_ThisFunc ": can't init IFilter"
 
@@ -256,7 +256,7 @@ IFilter(file, searchstring:="")                                             	{  
 	while (DllCall(NumGet(NumGet(IFilter+0)+4*A_PtrSize), "Ptr", IFilter, "Ptr", &STAT_CHUNK) == 0) { ; ::GetChunk
 		if (NumGet(STAT_CHUNK, 8, "UInt") & CHUNK_TEXT) {
 			while (DllCall(NumGet(NumGet(IFilter+0)+5*A_PtrSize), "Ptr", IFilter, "Int64*", (siz := cchBufferSize), "Ptr", &buf) != FILTER_E_NO_MORE_TEXT) { ; ::GetText
-				text := StrGet(&buf,, "UTF-16")
+				text .= StrGet(&buf,, "UTF-16")
 				if (resultstriplinebreaks)
 					text := StrReplace(text, "`r`n")
 				If searchstring && (strpos := RegExMatch(text, searchstring))
@@ -281,7 +281,7 @@ return searchstring ? "" : Text
 ;----------------------------------------------------------------------------------------------------------------------------------------------
 ; xpdf wrapper
 ;----------------------------------------------------------------------------------------------------------------------------------------------
-PdfToText(PdfPath, pages, enc="UTF-8", SaveToFile="")   	{                 	;-- using xpdf's pdftotext, function catches the stdout
+PdfToText(PdfPath, pages="", enc="UTF-8", SaveToFile="") 	{                 	;-- using xpdf's pdftotext, function catches the stdout
 
 	; Link	: https://autohotkey.com/boards/viewtopic.php?t=15880&start=20
 	; By	: kon - 16.4.2016 modified from: Ixiko
@@ -342,8 +342,7 @@ PdfInfo(PdfPath, opt:="", lastpage:=1)                               	{	        
 	; Link:               	https://autohotkey.com/boards/viewtopic.php?f=9&t=59294&hilit=pdfinfo
 
 		static qq			:= Chr(0x22)
-		static PdfResults
-		static PdfPath_old
+		static PdfResults, PdfPath_old
 
 		If !(PdfPath_old = PdfPath)	{
 			PdfResults    	:= Object()

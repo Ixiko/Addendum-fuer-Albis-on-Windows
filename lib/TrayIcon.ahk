@@ -16,35 +16,37 @@
 ; Upd.20190312 ..: Cyruz        - Added TrayIcon_Set, code merged and refactored.
 ; ----------------------------------------------------------------------------------------------------------------------
 
-; ----------------------------------------------------------------------------------------------------------------------
-; Function ......: TrayIcon_GetInfo
-; Description ...: Get a series of useful information about tray icons.
-; Parameters ....: sExeName  - The exe for which we are searching the tray icon data. Leave it empty to receive data for
-; ...............:             all tray icons.
-; Return ........: oTrayInfo - An array of objects containing tray icons data. Any entry is structured like this:
-; ...............:             oTrayInfo[A_Index].idx     - 0 based tray icon index.
-; ...............:             oTrayInfo[A_Index].idcmd   - Command identifier associated with the button.
-; ...............:             oTrayInfo[A_Index].pid     - Process ID.
-; ...............:             oTrayInfo[A_Index].uid     - Application defined identifier for the icon.
-; ...............:             oTrayInfo[A_Index].msgid   - Application defined callback message.
-; ...............:             oTrayInfo[A_Index].hicon   - Handle to the tray icon.
-; ...............:             oTrayInfo[A_Index].hwnd    - Window handle.
-; ...............:             oTrayInfo[A_Index].class   - Window class.
-; ...............:             oTrayInfo[A_Index].process - Process executable.
-; ...............:             oTrayInfo[A_Index].tray    - Tray Type (Shell_TrayWnd or NotifyIconOverflowWindow).
-; ...............:             oTrayInfo[A_Index].tooltip - Tray icon tooltip.
-; Info ..........: TB_BUTTONCOUNT message - http://goo.gl/DVxpsg
-; ...............: TB_GETBUTTON message   - http://goo.gl/2oiOsl
-; ...............: TBBUTTON structure     - http://goo.gl/EIE21Z
-; ----------------------------------------------------------------------------------------------------------------------
+TrayIcon_GetInfo(sExeName := ""){                            ; Get a series of useful information about tray icons
 
-TrayIcon_GetInfo(sExeName := ""){
+	; ----------------------------------------------------------------------------------------------------------------------
+	; Function .......: 	TrayIcon_GetInfo
+	; Description ...: 	Get a series of useful information about tray icons.
+	; Parameters ...: 	sExeName  - The exe for which we are searching the tray icon data. Leave it empty to receive data for
+	; ....................:                         all tray icons.
+	; Return ..........:    	oTrayInfo - An array of objects containing tray icons data. Any entry is structured like this:
+	; ....................:     oTrayInfo[A_Index].idx       	- 0 based tray icon index.
+	; ....................:     oTrayInfo[A_Index].idcmd  	- Command identifier associated with the button.
+	; ....................:     oTrayInfo[A_Index].pid         	- Process ID.
+	; ....................:     oTrayInfo[A_Index].uid         	- Application defined identifier for the icon.
+	; ....................:     oTrayInfo[A_Index].msgid  	- Application defined callback message.
+	; ....................:     oTrayInfo[A_Index].hicon   	- Handle to the tray icon.
+	; ....................:     oTrayInfo[A_Index].hwnd      	- Window handle.
+	; ....................:     oTrayInfo[A_Index].class       	- Window class.
+	; ....................:     oTrayInfo[A_Index].process	- Process executable.
+	; ....................:     oTrayInfo[A_Index].tray        	- Tray Type (Shell_TrayWnd or NotifyIconOverflowWindow).
+	; ....................:     oTrayInfo[A_Index].tooltip     	- Tray icon tooltip.
+	; ....................:
+	; Info .............:  	TB_BUTTONCOUNT message 	- http://goo.gl/DVxpsg
+	; ....................:  	TB_GETBUTTON message      	- http://goo.gl/2oiOsl
+	; ....................:  	TBBUTTON structure              	- http://goo.gl/EIE21Z
+	; ----------------------------------------------------------------------------------------------------------------------
+
     d := A_DetectHiddenWindows
     DetectHiddenWindows, On
 
     oTrayInfo := []
-    For key,sTray in ["Shell_TrayWnd", "NotifyIconOverflowWindow"]
-    {
+    For key,sTray in ["Shell_TrayWnd", "NotifyIconOverflowWindow"]     {
+
         idxTB := TrayIcon_GetTrayBar(sTray)
         WinGet, pidTaskbar, PID, ahk_class %sTray%
 
@@ -57,8 +59,8 @@ TrayIcon_GetInfo(sExeName := ""){
 
         ; TB_BUTTONCOUNT = 0x0418
         SendMessage, 0x0418, 0, 0, ToolbarWindow32%idxTB%, ahk_class %sTray%
-        Loop, %ErrorLevel%
-        {
+        Loop  % ErrorLevel        {
+
              ; TB_GETBUTTON 0x0417
             SendMessage, 0x0417, A_Index-1, pRB, ToolbarWindow32%idxTB%, ahk_class %sTray%
 
@@ -82,8 +84,8 @@ TrayIcon_GetInfo(sExeName := ""){
             WinGet, sProcess, ProcessName, ahk_id %hWnd%
             WinGetClass, sClass, ahk_id %hWnd%
 
-            If ( !sExeName || sExeName == sProcess || sExeName == nPid )
-            {
+            If ( !sExeName || sExeName == sProcess || sExeName == nPid )             {
+
                 DllCall("ReadProcessMemory", Ptr,hProc, Ptr,iString, Ptr,&tip, UPtr,szTip, UPtr,0)
                 oTrayInfo.Push({ "idx"     : A_Index-1
                                , "idcmd"   : idCmd
@@ -105,15 +107,16 @@ TrayIcon_GetInfo(sExeName := ""){
     Return oTrayInfo
 }
 
-; ----------------------------------------------------------------------------------------------------------------------
-; Function .....: TrayIcon_Hide
-; Description ..: Hide or unhide a tray icon.
-; Parameters ...: idCmd - Command identifier associated with the button.
-; ..............: sTray - Place where to find the icon ("Shell_TrayWnd" or "NotifyIconOverflowWindow").
-; ..............: bHide - True for hide, False for unhide.
-; Info .........: TB_HIDEBUTTON message - http://goo.gl/oelsAa
-; ----------------------------------------------------------------------------------------------------------------------
-TrayIcon_Hide(idCmd, sTray:="Shell_TrayWnd", bHide:=True){
+TrayIcon_Hide(idCmd, sTray:="Shell_TrayWnd", bHide:=True){               	; Hide or unhide a tray icon
+	; ----------------------------------------------------------------------------------------------------------------------
+	; Function .....: TrayIcon_Hide
+	; Description ..: Hide or unhide a tray icon.
+	; Parameters ...: idCmd - Command identifier associated with the button.
+	; ..............: sTray - Place where to find the icon ("Shell_TrayWnd" or "NotifyIconOverflowWindow").
+	; ..............: bHide - True for hide, False for unhide.
+	; Info .........: TB_HIDEBUTTON message - http://goo.gl/oelsAa
+	; ----------------------------------------------------------------------------------------------------------------------
+
     d := A_DetectHiddenWindows
     DetectHiddenWindows, On
     idxTB := TrayIcon_GetTrayBar()
@@ -122,14 +125,16 @@ TrayIcon_Hide(idCmd, sTray:="Shell_TrayWnd", bHide:=True){
     DetectHiddenWindows, %d%
 }
 
-; ----------------------------------------------------------------------------------------------------------------------
-; Function .....: TrayIcon_Delete
-; Description ..: Delete a tray icon.
-; Parameters ...: idx   - 0 based tray icon index.
-; ..............: sTray - Place where to find the icon ("Shell_TrayWnd" or "NotifyIconOverflowWindow").
-; Info .........: TB_DELETEBUTTON message - http://goo.gl/L0pY4R
-; ----------------------------------------------------------------------------------------------------------------------
-TrayIcon_Delete(idx, sTray:="Shell_TrayWnd"){
+TrayIcon_Delete(idx, sTray:="Shell_TrayWnd"){                                          	; Delete a tray icon
+
+	; ----------------------------------------------------------------------------------------------------------------------
+	; Function .....: TrayIcon_Delete
+	; Description ..: Delete a tray icon.
+	; Parameters ...: idx   - 0 based tray icon index.
+	; ..............: sTray - Place where to find the icon ("Shell_TrayWnd" or "NotifyIconOverflowWindow").
+	; Info .........: TB_DELETEBUTTON message - http://goo.gl/L0pY4R
+	; ----------------------------------------------------------------------------------------------------------------------
+
     d := A_DetectHiddenWindows
     DetectHiddenWindows, On
     idxTB := TrayIcon_GetTrayBar()
@@ -138,51 +143,58 @@ TrayIcon_Delete(idx, sTray:="Shell_TrayWnd"){
     DetectHiddenWindows, %d%
 }
 
-; ----------------------------------------------------------------------------------------------------------------------
-; Function .....: TrayIcon_Remove
-; Description ..: Remove a Tray icon. It should be more reliable than TrayIcon_Delete.
-; Parameters ...: hWnd - Window handle.
-; ..............: uId  - Application defined identifier for the icon.
-; Info .........: NOTIFYICONDATA structure  - https://goo.gl/1Xuw5r
-; ..............: Shell_NotifyIcon function - https://goo.gl/tTSSBM
-; ----------------------------------------------------------------------------------------------------------------------
-TrayIcon_Remove(hWnd, uId){
-        VarSetCapacity(NID, szNID := ((A_IsUnicode ? 2 : 1) * 384 + A_PtrSize*5 + 40),0)
-        NumPut( szNID, NID, 0           )
-        NumPut( hWnd,  NID, A_PtrSize   )
-        NumPut( uId,   NID, A_PtrSize*2 )
-        Return DllCall("Shell32.dll\Shell_NotifyIcon", UInt,0x2, UInt,&NID)
+TrayIcon_Remove(hWnd, uId){                                                                 	; Remove a Tray icon. It should be more reliable than TrayIcon_Delete
+
+	; ----------------------------------------------------------------------------------------------------------------------
+	; Function .....: TrayIcon_Remove
+	; Description ..: Remove a Tray icon. It should be more reliable than TrayIcon_Delete.
+	; Parameters ...: hWnd - Window handle.
+	; ..............: uId  - Application defined identifier for the icon.
+	; Info .........: NOTIFYICONDATA structure  - https://goo.gl/1Xuw5r
+	; ..............: Shell_NotifyIcon function - https://goo.gl/tTSSBM
+	; ----------------------------------------------------------------------------------------------------------------------
+
+	VarSetCapacity(NID, szNID := ((A_IsUnicode ? 2 : 1) * 384 + A_PtrSize*5 + 40),0)
+	NumPut( szNID, NID, 0           )
+	NumPut( hWnd,  NID, A_PtrSize   )
+	NumPut( uId,   NID, A_PtrSize*2 )
+
+Return DllCall("Shell32.dll\Shell_NotifyIcon", UInt,0x2, UInt,&NID)
 }
 
-; ----------------------------------------------------------------------------------------------------------------------
-; Function .....: TrayIcon_Move
-; Description ..: Move a tray icon.
-; Parameters ...: idxOld - 0 based index of the tray icon to move.
-; ..............: idxNew - 0 based index where to move the tray icon.
-; ..............: sTray  - Place where to find the icon ("Shell_TrayWnd" or "NotifyIconOverflowWindow").
-; Info .........: TB_MOVEBUTTON message - http://goo.gl/1F6wPw
-; ----------------------------------------------------------------------------------------------------------------------
-TrayIcon_Move(idxOld, idxNew, sTray := "Shell_TrayWnd"){
+TrayIcon_Move(idxOld, idxNew, sTray := "Shell_TrayWnd"){                     	; Move a tray icon
+
+	; ----------------------------------------------------------------------------------------------------------------------
+	; Function .....: TrayIcon_Move
+	; Description ..: Move a tray icon.
+	; Parameters ...: idxOld - 0 based index of the tray icon to move.
+	; ..............: idxNew - 0 based index where to move the tray icon.
+	; ..............: sTray  - Place where to find the icon ("Shell_TrayWnd" or "NotifyIconOverflowWindow").
+	; Info .........: TB_MOVEBUTTON message - http://goo.gl/1F6wPw
+	; ----------------------------------------------------------------------------------------------------------------------
+
     d := A_DetectHiddenWindows
     DetectHiddenWindows, On
     idxTB := TrayIcon_GetTrayBar()
-    SendMessage, 0x452, idxOld, idxNew, ToolbarWindow32%idxTB%, ahk_class %sTrayPlace% ; TB_MOVEBUTTON = 0x452
-    DetectHiddenWindows, %d%
+    SendMessage, 0x452, idxOld, idxNew, % "ToolbarWindow32" idxTB, % "ahk_class " sTrayPlace ; TB_MOVEBUTTON = 0x452
+    DetectHiddenWindows, % d
 }
 
-; ----------------------------------------------------------------------------------------------------------------------
-; Function .....: TrayIcon_Set
-; Description ..: Modify icon with the given index for the given window.
-; Parameters ...: hWnd       - Window handle.
-; ..............: uId        - Application defined identifier for the icon.
-; ..............: hIcon      - Handle to the tray icon.
-; ..............: hIconSmall - Handle to the small icon, for window menubar. Optional.
-; ..............: hIconBig   - Handle to the big icon, for taskbar. Optional.
-; Return .......: True on success, false on failure.
-; Info .........: NOTIFYICONDATA structure  - https://goo.gl/1Xuw5r
-; ..............: Shell_NotifyIcon function - https://goo.gl/tTSSBM
-; ----------------------------------------------------------------------------------------------------------------------
-TrayIcon_Set(hWnd, uId, hIcon, hIconSmall:=0, hIconBig:=0){
+TrayIcon_Set(hWnd, uId, hIcon, hIconSmall:=0, hIconBig:=0){                  	; Modify icon with the given index for the given window
+
+    ; ----------------------------------------------------------------------------------------------------------------------
+    ; Function .....: TrayIcon_Set
+    ; Description ..: Modify icon with the given index for the given window.
+    ; Parameters ...: hWnd       - Window handle.
+    ; ..............: uId        - Application defined identifier for the icon.
+    ; ..............: hIcon      - Handle to the tray icon.
+    ; ..............: hIconSmall - Handle to the small icon, for window menubar. Optional.
+    ; ..............: hIconBig   - Handle to the big icon, for taskbar. Optional.
+    ; Return .......: True on success, false on failure.
+    ; Info .........: NOTIFYICONDATA structure  - https://goo.gl/1Xuw5r
+    ; ..............: Shell_NotifyIcon function - https://goo.gl/tTSSBM
+    ; ----------------------------------------------------------------------------------------------------------------------
+
     d := A_DetectHiddenWindows
     DetectHiddenWindows, On
     ; WM_SETICON = 0x0080
@@ -200,76 +212,88 @@ TrayIcon_Set(hWnd, uId, hIcon, hIconSmall:=0, hIconBig:=0){
     NumPut( hIcon, NID, (A_PtrSize == 4) ? 20  : 32 )
 
     ; NIM_MODIFY := 0x1
-    Return DllCall("Shell32.dll\Shell_NotifyIcon", UInt,0x1, Ptr,&NID)
+
+Return DllCall("Shell32.dll\Shell_NotifyIcon", UInt,0x1, Ptr,&NID)
 }
 
-; ----------------------------------------------------------------------------------------------------------------------
-; Function .....: TrayIcon_GetTrayBar
-; Description ..: Get the tray icon handle.
-; Parameters ...: sTray - Traybar to retrieve.
-; Return .......: Tray icon handle.
-; ----------------------------------------------------------------------------------------------------------------------
-TrayIcon_GetTrayBar(sTray:="Shell_TrayWnd"){
+TrayIcon_GetTrayBar(sTray:="Shell_TrayWnd"){                                       	; Get the tray icon handle
+
+    ; ----------------------------------------------------------------------------------------------------------------------
+    ; Function .....: TrayIcon_GetTrayBar
+    ; Description ..: Get the tray icon handle.
+    ; Parameters ...: sTray - Traybar to retrieve.
+    ; Return .......: Tray icon handle.
+    ; ----------------------------------------------------------------------------------------------------------------------
+
     d := A_DetectHiddenWindows
     DetectHiddenWindows, On
-    WinGet, ControlList, ControlList, ahk_class %sTray%
+    WinGet, ControlList, ControlList, % "ahk_class " sTray
     RegExMatch(ControlList, "(?<=ToolbarWindow32)\d+(?!.*ToolbarWindow32)", nTB)
-    Loop, %nTB%
-    {
-        ControlGet, hWnd, hWnd,, ToolbarWindow32%A_Index%, ahk_class %sTray%
+    Loop % nTB    {
+        ControlGet, hWnd, hWnd,, % "ToolbarWindow32" A_Index, % "ahk_class " sTray
         hParent := DllCall( "GetParent", Ptr, hWnd )
-        WinGetClass, sClass, ahk_id %hParent%
+        WinGetClass, sClass, % "ahk_id " hParent
         If !(sClass == "SysPager" || sClass == "NotifyIconOverflowWindow" )
             Continue
         idxTB := A_Index
         Break
     }
-    DetectHiddenWindows, %d%
+    DetectHiddenWindows, % d
     Return idxTB
 }
 
-; ----------------------------------------------------------------------------------------------------------------------
-; Function .....: TrayIcon_GetHotItem
-; Description ..: Get the index of tray's hot item.
-; Return .......: Index of tray's hot item.
-; Info .........: TB_GETHOTITEM message - http://goo.gl/g70qO2
-; ----------------------------------------------------------------------------------------------------------------------
-TrayIcon_GetHotItem(){
+TrayIcon_GetHotItem(){                                                                          	; Get the index of tray's hot item.
+
+    ; ----------------------------------------------------------------------------------------------------------------------
+    ; Function .....: TrayIcon_GetHotItem
+    ; Description ..: Get the index of tray's hot item.
+    ; Return .......: Index of tray's hot item.
+    ; Info .........: TB_GETHOTITEM message - http://goo.gl/g70qO2
+    ; ----------------------------------------------------------------------------------------------------------------------
+
     idxTB := TrayIcon_GetTrayBar()
-    SendMessage, 0x0447, 0, 0, ToolbarWindow32%idxTB%, ahk_class Shell_TrayWnd ; TB_GETHOTITEM = 0x0447
-    Return ErrorLevel << 32 >> 32
+    SendMessage, 0x0447, 0, 0, % "ToolbarWindow32" idxTB, ahk_class Shell_TrayWnd ; TB_GETHOTITEM = 0x0447
+
+Return ErrorLevel << 32 >> 32
 }
 
-; ----------------------------------------------------------------------------------------------------------------------
-; Function .....: TrayIcon_Button
-; Description ..: Simulate mouse button click on a tray icon.
-; Parameters ...: sExeName - Executable Process Name of tray icon.
-; ..............: sButton  - Mouse button to simulate (L, M, R).
-; ..............: bDouble  - True to double click, false to single click.
-; ..............: nIdx     - Index of tray icon to click if more than one match.
-; ----------------------------------------------------------------------------------------------------------------------
-TrayIcon_Button(sExeName, sButton:="L", bDouble:=False, nIdx:=1){
+TrayIcon_Button(sExeName, sButton:="L", bDouble:=False, nIdx:=1){     	; Simulate mouse button click on a tray icon.
+
+    ; ----------------------------------------------------------------------------------------------------------------------
+    ; Function .....: TrayIcon_Button
+    ; Description ..: Simulate mouse button click on a tray icon.
+    ; Parameters ...: sExeName - Executable Process Name of tray icon.
+    ; ..............: sButton  - Mouse button to simulate (L, M, R).
+    ; ..............: bDouble  - True to double click, false to single click.
+    ; ..............: nIdx     - Index of tray icon to click if more than one match.
+    ; ----------------------------------------------------------------------------------------------------------------------
+
     d := A_DetectHiddenWindows
     DetectHiddenWindows, On
-    WM_MOUSEMOVE      = 0x0200
-    WM_LBUTTONDOWN    = 0x0201
-    WM_LBUTTONUP      = 0x0202
-    WM_LBUTTONDBLCLK  = 0x0203
-    WM_RBUTTONDOWN    = 0x0204
-    WM_RBUTTONUP      = 0x0205
-    WM_RBUTTONDBLCLK  = 0x0206
-    WM_MBUTTONDOWN    = 0x0207
-    WM_MBUTTONUP      = 0x0208
-    WM_MBUTTONDBLCLK  = 0x0209
+
+    WM_MOUSEMOVE        	:= 0x0200
+    WM_LBUTTONDOWN    	:= 0x0201
+    WM_LBUTTONUP          	:= 0x0202
+    WM_LBUTTONDBLCLK  	:= 0x0203
+    WM_RBUTTONDOWN  	:= 0x0204
+    WM_RBUTTONUP          	:= 0x0205
+    WM_RBUTTONDBLCLK  	:= 0x0206
+    WM_MBUTTONDOWN   	:= 0x0207
+    WM_MBUTTONUP         	:= 0x0208
+    WM_MBUTTONDBLCLK 	:= 0x0209
+
     sButton := "WM_" sButton "BUTTON"
     oIcons  := TrayIcon_GetInfo(sExeName)
     If ( bDouble )
         PostMessage, oIcons[nIdx].msgid, oIcons[nIdx].uid, %sButton%DBLCLK,, % "ahk_id " oIcons[nIdx].hwnd
-    Else
-    {
+    Else    {
         PostMessage, oIcons[nIdx].msgid, oIcons[nIdx].uid, %sButton%DOWN,, % "ahk_id " oIcons[nIdx].hwnd
         PostMessage, oIcons[nIdx].msgid, oIcons[nIdx].uid, %sButton%UP,, % "ahk_id " oIcons[nIdx].hwnd
     }
-    DetectHiddenWindows, %d%
+    DetectHiddenWindows, % d
     Return
 }
+
+
+
+

@@ -39,6 +39,9 @@ body {
     /* A row is basically just a flexbox container */
     display: flex;
     flex-wrap: wrap;
+    flex-direction: row;
+    overflow:hidden;
+    justify-content: flex-start;
     margin-left:5px;
     margin-bottom:.25em;
 }    
@@ -46,11 +49,16 @@ body {
     font-size: 1.2rem;
     font-weight: 400;
     color: black;
-    vertical-align: middle;
     margin-right:.2em;
     margin-top:.3em;
 }
-
+.rowStopWatch {
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: black;
+    align-self: flex-start;
+    margin-top:.3em;
+}
 .statetext {
     font-size: 1rem;
     font-weight: 400;
@@ -67,18 +75,13 @@ body {
     cursor:default;
     font-weight: 600;
 }
-
-
 .btn {
-    
     height: 28px;
     font-size: 1.2rem;
     font-weight: 400;
-
     padding-left: .5em;
     padding-right: .5em;
-    margin-right: .2em;
-
+    margin-right: .5em;
     color: #424242;
     background-color: transparent;
     background-color:rgb(255, 247, 172);
@@ -86,7 +89,7 @@ body {
     border-radius: .25rem;
     border-style:outset;
     text-align: center;
-
+    text-decoration: blink;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -97,7 +100,7 @@ body {
 .btn:hover {
     color: #272727;
     text-decoration: none;
-    box-shadow: .1rem .2rem 0 .2rem rgba(78, 78, 78, 0.25);
+    box-shadow: .2rem .2rem .3rem .2rem rgba(8, 8, 8, 0.40);
     cursor: pointer;
 }
 .btn.focus,
@@ -108,35 +111,28 @@ body {
     background-color:rgb(90, 89, 60);
     box-shadow: 0 0 0 0.0rem rgba(100, 100, 100, 0.25);
 }
-
-
 .form-control {
     width: 100%;
     padding: .375rem .375rem;
     font-size: 1.2rem;
     font-weight: 400;
-
     width:calc(6*1.1em); 
-
     margin-right:.2em;
     margin-bottom:.25em;
-
-    color: #333333;
+    color: #000000;
     background-color: rgb(255, 253, 234);
     background-clip: padding-box;
     border: 1px solid #2c2c2c;
     border-color: transparent;
     border-radius: .25rem;
-
     transition: all 0.5s ease-out;
 }
 .form-control:hover, focus {
     color: #000000;
     background-color: rgb(255, 250, 194);
     border-color: #494949;
-    box-shadow: 0 0 0 .2rem rgba(78, 78, 78, 0.25);
+    box-shadow: .2rem .2rem .3rem .2rem rgba(78, 78, 78, 0.35);
 }
-
 table 			    {    
     margin-right:0px;
     margin-left:2px;
@@ -205,9 +201,8 @@ th:hover   	 	{
     border-radius: 0em 0em 0em .35em;
 }
 .col1right           {
-
     border-radius: 0em 0em .35em 0em;
-    }
+}
 .emptycell          {
     background-color:rgb(227, 233, 209);
     transition: .25s;    
@@ -215,32 +210,49 @@ th:hover   	 	{
 .emptycell:hover    {
     background-color:rgb(227, 233, 209);    
 }
+.progress {
+    height: 20px;
+    width: 100%;
+    position: relative;
+    background: rgb(211, 218, 183);
+    border: 1px solid rgb(0, 0, 0);
+    border-radius: 5px;
+    color: black;
+    font-weight: 250;
+    font-size: 1em;
+    text-transform: capitalize;
+    font:140% serif;
+    transition: color .15s ease-in-out, background-color .2s ease-in-out, border-color .15s ease-in-out;
+    transition: all 0.5s ease-out;
+}
+.progress:hover {
+    border-color: rgb(63, 66, 223);
+    background: rgb(231, 238, 207); 
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    word-spacing: 0.3em;
+}
+.progress:before {
+  content: attr(data-label);
+  border-radius: 5px; 
+  position: absolute;
+  text-align: center;
+  top: 0px;
+  left: 0;
+  right: 0;
+  transition: all 0.3s ease-in-out;
+}
+.progress .value {
+  background: linear-gradient(rgb(47, 117, 175), rgb(104, 176, 235), rgb(41, 104, 156));
+  border-radius: 5px; 
+  display: inline-block;
+  height: 100%;
+  color: black;
 
-progress {
-    -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
-    width: 88%; 
-    height: 10px; 
-    margin-right:5px;
-        
-    border: none; 
-    border-radius: 5px; 
-    color: rgb(0, 120, 215);
-    background-size: 35px 20px, 100% 100%, 100% 100%;
-    transition: color .15s ease-in-out, background-color .2s ease-in-out, border-color .15s ease-in-out, box-shadow .25s ease-in-out;
 }
-progress:hover {
-    border-color: #98a7fa;
-    color: rgb(40, 158, 255);   
-}
-.progresstext {
-    font-size: 1rem;
-    font-weight: 200;
-    width: calc(3*1em);
-    vertical-align: baseline;
-    text-align: right;
-   
+.progress .value:hover {
+    background: linear-gradient(rgb(68, 175, 47), rgb(119, 235, 104), rgb(41, 156, 66));
+    color: black;
 }
 
     </style>
@@ -250,16 +262,21 @@ progress:hover {
   
     <div class="row">
         <button type="button" class="btn" id="vaccountstart" onclick="ahk.ExecuteFunc(event)">Impfstatistik</button>
-        <div class="rowtext">für den</div>        
-        <input  type="date" class="form-control" id="vacdate" name="vacdate">
+        <div class="rowtext">erstellen für den</div>     
+        <form>
+            <input type="text" class="form-control" list="vacdates" id="vacdate" name="vacdate">
+            <datalist id="vacdates">
+                <option value="-">
+            </datalist>
+        </form>   
+        <div class="rowStopWatch" id="stopwatch"></div> 
     </div>
 
     <div class="row">
-        <progress id="vacstatsprogress" max="100" value="0"></progress>
-        <div class="progresstext" id="stopwatch"></div>
+        <div class="progress" data-label="COVID19 IMPFSTATISTIK">
+            <div class="value" id="vacstatsprogress" style="width:0%;"></div>
+          </div>
     </div>
-
-    <div class="statetext" id="vacstate">COVID19-IMPFSTATISTIK</div> 
 
     <table>
         <thead>
@@ -314,23 +331,30 @@ progress:hover {
             <tr>
                 <td class="col1">> 60</td>
                 <td id="tAO1"></td>
-                <td id="tAO1"></td>
+                <td id="tAO2"></td>
                 <td id="tAO3"></td>
                 <td id="tAOs"></td>
             </tr>
-                <tr>
-                <td class="col1">< 18</td>
-                <td id="tAJ1"></td>
-                <td id="tAJ2"></td>
-                <td id="tAJ3"></td>
-                <td id="tAJs"></td>
-            </tr>
-                <tr>
+            <tr>
                 <td class="col1">18-59</td>
                 <td id="tAM1"></td>
                 <td id="tAM2"></td>
                 <td id="tAM3"></td>
                 <td id="tAMs"></td>
+            </tr>
+            <tr>
+                <td class="col1">12-17</td>
+                <td id="tAJ1"></td>
+                <td id="tAJ2"></td>
+                <td id="tAJ3"></td>
+                <td id="tAJs"></td>
+            </tr>
+            <tr>
+                <td class="col1">05-11</td>
+                <td id="tAK1"></td>
+                <td id="tAK2"></td>
+                <td id="tAK3"></td>
+                <td id="tAKs"></td>
             </tr>
             <tr>
                 <td class="col1left">alle</td>
@@ -339,7 +363,7 @@ progress:hover {
                 <td id="tS3"></td>
                 <td class="col1right" id="tSs"></td>
                 </tr>
-            </tbody>
+        </tbody>
     </table>
 
     
