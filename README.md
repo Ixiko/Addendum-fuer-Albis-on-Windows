@@ -22,7 +22,7 @@
 
 
 
-### ![AlbisIcon.svg](Docs\Icons\AlbisIcon.svg)<u>Albis</u>
+### ![AlbisIcon.svg](Docs/Icons/AlbisIcon.svg)<u>Albis</u>
 
 - Auto-Login
 - Suche im Albismenu
