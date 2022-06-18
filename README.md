@@ -48,7 +48,7 @@
 - 🖨 direkter **Dokumentexport** und **-druck**
 - ![Rezepthelferlein.svg](Docs/Icons/Rezepthelferlein.svg) **Rezepthelfer**
 - 📝 **Kontextsensitive Texterweiterungen**: Diagnosen, Gebühren, ...
-- ![AUBEscheinigung.svg](Docs/Icons/AUBEscheinigung.svg) **Arbeitsunfähigkeitsbescheinigung**: Anzeige von Beginn und Ende der Lohnfortzahlung
+- ![AUBescheinigung.svg](Docs/Icons/AUBescheinigung.svg) **Arbeitsunfähigkeitsbescheinigung**: Anzeige von Beginn und Ende der Lohnfortzahlung
 
 
 
