@@ -1,40 +1,33 @@
 ﻿{
 	"1":{
-		"Beschreibung": "Kompressionsstr\u00fcmpfe verordnen",
-		"Bezeichner": "Kompressionsstr\u00fcmpfe, L\u00e4nge: Unterschenkel, Fußspitze: geschlossen",
-		"Medikamente": [
-			"Paar Kompressionsstr\u00fcmpfe KKL 2",
-			"Unterschenkellang mit geschlossener Fu\u00dfspitze",
-			"Diagnose: Varizen der unteren Extremit\u00e4ten bds.",
+		"Beschreibung"	: "Kompressionsstrümpfe",
+		"Bezeichner"   	: "Kompressionsstrümpfe, Länge: Unterschenkel, Fußspitze: geschlossen",
+		"Medikamente"	: [
+			"Paar Kompressionsstrümpfe KKL 2",
+			"Unterschenkellang mit geschlossener Fußspitze",
+			"Diagnose: Varizen der unteren Extremitäten bds.",
 			"",
 			"",
 			""
 		],
-		"Optionen": "",
-		"RezeptTyp": "Hilfsmittel",
-		"Zusaetze": [
-			"",
-			"",
-			"",
-			"",
-			"",
-			""
-		]
-	},
+		"Optionen"	: "",
+		"RezeptTyp"	: "Hilfsmittel",
+		"Zusaetze" 	: ["","","","","",""]
+		},
 	"2":{
-		"Beschreibung": "Kompressionsstr\u00fcmpfe verordnen",
-		"Bezeichner": "Kompressionsstr\u00fcmpfe, L\u00e4nge: Unterschenkel, Fußspitze: offen",
-		"Medikamente": [
-			"Paar Kompressionsstr\u00fcmpfe KKL 2",
-			"Unterschenkellang mit offener Fu\u00dfspitze",
-			"Diagnose: Varizen der unteren Extremit\u00e4ten bds.",
+		"Beschreibung"	: "Kompressionsstrümpfe",
+		"Bezeichner"	: "Kompressionsstrümpfe, Länge: Unterschenkel, Fußspitze: offen",
+		"Medikamente"	: [
+			"Paar Kompressionsstrümpfe KKL 2",
+			"Unterschenkellang mit offener Fußspitze",
+			"Diagnose: Varizen der unteren Extremitäten bds.",
 			"",
 			"",
 			""
 		],
-		"Optionen": "",
-		"RezeptTyp": "Hilfsmittel",
-		"Zusaetze": [
+		"Optionen"	: "",
+		"RezeptTyp"	: "Hilfsmittel",
+		"Zusaetze"	: [
 			"",
 			"",
 			"",
@@ -42,21 +35,21 @@
 			"",
 			""
 		]
-	},
+		},
 	"3":{
-		"Beschreibung": "Kompressionsstr\u00fcmpfe verordnen",
-		"Bezeichner": "Kompressionsstr\u00fcmpfe, L\u00e4nge: Oberschenkel, Fußspitze: offen",
-		"Medikamente": [
-			"Paar Kompressionsstr\u00fcmpfe KKL 2",
-			"Oberschenkellang mit offener Fu\u00dfspitze",
-			"Diagnose: Varizen der unteren Extremit\u00e4ten bds.",
+		"Beschreibung"	: "Kompressionsstrümpfe",
+		"Bezeichner"	: "Kompressionsstrümpfe, Länge: Oberschenkel, Fußspitze: offen",
+		"Medikamente"	: [
+			"Paar Kompressionsstrümpfe KKL 2",
+			"Oberschenkellang mit offener Fußspitze",
+			"Diagnose: Varizen der unteren Extremitäten bds.",
 			"",
 			"",
 			""
 		],
-		"Optionen": "",
-		"RezeptTyp": "Hilfsmittel",
-		"Zusaetze": [
+		"Optionen"	: "",
+		"RezeptTyp"	: "Hilfsmittel",
+		"Zusaetze"	: [
 			"",
 			"",
 			"",
@@ -64,14 +57,14 @@
 			"",
 			""
 		]
-	},
+		},
 	"4":{
-		"Beschreibung": "Kompressionsstr\u00fcmpfe verordnen",
-		"Bezeichner": "Kompressionsstr\u00fcmpfe, L\u00e4nge: Oberschenkel, Fußspitze: geschlossen",
+		"Beschreibung": "Kompressionsstrümpfe",
+		"Bezeichner": "Kompressionsstrümpfe, Länge: Oberschenkel, Fußspitze: geschlossen",
 		"Medikamente": [
-			"Paar Kompressionsstr\u00fcmpfe KKL 2",
-			"Oberschenkellang mit geschlossener Fu\u00dfspitze",
-			"Diagnose: Varizen der unteren Extremit\u00e4ten bds.",
+			"Paar Kompressionsstrümpfe KKL 2",
+			"Oberschenkellang mit geschlossener Fußspitze",
+			"Diagnose: Varizen der unteren Extremitäten bds.",
 			"",
 			"",
 			""
@@ -88,10 +81,10 @@
 		]
 	},
 	"5":{
-		"Beschreibung": "ein Oberarmblutdruckme\u00dfger\u00e4t",
-		"Bezeichner": "Blutdruckmessger\u00e4t",
+		"Beschreibung": "ein Oberarmblutdruckmeßgerät",
+		"Bezeichner": "Blutdruckmeßgerät",
 		"Medikamente": [
-			"vollautomatisches Oberarmblutdruckme\u00dfger\u00e4t",
+			"vollautomatisches Oberarmblutdruckmeßgerät",
 			"Dgn: schwer einstellbarer Bluthochdruck",
 			"",
 			"",
@@ -198,9 +191,9 @@
 		]
 	},
 	"10":{
-		"Beschreibung": "meine Standard-Medikamente zur Therapie einer exacerbierten COPD",
-		"Bezeichner": "exacerbierte COPD (Medikamentenliste)",
-		"Medikamente": [
+		"Beschreibung"	: "meine Standard-Medikamente zur Therapie einer exacerbierten COPD",
+		"Bezeichner"   	: "exacerbierte COPD (Medikamentenliste)",
+		"Medikamente"	: [
 			"Prednisolon 10mg GALEN TAB N1 20 St",
 			"Prednisolon 20mg GALEN TAB N1 20 St",
 			"Salbutamol 1A Pharma 0.1mg DOS N2 2 St",
@@ -208,8 +201,133 @@
 			"Roxithromycin 300 Heumann FTA N1 7 St",
 			""
 		],
-		"Optionen": "Einnahmeplan",
-		"RezeptTyp": "",
+		"Optionen"		: "Einnahmeplan",
+		"RezeptTyp"		: "",
+		"Zusaetze"			: ["","","","","",""]
+	},
+	"11":{
+		"Beschreibung": "Inkontinenzvorlagen ohne Produktverordnung, Quartalsmenge",
+		"Bezeichner": "anatomisch geformte Vorlagen, normale Saugleistung",
+		"Medikamente": [
+			"anatomisch geformte Vorlagen, normale Saugleistung",
+			"Positionsnummer: 15.25.30.0 , 100 Stück",
+			"Diagnose: mittlere Harninkontinenz",
+			"",
+			"",
+			""
+		],
+		"Optionen": "",
+		"RezeptTyp": "Hilfsmittel",
+		"Zusaetze": [
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		]
+	},
+	"12":{
+		"Beschreibung": "Inkontinenzvorlagen mit Produktverordnung, Quartalsmenge",
+		"Bezeichner": "Inkontinenzhosen für 1x tgl., Größe 2, normale Saugleistung",
+		"Medikamente": [
+			"Inkontinenzhosen für 1x tgl., Größe 2, normale Saugleistung",
+			"Jahresverordnung vom TT.MM.YYYY bis zum TT.MM.YYYY+1",
+			"Diagnose: mittlere Harninkontinenz",
+			"",
+			"",
+			""
+		],
+		"Optionen": "",
+		"RezeptTyp": "Hilfsmittel",
+		"Zusaetze": [
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		]
+	},
+	"13":{
+		"Beschreibung": "Einlagen Weichbettung lang u. Suppinationskeil na. Maß",
+		"Bezeichner": "Einlagen - weich lang, Suppinationskeil na. Maß",
+		"Medikamente": [
+			"Paar Bettungseinlagen mit langsohliger Weichbettung und ",
+			"Supinationskeilen nach Maß",
+			"Diagnose: Senk-Spreizfuß, Metatarsalgie",
+			"",
+			"",
+			""
+		],
+		"Optionen": "",
+		"RezeptTyp": "Hilfsmittel",
+		"Zusaetze": [
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		]
+	},
+	"14":{
+		"Beschreibung": "Sauerstoffkonzentrator Standgerät max. 5l/min Dauerbetrieb geeignet",
+		"Bezeichner": "Sauerstoffkonzentrator stationär",
+		"Medikamente": [
+			"stationärer Sauerstoffkonzentrator (3l/min 24h/Tag)",
+			"Jahresverordnung vom TT.MM.YYYY bis zum TT.MM.YYYY+1",
+			"Diagnose: ",
+			"",
+			"",
+			""
+		],
+		"Optionen": "",
+		"RezeptTyp": "Hilfsmittel",
+		"Zusaetze": [
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		]
+	},
+	"15":{
+		"Beschreibung": "Sauerstoffkonzentrator mobil max. 5l/min nicht für den Dauerbetrieb geeignet",
+		"Bezeichner": "Sauerstoffkonzentrator mobil",
+		"Medikamente": [
+			"mobiler Sauerstoffkonzentrator (3l/min 24h/Tag)",
+			"Jahresverordnung vom TT.MM.YYYY bis zum TT.MM.YYYY+1",
+			"Diagnose: ",
+			"",
+			"",
+			""
+		],
+		"Optionen": "",
+		"RezeptTyp": "Hilfsmittel",
+		"Zusaetze": [
+			"",
+			"",
+			"",
+			"",
+			"",
+			""
+		]
+	},
+	"16":{
+		"Beschreibung": "Sauerstoffbrille und Verbindungsschlauch",
+		"Bezeichner": "Zubehör für Sauerstoffkonzentrator",
+		"Medikamente": [
+			"10xSauerstoffbrille für Erwachsene mit",
+			"4xSicherheitsverbindungsschlauch 2,1m",
+			"Diagnose: ",
+			"",
+			"",
+			""
+		],
+		"Optionen": "",
+		"RezeptTyp": "Hilfsmittel",
 		"Zusaetze": [
 			"",
 			"",
@@ -219,4 +337,6 @@
 			""
 		]
 	}
+
 }
+

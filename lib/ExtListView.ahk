@@ -184,12 +184,12 @@ ExtListView_Initialize(sWnd, szReadBuf:=1024, sEnc:="CP0") {
     ; ..............: objLV.szreadbuf  - Size of the read buffer.
     ; ----------------------------------------------------------------------------------------------------------------------
 
-    objLV            := Object()
-    objLV.swnd       := sWnd
-    objLV.hwnd       := WinExist(sWnd)
-    objLV.szwritebuf := (A_PtrSize == 4) ? 28 : 36 ; Size of LVITEM
-    objLV.szreadbuf  := szReadBuf
-    objLV.senc       := sEnc
+    objLV                	:= Object()
+    objLV.swnd       	:= sWnd
+    objLV.hwnd       	:= WinExist(sWnd)
+    objLV.szwritebuf 	:= (A_PtrSize == 4) ? 28 : 36 ; Size of LVITEM
+    objLV.szreadbuf  	:= szReadBuf
+    objLV.senc        	:= sEnc
 
     ControlGet, hLv, Hwnd,, SysListView321, % "ahk_id " objLV.hwnd
     objLV.hlv := hLv

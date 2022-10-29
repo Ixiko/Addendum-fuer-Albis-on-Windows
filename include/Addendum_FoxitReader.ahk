@@ -1,17 +1,17 @@
 ﻿;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;                                                              	 RPA (robotic prozess automation) FUNKTIONEN für
-;                                  FOXIT PDF READER V9.1 als FUNKTIONSBIBLIOTHEK FÜR DIE NUTZUNG IN SCANPOOL.AHK
+;       	RPA (robotic prozess automation) FUNKTIONEN für
+;   	    FOXIT PDF READER V9.1
+;
+;			ABHÄNGIGKEITEN:
 ;                                                                                  	------------------------
-;                                                  	FÜR DAS AIS-ADDON: "ADDENDUM FÜR ALBIS ON WINDOWS"
-;                                                                                  	------------------------
-;    		BY IXIKO STARTED IN SEPTEMBER 2017 - LAST CHANGE 12.07.2020 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
+;          	FÜR DAS AIS-ADDON: "ADDENDUM FÜR ALBIS ON WINDOWS"
+;    		BY IXIKO STARTED IN SEPTEMBER 2017 - LAST CHANGE 12.07.2022 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ;----------------------------------------------------------------------------------------------------------------------------------------------
 ; FOXIT READER
 ;----------------------------------------------------------------------------------------------------------------------------------------------
-
-FoxitInvoke(command, FoxitID := "") {		                                                           	;-- wm_command wrapper for FoxitReader Version:  9.1
+FoxitInvoke(command, FoxitID="") {		                                                               	;-- wm_command wrapper for FoxitReader Version:  9.1
 
 		/* DESCRIPTION of FUNCTION:  FoxitInvoke() by Ixiko (version 11.07.2020)
 
@@ -43,188 +43,190 @@ FoxitInvoke(command, FoxitID := "") {		                                         
 	static FoxitCommands
 	If !IsObject(FoxitCommands) {
 
-			FoxitCommands := {	"SaveAs":                                                       	1299
-											,	"Close":                                                         	57602
-	                                		,	"Hand":                                                         	1348        	; Home - Tools
-	                                		,	"Select_Text":                                                 	46178      	; Home - Tools
-	                                		,	"Select_Annotation":                                       	46017      	; Home - Tools
-	                                		,	"Snapshot":                                                    	46069      	; Home - Tools
-	                                		,	"Clipboard_SelectAll":                                    	57642      	; Home - Tools
-	                                		,	"Clipboard_Copy":                                         	57634      	; Home - Tools
-	                                		,	"Clipboard_Paste":                                         	57637      	; Home - Tools
-	                                		,	"Actual_Size":                                                 	1332        	; Home - View
-	                                		,	"Fit_Page":                                                     	1343        	; Home - View
-	                                		,	"Fit_Width":                                                   	1345        	; Home - View
-	                                		,	"Reflow":                                                        	32818      	; Home - View
-	                                		,	"Zoom_Field":                                                	1363        	; Home - View
-	                                		,	"Zoom_Plus":                                                 	1360        	; Home - View
-	                                		,	"Zoom_Minus":                                              	1362        	; Home - View
-	                                		,	"Rotate_Left":                                                 	1340        	; Home - View
-	                                		,	"Rotate_Right":                                               	1337        	; Home - View
-	                                		,	"Highlight":                                                    	46130      	; Home - Comment
-	                                		,	"Typewriter":                                                  	46096      	; Home - Comment, Comment - TypeWriter
-	                                		,	"Open_From_File":                                        	46140      	; Home - Create
-	                                		,	"Open_Blank":                                               	46141      	; Home - Create
-	                                		,	"Open_From_Scanner":                                  	46165      	; Home - Create
-	                                		,	"Open_From_Clipboard":                               	46142      	; Home - Create - new pdf from clipboard
-	                                		,	"PDF_Sign":                                                   	46157      	;Home - Protect
-	                                		,	"Create_Link":                                                	46080      	; Home - Links
-	                                		,	"Create_Bookmark":                                       	46070      	; Home - Links
-	                                		,	"File_Attachment":                                          	46094      	; Home - Insert
-	                                		,	"Image_Annotation":                                      	46081      	; Home - Insert
-	                                		,	"Audio_and_Video":                                       	46082      	; Home - Insert
-	                                		,	"Comments_Import":                                      	46083      	; Comments
-	                                		,	"Highlight":                                                    	46130      	; Comments - Text Markup
-	                                		,	"Squiggly_Underline":                                     	46131      	; Comments - Text Markup
-	                                		,	"Underline":                                                   	46132      	; Comments - Text Markup
-	                                		,	"Strikeout":                                                     	46133      	; Comments - Text Markup
-	                                		,	"Replace_Text":                                              	46134      	; Comments - Text Markup
-	                                		,	"Insert_Text":                                                  	46135      	; Comments - Text Markup
-	                                		,	"Note":                                                          	46137      	; Comments - Pin
-	                                    	,	"File":                                                            	46095      	; Comments - Pin
-	                                    	,	"Callout":                                                       	46097      	; Comments - Typewriter
-	                                    	,	"Textbox":                                                      	46098      	; Comments - Typewriter
-	                                    	,	"Rectangle":                                                   	46101      	; Comments - Drawing
-	                                    	,	"Oval":                                                          	46102      	; Comments - Drawing
-	                                    	,	"Polygon":                                                      	46103      	; Comments - Drawing
-	                                    	,	"Cloud":                                                        	46104      	; Comments - Drawing
-	                                    	,	"Arrow":                                                         	46105      	; Comments - Drawing
-	                                    	,	"Line":                                                           	46106      	; Comments - Drawing
-	                                    	,	"Polyline":                                                      	46107      	; Comments - Drawing
-	                                    	,	"Pencil":                                                         	46108      	; Comments - Drawing
-	                                    	,	"Eraser":                                                        	46109      	; Comments - Drawing
-	                                    	,	"Area_Highligt":                                             	46136      	; Comments - Drawing
-	                                    	,	"Distance":                                                     	46110      	; Comments - Measure
-	                                    	,	"Perimeter":                                                   	46111      	; Comments - Measure
-	                                    	,	"Area":                                                          	46112      	; Comments - Measure
-	                                    	,	"Stamp":                                                        	46149      	; Comments - Stamps , opens only the dialog
-	                                    	,	"Create_custom_stamp":                                 	46151      	; Comments - Stamps
-	                                    	,	"Create_custom_dynamic_stop":                     	46152      	; Comments - Stamps
-	                                    	,	"Summarize_Comments":                                	46188      	; Comments - Manage Comments
-	                                    	,	"Import":                                                        	46083      	; Comments - Manage Comments
-	                                    	,	"Export_All_Comments":                                  	46086      	; Comments - Manage Comments
-	                                    	,	"Export_Highlighted_Texts":                            	46087      	; Comments - Manage Comments
-	                                    	,	"FDF_via_Email":                                            	46084      	; Comments - Manage Comments
-	                                    	,	"Comments":                                                 	46088      	; Comments - Manage Comments
-	                                    	,	"Comments_Show_All":                                   	46089      	; Comments - Manage Comments
-	                                    	,	"Comments_Hide_All":                                   	46090      	; Comments - Manage Comments
-	                                    	,	"Popup_Notes":                                               	46091      	; Comments - Manage Comments
-	                                    	,	"Popup_Notes_Open_All":                                	46092      	; Comments - Manage Comments
-	                                    	,	"Popup_Notes_Close_All":                               	46093 }     	; Comments - Manage Comments
+		FoxitCommands   := {	"SaveAs":                                                       	1299
+										,	"Close":                                                         	57602
+										,	"Hand":                                                         	1348        	; Home - Tools
+										,	"Select_Text":                                                 	46178      	; Home - Tools
+										,	"Select_Annotation":                                       	46017      	; Home - Tools
+										,	"Snapshot":                                                    	46069      	; Home - Tools
+										,	"Clipboard_SelectAll":                                    	57642      	; Home - Tools
+										,	"Clipboard_Copy":                                         	57634      	; Home - Tools
+										,	"Clipboard_Paste":                                         	57637      	; Home - Tools
+										,	"Actual_Size":                                                 	1332        	; Home - View
+										,	"Fit_Page":                                                     	1343        	; Home - View
+										,	"Fit_Width":                                                   	1345        	; Home - View
+										,	"Reflow":                                                        	32818      	; Home - View
+										,	"Zoom_Field":                                                	1363        	; Home - View
+										,	"Zoom_Plus":                                                 	1360        	; Home - View
+										,	"Zoom_Minus":                                              	1362        	; Home - View
+										,	"Rotate_Left":                                                 	1340        	; Home - View
+										,	"Rotate_Right":                                               	1337        	; Home - View
+										,	"Highlight":                                                    	46130      	; Home - Comment
+										,	"Typewriter":                                                  	46096      	; Home - Comment, Comment - TypeWriter
+										,	"Open_From_File":                                        	46140      	; Home - Create
+										,	"Open_Blank":                                               	46141      	; Home - Create
+										,	"Open_From_Scanner":                                  	46165      	; Home - Create
+										,	"Open_From_Clipboard":                               	46142      	; Home - Create - new pdf from clipboard
+										,	"PDF_Sign":                                                   	46157      	;Home - Protect
+										,	"Create_Link":                                                	46080      	; Home - Links
+										,	"Create_Bookmark":                                       	46070      	; Home - Links
+										,	"File_Attachment":                                          	46094      	; Home - Insert
+										,	"Image_Annotation":                                      	46081      	; Home - Insert
+										,	"Audio_and_Video":                                       	46082      	; Home - Insert
+										,	"Comments_Import":                                      	46083      	; Comments
+										,	"Highlight":                                                    	46130      	; Comments - Text Markup
+										,	"Squiggly_Underline":                                     	46131      	; Comments - Text Markup
+										,	"Underline":                                                   	46132      	; Comments - Text Markup
+										,	"Strikeout":                                                     	46133      	; Comments - Text Markup
+										,	"Replace_Text":                                              	46134      	; Comments - Text Markup
+										,	"Insert_Text":                                                  	46135      	; Comments - Text Markup
+										,	"Note":                                                          	46137      	; Comments - Pin
+										,	"File":                                                            	46095      	; Comments - Pin
+										,	"Callout":                                                       	46097      	; Comments - Typewriter
+										,	"Textbox":                                                      	46098      	; Comments - Typewriter
+										,	"Rectangle":                                                   	46101      	; Comments - Drawing
+										,	"Oval":                                                          	46102      	; Comments - Drawing
+										,	"Polygon":                                                      	46103      	; Comments - Drawing
+										,	"Cloud":                                                        	46104      	; Comments - Drawing
+										,	"Arrow":                                                         	46105      	; Comments - Drawing
+										,	"Line":                                                           	46106      	; Comments - Drawing
+										,	"Polyline":                                                      	46107      	; Comments - Drawing
+										,	"Pencil":                                                         	46108      	; Comments - Drawing
+										,	"Eraser":                                                        	46109      	; Comments - Drawing
+										,	"Area_Highligt":                                             	46136      	; Comments - Drawing
+										,	"Distance":                                                     	46110      	; Comments - Measure
+										,	"Perimeter":                                                   	46111      	; Comments - Measure
+										,	"Area":                                                          	46112      	; Comments - Measure
+										,	"Stamp":                                                        	46149      	; Comments - Stamps , opens only the dialog
+										,	"Create_custom_stamp":                                 	46151      	; Comments - Stamps
+										,	"Create_custom_dynamic_stop":                     	46152      	; Comments - Stamps
+										,	"Summarize_Comments":                                	46188      	; Comments - Manage Comments
+										,	"Import":                                                        	46083      	; Comments - Manage Comments
+										,	"Export_All_Comments":                                  	46086      	; Comments - Manage Comments
+										,	"Export_Highlighted_Texts":                            	46087      	; Comments - Manage Comments
+										,	"FDF_via_Email":                                            	46084      	; Comments - Manage Comments
+										,	"Comments":                                                 	46088      	; Comments - Manage Comments
+										,	"Comments_Show_All":                                   	46089      	; Comments - Manage Comments
+										,	"Comments_Hide_All":                                   	46090      	; Comments - Manage Comments
+										,	"Popup_Notes":                                               	46091      	; Comments - Manage Comments
+										,	"Popup_Notes_Open_All":                                	46092      	; Comments - Manage Comments
+										,	"Popup_Notes_Close_All":                               	46093 }     	; Comments - Manage Comments
+		FoxitCommands1 := { 	"firstPage":                                                      	1286        	; View - Go To
+										,	"lastPage":                                                      	1288        	; View - Go To
+										,	"nextPage":                                                     	1289        	; View - Go To
+										,	"previousPage":                                               	1290        	; View - Go To
+										,	"previousView":                                               	1335        	; View - Go To
+										,	"nextView":                                                     	1346        	; View - Go To
+										,	"ReadMode":                                                 	1351        	; View - Document Views
+										,	"ReverseView":                                               	1353        	; View - Document Views
+										,	"TextViewer":                                                  	46180      	; View - Document Views
+										,	"Reflow":                                                        	32818      	; View - Document Views
+										,	"turnPage_left":                                              	1340        	; View - Page Display
+										,	"turnPage_right":                                            	1337        	; View - Page Display
+										,	"SinglePage":                                                 	1357        	; View - Page Display
+										,	"Continuous":                                                	1338        	; View - Page Display
+										,	"Facing":                                                       	1356        	; View - Page Display - two pages side by side
+										,	"Continuous_Facing":                                     	1339        	; View - Page Display - two pages side by side with scrolling enabled
+										,	"Separate_CoverPage":                                  	1341        	; View - Page Display
+										,	"Horizontally_Split":                                        	1364        	; View - Page Display
+										,	"Vertically_Split":                                            	1365        	; View - Page Display
+										,	"Spreadsheet_Split":                                       	1368        	; View - Page Display
+										,	"Guides":                                                       	1354        	; View - Page Display
+										,	"Rulers":                                                        	1355        	; View - Page Display
+										,	"LineWeights":                                               	1350        	; View - Page Display
+										,	"AutoScroll":                                                  	1334        	; View - Assistant
+										,	"Marquee":                                                    	1361        	; View - Assistant
+										,	"Loupe":                                                        	46138      	; View - Assistant
+										,	"Magnifier":                                                   	46139      	; View - Assistant
+										,	"Read_Activate":                                             	46198      	; View - Read
+										,	"Read_CurrentPage":                                      	46199      	; View - Read
+										,	"Read_from_CurrentPage":                             	46200      	; View - Read
+										,	"Read_Stop":                                                  	46201      	; View - Read
+										,	"Read_Pause":                                               	46206      	; View - Read
+										,	"Navigation_Panels":                                      	46010      	; View - View Setting
+										,	"Navigation_Bookmark":                                	45401      	; View - View Setting
+										,	"Navigation_Pages":                                      	45402      	; View - View Setting
+										,	"Navigation_Layers":                                      	45403      	; View - View Setting
+										,	"Navigation_Comments":                               	45404      	; View - View Setting
+										,	"Navigation_Appends":                                  	45405      	; View - View Setting
+										,	"Navigation_Security":                                    	45406      	; View - View Setting
+										,	"Navigation_Signatures":                                	45408      	; View - View Setting
+										,	"Navigation_WinOff":                                    	1318        	; View - View Setting
+										,	"Navigation_ResetAllWins":                             	1316        	; View - View Setting
+										,	"Status_Bar":                                                  	46008        	; View - View Setting
+										,	"Status_Show":                                               	1358        	; View - View Setting
+										,	"Status_Auto_Hide":                                       	1333        	; View - View Setting
+										,	"Status_Hide":                                                	1349        	;View - View Setting
+										,	"WordCount":                                                	46179      	;View - Review
+										,	"Form_to_sheet":                                            	46072      	;Form - Form Data
+										,	"Combine_Forms_to_a_sheet":                        	46074      	;Form - Form Data
+										,	"DocuSign":                                                   	46189      	;Protect
+										,	"Login_to_DocuSign":                                     	46190      	;Protect
+										,	"Sign_with_DocuSign":                                   	46191      	;Protect
+										,	"Send_via_DocuSign":                                    	46192      	;Protect
+										,	"Sign_and_Certify":                                        	46181      	;Protect
+										,	"-----_-------------":                                         	46182      	;Protect
+										,	"Place_Signature":                                          	46183      	;Protect
+										,	"Validate":                                                     	46185      	;Protect
+										,	"Time_Stamp_Document":                              	46184      	;Protect
+										,	"Digital_IDs":                                                 	46186      	;Protect
+										,	"Trusted_Certificates":                                     	46187      	;Protect
+										,	"Email":                                                         	1296        	;Share - Send To - same like Email current tab
+										,	"Email_All_Open_Tabs":                                 	46012      	;Share - Send To
+										,	"Tracker":                                                      	46207      	;Share - Tracker
+										,	"User_Manual":                                              	1277        	;Help - Help
+										,	"Help_Center":                                               	558          	;Help - Help
+										,	"Command_Line_Help":                                 	32768      	;Help - Help
+										,	"Post_Your_Idea":                                           	1279        	;Help - Help
+										,	"Check_for_Updates":                                    	46209      	;Help - Product
+										,	"Install_Update":                                            	46210      	;Help - Product
+										,	"Set_to_Default_Reader":                                	32770      	;Help - Product
+										,	"Foxit_Plug-Ins":                                             	1312        	;Help - Product
+										,	"About_Foxit_Reader":                                    	57664      	;Help - Product
+										,	"Register":                                                      	1280        	;Help - Register
+										,	"Open_from_Foxit_Drive":                              	1024        	;Extras - maybe this is not correct!
+										,	"Add_to_Foxit_Drive":                                     	1025        	;Extras - maybe this is not correct!
+										,	"Delete_from_Foxit_Drive":                             	1026        	;Extras - maybe this is not correct!
+										,	"Options":                                                     	243          	;the following one's are to set directly any options
+										,	"Use_single-key_accelerators_to_access_tools":  	128          	;Options/General
+										,	"Use_fixed_resolution_for_snapshots":             	126          	;Options/General
+										,	"Create_links_from_URLs":                              	133          	;Options/General
+										,	"Minimize_to_system_tray":                             	138          	;Options/General
+										,	"Screen_word-capturing":                               	127          	;Options/General
+										,	"Make_Hand_Tool_select_text":                       	129          	;Options/General
+										,	"Double-click_to_close_a_tab":                       	91            	;Options/General
+										,	"Auto-hide_status_bar":                                  	162          	;Options/General
+										,	"Show_scroll_lock_button":                             	89            	;Options/General
+										,	"Automatically_expand_notification_message":	1725        	;Options/General - only 1 can be set from these 3
+										,	"Dont_automatically_expand_notification":      	1726        	;Options/General - only 1 can be set from these 3
+										,	"Dont_show_notification_messages_again":     	1727        	;Options/General - only 1 can be set from these 3
+										,	"Collect_data_to_improve_user_experience":   	111          	;Options/General
+										,	"Disable_all_features_which_require_internet":	562          	;Options/General
+										,	"Show_Start_Page":                                        	160          	;Options/General
+										,	"Change_Skin":                                             	46004
+										,	"Filter_Options":                                            	46167      	;the following are searchfilter options
+										,	"Whole_words_only":                                     	46168      	;searchfilter option
+										,	"Case-Sensitive":                                            	46169      	;searchfilter option
+										,	"Include_Bookmarks":                                    	46170      	;searchfilter option
+										,	"Include_Comments":                                     	46171      	;searchfilter option
+										,	"Include_Form_Data":                                    	46172      	;searchfilter option
+										,	"Highlight_All_Text":                                       	46173      	;searchfilter option
+										,	"Filter_Properties":                                          	46174      	;searchfilter option
+										,	"Print":                                                           	57607
+										,	"Properties":                                                   	1302        	;opens the PDF file properties dialog
+										,	"Mouse_Mode":                                             	1311
+										,	"Touch_Mode":                                              	1174
+										,	"predifined_Text":                                           	46099
+										,	"set_predefined_Text":                                    	46100
+										,	"Create_Signature":                                        	26885      	;Signature
+										,	"Draw_Signature":                                          	26902      	;Signature
+										,	"Import_Signature":                                        	26886      	;Signature
+										,	"Paste_Signature":                                          	26884      	;Signature
+										,	"Type_Signature":                                           	27005      	;Signature
+										,	"Pdf_Sign_Close":                                          	46164}    	;Pdf-Sign
 
-			 FoxitCommands .= {	"firstPage":                                                      	1286        	; View - Go To
-	                                		,	"lastPage":                                                      	1288        	; View - Go To
-                                        	,	"nextPage":                                                     	1289        	; View - Go To
-                                        	,	"previousPage":                                               	1290        	; View - Go To
-                                        	,	"previousView":                                               	1335        	; View - Go To
-                                        	,	"nextView":                                                     	1346        	; View - Go To
-                                        	,	"ReadMode":                                                 	1351        	; View - Document Views
-                                        	,	"ReverseView":                                               	1353        	; View - Document Views
-                                        	,	"TextViewer":                                                  	46180      	; View - Document Views
-                                        	,	"Reflow":                                                        	32818      	; View - Document Views
-                                        	,	"turnPage_left":                                              	1340        	; View - Page Display
-                                        	,	"turnPage_right":                                            	1337        	; View - Page Display
-                                        	,	"SinglePage":                                                 	1357        	; View - Page Display
-                                        	,	"Continuous":                                                	1338        	; View - Page Display
-                                        	,	"Facing":                                                       	1356        	; View - Page Display - two pages side by side
-                                        	,	"Continuous_Facing":                                     	1339        	; View - Page Display - two pages side by side with scrolling enabled
-                                        	,	"Separate_CoverPage":                                  	1341        	; View - Page Display
-                                        	,	"Horizontally_Split":                                        	1364        	; View - Page Display
-                                        	,	"Vertically_Split":                                            	1365        	; View - Page Display
-                                        	,	"Spreadsheet_Split":                                       	1368        	; View - Page Display
-                                        	,	"Guides":                                                       	1354        	; View - Page Display
-                                        	,	"Rulers":                                                        	1355        	; View - Page Display
-                                        	,	"LineWeights":                                               	1350        	; View - Page Display
-                                        	,	"AutoScroll":                                                  	1334        	; View - Assistant
-                                        	,	"Marquee":                                                    	1361        	; View - Assistant
-                                        	,	"Loupe":                                                        	46138      	; View - Assistant
-                                        	,	"Magnifier":                                                   	46139      	; View - Assistant
-                                        	,	"Read_Activate":                                             	46198      	; View - Read
-                                        	,	"Read_CurrentPage":                                      	46199      	; View - Read
-                                        	,	"Read_from_CurrentPage":                             	46200      	; View - Read
-                                        	,	"Read_Stop":                                                  	46201      	; View - Read
-                                        	,	"Read_Pause":                                               	46206      	; View - Read
-	                                		,	"Navigation_Panels":                                      	46010      	; View - View Setting
-	                                		,	"Navigation_Bookmark":                                	45401      	; View - View Setting
-	                                		,	"Navigation_Pages":                                      	45402      	; View - View Setting
-	                                		,	"Navigation_Layers":                                      	45403      	; View - View Setting
-	                                		,	"Navigation_Comments":                               	45404      	; View - View Setting
-	                                		,	"Navigation_Appends":                                  	45405      	; View - View Setting
-	                                		,	"Navigation_Security":                                    	45406      	; View - View Setting
-	                                		,	"Navigation_Signatures":                                	45408      	; View - View Setting
-	                                		,	"Navigation_WinOff":                                    	1318        	; View - View Setting
-	                                		,	"Navigation_ResetAllWins":                             	1316        	; View - View Setting
-	                                		,	"Status_Bar":                                                  	46008        	; View - View Setting
-	                                		,	"Status_Show":                                               	1358        	; View - View Setting
-	                                		,	"Status_Auto_Hide":                                       	1333        	; View - View Setting
-	                                		,	"Status_Hide":                                                	1349        	;View - View Setting
-	                                		,	"WordCount":                                                	46179      	;View - Review
-	                                		,	"Form_to_sheet":                                            	46072      	;Form - Form Data
-	                                		,	"Combine_Forms_to_a_sheet":                        	46074      	;Form - Form Data
-	                                		,	"DocuSign":                                                   	46189      	;Protect
-	                                		,	"Login_to_DocuSign":                                     	46190      	;Protect
-	                                		,	"Sign_with_DocuSign":                                   	46191      	;Protect
-	                                		,	"Send_via_DocuSign":                                    	46192      	;Protect
-	                                		,	"Sign_and_Certify":                                        	46181      	;Protect
-	                                		,	"-----_-------------":                                         	46182      	;Protect
-	                                		,	"Place_Signature":                                          	46183      	;Protect
-	                                		,	"Validate":                                                     	46185      	;Protect
-	                                		,	"Time_Stamp_Document":                              	46184      	;Protect
-	                                		,	"Digital_IDs":                                                 	46186      	;Protect
-	                                		,	"Trusted_Certificates":                                     	46187      	;Protect
-	                                		,	"Email":                                                         	1296        	;Share - Send To - same like Email current tab
-	                                		,	"Email_All_Open_Tabs":                                 	46012      	;Share - Send To
-	                                		,	"Tracker":                                                      	46207      	;Share - Tracker
-	                                		,	"User_Manual":                                              	1277        	;Help - Help
-	                                		,	"Help_Center":                                               	558          	;Help - Help
-	                                		,	"Command_Line_Help":                                 	32768      	;Help - Help
-	                                		,	"Post_Your_Idea":                                           	1279        	;Help - Help
-	                                		,	"Check_for_Updates":                                    	46209      	;Help - Product
-	                                		,	"Install_Update":                                            	46210      	;Help - Product
-	                                		,	"Set_to_Default_Reader":                                	32770      	;Help - Product
-	                                		,	"Foxit_Plug-Ins":                                             	1312        	;Help - Product
-	                                		,	"About_Foxit_Reader":                                    	57664      	;Help - Product
-	                                		,	"Register":                                                      	1280        	;Help - Register
-	                                		,	"Open_from_Foxit_Drive":                              	1024        	;Extras - maybe this is not correct!
-	                                		,	"Add_to_Foxit_Drive":                                     	1025        	;Extras - maybe this is not correct!
-	                                		,	"Delete_from_Foxit_Drive":                             	1026        	;Extras - maybe this is not correct!
-	                                		,	"Options":                                                     	243          	;the following one's are to set directly any options
-	                                		,	"Use_single-key_accelerators_to_access_tools":  	128          	;Options/General
-	                                		,	"Use_fixed_resolution_for_snapshots":             	126          	;Options/General
-	                                		,	"Create_links_from_URLs":                              	133          	;Options/General
-	                                		,	"Minimize_to_system_tray":                             	138          	;Options/General
-	                                		,	"Screen_word-capturing":                               	127          	;Options/General
-	                                		,	"Make_Hand_Tool_select_text":                       	129          	;Options/General
-	                                		,	"Double-click_to_close_a_tab":                       	91            	;Options/General
-	                                		,	"Auto-hide_status_bar":                                  	162          	;Options/General
-	                                		,	"Show_scroll_lock_button":                             	89            	;Options/General
-	                                		,	"Automatically_expand_notification_message":	1725        	;Options/General - only 1 can be set from these 3
-	                                		,	"Dont_automatically_expand_notification":      	1726        	;Options/General - only 1 can be set from these 3
-	                                		,	"Dont_show_notification_messages_again":     	1727        	;Options/General - only 1 can be set from these 3
-	                                		,	"Collect_data_to_improve_user_experience":   	111          	;Options/General
-	                                		,	"Disable_all_features_which_require_internet":	562          	;Options/General
-	                                		,	"Show_Start_Page":                                        	160          	;Options/General
-	                                		,	"Change_Skin":                                             	46004
-	                                		,	"Filter_Options":                                            	46167      	;the following are searchfilter options
-	                                		,	"Whole_words_only":                                     	46168      	;searchfilter option
-	                                		,	"Case-Sensitive":                                            	46169      	;searchfilter option
-	                                		,	"Include_Bookmarks":                                    	46170      	;searchfilter option
-	                                		,	"Include_Comments":                                     	46171      	;searchfilter option
-	                                		,	"Include_Form_Data":                                    	46172      	;searchfilter option
-	                                		,	"Highlight_All_Text":                                       	46173      	;searchfilter option
-	                                		,	"Filter_Properties":                                          	46174      	;searchfilter option
-	                                		,	"Print":                                                           	57607
-	                                		,	"Properties":                                                   	1302        	;opens the PDF file properties dialog
-	                                		,	"Mouse_Mode":                                             	1311
-	                                		,	"Touch_Mode":                                              	1174
-	                                		,	"predifined_Text":                                           	46099
-	                                		,	"set_predefined_Text":                                    	46100
-	                                		,	"Create_Signature":                                        	26885      	;Signature
-	                                		,	"Draw_Signature":                                          	26902      	;Signature
-	                                		,	"Import_Signature":                                        	26886      	;Signature
-	                                		,	"Paste_Signature":                                          	26884      	;Signature
-	                                		,	"Type_Signature":                                           	27005      	;Signature
-	                                		,	"Pdf_Sign_Close":                                          	46164}    	;Pdf-Sign
+		For key, val in FoxitCommands1
+			FoxitCommands[key] := val
 
 	}
 
@@ -234,18 +236,16 @@ FoxitInvoke(command, FoxitID := "") {		                                         
 		return FoxitCommands[command]
 }
 
-FoxitReader_CloseAllPatientPDF() {	                                                                    	;-- schließt nur die FoxitReader Fenster welche im ScanPool Ordner als Datei vorliegen
+FoxitReader_CloseAllPatientPDF() {	                                                                    	;-- schließt nur die FoxitReader Fenster welche im BefundOrdner als Datei vorliegen
 
-		MsgBox, 4, Addendum für AlbisOnWindows, Sollen noch alle Fenster im %PDFReader% mit`nnoch geöffneten Patientenbefunden geschlossen werden?
+		MsgBox, 4, Addendum für AlbisOnWindows, % "Sollen noch alle Fenster im " PDFReader " mit noch geöffneten Patientenbefunden geschlossen werden?"
 		IfMsgBox, Yes
 		{
-			WinGet, WinList, List, ahk_class classFoxitReader
-			Loop %WinList%
-			{
-				WinGetTitle, Fxit%A_Index%, % "ahk_id " WinList%A_Index%
-				wl:= Trim(SubStr(Fxit%A_Index%, 1, StrLen(Fxit%A_Index%)-15))
-				;If LV_Find(hLV1, wl, 0)
-				WinClose, % "ahk_id " WinList%A_Index%
+			WinGet, WinList, List, % "ahk_class classFoxitReader"
+			For idx, hFoxit in StrSplit(WinList, "`n") {
+				WinGetTitle, FoxitTitle, % "ahk_id " hFoxit
+				If InStr(pdfFileName, FoxitTitle)
+					WinClose, % "ahk_id " hFoxit
 			}
 
 		}
@@ -291,7 +291,7 @@ FoxitReader_DokumentSignieren(docTitle:="", BefundOrdner:="") {	   						;-- Fox
 			If !Darstellungstyp
 					IniRead, Darstellungstyp				     				 , %AddendumDir%\Addendum.ini, ScanPool, Darstellungstyp
 			If !PasswortOn
-					IniRead, PasswordOn    					    			 , %AddendumDir%\Addendum.ini, ScanPool, Passwort_benutzen, 0
+					IniRead, PasswordOn    				    			 , %AddendumDir%\Addendum.ini, ScanPool, Passwort_benutzen, 0
 
 			;noch nicht implementiert aufgrund Sicherheitsbedenken (AHK ist zu unsicher was das Abspeichern von Passwörten betrifft)
 			IniRead, Autokennwort, %AddendumDir%\Addendum.ini, ScanPool, Autokennwort, 0
@@ -304,10 +304,9 @@ FoxitReader_DokumentSignieren(docTitle:="", BefundOrdner:="") {	   						;-- Fox
 		;}
 				P+= (PAdd)
 		;{ 02. Auslesen der Fensterposition des Albis Fenster, erstellen zweier Objecte
-			AWI			 	:= Object()				                     	;AlbisWindowInfo = AWI.WindowX
-			CWI			 	:= Object()				                     	;ChildWindowInfo or WindowOfInterest
-			AlbisWinID	:= AlbisWinID()
-			AWI			 	:= GetWindowInfo(AlbisWinID)
+			AWI			 	:= Object()				                                  	;AlbisWindowInfo = AWI.WindowX
+			CWI			 	:= Object()				                                  	;ChildWindowInfo or WindowOfInterest
+			AWI			 	:= GetWindowInfo(AlbisWinID := AlbisWinID())
 			BO			 	:= GetWindowInfo(hBO)
 			TTx			 	:= BO.WindowX+10
 			TTy			 	:= BO.WindowY+38
@@ -316,36 +315,32 @@ FoxitReader_DokumentSignieren(docTitle:="", BefundOrdner:="") {	   						;-- Fox
 				P+= (PAdd)
 		;{ 03. Ermitteln der aktuellen ID des obersten FoxitFenster mit Ermittlung des entsprechenden Fenstertitel oder wenn ein Titel übermittelt wird, wird dieses Fenster aufgerufen und auf eine vorhandene Signatur geprüft
 
-			If (docTitle = "")
-        	{
-					WinGetTitle, docTitle, % "ahk_id " FoxitID:=WinExist("ahk_class classFoxitReader")
-					docTitle				:= Trim( SubStr(docTitle, 1, StrLen(docTitle)-15) )
-					docTitleFullPath	:= BefundOrdner "\" docTitle
+			If (docTitle = "")        	{
+				WinGetTitle, docTitle, % "ahk_id " FoxitID:=WinExist("ahk_class classFoxitReader")
+				docTitle				:= Trim( SubStr(docTitle, 1, StrLen(docTitle)-15) )
+				docTitleFullPath	:= BefundOrdner "\" docTitle
 			}
-			else
-			{
-					FoxitID:=WinExist(docTitle)
-					If !(FoxitID)
-					{
-								FoxitWindow:
-								msgTextPre	:=  "Das FoxitReader Fenster mit dem Titel: `n'"
-								msgTextPost	:= "`nkonnte nicht identifiziert werden.`n`nBitte holen Sie das Fenster mit diesem Titel nach vorne. Klicken Sie DANN`n"
-								msgTextPost	.= "erst auf Ok! und innerhalb der nächsten 3 Sekunden wieder`nin das FoxitReader Fenster `(aktivieren!`)"
-								MsgBox,, Addendum für AlbisOnWindows - ScanPool - Info, % msgTextPre docTitle msgTextPost
-								Loop, 30
-								{
-											ActwID:= WinExist("A")
-											WinGetTitle, wt, % "ahk_id " ActwID
-											If Instr(wt, docTitle) {
-												 FoxitID:= ActwID
-												 PraxTT("Danke! Das richtige FoxitReader Fenster konnte jetzt erfasst werden.`nDieser Dialog schließt sich automatisch in 2 Sekunden`.", "2 2")
-												 break
-											}
-											sleep 100
-											If (A_Index>29)
-												goto FoxitWindow
+			else			{
+				FoxitID:=WinExist(docTitle)
+				If !(FoxitID)					{
+						FoxitWindow:
+						msgTextPre	:=  "Das FoxitReader Fenster mit dem Titel: `n'"
+						msgTextPost	:= "`nkonnte nicht identifiziert werden.`n`nBitte holen Sie das Fenster mit diesem Titel nach vorne. Klicken Sie DANN`n"
+						msgTextPost	.= "erst auf Ok! und innerhalb der nächsten 3 Sekunden wieder`nin das FoxitReader Fenster `(aktivieren!`)"
+						MsgBox,, Addendum für AlbisOnWindows - ScanPool - Info, % msgTextPre docTitle msgTextPost
+						Loop, 30								{
+								ActwID:= WinExist("A")
+								WinGetTitle, wt, % "ahk_id " ActwID
+								If Instr(wt, docTitle) {
+									 FoxitID:= ActwID
+									 PraxTT("Danke! Das richtige FoxitReader Fenster konnte jetzt erfasst werden.`nDieser Dialog schließt sich automatisch in 2 Sekunden`.", "2 2")
+									 break
 								}
+								sleep 100
+								If (A_Index>29)
+									goto FoxitWindow
 						}
+					}
 				docTitleFullPath:= BefundOrdner "\" docTitle
 			}
 
@@ -359,18 +354,16 @@ FoxitReader_DokumentSignieren(docTitle:="", BefundOrdner:="") {	   						;-- Fox
 				;result:= FrCmd("NewAttachment", "AfxWnd100su4", FoxitID)
 				result:= FoxitInvoke("NewAttachment", FoxitID)
 				WinWait, Dateianhang ahk_class #32770,, 3
-				If ErrorLevel
-            	{
-						PraxTT("Dieses Dokument wurde schon signiert.`nDamit kann als nächstes der Import in die`nPatientenakte gestartet werden..", "5 2")
-						sleep, 2000
-						P+= 9*(PAdd/5/11)							;überspringe 9 Schritte
-						goto CloseFoxitReader
+				If ErrorLevel            	{
+					PraxTT("Dieses Dokument wurde schon signiert.`nDamit kann als nächstes der Import in die`nPatientenakte gestartet werden..", "5 2")
+					sleep, 2000
+					P+= 9*(PAdd/5/11)							;überspringe 9 Schritte
+					goto CloseFoxitReader
 				}
 			;Schließen des 'Dateianhang' Dialoges
-				WhatFoxitID:= WinExist("Dateianhang ahk_class #32770")
-				If (FoxitID = GetParent(WhatFoxitID)) {
-						PraxTT("Fahre fort mit dem Signieren`ndes Dokumentes.", "3 2")
-				}
+				WhatFoxitID := WinExist("Dateianhang ahk_class #32770")
+				If (FoxitID = GetParent(WhatFoxitID))
+					PraxTT("Fahre fort mit dem Signieren`ndes Dokumentes.", "3 2")
 				VerifiedClick("Button2", "", "", WhatFoxitID)
 
 		;}
@@ -456,8 +449,8 @@ FoxitReader_DokumentSignieren(docTitle:="", BefundOrdner:="") {	   						;-- Fox
 				P+= (PAdd)
 		;{ 08. verschiebt das Signierfenster in Richtung des Albis Fenster - mittelt die beiden in der Position aus
 			PraxTT("Signierfenster gefunden.`nVerschiebe es in Richtung des Albisfensters.", "13 0")
-			WinMove		, ahk_id %hPraxTT%,, % BOx, % BOy
-			WinActivate	, ahk_id %FoxitID%
+			WinMove		, % "ahk_id " PraxTThGui,, % BOx, % BOy
+			WinActivate	, % "ahk_id " FoxitID
 			CWI:= GetWindowInfo(hDokSig)
 			WinMove		, % "ahk_id " hDokSig,, % AWI.WindowX + (AWI.WindowW-CWI.WindowW)//2, % AWI.WindowY + (AWI.WindowH-CWI.WindowH)//2
 			sleep, 200
@@ -734,41 +727,7 @@ FoxitReader_CloseSaveAs(hHook2) {																		;-- zum Schliessen des Dialog
 	;}
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
-	; c) Auslesen von Dateiordner und PDF-Dateinamen aus den Edit-Controls auslesen
-	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-		;efname := Controls("Edit1", "GetText", foxitHook)
-		;				 Controls("ToolBarWindow324", "Click use ControlClick Left", foxitHook)
-		; If !fDir	:= Controls("Edit2", "GetText", foxitHook) {
-			;			 Controls("ToolBarWindow324", "Click use MouseClick Left", foxitHook)
-		;	fDir	:= Controls("Edit2", "GetText", foxitHook)
-		; }
-		; headway .= "`n2. Informationen wurde ausgelesen`n- " fDir "\" fname " -"
-	;}
-
-	;----------------------------------------------------------------------------------------------------------------------------------------------
-	; d) Vergleich Dateinamen aus Fenstertitel und Edit1, bei Unterschied wird Edit1 mit Fensterdateinamen ersetzt
-	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-		;If !InStr(efname, fname)
-		;		VerifiedSetText("", fname, "ahk_id " Controls("Edit1"	, "hwnd", foxitHook) , 200)
-		;headway .= "`n3. Einstellungen wurden verglichen. "
-	;}
-
-	;----------------------------------------------------------------------------------------------------------------------------------------------
-	; e) Kontrolle auf den korrekten Speicherordner (unterscheidet anhand des Namensmuster!)
-	;----------------------------------------------------------------------------------------------------------------------------------------------;{
-		;If !RegExMatch(fname, "\d\dA\w\.pdf") and !InStr(fDir, "albiswin")
-		; {
-		;			propWasSet:=1
-		;			If !Controls("Edit2", "GetText", foxitHook)			;falls Edit2 nicht mehr freigeschaltet ist würde ein leerer String zurückgegeben
-		;				 Controls("ToolBarWindow324", "Click use MouseClick Left"	, foxitHook)
-		;			Controls("Edit2", "SetText " BefundOrdner	, foxitHook)
-		;			Controls("Edit2", "Send {Enter}"				, foxitHook)
-		; }
-		;headway .= "`n4. " ( propWasSet = 1 ? "Pfade mussten angepasst werden." : "alle Speicherpfade sind korrekt. " )
-	;}
-
-	;----------------------------------------------------------------------------------------------------------------------------------------------
-	; f) Speichern Button wird erst gesucht (kann Button2 oder Button3 sein), anschließend wird er gedrückt
+	; c) Speichern Button wird erst gesucht (kann Button2 oder Button3 sein), anschließend wird er gedrückt
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
 		ControlClass:= Controls("", "ControlFind, &Speichern, Button", foxitHook)				;Deutsch
 		If !ControlClass
@@ -787,17 +746,16 @@ FoxitReader_CloseSaveAs(hHook2) {																		;-- zum Schliessen des Dialog
 	; f) Löschen des Controls-Objekts, automat. Schließen eines gerade signierten Pdf-Befundes
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
 		headway .= "`n6. Warte auf das Schließen des Dialoges`nim Anschluß wird das Dokumentfenster geschlossen."
-		;PraxTT(headway, "8 2")
 
 	;geöffnetes Pdf-Dokument nach dem Signieren schliessen
-		while, WinExist("Speichern unter ahk_class #32770")
-		{
+		while, WinExist("Speichern unter ahk_class #32770")		{
+
 				if (hCSaveAs:= WinExist("Speichern unter bestätigen ahk_class #32770"))
 							FoxitReader_ConfirmSaveAs(hCSaveAs)
 
 				Sleep, 40
-				If A_Index > 60
-						break
+				If (A_Index > 60)
+					break
 		}
 
 		Sleep, 1000
@@ -811,7 +769,6 @@ FoxitReader_CloseSaveAs(hHook2) {																		;-- zum Schliessen des Dialog
 		foxitHook 	:= 0
 	;}
 
-		;PdfData.AlbisPdfPath := fDir "\" fname
 
 return
 }
@@ -822,7 +779,7 @@ FoxitReader_ExceptionDialog(hHook3) {                                           
 return VerifiedClick("Button1", "", "", hHook3)
 }
 
-FoxitReader_SignDoc(hDokSig, FoxitTitle, FoxitText:="") {					    					;-- Winhook-Handler zum Bearbeiten des Dokument signieren Dialoges
+FoxitReader_SignDoc(hDokSig, FoxitTitle, FoxitText:="") {				    					;-- Winhook-Handler zum Bearbeiten des Dokument signieren Dialoges
 
 	PraxTT("Das Fenster 'Dokument signieren' wird gerade bearbeitet....!'", "0 2")
 
@@ -946,8 +903,8 @@ PdfReader_Close(ReaderTitleOrID, PDFReaderWinClass, CloseTabOnly:=0) {			;-- sch
 		else
 			WinGet, ReaderID, ID, % ReaderTitleOrID
 
-		If CloseTab Only and InStr(PDFReaderWinClass, "FoxitReader")
-		{
+		If CloseTab Only and InStr(PDFReaderWinClass, "FoxitReader")		{
+
 				WinActivate	 	, % "ahk_id " ReaderID
 				WinWaitActive	, % "ahk_id " ReaderID,, 5
 				FoxitInvoke("Close", ReaderID)
@@ -991,116 +948,17 @@ JEE_StrUtf8BytesToText(vUtf8) {
 		return StrGet(&vUtf8, "UTF-8")
 }
 
-;----------------------------------------------------------------------------------------------------------------------------------------------
-; SUMATRA READER
-;----------------------------------------------------------------------------------------------------------------------------------------------
-
-SumatraInvoke(command, SumatraID="") {                                                           	;-- wm_command wrapper for Sumatra PDF Version: 3.1
-
-	/* DESCRIPTION of FUNCTION:  SumatraInvoke() by Ixiko (version 12.07.2020)
-
-		---------------------------------------------------------------------------------------------------
-										a WM_command wrapper for Sumatra Pdf-Reader V* by Ixiko
-																		...........................................................
-													 Remark: maybe not all commands are listed at now!
-		---------------------------------------------------------------------------------------------------
-		        by use  of a valid SumatraID, this function will post your command to Sumatra
-			                                             otherwise this function returns the command code
-																		...........................................................
-			Remark: You have to control the success of the postmessage command yourself!
-		---------------------------------------------------------------------------------------------------
-
-		---------------------------------------------------------------------------------------------------
-		      EXAMPLES - EXAMPLES - EXAMPLES - EXAMPLES - EXAMPLES - EXAMPLES
-
-		SumatraInvoke("Show_FullPage")        SumatraInvoke("Place_Signature", SumatraID)
-		.................................................       ...................................................................
-		this one only returns the Sumatra              sends the command "Place_Signature" to
-        command-code                                             your specified Sumatra process using
-																 parameter 2 (SumatraID) as window handle.
-															 		          command-code will be returned too
-		---------------------------------------------------------------------------------------------------
-
-	*/
-
-	static SumatraCommands
-	If !IsObject(SumatraCommands) {
-
-		SumatraCommands := { 	"Open":                                 	400  	; File
-											,	"Close":                                 	401  	; File
-											,	"SaveAs":                               	402  	; File
-											,	"Rename":                              	580  	; File
-											,	"Print":                                   	403  	; File
-											,	"SendMail":                           	408  	; File
-											,	"Properties":                           	409  	; File
-											,	"OpenLast1":                         	510  	; File
-											,	"OpenLast2":                         	511  	; File
-											,	"OpenLast3":                         	512  	; File
-											,	"Exit":                                    	405  	; File
-											,	"SinglePage":                         	410  	; View
-											,	"DoublePage":                       	411  	; View
-											,	"BookView":                           	412  	; View
-											,	"ShowPagesContinuously":     	413  	; View
-											,	"TurnCounterclockwise":         	415  	; View
-											,	"TurnClockwise":                    	416  	; View
-											,	"Presentation":                        	418  	; View
-											,	"Fullscreen":                          	421  	; View
-											,	"Bookmark":                          	000  	; View - do not use! empty call!
-											,	"ShowToolbar":                      	419  	; View
-											,	"SelectAll":                             	422  	; View
-											,	"CopyAll":                              	420  	; View
-											,	"NextPage":                           	430  	; GoTo
-											,	"PreviousPage":                      	431  	; GoTo
-											,	"FirstPage":                            	432  	; GoTo
-											,	"LastPage":                            	433  	; GoTo
-											,	"GotoPage":                          	434  	; GoTo
-											,	"Back":                                  	558  	; GoTo
-											,	"Forward":                             	559  	; GoTo
-											,	"Find":                                   	435  	; GoTo
-											,	"FitPage":                              	440  	; Zoom
-											,	"ActualSize":                          	441  	; Zoom
-											,	"FitWidth":                             	442  	; Zoom
-											,	"FitContent":                          	456  	; Zoom
-											,	"CustomZoom":                     	457  	; Zoom
-											,	"Zoom6400":                        	443  	; Zoom
-											,	"Zoom3200":                        	444  	; Zoom
-											,	"Zoom1600":                        	445  	; Zoom
-											,	"Zoom800":                          	446  	; Zoom
-											,	"Zoom400":                          	447  	; Zoom
-											,	"Zoom200":                          	448  	; Zoom
-											,	"Zoom150":                          	449  	; Zoom
-											,	"Zoom125":                          	450  	; Zoom
-											,	"Zoom100":                          	451  	; Zoom
-											,	"Zoom50":                            	452  	; Zoom
-											,	"Zoom25":                            	453  	; Zoom
-											,	"Zoom12.5":                          	454  	; Zoom
-											,	"Zoom8.33":                          	455  	; Zoom
-											,	"AddPageToFavorites":           	560  	; Favorites
-											,	"RemovePageFromFavorites": 	561  	; Favorites
-											,	"ShowFavorites":                    	562  	; Favorites
-											,	"CloseFavorites":                    	1106  	; Favorites
-											,	"CurrentFileFavorite1":           	600  	; Favorites
-											,	"CurrentFileFavorite2":           	601  	; Favorites -> I think this will be increased with every page added to favorites
-											,	"ChangeLanguage":               	553  	; Settings
-											,	"Options":                             	552  	; Settings
-											,	"AdvancedOptions":               	597  	; Settings
-											,	"VisitWebsite":                        	550  	; Help
-											,	"Manual":                              	555  	; Help
-											,	"CheckForUpdates":               	554  	; Help
-											,	"About":                                	551}  	; Help
-
+; helper
+Win32_SendMessage(win) {                                                                                  	;-- for closing a window via SendMessage - win is a Hwnd
+	static wm_msgs := {"WM_CLOSE":0x0010, "WM_QUIT":0x0012, "WM_DESTROY":0x0002}
+	for k, v in wm_msgs {
+		SendMessage, %v%, 0, 0,, ahk_id %win%
+		if(IsClosed(win, 1))
+			break
 	}
-
-	If !SumatraCommands.HasKey(command)
-		return 0
-
-	If SumatraID
-		PostMessage, 0x111, % SumatraCommands[command],,, % "ahk_id " SumatraID
-	else
-		return SumatraCommands[command]
-
+	if(IsClosed(win, 1))
+		return true
+	return false
 }
-
-
 
 

@@ -1,0 +1,69 @@
+﻿{
+  "1": [
+    "(fakt:3,5:Erhöhter Zeitaufwand bei Risikoabwägung)",
+    "(fakt:3,5:erhöhter Zeitaufwand bei längerem Gesprächsbedarf)",
+    "(fakt:3,5:Hoher Zeitaufwand bei langer Vorgeschichte unter Berücksichtigung zahlreicher Vorbefunde)",
+    "(fakt:3,5:schwierige Differentialdiagnostik bei Mehrfachbefunden)",
+    "(fakt:3,5:Komplexes Krankheitsbild/Erschwernis bei Begleiterkrankung)",
+    "(fakt:3,5:Schwere der Grunderkrankung)",
+    "(fakt:3,5:Aufwendige Beratung zu Therapieoptionen)",
+    "(fakt:3,5:Aufwendige Beratung zur eigenaktiven Mitarbeit)",
+    "(fakt:3,5:Unerwartete Medikamentenwirkung)",
+    "(fakt:3,5:Wechselwirkungsproblematik bei Mehrfachmedikation)",
+    "(fakt:3,5:Häufig wechselndes Beschwerdebild)",
+    "(fakt:3,5:Schwierige medikamentöse Einstellung)",
+    "(fakt:3,5:Erschwerte Verständigung)",
+    "(fakt:3,5:Überdurchschnittlicher Zeitaufwand)",
+    "(fakt:3,5:Therapieresistenz)",
+    "(fakt:3,5:)",
+    "(fakt:3,5:sMultiorganerkrankungen",
+    "(fakt:3,5:Multimorbidität)",
+    "(fakt:3,5:Kontrolle nach operativer Therapie)",
+    "(fakt:3,5:Erhöhter Zeitaufwand bei Erstvorstellung + mehrere Vorstellungsgründe)",
+    "(fakt:3,5:Erhöhter Zeitaufwand bei Berücksichtigung sozialer Aspekte)",
+    "(fakt:3,5:Erhöhter Zeitaufwand bei neuer Therapie)",
+    "(fakt:3,5:Erhebung vieler außerhalb erbrachter Behandlungen)",
+    "(fakt:3,5:Dauer 15 min, Gespräch nach Krankenhausentlassung)",
+    "(fakt:3,5:Dauer 15 min, Besprechung externer Untersuchungsbefunde)",
+    "(fakt:3,5:Dauer 15 min, Besprechung Laborbefunde)",
+    "(fakt:3,5:Dauer 15 Minuten)",
+    "(fakt:3,5:schwierige Umstände bei der Erbringung technischer Leistungen)"
+  ],
+  "5": [
+    "(fakt:3,5:Untersuchung mehrerer Organgsysteme Herz Lunge Bauch Bein)",
+    "(fakt:3,5:Atypischer Befund)"
+  ],
+  "7": [
+    "(fakt:3,5:Untersuchung mehrerer Organgsysteme Herz Lunge Bauch Bein)",
+    "(fakt:3,5:Atypischer Befund)"
+  ],
+  "15": [
+    "(text:Einleitung supportive Diabetestherapie)"
+  ],
+  "50": [
+    "(fakt:3,5:Hohe Dringlichkeit)"
+  ],
+  "76": [
+    "(ltext:Erstellung eines Medikamentenplanes)"
+  ],
+  "200": [
+    "(fakt:3,5:Erschwerte Darstellung und Beurteilung bei...)",
+    "(fakt:3,5:Erschwerte Diagnostik nach Voroperation)",
+    "(fakt:3,5:Erschwerte Untersuchung bei akuten Schmerzen)",
+    "(fakt:3,5:Erschwert bei reflektorischer Abwehrhaltung)"
+  ],
+  "245": [
+    "(fakt:1.0)(ltext:erhöhte Hygienemaßnahmen entspr. §6 GOÄ)"
+  ],
+  "298": [
+    "(ltext:Abstrich Rachenraum)",
+    "(ltext:Abstrich Nase)"
+  ],
+  "d+": [
+    "(fakt:3,5:Multiorganerkrankungen)",
+    "(fakt:3,5:Schwierig bei akuten Schmerzen)",
+    "(fakt:3,5:schwierige Differentialdiagnostik bei Mehrfachbefunden)",
+    "(fakt:3,5:schwierige Umstände bei der Erbringung technischer Leistungen)",
+    "(fakt:3,5:Leistung unter schlechten, auswärtigen Bedingungen)"
+  ]
+}

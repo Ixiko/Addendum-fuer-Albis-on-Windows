@@ -1,15 +1,15 @@
-﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
-;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 27.04.2020 - this file runs under Lexiko's GNU Licence
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                                             	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
+;                                                                             	!diese Bibliothek wird von fast allen Skripten benötigt!
+;                                              	by Ixiko started in September 2017 - last change 29.09.2021 - this file runs under Lexiko's GNU Licence
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; PROTOKOLLIEREN, FEHLERMELDUNGEN                                                                                                                                                                                                      	(04)
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; (01) FehlerProtokoll                        	(02) ExceptionHelper                      	(03) Telegram_Send                          	(04) TrayTip
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; PROTOKOLLIEREN, FEHLERMELDUNGEN                                                                                                                                                                             	(05)
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; (01) FehlerProtokoll                        	(02) TProtGetDay 							(03) TProtMatchID 							(04) Telegram_Send                        	(03) TrayTip
 ;1
-FehlerProtokoll(Exception, MsgToTelegram:= 1) {                                                                   	;-- Addendum.ahk stürzt auf manchen Clients einfach ab, Funktion erstellt ein Protokoll hoffentlich
+FehlerProtokoll(Exception, MsgToTelegram:= 1) {                                                	;-- erstellt ein Protokoll
 
 
 	; REMARK: this function uses a global object "Addendum", this object must contain data to Addendum paths and Telegram data (please see Addendum.ahk)
@@ -29,16 +29,16 @@ FehlerProtokoll(Exception, MsgToTelegram:= 1) {                                 
 
 		If IsObject(Exception)		{
 
-				startLine	:= (Exception.line - Range)
-				startLine	+= 1
+				startLine	:= (Exception.line - Floor(Range/2))
 				faultcode	:= "`tbetroffener Code (Bereich +-" Range "):`n"
 
 			; saves a range of code lines to file protocoll
-				FileRead, faultFile, % A_ScriptFullPath
+				faultFile 	:= FileOpen(Exception.File, "r", "UTF-8").Read()
 				faultLine	:= StrSplit(faultFile, "`n", "`r")
-				Loop, % Range
-					faultcode .= "`t`t`t" SubStr("00000" (startLine+A_Index), -4) ": " faultLine[(startLine+A_Index)] "`n"
-				faultcode	:= RTrim(faultcode, "`n")
+				faultcode 	:= "`t`t/*`n"
+				Loop % Range
+					faultcode .= "`t`t`t" SubStr("00000" (startLine+A_Index-1), -4) ": " faultLine[(startLine+A_Index-1)] "`n"
+				faultcode	.= " `t`t*/"
 
 				eMsg:= RegexReplace(exception.Message, "(\{)", q "$1" q)
 				eMsg:= RegexReplace(eMsg, "(\})", q "$1" q )
@@ -78,102 +78,83 @@ FehlerProtokoll(Exception, MsgToTelegram:= 1) {                                 
 		}
 
 	; save generated protocol
-		FileAppend, % towrite1 towrite2, % Addendum["AddendumDir"] "\logs'n'data\ErrorLogs\Fehlerprotokoll-" A_MM A_YYYY ".txt"
+		;~ SciTEOutput(towrite1 towrite2)
+		FileAppend, % towrite1 towrite2, % Addendum.LogPath "\ErrorLogs\Fehlerprotokoll-" A_MM A_YYYY ".txt"
 
 
 return true
 }
 ;2
-ExceptionHelper(libPath, SearchCode, ErrorMessage, codeline) {													;-- searches for the given SearchCode in an uncompiled script as a help to throw exceptions
+TProtGetDay(datestring, client)                                        	{                 	; Tagesprotokoll einlesen
 
-	If !A_IsCompiled {
+	; datestring Format: dd.MM.yyyy oder yyyyMMdd
 
-		;Fehlerfunktion bei Eingabe eines falschen Parameter
-			FileRead, Pfunc, %AddendumDir%\libPath
-			Loop, Parse, Pfunc, `n
-			{
-					If Instr(A_LoopField, SearchCode) {
-						scriptline:= A_Index
-						ScriptText:= A_LoopField
-						break
-					}
-			}
+	static datestring_old, SectionDate, TPFullPath
 
-			Exception(ErrorMessage)
+	If (datestring_old != datestring) {
 
-	} else {
+		If !RegExMatch(datestring, "(?<dd>\d+)\.(?<MM>\d+)\.(?<YYYY>\d+)", d)
+			RegExMatch(datestring, "^(?<YYYY>\d{4})(?<MM>\d{2})(?<dd>\d{2})", d)
 
-			msg=
-					(Ltrim
-					This message is shown, because the script wanted
-					to call a function that works only in uncompiled scripts.
+		lDate := dYYYY dMM ddd
+		datestring_old := datestring
 
-					A function was called to show a runtime error.
-					This function was called from %A_ScriptName%
-					at line: %codeline%. The code to show ist:
-					%SearchCode%
-					with the following error-message:
-					%ErrorMessage%
-					)
+		FormatTime, weekdayshort, % lDate, ddd
+		FormatTime, weekdaylong	, % lDate, dddd
+		FormatTime, month       	, % lDate, MMMM
 
-			MsgBox, % "Addendum für AlbisOnWindows - " A_ScriptName,  %msg%
+		SectionDate 	:= weekdaylong "|" ddd "." dMM
+		TPFullPath		:= Addendum.DBPath "\Tagesprotokolle\" dYYYY "\" dMM "-" month "_TP.txt"
 
 	}
 
+	If !FileExist(TPFullPath)
+		return "no file: " TPFullPath
+
+	IniRead, TProtoTmp, % TPFullPath, % SectionDate, % client
+ 	TProto := 	InStr(TProtoTmp, "Error") 	? "Error"
+				: 	InStr(TProtoTmp, ",")       	? StrSplit(RTrim(TProtoTmp, ","), ",")
+				                                        	: StrSplit(TProtoTmp, ">", "<")
+	If !Tproto[TProto.Count()]
+		TProto.RemoveAt(TProto.Count())
+
+return TPRoto
 }
 ;3
-Telegram_Send(telegramBotKey, telegramChatId, textMessage) {				                    			;-- another way to send a message
+TProtMatchID(matchID, datestring:="", client:="")             	{               	; sucht nach bereits gespeicherten PatID's
+
+  ; datestring und client leer lassen um mit dem aktuellen Tagesprotokoll zu arbeiten
+
+  ; bei Angabe eines Datums wird das jeweilige Tagesprotokoll geladen
+	Tprot  	:= datestring ? TProtGetDay(datestring, (client ? client : compname)) : Addendum.TProtocol
+
+  ; Tagesprotokoll enthält keine Daten
+	If (!IsObject(TProt) || TProt.Count() = 0)
+		return false
+
+  ; vergleicht gespeicherte PatientenIDs mit der Übergebenen
+	For each, PatIDTimeStr in TProt {
+		RegExMatch(PatIDTimeStr, "O)(?<ID>\d+)\((?<Hour>\d+):(?<Min>\d+)\)", Pat)
+		If (Pat.ID = matchID)
+			return SubStr("00" Pat.Hour, -1) ":" SubStr("00" Pat.Min, -1)
+	}
+
+return false
+}
+;4
+Telegram_Send(telegramBotKey, telegramChatId, textMessage) {				     		;-- another way to send a message
 
     WinHTTP := ComObjCreate("WinHTTP.WinHttpRequest.5.1")
     WinHTTP.Open("POST", Format("https://api.telegram.org/bot{1}/sendMessage?chat_id={2}&text={3}", telegramBotKey, telegramChatId, textMessage), 0)
-	;WinHTTP.SetRequestHeader("Content-Type", "application/json")
 	WinHTTP.Send()
-
-    TrayTip Text Sent to Telegram, %textMessage%
+    TrayTip Text Sent to Telegram, % textMessage
 
 Return
 }
-;4
+;5
 TrayTip(Title, Msg, Seconds:=2) {
-
 	If !InStr(compname, "SP1")
 		return
-
 	TrayTip, % Title, % Msg, % Seconds
 }
-;5
-HashThisString(str) {
-return CryptHash(&str, StrLen(str), "MD5")
-}
-;intern
-CryptHash(pData, nSize, SID = "CRC32", nInitial = 0) {
-	CALG_SHA := CALG_SHA1 := 1 + CALG_MD5 := 0x8003
-	If Not	CALG_%SID%
-	{
-		FormatI := A_FormatInteger
-		SetFormat, Integer, H
-		sHash := DllCall("ntdll\RtlComputeCrc32", "Uint", nInitial, "Uint", pData, "Uint", nSize, "Uint")
-		SetFormat, Integer, %FormatI%
-		StringUpper,	sHash, sHash
-		StringReplace,	sHash, sHash, X, 000000
-		Return	SubStr(sHash,-7)
-	}
 
-	DllCall("advapi32\CryptAcquireContextA", "UintP", hProv, "Uint", 0, "Uint", 0, "Uint", 1, "Uint", 0xF0000000)
-	DllCall("advapi32\CryptCreateHash", "Uint", hProv, "Uint", CALG_%SID%, "Uint", 0, "Uint", 0, "UintP", hHash)
-	DllCall("advapi32\CryptHashData", "Uint", hHash, "Uint", pData, "Uint", nSize, "Uint", 0)
-	DllCall("advapi32\CryptGetHashParam", "Uint", hHash, "Uint", 2, "Uint", 0, "UintP", nSize, "Uint", 0)
-	VarSetCapacity(HashVal, nSize, 0)
-	DllCall("advapi32\CryptGetHashParam", "Uint", hHash, "Uint", 2, "Uint", &HashVal, "UintP", nSize, "Uint", 0)
-	DllCall("advapi32\CryptDestroyHash", "Uint", hHash)
-	DllCall("advapi32\CryptReleaseContext", "Uint", hProv, "Uint", 0)
-
-	FormatI := A_FormatInteger
-	SetFormat, Integer, H
-	Loop,	%nSize%
-		sHash .= SubStr(*(&HashVal + A_Index - 1), -1)
-	SetFormat, Integer, %FormatI%
-	StringReplace,	sHash, sHash, x, 0, All
-	StringUpper,	sHash, sHash
-	Return	sHash
-}

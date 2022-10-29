@@ -1,0 +1,595 @@
+<!doctype html>
+<html>
+<head>
+<meta charset='UTF-8'><meta name='viewport' content='width=device-width initial-scale=1'>
+
+<link href='https://fonts.loli.net/css?family=Open+Sans:400italic,700italic,700,400&subset=latin,latin-ext' rel='stylesheet' type='text/css' /><style type='text/css'>html {overflow-x: initial !important;}:root { --bg-color:#ffffff; --text-color:#333333; --select-text-bg-color:#B5D6FC; --select-text-font-color:auto; --monospace:"Lucida Console",Consolas,"Courier",monospace; --title-bar-height:20px; }
+.mac-os-11 { --title-bar-height:28px; }
+html { font-size: 14px; background-color: var(--bg-color); color: var(--text-color); font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+body { margin: 0px; padding: 0px; height: auto; inset: 0px; font-size: 1rem; line-height: 1.42857; overflow-x: hidden; background: inherit; tab-size: 4; }
+iframe { margin: auto; }
+a.url { word-break: break-all; }
+a:active, a:hover { outline: 0px; }
+.in-text-selection, ::selection { text-shadow: none; background: var(--select-text-bg-color); color: var(--select-text-font-color); }
+#write { margin: 0px auto; height: auto; width: inherit; word-break: normal; overflow-wrap: break-word; position: relative; white-space: normal; overflow-x: visible; padding-top: 36px; }
+#write.first-line-indent p { text-indent: 2em; }
+#write.first-line-indent li p, #write.first-line-indent p * { text-indent: 0px; }
+#write.first-line-indent li { margin-left: 2em; }
+.for-image #write { padding-left: 8px; padding-right: 8px; }
+body.typora-export { padding-left: 30px; padding-right: 30px; }
+.typora-export .footnote-line, .typora-export li, .typora-export p { white-space: pre-wrap; }
+.typora-export .task-list-item input { pointer-events: none; }
+@media screen and (max-width: 500px) {
+  body.typora-export { padding-left: 0px; padding-right: 0px; }
+  #write { padding-left: 20px; padding-right: 20px; }
+}
+#write li > figure:last-child { margin-bottom: 0.5rem; }
+#write ol, #write ul { position: relative; }
+img { max-width: 100%; vertical-align: middle; image-orientation: from-image; }
+button, input, select, textarea { color: inherit; font: inherit; }
+input[type="checkbox"], input[type="radio"] { line-height: normal; padding: 0px; }
+*, ::after, ::before { box-sizing: border-box; }
+#write h1, #write h2, #write h3, #write h4, #write h5, #write h6, #write p, #write pre { width: inherit; }
+#write h1, #write h2, #write h3, #write h4, #write h5, #write h6, #write p { position: relative; }
+p { line-height: inherit; }
+h1, h2, h3, h4, h5, h6 { break-after: avoid-page; break-inside: avoid; orphans: 4; }
+p { orphans: 4; }
+h1 { font-size: 2rem; }
+h2 { font-size: 1.8rem; }
+h3 { font-size: 1.6rem; }
+h4 { font-size: 1.4rem; }
+h5 { font-size: 1.2rem; }
+h6 { font-size: 1rem; }
+.md-math-block, .md-rawblock, h1, h2, h3, h4, h5, h6, p { margin-top: 1rem; margin-bottom: 1rem; }
+.hidden { display: none; }
+.md-blockmeta { color: rgb(204, 204, 204); font-weight: 700; font-style: italic; }
+a { cursor: pointer; }
+sup.md-footnote { padding: 2px 4px; background-color: rgba(238, 238, 238, 0.7); color: rgb(85, 85, 85); border-radius: 4px; cursor: pointer; }
+sup.md-footnote a, sup.md-footnote a:hover { color: inherit; text-transform: inherit; text-decoration: inherit; }
+#write input[type="checkbox"] { cursor: pointer; width: inherit; height: inherit; }
+figure { overflow-x: auto; margin: 1.2em 0px; max-width: calc(100% + 16px); padding: 0px; }
+figure > table { margin: 0px; }
+thead, tr { break-inside: avoid; break-after: auto; }
+thead { display: table-header-group; }
+table { border-collapse: collapse; border-spacing: 0px; width: 100%; overflow: auto; break-inside: auto; text-align: left; }
+table.md-table td { min-width: 32px; }
+.CodeMirror-gutters { border-right: 0px; background-color: inherit; }
+.CodeMirror-linenumber { user-select: none; }
+.CodeMirror { text-align: left; }
+.CodeMirror-placeholder { opacity: 0.3; }
+.CodeMirror pre { padding: 0px 4px; }
+.CodeMirror-lines { padding: 0px; }
+div.hr:focus { cursor: none; }
+#write pre { white-space: pre-wrap; }
+#write.fences-no-line-wrapping pre { white-space: pre; }
+#write pre.ty-contain-cm { white-space: normal; }
+.CodeMirror-gutters { margin-right: 4px; }
+.md-fences { font-size: 0.9rem; display: block; break-inside: avoid; text-align: left; overflow: visible; white-space: pre; background: inherit; position: relative !important; }
+.md-fences-adv-panel { width: 100%; margin-top: 10px; text-align: center; padding-top: 0px; padding-bottom: 8px; overflow-x: auto; }
+#write .md-fences.mock-cm { white-space: pre-wrap; }
+.md-fences.md-fences-with-lineno { padding-left: 0px; }
+#write.fences-no-line-wrapping .md-fences.mock-cm { white-space: pre; overflow-x: auto; }
+.md-fences.mock-cm.md-fences-with-lineno { padding-left: 8px; }
+.CodeMirror-line, twitterwidget { break-inside: avoid; }
+svg { break-inside: avoid; }
+.footnotes { opacity: 0.8; font-size: 0.9rem; margin-top: 1em; margin-bottom: 1em; }
+.footnotes + .footnotes { margin-top: 0px; }
+.md-reset { margin: 0px; padding: 0px; border: 0px; outline: 0px; vertical-align: top; background: 0px 0px; text-decoration: none; text-shadow: none; float: none; position: static; width: auto; height: auto; white-space: nowrap; cursor: inherit; -webkit-tap-highlight-color: transparent; line-height: normal; font-weight: 400; text-align: left; box-sizing: content-box; direction: ltr; }
+li div { padding-top: 0px; }
+blockquote { margin: 1rem 0px; }
+li .mathjax-block, li p { margin: 0.5rem 0px; }
+li blockquote { margin: 1rem 0px; }
+li { margin: 0px; position: relative; }
+blockquote > :last-child { margin-bottom: 0px; }
+blockquote > :first-child, li > :first-child { margin-top: 0px; }
+.footnotes-area { color: rgb(136, 136, 136); margin-top: 0.714rem; padding-bottom: 0.143rem; white-space: normal; }
+#write .footnote-line { white-space: pre-wrap; }
+@media print {
+  body, html { border: 1px solid transparent; height: 99%; break-after: avoid; break-before: avoid; font-variant-ligatures: no-common-ligatures; }
+  #write { margin-top: 0px; padding-top: 0px; border-color: transparent !important; padding-bottom: 0px !important; }
+  .typora-export * { -webkit-print-color-adjust: exact; }
+  .typora-export #write { break-after: avoid; }
+  .typora-export #write::after { height: 0px; }
+  .is-mac table { break-inside: avoid; }
+  .typora-export-show-outline .typora-export-sidebar { display: none; }
+}
+.footnote-line { margin-top: 0.714em; font-size: 0.7em; }
+a img, img a { cursor: pointer; }
+pre.md-meta-block { font-size: 0.8rem; min-height: 0.8rem; white-space: pre-wrap; background: rgb(204, 204, 204); display: block; overflow-x: hidden; }
+p > .md-image:only-child:not(.md-img-error) img, p > img:only-child { display: block; margin: auto; }
+#write.first-line-indent p > .md-image:only-child:not(.md-img-error) img { left: -2em; position: relative; }
+p > .md-image:only-child { display: inline-block; width: 100%; }
+#write .MathJax_Display { margin: 0.8em 0px 0px; }
+.md-math-block { width: 100%; }
+.md-math-block:not(:empty)::after { display: none; }
+.MathJax_ref { fill: currentcolor; }
+[contenteditable="true"]:active, [contenteditable="true"]:focus, [contenteditable="false"]:active, [contenteditable="false"]:focus { outline: 0px; box-shadow: none; }
+.md-task-list-item { position: relative; list-style-type: none; }
+.task-list-item.md-task-list-item { padding-left: 0px; }
+.md-task-list-item > input { position: absolute; top: 0px; left: 0px; margin-left: -1.2em; margin-top: calc(1em - 10px); border: none; }
+.math { font-size: 1rem; }
+.md-toc { min-height: 3.58rem; position: relative; font-size: 0.9rem; border-radius: 10px; }
+.md-toc-content { position: relative; margin-left: 0px; }
+.md-toc-content::after, .md-toc::after { display: none; }
+.md-toc-item { display: block; color: rgb(65, 131, 196); }
+.md-toc-item a { text-decoration: none; }
+.md-toc-inner:hover { text-decoration: underline; }
+.md-toc-inner { display: inline-block; cursor: pointer; }
+.md-toc-h1 .md-toc-inner { margin-left: 0px; font-weight: 700; }
+.md-toc-h2 .md-toc-inner { margin-left: 2em; }
+.md-toc-h3 .md-toc-inner { margin-left: 4em; }
+.md-toc-h4 .md-toc-inner { margin-left: 6em; }
+.md-toc-h5 .md-toc-inner { margin-left: 8em; }
+.md-toc-h6 .md-toc-inner { margin-left: 10em; }
+@media screen and (max-width: 48em) {
+  .md-toc-h3 .md-toc-inner { margin-left: 3.5em; }
+  .md-toc-h4 .md-toc-inner { margin-left: 5em; }
+  .md-toc-h5 .md-toc-inner { margin-left: 6.5em; }
+  .md-toc-h6 .md-toc-inner { margin-left: 8em; }
+}
+a.md-toc-inner { font-size: inherit; font-style: inherit; font-weight: inherit; line-height: inherit; }
+.footnote-line a:not(.reversefootnote) { color: inherit; }
+.reversefootnote { font-family: ui-monospace, sans-serif; }
+.md-attr { display: none; }
+.md-fn-count::after { content: "."; }
+code, pre, samp, tt { font-family: var(--monospace); }
+kbd { margin: 0px 0.1em; padding: 0.1em 0.6em; font-size: 0.8em; color: rgb(36, 39, 41); background: rgb(255, 255, 255); border: 1px solid rgb(173, 179, 185); border-radius: 3px; box-shadow: rgba(12, 13, 14, 0.2) 0px 1px 0px, rgb(255, 255, 255) 0px 0px 0px 2px inset; white-space: nowrap; vertical-align: middle; }
+.md-comment { color: rgb(162, 127, 3); opacity: 0.6; font-family: var(--monospace); }
+code { text-align: left; vertical-align: initial; }
+a.md-print-anchor { white-space: pre !important; border-width: initial !important; border-style: none !important; border-color: initial !important; display: inline-block !important; position: absolute !important; width: 1px !important; right: 0px !important; outline: 0px !important; background: 0px 0px !important; text-decoration: initial !important; text-shadow: initial !important; }
+.os-windows.monocolor-emoji .md-emoji { font-family: "Segoe UI Symbol", sans-serif; }
+.md-diagram-panel > svg { max-width: 100%; }
+[lang="flow"] svg, [lang="mermaid"] svg { max-width: 100%; height: auto; }
+[lang="mermaid"] .node text { font-size: 1rem; }
+table tr th { border-bottom: 0px; }
+video { max-width: 100%; display: block; margin: 0px auto; }
+iframe { max-width: 100%; width: 100%; border: none; }
+.highlight td, .highlight tr { border: 0px; }
+mark { background: rgb(255, 255, 0); color: rgb(0, 0, 0); }
+.md-html-inline .md-plain, .md-html-inline strong, mark .md-inline-math, mark strong { color: inherit; }
+.md-expand mark .md-meta { opacity: 0.3 !important; }
+mark .md-meta { color: rgb(0, 0, 0); }
+@media print {
+  .typora-export h1, .typora-export h2, .typora-export h3, .typora-export h4, .typora-export h5, .typora-export h6 { break-inside: avoid; }
+}
+.md-diagram-panel .messageText { stroke: none !important; }
+.md-diagram-panel .start-state { fill: var(--node-fill); }
+.md-diagram-panel .edgeLabel rect { opacity: 1 !important; }
+.md-fences.md-fences-math { font-size: 1em; }
+.md-fences-advanced:not(.md-focus) { padding: 0px; white-space: nowrap; border: 0px; }
+.md-fences-advanced:not(.md-focus) { background: inherit; }
+.typora-export-show-outline .typora-export-content { max-width: 1440px; margin: auto; display: flex; flex-direction: row; }
+.typora-export-sidebar { width: 300px; font-size: 0.8rem; margin-top: 80px; margin-right: 18px; }
+.typora-export-show-outline #write { --webkit-flex:2; flex: 2 1 0%; }
+.typora-export-sidebar .outline-content { position: fixed; top: 0px; max-height: 100%; overflow: hidden auto; padding-bottom: 30px; padding-top: 60px; width: 300px; }
+@media screen and (max-width: 1024px) {
+  .typora-export-sidebar, .typora-export-sidebar .outline-content { width: 240px; }
+}
+@media screen and (max-width: 800px) {
+  .typora-export-sidebar { display: none; }
+}
+.outline-content li, .outline-content ul { margin-left: 0px; margin-right: 0px; padding-left: 0px; padding-right: 0px; list-style: none; }
+.outline-content ul { margin-top: 0px; margin-bottom: 0px; }
+.outline-content strong { font-weight: 400; }
+.outline-expander { width: 1rem; height: 1.42857rem; position: relative; display: table-cell; vertical-align: middle; cursor: pointer; padding-left: 4px; }
+.outline-expander::before { content: ""; position: relative; font-family: Ionicons; display: inline-block; font-size: 8px; vertical-align: middle; }
+.outline-item { padding-top: 3px; padding-bottom: 3px; cursor: pointer; }
+.outline-expander:hover::before { content: ""; }
+.outline-h1 > .outline-item { padding-left: 0px; }
+.outline-h2 > .outline-item { padding-left: 1em; }
+.outline-h3 > .outline-item { padding-left: 2em; }
+.outline-h4 > .outline-item { padding-left: 3em; }
+.outline-h5 > .outline-item { padding-left: 4em; }
+.outline-h6 > .outline-item { padding-left: 5em; }
+.outline-label { cursor: pointer; display: table-cell; vertical-align: middle; text-decoration: none; color: inherit; }
+.outline-label:hover { text-decoration: underline; }
+.outline-item:hover { border-color: rgb(245, 245, 245); background-color: var(--item-hover-bg-color); }
+.outline-item:hover { margin-left: -28px; margin-right: -28px; border-left: 28px solid transparent; border-right: 28px solid transparent; }
+.outline-item-single .outline-expander::before, .outline-item-single .outline-expander:hover::before { display: none; }
+.outline-item-open > .outline-item > .outline-expander::before { content: ""; }
+.outline-children { display: none; }
+.info-panel-tab-wrapper { display: none; }
+.outline-item-open > .outline-children { display: block; }
+.typora-export .outline-item { padding-top: 1px; padding-bottom: 1px; }
+.typora-export .outline-item:hover { margin-right: -8px; border-right: 8px solid transparent; }
+.typora-export .outline-expander::before { content: "+"; font-family: inherit; top: -1px; }
+.typora-export .outline-expander:hover::before, .typora-export .outline-item-open > .outline-item > .outline-expander::before { content: "−"; }
+.typora-export-collapse-outline .outline-children { display: none; }
+.typora-export-collapse-outline .outline-item-open > .outline-children, .typora-export-no-collapse-outline .outline-children { display: block; }
+.typora-export-no-collapse-outline .outline-expander::before { content: "" !important; }
+.typora-export-show-outline .outline-item-active > .outline-item .outline-label { font-weight: 700; }
+.md-inline-math-container mjx-container { zoom: 0.95; }
+
+
+:root {
+    --side-bar-bg-color: #fafafa;
+    --control-text-color: #777;
+}
+
+@include-when-export url(https://fonts.loli.net/css?family=Open+Sans:400italic,700italic,700,400&subset=latin,latin-ext);
+
+/* open-sans-regular - latin-ext_latin */
+  /* open-sans-italic - latin-ext_latin */
+    /* open-sans-700 - latin-ext_latin */
+    /* open-sans-700italic - latin-ext_latin */
+  html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    font-family: "Open Sans","Clear Sans", "Helvetica Neue", Helvetica, Arial, 'Segoe UI Emoji', sans-serif;
+    color: rgb(51, 51, 51);
+    line-height: 1.6;
+}
+
+#write {
+    max-width: 860px;
+  	margin: 0 auto;
+  	padding: 30px;
+    padding-bottom: 100px;
+}
+
+@media only screen and (min-width: 1400px) {
+	#write {
+		max-width: 1024px;
+	}
+}
+
+@media only screen and (min-width: 1800px) {
+	#write {
+		max-width: 1200px;
+	}
+}
+
+#write > ul:first-child,
+#write > ol:first-child{
+    margin-top: 30px;
+}
+
+a {
+    color: #4183C4;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    position: relative;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    font-weight: bold;
+    line-height: 1.4;
+    cursor: text;
+}
+h1:hover a.anchor,
+h2:hover a.anchor,
+h3:hover a.anchor,
+h4:hover a.anchor,
+h5:hover a.anchor,
+h6:hover a.anchor {
+    text-decoration: none;
+}
+h1 tt,
+h1 code {
+    font-size: inherit;
+}
+h2 tt,
+h2 code {
+    font-size: inherit;
+}
+h3 tt,
+h3 code {
+    font-size: inherit;
+}
+h4 tt,
+h4 code {
+    font-size: inherit;
+}
+h5 tt,
+h5 code {
+    font-size: inherit;
+}
+h6 tt,
+h6 code {
+    font-size: inherit;
+}
+h1 {
+    font-size: 2.25em;
+    line-height: 1.2;
+    border-bottom: 1px solid #eee;
+}
+h2 {
+    font-size: 1.75em;
+    line-height: 1.225;
+    border-bottom: 1px solid #eee;
+}
+
+/*@media print {
+    .typora-export h1,
+    .typora-export h2 {
+        border-bottom: none;
+        padding-bottom: initial;
+    }
+
+    .typora-export h1::after,
+    .typora-export h2::after {
+        content: "";
+        display: block;
+        height: 100px;
+        margin-top: -96px;
+        border-top: 1px solid #eee;
+    }
+}*/
+
+h3 {
+    font-size: 1.5em;
+    line-height: 1.43;
+}
+h4 {
+    font-size: 1.25em;
+}
+h5 {
+    font-size: 1em;
+}
+h6 {
+   font-size: 1em;
+    color: #777;
+}
+p,
+blockquote,
+ul,
+ol,
+dl,
+table{
+    margin: 0.8em 0;
+}
+li>ol,
+li>ul {
+    margin: 0 0;
+}
+hr {
+    height: 2px;
+    padding: 0;
+    margin: 16px 0;
+    background-color: #e7e7e7;
+    border: 0 none;
+    overflow: hidden;
+    box-sizing: content-box;
+}
+
+li p.first {
+    display: inline-block;
+}
+ul,
+ol {
+    padding-left: 30px;
+}
+ul:first-child,
+ol:first-child {
+    margin-top: 0;
+}
+ul:last-child,
+ol:last-child {
+    margin-bottom: 0;
+}
+blockquote {
+    border-left: 4px solid #dfe2e5;
+    padding: 0 15px;
+    color: #777777;
+}
+blockquote blockquote {
+    padding-right: 0;
+}
+table {
+    padding: 0;
+    word-break: initial;
+}
+table tr {
+    border: 1px solid #dfe2e5;
+    margin: 0;
+    padding: 0;
+}
+table tr:nth-child(2n),
+thead {
+    background-color: #f8f8f8;
+}
+table th {
+    font-weight: bold;
+    border: 1px solid #dfe2e5;
+    border-bottom: 0;
+    margin: 0;
+    padding: 6px 13px;
+}
+table td {
+    border: 1px solid #dfe2e5;
+    margin: 0;
+    padding: 6px 13px;
+}
+table th:first-child,
+table td:first-child {
+    margin-top: 0;
+}
+table th:last-child,
+table td:last-child {
+    margin-bottom: 0;
+}
+
+.CodeMirror-lines {
+    padding-left: 4px;
+}
+
+.code-tooltip {
+    box-shadow: 0 1px 1px 0 rgba(0,28,36,.3);
+    border-top: 1px solid #eef2f2;
+}
+
+.md-fences,
+code,
+tt {
+    border: 1px solid #e7eaed;
+    background-color: #f8f8f8;
+    border-radius: 3px;
+    padding: 0;
+    padding: 2px 4px 0px 4px;
+    font-size: 0.9em;
+}
+
+code {
+    background-color: #f3f4f4;
+    padding: 0 2px 0 2px;
+}
+
+.md-fences {
+    margin-bottom: 15px;
+    margin-top: 15px;
+    padding-top: 8px;
+    padding-bottom: 6px;
+}
+
+
+.md-task-list-item > input {
+  margin-left: -1.3em;
+}
+
+@media print {
+    html {
+        font-size: 13px;
+    }
+    pre {
+        page-break-inside: avoid;
+        word-wrap: break-word;
+    }
+}
+
+.md-fences {
+	background-color: #f8f8f8;
+}
+#write pre.md-meta-block {
+	padding: 1rem;
+    font-size: 85%;
+    line-height: 1.45;
+    background-color: #f7f7f7;
+    border: 0;
+    border-radius: 3px;
+    color: #777777;
+    margin-top: 0 !important;
+}
+
+.mathjax-block>.code-tooltip {
+	bottom: .375rem;
+}
+
+.md-mathjax-midline {
+    background: #fafafa;
+}
+
+#write>h3.md-focus:before{
+	left: -1.5625rem;
+	top: .375rem;
+}
+#write>h4.md-focus:before{
+	left: -1.5625rem;
+	top: .285714286rem;
+}
+#write>h5.md-focus:before{
+	left: -1.5625rem;
+	top: .285714286rem;
+}
+#write>h6.md-focus:before{
+	left: -1.5625rem;
+	top: .285714286rem;
+}
+.md-image>.md-meta {
+    /*border: 1px solid #ddd;*/
+    border-radius: 3px;
+    padding: 2px 0px 0px 4px;
+    font-size: 0.9em;
+    color: inherit;
+}
+
+.md-tag {
+    color: #a7a7a7;
+    opacity: 1;
+}
+
+.md-toc { 
+    margin-top:20px;
+    padding-bottom:20px;
+}
+
+.sidebar-tabs {
+    border-bottom: none;
+}
+
+#typora-quick-open {
+    border: 1px solid #ddd;
+    background-color: #f8f8f8;
+}
+
+#typora-quick-open-item {
+    background-color: #FAFAFA;
+    border-color: #FEFEFE #e5e5e5 #e5e5e5 #eee;
+    border-style: solid;
+    border-width: 1px;
+}
+
+/** focus mode */
+.on-focus-mode blockquote {
+    border-left-color: rgba(85, 85, 85, 0.12);
+}
+
+header, .context-menu, .megamenu-content, footer{
+    font-family: "Segoe UI", "Arial", sans-serif;
+}
+
+.file-node-content:hover .file-node-icon,
+.file-node-content:hover .file-node-open-state{
+    visibility: visible;
+}
+
+.mac-seamless-mode #typora-sidebar {
+    background-color: #fafafa;
+    background-color: var(--side-bar-bg-color);
+}
+
+.md-lang {
+    color: #b4654d;
+}
+
+/*.html-for-mac {
+    --item-hover-bg-color: #E6F0FE;
+}*/
+
+#md-notification .btn {
+    border: 0;
+}
+
+.dropdown-menu .divider {
+    border-color: #e5e5e5;
+    opacity: 0.4;
+}
+
+.ty-preferences .window-content {
+    background-color: #fafafa;
+}
+
+.ty-preferences .nav-group-item.active {
+    color: white;
+    background: #999;
+}
+
+.menu-item-container a.menu-style-btn {
+    background-color: #f5f8fa;
+    background-image: linear-gradient( 180deg , hsla(0, 0%, 100%, 0.8), hsla(0, 0%, 100%, 0)); 
+}
+
+
+
+</style><title>Changes_Addendum_main</title>
+</head>
+<body class='typora-export os-windows'><div class='typora-export-content'>
+<div id='write'  class=''><p><img src="./ahk_logo.png" referrerpolicy="no-referrer" alt="ahk_logo.png" title="ahk_logo.png"></p><p>&nbsp;</p><h1 id='versionslogbuch'><u><span>Versionslogbuch</span></u></h1><h3 id='addendum'><img src="./Icons\Addendum.png" referrerpolicy="no-referrer" alt="Addendum.png" title="Addendum.png"><span> Addendum</span></h3><p><span>▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂</span></p><h3 id='addendum-v209--07092022'><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><em><strong><span>Addendum V2.09</span></strong></em><span>  (07.09.2022)</span></h3><p><img src="07.09.2022.svg" referrerpolicy="no-referrer" alt="AddendumDesign"></p><p>&nbsp;</p><p>&nbsp;</p><p><span>▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂</span></p><h3 id='addendum-v208--22072022'><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><em><strong><span>Addendum V2.08</span></strong></em><span>  (22.07.2022)</span></h3><figure><table><thead><tr><th><span>Datum</span></th><th><span>Beschreibung</span></th></tr></thead><tbody><tr><td><strong><span>22.07.2022</span></strong></td><td><span>▪ </span><strong><u><span>DICOM-CD</span></u></strong><span> ⬝ Funktion für automatisiertes Kopieren von DICOM Dateien (inklusive der Ordnerstruktur) hinzugefügt. Die Funktion startet automatisch nach Einlegen einer DICOM-CD in ein CD-Laufwerk. Die Funktion wird nur auf einem PC mit angeschlossenem CD-Laufwerk aktiviert. Die Einstellungen müssen derzeit noch weitestgehend händisch in der Addendum.ini hinterlegt werden. Der Zugriff über das  TrayMenu ist vorbereitet. Festgelegt werden kann in welches Verzeichnis einer Festplatte die Dateien kopiert werden. Der Namen des Stammordners für die CD-Daten wird aus den Untersuchungsdaten, die in der DICOMDIR Datei der CD hinterlegt sind, generiert. In der Addendum.ini sind per Voreinstellung der Name und das Geburtsdatum des Patienten eingestellt. </span><br><span>Die Ordnerstruktur würde dann so aussehen:</span><br><span>E:\Dicom</span><span>&lt;</span><span>br&gt;       ┕ Mustermann, Max 19910130</span><br><span>          ├</span><span>	</span><span>STD0001</span><br><span>          ├</span><span>	</span><span>STD0002</span><br><span>          ┕ STD0003</span><br><span>Die Funktion wird fragen, wenn möglicherweise eine identische Kopie angelegt werden soll. Es wird aktuell nur die Ordnerstruktur, aber nicht die Dateien verglichen. Die Funktion ist nicht für die Umwandlung der Dicom Daten in eine anderes Bildformat ausgelegt. </span><br><span>&lt;</span><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V2.08</span></strong><span>&gt;</span><br><br><span> ▪ </span><strong><span>Abrechnungsassistent</span></strong><span>	</span><span>⬝</span><span>	</span><span>Optische Verbesserungen. Bei ausreichend großer Monitorauflösung (&gt;1920 Pixel horizontal) können Albis und der Abrechnungsassistent nebeneinander so ausgerichtet werden das sie sich die Monitorfläche gut teilen.  So muss nicht zwischen den Fenstern hin- und her geschaltet werden.</span><br><span>⬝</span><span>	</span><strong><span>Chronikerpauschale</span></strong><span>: findet neue Patienten mit chronischen Krankheiten über eingetragene Quartalsdiagnosen. Findet deshalb auch Pat., welche bisher nicht als Chroniker erkannt/markiert wurden. Schlägt bei diesen Abrechnung der Chronikerpauschalen 03220 und/oder 03221 vor.</span><br><span>⬝</span><span>	</span><span>in Vorbereitung sind Funktionen für die erweiterte Auswertung und Fehlersuche für die Abrechnung. </span><br><span>1.Funktion findet Patienten bei denen die Ziffer für das Hautkrebsscreening abgerechnet wurde, bei denen aber bisher kein elektronisches Formular angelegt wurde. Findet auch eFormulare ohne Abrechnungsziffer. </span><br><span>  </span><strong><span>Addendum V2.06</span></strong><br><span>▪ </span><strong><span>Infofenster</span></strong><span> ⬝</span><span>	</span><span>Schriftgrößen werden jetzt hoffentlich auf verschiedenen Windowsumgebungen korrekt verwendet. Vermutlich hat Windows nicht überall die abgeschaltete automatische DPI-Skalierung erkannt.</span><br><span>▪ </span><strong><span>Gesundheitsvorsorge</span></strong><span> </span><span>	</span><span>⬝ Kürzel </span><lko></td></tr><tr><td>&nbsp;</td><td><span>📝 </span><strong><span>Dauerdiagnosen</span></strong><span> ⬝ </span><span>	</span><span>die Fensterbreite wird automatisch angepasst so das der gesamte Diagnosentext sichtbar wird.</span><br><span>📝 </span><strong><span>Copy/Paste Diagnosen</span></strong><span> ⬝Kontextbezogene Diagnosenformatierung. Diagnosen welche per Strg+C ins Clipboard kopiert .B. aus einer PDF Datei, kopiert wurden,werden vom Skript beim Einfügen unter dem Kürzel &quot;dia&quot; in das Albisformat umgewandelt. </span><br><span>Aus &quot;</span><strong><span>Hypertonus Stadium I nach WHO (I10.90G)</span></strong><span>&quot; wird also &quot;</span><strong><span>Hypertonus Stadium I nach WHO {I10.90G}; </span></strong><span>&quot;⬝</span><span>	</span><span>reine Diagnosentext (ohne den ICD-Code) werden nicht erkannt</span><br><span>⬝</span><span>	</span><span>die Änderungen werden an allen Diagnosen des Clipboards vorgenommen, der Inhalt des Clipboards wird nicht verändert. </span><br><span>📝 </span><strong><span>Diagnosenhotstrings</span></strong><span>⬝ Diagnosen an ICD-10-2022-GM angepasst. Weitere Kürzel und Diagnosen hinzugefügt. (Aktuell sind </span><strong><span>326 Diagnosen</span></strong><span> über </span><strong><span>635 Abkürzungen</span></strong><span> erreichbar</span><br><span>▪ </span><strong><span>AutoClose-Timeout</span></strong><span>	</span><span>   </span><span>	</span><span>⬝</span><span>	</span><span>Das automatische Schließen der EBM/KRW Hinweis Fensters (Regelprüfung) läßt sich über das Traymenu an- oder abschalten.</span><br><span>⬝</span><span>	</span><span>Die Zeit bis zum Schließen der Hinweisfensters läßt sich individuell für jeden Client über einen weiteren Punkt im Traymenu festlegen.</span></td></tr></tbody></table></figure><p><span>▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂</span></p><h3 id='addendum-v204--03072022'><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><em><strong><span>Addendum V2.04</span></strong></em><span>  (03.07.2022)</span></h3><figure><table><thead><tr><th><span>Datum</span></th><th><span>Beschreibung</span></th></tr></thead><tbody><tr><td><strong><span>03.07.2022</span></strong></td><td><strong><span>Addendum_Albis</span></strong><span>: </span><br><span>💰 </span><strong><span>AlbisGVU()</span></strong><span> - verbesserte Funktion um die Abrechnung von Gesundheitsvorsorgeuntersuchung und gleichzeitig Hautkrebsscreening   vornehmen zu lassen. Sollte das Regelprüfungsfenster von Albis erkennen und abfangen können. Nach Beendigung der Eintragung wird AlbisCaveGVU() aufgerufen um sichtbare Hinweise zu den aktuellen Untersuchungen zu hinterlegen  </span><br><span>💰 </span><strong><span>AlbisCaveGVU()</span></strong><span> - hilft einen vom Skript erstellten Hinweistext (z.B. GVU/HKS 06^22) in Zeile 9 des Cave! von Dialoges einzutragen</span><br><span>▪ </span><strong><span>AlbisSetzeProgrammDatum()</span></strong><span> - Zuverläßigkeit in der Erkennung des Dialogfenster &#39;Programmdatum einstellen&#39; war so gut wie nicht mehr vorhanden. Die Funktion führt jetzt mehrere Abfragen aus und prüft die ermittelten Fenster- und Steuerelementhandles tiefergehend.</span><br><span>▪ </span><strong><span>AlbisKarteikarteEingabe()</span></strong><span> - Funktionen prüfen stärker mit welchen Steuerelementen sie arbeiten, damit soll ein versehentlicher Verlust des korrekten Eingabefokus verhindert werden. Text wird jetzt gezielt an das Steuerelement gesendet. Damit sollten ins Leere gehende Texteingaben nicht mehr vorkommen</span><br><span>▪ </span><strong><span>AlbisKarteikarteUnfocus()</span></strong><span> - die Zeilenauswahl in der Karteikarte sicher schließen.</span></td></tr></tbody></table></figure><p><span>▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂</span></p><h3 id='addendum-v200--04052022'><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><em><strong><span>Addendum V2.00</span></strong></em><span>  (04.05.2022)</span></h3><figure><table><thead><tr><th><span>Datum</span></th><th><span>Beschreibung</span></th></tr></thead><tbody><tr><td><strong><span>04.05.2022</span></strong></td><td><span>▪  </span><strong><span>Einträge</span></strong><span> bei </span><strong><span>Dauermedikamenten</span></strong><span>, </span><strong><span>Dauerdiagnosen</span></strong><span> oder im </span><strong><span>Wartezimmer</span></strong><span> (mit Filter) lassen sich ohne Bestätigung löschen wenn gewünscht</span><br><span>▪ ⌨ </span><strong><span>Hotstrings</span></strong><span> für das aktuelle Datum und die letzten und die nächsten 2 Tage hinzugefügt, schreiben sie einfach #vorgestern , </span><strong><span>#gestern</span></strong><span>, </span><strong><span>#heute</span></strong><span>, </span><strong><span>#morgen</span></strong><span> und #</span><strong><span>übermorgen</span></strong><span>, mit </span><strong><span>#dd, #mm</span></strong><span> und </span><strong><span>#yy</span></strong><span> (oder </span><strong><span>#tag</span></strong><span>, </span><strong><span>#mona</span></strong><span>t, </span><strong><span>#jahr</span></strong><span>) werden Teile des heutigen Datum ausgegeben</span><br><span>▪ ✉ die </span><strong><span>Preise für Briefporto</span></strong><span> werden jetzt aus der Addendum.ini gelesen (Kategorie [Preise]). Die jährliche Anpassung ist damit  einfacher zu machen als die Preise an der richtigen Stelle im Quellcode vorzunehmen.</span><br><br><span> 🔮 </span><strong><span>Autonaming</span></strong><br><span>▪  Eine erste alpha Version einer vollständigen Klassifizierung des Posteinganges ist fertig. </span><br><span> Bisher wurden ausschließlich die Namen der Patienten in den PDF-Dokumenten erkannt. Jetzt nutzt das Skript die vom Anwender zuvor vergebenen Dokumentbezeichnungen für eine einfache Klassifizierung. </span><br><span> Die Dokumentbezeichner müssen dabei folgendes Format aufweisen: Kategoriebezeichnung - Inhaltsbeschreibung  z.B. &quot;Radiologie - MRT der LWS&quot;. Außerdem sollten für eine hohe Treffergenauigkeit die in der Bezeichnung verwendeten Worte im Text vorkommen. Damit wird allerdings keine allzu hohe Genauigkeit erreicht. Gibt es eine weitere Version werde ich vermutlich die Texte/Wörter aus gleich klassifizierten Dokumenten miteinander vergleichen um immer vorkommende Worte/Phrasen zu erkennen.</span><br><span> </span><em><strong><span>Achtung</span></strong></em><span>: Die automatische Kategorisierung (&quot;Autonaming&quot;) des Dokumentinhaltes wird erst beim Aufruf des &quot;Umbennen&quot;-Dialoges (Patienten Journal / Infofenster) ausgeführt.</span></td></tr><tr><td>&nbsp;</td><td><img src="Icons/FritzboxAnrufmonitor24x24.png" style="zoom:80%;" /><strong><span>Fritzbox Anrufmonitor</span></strong><br><span>▪  fragt bei der ersten Verwendung nach der IP-Adresse der Fritzbox.</span><br><span>▪  prüft den Online-Status der Fritzbox</span></td></tr><tr><td>&nbsp;</td><td><span>⚗ </span><strong><span>Addendum_LDT</span></strong><br><span>▪  neue Funktionsbibliothek für die Filterung und Datenextraktion aus LDT-Dateien (Labordatentransfer) &lt;</span><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.82</span></strong><span>&gt;</span></td></tr><tr><td>&nbsp;</td><td><img src="Icons/Laborjournal.png" style="zoom:35%;" /><span> </span><strong><span>Laborjournal</span></strong><br><span>▪  erweiterte Filtermöglichkeiten (alles/ohne Covid-19 Untersuchung/nur Covid-19 Untersuchungen), optische Verbesserungen, Geschwindigkeitsverbesserung (Tabelle wird nur bei Bedarf neu erstellt)  &lt;</span><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.81</span></strong><span>&gt;</span></td></tr><tr><td>&nbsp;</td><td><img src="Icons/ICD10.png" style="zoom:10%;" /><span> </span><strong><span>ICD 10 GM 2022</span></strong><br><span>▪ aktuelle ICD 10 Fassung durch ein kleines Skript das die DIMDI-Textfassung in eine mit Albis kompatible Textfassung umsetzt V1.80&lt;br</span></td></tr><tr><td>&nbsp;</td><td><img src="Icons/Laborbuch.svg" style="zoom:7%;" /><span> </span><strong><span>Laborbuch / Anforderung zuordnen</span></strong><br><span>▪  im Laborbuch finden sich Anforderungen ohne Namen  ? Addendum findet den passenden Patienten zur Anforderungsnummer allein. Wählen Sie eine Anforderung ohne Zuordnung aus und starten Sie über das Kontextmenu  ◁ Patient zuweisen ▷ oder per ◁ Hotkey F2 ▷ (Albis Standard) den Dialog &quot;Anforderung zuordnen&quot;. Addendum fängt das Fenster ab und beginnt sofort mit der Patientensuche. Der gefundene Patientenname wird von Addendum in das Eingabesteuerelement des Dialoges geschrieben. Wie funktioniert das? Das Laborbuch zeigt nicht den vollständigen, vom Labor erhaltenen, Datensatz zur Anforderungsnummer an. Im Datensatz befindet sich zwar kein Patientenname, aber es wurde ein Geburtsdatum vom Labor zurückgesendet. Über die Patientendatenbank werden alle Patienten mit demselben Geburtsdatum herausgesucht. Danach werden alle Patienten mit einem ältern Behandlungsdatum als dem übermittelten Laboreingangsdatum aussortiert. In den überwiegenden Fällen bleibt nur ein Patient übrig. Dieser wird dann vorgeschlagen. &lt;</span><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.79</span></strong><span>&gt;</span></td></tr><tr><td>&nbsp;</td><td><img src="Icons/Quicksearch.ico" style="zoom:50%;" /><span> </span><strong><span>Quicksearch</span></strong><span> / </span><strong><span>Patienten</span></strong><span> </span><br><span>▪  bessere Überwachung des aktiven Fensterfocus um blockierende Tastenkombinationen in anderen Fenstern auszuschließen</span></td></tr><tr><td>&nbsp;</td><td><img src="Icons/Schnellrezept.png" style="zoom:50%;" /><span>  </span><strong><span>Schnellrezepte</span></strong><br><span>▪  sind jetzt auch für Privatrezepte verfügbar  &lt;</span><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.78</span></strong><span>&gt;</span></td></tr><tr><td>&nbsp;</td><td><span>🗓 </span><strong><span>Shift+F3-Kalender</span></strong><br><span>▪ gibt eine Warnung aus, wenn man eine Arbeitsunfähigkeitsnbescheinigung für mehr 30 Kalendertage ausstellen will</span><br><span>▪ Übertragen ins &quot;von&quot; und &quot;bis&quot; Feld von zwei ausgewählten Tagen funktioniert wieder</span></td></tr><tr><td>&nbsp;</td><td><span>📡 </span><strong><span>AddendumMonitor</span></strong><br><span>▪ dem Skript können weitere Prozesse / AutohotkeySkripte zur Überwachung übergeben werden. Um weitere Überwachungen ausführen zu lassen, gibt es einen komfortablen Manager, welcher über das Tray Icon zu erreichen ist.</span></td></tr><tr><td>&nbsp;</td><td><span>🔎 </span><strong><span>Dokument Finder</span></strong><br><span>▪ Skript für die Volltextsuche (RegEx) in PDF, Word und Textdateien mit integrierter PDF Anzeige (noch keine Vorschau für Text und Worddateien). Die Suche ist langsam da keine Indizierung vorgenommen wird. Voreingestellt sind ist das Albis-Verzeichnis (albiswin\briefe</span><span>)</span><span>. Weitere Verzeichnisse können hinzugefügt werden. &lt;</span><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.77</span></strong><span>&gt;</span></td></tr><tr><td>&nbsp;</td><td><span>💰 </span><strong><span>Abrechnungsassistent</span></strong><br><span>▪ Fehler beim Übertragen von Daten in die Karteikarte beseitigt</span><br><span>▪ automatisierte Übernahme der Abrechnungsvorschläge funktioniert leider nicht mehr</span></td></tr></tbody></table></figure><p><span>▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂</span></p><h3 id='addendum-v172--01022022'><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><em><strong><span>Addendum V1.72</span></strong></em><span>  (01.02.2022)</span></h3><figure><table><thead><tr><th><span>Datum</span></th><th><span>Beschreibung</span></th></tr></thead><tbody><tr><td><strong><span>01.02.2022</span></strong></td><td><span>💡 </span><strong><u><span>Infofenster</span></u></strong><span> </span><br><span> </span><img src="Icons\rename.svg" referrerpolicy="no-referrer" alt="rename.svg"><strong><span>Dokumente umbenennen</span></strong><span> </span><br><span>     ▸bei der manuellen Vergabe von Dateibezeichnungen können Teile der Dateibezeichnung von der Übernahme in die </span><br><span>        Liste mit Vorschlägen ausgeschlossen werden. Der auszuschließende Teil wird dazu von zwei * Sternchen </span><br><span>        umschlossen (z.B. COVID19-Impfstoffbestellung </span><em><span>40</span></em><span>.KW). Wird nur ein Sternchen verwendet, werden die</span><br><span>        nachfolgenden  Zeichen ignoriert.</span><br><span>     ▸Dokumente können über den Dialog direkt gelöscht werden</span><br><span>  </span><img src="Icons\Lan_Cable.svg" referrerpolicy="no-referrer" alt="Lan_Cable.svg"><strong><span>Netzwerk</span></strong><span> </span><br><span>     ▸Netzwerkgeräte (im Moment PC&#39;s) werden angezeigt</span><br><span>     ▸der Online/Offlinestatus wird angezeigt</span><br><span>     ▸es können im Netzwerk bestimmte Befehle an den Clients versendet werden</span><br><span> </span><img src="Icons/Laborbuch.svg" style="zoom:7%;" /><span> </span><strong><span>Laborbuch</span></strong><br><span>        im Laborbuch erhalten Sie jetzt die Möglichkeit den richtigen Patienten für namenlose Einträge zu finden. </span><br><span>        Man muss sich nicht mehr die Anforderungsnummer und dazu den Patienten notieren. </span><br><span>        Die gefunden Patienten werden automatisch1 zur Auswahl angezeigt, wenn man in Albis den Kontextmenubefehl </span><br><span>        &quot;Patient zuordnen&quot; ausgeführt hat und das entsprechende Dialogfenster erkannt wurde.</span><br><span>        (</span><em><span>namenlose Einträge - beim elektronischen Labordatenversand übermittel mein Labor bei Abrechnung über die</span><br><span>          Laborgemeinschaft keinen Patientennamen. Übermittelt wird allerdings ein Geburtsdatum</span></em><span>)</span><br><span>         * automatische Funktion ist noch nicht bereit</span><br><span> 🦠 </span><strong><span>LaborJournal</span></strong><span> </span><br><span>        Praxisinterne COVID-19-PCR-Statistik hinzugefügt (Anzahl der positiven PCT-Ergebnisse, Namen der  </span><br><span>        SARS-CoV-Varianten u.e.m.) für den Auswertungszeitraum und eine zweite Auswertung mit den</span><br><span>Daten seit Anfang 2020 </span><br><span>  📝 </span><strong><span>Diagnosen</span></strong><span> </span><br><span>        die Diagnosen-Auswahlbox hat ein angenehmeres Layout erhalten.</span><br><span>  👪 </span><strong><span>Patienten</span></strong><span> </span><br><span>         das Modul hat ebenso eine schönere Oberfläche bekommen. Suchfunktion für offene Suche in allen Datenfeldern erweitert.</span><br><span> 🖨 </span><strong><span>Rechnungsdruck</span></strong><span> </span><br><span>         automatischer Vorschlag eines Dateinnamen bei PDF Ausgabe einer Rechnung </span><br><span>  🔎 </span><strong><span>Quicksearch</span></strong><span> </span><br><span>         zeigt Labortexte aus der LABTEXTE.dbf nach Click auf einen Eintrag in den anderen Labordatenbanken </span><br><span>  💰 </span><strong><span>Abrechnungsassistent</span></strong><span> </span><br><span>         umfangreiche Verbesserung mehrerer Funktionen (Ziffern eintragen, mehr Einstellungen und</span><br><span>         lädt Daten deutlich schneller)</span></td></tr><tr><td>&nbsp;</td><td><span>⚗ </span><strong><span>Addendum_LDT</span></strong><br><span>        eine neue Bibliothek mit Funktionen für die native Auswertung von .LDT Dateien (Labor-Daten-Transfer) &lt;br</span></td></tr><tr><td>&nbsp;</td><td><strong><u><span>Addendum_DB</span></u></strong><br><span>💉 </span><strong><span>Impfstatistik()</span></strong><br><span>       class_AlbisDB hat eine Funktion zur Zählung der COVID19 Impfungen gemäß den Anforderungen des RKI erhalten.</span><br><span>⚗ </span><strong><span>LaborBuchUnbekannteID()</span></strong><br><span>       für das Albis Laborbuch bei Übergabe einer Anforderungsnummer mit Eingangsdatum der Anforderungen sucht die</span><br><span>	</span><span>   Funktion in der Datenbank nach dieser Anforderungsnummer und liest dort das hinterlegte Geburtsdatum aus.</span><br><span>       Alle Patienten mit diesem Geburtsdatum werden von der Funktion zurückgegeben.</span></td></tr><tr><td>&nbsp;</td><td><strong><span>Addendum_Albis</span></strong><span> </span><br><span>  📓 </span><strong><span>AlbisAdressfelderZusatz()</span></strong><br><span>       für die Einblendung einer zusätzlichen Schaltfläche zum Leeren der Adressfelder im Dialog weitere Informationen </span><br><span>  📐 </span><strong><span>AlbisGetFocus()</span></strong><span>   </span><span>	</span><br><span>       Erkennungsrate verbessert </span><br><span> ⚗ </span><strong><span>AlbisLaborImport()</span></strong><br><span>       Fenstererkennung verbessert</span><br><span> ⚗ </span><strong><span>AlbisLabBuchRowSelected()</span></strong><br><span>       gibt die ausgewählte Zeile im Laborbuch zurück</span></td></tr><tr><td>&nbsp;</td><td><span>📥 </span><strong><span>Laborabruf_iBWC</span></strong><br><span>       überprüft das LDT-Laborverzeichnis auf bisher unverarbeitete Dateien. </span><br><span>       Verarbeitet zunächst diese Dateien. Das Skript wird anschließend nach wenigen Minuten neu gestartet und </span><br><span>       beginnt den Laborabruf erneut</span><br></td></tr></tbody></table></figure><p><span>▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂</span></p><h3 id='addendum-v168--05122021'><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><em><strong><span>Addendum V1.68</span></strong></em><span>  (05.12.2021)</span></h3><figure><table><thead><tr><th><span>Datum</span></th><th><span>Beschreibung</span></th></tr></thead><tbody><tr><td><strong><span>05.12.2021</span></strong></td><td><span>💉  </span><strong><span>Impfstatistik</span></strong><br><span>funktionierende Statistik für COVID19-Schutzimpfungen für das RKI, die Statistik wird als Tabelle</span><br><span>dargestellt und die Daten werden ausserdem auf Tastendruck ins KBV Formular übertragen</span><br><span>  🖱 </span><strong><span>Schaltfläche zum Leeren aller Addressfelder</span></strong><br><span>        im Dialog &#39;weitere Informationen&#39; eine Schaltfläche zum einfachen Leeren der Addressfelder bereitgestellt.</span><br><span>        Funktion kann zuvor gelöschten Inhalt der Felder wiederherstellen.</span><br><span>  ⏰ </span><strong><span>Neustart von Albis zum Tageswechsel</span></strong><span> </span><br><span>         kurz vor 0 Uhr jeden Tages wird Albis beendet und kurz nach 0 Uhr des neuen Tages erneut gestartet. </span><br><span>         Ohne Neustart von Albis wird ein Zeitstempel für die TI nicht erneuert. </span><br><span>         Angeschlossene Lesegeräte (Telematik) lassen sich am nächsten Tag nicht in Betrieb nehmen. </span><br><span> 📅 Verbesserungen beim </span><strong><span>Shift-F3 Kalender</span></strong><span>.</span><br><span>        Es werden wieder Datumsbereiche in die Felder geschrieben. </span><br><span> 👪 Einträge im </span><strong><span>Fenster &#39;Familiendaten&#39;</span></strong><br><span>        Verschieben mit Strg &amp; Pfeil hoch oder runter möglich</span><br><span> 📝 </span><strong><span>Diagnosen-Auswahlbox</span></strong><br><span>Dialog wird automatisch geschlossen wenn sich der Tastatureingabefokus geändert hat</span><br><span> 💡 </span><strong><span>Infofenster</span></strong><br><span>        beim Laden einer leeren PDFDaten.json Datei blieb das Skript beim Umwandeln des JSON-Strings in ein </span><br><span>       Autohotkey-Objekt hängen. Nachfolgende Aufrufe, wie Hotkeys und Hotstrings, wurden dann nicht ausgeführt.</span></td></tr><tr><td>&nbsp;</td><td><img src="Icons\Telegram.svg" referrerpolicy="no-referrer" alt="Telegram.svg"><span> </span><strong><span>PushToTelegram</span></strong><br><span>        eine Erweiterung um EMails von Outlook nach Telegram weiterzuleiten </span><br><span> 💡 </span><strong><span>Infofenster</span></strong><br><span>        ▸ Die Tagesprotokolle von jedem anderen Rechner im Praxisnetzwerk lassen sich anzeigen.</span><br><span>        ▸ Laborblattausgabe über PDF-Drucker verbessert</span><br><span> </span><img src="Icons/Laborjournal.png" style="zoom:35%;" /><strong><span>LaborJournal</span></strong><br><span>        merkt sich die letzte Änderung der LabParam.dbf um die Anzahl der Parameter und ihre</span><br><span>        Beschreibungen aktuell halten zu können</span><br><span> ⌨ </span><strong><span>Hotstring-Viewer</span></strong><br><span>        wenn die Suche in den vorab eingegebenen Diagnosen-Hotstrings erfolglos ist, wird automatisch</span><br><span>        im ICD-Katolog gesucht&lt;br</span></td></tr></tbody></table></figure><p><span>▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂</span></p><h3 id='addendum-v167--26102021'><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.67</span></strong><span>  (26.10.2021)</span></h3><figure><table><thead><tr><th><span>Datum</span></th><th><span>Beschreibung</span></th></tr></thead><tbody><tr><td><strong><span>26.10.2021</span></strong></td><td><span>💰 </span><strong><span>Abrechnungsassistent</span></strong><span>: </span><br><span>     ▸anhand von ICD Diagnosen werden Patienten zur Abrechnung von Chronikerpauschalen vorgeschlagen</span><br><span>     ▸Verbesserung und Erweiterung der grafischen Oberfäche.</span><br><span>     ▸Geschwindigkeit verbessert.</span><br><span>     ▸Fehler beseitigt. </span><br><br><span> </span><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.66</span></strong><br><span>📧 </span><strong><span>MailManager</span></strong><span>:</span><br><span>      ▸Vorbereitung für Outlook Automatisierung von Fritz!Box FaxMail Nachrichten  </span><br><br><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.65</span></strong><br><span>💡 </span><strong><span>Infofenster</span></strong><span>:</span><br><span>    ▸</span><em><span>AutoWartezimmer</span></em><span>: Pat. können anhand bestimmter Stichworte in einer importierten</span><br><span>    ▸Dokumentbezeichnung automatisch einembestimmten Wartezimmer zugeordnet werden,</span><br><span>        z.B. als &quot;ToDo Liste&quot; abzuarbeitender Anfragen</span><br><br><span>⚗ </span><strong><span>Laborabruf</span></strong><br><span>    ▸Verbesserungen bei den Fenstererkennungen</span><br><br><span>⌨ </span><strong><span>Kontextabhängige Hotstrings</span></strong><span>:⏷</span><em><span>Hotstring-Diagnosen</span></em><span> funktionieren jetzt auch in diversen Formularen:</span><br><span>      ▸ Krankenhauseinweisung (Muster 2)</span><br><span>      ▸ Überweisung (Muster 6)</span><br><span>      ▸ Antrag auf Kostenübernahme Reha-Sport (Muster 56)</span><br><span>      ▸ Befundbericht Rehabilitationsanstrag (Muster G1204)</span><br><span>      ▸ Ärztliches Gutachten </span><br><span> ⏵ </span><strong><span>Verwandtschaftsbeziehungen</span></strong><span>: im Familiendialog hinzugefügt</span><br><span> ⏵ </span><strong><span>Laden von Hotstrings</span></strong><span>:  Hotstrings können jetzt in externen Dateien abgelegt werden</span><br><span> ⏵ </span><strong><span>Hotstringhelfer Fenster</span></strong><span>: verrutschen der Gui Position ausserhalb des sichtbaren Monitorbereiches wird verhindert</span><br><span> ⏵ </span><strong><span>Hotkeys und Hotkeyfunktionen</span></strong><span>: verbessert</span><br><br><span>⌨ </span><strong><span>Scite4AutoHotkey</span></strong><span> - die Größe des Output pane ist wird entsprechend der Monitororientierung (Hochformat/Querformat) angepasst</span><br></td></tr></tbody></table></figure><p><span>▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂</span></p><h3 id='addendum-v164--18092021'><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><em><strong><span>Addendum V1.64</span></strong></em><span>  (18.09.2021)</span></h3><figure><table><thead><tr><th><span>Datum</span></th><th><span>Beschreibung</span></th></tr></thead><tbody><tr><td><strong><span>18.09.2021</span></strong></td><td><span>⏵⚗ </span><strong><span>Laborjournal.ahk</span></strong><span> </span><br><span>- automatischer Start zur festgelegten Zeit, z.B. zum Beginn der Spechstunde. An Tagen ohne Sprechstunde (Wochenende, Urlaub)</span><br><strong><span>AUTOMATISCHES ERSETZEN (HOTSTRINGS):</span></strong><br><span>⏵⌨ </span><strong><span>Senden von Diagnosen erweitert</span></strong><span>. Cursor wird zur schnelleren Eingabe von z.B. Seitenangaben an   entsprechende die Position im ICD-Code gesetzt.</span><br><span>⏵💰 </span><strong><span>Senden von Ziffern im Abrechnungsfenster</span></strong><span> per Hotkey hinzugefügt. Schnelles Einfügen von Einzelziffern z.B. im Rahmen der Korrekturen bei Abrechnungsprüfung.</span><br><span>⏵ ⌨ </span><strong><span>Kontextsensitive Hotstringhilfe</span></strong><span> hinzugefügt. Die Eingabe eines Sternchen (*) nach einer begonnenen Texteingabestellt ein Suchfenster fürHotstrings in ihrem Kontext bereit. Wurde zuvor nichts eingegeben werden alle HotStrings des jeweiligen Kontext angezeigt (z.B. alle EBModer Diagnosenhotstrings).  &lt;</span><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.63</span></strong><span>&lt;</span><br><span>⏵💰 </span><strong><span>Abrechnungsscheinprüfung:</span></strong><span>  vor dem Eintragen von Kosten für Kopien (als Sachkosten) wird auf einen angelegten Privat oder BG Schein geprüft</span><br><span>⏵ </span><strong><span>Portokosten</span></strong><span>: nach Eingabe von porto nach den Kürzeln bg oder lbg erscheint jetzt ein Tooltip mit Preisen und Beschreibungen der Deutschen Post AG. Nachfolgend muss nur noch eine Zahl zur Auswahl der richtigen Portokosten gedrückt werden. Die Europreise sind in der Addendum.ini hinterlegt.</span><br><span>⏵⌨ </span><strong><span>mehr Diagnosenhotstrings</span></strong><span>:</span><span>	</span><span>Fristenanzeige im AU Formular leicht überarbeitet, Fristen werden in die Karteikarte übernommen</span><br><br><span> ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ ͞ </span><br><span>- das Tray-Menu enthält </span><strong><span>mehr Einstellungsmöglichkeiten</span></strong><span> für Addendum</span><br><span>- </span><strong><span>Skript für Organisation des Corona-Impfmanagements</span></strong><span> hinzugefügt + Hotstrings für Corona EBM Ziffern.</span><br><span>- Schnellentfernung aus der Wartezimmerliste (Albisdialog wird nach Festlegung automatisch bestätigt)</span><br><span>- 💉</span><strong><span>Coronaimpfdokumentation.ahk</span></strong><span> - hilft die Dokumentation schneller zu erfassen</span><br><br><span> </span><u><strong><span>Addendum_Gui</span></strong></u><br><span>⏵ Autonaming wird nach jedem Texterkennungsvorgang aufgerufen. </span><br><span> der Dateiname des Dokumentes enthält den richtigen Patientennamen und das Erstellungsdatum des Dokumentes</span><br><span>⏵Wiederherstellung der letzten Fensteransicht verbessert</span><br><span>⏵das Laborblatt kann per EMail (Outlook) versendet werden. Die für den Versand benötigte EMail Adresse wird aus der Albis-Datenbank bezogen</span><span>	</span><span>(einzutragen unter Stammdaten).</span><br><span>⏵der Dokumentimport hat eine ansehnliche Fortschrittsanzeige erhalten</span><br><span>⏵Autovervollständigung beim Umbennen von Dokumenten</span><br><span>⏵Dateiexport aus dem Journal in den Exportordner</span><br></td></tr></tbody></table></figure><p><span>▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂</span></p><h3 id='addendum-v160--08042021br'><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><em><strong><span>Addendum V1.60</span></strong></em><span>  (08.04.2021)</span><br></h3><figure><table><thead><tr><th style='text-align:center;' ><span>Datum</span></th><th><span>Beschreibung</span></th></tr></thead><tbody><tr><td style='text-align:center;' ><strong><span>08.04.2021</span></strong></td><td><strong><span>Abrechnungsassistent.ahk</span></strong><br><span>Der Abrechnungsassistent scannt die DBase-Datenbanken nach allen bisherigen Einträgen für Gesundheitsvorsorgen, Hautkrebsscreening, Krebsvorsorge (Männer) Darmkrebsscreening-, Screening des Aortenaneurysma, Chronikerziffern. Dem stellt es dann alle Abrechnungsscheine eines Quartals gegenüber , nutzt die KVB-Abrechnungsregeln und zeigt innerhalb von 4,5s eine Tabelle mit Patienten und potientiell abzurechnenden Untersuchungen für das gewählte Quartal an. Ein Doppelklick auf einen Patienten öffnet seine Karteikarte. Ein weiterer Klick im angezeigten Quartalskalender und die Ziffern werden am gewählten Datum eingetragen. Einfach? Einfach! Schneller als mit Albis? Wesentlich schneller! Ausbaufähig? Definitiv! Ersatz für den Albis Abrechnungsassistenten? Da ich nicht weiß ob dieser nicht doch zuverlässige Ausgaben genieren kann, nur ein &quot;vielleicht&quot;.</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><span>💡</span><u><strong><span>Infofenster</span></strong></u><span>            </span><span>	</span><br><span>- Autovervollständigung für Namen u. Bezeichnungen im Dateidialog fertig gestellt </span><br><span>- Fehlerbehebung bei der Dateibehandlung und bei der Anzeige in der Listview </span><br><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.55</span></strong></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><u><strong><span>Quicksearch</span></strong></u><span>            </span><span>	</span><br><span>-  </span><span>	</span><span>für die direkte Suche in den Datenbankdateien mit derzeit schon der Möglichkeit in den Spalten eine RegEx-Suche durchführen zu lassen. Die Suchergebnisse werden in einer eigenen Tabelle ausgegeben bei welcher man in Zukunft ganze Spalten ein- und ausblenden wird können.</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><u><strong><span>Addendum</span></strong></u><span>            </span><span>	</span><br><span>- es können etwas mehr Einstellungen über das Traymenu vorgenommen werden.</span><br><span>- Funktion für automatisierte Korrektur von EBM-Ausnahmeziffern im Feld Ausnahmeindikation hinzugefügt</span><br><span> - mehr Hotstrings für EBM, GOÄ Ziffern und Diagnosen  &lt;</span><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.54</span></strong><span>&gt;</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><u><img src="Icons/Laborjournal.png" style="zoom:35%;" /><span> </span><strong><span>LaborJournal</span></strong></u><span>        </span><span>		</span><br><span>- HTML schöner gemacht, CSS ToolTip Animation beim Überfahren von Laborparametern mit der Maus (Langtexte der Parameter werden gezeigt)</span><br><span>- Unterschreitungen der Normgrenzen sollte jetzt erkannt werden</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><span>⚗ </span><strong><span>Laborabruf_iBWC</span></strong><span>   </span><span>	</span><span>- </span><span>	</span><span>Protokoll und Ablaufanzeige konsistenter gemacht</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><u><img src="Icons/Laborjournal.png" style="zoom:35%;" /><span> </span><strong><span>LaborJournal</span></strong></u><br><span> - es wurden mehr Parameter im Labor angezeigt als eingestellt war </span><br><span>- Zeigt die Laborwerte der letzten n Werktage an. Es kommt somit immer eine feste Anzahl an Tagen zur Darstellung. </span><br><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.53</span></strong></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><u><strong><span>Addendum</span></strong></u><br><span> - der Auto-Neustart des Skriptes setzt das Albis-Programmdatum wieder auf das aktuelle Tagesdatum</span><br><span>- der Dialog &#39;Labor Anzeigegruppen&#39; wird abgefangen um die Steuerelemente zu vergrößern</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><span>⚗ </span><u><strong><span>Laborabruf_iBWC</span></strong></u><br><span>- Laborabruf wartet das Öffnen des Laborbuches ab und löst dann &#39;alle übertragen&#39; aus. Addendum übernimmt dann dieÜbertragung ins Laborblatt. Voraussetzung ist, das bei Albis unter Optionen/Labor im Reiter Import bei &#39;Laborbuch nach Import automatisch öffnen&#39; ein Häkchen gesetzt ist und das in Addendum die Einstellung Laborabruf automatisieren ebenso abgehakt ist.  Anmerkung: Das Übertragen der Werte in das Laborblatt wird in einigen Fällen nicht komplett erfolgen können. Einige seltene Dialogfenster sind noch nicht erfasst und automatisiert worden durch mich.</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><span>💡 </span><u><strong><span>Infofenster</span></strong></u><span> - RPA des Sumatra Readers funktioniert fast tadellos. Funktionen optimiert und fehlerhafte Listviewzugriff behoben.</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><span>💡 </span><strong><u><span>InfoFenster</span></u></strong><br><span>mehrere kleinere Fehler bei der Gui Darstellung entfernt</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><u><strong><span>Addendum</span></strong></u><span> </span><br><span>- ein manueller Skriptneustart wird verhindert, wenn Addendum gerade einen Arbeits-Thread ausführt</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><strong><span>AddendumReanimator</span></strong><span>, </span><strong><span>Outlook Anhänge extrahieren</span></strong><br><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.52</span></strong></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><strong><span>ListviewClipboard()</span></strong><span> eine kleine Funktion welche den Inhalt von Tabellensteuerlementen (Listview) ins Clipboard kopiert. Und wenn hinterlegt, dann entfernt die Funktionen überflüssige Informationen und formatiert die Daten so daß man diese z.B. direkt in einem Textprogramm ausgeben kann. Voreingestellt ist die Formatierung für das Dauermedikamenten und Dauerdiagnosenfenster.</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><span>💡 </span><u><strong><span>InfoFenster</span></strong></u><br><span>mit WatchFolder() und AutoOCR wird bei PDF-Dateien im Befundordner automatisch ein OCR-Vorgang durchgeführt. Anschliessend werden die Dateien automatisch kategorisiert und umbenannt</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><span>⚗ </span><u><strong><span>Laborabruf Timer</span></strong></u><br><span>Ein zeitgesteuerte Abruf von Labordaten ist jetzt möglich. </span><br><span>Je nach ihren Einstellungen wird ein Skript einmal oder beliebig oft pro Tag gestartet. Das vorhandene Skript automatisiert den Abruf der Labordaten vom Download der LDT-Datei, über den Import der Labordaten bis hin zum Übertragen aller Werte ins Laborblatt. Derzeit fehlt noch eine entscheidende Idee wie ich bei Anforderungen ohne zugewiesene Patienten eine automatische Zuweisung durchführen kann. Im Infofenster wird der nächste Zeitpunkt des Laborabrufes angezeigt. </span><br><span>Das Kopieren von Inhalten aus Albisfenstern ist erweitert worden. Diagnosen sowie Medikamentenlisten werden ausgelesen und nach eigenen Vorgaben formatiert. Die neu formartierten Listen kann man dann per Strg+v (Paste) einfügen wo man möchte.</span><br><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"></td></tr></tbody></table></figure><p><span>▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂</span></p><h3 id='addendum-v150--07022021br'><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><em><strong><span>Addendum V1.50</span></strong></em><span>  (07.02.2021)</span><br></h3><figure><table><thead><tr><th style='text-align:center;' ><span>Datum</span></th><th><span>Beschreibung</span></th></tr></thead><tbody><tr><td style='text-align:center;' ><strong><span>07.02.2021</span></strong></td><td><span>💡 </span><u><strong><span>InfoFenster</span></strong></u><br><span>alle kategorisierten Befunde werden nacheinander importiert. Dateien einen neuen Namen (Kategorie) zu geben wurde vereinfacht. Da Albis maximal 70 Zeichen für das Karteikartenkürzel &quot;scan&quot; vorgibt, ist die Eingabe eines neuen Dateinamens auf diese Länge begrenzt.</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><u><img src="Icons/Laborjournal.png" style="zoom:35%;" /><span> </span><strong><span>LaborJournal</span></strong></u><br><span>Zusammenfassung der auffälligsten Laborparameter der letzten Blutabnahmen. Übersichtlicher als das Laborbuch da deutlicher weniger Informationen zu erfassen sind. Die Darstellung erfolgt in Tabellenform mit farblichen Hervorhebungen.</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><span>💡 </span><u><strong><span>InfoFenster</span></strong></u><br><span>Zusatzfunktion Direktdruck des Laborblattes auf Drucker oder als PDF-Export mit automatischer Namensgebung der exportierten Datei, Autobenennung von PDF Dateien funktioniert zuverlässiger.</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><img src="Icons/Laborjournal.png" style="zoom:35%;" /><span> </span><strong><span>LaborJournal</span></strong><br><span> Zusammenfassung der auffälligsten Laborparameter der letzten Blutabnahmen. Übersichtlicher als das Laborbuch da deutlicher weniger Informationen zu erfassen sind. </span><br><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.49</span></strong></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><span>💡 </span><u><strong><span>InfoFenster</span></strong></u><br><span>Zusatzfunktion Direktdruck des Laborblattes auf Drucker oder als PDF-Export mit automatischer Namensgebung der exportierten Datei, Autobenennung von PDF Dateien funktioniert zuverlässiger.  </span><br><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.48</span></strong></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><u><strong><span>Addendum_Exporter</span></strong></u><br><span>Suche nach dem Arbeitgeber von Patienten möglich oder sich diese anzeigen lassen, das Skript erweitertert sich zum komfortablen Interface für die Suche nach Patienten mit Hilfe von Parametern die man nicht in der freien Statistik findet (ich jedenfalls nicht)</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><u><strong><span>Addendum_MDCalc</span></strong></u><br><span>neue Bibliothek mit medizinischen Berechnungsfunktionen für Körperoberflächen (KOF), eGFR Abschätzungnach der CK-EPI-Formel von 2009, BMI, Dosisrechner ...</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><u><strong><span>Addendum_Mining</span></strong></u><br><span>neue Bibliothek erweitert die Autonaming Fähigkeiten (automatische Umbenennung von Befunddateien) von Addendum</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><span>💡 </span><u><strong><span>InfoFenster</span></strong></u><span> </span><br><span>kleine Verbesserung beim Reaktionsvermögen</span><br><em><strong><span>Abrechnungshelfer</span></strong></em><span> im Infofenster: Anzeige der letzten abgerechneten Vorsorgeuntersuchungen, GB-Komplexe, Chroniker- und Vorsorgeziffern mit Datum</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><strong><u><span>Gesundheitsvorsorgen</span></u></strong><br><span>neues Skript basierend auf Addendum_DBASE.ahk das durch direkten Zugriff auf die Albis Datenbank alle Kassenversicherten Patienten anzeigt bei denen eine Vorsorgeuntersuchung im Abrechnungsquartal möglich ist.</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><span>💡 </span><u><strong><span>InfoFenster</span></strong></u><br><strong><span>AutoNaming()</span></strong><span> Erkennung des Befunddatums aus dem Inhalt, derzeit werden Tagesdaten und Entlassungsdaten in der Form &quot;vom 03.04.2020 bis zum 14.04.2020&quot; erkannt</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><span>💡 </span><u><strong><span>InfoFenster</span></strong></u><br><span>hat einen weiteren TAB (</span><strong><span>Extra</span></strong><span>) erhalten über den man Skriptdateien oder Programme starten kann</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><strong><u><span>Addendum_Exporter.ahk</span></u></strong><br><span>ein Skript um bequem alle einem Patienten zugehörigen Dokumente, die sich in den vielen </span><br><span>Unterordnern in ..\albiswin\Briefe</span><span>.</span><span>. befinden in ein gemeinsames Verzeichnis zu exortieren. Dabei lassen sich die Dateien nach Dateiendungen oder nach dem Karteikartentext filtern. Das Skript nutzt dazu meine kurz zuvor enttworfene DBASE-Klasse und erstellt eindeutige Dateinamen anhand der vorhandenen Karteikarteneinträge. Somit kann man auf einfach Weise alle Dokumente für Anfragen von Behörden zusammen stellen.   </span><br><span> </span><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.47</span></strong></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><span>💡 </span><u><strong><span>InfoFenster</span></strong></u><span>  </span><br><span>- Beim Umbenennen einer PDF Datei wird zur Erleichterung die 1.Seite als Vorschau (nutzt Sumatra PDF) eingeblendet</span><br><span> </span><strong><span>automatische Dateibenennung</span></strong><span> </span><br><span>- Namen von Patienten werden erkannt, vorausgesetzt Addendum hat sie in der Datenbank</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><strong><u><span>Addendum_DBASE</span></u></strong><br><span>native DBASE Klasse für Albis .dbf Files, geeignet für:</span><br><span>-</span><span>	</span><span>Analyse der von Albis verwendeten DBASE-Datei Strukturen </span><br><span>-</span><span>	</span><span>Portierung von Daten </span><br><span>-</span><span>	</span><span>Suche nach Daten</span><br><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.46</span></strong></td></tr></tbody></table></figure><p><span>▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂</span></p><h3 id='addendum-v145--09112021br'><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><em><strong><span>Addendum V1.45</span></strong></em><span>  (09.11.2021)</span><br></h3><figure><table><thead><tr><th style='text-align:center;' ><span>Datum</span></th><th><span>Beschreibung</span></th></tr></thead><tbody><tr><td style='text-align:center;' >&nbsp;</td><td><u><strong><span>Befundmanagement</span></strong></u><br><span>alle Befunde eines Patienten (pdf, Bilder) in einen Ordner exportieren oder in allen PDF-Dateien eines Patienten nach einem Begriff suchen lassen und die Dateien und Fundstellen anzeigen lassen hierfür ist unter Umständen zunächst ein Texterkennungsvorgang notwendig, der allerdings automatisch durchgeführt wird</span></td></tr><tr><td style='text-align:center;' ><strong><span>09.11.2020</span></strong></td><td><span>- überflüssigen Code entfernt, einige Bereich effizienter gestaltet</span><br><span>- wesentlich Verbesserung beim Infofenster und seinen Teilfunktionen, insgesamt ein deutlicher Zugang an Komfort und Geschwindigkeit</span><br><span>- die PDF Verarbeitung wird immer umfangreicher und komfortabler</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><u><strong><span>Texterkennung per Tesseract</span></strong><span> </span><br></u><span> - bei nicht durchsuchbaren PDF Dokumente (ohne Textlayer) wird automatisch eine Texterkennung durchgeführt.  </span><br><span> - verwendet werden die besten deutschen Tesseract Trainingsdaten. Ein ORC Durchgang dauert deshalb recht lange,</span><br><span>    erzeugt aber selbst bei schlechten Vorlagen, akzeptable Ergebnisse. </span><br><span> - es wird vor jeder Manipulation einer PDF Datei ein Backup des Originals angelegt (falls nicht vorhanden), um die </span><br><span>    Wiederherstellung der Datei zu ermöglichen! Backup Dateien werden nicht automatisch gelöscht! </span><br><span>  - zur Beschleunigung der wiederholten Ladevorgänge und zur Verminderung der schreibenden Dateizugriffe </span><br><span>    kann auch mit einer sogenannten &#39;RAMDisk&#39; gearbeitet werden. Da es bis auf </span><strong><span>ImDisk</span></strong><span> keine auf einer &#39;freien Lizenz&#39; </span><br><span>    basierende Software für Windows existiert und </span><strong><span>ImDisk</span></strong><span> recht &quot;zickig&quot; zu handhaben ist, habe ich auf eine </span><br><span>    automatisch Erstellung einer RamDisk verzichtet. Ich nutze derzeit </span><strong><span>OSF Mount</span></strong><span> da sich dieses recht einfach einrichten läßt. </span><br><span> - der Vorgang wird als eigener Thread ausgeführt und behindert deshalb andere Skriptfunktionen nicht </span><br><span> - benötigt werden: </span><em><strong><span>Tesseract ab Version 4</span></strong></em><span>,  </span><strong><span>ImageMagick</span></strong><span> und </span><strong><span>qpdf</span></strong><span> im Ordner &quot;\include\OCR&quot; </span><br><span> - die Tesseract Einstellung für erzeugte PDF Dateigrößen sind auf minimalen Speicherplatzverbrauch optimiert </span><br><span> - 💡 </span><u><strong><span>InfoFenster</span></strong></u><span>: im Journal Tab kann über das Kontextmenu (Rechtsklick Menu) ein manueller OCR Durchgang initiert werden </span><br><span> - PDF Dateien ohne Text, lassen sich nicht mehr in die Karteikarte eines Patienten importieren! </span><br><strong><span>(Addendum V1.44)</span></strong><span>  </span><br><br><strong><u><span>PDF Patientennamen Indizierung</span></u></strong><br><span> - PDF Dateien können jetzt nach enthaltenen Patientennamen durchsucht werden </span><br><span> - der Vorgang wird automatisch bei unbezeichneten PDF Dateien durchgeführt, bei PDF Dateien mit Patientennamen </span><br><span>    kann ein manueller Suchevorgang gestartet werden </span><br><span> - in der Zukunft soll das Skript PDF Dateien detektieren, welche Befunde von mehr als einem Patienten enthalten. </span><br><span>    Außerdem werde ich versuchen die PDF Datei zu kategorisieren mit Absender, Befundart (z.B. Krankenhausepikrise </span><br><span>    mit Aufenthaltszeitraum) </span><br><span> - das Skript durchsucht nach bestimmten Regeln den PDF Text einer Datei um Wörter als mögliche Namen zu erkennen </span><br><span> - die gesammelten Wörter werden mit den Namen in der Addendum Patientennamen Datenbank verglichen </span><br><span> - um OCR Fehler auszugleichen verwendet das Skript beim Vergleich einen String-Similarity (Fuzzy)-Algorithmus </span><br><span> - enthält ein Dokument Datumsangaben, werden diese für die Suche nach Namen einbezogen </span><br><span> - per Scoring (Namenstreffer und Datumstreffer ergeben 2 Punkte) wird die Wahrscheinlichkeit erhöht den korrekten </span><br><span>   Patientennamen vorzuschlagen. </span><strong><span>(Addendum V1.44)</span></strong><span> </span><br><br><strong><u><span>Tagesprotokoll</span></u></strong><br><span>- man kann jetzt die aufgezeichneten Tage durchschalten und sich so die geöffneten Karteikarten zeigen lassen (benutzt keine Daten aus der Albisdatenbank!)</span><br></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><strong><u><span>Addendum - Verordnungsplan</span></u></strong><br><em><span>für alle die keinen Bundeseinheitlichen Medikationsplan und kein zwei Medikamentenpläne führen wollen</span></em><br><span>Dieses Skript ist im Prinzip ein Word-Makro. Es verändert ein bestehendes Word Dokument (verordnungsplan.docx) das fast alle Informationen wie in einem BMP vorhanden sind. Da ich in den Dauermedikamenten aber Medikamente hinterlege welche problematisch sind z.B. da der Patient eine Allergie darauf hatte oder ein Wirkstoff/Wirkstoffgruppe Interaktionspotentiale zeigte , sind z.T. wesentlich mehr Informationen über &quot;besser nicht&quot; zu verordnenden Medikamente vorhanden als im BMP anzeigt werden können. Das ist der wesentlichste Grund warum ich den BMP ablehne. Das Skript führt die Informationen über problematische Medikamente automatisch zusammen und stellt diese in einem extra Feld oberhalb des Medikamentenplans gut sichbar zusammen. Es arbeitet mit einer selbst erstellten Datenbank aus der Verordnungsgrund und Wirkstoffe in den Medikamentenplan übernommen werden können.</span><br><span> </span><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.42</span></strong></td></tr><tr><td style='text-align:center;' ><strong><span>18.10.2020</span></strong></td><td><u><strong><span>Addendum</span></strong></u><span> </span><br><span>über das Traymenu lassen sich jetzt auch Programme (ausführbare Dateien *.exe) starten, Programme lassen sich dabei in zwei Kategorien ablegen. Als Modul oder Tool (Zubehör). Ein Modul soll dabei bei der medizinischen Dokumentation helfen. Die Tool-Kategorie beinhaltet Programme für andere Aufgaben</span><br><span> - neuer Hotstring: &#39;gb&#39; - zeigt die Liste aller Diagnosen für die Abrechnung geriatrischer Basiskomplexe 03360,03362</span><br><span> - neue Hotstrings für Kassenleistungen</span><br><span>- neue Hotstrings für Privatleistungen</span><br><span> - neuer Hotkey zur Nutzung in Albis Strg-Z = rückgängig machen (undo) für editierbare Eingabefelder, wenn diese Edit oder Richeditfelder sind. </span><br><span> - Info Fenster - Verbesserungen:</span><br><span> - die Einbindung in das Albisfenster ist jetzt besser gelungen</span><br><span>- Dateioperationen prüfen jetzt zuverlässig ob eine Datei existiert oder von einem anderen Prozeß blockiert ist bevor sie ausgeführt werden</span><br><span> - Journal:  die Importfunktion nimmt die erste PDF-Datei welche existiert und nicht blockiert ist, zudem wird geprüft ob der Dateiname nach der Konvention (Nachname, Vorname, Inhaltsbeschreibung) einen Patientennamen enthält</span><br><span>das Kontextmenu bietet die Möglichkeit bei unbenannten Dateien auf Basis des PDF Textes einen neuen Dateinamen generieren zu lassen</span></td></tr><tr><td style='text-align:center;' ><strong><span>18.10.2020</span></strong></td><td><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum</span></strong><br><strong><span>FoxitReader_GetPages()</span></strong><span> -</span><span>	</span><span>flexibleres Finden der Seiteninformation mittels RegExMatch der Steuerelement-Texte (aktuelle Seite / maximale Seiten [z.B. 2 / 16]), das Steuerelement hatte wechselnde ClassNN Namen</span></td></tr><tr><td style='text-align:center;' ><strong><span>19.09.2020</span></strong></td><td><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><u><span>Addendum</span></u></strong><br><span>Veränderungen an der Fenstererkennungsprozedur mit höherer Zuverlässigkeit und Geschwindigkeit</span></td></tr><tr><td style='text-align:center;' ><strong><span>29.08.2020</span></strong></td><td><u><strong><span>AddendumMonitor</span></strong></u><span> </span><br><span>Prozeßpolling auf 3 Sekunden herauf gesetzt</span></td></tr><tr><td style='text-align:center;' ><strong><span>29.08.2020</span></strong></td><td><u><strong><span>Addendum_Gui</span></strong></u><br><span>geschicktere Anpassung des Infofenster, schönere Darstellung von Daten im Info-TAB</span></td></tr><tr><td style='text-align:center;' ><strong><span>26.08.2020</span></strong></td><td><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum</span></strong><br><span>die Fenstergröße und -position des Albisfenster läßt sich für jeden Arbeitsplatz-PC individuell einrichten. Durch Angabe von x und y Koordinaten kann man Albis an einer Stelle fixieren. Dies erleichtert die Arbeit mit 2 Programmen, z.B. wenn man einem Programm Daten eingeben will welche man per Hand aus Albis übernehmen muss. Albis fixiere ich auf manchen PCs damit ich nicht zum Sprechstundenanfang jedesmal alle Fenster an die richtigen Positionen schieben muss. (</span><strong><span>Addendum V1.37</span></strong><span>)</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><u><strong><span>Addendum_Starter</span></strong></u><br><span>die zum Ausführen der Skripte notwendig AutohotkeyH.exe wird vom Netzwerklaufwerk in das lokale AppData Verzeichnis des Arbeitsplatz-PC kopiert. Die lokale AutohotkeyH.exe wird absofort für das Ausführen der Skripte benutzt. Dies wurde notwendig, weil das Windows 10 Update vom 18.08.2020 eine neue Version der Windows-Kernel-Dll (ntdll.dll) gebracht hat. Mit dieser neuen Version gab es fortwährend Konflikte bei der Ausführung von AutohotkeyH auf dem Netzwerklaufwerk. Die neue ntdll.dll hat dann scheinbar Probleme AutohotkeyH das Laden von lokalen dll Dateien aus dem  C:\Windows\system32 ohne Absturz zu ermöglichen.</span></td></tr><tr><td style='text-align:center;' ><strong><span>23.08.2020</span></strong></td><td><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum</span></strong><br><span>Hotstrings für Sachkosten zum schnelleren Erstellen von Privatrechnungen angelegt. Diese können direkt im Abrechnungsschein oder in der Karteikarte eingetippt werden, z.B. Gutachtenpreise, Portokosten. Das Skript berechnet Kopiekosten anhand der eingegeben Seitenzahl</span></td></tr><tr><td style='text-align:center;' ><strong><span>21.08.2020</span></strong></td><td><u><strong><span>Addendum_Gui</span></strong></u><br><span>zeigt verfügbare und nicht verfügbare Netzwerkgeräte (PC&#39;s) an, zukünftig kann man hier per einfachem Mausklick die PC&#39;s herunterfahren, einen Chat aufmachen oder den Windows Remotedesktop starten ... (</span><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum V1.36</span></strong><span>)</span></td></tr><tr><td style='text-align:center;' ><strong><span>19.08.2020</span></strong></td><td><strong><u><span>Addendum_Gui</span></u></strong><br><span> Optimierung und verbesserte Berechnung der Anzeigegröße aller Elemente</span></td></tr><tr><td style='text-align:center;' ><strong><span>17.08.2020</span></strong></td><td><u><strong><span>Addendum_PopMenu</span></strong></u><br><span>fehlbezeichnete Dokumente, z.B. ist ein importiertes Dokument eines anderen Patienten lassen sich in den Befundordner nach  Abfrage des geänderten Patientennamen exportieren</span><br><span> -- im Traymeu läßt sich das PopUpMenu an- oder ausschlaten, Achtung die Einstellung wird nur auf dem jeweiligen Client nicht mehr ausgeführt </span><br><span> -- die Fax-Funktion für direkltes Faxen aus der Karteikarte  kommt langsam ins Rollen (Addendum V1.35)</span></td></tr><tr><td style='text-align:center;' ><strong><span>16.08.2020</span></strong></td><td><u><strong><span>Addendum_Monitor</span></strong></u><br><span>Fehlerbeseitung bei der Namenserkennung, Skript kontrolliert alle 15min ob Addendum.ahk ausgeführt (Problem der Erkennung auf einigen Systemen), manueller Abbruch des Neustarts möglich (V0.45)</span></td></tr><tr><td style='text-align:center;' ><strong><span>08.08.2020</span></strong></td><td><u><strong><span>AddendumMonitor</span></strong></u><br><span>da Addendum z.T. aus unerfindlichen Gründen nicht automatisch nach einem Fehler oder Nutzereingriff gestartet wird, kontrolliert das Skript jetzt alle 15 min ob Addendum noch ausgeführt wird</span></td></tr><tr><td style='text-align:center;' ><strong><span>08.08.2020</span></strong></td><td><u><strong><span>Addendum_Gui</span></strong></u><span> - Optimierung der Dialoganzeigen</span></td></tr><tr><td style='text-align:center;' ><strong><span>05.08.2020</span></strong></td><td><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><span>Addendum</span></strong><span> - RPA für MicroDicom einem freien DICOM Viewer integriert (Dicom2Albis Ersatz) V1.34</span></td></tr><tr><td style='text-align:center;' ><strong><span>04.08.2020</span></strong></td><td><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><strong><u><span>Addendum</span></u></strong><span> - das </span><em><span>Schnellrezept</span></em><span> läßt sich ein- und ausschalten</span></td></tr><tr><td style='text-align:center;' ><strong><span>01.08.2020</span></strong></td><td><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><u><strong><span>Addendum</span></strong></u><br><span> - Sumatra_GetPages(), Sumatra_ToPrint(), FoxitReader_GetPages(), FoxitReader_ToPrint**: </span><em><span>_GetPages</span></em><span> Funktionen ermitteln die angezeigte Seite und die maximale Seitenzahl im aktuell angezeigten Dokument, die </span><em><span>_ToPrint</span></em><span> Funktionen automatisieren den Dokumentdruck auf einen bestimmten Drucker</span></td></tr><tr><td style='text-align:center;' ><strong><span>31.07.2020</span></strong></td><td><img src="Icons/Addendum18x18.ico" referrerpolicy="no-referrer" alt="Addendum-Symbol"><span> </span><u><strong><span>Addendum</span></strong></u><br><span> - </span><strong><span>PopUpMenu</span></strong><span>: direkter PDF-Druck und PDF-Export aus der Akte für den Sumatra PDF-Viewer ermöglicht</span></td></tr><tr><td style='text-align:center;' ><strong><span>15.07.2020</span></strong></td><td><strong><span>FoxitReader</span></strong><span> - Fehler bei den Funktionen der Signaturhilfe beseitigt</span></td></tr><tr><td style='text-align:center;' ><strong><span>11.07.2020</span></strong></td><td><strong><span>FoxitReader_GetPDFPath()</span></strong><span> liest den Dokumentenpfad und Dateinamen im &#39;Speichern unter&#39; Dialog des FoxitReader aus</span></td></tr><tr><td style='text-align:center;' ><strong><span>02.07.2020</span></strong></td><td><em><span>Anpassung an den EBM 2020 ab 01.07.2020</span></em><span> - Hotstring für Kopieziffer 40144 entfernt</span></td></tr><tr><td style='text-align:center;' ><strong><span>24.06.2020</span></strong></td><td><strong><span>neue Funktionalität für das Karteikarten Kontext- oder Rechtsklickmenu</span></strong><span>, je nach ausgwähltem Eintrag werden dem Menu zum Drucken, Bearbeiten, Ansehen, Exportieren, Faxversand hinzugefügt</span></td></tr><tr><td style='text-align:center;' ><strong><span>09.06.2020</span></strong></td><td><u><strong><span>AddendumMonitor</span></strong></u><span> zeigt einen Countdown bis zum Neustart von Addendum an, während des Countdowns kann der Vorgang durch Drücken der Escape-Taste abgebrochen werden. </span><strong><span>V1.32</span></strong></td></tr><tr><td style='text-align:center;' ><strong><span>06.06.2020</span></strong></td><td><span>💡 </span><u><strong><span>InfoFenster</span></strong></u><br><span> </span><br><span>- unbegrenzt langer Karteikartenverlauf des Tages (Albis ist auf 16 Einträge begrenzt ) </span><br><span>- Verbesserte Integration in das Albisfenster. </span><br><span>- Infofensterfunktion kann per ini Eintrag zu- oder abgeschaltet werden, wenn man z.B. diese Funktion auf bestimmten Clients  nicht benötigt </span><br><span>- Anzeigen von PDF-Dokumenten und Bilder per Doppelklick </span><br><span>- Erweiterung des Kontextmenu für das Journal </span><br><span>- neue Funktion für das Journal: sofortiger Import eines Befundes in die zugehörige Karteikarte </span><br><span>- zuverlässigere Befundzuordnung durch veränderten Algorithmus zur Identifizierung von Personennamen</span></td></tr><tr><td style='text-align:center;' ><strong><span>11.06.2020</span></strong></td><td><strong><span>AddendumToolbar</span></strong><span> - es können jetzt auch Programme aus beliebigen Verzeichnissen über die Toolbar starten z.B. ein Webclient für den Abruf von Labordaten aber auch Word, Excel ..., im Moment muss man noch per manuell Eintragungen in der Addendum Ini dafür vornehmen, die Toolbar überdeckt keine anderen Toolbars mehr, Fehlerausgaben werden jetzt auch im Fehlerprotokoll gespeichert</span></td></tr><tr><td style='text-align:center;' ><strong><span>12.05.2020</span></strong></td><td><span>Möglichkeit für automatischen Login ins Order&amp;Entry des CGM-Laborchannel (nur Internet Explorer), noch rudimentär ohne Überprüfung</span></td></tr><tr><td style='text-align:center;' ><strong><span>29.04.2020</span></strong></td><td><span>* Anzeigeverbesserungen des Infofenster</span><em><br></em><span>  die aktuellste FindText-Bibliothek aus dem AHK-Forum wird verwendet, Geschwindigkeits und Erkennungsgenauigkeit ist wesentlich besser jetzt (gebraucht für die Automatisierung des Signartur setzen Vorganges einer PDF Datei)</span><br><span>* verbesserte Erkennung von Speichern unter bestätigen Dialogen des FoxitReader</span></td></tr><tr><td style='text-align:center;' ><strong><span>24.04.2020</span></strong></td><td><strong><span>*</span></strong><span> das Infofester hat jetzt ein Journal erhalten, dort werden alle vorliegenden Befunde im Bildvorlagenverzeichnis (Menu Optionen/Bildvorlagen) aufgelistet. Per Doppelklick startet man die Ansicht über seinen PDF-Viewer. Über ein Rechtsklickmenu lassen sich die Dateien umbenennen, löschen, mit ihrem PDF-Reader ansehen oder man kann sich die zugehörige Patientenakte öffnen lassen. </span><strong><span>V1.30</span></strong></td></tr><tr><td style='text-align:center;' ><strong><span>21.04.2020</span></strong></td><td><span>das </span><em><strong><u><span>Infofenster</span></strong></em></u><span> (Fenster mit Befunden des Patienten) wird nur noch in der Karteikarte gezeichnet und kann im Tray-Menu aus- oder eingeschaltet werden.</span></td></tr><tr><td style='text-align:center;' ><strong><span>16.04.2020</span></strong></td><td><span>kleiner Fehler häufige Wirkung. Addendum hat seine Toolbar mehrfach starten können. Die Toolbar wird jetzt erfolgreich geschlossen, wenn Albis beendet wird.</span></td></tr><tr><td style='text-align:center;' ><strong><span>07.04.2020</span></strong></td><td><strong><span>Öffnen einer Patientenakte aus dem Windows Dateiexplorer heraus</span></strong><br><span>mit Linksklick eine mit einem Patientennamen versehene PDF Datei  auswählen und per F6 wird die zugehörige Akte geöffnet, dies erleichtert den Import von Befunden, nicht erkannte Personennamen werden über den Aufruf der ersten 2 Buchstaben des Zu- und Vornamen über den Patient öffnen Dialog in Albis gesucht und bei passenden Namen zum Öffnen angeboten  </span><strong><span>V1.29</span></strong></td></tr><tr><td style='text-align:center;' ><strong><span>05.04.2020</span></strong></td><td><span>Addendum_Starter.ahk verbessert: AddendumMonitor.ahk wird nicht mehr doppelt gestartet, wenn es im Hintergrund läuft, falls das Addendum-Skript noch läuft wird gefragt ob es neu gestartet werden soll</span></td></tr><tr><td style='text-align:center;' ><strong><span>05.04.2020</span></strong></td><td><span>der Dateipfad signierter PDF-Dateien wenn diese nach Albis importiert wurden wird zusammen mit der PatientenID in eine Textdatei gespeichert. Dies ist für ein schnelleres Wiederauffinden/Zusammenstellen alle Patientenbefunde gedacht.</span></td></tr><tr><td style='text-align:center;' ><strong><span>04.04.2020</span></strong></td><td><span>signierter FoxitTab wird je nach Einstellung automatisch geschlossen</span></td></tr><tr><td style='text-align:center;' ><strong><span>04.04.2020</span></strong></td><td><span>Importvorgang für PDF Dateien um das circa 5fache beschleunigt, Erkennung der Dialoge verbessert</span></td></tr><tr><td style='text-align:center;' ><strong><span>31.03.2020</span></strong></td><td><span>Labelfehler bei Ausführung auf einem unbekanntem Client beseitigt, </span><strong><span>Addendum_Reload/Addendum/Addendum_Monitor/Addendum_Starter</span></strong><span> - für ausschließlichen Ausführung des Addendum.ahk Skriptes mit AutohotkeyH eingestellt</span></td></tr><tr><td style='text-align:center;' ><strong><span>12.02.2020</span></strong></td><td><span>Signieren beschleunigt, RPA Abbrüche beseitigt</span></td></tr><tr><td style='text-align:center;' ><strong><span>12.02.2020</span></strong></td><td><span>nutzt man den FoxitReader lässt sich mit einer einzigen Taste der komplette Vorgang zum Signieren eines Dokumentes starten. Was vorher nicht zuverlässig mit dem ScanPool-Skript funktionierte, läuft jetzt so schnell, das ich den Vorgang optisch ausgebremst halte. Du drückst Deine Wunschtaste im aktiviertem Foxit-Fenster, der Mauszeiger bewegt sich zum Dokumentbereich, zieht dort den Bereich für Dein voreingestelltes PDF-Sign auf, alle folgenden Dialoge samt Checkboxen, Buttons werden gedrückt, die Datei wird mit allen Sicherheitsnachfragen gespeichert und die signierte Datei wird danach sofort geschlossen. Existiert noch ein geöffnetes FoxitReader Fenster wird dieses nach vorne geholt und Du kannst gleich weiterlesen! Zeit für den gesamten Vorgang max. 5s (ausgebremst) - notwendige Eingriffe ein Druck auf eine Taste! That&#39;s RPA! ..... und falls Du das nicht brauchst schaltest Du es einfach über das Tray-Menu oder die Addendum.ini aus!  (V1.28)</span></td></tr><tr><td style='text-align:center;' ><strong><span>12.02.2020</span></strong></td><td><span>massive Nachbesserung an der PDF- und Bildimportfunktion, Dateien die nicht zugeordnet werden können, zieht man jetzt einfach in das Posteingangsfenster und prompt erscheinen diese dort. Danach lassen diese sich schnell in die Akte importieren.</span></td></tr><tr><td style='text-align:center;' ><strong><span>11.02.2020</span></strong></td><td><span>mehr zu- und abschaltbare Einstellungen, Vorbereitungen für einen zeitgesteuerten Laborabruf welcher pathologische Blutwerte per Telegram-Messenger verschicken kann</span></td></tr><tr><td style='text-align:center;' ><strong><span>11.02.2020</span></strong></td><td><span>Tray-Menu Funktion zum Starten von Modulen funktioniert wieder</span></td></tr><tr><td style='text-align:center;' ><strong><span>31.01.2020</span></strong></td><td><span>einzelne Skriptfunktionen lassen sich jetzt über das Traymenu wahlweise zu- oder abschalten, derzeit: Albis und Microsoft Word automatisch auf dem Monitor positionieren (nur für 4k Monitore), Automatisierung für die Abrechnung der Gesundheitsvorsorgen (Überprüfung auf Abrechenbarkeit, Formulare, Ziffern...), automatisches Signieren einer PDF mit Hilfe des FoxitReader V1.26</span></td></tr><tr><td style='text-align:center;' ><strong><span>30.01.2020</span></strong></td><td><strong><span>Befund und Bildimport</span></strong><span> - sind jetzt direkt über ein in Albis integrierten Dialog (wird bei den Stammdaten/DauerDiagnosen/Dauermedikamente erstellt) möglich. Dazu wird der Scanordner (alias &quot;Befundordner&quot;) auf pdf und jpg Dateien untersucht. Der Imprt erfolgt direkt in die Patientenakte zum Erstellungsdatum der Befund/Bilddatei. Die Funktion ist nicht in Verbindung mit dem Praxisarchiv gedacht. V1.25</span></td></tr><tr><td style='text-align:center;' ><strong><span>24.01.2020</span></strong></td><td><strong><span>AlbisResizeDauerdiagnosen()</span></strong><span> - Addendum-Albis.ahk: kleine Funktion ausschließlich zum Verändern der Größe des Dauerdialogfensters</span></td></tr><tr><td style='text-align:center;' ><strong><span>19.01.2020</span></strong></td><td><strong><span>Addendum Toolbar</span></strong><span> - Addendum integriert eine zusätzliche Toolbar in Albis. Über diese lassen sich Skripte starten und Einstellungen vornehmen. Welche Skripte gestartet werden können hängt von den vorgenommenen Einstellungen in der Addendum.ini ab.</span></td></tr><tr><td style='text-align:center;' ><strong><span>14.01.2020</span></strong></td><td><strong><span>AlbisFocusEventProc()</span></strong><span> - Fehler in der Steuerelementerkennung beseitigt</span></td></tr><tr><td style='text-align:center;' ><strong><span>07.01.2020</span></strong></td><td><span>es wird verhindert das Addendum doppelt gestartet werden kann</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><span>die kontextsensitive Hotstring Erkennung in der Patientenakte funktioniert wieder</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><strong><span>Addendum_Protocol()</span></strong><span> - das senden einer Nachricht mit Telegram funktioniert, die fehlerauslösende Zeile wird auch gesendet und im Protokoll auf Festplatte gespeichert</span></td></tr><tr><td style='text-align:center;' ><strong><span>02.01.2020</span></strong></td><td><span>das &quot;Dauerdiagnosen von&quot; Fenster wird neu gezeichnet, die Dauermedikamente wird verbreitert und das Werbeelement wird entfernt</span></td></tr><tr><td style='text-align:center;' ><strong><span>23.11.2019</span></strong></td><td><strong><span>Rezepthelfer</span></strong><span> - Aufruf gespeicherter Rezeptvorlagen per Textkürzel wieder entfernt (kann mir diese nicht merken), dafür wird jetzt ein Auswahlfeld in jedes Rezept eingeblendet</span></td></tr><tr><td style='text-align:center;' ><strong><span>02.10.2019</span></strong></td><td><strong><span>Abrechnungshelfer-Modul</span></strong><span>: ein großer Schritt zu mehr Funktionalität und umfangreicherer automatisierten Übertragung der Ergebnisse nach Albis (V0.98.65)</span></td></tr><tr><td style='text-align:center;' ><strong><span>27.09.2019</span></strong></td><td><span>Optimierung und Fehlerbeseitigung in den WinEventhooks, </span><strong><span>AutoICD()</span></strong><span> Funktion leicht verbessert</span></td></tr><tr><td style='text-align:center;' ><strong><span>25.09.2019</span></strong></td><td><strong><span>Auto-ICD-Diagnosen Hotstrings</span></strong><span> - ein Fenster zum Anlegen eigener Hotstrings für die ICD Textexpandierung hinzugefügt (siehe Screenshots). (V0.98.62)</span></td></tr><tr><td style='text-align:center;' ><strong><span>18.09.2019</span></strong></td><td><strong><span>Tray-Menu erweitert:</span></strong><span> - in der Addendum.ini können jetzt Programme eingetragen, welche über das Tray-Icon in der Taskbar startbar gemacht werden</span></td></tr><tr><td style='text-align:center;' ><strong><span>11.09.2018</span></strong></td><td><strong><span>Rezepthelfer</span></strong><span> - erstelle Hilfsmittelrezepte ohne eine Liste öffnen zu müssen, tippe in eine Zeile im Rezept z.B. ATStrumpf oder Strumpf oder Strümpfe oder ... und es wird Dir das Rezept mit allen Zeilen befüllt. (</span><strong><span>V0.98.61</span></strong><span>)</span></td></tr><tr><td style='text-align:center;' ><strong><span>10.09.2018</span></strong></td><td><strong><span>Shift-F3 Kalender</span></strong><span> - mehr Datumfelder werden erkannt, der Kalender wird nur noch bei Datumsfeldern angezeigt. Zuvor bestand ein Problem in der zuverlässigen Erkennung</span></td></tr><tr><td style='text-align:center;' ><strong><span>05.09.2019</span></strong></td><td><span>Vereinfachung der Übernahme von neuen ICD-Diagnosen in die Hotstringliste mit Gui für optionale Angaben, Synonyme, Ausgabe als formatierter Code in Scite</span></td></tr><tr><td style='text-align:center;' ><strong><span>01.09.2019</span></strong></td><td><strong><span>Auto-ICD-Diagnose</span></strong><span> - verbessert, Fehler beseitigt, Diagnoseliste besteht derzeit aus circa 170 häufigen allgemeinärztlichen Diagnose und circa 250 Abkürzungen/Begriffen. </span><br><strong><span>Funktionsbibliotheken</span></strong><span> - sind jetzt klar getrennt nach Addendum eigenen (\include) und allgemeinen (\lib) Bibliotheken</span><br><strong><span>Abrechnungshelfer</span></strong><span> - neues Makro für die Auswertung aller Dauerdiagnosen in einem Tagesprotokoll (war hilfreich für die Auto-ICD-Diagnose Funktion)</span></td></tr><tr><td style='text-align:center;' ><strong><span>27.08.2019</span></strong></td><td><span>Auslagerung der Auto-ICD-Diagnosen in eine eigene Datei für bessere Editierbarkeit und angedachte Modularität</span></td></tr><tr><td style='text-align:center;' ><strong><span>23.08.2019</span></strong></td><td><span>Drucken des letzten aktuellen Laborparameter mit einer Hotkey-Kombination integriert  (V0.98.58)</span></td></tr><tr><td style='text-align:center;' ><strong><span>23.08.2019</span></strong></td><td><span>Verbesserungen und Fehlerbeseitigung der Funktion AutoDiagnose</span></td></tr><tr><td style='text-align:center;' ><strong><span>14.08.2019</span></strong></td><td><strong><span>Hotstring-Funktion </span><em><span>AutoDiagnose()</span></em></strong><span> erweitert. </span><br><span>- </span><em><span>Ausgabe von Diagnosenketten</span></em><span>: z.B. Diabetes mellitus mit multiplen Komplikationen, G. {E14.72G}; Diabetische Polyneuropathie {</span><span>*</span><span>G63.2G}; diabetische Nephropathie {</span><span>*</span><span>N08.3G}; </span><br><span>- </span><em><span>Abfrage von und Handling der Seitenangaben</span></em><span> in Diagnosen (funktioniert auch  mit den Diagnoseketten)</span></td></tr><tr><td style='text-align:center;' ><strong><span>27.06.2019</span></strong></td><td><span>Abrechnungshelfer.ahk - kann deutlich mehr jetzt (V0.98.55)</span></td></tr><tr><td style='text-align:center;' ><strong><span>25.06.2019</span></strong></td><td><strong><span>V0.98.55</span></strong><span> - Verbesserungen in den Addendum Funktionen (AddendumFunctions.ahk) und den anderen Skripten</span></td></tr><tr><td style='text-align:center;' ><strong><span>01.06.2019</span></strong></td><td><span>der Laborabruf ist nach Aufruf des Menu &quot;Labor abrufen&quot; vom Skript zunehmend vollständiger automatisiert (V0.98.45)</span></td></tr><tr><td style='text-align:center;' ><strong><span>13.05.2019</span></strong></td><td><span>HotString Fehler in der Erkennung des Eingabefocus bei AutoDoc() beseitigt</span></td></tr><tr><td style='text-align:center;' ><strong><span>11.05.2019</span></strong></td><td><span>HotStrings hinzugefügt</span></td></tr><tr><td style='text-align:center;' ><strong><span>01.05.2019</span></strong></td><td><span>Addendum Starts erfolgen jetzt über das AddendumStarter.ahk Skript welches gleichzeitig bei jedem Start überprüft dqs alle wichtigen Dateien und Einstellungen vorhanden sind.  (V0.98.35)</span></td></tr><tr><td style='text-align:center;' ><strong><span>01.05.2019</span></strong></td><td><span>das RestartScript in AddendumReload.ahk umbenannt</span></td></tr><tr><td style='text-align:center;' ><strong><span>01.05.2019</span></strong></td><td><span>Fehlerprotokollierung hatte selbst einige Fehler so daß nichts gespeichert werden konnte, eine zusätzliche Protokollierungsfunktion für OnExit - Gründe hinzugefügt</span></td></tr><tr><td style='text-align:center;' ><strong><span>15.04.2019</span></strong></td><td><span>die </span><strong><span>Modulstarter Funktion</span></strong><span> (erreichbar über das Traymenu) kontrolliert ob ein Modul schon läuft und gibt einen Hinweis dazu aus. Gleichzeitig läßt sich über dieses Menu </span><em><span>ein laufendes Modul beenden</span></em><span>, insbesondere dann wenn es abgestürzt ist.</span></td></tr><tr><td style='text-align:center;' ><strong><span>13.04.2019</span></strong></td><td><strong><span>Hotstringaufrufe</span></strong><span> können jetzt an </span><em><span>bestimmte Bedingungen</span></em><span> speziell für die Handhabung in Albis angepasst werden. Die Funktion </span><strong><span>AlbisGetActiveControl()</span></strong><span> kann unter anderem Erkennen in welchem Fensterbereich sich der Texteingabe-Cursor befindet. So ist es jetzt möglich Hotstrings nur für die Ersetzung z.B. beim Kürzel &#39;lko&#39; in der Karteikarte zu erstellen. Diese Kürzel sind dann z.B. nicht nach Eingabe von &#39;dia&#39; erreichbar und umgekehrt. V 0.98.34</span></td></tr><tr><td style='text-align:center;' ><strong><span>21.03.2019</span></strong></td><td><span>einige Fehler beim Shift+F3 Kalender behoben, hat auch in den Diagnosenfeldern den Kalender geöffnet, jetzt auch Anzeige im Datumsfeld der Patientenakte</span></td></tr><tr><td style='text-align:center;' ><strong><span>20.02.2019</span></strong></td><td><span>Fehler in der neuen Datumsfunktion +1 Woche +1 Monat</span></td></tr><tr><td style='text-align:center;' ><strong><span>20.02.2019</span></strong></td><td><strong><span>Start aller Module über das TrayIcon des Addendum-Skriptes möglich</span></strong><span>, über Einstellungen in der Addendum.ini kann man festlegen welche Skripte auf welchem Client ausgeführt werden dürfen V 0.98.33</span></td></tr><tr><td style='text-align:center;' ><strong><span>17.02.2019</span></strong></td><td><strong><span>Schulzettel Modul</span></strong></td></tr><tr><td style='text-align:center;' ><strong><span>08.02.2019</span></strong></td><td><span>den Shift+F3 Kalenderersatz vervollständigt</span></td></tr><tr><td style='text-align:center;' ><strong><span>28.01.2019</span></strong></td><td><span>den Ablauf des Laborabrufes fast vollständig vom Skript Laborabrufen ins Addendumskript integriert</span></td></tr><tr><td style='text-align:center;' ><strong><span>22.01.2019</span></strong></td><td><strong><span>Addendum.ahk</span></strong><span> - ist ab heute nur noch mit Autohotkey_H zu starten, die anderen Skripte werden je nach Bedarf von Autohotkey_L nach Autohotkey_H umgeschrieben</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><span>Hook auf das Laborabrufprogramm (MCSVianova WebClient) gesetzt</span></td></tr><tr><td style='text-align:center;' ><strong><span>13.01.2019</span></strong></td><td><strong><span>Hooks</span></strong><span> überarbeitet, deutlich schnellere und zuverlässigere Erfassung von Fenstern</span></td></tr><tr><td style='text-align:center;' ><strong><span>08.01.2019</span></strong></td><td><span>weitere Fenster des Vorganges Labor abrufen sind jetzt per Hook automatisiert , </span><em><span>&quot;Labor auswählen&quot;</span></em><span> und </span><em><span>&quot;Labordaten&quot;</span></em><span> werden jetzt ohne Nutzereingriff automatisch ausgefüllt und bestätigt</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><strong><span>AutoDoc</span></strong><span> - integriertes neues Modul zum schnelleren Erstellen von Einträgen im Dokumentenfenster. Das Makro-Modul in Albis hat sicherlich einen guten Ansatz, aber es benötigt mir zuviele Eingaben und Klicks bis es fertig ist. Mit AutoDoc setzt man eine neue Zeile z.B. durch Drücken der Einfügetaste, drückt danach + und es erscheint eine Auswahlbox für Deine Makro&#39;s (nutzt nicht die Albismakros!).</span></td></tr><tr><td style='text-align:center;' ><strong><span>06.01.2019</span></strong></td><td><span>neue Hotkey&#39;s zur Vereinfachung des Verschiebens von Einträgen im Dauermedikament und Dauerdiagnosen Fenster, drücke Steuerung und eine der beiden Pfeiltasten für hoch und runter zum Verschieben von Einträgen</span></td></tr><tr><td style='text-align:center;' ><strong><span>05.01.2019</span></strong></td><td><strong><span>PopUp-Bearbeitung</span></strong><span> für das Fenster &quot;GNR der Anford.Ident&quot; dem integrierten PopUpBlocker hinzugefügt (V0.98.22)</span></td></tr><tr><td style='text-align:center;' ><strong><span>29.12.2018</span></strong></td><td><span>bei über Nacht laufenden Computern stellt Addendum das Albis Programmdatum einen Tag weiter und das Addendumskript wird neu geladen, dies verhindert Fehler im Skript durch Änderungen des Tagesdatums</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><span>Versionierung geändert aus 0.98b wurde V0.98.2, kleinste Programmänderungen erhalten auch einen Zähler an der 4.Stelle - V0.98.21</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><span>Funktion </span><strong><span>NoTrayIcons()</span></strong><span> war unter Windows10 wirkungslos, neueste Version ist jetzt integriert so daß bei Absturz oder Neustart eines Skript das Icon für ein nicht mehr laufendes Skript in der Traybar entfernt wird.</span></td></tr><tr><td style='text-align:center;' ><strong><span>13.12.2018</span></strong></td><td><span>SkriptIcon ist in das Skript integriert</span></td></tr><tr><td style='text-align:center;' ><strong><span>08.12.2018</span></strong></td><td><span>IPC - Inter Process Communication - zwischen dem Addendum und Praxomat Skript steht, das Addendumskript kann somit weitere Funktionen übernehmen (V0.98b)</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><strong><span>Hooks</span></strong><span> komplett überarbeitet, im Prinzip das komplette Skripte rund erneuert, Shell-Hooks werden nicht mehr benötigt, alles läuft über </span><em><span>WinEventHooks</span></em></td></tr><tr><td style='text-align:center;' ><strong><span>14.11.2018</span></strong></td><td><span>Shell-Hook für Parent-Fenster hinzugefügt (27.10.2018), die WinEventHooks erfassen Control- und Childwindow Events besser. Die beiden grundlegenden Hook-Funktionen sind jetzt clientunabhängig. Eventhook Routinen sind optimiert auf Geschwindigkeit und Erfassungsgenauigkeit (14.11.2018).</span></td></tr><tr><td style='text-align:center;' ><strong><span>31.05.2018</span></strong></td><td><strong><span>Laufzeitüberwachung für das Laborprogramm (AIS Connector)</span></strong><span> - hinzugefügt </span><br><strong><span>Praxomat_sT V0.95</span></strong></td></tr><tr><td style='text-align:center;' ><strong><span>25.05.2018</span></strong></td><td><span>Hotkeys verändert, Ausführung verbessert</span></td></tr><tr><td style='text-align:center;' ><strong><span>20.05.2018</span></strong></td><td><span>Registry auslesen klappt jetzt auch auf 64-bit System, nutze eine neu implementierte Funktion aus der Praxomat-Functions Bibliothek, an der TrayTip Ausgabe gearbeitet. Das Infofenster zeigt ein paar Informationen zum laufenden Skript an.</span><br><strong><span>Praxomat_sT V0.94</span></strong></td></tr><tr><td style='text-align:center;' ><strong><span>18.05.2018</span></strong></td><td><strong><span>ToolTipAutomatic-Label</span></strong><span> - entfernt, wird nicht mehr gebraucht</span></td></tr><tr><td style='text-align:center;' ><strong><span>24.04.2018</span></strong></td><td><strong><span>AlbisHotKeyHilfe()</span></strong><span> - Hotkeyhilfe in der Statusbar von Albis nach Praxomat-Functions.ahk verschoben</span></td></tr><tr><td style='text-align:center;' ><strong><span>23.04.2018</span></strong></td><td><strong><span>TrayMenu geändert</span></strong><span>, Praxomat_st hat ein 💡 </span><u><strong><span>InfoFenster</span></strong></u><span> erhalten</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><strong><span>Errinnerungsfenster</span></strong><span> - errinnern die Schwestern humorvoll an ihre einmal pro Woche durchzuführenden Tätigkeiten - </span><strong><span>Sprechzimmer </span></strong><span>mit Formularen/Arbeitsmaterialien bestücken, den </span><strong><span>Hausbesuchskoffer</span></strong><span> zu bestücken, beide Fenster erstellen aus einer Text-Liste, welche einfach zu editieren ist, eine formatierte Ausgabe auf dem Bildschirm. Die Liste enthält die Dinge mit denen Sprechzimmer oder Koffer zu bestücken sind. Der Aufruf der Funktion ist Client-abhängig gestaltet, je nachdem an welchem Arbeitsplatz die dazu beauftragte Schwester hauptsächlich arbeitet.</span><br><strong><span>Praxomat_sT V0.93</span></strong></td></tr><tr><td style='text-align:center;' ><strong><span>21.04.2018</span></strong></td><td><strong><span>Menusuche</span></strong><span> - Integration von Lexiko&#39;s hervorragendem Menusearch Skript - funktioniert auch mit anderen Programmen!</span><br><strong><span>Praxomat_sT V0.92</span></strong></td></tr><tr><td style='text-align:center;' ><strong><span>22.12.2017</span></strong></td><td><span>neuer </span><strong><span>Hotstring für Mail</span></strong><span> oder sonstiges: &#39;Bestellungen&#39;: Info`s über Möglichkeiten zu Rezeptbestellungen</span></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td><span>Fehlerbehebung innerhalb der HotKey&#39;s und Hotstrings</span></td></tr><tr><td style='text-align:center;' ><strong><span>15.12.2017</span></strong></td><td><strong><span>Praxomat_st - Telegram-Desktop-App</span></strong><span> - funktioneller-Hotkey - ein einfaches Enter erzeugt eine neue Zeile, bei einem schnellen Doppel-Enter wird Strg + Enter gesendet um die Nachricht abzusenden, diese Tastenkombination hat mich gestört, aber ich wollte dennoch die Formatierbarkeit einer Nachricht erhalten</span><br><strong><span>Praxomat_sT V0.90</span></strong></td></tr><tr><td style='text-align:center;' ><strong><span>10.12.2017</span></strong></td><td><strong><span>Hashtag-Übermittlung</span></strong><span> (interne Patientennummer) mit einem kleinen Infotext um Patienten die bei </span><strong><span>Telegram</span></strong><span> angemeldet sind eindeutig identifizieren zu können</span><br><span>diese Funktion wird nur aufgerufen, wenn man in der Telegram-App im Chat das Wort Hash und anschliessend Enter, Space oder Tab drückt</span></td></tr><tr><td style='text-align:center;' ><strong><span>26.11.2017</span></strong></td><td><strong><span>Popup Blocker</span></strong><span> für das Fenster: &quot;</span><strong><span>fehlende KVK</span></strong><span>&quot;  - &gt; in das Praxomat-Überwachungsprogramm integriert</span></td></tr><tr><td style='text-align:center;' ><strong><span>11.11.2017</span></strong></td><td><strong><span>Popup Blocker für TeamViewer</span></strong></td></tr><tr><td style='text-align:center;' >&nbsp;</td><td>&nbsp;</td></tr></tbody></table></figure><p>&nbsp;</p></div></div>
+</body>
+</html>

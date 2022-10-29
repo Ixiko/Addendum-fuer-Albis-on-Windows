@@ -47,7 +47,7 @@ LVM_GetColOrder(h) {
 	Loop, % hdrC
 		result .= NumGet(&o, (A_Index - 1) * A_PtrSize) + 1 . ","
 	StringTrimRight, result, result, 1
-	Return result
+	Return SubStr(result, -1)
 }
 
 LVM_SetColOrder(h, c) {
@@ -130,8 +130,7 @@ LVM_Modify(h, r, c=1, o=0, f*) {
 	NumPut(r-1, lvItem, A_PtrSize, "int") ; iItem
 	NumPut(o, lvItem, A_PtrSize * 3, "uint") ; state
 	NumPut(1, lvItem, A_PtrSize * 4, "uint") ; stateMask
-	For index,field in f
-	{
+	For index,field in f	{
 		NumPut(c + A_Index - 1, lvItem, A_PtrSize * 2, "int") ; iSubItem
 		NumPut(&field, lvItem, A_PtrSize * 5, "ptr") ; pszText
 		If (A_IsUnicode)

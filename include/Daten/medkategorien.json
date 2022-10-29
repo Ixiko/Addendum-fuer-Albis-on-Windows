@@ -1,0 +1,1590 @@
+﻿{
+    "Abasaglar": {
+        "ingredient": "Insulin Glargin",
+        "use": "Diabetes"
+    },
+    "Actraphane": {
+        "ingredient": " Insulin (human), normal und I. Isophan (human)",
+        "use": "Diabetes (Insulin)"
+    },
+    "Actrapid": {
+        "ingredient": "Insulin (human), normal",
+        "use": "Diabetes"
+    },
+    "Actrapid nfill": {
+        "ingredient": "Insulin (human)",
+        "use": "Diabetes"
+    },
+    "Advantan Creme": {
+        "ingredient": "Methylprednisolonaceponat",
+        "use": "chron. Hauteruptionen"
+    },
+    "Aerius": {
+        "ingredient": "",
+        "use": "Asthma"
+    },
+    "Akineton": {
+        "ingredient": "Biperidenhydrochlorid",
+        "use": "Psyche"
+    },
+    "Aldactone": {
+        "ingredient": "Spironolacton",
+        "use": "Blutdruck/Wassertabl."
+    },
+    "Alendronat": {
+        "ingredient": "Alendronsäure",
+        "use": "Osteoporose"
+    },
+    "Alfacalcidol": {
+        "ingredient": "Alfacalcidol",
+        "use": "Vitamin D und Analoga"
+    },
+    "Allo": {
+        "ingredient": "Allopurinol",
+        "use": "Gicht"
+    },
+    "Allobeta": {
+        "ingredient": "Allopurinol",
+        "use": "Gicht"
+    },
+    "Allopurinol": {
+        "ingredient": "Allopurinol",
+        "use": "Gicht"
+    },
+    "Amiodaron": {
+        "ingredient": "Amiodaron",
+        "use": "Herzrhythmus"
+    },
+    "AmioHEXAL": {
+        "ingredient": "Amiodaron",
+        "use": "Herzrhythmus"
+    },
+    "Amlodigamma": {
+        "ingredient": "Amlodipin",
+        "use": "Bluthochdruck"
+    },
+    "Amlodipin": {
+        "ingredient": "Amlodipin",
+        "use": "Blutdruck"
+    },
+    "Amlodipin arma": {
+        "ingredient": "Amlodipin",
+        "use": "Bluthochdruck"
+    },
+    "Amlodipin Besilat": {
+        "ingredient": "Amlodipin",
+        "use": "Bluthochdruck"
+    },
+    "Amlodipin HEXAL": {
+        "ingredient": "Amlodipin/Valsartan",
+        "use": "Bluthochdruck"
+    },
+    "Amlodipin/Vals": {
+        "ingredient": "Amlodipin und Valsartan",
+        "use": "Bluthochdruck"
+    },
+    "Amlodipin/Valsa": {
+        "ingredient": "Valsartan und Amlodipin",
+        "use": "Bluthochdruck"
+    },
+    "Ampho Moronal": {
+        "ingredient": "Amphotericin B",
+        "use": "Candida/Soor"
+    },
+    "Anoro": {
+        "ingredient": "",
+        "use": "Lunge - COPD"
+    },
+    "Anoro Ellipta": {
+        "ingredient": "Vilanterol und Umeclidinium bromid",
+        "use": "COPD/Asthma"
+    },
+    "Arcoxia": {
+        "ingredient": "Etoricoxib",
+        "use": "Schmerzen"
+    },
+    "Ass": {
+        "ingredient": "Acetylsalicylsäure",
+        "use": "Gerinnung"
+    },
+    "Ass Dexcel": {
+        "ingredient": "Acetylsalicylsäure",
+        "use": "Gerinnung"
+    },
+    "Ass Protect": {
+        "ingredient": "Acetylsalicylsäure",
+        "use": "Gerinnung"
+    },
+    "Atmadisc Forte": {
+        "ingredient": "Salmeterol und Fluticason",
+        "use": "COPD/Asthma"
+    },
+    "Atorvastatin": {
+        "ingredient": "Atorvastatin",
+        "use": "Cholesterin"
+    },
+    "Atorvastatin ar": {
+        "ingredient": "Atorvastatin",
+        "use": "Cholesterin"
+    },
+    "Atorvastatin PUREN": {
+        "ingredient": "Atorvastatin",
+        "use": "Cholesterin"
+    },
+    "Atozet": {
+        "ingredient": "Atorvastatin und Ezetimib",
+        "use": "Cholesterin"
+    },
+    "Axura": {
+        "ingredient": "Memantine",
+        "use": "Demenz"
+    },
+    "Azithromycin": {
+        "ingredient": "Azithromycin",
+        "use": "mit Antibiotika therapierbarer Infekt"
+    },
+    "Baclofen": {
+        "ingredient": "Baclofen",
+        "use": "Spastik"
+    },
+    "Baldurat bei": {
+        "ingredient": "Baldrianextrakt",
+        "use": "Schlafen/Baldurat"
+    },
+    "Beloc": {
+        "ingredient": "Metoprololsuccinat",
+        "use": "Blutdruck"
+    },
+    "Beloc Zok": {
+        "ingredient": "Metoprolol",
+        "use": "Bluthochdruck"
+    },
+    "Berlinsulin H Basal": {
+        "ingredient": "Insulin (human), normal",
+        "use": "Diabetes"
+    },
+    "Berlinsulin H Norm": {
+        "ingredient": "Insulin Isophan (human)",
+        "use": "Diabetes"
+    },
+    "Berlthyrox": {
+        "ingredient": "L-Thyroxin",
+        "use": "Schilddrüse"
+    },
+    "Berodual N": {
+        "ingredient": "Fenoterol und Ipratropium bromid",
+        "use": "COPD/Asthma (Notfall)"
+    },
+    "Betahistin": {
+        "ingredient": "Betahistin",
+        "use": "Schwindelanfälle"
+    },
+    "Betmiga": {
+        "ingredient": "Mirabegon",
+        "use": "Blasenentleerungsstörung"
+    },
+    "Biso": {
+        "ingredient": "Bisoprolol",
+        "use": "Blutdruck/Herzrhythmus"
+    },
+    "Bisobeta": {
+        "ingredient": "Bisoprolol",
+        "use": "Blutdruck"
+    },
+    "BisoHEXAL": {
+        "ingredient": "Bisoprolol",
+        "use": "Blutdruck/Herzrhythmus"
+    },
+    "Bisoprolol": {
+        "ingredient": "Bisoprolol",
+        "use": "Blutdruck/Herzrhythmus"
+    },
+    "Blopress": {
+        "ingredient": "Candesartan",
+        "use": "Blutdruck"
+    },
+    "Blopress Forte": {
+        "ingredient": "Candesartan und Hydrochlorothiazid",
+        "use": "Blutdruck"
+    },
+    "Brilique": {
+        "ingredient": "Ticagrelor",
+        "use": "KHK/Stent"
+    },
+    "Brimica Genuair": {
+        "ingredient": "Formoterol und Aclidinium bromid",
+        "use": "COPD"
+    },
+    "Budesonid": {
+        "ingredient": "Budesonid",
+        "use": "Asthma/COPD"
+    },
+    "Calcicare D3 KTA": {
+        "ingredient": "Calcium + Vitamin D3",
+        "use": "Osteoporose"
+    },
+    "Camlostar": {
+        "ingredient": "Candesartan und Amlodipin",
+        "use": "Blutdruck"
+    },
+    "Candeamlo Hex": {
+        "ingredient": "Candesartan und Amlodipin",
+        "use": "Bluthochdruck"
+    },
+    "Candecor": {
+        "ingredient": "Candesartan",
+        "use": "Blutdruck"
+    },
+    "Candecor-Amlo": {
+        "ingredient": "Candesartan und Amlodipin",
+        "use": "Blutdruck"
+    },
+    "Candesartan": {
+        "ingredient": "Candesartan",
+        "use": "Blutdruck"
+    },
+    "Candesartan/Hct": {
+        "ingredient": "Candesartan und Hydrochlorothiazid",
+        "use": "Blutdruck"
+    },
+    "Capto": {
+        "ingredient": "Captopril",
+        "use": "Bluthochdruck"
+    },
+    "Caramlo": {
+        "ingredient": "Candesartan und Amlodipin",
+        "use": "Hypertonie"
+    },
+    "Carmen Ace": {
+        "ingredient": "Enalapril und Lercanidipin",
+        "use": "Blutdruck"
+    },
+    "Carvedilol": {
+        "ingredient": "Carvedilol",
+        "use": "Herzrhythmus"
+    },
+    "Celebrex": {
+        "ingredient": "Celecoxib",
+        "use": "Schmerzen"
+    },
+    "Celestamine": {
+        "ingredient": "Betametason",
+        "use": "Allergie (Kortison)"
+    },
+    "Celestamine N": {
+        "ingredient": "Celestamine",
+        "use": "Wespengiftallergie"
+    },
+    "Cetirizin": {
+        "ingredient": "Cetrizin",
+        "use": "Allergie/Juckreiz"
+    },
+    "Chloraldurat": {
+        "ingredient": "Chloraldurat",
+        "use": "Schlaf"
+    },
+    "Cipralex": {
+        "ingredient": "Citalopram",
+        "use": "Stimmung/Psyche"
+    },
+    "Circadin": {
+        "ingredient": "Melatonin",
+        "use": "Schlaf"
+    },
+    "Citalopram": {
+        "ingredient": "Citalopram",
+        "use": "Stimmung/Psyche"
+    },
+    "Clexane": {
+        "ingredient": "Enoxaparin",
+        "use": "Thromboseprophylaxe"
+    },
+    "Clonazepam Neurax": {
+        "ingredient": "Clonazepam",
+        "use": "REM-Schlaf-Verhaltensstörung"
+    },
+    "Clonid": {
+        "ingredient": "Clonidin-Hcl",
+        "use": "Auge"
+    },
+    "Clonid Ophtal": {
+        "ingredient": "Clonidin",
+        "use": "grüner Star"
+    },
+    "Clopidogrel": {
+        "ingredient": "Clopidogrel",
+        "use": "Gerinnung"
+    },
+    "Clopidogrel bis": {
+        "ingredient": "",
+        "use": "ergänzende Erklärung"
+    },
+    "Clozapin": {
+        "ingredient": "Clozapin",
+        "use": "Stimmung/Psyche/Neuroleptikum"
+    },
+    "Colecalciferol": {
+        "ingredient": "Colecalciferol",
+        "use": "Vitamin D3"
+    },
+    "Colestyramin": {
+        "ingredient": "Colestyramin 20",
+        "use": "Galle"
+    },
+    "Cymbalta": {
+        "ingredient": "Duloxetin",
+        "use": "Stimmung/Psyche"
+    },
+    "Daxas": {
+        "ingredient": "Roflumilast",
+        "use": "COPD"
+    },
+    "Decoderm": {
+        "ingredient": "Flupredniden",
+        "use": "Haut/Kortison"
+    },
+    "Dekristol": {
+        "ingredient": "Colecalciferol",
+        "use": "Osteoporoseprophylaxe/Immunsystem"
+    },
+    "Dexamethason": {
+        "ingredient": "Dexamethason",
+        "use": ""
+    },
+    "Dexamytrex": {
+        "ingredient": "Dexametason und Ciprofloxacin",
+        "use": "Auge/Antibiotikum/Infektion"
+    },
+    "Diazepam": {
+        "ingredient": "Diazepam",
+        "use": "Psyche"
+    },
+    "Diclofenac": {
+        "ingredient": "Diclofenac, Natriumsalz",
+        "use": "chron. Sonnenlichtschäden der Haut (weißer Hautkrebs)"
+    },
+    "Digitoxin": {
+        "ingredient": "Digitoxin",
+        "use": "Herzrhythmus"
+    },
+    "Dociton": {
+        "ingredient": "Propanolol",
+        "use": "Tremor"
+    },
+    "Donepezil Hcl": {
+        "ingredient": "Donepezil",
+        "use": "Psyche"
+    },
+    "Dorzocomp": {
+        "ingredient": "Dorzolamid",
+        "use": "grüner Star"
+    },
+    "Dosierung": {
+        "ingredient": "",
+        "use": ""
+    },
+    "Doxazosin": {
+        "ingredient": "Doxazosin",
+        "use": "Bluthochdruck"
+    },
+    "Duodart": {
+        "ingredient": "Dutasterid und Tamsulosin",
+        "use": "Prostata"
+    },
+    "Duspatalin": {
+        "ingredient": "Mebiverinhydrochlorid",
+        "use": "abdominelle Krämpfe"
+    },
+    "Ebastel": {
+        "ingredient": "Ebastin",
+        "use": "schwere Allergie /Antihistaminikum"
+    },
+    "Ebrantil": {
+        "ingredient": "Urapidil",
+        "use": "Bluthochdruck, ausgeprägt"
+    },
+    "Eferox Jod": {
+        "ingredient": "L-Thyroxin + Jod",
+        "use": "Schilddrüse"
+    },
+    "Eliquis": {
+        "ingredient": "Apixaban",
+        "use": "Gerinnung"
+    },
+    "Elontril": {
+        "ingredient": "Bupropion",
+        "use": "Stimmung/Psyche"
+    },
+    "Emselex": {
+        "ingredient": "Darifenacin",
+        "use": "Blase"
+    },
+    "Enalagamma": {
+        "ingredient": "Enalapril",
+        "use": "Buthochdruck"
+    },
+    "Enalapril": {
+        "ingredient": "Enalapril",
+        "use": "Blutdruck"
+    },
+    "Enalapril aufgrund": {
+        "ingredient": "",
+        "use": ""
+    },
+    "Enalapril Comp": {
+        "ingredient": "Enalapril",
+        "use": "Bluthochdruck"
+    },
+    "Enalapril/Lerca Mic": {
+        "ingredient": "Enalapril/Lercanidipin",
+        "use": "Blutdruck"
+    },
+    "Entresto": {
+        "ingredient": "Sucabutril und Valsartan",
+        "use": "Herzinsuffizienz"
+    },
+    "EplerenHEXAL": {
+        "ingredient": "Eplerenon",
+        "use": "Herzinsuffizienz"
+    },
+    "Eremfat": {
+        "ingredient": "Erythromycin",
+        "use": "Akne inversa"
+    },
+    "Escitalopram": {
+        "ingredient": "Escitalopram",
+        "use": "Stimmung/Psyche"
+    },
+    "Esomeprazol": {
+        "ingredient": "Esopremazol",
+        "use": "Magensäure"
+    },
+    "Etoricoxib": {
+        "ingredient": "Etoricoxib",
+        "use": "Schmerzen"
+    },
+    "Euthyrox": {
+        "ingredient": "L-Thyroxin",
+        "use": "Schilddrüse"
+    },
+    "Exforge": {
+        "ingredient": "Valsartan u. Amlodipin",
+        "use": "Blutdruck"
+    },
+    "Exforge HCT": {
+        "ingredient": "Valsartan u. Amlodipin u. HCT",
+        "use": "Blutdruck"
+    },
+    "Ezetimib": {
+        "ingredient": "Ezetimib",
+        "use": "Cholesterin"
+    },
+    "Ezetimib/Simva": {
+        "ingredient": "Ezetimib und Simvastatin",
+        "use": "Cholesterin"
+    },
+    "Falithrom": {
+        "ingredient": "Phenprocoumon",
+        "use": "Gerinnung"
+    },
+    "Fastjekt Autoinjektor": {
+        "ingredient": "Epinephrin",
+        "use": "Wespengiftallergie"
+    },
+    "Febuxostat": {
+        "ingredient": "Febuxostat",
+        "use": "Herzrhythmus"
+    },
+    "Felodipin": {
+        "ingredient": "Felodipin",
+        "use": "Hypertonie"
+    },
+    "Fenofibrat": {
+        "ingredient": "Fenofibrat",
+        "use": "Cholesterin"
+    },
+    "Ferro": {
+        "ingredient": "Eisen(II)-Ion",
+        "use": "Eisen"
+    },
+    "Ferro Sanol": {
+        "ingredient": "Eisen-(III)-Ion",
+        "use": "Blutarmut/Eisenmangel"
+    },
+    "Fexofenaderm": {
+        "ingredient": "Fexofenadin",
+        "use": "Allergie/Juckreiz"
+    },
+    "Finasterid": {
+        "ingredient": "Finasterid",
+        "use": "Prostata"
+    },
+    "Finasterid-HEXAL": {
+        "ingredient": "Finasterid",
+        "use": "Prostata"
+    },
+    "Fluanxol": {
+        "ingredient": "Flupentixoldihydrochlorid",
+        "use": "Psyche/Bedarfsmed."
+    },
+    "Fluoxetin": {
+        "ingredient": "Fluoxetin",
+        "use": "Stimmung/Psyche"
+    },
+    "Fluvastatin": {
+        "ingredient": "Fluvastatin",
+        "use": "Cholesterin"
+    },
+    "Folsaeure": {
+        "ingredient": "Folsäure",
+        "use": "Folsäure Mangelzustände"
+    },
+    "Folsan": {
+        "ingredient": "Folsäure",
+        "use": "Folsäuremangel"
+    },
+    "Folverlan": {
+        "ingredient": "Folsäure",
+        "use": "Folsäuremangel"
+    },
+    "Formoterol": {
+        "ingredient": "Formoterol",
+        "use": "Asthma/COPD"
+    },
+    "Formoterol Easyhaler": {
+        "ingredient": "Formoterol",
+        "use": "Asthma/COPD"
+    },
+    "Forxiga": {
+        "ingredient": "Dapagliflozin",
+        "use": "Diabetes"
+    },
+    "Foster": {
+        "ingredient": "Formoterol und Beclometason",
+        "use": "Asthma/COPD"
+    },
+    "Fragmin": {
+        "ingredient": "Dalteparin",
+        "use": "Gerinnung/Heparin"
+    },
+    "Furosemid": {
+        "ingredient": "Furosemid",
+        "use": "Blutdruck/Wassertbl."
+    },
+    "Gabapentin": {
+        "ingredient": "Gabapentin",
+        "use": "Schmerzen"
+    },
+    "Ganfort": {
+        "ingredient": "Bimatoprost und Timolol",
+        "use": "grüner Star"
+    },
+    "Gingium": {
+        "ingredient": "Gingkoblätter Trockenextrakt",
+        "use": "Demenz"
+    },
+    "Glibenclamid": {
+        "ingredient": "Glibenclamid",
+        "use": "Diabetes"
+    },
+    "Glimepirid": {
+        "ingredient": "Glimepirid",
+        "use": "Diabetes"
+    },
+    "Godamed": {
+        "ingredient": "Acetylsalicylsäure",
+        "use": "Schmerzen"
+    },
+    "Gynokadin": {
+        "ingredient": "Estradiol",
+        "use": "Gynäkologisch"
+    },
+    "Haloperidol-Neurax": {
+        "ingredient": "Haloperidol",
+        "use": "PSyche/Schlaf"
+    },
+    "Hct": {
+        "ingredient": "Hydrochlorothiazid",
+        "use": "Blutdruck/Wassertbl."
+    },
+    "Hulio": {
+        "ingredient": "Adalimumab",
+        "use": "Rheuma"
+    },
+    "Humalog": {
+        "ingredient": "Insulin lispro",
+        "use": "Diabetes"
+    },
+    "Humalog Kwikpen": {
+        "ingredient": "Insulin lispro",
+        "use": "Diabetes"
+    },
+    "Huminsulin": {
+        "ingredient": "Insulin Isophan (human)",
+        "use": "Diabetes"
+    },
+    "Huminsulin Bas": {
+        "ingredient": "Insulin Isophan (human)",
+        "use": "Diabetes"
+    },
+    "Humira": {
+        "ingredient": "Adalimumab",
+        "use": "Rheuma"
+    },
+    "Hydromorphon": {
+        "ingredient": "Hydromorphon hydrochlorid",
+        "remark": "",
+        "use": "Schmerzen"
+    },
+    "Hydromorphon-Hcl Krug": {
+        "ingredient": "Hydromorphon",
+        "use": "Schmerzen/Morphine"
+    },
+    "Hygroton": {
+        "ingredient": "Chlortalidon",
+        "use": "Blutdruck (Wassertbl.)"
+    },
+    "Ibuprofen": {
+        "ingredient": "Ibuprofen",
+        "use": "Schmerzen"
+    },
+    "Imraldi": {
+        "ingredient": "Adalimumab",
+        "use": "Rheuma"
+    },
+    "Indapamid": {
+        "ingredient": "Indapamid",
+        "use": "Blutdruck (Wassertbl.)"
+    },
+    "Insuman Basal": {
+        "ingredient": "Insulin Isophan (human)",
+        "use": "Diabetes"
+    },
+    "Insuman Rapid": {
+        "ingredient": "Insulin Normal",
+        "use": "Diabetes"
+    },
+    "Irbesartan": {
+        "ingredient": "Irbesartan",
+        "use": "Blutdruck"
+    },
+    "Irbesartan arma": {
+        "ingredient": "Irbesartan",
+        "use": "Bluthochdruck"
+    },
+    "Janumet": {
+        "ingredient": "Metformin u. Sitagliptin",
+        "use": "Diabetes"
+    },
+    "Januvia": {
+        "ingredient": "Sitaglitpin",
+        "use": "Diabetes"
+    },
+    "Jardiance": {
+        "ingredient": "Empagliflozin",
+        "use": "Diabetes"
+    },
+    "Kalinor P": {
+        "ingredient": "Kalium",
+        "use": "niedriger Kaliumspiegel im Blut"
+    },
+    "Karvezide": {
+        "ingredient": "",
+        "use": "Blutdruck"
+    },
+    "Kochsalz": {
+        "ingredient": "Kochsalz",
+        "use": "Ausgleich Salzverlust"
+    },
+    "Kreon": {
+        "ingredient": "Pankreasenzyme",
+        "use": "Verdauung"
+    },
+    "L Thyrox": {
+        "ingredient": "Levothyroxin",
+        "use": "Schilddrüse"
+    },
+    "L Thyrox Jod": {
+        "ingredient": "L-Thyroxin + Jodid",
+        "use": "Schilddrüse"
+    },
+    "L Thyroxin": {
+        "ingredient": "Levothyroxin",
+        "use": "Schilddrüse"
+    },
+    "L-Thyroxin": {
+        "ingredient": "Levothyroxin",
+        "use": "Schilddrüse"
+    },
+    "Lactulose": {
+        "ingredient": "Lactulose",
+        "use": "Stuhlgang"
+    },
+    "Lactulose Sirup": {
+        "ingredient": "Lactulose",
+        "use": "Obstipation/Leber"
+    },
+    "Lamotrigin": {
+        "ingredient": "Lamotrigin",
+        "use": "Epilepsie"
+    },
+    "Lantus": {
+        "ingredient": "Insulin glargin",
+        "use": "Diabetes"
+    },
+    "Latanomed": {
+        "ingredient": "Latanoprost",
+        "use": "Augen"
+    },
+    "Latanoprost": {
+        "ingredient": "Latanoprost",
+        "use": "Augen"
+    },
+    "Leflunomid": {
+        "ingredient": "Leflunomid",
+        "use": "Rheuma"
+    },
+    "Lercanidipin": {
+        "ingredient": "Lercanidipin",
+        "use": "Bluthochdruck"
+    },
+    "Lercanidipin Hcl": {
+        "ingredient": "Lercanidipin",
+        "use": "Blutdruck"
+    },
+    "Lercanidipin Omniaph": {
+        "ingredient": "Lercanidipin",
+        "use": "Blutdruck"
+    },
+    "Lercanidipin-Hcl": {
+        "ingredient": "Lercanidipin",
+        "use": "Blutdruck"
+    },
+    "Levetiracetam": {
+        "ingredient": "Levetiracetam",
+        "use": "Epilepsie"
+    },
+    "Levetiracetam Pharma": {
+        "ingredient": "Levetiracetam",
+        "use": "Epilepsie"
+    },
+    "Levetiragamma": {
+        "ingredient": "Levetiracetam",
+        "use": "Epilepsie"
+    },
+    "Levodopa Bens": {
+        "ingredient": "Levodopa und Decarboxylasehemmer",
+        "use": "Parkinson"
+    },
+    "Levodopa/B-Neurax": {
+        "ingredient": "Levodopa und Benserazid",
+        "use": "Parkinson"
+    },
+    "Levodopa/Carb": {
+        "ingredient": "Levodopa und Decarboxylasehemmer",
+        "use": "Parkinson"
+    },
+    "Lioresal": {
+        "ingredient": "Baclofen",
+        "use": "Muskelspastik"
+    },
+    "Liprolog": {
+        "ingredient": "Insulin lispro",
+        "use": "Diabetes"
+    },
+    "Lisinopril": {
+        "ingredient": "Lisinopril",
+        "use": "Blutdruck"
+    },
+    "Lixiana": {
+        "ingredient": "Edoxaban",
+        "use": "Gerinnung"
+    },
+    "Lodotra": {
+        "ingredient": "Prednisolon",
+        "use": "Rheuma"
+    },
+    "Macrogol": {
+        "ingredient": "Macrogol",
+        "use": "chron. Stuhlverhalt"
+    },
+    "Macrogol Plus": {
+        "ingredient": "Macrogol",
+        "use": "Abführmittel"
+    },
+    "Macrogol Pulver": {
+        "ingredient": "Macrogol, Kombinationen",
+        "use": "chronische Obstipation "
+    },
+    "Madopar": {
+        "ingredient": "L-Dopa und Benserazid",
+        "use": "M. Parkinson"
+    },
+    "Magnesium": {
+        "ingredient": "Magnesium",
+        "use": "Herzrhythmus"
+    },
+    "Marcumar": {
+        "ingredient": " Phenprocoumon",
+        "use": "Gerinnung"
+    },
+    "Melneurin": {
+        "ingredient": "Melperon",
+        "use": "Schlafverbesserung"
+    },
+    "Melperon": {
+        "ingredient": "Melperon",
+        "use": "Erregungs- und Spannungszustände"
+    },
+    "Mesala": {
+        "ingredient": "Mesalazin",
+        "use": "Darmentzündung"
+    },
+    "Mesalazin": {
+        "ingredient": "Mesalazin",
+        "use": "Darmentzündung"
+    },
+    "Metamizol": {
+        "ingredient": "Metamizol",
+        "use": "Schmerzen"
+    },
+    "Metex n": {
+        "ingredient": "Methotrexat",
+        "use": "Rheuma"
+    },
+    "Metfogamma": {
+        "ingredient": "Metformin",
+        "use": "Diabetes"
+    },
+    "Metformin": {
+        "ingredient": "Metformin",
+        "use": "Diabetes"
+    },
+    "Metformin Lich": {
+        "ingredient": "Metformin",
+        "use": "Diabetes"
+    },
+    "Metobeta": {
+        "ingredient": "Metoprolol",
+        "use": "Blutdruck"
+    },
+    "Metohexal": {
+        "ingredient": "Metoprolol tartrat",
+        "use": "Metoprolol tartrat"
+    },
+    "Metohexal-Succ": {
+        "ingredient": "Metoprolol",
+        "use": "Blutdruck"
+    },
+    "Metoprogamma": {
+        "ingredient": "",
+        "use": "Blutdruck/Herzrhythmus"
+    },
+    "Metoprolol": {
+        "ingredient": "Metoprolol",
+        "use": "Blutdruck/Herzrhythmus"
+    },
+    "Metoprolol Nk": {
+        "ingredient": "Metoprolol",
+        "use": "Bluthochdruck"
+    },
+    "Metoprolol Su": {
+        "ingredient": "Metoprololsuccinat",
+        "use": "Blutdruck / Puls"
+    },
+    "Metoprolol Z": {
+        "ingredient": "Metoprolol",
+        "use": "Bluthochdruck"
+    },
+    "Metoprololsu": {
+        "ingredient": "Metoprolol",
+        "use": "Blutdruck"
+    },
+    "Metoprololsuc": {
+        "ingredient": "Metoprolol",
+        "use": "Blutdruck"
+    },
+    "Metoprololsucc": {
+        "ingredient": "Metoprololsuccinat",
+        "use": "Blutdruck"
+    },
+    "Metoprololsuccinat": {
+        "ingredient": "Metoprolol succinat",
+        "use": "Blutdruck/Herzrhythmus"
+    },
+    "Mictonorm Uno": {
+        "ingredient": "Propiverin",
+        "use": "Blase"
+    },
+    "Minocyclin": {
+        "ingredient": "Minocyclin",
+        "use": "Akne inversa"
+    },
+    "Mirtalich": {
+        "ingredient": "Mirtazapin",
+        "use": "Stimmung/Psyche"
+    },
+    "Mirtazapin": {
+        "ingredient": "Mirtazapin",
+        "use": "Stimmung/Psyche"
+    },
+    "Mirtazapin arma": {
+        "ingredient": "Mirtazapin",
+        "use": "Stimmung/Psyche/Schlaf"
+    },
+    "Mometason": {
+        "ingredient": "Mometason",
+        "use": "allergische Rhinitis"
+    },
+    "Morphin": {
+        "ingredient": "Morphin",
+        "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
+        "use": "Schmerzen/BTM"
+    },
+    "Movicol": {
+        "ingredient": "Macrogol",
+        "use": "Stuhlgang"
+    },
+    "Movicol Beutel": {
+        "ingredient": "Macrogol",
+        "use": "Stuhlgang"
+    },
+    "Moxonidin": {
+        "ingredient": "Moxonidin",
+        "use": "Bluthochdruck"
+    },
+    "Mtx": {
+        "ingredient": "Methotrexat",
+        "use": "Rheuma"
+    },
+    "Nebilet": {
+        "ingredient": "Nebivolol",
+        "use": "Blutdruck"
+    },
+    "Nebivolol": {
+        "ingredient": "Nebivolol",
+        "use": "Blutdruck/Puls"
+    },
+    "Nephral": {
+        "ingredient": "Triamteren und Hydrochlorothiazid",
+        "use": "Wassertablette"
+    },
+    "Nifedipin": {
+        "ingredient": "Nifedipin",
+        "use": "Blutdruck"
+    },
+    "Nitrangin": {
+        "ingredient": "Glyceroltrinitrat",
+        "use": "Brustenge/Angina pectoris"
+    },
+    "Nitrendipin": {
+        "ingredient": "Nitrendipin",
+        "use": "Bluthochdruck"
+    },
+    "Nitrolingual Akut": {
+        "ingredient": "Nitrolingual",
+        "use": "Brustschmerz"
+    },
+    "Novaminsulfon": {
+        "ingredient": "Metamizol",
+        "use": "Schmerzen"
+    },
+    "Novopulmon": {
+        "ingredient": "Budesonid",
+        "use": "Asthma"
+    },
+    "Novorapid Flexpen": {
+        "ingredient": "Insulin aspart",
+        "use": "Diabetes"
+    },
+    "Nustendi": {
+        "ingredient": "Bempedoinsäure und Ezetimib",
+        "use": "Cholesterin"
+    },
+    "Obsidan": {
+        "ingredient": "Propranololhydrochlorid",
+        "use": "Pfortaderhochdruck"
+    },
+    "Oekolp Ovula": {
+        "ingredient": "",
+        "use": ""
+    },
+    "Olanzapin": {
+        "ingredient": "Olanzapin",
+        "use": "Stimmung/Psyche"
+    },
+    "Olmesart Amlo": {
+        "ingredient": "Olmesartan und Amlodipin",
+        "use": "Bluthochdruck"
+    },
+    "Olmesartan": {
+        "ingredient": "Olmesartan",
+        "use": "Bluthochdruck"
+    },
+    "Olmesartan/Amlo": {
+        "ingredient": "Olmesarrtan/Amlodipin",
+        "use": "Hypertonie"
+    },
+    "Olmesartan/Amlo Hex": {
+        "ingredient": "Olmesartan und Amlodipin",
+        "use": "Bluthochdruck"
+    },
+    "Omepra": {
+        "ingredient": "Omeprazol",
+        "use": "Magen/Sodbrennen"
+    },
+    "Omeprazol": {
+        "ingredient": "Omeprazol",
+        "use": "Magen"
+    },
+    "Opipram": {
+        "ingredient": "Opipramol",
+        "use": "Stimmung/Psyche"
+    },
+    "Oxycocomp": {
+        "ingredient": "Oxycodon und Naloxon [MORPHIN]",
+        "use": "Schmerzen"
+    },
+    "Oxycodon": {
+        "ingredient": "Oxycodon-Hydrochlorid",
+        "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
+        "use": "Schmerzen/Morphin-BTM"
+    },
+    "Oxycodon Comp": {
+        "ingredient": "Oxycodon/Naloxon",
+        "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
+        "use": "Schmerzen/Morphin-BTM"
+    },
+    "Oxycodon Hcl": {
+        "ingredient": "Oxycodon akut",
+        "use": "Schmerzen"
+    },
+    "Oxycodon/Naloxon": {
+        "ingredient": "Oxycodon und Naloxon",
+        "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
+        "use": "Schmerzen/Morphin-BTM"
+    },
+    "Ozempic": {
+        "ingredient": "Semaglutid",
+        "use": "Diabetes"
+    },
+    "Palexia": {
+        "ingredient": "Tapentadol",
+        "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
+        "use": "Schmerzen"
+    },
+    "Pantopra": {
+        "ingredient": "Pantoprazol",
+        "use": "Magen"
+    },
+    "Pantopra-Q": {
+        "ingredient": "Pantoprazol",
+        "use": "Magen"
+    },
+    "Pantoprazol": {
+        "ingredient": "Pantoprazol",
+        "use": "Magen"
+    },
+    "Pantoprazol arma": {
+        "ingredient": "Pantoprazol",
+        "use": "Magensäure"
+    },
+    "Pantozol": {
+        "ingredient": "Pantoprazol",
+        "use": "Magen"
+    },
+    "Penicillin San": {
+        "ingredient": "Penicillin ",
+        "use": "Infektion"
+    },
+    "Perindopril Ind": {
+        "ingredient": "Perindopril",
+        "use": "Blutdruck"
+    },
+    "Pipamperon": {
+        "ingredient": "Pipamperon",
+        "use": "Schlafen/Demenz"
+    },
+    "Plavix": {
+        "ingredient": "Clopidogrel",
+        "use": "Gerinnung/Herz"
+    },
+    "Pradaxa": {
+        "ingredient": "Dabigatran",
+        "use": "Gerinnung/VHF"
+    },
+    "Pramipexol": {
+        "ingredient": "Pramipexol",
+        "use": "Parkinson"
+    },
+    "Prasugrel": {
+        "ingredient": "Clopidogrel",
+        "use": "KHK - Prophylaxe Stents"
+    },
+    "Prednisolon": {
+        "ingredient": "Prednisolon",
+        "use": "Entzündung/Kortison"
+    },
+    "Pregabalin": {
+        "ingredient": "Pregabalin",
+        "use": "Schmerzen (neuropathisch)"
+    },
+    "Pregabalin-": {
+        "ingredient": "Pregabalin",
+        "use": "Schmerzen"
+    },
+    "Pregabalin-Neurax": {
+        "ingredient": "Pregabalin",
+        "use": "neuropath. Schmerzen"
+    },
+    "Preterax": {
+        "ingredient": "",
+        "use": "Blutdruck/Wassertablette"
+    },
+    "Procoralan": {
+        "ingredient": "Ivabradin",
+        "use": "Herzrhythmus"
+    },
+    "Progestan": {
+        "ingredient": "Progesteron",
+        "use": "Gynäkologisch"
+    },
+    "Promethazin-Neurax": {
+        "ingredient": "Promethazin",
+        "use": "Stimmung/Psyche"
+    },
+    "Propycil": {
+        "ingredient": "Propycil",
+        "use": "Schilddrüse"
+    },
+    "Protaphane nfill": {
+        "ingredient": "Insulin Isophan (human)",
+        "use": "Diabetes"
+    },
+    "Protaphane Penfill": {
+        "ingredient": "Insulin Isophan",
+        "use": "Diabetes"
+    },
+    "Quetiapin": {
+        "ingredient": "Quetiapinhemifumarat",
+        "use": "Psyche"
+    },
+    "Rami/Amlodipin": {
+        "ingredient": "Ramipril und Amlodipin",
+        "use": "Blutdruck"
+    },
+    "Ramidipin": {
+        "ingredient": "Ramipril und Amlodipin",
+        "use": "Bluthochdruck"
+    },
+    "Ramilich": {
+        "ingredient": "Ramipril",
+        "use": "Bluthochdruck"
+    },
+    "Ramiplus": {
+        "ingredient": "Ramipril",
+        "use": "Bluthochdruck"
+    },
+    "Ramipril": {
+        "ingredient": "Ramipril",
+        "use": "Blutdruck"
+    },
+    "Ramipril arma": {
+        "ingredient": "Ramipril",
+        "use": "Blutdruck"
+    },
+    "Ramipril Comp": {
+        "ingredient": "Ramipril/Hydrochlorothiazid",
+        "use": "Hypertonie"
+    },
+    "Ramipril HEXAL": {
+        "ingredient": "Ramipril",
+        "use": "Hypertonie"
+    },
+    "Ramipril Pl": {
+        "ingredient": "Ramipril und Amlodipin",
+        "use": "Blutdruck"
+    },
+    "Ramipril/Amlo": {
+        "ingredient": "Ramipril und Amlodipin",
+        "use": "Blutdruck"
+    },
+    "Ramipril/Amlodip": {
+        "ingredient": "Ramipril und Amlodipin",
+        "use": "Blutdruck"
+    },
+    "Ranexa": {
+        "ingredient": "Ranolazin",
+        "use": "Herzrhythmus"
+    },
+    "Relvar": {
+        "ingredient": " Vilanterol und Fluticason furoat",
+        "use": "Asthma/COPD"
+    },
+    "Restex": {
+        "ingredient": "Levodopa und Decarboxylasehemmer",
+        "use": "unruhige Beine"
+    },
+    "Revinty": {
+        "ingredient": "Vilanterol und Fluticason furoat",
+        "use": "Asthma/COPD"
+    },
+    "Revinty Ellipta": {
+        "ingredient": "Vilanterol und Fluticasonfuroat",
+        "use": "COPD/Lunge"
+    },
+    "Risperidon": {
+        "ingredient": "Risperidon",
+        "use": "Stimmung/Psyche"
+    },
+    "Risperidon Pharma": {
+        "ingredient": "Risperidon",
+        "use": "Demenz"
+    },
+    "Rivotril": {
+        "ingredient": "Clonazepam",
+        "use": "Unruhezustände"
+    },
+    "Rolufta": {
+        "ingredient": "Umeclidinium bromid",
+        "use": "COPD"
+    },
+    "Rosuvasta": {
+        "ingredient": "Rosuvastatin",
+        "use": "Cholesterin/Triglyzeride"
+    },
+    "Rosuvastatin": {
+        "ingredient": "Rosuvastatin",
+        "use": "Cholesterin- / Triglyzeridesenkung"
+    },
+    "Rosuzet": {
+        "ingredient": "Rosuvastatin/Ezetimib",
+        "use": "Cholesterin"
+    },
+    "Salbu": {
+        "ingredient": "Salbutamol",
+        "remark": "Notfallspray",
+        "use": "Asthma/COPD (Notfall)"
+    },
+    "SalbuHEXAL N": {
+        "ingredient": "Salbutamol",
+        "use": "Asthma"
+    },
+    "Salbutamol": {
+        "ingredient": "Salbutamol",
+        "remark": "Notfallspray",
+        "use": "Asthma/COPD (Notfall)"
+    },
+    "Sativex": {
+        "ingredient": "Cannabinoide",
+        "use": "Muskelkrämpfe bei neurologischer Grunderkrankung"
+    },
+    "Sativex Z Anw": {
+        "ingredient": "Cannabinoide",
+        "use": "Spastik"
+    },
+    "Selegilin-Neurax": {
+        "ingredient": "Selegilin",
+        "use": "Parkinson"
+    },
+    "Sertralin": {
+        "ingredient": "Sertralin",
+        "use": "Stimmung/Psyche"
+    },
+    "Simbrinza": {
+        "ingredient": "Brinzolamid und Brimonidin",
+        "use": "grüner Star"
+    },
+    "Simvabeta": {
+        "ingredient": "Simvastatin",
+        "use": "Cholesterin"
+    },
+    "SimvaHEXAL": {
+        "ingredient": "",
+        "use": "Cholesterin"
+    },
+    "Simvastatin": {
+        "ingredient": "Simvastatin",
+        "use": "Cholesterin"
+    },
+    "Simvastatin arma": {
+        "ingredient": "Simvastatin",
+        "use": "Cholesterin"
+    },
+    "Siofor": {
+        "ingredient": "Metformin",
+        "use": "Diabetes"
+    },
+    "Solaraze": {
+        "ingredient": "Diclofenac, Natriumsalz",
+        "use": "Hautveränderungen"
+    },
+    "Solifenacin": {
+        "ingredient": "Solifenacin",
+        "use": "Blasenentleerungsstörung"
+    },
+    "Solifenacin arma": {
+        "ingredient": "Solifenacin",
+        "use": "überaktive Blase"
+    },
+    "Sormodren": {
+        "ingredient": "Bornaprin",
+        "use": "Speichelfluß / Schwitzen"
+    },
+    "Spiriva": {
+        "ingredient": "Tiotropiumbromid",
+        "use": "COPD"
+    },
+    "Spiriva Respimat": {
+        "ingredient": "Tiotropiumbromid",
+        "use": "chron.Bronchitis"
+    },
+    "Spiro Comp": {
+        "ingredient": "Spironolacton und Furosemid",
+        "use": "Wassertablette"
+    },
+    "Spironolacton": {
+        "ingredient": "Spironolacton",
+        "use": "Wassertbl."
+    },
+    "Spironolacton Accord": {
+        "ingredient": "Spironolacton",
+        "use": "Herzschwäche"
+    },
+    "Srivasso": {
+        "ingredient": "",
+        "use": "COPD"
+    },
+    "Sultanol": {
+        "ingredient": "Salbutamol",
+        "use": "COPD Notfall Spray"
+    },
+    "Sumatriptan": {
+        "ingredient": "Sumatritptansuccinat",
+        "use": "Migräne"
+    },
+    "Tamox": {
+        "ingredient": "Tamoxifen",
+        "use": "adjuvante Therapie bei Brustkrebs"
+    },
+    "Tamoxifen": {
+        "ingredient": "Tamoxifen",
+        "use": "adjuvante Therapie bei Brustkrebs"
+    },
+    "Tamsulosin": {
+        "ingredient": "Tamsulosin",
+        "use": "Prostata"
+    },
+    "Tamsulosin HEXAL": {
+        "ingredient": "Tamsulosin",
+        "use": "Prostata"
+    },
+    "Tamsulosin Zen": {
+        "ingredient": "Tamsulosin",
+        "use": "Prostata"
+    },
+    "Targin": {
+        "ingredient": "Oxycodon und Naloxon",
+        "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
+        "use": "Schmerzen/Morphin-BTM"
+    },
+    "Tavor": {
+        "ingredient": "Lorazepam",
+        "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
+        "use": "Stimmung/Psyche/nicht anderweitig beherrschbare Panikattacke"
+    },
+    "Tavor Expidet": {
+        "ingredient": "Lorazepam",
+        "remark": "Anwendung: Tablette nur unter die Zunge legen",
+        "use": "Stimmung/Psyche"
+    },
+    "Tavu": {
+        "ingredient": "Timolol und Latanoprost",
+        "use": "grüner Star"
+    },
+    "Telmisartan": {
+        "ingredient": "Telmisartan",
+        "use": "Blutdruck"
+    },
+    "Tensoflux": {
+        "ingredient": "Bendroflumethiazid und Amilorid",
+        "use": "Blutdruck/Wassertbl."
+    },
+    "Tevacidol": {
+        "ingredient": "Alfacalcidol",
+        "use": "Vitamin D und Analoga"
+    },
+    "Thyronajod": {
+        "ingredient": "L-Thyroxin",
+        "use": "Schilddrüse"
+    },
+    "Tilidin": {
+        "ingredient": "Tilidin/Naloxon",
+        "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
+        "use": "Schmerzen/Morphin-BTM"
+    },
+    "Tilidin Comp": {
+        "ingredient": "Tilidin und Naloxon",
+        "use": "Schmerzen"
+    },
+    "Tilidin Plus": {
+        "ingredient": "Tilidin und Naloxon",
+        "use": "Schmerzen [Morphin]"
+    },
+    "Tizanidin": {
+        "ingredient": "Tizanidin",
+        "use": "Spastik"
+    },
+    "Torasemid": {
+        "ingredient": "Torasemid",
+        "use": "Blutdruck/Wassertbl."
+    },
+    "Torasemid -Pharma": {
+        "ingredient": "Torasemid",
+        "use": "Blutdruck/Entlastung des Herzens"
+    },
+    "Torasemid arma": {
+        "ingredient": "Torasemid",
+        "use": "Blutdruck/Wassertablette"
+    },
+    "Torem": {
+        "ingredient": "Torasemid",
+        "use": "Bluthochdruck/Wassertablette"
+    },
+    "Tramadol": {
+        "ingredient": "Tramadol",
+        "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
+        "use": "Schmerzen (Morphin)"
+    },
+    "Tramal": {
+        "ingredient": "Tramadol",
+        "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
+        "use": "Schmerzen (Morphin)"
+    },
+    "Trimbow": {
+        "ingredient": "Formoterol, Glycopyrroniumbromid und Beclometason",
+        "use": "Asthma/COPD"
+    },
+    "Trulicity": {
+        "ingredient": "Dulaglutid",
+        "use": "Diabetes"
+    },
+    "Trusopt": {
+        "ingredient": "Dorzolamid",
+        "use": "Auge (grüner Star)"
+    },
+    "Ultibro": {
+        "ingredient": "Indacaterol und Glycopyrronium bromid",
+        "use": "COPD"
+    },
+    "Ultibro Breezhaler": {
+        "ingredient": "Indacaterol und Glycopyrronium bromid",
+        "use": "COPD"
+    },
+    "Vaginal supp": {
+        "ingredient": "",
+        "use": ""
+    },
+    "Valoron N": {
+        "ingredient": "Tilidin und Naloxon",
+        "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
+        "use": "Schmerzen"
+    },
+    "Valsacor": {
+        "ingredient": "Valsartan",
+        "use": "Bluthochdruck"
+    },
+    "Valsartan": {
+        "ingredient": "Valsartan",
+        "use": "Blutdruck"
+    },
+    "Valsartan Plus": {
+        "ingredient": "Valsartan",
+        "use": "Bluthochdruck"
+    },
+    "Valsartanzentiva Co": {
+        "ingredient": "Valsartan und Hydrochlorothiazid",
+        "use": "Bluthochdruck"
+    },
+    "Velmetia": {
+        "ingredient": "Metformin und Sitagliptin",
+        "use": "Diabetes"
+    },
+    "Venlafaxin": {
+        "ingredient": "Venlafaxin",
+        "use": "Stimmung/Psyche"
+    },
+    "Vesikur": {
+        "ingredient": "Solifenacin",
+        "use": "überaktive Blase"
+    },
+    "Viani": {
+        "ingredient": "Salmeterol und Fluticason",
+        "use": "Asthma / COPD"
+    },
+    "Vigantol Oel": {
+        "ingredient": "Colecalciferol",
+        "use": "Osteoporoseprophylaxe"
+    },
+    "Vigantolvit": {
+        "ingredient": "Cholecalciferol",
+        "use": "Vitamin D Mangel"
+    },
+    "Vimpat": {
+        "ingredient": "Lacosamid",
+        "use": "Epilepsie"
+    },
+    "Vitamin B": {
+        "ingredient": "Cyanocobalamin",
+        "use": "Vitamin B12 Mangel"
+    },
+    "Vitamin B Komplex": {
+        "ingredient": "Vitamin B Komplex",
+        "use": "Vitamin B Mangel"
+    },
+    "Vitamin B1": {
+        "ingredient": "Vitamin B1",
+        "use": "Leber"
+    },
+    "Vitamin B12": {
+        "ingredient": "Cyanocobalamin",
+        "use": "Perniziosa (Vitamin B12 Mangelzustände)"
+    },
+    "Vocado": {
+        "ingredient": "Olmesartan und Amlodipin",
+        "use": "Blutdruck"
+    },
+    "Vocado HCT": {
+        "ingredient": "Olmesartan und Amlodipin und Hydrochlorothiazid",
+        "use": "Blutdruck"
+    },
+    "Xadago": {
+        "ingredient": "Safinamid",
+        "use": "Parkinson"
+    },
+    "Xarelto": {
+        "ingredient": "Rivaroxaban",
+        "use": "Gerinnung"
+    },
+    "Xarelto bis": {
+        "ingredient": "",
+        "use": ""
+    },
+    "Xelevia": {
+        "ingredient": "Sitagplitpin",
+        "use": "Diabetes"
+    },
+    "Zanipress": {
+        "ingredient": "Enalapril / Lercanidipin",
+        "use": "Bluthochdruck"
+    },
+    "Zolpidem": {
+        "ingredient": "Zolpidem",
+        "remark": "Gefahr der Gewöhnung/Abhängigkeit!",
+        "use": "Schlaf"
+    },
+    "Zostex": {
+        "ingredient": "Brivudin",
+        "use": "Gürtelrose/ausgeprägter Lippenherpes"
+    }
+}
