@@ -203,6 +203,7 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
 <img src="Docs/TrennerExtraBreit.svg" style="zoom:100%;" />
 
 <br>
+
 ![Laborjournal](Docs/Laborjournal.svg)
 
 - ***Responsives interaktives Webinterface*** (Basis: Internet Explorers).
