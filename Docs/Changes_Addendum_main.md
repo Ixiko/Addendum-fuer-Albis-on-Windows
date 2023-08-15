@@ -8,6 +8,62 @@
 
 <img src="Devider.svg" alt="Devider" align="center" margin="0" width="100%" />
 
+###  ![Addendum-Symbol](Icons/Addendum18x18.ico) ***Addendum V2.6***  (14.08.2023)
+
+**<u>QuickExporter</u>**	
+
+- Kartenkartenexport mit Dokumentation ausgelegt für den Export tausender Patientenakten 
+
+- ohne Mühe exportieren und dabei jederzeit die Übersicht behalten. 
+- Exportiert Tagesprotokoll, Labor, externe sowie eigene Befunde soweit diese in der Karteikarte mit einem Kürzel hinterlegt sind.)
+- Leicht verwendbare Filterfunktionen filtert nicht nur nach Karteikartenkürzel sondern auch den Inhalt
+
+<u>**Addendum**</u>	
+
+- Patientendaten für Copy-Paste-Vorgänge. Name, Geburtsdatum, Postanschrift, Behandlungsbeginn, letzter Tag der Behandlung und andere Daten an die man sonst nicht gelangt, lassen sich mit 2-3 Klicks aus der Patientenakte heraus ins Clipboard kopieren
+
+- Hotkey-Kombination: "Strg + Alt + J" öffnet den Dialog "Formular/Privat-AU" ähnlich dem vorgegebenen "Strg+J" jetzt für die eAU (aka AU) 
+
+- ***Diagnosen Hotstrings*** - ICD-10-GM 2023 ist implementiert. Für manuelle Zwischenupdates gibt es jetzt ein Skript, welches eine Textdatei herausgegeben vom BfArM (dimdi.de) als alphabetisches ICD-10-GM Verzeiches für die Verwendung durch Addendum aufbereitet. Diagnosenauswahlboxen werden im HotstringViewer angezeigt
+
+- ***Windows Server***: Die Ausführbarkeit von Addendum unter einem Window Server Betriebssystem (ab WinServer 2019+) ist möglich, es sind aber noch nicht alle Skripte für den Einsatz auf einem  Windows Server Betriebssystemen eingerichtet Pfadvariabilität für das Addendum- und das Albsverzeichnis, die Laufwerkbuchstaben (also die Pfade) können jetzt auf jedem Client im Rechner unterschiedlich sein (in der Addendum.ini unter Clientname/Laufwerksbuchstabe=D z.B. eintragen) automatische Erkennung ist geplant
+
+- ***Autologin*** - das automatische Einloggen in Albis durch Addendum kann jetzt per Traymenu an- oder abgeschaltet werden. Ausserdem wird ein Autologin ohne Logindaten nicht mehr ausgefüht.
+
+- ***Druckausgabe*** - mehr automatisierte Dateinamensvorschläge beim PDF-Druck |
+
+- ***Hotstrings***: **GOÄ** - automatisiert altersabhängige Gebühreneintragen aktuell Gebühren für die OP-Vorbereitung 
+
+- ***Dialog Leistungskette bestätigen*** - automatische Anpassung der Fenstergröße hinzugefügt 
+
+- Funktion um Karteikarten aus dem Text im Clipboardinhalt anzeigen zu lassen erweitert. Sammelt jetzt alle Patienten ein und bietet die Möglichkeit die jeweilige Karteikarte zu öffnen. 
+
+- erste Implementierung für eigene Texthinweise zu festgelegten AU Diagnosen um z.B. die Ausstellung von AU-Bescheinigungen einzuschränken oder ganz zu verhindern 
+
+- versieht PDF Namen bei der Druckausgabe mit einem Zähler um manuelle Anpassungen von Dateinamen zu vermeiden
+
+
+<u>***Abrechnungsassistent***</u>
+
+- Kürzel werden bei Ausgabe von Behandlungsdaten in derselben Reihenfolge wie in der Albiskarteikarte angezeigt   - 
+
+<u>***Fritz!AnrufMonitor***</u>   	
+
+- verwendet jetzt auch Daten aus der UEBARZT.dbf für die Identifikation der Anrufer 
+
+ ***<u>Gebühren</u>***
+ - Fehler beim Erstellen der Ausgabestrings behoben 
+
+***<u>Quicksearch</u>***
+
+- merkt sich für jede Datenbank den angezeigten Datenblock und stellt ihn nach einem Neustart wieder her Information zu Spaltentiteln werden jetzt mit ausgegeben 
+
+<u>***Verordnungsplan verschönern***</u> 	
+
+- Ausgabelayout übersichtlicher gestaltet. Medikamentenbezeichnungen sind jetzt ausführlicher.
+
+<img src="Devider.svg" alt="Devider" align="center" margin="0" width="100%" />
+
 ###  ![Addendum-Symbol](Icons/Addendum18x18.ico) ***Addendum V2.16***  (14.12.2022)
 
 <u>**Quicksearch**</u>   	

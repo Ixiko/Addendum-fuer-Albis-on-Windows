@@ -1,7 +1,7 @@
 ![Addendum.svg](assets/AddendumLogo2021-2.svg)
 #### Extends the possibilities through surface analysis and manipulation
 
-### V2.16 vom 14.12.2022
+### V2.6 vom 14.08.2023
 
 ![Trenner](Docs/TrennerExtraBreit.svg)
 
@@ -28,19 +28,32 @@
 - 🗟 Suchen von Menupunkten im Albismenu
 - ⌨ **Vereinfachung** der Bedienung durch logischere Tastenkombinationen
 - ![AED.svg](Docs/Icons/AED.svg) **Albis Reanimator**: ein abgestürztes Albis und/oder seine Komponeten beenden und neustarten
-- 💾 **Datenexport**
 
 
 
 ### 📄 <u>Dokumente</u>
 
 - 💡 **Auto-OCR** mit Tesseract
+
 - 👪 **automatische Erkennung** von Patientennamen und des Dokumentdatums aus dem Dokumenttext
+
 - ![rename.svg](Docs/Icons/rename.svg) **Autonaming** für Dokumente (automatische Klassifizierung von PDF-Dokumenten)
+
 - ✍ Unterstützung für **PDF-Signierung**
-- 🔎 **Dokument Finder** - Volltextsuche in PDF, Word und Text Dokumenten
 
+- 🔎 **Dokument Finder** - Volltextsuche in PDF, Word und Text Dokumenten#
 
+- 💾 **Datenexport** -  **QuickExporter** 
+
+  - Skript für den Datenmassenexport inklusive 
+
+  - automatisierter Erstellung eines Versandbriefes 
+
+  - Dokumentation von Empfänger, Versandmedium, Versanddatum und mehr
+
+  - Erstellung verschlüsselter 7z Archive 
+
+    
 
 ### 🗃 <u>Karteikarte</u>
 
