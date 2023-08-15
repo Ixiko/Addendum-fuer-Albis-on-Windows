@@ -17,7 +17,7 @@ return
 ;----------------------------------------------------------------------------------------------------------------------------------------------
 ; native PDF functions
 ;----------------------------------------------------------------------------------------------------------------------------------------------
-PDFGetPages(pdfFilePath , qpdfPath:="")                           	{               	;-- gibt die Anzahl der Seiten einer PDF zurück
+PDFGetPages(pdfFilePath , qpdfPath:="")                           	{ ;-- gibt die Anzahl der Seiten einer PDF zurück
 
 	; last change 25.11.2021
 		pages := ""
@@ -41,7 +41,7 @@ PDFGetPages(pdfFilePath , qpdfPath:="")                           	{            
 			If (pages > 0 && pages < 10000)
 				return pages
 
-	; #### if there's no match, sometimes the PDF XREF table is encoded/compressed - qpdf will be used
+	; #### if there's no match, sometimes the PDF XREF table is encoded/compressed - qpdf can help in case
 		If qpdfPath {
 			qpdfPages := StdoutToVar(qpdfPath "\qpdf.exe --show-npages " q pdfFilePath q)
 			If RegExMatch(qpdfPages, "\d+", qpages)
@@ -51,7 +51,7 @@ PDFGetPages(pdfFilePath , qpdfPath:="")                           	{            
 return 0
 }
 
-PDFisCorrupt(pdfFilePath)                                                	{                	;-- überprüft ob die PDF Datei defekt ist
+PDFisCorrupt(pdfFilePath)                                          	{ ;-- überprüft ob die PDF Datei defekt ist
 
 	; letzte Änderung: 18.09.2022
 
@@ -63,10 +63,11 @@ PDFisCorrupt(pdfFilePath)                                                	{     
 	fobj.RawRead(EndOfFile, 7)
 	EndOfFile	:=StrGet(&EndOfFile, 7, "CP0")
 	EOLBytes := RegExReplace(EndOfFile, "[\n\r\d%]")
+
 return InStr(EOLBytes, "EOF") ? false : true
 }
 
-PDFisSearchable(pdfFilePath)                                          	{               	;-- durchsuchbare PDF Datei?
+PDFisSearchable(pdfFilePath)                                       	{ ;-- durchsuchbare PDF Datei?
 
 	; letzte Änderung 25.11.2021 : neuer Matchstring
 
@@ -88,11 +89,11 @@ PDFisSearchable(pdfFilePath)                                          	{        
 return 0
 }
 
-PDFGetVersion(pdfFilePath)                                            	{               	;-- die Version einer PDF Datei auslesen
+PDFGetVersion(pdfFilePath)                                        	{ ;-- die Version einer PDF Datei auslesen
 return FileOpen(pdfFilePath, "r", "CP0").ReadLine()
 }
 
-PDFGetEOLBytes(pdfFilePath)                                         	{               	;-- end-of-line Zeichen einer PDF ermitteln
+PDFGetEOLBytes(pdfFilePath)                                       	{ ;-- end-of-line Zeichen einer PDF ermitteln
 
 	; je nach Version einer PDF Datei befindet sich am Ende eines Datensatzes entweder
 	; ein LF (0A) oder ein CRLF "0D0A"
@@ -109,7 +110,7 @@ PDFGetEOLBytes(pdfFilePath)                                         	{          
 return Format("{:02X}", NumGet(EOL, 0, "Int")) = "0A" ? 1 : 2
 }
 
-PDFGetXREF(pdfFilePath, EOLBytes=0)                           	{               	;-- unverschlüsselte XREF Metadaten lesen
+PDFGetXREF(pdfFilePath, EOLBytes=0)                               	{ ;-- unverschlüsselte XREF Metadaten lesen
 
 	; FUNKTION ist nicht beendet!
 
@@ -131,13 +132,13 @@ PDFGetXREF(pdfFilePath, EOLBytes=0)                           	{               	
 		fobj.seek(-1 * EOLBytes, 1)
 		rbytes := Format("{:02X}", NumGet(bytes, 0, "Char"))
 		t := 	(Mod(A_Index, 5 ) = 0   	? SubStr("00" A_Index, -1) " - " SubStr("0000000" fobj.Tell(), -7) "`n" : "")
-			. 	(EOLBytes = 2               	? Format("{:02X}", NumGet(bytes, 0, "Char")) " " Format("{:02X}", NumGet(bytes, 1, "Char")) : Format("{:02X}", NumGet(bytes, 0, "Char")))
-			.	(Mod(A_Index - 1, 5 ) = 0	? "`n`n" : " ") . t
+			. 	(EOLBytes = 2            	? Format("{:02X}", NumGet(bytes, 0, "Char")) " " Format("{:02X}", NumGet(bytes, 1, "Char")) : Format("{:02X}", NumGet(bytes, 0, "Char")))
+			. 	(Mod(A_Index - 1, 5 ) = 0	? "`n`n" : " ") . t
 		If rbytes in 0A,0D
 			break
 		If (A_Index > 50) {
 			MsgBox, % "endxref: " endxref ", EOLBytes: " EOLBytes "`n" t
-			ExitApp
+			return ""
 		}
 
 	}
@@ -169,7 +170,7 @@ PDFGetXREF(pdfFilePath, EOLBytes=0)                           	{               	
 	MsgBox, % "Table: n=" n " objects=" NrObjects "`n" t
 }
 
-PDFObjectSearch(pdfFilePath, mstring)                            	{                	;-- freie Suche in Objekteigenschaften
+PDFObjectSearch(pdfFilePath, mstring)                             	{ ;-- freie Suche in Objekteigenschaften
 
 	; mstring = matchstring
 
@@ -193,7 +194,7 @@ return 0
 
 }
 
-IFilter(file, searchstring:="", IFilterNr:=1)                        	{               	;-- Textsuche/Textextraktion in PDF/Word Dokumenten
+IFilter(file, searchstring:="", IFilterNr:=1)                      	{ ;-- Textsuche/Textextraktion in PDF/Word Dokumenten
 
 	; IFilter plugin's werden benötigt! Diese erhalten sie mit der Installation von SumatraPDF oder Adobe Acrobat DC.
 
@@ -384,7 +385,7 @@ return searchstring ? "" : Text
 ;----------------------------------------------------------------------------------------------------------------------------------------------
 ; xpdf wrapper
 ;----------------------------------------------------------------------------------------------------------------------------------------------
-PdfToText(PdfPath, pages="", enc="UTF-8", SaveToFile="") 	{                 	;-- using xpdf's pdftotext, function catches the stdout
+PdfToText(PdfPath, pages="", enc="UTF-8", SaveToFile="")          	{ ;-- using xpdf's pdftotext, function catches the stdout
 
 	; Link	: https://autohotkey.com/boards/viewtopic.php?t=15880&start=20
 	; By	: kon - 16.4.2016 modified from: Ixiko
@@ -410,7 +411,7 @@ PdfToText(PdfPath, pages="", enc="UTF-8", SaveToFile="") 	{                 	;--
 return StdOutToVar(Addendum.XpdfPath "\pdftotext.exe" " -f " PageStart " -l " PageEnd " -bom -nopgbrk -nodiag -clip -layout -enc " q enc q " " q PdfPath q " " q SaveToFile q)			;-enc " encoding "  " " q "-" q -layout
 }
 
-PdfToPng(PdfPath, page=1, dpi=300, PreviewPath="")   	{	              	;-- using xpdf's pdftoPng
+PdfToPng(PdfPath, page=1, dpi=300, PreviewPath="")                	{ ;-- using xpdf's pdftoPng
 
 	;Link: https://autohotkey.com/boards/viewtopic.php?t=15880&start=20
 	;original By: kon - 16.4.2016 modified from: Ixiko
@@ -431,7 +432,7 @@ PdfToPng(PdfPath, page=1, dpi=300, PreviewPath="")   	{	              	;-- using
 return pngPath
 }
 
-PdfInfo(PdfPath, opt:="", lastpage:=1)                               	{	               	;-- using xpdf's pdfinfo to get metadata and Pdf Info's
+PdfInfo(PdfPath, opt:="", lastpage:=1)                            	{ ;-- using xpdf's pdfinfo to get metadata and Pdf Info's
 
 	; Description:    	function now returns an object (thx to swagfag for his help on RegExMatch)
 	;                       	a space char in keys will be replaced from "Page size" to "Pagesize"
@@ -529,7 +530,7 @@ return 1
 ;----------------------------------------------------------------------------------------------------------------------------------------------
 ; Sonstiges
 ;----------------------------------------------------------------------------------------------------------------------------------------------
-MetaDatenAnzeigen(PdfPath, ShowInfo:=false)	{		                         	;-- zeigt die Metadaten einer PDF Datei an
+MetaDatenAnzeigen(PdfPath, ShowInfo:=false)                       	{ ;-- zeigt die Metadaten einer PDF Datei an
 
 	output:="", maxlength:=0
 	metadata:= Object()
@@ -550,19 +551,19 @@ MetaDatenAnzeigen(PdfPath, ShowInfo:=false)	{		                         	;-- zei
 return metadata
 }
 
-GetPDFData(path, pdfname) 	{                                                           	;-- Dateigröße, Durchsuchbar ...
+GetPDFData(path, pdfname)                                         	{ ;-- Dateigröße, Durchsuchbar ...
 
 	pdfPath := path "\" pdfname
-	FileGetSize	, FSize       	, % pdfPath, K
+	FileGetSize	, FSize      	, % pdfPath, K
 	FileGetTime	, timeStamp 	, % pdfPath, C
 	FormatTime	, FTime     	, % timeStamp, dd.MM.yyyy
 
-return {	"name"          	: pdfname
-		, 	"filesize"          	: FSize
-		, 	"timestamp"   	: timeStamp
+return {"name"          	: pdfname
+		, 	"filesize"       	: FSize
+		, 	"timestamp"      	: timeStamp
 		, 	"filetime"       	: FTime
 		, 	"pages"          	: PDFGetPages(pdfPath, Addendum.PDF.qpdfPath)
-		, 	"isSearchable"	: (PDFisSearchable(pdfPath)?1:0)}
+		, 	"isSearchable"  	: (PDFisSearchable(pdfPath)?1:0)}
 }
 
 

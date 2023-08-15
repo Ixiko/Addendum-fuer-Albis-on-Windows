@@ -1,5 +1,6 @@
 ﻿/*
-  version: 2021.02.20
+  version: 2022.11.05 - Options.CoordMode wurde nicht übergeben
+
   If you want to add your own style to the built-in style, you can add it directly in btt().
   Advantage:
   *High performance is 2-1000 times the performance of the built-in ToolTip (the larger the text, the greater the performance comparison, 2-5 times the performance in most common application scenarios)
@@ -18,40 +19,42 @@
   Draw shadows
   Text perfectly centered
   There are too many texts to give obvious prompts (such as flashing) when the display is not complete
+
 */
-btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInOptionOrOptions:="") {
-  static BTT
-       , Style1 	:= {TextColor:0xffeef8f6
+btt(Text:="", X:="", Y:="", WhichToolTip:="", BuiltInStyleOrStyles:="", BuiltInOptionOrOptions:="") {
+
+  static 	BTT
+       , 	Style1 	:= {TextColor:0xffeef8f6
                    , BackgroundColor:0xff1b8dff
                    , FontSize:14}
-       , Style2 	:= {Border:1
+       , 	Style2 	:= {Border:1
                    , Rounded:8
                    , TextColor:0xfff4f4f4
                    , BackgroundColor:0xaa3e3d45
                    , FontSize:14}
-       , Style3 	:= {Border:2
+       , 	Style3 	:= {Border:2
                    , Rounded:0
                    , TextColor:0xffF15839
                    , BackgroundColor:0xffFCEDE6
                    , FontSize:14}
-       , Style4 	:= {Border:5
+       , 	Style4 	:= {Border:5
                    , Rounded:15
                    , BorderColor:0xff503a68
                    , TextColor:0xffF3AE00
                    , BackgroundColorLinearGradientStart:0xff9A83AF
                    , BackgroundColorLinearGradientEnd:0xff7A638F
                    , BackgroundColorLinearGradientDirection:1
-                   , FontSize:16
+                   , FontSize:14
 				   , FontRender:5
                    , FontStyle:"Bold Italic"}
-       , Style5 	:= {Border:0
+       , 	Style5 	:= {Border:0
                    , Rounded:5
                    , TextColor:0xffeeeeee
 				   , FontRender:5
                    , BackgroundColorLinearGradientStart:0xff134E5E
                    , BackgroundColorLinearGradientEnd:0xff326f69
                    , BackgroundColorLinearGradientDirection:1}
-       , Style98:=  {Border:5
+       , 	Style98:=  {Border:5
                     , Rounded:15
                     , Margin:10
                     , BorderColor:0xffaabbcc
@@ -61,11 +64,11 @@ btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInO
                     , BackgroundColorLinearGradientEnd:0xff8DA5D3
                     , BackgroundColorLinearGradientDirection:1
 					, BackgroundColorLinearGradientAngle:135
-                    , Font:"Futura Bk Bt"
+                    , Font:"Consolas"
                     , FontSize:14
                     , FontRender:5
                     , FontStyle:"Normal"}
-        , Style99:=  {Border:20
+       , 	Style99:=  {Border:20
                     , Rounded:30
                     , Margin:30
                     , BorderColor:0xffaabbcc
@@ -78,65 +81,89 @@ btt(Text:="", X:="", Y:="", WhichToolTip:="", BulitInStyleOrStyles:="", BulitInO
                     , FontSize:12
                     , FontRender:5
                     , FontStyle:"Regular Bold Italic BoldItalic Underline Strikeout"}
-        , Option99 := {TargetHWND:""
+       , 	Option99 := {TargetHWND:""
                     , CoordMode:"Screen"
                     , MouseNeverCoverToolTip:""
                     , DistanceBetweenMouseXAndToolTip:""
                     , DistanceBetweenMouseYAndToolTip:""}
+
   if (BTT="")
     BTT:= new BeautifulToolTip()
+
   BTT.ToolTip(Text, X, Y, WhichToolTip
-            , %BulitInStyleOrStyles%=""       	? BulitInStyleOrStyles      	: %BulitInStyleOrStyles%
-            , %BulitInOptionOrOptions%=""	? BulitInOptionOrOptions 	: %BulitInOptionOrOptions%)
+	            , 	%BuiltInStyleOrStyles%=""       	? BuiltInStyleOrStyles      	: %BuiltInStyleOrStyles%
+	            , 	%BuiltInOptionOrOptions%=""	? BuiltInOptionOrOptions 	: %BuiltInOptionOrOptions%)
 }
 
 Class BeautifulToolTip{
-  static MouseNeverCoverToolTip:=1, DistanceBetweenMouseXAndToolTip:=16, DistanceBetweenMouseYAndToolTip:=16, DebugMode:=0
+
+  static MouseNeverCoverToolTip:=1
+		, DistanceBetweenMouseXAndToolTip:=16
+		, DistanceBetweenMouseYAndToolTip:=16
+		, DebugMode:=0
+
   __New()  {
+
     if (!this.pToken)    {
-      SavedBatchLines:=A_BatchLines
+
+      SavedBatchLines := A_BatchLines
       SetBatchLines, -1
       this.pToken := Gdip_Startup()
       if (!this.pToken)      {
         MsgBox, 48, gdiplus error!, Gdiplus failed to start. Please ensure you have gdiplus on your system
         ExitApp
       }
+
       this.Monitors := MDMF_Enum()
       SysGet, VirtualWidth, 78
       SysGet, VirtualHeight, 79
       this.DIBWidth  := VirtualWidth
       this.DIBHeight := VirtualHeight
       this.ToolTipFontName := Fnt_GetTooltipFontName()
-      loop, 20      {
+
+      loop 20      {
+
         Gui, _BTT%A_Index%: +E0x80000 -Caption +ToolWindow +LastFound +AlwaysOnTop +Hwnd_hBTT%A_Index%
         Gui, _BTT%A_Index%: Show, NA
-          this["hBTT" A_Index] 	:= _hBTT%A_Index%
-        , this["hbm" A_Index]  	:= CreateDIBSection(this.DIBWidth, this.DIBHeight)
-        , this["hdc" A_Index]   	:= CreateCompatibleDC()
-        , this["obm" A_Index]  	:= SelectObject(this["hdc" A_Index], this["hbm" A_Index])
-        , this["G" A_Index]      	:= Gdip_GraphicsFromHDC(this["hdc" A_Index])
-        , Gdip_SetSmoothingMode(this["G" A_Index], 4)
-        , Gdip_SetPixelOffsetMode(this["G" A_Index], 2)
+        this["hBTT" A_Index] 	:= _hBTT%A_Index%
+        this["hbm" A_Index]  	:= CreateDIBSection(this.DIBWidth, this.DIBHeight)
+        this["hdc" A_Index]   	:= CreateCompatibleDC()
+        this["obm" A_Index]  	:= SelectObject(this["hdc" A_Index], this["hbm" A_Index])
+        this["G" A_Index]      	:= Gdip_GraphicsFromHDC(this["hdc" A_Index])
+        Gdip_SetSmoothingMode(this["G" A_Index], 4)
+        Gdip_SetPixelOffsetMode(this["G" A_Index], 2)
+
       }
-      SetBatchLines, %SavedBatchLines%
+
+      SetBatchLines, % SavedBatchLines
+
     }
     else
       return
+
   }
+
   __Delete()  {
-    loop, 20    {
-        Gdip_DeleteGraphics(this["G" A_Index])
-      , SelectObject(this["hdc" A_Index], this["obm" A_Index])
-      , DeleteObject(this["hbm" A_Index])
-      , DeleteDC(this["hdc" A_Index])
-    }
-    Gdip_Shutdown(this.pToken)
+
+		loop, 20    {
+			Gdip_DeleteGraphics(this["G" A_Index])
+		  , SelectObject(this["hdc" A_Index], this["obm" A_Index])
+		  , DeleteObject(this["hbm" A_Index])
+		  , DeleteDC(this["hdc" A_Index])
+		}
+		Gdip_Shutdown(this.pToken)
+
   }
+
   ToolTip(Text:="", X:="", Y:="", WhichToolTip:="", Styles:="", Options:="")  {
+
     WhichToolTip:=(WhichToolTip="") ? 1 : Range(WhichToolTip, 1, 20)
-    O:=this._CheckStylesAndOptions(Styles, Options)
-    FirstCallOrNeedToUpdate:=(Text       != this["SavedText" WhichToolTip]
+    O := this._CheckStylesAndOptions(Styles, Options)
+    FirstCallOrNeedToUpdate := (Text != this["SavedText" WhichToolTip]
                            || O.Checksum != this["SavedOptions" WhichToolTip])
+
+
+
     if (Text="")    {
       Gdip_GraphicsClear(this["G" WhichToolTip])
       UpdateLayeredWindow(this["hBTT" WhichToolTip], this["hdc" WhichToolTip])
@@ -150,22 +177,26 @@ Class BeautifulToolTip{
       , this["SavedTargetHWND" WhichToolTip] := ""
     }
     else if (FirstCallOrNeedToUpdate) {
+
       SavedBatchLines:=A_BatchLines
       SetBatchLines, -1
-        TargetSize := this._CalculateDisplayPosition(X, Y, "", "", O, GetTargetSize := 1)
-      , MaxTextWidth := TargetSize.W - O.Margin*2 - O.Border*2
-      , MaxTextHeight := (TargetSize.H*90)//100 - O.Margin*2 - O.Border*2
-      , O.Width := MaxTextWidth, O.Height := MaxTextHeight
-      , TextArea := StrSplit(Gdip_TextToGraphics2(this["G" WhichToolTip], Text, O, Measure := 1), "|")
-      , TextWidth  	:= Min(Ceil(TextArea[3]), MaxTextWidth)
-      , TextHeight 	:= Min(Ceil(TextArea[4]), MaxTextHeight)
-      , RectWidth  	:= TextWidth+O.Margin*2
-      , RectHeight 	:= TextHeight+O.Margin*2
-      , RectWithBorderWidth := RectWidth+O.Border*2
-      , RectWithBorderHeight := RectHeight+O.Border*2
-      , R := (O.Rounded>Min(RectWidth, RectHeight)//2) ? Min(RectWidth, RectHeight)//2 : O.Rounded
+
+      TargetSize := this._CalculateDisplayPosition(X, Y, "", "", O, GetTargetSize := 1)
+
+      MaxTextWidth := TargetSize.W - O.Margin*2 - O.Border*2
+      MaxTextHeight := (TargetSize.H*90)//100 - O.Margin*2 - O.Border*2
+      O.Width      	:= MaxTextWidth, O.Height := MaxTextHeight
+      TextArea     	:= StrSplit(Gdip_TextToGraphics2(this["G" WhichToolTip], Text, O, Measure := 1), "|")
+      TextWidth      	:= Min(Ceil(TextArea[3]), MaxTextWidth)
+      TextHeight     	:= Min(Ceil(TextArea[4]), MaxTextHeight)
+      RectWidth      	:= TextWidth+O.Margin*2
+      RectHeight     	:= TextHeight+O.Margin*2
+      RectWithBorderWidth := RectWidth+O.Border*2
+      RectWithBorderHeight := RectHeight+O.Border*2
+      R := (O.Rounded>Min(RectWidth, RectHeight)//2) ? Min(RectWidth, RectHeight)//2 : O.Rounded
       Gdip_GraphicsClear(this["G" WhichToolTip])
       pBrushBorder := Gdip_BrushCreateSolid(O.BorderColor)
+
       if (O.BGCLGD and O.BGCLGS and O.BGCLGE)  {
         Left:=O.Border, Top:=O.Border, Right:=Left+RectWidth, Bottom:=Top+RectHeight
         switch, O.BGCLGD  {
@@ -176,6 +207,7 @@ Class BeautifulToolTip{
       }
       else
         pBrushBackground := Gdip_BrushCreateSolid(O.BackgroundColor)
+
       if (O.Border>0)
         switch, R        {
           case, "0": Gdip_FillRectangle(this["G" WhichToolTip]
@@ -190,32 +222,40 @@ Class BeautifulToolTip{
         , pBrushBackground, O.Border, O.Border, RectWidth, RectHeight
         , (R>O.Border) ? R-O.Border : R)
       }
-      Gdip_DeleteBrush(pBrushBorder)
+
+	  Gdip_DeleteBrush(pBrushBorder)
       Gdip_DeleteBrush(pBrushBackground)
-      O.X:=O.Border+O.Margin, O.Y:=O.Border+O.Margin, O.Width:=TextWidth, O.Height:=TextHeight
-      if (TextArea[5]<StrLen(Text))
-        TempText := TextArea[5]>4 ? SubStr(Text, 1 ,TextArea[5]-4) "…………" : SubStr(Text, 1 ,1) "…………"
-      else
-        TempText := Text
-      Gdip_TextToGraphics2(this["G" WhichToolTip], TempText, O)
-      if (this.DebugMode)      {
+      O.X:=O.Border+O.Margin
+	  O.Y:=O.Border+O.Margin
+	  O.Width:=TextWidth
+	  O.Height:=TextHeight
+
+      TempText := (TextArea[5]<StrLen(Text)) ? TextArea[5]>4 ? SubStr(Text, 1 ,TextArea[5]-4) "…………" : SubStr(Text, 1 ,1) "…………" : Text
+
+	  Gdip_TextToGraphics2(this["G" WhichToolTip], TempText, O)
+
+	 if (this.DebugMode)      {
         pBrush := Gdip_BrushCreateSolid(0x20ff0000)
         Gdip_FillRectangle(this["G" WhichToolTip], pBrush, O.Border+O.Margin, O.Border+O.Margin, TextWidth, TextHeight)
         Gdip_DeleteBrush(pBrush)
       }
+
       this._CalculateDisplayPosition(X, Y, RectWithBorderWidth, RectWithBorderHeight, O)
       UpdateLayeredWindow(this["hBTT" WhichToolTip], this["hdc" WhichToolTip], X, Y, RectWithBorderWidth, RectWithBorderHeight)
-        this["SavedText" WhichToolTip]            	:= Text
-      , this["SavedOptions" WhichToolTip]      	:= O.Checksum
-      , this["SavedX" WhichToolTip]                	:= X
-      , this["SavedY" WhichToolTip]                	:= Y
-      , this["SavedW" WhichToolTip]              	:= RectWithBorderWidth
-      , this["SavedH" WhichToolTip]                	:= RectWithBorderHeight
-      , this["SavedCoordMode" WhichToolTip]  	:= O.CoordMode
-      , this["SavedTargetHWND" WhichToolTip]	:= O.TargetHWND
+	  this["SavedText" WhichToolTip]                	:= Text
+      this["SavedOptions" WhichToolTip]          	:= O.Checksum
+      this["SavedX" WhichToolTip]                   	:= X
+      this["SavedY" WhichToolTip]                    	:= Y
+      this["SavedW" WhichToolTip]                  	:= RectWithBorderWidth
+      this["SavedH" WhichToolTip]                   	:= RectWithBorderHeight
+      this["SavedCoordMode" WhichToolTip]  	:= O.CoordMode
+      this["SavedTargetHWND" WhichToolTip]	:= O.TargetHWND
+
       SetBatchLines, %SavedBatchLines%
+
     }
     else if ((X="" || Y="") || O.CoordMode!="Screen" || O.CoordMode!=this.SavedCoordMode || O.TargetHWND!=this.SavedTargetHWND)    {
+
       this._CalculateDisplayPosition(X, Y, this["SavedW" WhichToolTip], this["SavedH" WhichToolTip], O)
       if (X!=this["SavedX" WhichToolTip] || Y!=this["SavedY" WhichToolTip])      {
         UpdateLayeredWindow(this["hBTT" WhichToolTip], this["hdc" WhichToolTip], X, Y, this["SavedW" WhichToolTip], this["SavedH" WhichToolTip])
@@ -225,8 +265,11 @@ Class BeautifulToolTip{
         , this["SavedTargetHWND" WhichToolTip] 	:= O.TargetHWND
       }
     }
+
   }
+
   _CheckStylesAndOptions(Styles, Options)  {
+
       O                 := IsObject(Styles)     ? Styles.Clone()       : Object()
     , O.Border          := O.Border=""          ? 1                    : Range(O.Border, 0, 20)
     , O.Rounded         := O.Rounded=""         ? 3                    : Range(O.Rounded, 0, 30)
@@ -255,13 +298,17 @@ Class BeautifulToolTip{
                                 , O.Border, O.Rounded, O.Margin, O.BorderColor, O.TextColor
                                 , O.BackgroundColor, O.BGCLGS, O.BGCLGE, O.BGCLGD
                                 , O.Font, O.FontSize, O.FontRender, O.FontStyle)
-    return, O
+    return O
   }
+
   _CalculateDisplayPosition(ByRef X, ByRef Y, W, H, Options, GetTargetSize:=0)  {
-      VarSetCapacity(Point, 8, 0)
-    , DllCall("GetCursorPos", "Ptr", &Point)
-    , MouseX := NumGet(Point, 0, "Int"), MouseY := NumGet(Point, 4, "Int")
-    if (X="" and Y="")    {
+
+    VarSetCapacity(Point, 8, 0)
+	DllCall("GetCursorPos", "Ptr", &Point)
+    MouseX := NumGet(Point, 0, "Int")
+	MouseY := NumGet(Point, 4, "Int")
+
+    if (X="" && Y="")    {
         DisplayX     := MouseX
       , DisplayY     := MouseY
       , hMonitor     := MDMF_FromPoint(DisplayX, DisplayY, MONITOR_DEFAULTTONEAREST:=2)
@@ -275,68 +322,74 @@ Class BeautifulToolTip{
     else if (Options.CoordMode  = "Window" || Options.CoordMode  = "Relative")    {
         WinGetPos, WinX, WinY, WinW, WinH, % "ahk_id " Options.TargetHWND
         XInScreen    := WinX+X
-      , YInScreen    := WinY+Y
-      , TargetLeft   := WinX
-      , TargetTop    := WinY
-      , TargetWidth  := WinW
-      , TargetHeight := WinH
-      , TargetRight  := TargetLeft+TargetWidth
-      , TargetBottom := TargetTop+TargetHeight
-      , DisplayX     := (X="") ? MouseX : XInScreen
-      , DisplayY     := (Y="") ? MouseY : YInScreen
+        YInScreen    := WinY+Y
+        TargetLeft   := WinX
+        TargetTop    := WinY
+        TargetWidth  := WinW
+        TargetHeight := WinH
+        TargetRight  := TargetLeft+TargetWidth
+        TargetBottom := TargetTop+TargetHeight
+        DisplayX     := (X="") ? MouseX : XInScreen
+        DisplayY     := (Y="") ? MouseY : YInScreen
     }
     else if (Options.CoordMode  = "Client")    {
         VarSetCapacity(ClientArea, 16, 0)
-      , DllCall("GetClientRect", "Ptr", Options.TargetHWND, "Ptr", &ClientArea)
-      , DllCall("ClientToScreen", "Ptr", Options.TargetHWND, "Ptr", &ClientArea)
-      , ClientX      := NumGet(ClientArea, 0, "Int")
-      , ClientY      := NumGet(ClientArea, 4, "Int")
-      , ClientW      := NumGet(ClientArea, 8, "Int")
-      , ClientH      := NumGet(ClientArea, 12, "Int")
+        DllCall("GetClientRect", "Ptr", Options.TargetHWND, "Ptr", &ClientArea)
+        DllCall("ClientToScreen", "Ptr", Options.TargetHWND, "Ptr", &ClientArea)
+        ClientX      := NumGet(ClientArea, 0, "Int")
+        ClientY      := NumGet(ClientArea, 4, "Int")
+        ClientW      := NumGet(ClientArea, 8, "Int")
+        ClientH      := NumGet(ClientArea, 12, "Int")
         XInScreen    := ClientX+X
-      , YInScreen    := ClientY+Y
-      , TargetLeft   := ClientX
-      , TargetTop    := ClientY
-      , TargetWidth  := ClientW
-      , TargetHeight := ClientH
-      , TargetRight  := TargetLeft+TargetWidth
-      , TargetBottom := TargetTop+TargetHeight
-      , DisplayX     := (X="") ? MouseX : XInScreen
-      , DisplayY     := (Y="") ? MouseY : YInScreen
+        YInScreen    := ClientY+Y
+        TargetLeft   := ClientX
+        TargetTop    := ClientY
+        TargetWidth  := ClientW
+        TargetHeight := ClientH
+        TargetRight  := TargetLeft+TargetWidth
+        TargetBottom := TargetTop+TargetHeight
+        DisplayX     := (X="") ? MouseX : XInScreen
+        DisplayY     := (Y="") ? MouseY : YInScreen
     }
-    else {
-        DisplayX     := (X="") ? MouseX : X
-      , DisplayY     := (Y="") ? MouseY : Y
-      , hMonitor     := MDMF_FromPoint(DisplayX, DisplayY, MONITOR_DEFAULTTONEAREST:=2)
-      , TargetLeft   := this.Monitors[hMonitor].Left
-      , TargetTop    := this.Monitors[hMonitor].Top
-      , TargetRight  := this.Monitors[hMonitor].Right
-      , TargetBottom := this.Monitors[hMonitor].Bottom
-      , TargetWidth  := TargetRight-TargetLeft
-      , TargetHeight := TargetBottom-TargetTop
+    else if (Options.CoordMode  = "Screen") {
+    ;~ else {
+        DisplayX    	:= (X="") ? MouseX : X
+        DisplayY     	:= (Y="") ? MouseY : Y
+        hMonitor     	:= MDMF_FromPoint(DisplayX, DisplayY, MONITOR_DEFAULTTONEAREST:=2)
+        TargetLeft   	:= this.Monitors[hMonitor].Left
+        TargetTop    	:= this.Monitors[hMonitor].Top
+        TargetRight  	:= this.Monitors[hMonitor].Right
+        TargetBottom:= this.Monitors[hMonitor].Bottom
+        TargetWidth  := TargetRight-TargetLeft
+        TargetHeight := TargetBottom-TargetTop
     }
+
+
     if (GetTargetSize=1)    {
         TargetSize   := []
-      , TargetSize.X := TargetLeft
-      , TargetSize.Y := TargetTop
-      , TargetSize.W := Min(TargetWidth, this.DIBWidth)
-      , TargetSize.H := Min(TargetHeight, this.DIBHeight)
-      return, TargetSize
+        TargetSize.X := TargetLeft
+        TargetSize.Y := TargetTop
+        TargetSize.W := Min(TargetWidth, this.DIBWidth)
+        TargetSize.H := Min(TargetHeight, this.DIBHeight)
+      return TargetSize
     }
+
       DPIScale := A_ScreenDPI/96
-    , DisplayX := (X="") ? DisplayX+this.DistanceBetweenMouseXAndToolTip*DPIScale : DisplayX
-    , DisplayY := (Y="") ? DisplayY+this.DistanceBetweenMouseYAndToolTip*DPIScale : DisplayY
-    , DisplayX := (DisplayX+W>=TargetRight)  ? TargetRight-W  : DisplayX
-    , DisplayY := (DisplayY+H>=TargetBottom) ? TargetBottom-H : DisplayY
-    , DisplayX := (DisplayX<TargetLeft) ? TargetLeft : DisplayX
-    , DisplayY := (DisplayY<TargetTop)  ? TargetTop  : DisplayY
-    if  (this.MouseNeverCoverToolTip=1
-    and (X="" || Y="")
-    and MouseX>=DisplayX and MouseY>=DisplayY and MouseX<=DisplayX+W and MouseY<=DisplayY+H)    {
+
+      DisplayX := (X="") ? DisplayX+this.DistanceBetweenMouseXAndToolTip*DPIScale : DisplayX
+      DisplayY := (Y="") ? DisplayY+this.DistanceBetweenMouseYAndToolTip*DPIScale : DisplayY
+      DisplayX := (DisplayX+W>=TargetRight)  ? TargetRight-W  : DisplayX
+      DisplayY := (DisplayY+H>=TargetBottom) ? TargetBottom-H : DisplayY
+      DisplayX := (DisplayX<TargetLeft) ? TargetLeft : DisplayX
+      DisplayY := (DisplayY<TargetTop)  ? TargetTop  : DisplayY
+
+    if  (this.MouseNeverCoverToolTip=1 && (X="" || Y="") && MouseX>=DisplayX && MouseY>=DisplayY && MouseX<=DisplayX+W && MouseY<=DisplayY+H)    {
       DisplayY := MouseY-H-16>=TargetTop ? MouseY-H-16 : MouseY+H+16<=TargetBottom ? MouseY+16 : DisplayY
     }
+
     X := DisplayX , Y := DisplayY
   }
+
 }
 
 NonNull(Value1, Value2){
@@ -400,11 +453,7 @@ Fnt_GetNonClientMetrics(){
 		cbSize+=4
 	VarSetCapacity(NONCLIENTMETRICS,cbSize,0)
 	NumPut(cbSize,NONCLIENTMETRICS,0,"UInt")
-	if !DllCall("SystemParametersInfo"
-		,"UInt",SPI_GETNONCLIENTMETRICS
-		,"UInt",cbSize
-		,"Ptr",&NONCLIENTMETRICS
-		,"UInt",0)
+	if !DllCall("SystemParametersInfo", "UInt",SPI_GETNONCLIENTMETRICS, "UInt",cbSize, "Ptr",&NONCLIENTMETRICS, "UInt",0)
 		return false
 	return &NONCLIENTMETRICS
 }
@@ -414,8 +463,7 @@ MDMF_Enum(HMON := "") {
    Static EnumProc := CallbackFunc.Call("MDMF_EnumProc")
    Static Obj := (A_AhkVersion < "2") ? "Object" : "Map"
    Static Monitors := {}
-   If (HMON = "")
-   {
+   If (HMON = "")   {
       Monitors := %Obj%("TotalCount", 0)
       If !DllCall("User32.dll\EnumDisplayMonitors", "Ptr", 0, "Ptr", 0, "Ptr", EnumProc, "Ptr", &Monitors, "Int")
          Return False

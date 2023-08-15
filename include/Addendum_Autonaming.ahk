@@ -1,13 +1,14 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                         	** Addendum_Autonaming **
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;		Beschreibung:	    	Funktionen für die Textklassifizierungen von Dokumenten
+;		Beschreibung:	    	Funktionen zur Textklassifizierungen von Dokumenten
 ;
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
-;       Abhängigkeiten:
+;       Abhängigkeiten:		libs\class_cJSON.ahk
+;                               		libs\SciteOutPut.ahk
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_Calc started:    	29.09.2022
+;       Addendum_Calc started:    	21.03.2023
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
 
@@ -68,7 +69,7 @@ class autonamer {
 		/* Parameter
 
 			workpath   		.pdfdatapath:	der Pfad zur Metadatei der PDF-Dateien im Befundordner (erstellt Addendum_Gui.ahk)
-									.pdfpath:      	Dateipfad mit den Dokumenten
+									.pdfpath:       	Dateipfad mit den Dokumenten
 
 			Beispiel:
 			classifier := new autonamer(Addendum.DBPath "\Dictionary"
@@ -88,7 +89,7 @@ class autonamer {
 		this.debug     	:= this.optParser("Debug"                     	, false	, true)                 ; option, defaultvalue, is bool?
 		this.shwclean 	:= this.optParser("ShowCleanupedText"	, false	, true)
 		this.rmwords		:= this.optParser("RemoveStopwords"   	, true	, true)
-		this.instant    	:= this.optParser("Save_immediately"  	, true	, true)
+		this.instant     	:= this.optParser("Save_immediately"  	, true	, true)
 
 	  ; Dokumentverzeichnis und Addendum Metadaten-Datei (PdfDaten.json)
 		If IsObject(workpath) {
@@ -121,6 +122,8 @@ class autonamer {
 				TrayTip, Download..., Stoppwortliste wurde geladen, 4
 
 			}
+
+			;~ this.Debug ? SciTEOutput( " ["A_ThisFunc "]`n  1. options = " options "`n  2. this.options = " this.options "`n") : ""
 
 		  ; Wort-Daten aus geladener Textdatei herausfiltern
 			stopwordstmp := "|"
@@ -170,7 +173,7 @@ class autonamer {
 	return res
 	}
 
-
+; CollatingSequence=ASCII;DBQ=E:\;DefaultDir=E:\;Deleted=0;Driver={Microsoft dBase-Treiber (*.dbf)};DriverId=533;FIL=dBase 5.0;MaxBufferSize=2048;MaxScanRows=8;PageTimeout=5;SafeTransactions=0;Statistics=0;Threads=3;UID=admin;UserCommitSync=Yes;
   ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ; Klassifizierdaten
   ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -179,8 +182,7 @@ class autonamer {
 	  ; dieses Objekt hält die letzte Aktualisierungszeit der Klassifizierungsdaten vor
 		If !IsObject(this.classifierfile) {
 
-			fE := FileExist(this.classifierfilepath) ? true : false
-			cfpath := this.classifierfilepath
+			fE := FileExist(cfpath:=this.classifierfilepath) ? true : false
 			SplitPath, cfpath,, fDir, fExt, fNoExt
 			FileGetTime, ftime, % this.classifierfilepath, M
 			this.classifierfile := {"name"	: fE ? fNoExt                      	: "-"
@@ -189,7 +191,7 @@ class autonamer {
 										, "filetime"	: fE ? this.ClassifierFileTime() : 0}
 		}
 
-	  ; Klassifizierungsdaten laden
+	  ; Klassifizierungsdaten laden, Konsistentzprüfen
 		fileitems 	:= FileOpen(this.classifierfilepath, "r", "UTF-8").Read()
 		try {
 
@@ -202,13 +204,13 @@ class autonamer {
 			this.classifierfile.subItems := subItems
 
 		} catch {
-			MsgBox, 0x1000, % A_ScriptName, % "Die Datei mit den Klassifizierungsdaten ist leer, hat kein json-Format`n"
-																. 	" oder befindet sich nicht im Ordner: `n"
+			MsgBox, 0x1000, % A_ScriptName, % "Die Datei (" this.classifierfile.name "." this.classifierfile.ext ") mit den Klassifizierungsdaten ist leer,`n"
+																. 	"hat kein json-Format oder befindet sich nicht im Ordner: `n"
 																.	 "<" this.classifierfile.path ">`n"
 																. 	"Eine Klassifizierung von Dokumenten ist zunächst nicht möglich.`n"
 																. 	"Die dafür notwendigen Daten lassen sich aber`n"
 																.	"beim Umbenennen von Dokumenten mit`n"
-																. 	"'Addendum für Albis On Windows' erstellen."
+																. 	"'Addendum für Albis On Windows' erstellen.`n`n" this.classifierfilepath
 			autonames := Object()
 		}
 
@@ -225,8 +227,8 @@ class autonamer {
 
 	  ; Daten sichern
 		FileOpen(this.classifierfilepath, "w", "UTF-8").Write(cJSON.Dump(this.autonames, 1))
-		this.newdata := ""
 		EL := ErrorLevel
+		this.newdata := ""
 
 	  ; Debugging
 		If this.debug {
@@ -235,7 +237,7 @@ class autonamer {
 					. ", A_LastError: " 	A_LastError
 					. ", Zeichen: "    	StrLen(fileitems)
 					. ", Dateigröße: " 	(fSize/1024 > 10 ? Round(fSize/1024, 2) " MB" : fSize " KB")
-			SciTEOutput("gesichert nach: " this.classifierfilepath "`n" res)
+			SciTEOutput(" [" A_ThisFunc "]`n  gesichert nach: " this.classifierfilepath "`n" res)
 		}
 
 	return EL
@@ -261,25 +263,30 @@ class autonamer {
 	return this.autonames.Count() ? "update" : "empty"
 	}
 
-	add(mainclass, subclass:="")                                                      	{ ; fügt Daten hinzu
+	add(mainclass, subclass:="")                                                      	{ ; fügt ein Datenobjekt hinzu
 
-	  ; erstellt main und bei Bedarf subclass, generiert aus mainclass und subclass die ersten Klassifikationswörter
-	  ; weitere Worte werden über .setSub() hinzugefügt
+	  ; erstellt nur das Basisobjekt unter Verwendung von mainclass und subclass
+	  ; generiert aus mainclass und subclass die oder das erste Klassifikationswort
+	  ; mainclass und subclass Objekte werden nur angelegt wenn sie bisher nicht existieren,
+	  ; in diesem Fall werden auch keine Worte hinzugefügt
+	  ; weitere Daten (Worte) werden über .setSub() dem Basisobjekt hinzugefügt
 
 		this.newdata := false
+		mainclass	:= RegExReplace(Trim(mainclass)	, "\s{2,}", " ")
+		subclass	:= RegExReplace(Trim(subclass) 	, "\s{2,}", " ")
 
 	  ; - - - - - - - - - - - - - - - - - - - - - - -
 	  ; Kategorie
 		If !this.hasMain(mainclass) {
 
 			this.newdata 	:= this.newdata | 1
-			mainwords       	:= RegExReplace(mainclass, "\s{2,}", " ")
 
 			this.autonames[mainclass] := {"main":Object(), "sub":Object()} ; erstellt alle Objekte
 
-			For each, mainword in StrSplit(mainwords, A_Space)
-				If Trim(mainword)
-					this.autonames[mainclass].main.Push(Trim(mainword))
+			For each, mainword in StrSplit(mainclass, A_Space)
+				If (mainword := Trim(mainword))
+					this.autonames[mainclass].main.Push(mainword)
+
 		}
 
 	  ; - - - - - - - - - - - - - - - - - - - - - - -
@@ -287,20 +294,19 @@ class autonamer {
 		If subclass && !this.hasSub(mainclass, subclass) {
 
 			this.newdata 	:= this.newdata | 2
-			subwords       	:= RegExReplace(subclass, "\s{2,}", " ")
 
 			If !IsObject(this.autonames[mainclass].sub)
 				this.autonames[mainclass].sub := Object()
 			If !IsObject(this.autonames[mainclass].sub[subclass])
 				this.autonames[mainclass].sub[subclass] := Object()
 
-			For each, subword in StrSplit(subwords, A_Space)
-				If Trim(subword)
-					this.autonames[mainclass].sub[subclass].Push(Trim(subword))
+			For each, subword in StrSplit(subclass, A_Space)
+				If (subword := Trim(subword))
+					this.autonames[mainclass].sub[subclass].Push(subword)
 
 		}
 
-	  ; - - - - - - - - - - - - - - - - - - - - - - -
+	  ; - - - - - - - - - - - - - - - - - - - - - - - "[A-Za-zÄÖÜäöüß\s\-\d\.\/\\\(\)\[\]]{30,}
 	  ; Daten speichern
 		If this.instant && this.newdata
 			this.save()
@@ -310,30 +316,32 @@ class autonamer {
 
 	getMains(matchstring:="", ret:="arr")                                            	{ ; alle oder bestimmte Kategorien zurückgeben
 
-		; gibt die Hauptklassifikationen entweder als Array oder als durch ein mit "|" getrennte Liste zurück
+		; gibt die Hauptklassifikationen entweder als Array oder als eine durch ein beliebiges Zeichen oder eine Zeichenkette getrennte Liste zurück
+		; (Anm. Parameter 'ret' darf eine beliebige Anzahl an Zeichen zur Trennung enthalten, ausschließlich das Wort 'arr' ist reserviert um ein lineares Array erstellen zu können)
 		; die Listenausgabe vereinfacht die Handhabung von Combo- und Listboxen, sowie von DropDownListen
 
 		If (!isObject(this.autonames) || this.autonames.Count()=0)
 			return
 
-		maintitles := ret = "arr" ? Array() : ret~="i)^[a-zäöüß\d]+$" ? "|" : ret
+		maintitles := ret ~= "i)^arr$" ? Array() : ret~="i)^[a-zäöüß\d]+$" ? "|" : ret
 
 	 ; gibt nur Kategorien zurück, die den matchstring enthalten
-		If matchstring
+		If matchstring {
 			For maintitle, sub in this.autonames
-				If Instr(maintitle, matchstring)
-					If (ret = "arr")
+				If (maintitle = matchstring)
+					If (ret ~= "i)^arr$")
 						maintitles.Push(maintitle)
 					else
 						maintitles .= ret . maintitle
-
+		}
 	 ; alle Kategorien zurückgeben, wenn matchstring leer war oder keine Übereinstimmungen gefunden  wurden
-		If !matchstring
+		else If !matchstring {
 			For maintitle, sub in this.autonames
-				If (ret = "arr")
+				If (ret ~= "i)^arr$")
 					maintitles.Push(maintitle)
 				else
 					maintitles .= ret . maintitle
+		}
 
 	return IsObject(maintitles) ? maintitles : LTrim(maintitles, ret)
 	}
@@ -347,6 +355,7 @@ class autonamer {
 		If !this.hasMain(mainclass)
 			return -2
 
+      ; gibt alle Hauptkategoriewörter zurück
 		If (ret = "arr")
 			return this.autonames[mainclass].main
 
@@ -403,68 +412,66 @@ class autonamer {
 
 	setSub(mainclass, mainwords, subclass , subwords)                       	{ ; Subklassifizierungsdaten ändern)
 
-	  ; Hauptklasse, klassif. Worte, Subklasse, subklassif. Worte
+	  ; Parameter Hauptklasse, klassif. Worte, Subklasse, subklassif. Worte
+	  ; Funktion ersetzt die Klassifikationswortlisten mit den Daten aus der Edit-Steuerelemente Kategorie und Inhalt
+	  ; so lassen sich Worte zu den Listen hinzufügen oder von den Listen entfernen
 		static instantState
 
-		instantState := this.instant
-		this.instant := false
+		instantState	:= this.instant
+		this.instant 	:= false
+		mainclass  	:= RegExReplace(Trim(mainclass)	, "\s{2,}", " ")  ; überflüssige Leerzeichen (2+) entfernen
+		subclass    	:= RegExReplace(Trim(subclass) 	, "\s{2,}", " ")
 
-    ; Subklassifikation bisher unbekannt, dann neu anlegen, subklassifizierende Wörte können danach einfach hinzugefügt werden
+    ; die Subklassifikation existiert noch nicht, dann neu anlegen, subklassifizierende Wörte können danach einfach hinzugefügt werden
 	; das Anlegen einer neuer Haupt- und/oder Subklasse muss durch einen .add() Aufruf erfolgen
-	; .add() gibt bei Mißerfolg false zurück, so daße
+	; .add() gibt bei Mißerfolg false zurück, so daß
 		If !IsObject(this.autonames[mainclass].sub[subclass])
-			If (this.add(mainclass, subclass) = 0) {
-				this.instant := instantState
-				return -2
-			}
-
-		this.instant := instantState
+			this.add(mainclass, subclass)
 
 	; Haupt- und Subklassifikation ist angelegt, hunzufügen bisher unbekannte subklassifizierender Worte
 	; - - - - main - - - -
-		mainwords := !IsObject(mainwords) ? StrSplit(mainwords, "`n") : mainwords
-		For each, mainword in mainwords {
-			mainexists := false
-			For idx, mainStored in this.autonames[mainclass].main
-				If (mainStored = mainword) {
-					mainexists := true
-					break
-				}
-			If !mainexists
-				this.autonames[mainclass].main.Push(mainword)
-		}
+		words := ""
+		For mWIdx, word in StrSplit(mainwords, "`n")					        		; Achtung: mainwords muss alle Worte enthalten. Die bestehende Wortliste wird überschrieben
+			If (word := Trim(word))
+				words .= (mWIdx>1?"`n":"") word
+		this.autonames[mainclass].main := this.DeduplicateString(words)
+		mainwordC := this.autonames[mainclass].main.Count()              	; Wörterzahl neue mainwords Liste
 
 	; - - - - sub - - - -
-		subwords := !IsObject(subwords) ? StrSplit(subwords, "`n") : subwords
-		For each, subword in subwords {
-			subexists := false
-			For idx, subStored in this.autonames[mainclass].sub[subclass]
-				If (subStored = subword) {
-					subexists := true
-					break
-				}
-			If !subexists
-				this.autonames[mainclass].sub[subclass].Push(subword)
-		}
+		words := ""
+		For mWIdx, word in StrSplit(subwords, "`n")					    		; Achtung auch hier: subwords muss alle Worte enthalten! Die bestehende Wortliste wird überschrieben.
+			If (word := Trim(word))
+				words .= (mWIdx>1?"`n":"") word
+		this.autonames[mainclass].sub[subclass] := this.DeduplicateString(words)
+		subwordC := this.autonames[mainclass].sub[subclass].Count()	; Wörterzahl neue subwords Liste
 
-	; Daten speichern
-		If this.instant
-			this.save()
+	; instant save Einstellung zurücksetzen
+		this.instant := instantState
 
-	return {"mainwords":mainwords.Count(), "subwords":subwords.Count()}
+	return {"mainwords":mainwordC, "subwords":subwordC}
 	}
 
-	hasMain(mainclass:="", mmode:="")                                             	{ ; ist die Kategorie bekannt
+	hasMain(mainclass, mmode:="pattern")                                        	{ ; ist die Kategorie bekannt
 
-		If !mainclass
-			return false
+		; mmode                	- pattern matching :	if (string1 = string2)
+		; (matchmode)			- RegEx matching	:	if (string1 ~= "i)string2") 	 wobei string2 jeder beliebige RegExString sein kann
+		;								- leer lassen       	: 	um mainclass direkt zu überprüfen, ist ein Objekt
 
-	  ; pattern- oder RegEx Matching um Teile einer Bezeichnung zu finden, gibt in diesem Fall die erste gefundene Bezeichnung zurück
- 		If (mmode ~= "i)\s*(pattern|RegEx)") {
+ 		If (mmode ~= "i)(pattern|RegEx)") {
+
+			If (mmode~="i)RegEx") {
+				rxmainclass := RegExReplace(mainclass, "\s+", "\s+")
+				rxmainclass := RegExReplace(rxmainclass, "Prof\.\s+", "Prof\.\s*")
+				rxmainclass := RegExReplace(rxmainclass, "Dr\.\s+", "Dr\.\s*")
+				rxmainclass := RegExReplace(rxmainclass, "med\.\s+", "med\.\s*")
+				rxmainclass := RegExReplace(rxmainclass, "\s*\-\s*", "[\s\-]+")
+				rxmainclass := "i)" rxmainclass
+			}
+
 			For maintitle, data in this.autonames
-				If (mmode="pattern" && maintitle = mainclass)
+				If (mmode~="i)pattern" && maintitle = mainclass)
 					return maintitle
-				else if (mmode="RegEx" && maintitle ~= mainclass)
+				else if (mmode~="i)RegEx" && maintitle ~= rxmainclass)
 					return maintitle
 
 			return ""
@@ -473,17 +480,25 @@ class autonamer {
 	return isObject(this.autonames[mainclass])
 	}
 
-	hasSub(mainclass:="", subclass:="", mmode:="pattern")                	{ ; Kategorie enthält Subklassifizierung
+	hasSub(mainclass, subclass, mmode:="pattern")                          	{ ; Kategorie enthält Subklassifizierung
 
-	  ; für bessere Auswertbarkeit gibt die Funktion neg. Werte als Fehlerwerte zurück
-		If !mainclass || !subclass || !this.hasMain(mainclass)
-			return !this.hasMain(mainclass) ? false : !mainclass ? -1 : -2
+	  ; mmode siehe .hasMain
 
-		If (mmode ~= "i)\s*(pattern|RegEx)") {
+		If (mmode ~= "i)(pattern|RegEx)") {
+
+			If (mmode~="i)RegEx") {
+				rxsubclass := RegExReplace(subclass, "\s+", "\s+")
+				rxsubclass := RegExReplace(rxsubclass, "Prof\.\s+", "Prof\.\s*")
+				rxsubclass := RegExReplace(rxsubclass, "Dr\.\s+", "Dr\.\s*")
+				rxsubclass := RegExReplace(rxsubclass, "med\.\s+", "med\.\s*")
+				rxsubclass := RegExReplace(rxsubclass, "\s*\-\s*", "[\s\-]+")
+				rxsubclass := "i)" rxsubclass
+			}
+
 			For subtitle, data in this.autonames[mainclass].sub
-				If (mmode="pattern" && subtitle = subclass)
+				If (mmode~="i)pattern" && subtitle = subclass)
 					return subtitle
-				else if (mmode="RegEx" && subtitle ~= subclass)
+				else if (mmode~="i)RegEx" && subtitle ~= rxsubclass)
 					return subtitle
 
 		return ""
@@ -492,7 +507,7 @@ class autonamer {
 	return IsObject(this.autonames[mainclass].sub[subclass])
 	}
 
-	countSubclassifications()                                                              	{
+	countSubclassifications()                                                              	{ ; zählt alle subklassifizierenden Bezeichnungen
 
 		counter := 0
 		For mainTitle, data in this.autonames {
@@ -500,7 +515,7 @@ class autonamer {
 				counter ++
 		}
 
-	return counter + this.autonames.Count()
+	return counter ; + this.autonames.Count()
 	}
 
 
@@ -559,7 +574,7 @@ class autonamer {
 	return documents
 	}
 
-	getDocumentText(fpath)                                                             	{ ; PDF/Word Dokumente in Text umwandeln
+	getDocumentText(fpath)                                                              	{ ; PDF/Word Dokumente in Text umwandeln
 
 		If !RegExMatch(fpath, "[A-Z]\:\\") && this.pdfpath
 			txt := IFilter(pdfpath := this.pdfpath "\" fpath)
@@ -572,7 +587,6 @@ class autonamer {
 
   ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   ; Klassifizierer
-
   ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	matchscore(txt, fname:="")                                                          	{ ; der Klassifizierungsalgorithmus
 
@@ -581,7 +595,8 @@ class autonamer {
 		mains := {}
 
 	  ; Text für schnellere Verarbeitungen bereinigen
-		txt := " " this.cleanup(txt) " "
+		this.rmwords := true                          ; Stopwörter werden entfernt
+		txt := " " this.cleanup(txt, true) " "
 		txtlen := StrLen(txt)
 		If (this.debug > 1)
 			SciTEOutput(A_ThisFunc ": .cleanup() - Text bereinigt")
@@ -608,18 +623,22 @@ class autonamer {
 			  ; Anzahl der Worte (EMailadressen, Telefonnummern gelten als ein Wort)
 				If !RegExMatch(mainword, "^\s*([\w\.\_\-]+@[\w\.\_\-]+\.\w+|[\d\s\(\)\-]+)\s*") {
 					wordstmp := RegExReplace(mainword, "[^\pL\d]", " ")
-					wordstmp := RegExReplace(wordtmp, "\s{2,}", " ")
+					wordstmp := RegExReplace(wordstmp, "\s{2,}", " ")
 					mwordsCount := StrSplit(wordstmp, A_Space).Count()
 				}
 
 			  ; Position innerhalb des Dokumenttextes
-				rxmainword := RegExReplace(mainword, "\s{1,}", "\s+")
-				rxmainword := RegExReplace(mainword, "\-", "[^\pL\d]+")
-				If !(mpos1	:= RegExMatch(txt, "i)\s" rxmainword "\s", rxC1))
-					mpos2	:= RegExMatch(txt, "i)\s" rxmainword   	, rxC2)
-				If	(mpos := mpos2 ? mpos2 : mpos1) {
-					;~ caseMatched   +=	RegExMatch(mainword, "^[A-ZÄÖÜ]") ? 1 : 0
-					;~ caseFactor    	:=	RegExMatch(mainword, "^[A-ZÄÖÜ]") ? 2 : 1
+				rxmainword := Trim(mainword)
+				rxmainword := RegExReplace(rxmainword	, "\s{2,}"            	, " ")
+				rxmainword := RegExReplace(rxmainword	, "\(([\d\s]+)\)"  	, "[^\pL\d]*$1[^\pL\d]*")
+				;~ rxmainword := RegExReplace(rxmainword	, "\s"                  	, "\s*")
+				rxmainword := RegExReplace(rxmainword	, "\s"                  	, ".*?")
+				rxmainword := RegExReplace(rxmainword	, "(\-|\/)"           	, "[^\pL\d]*")
+				If !(mpos1	:= RegExMatch(txt, "i)\s" rxmainword "\s", rxC))
+					mpos2	:= RegExMatch(txt, "i)\s" rxmainword   	, rxC)
+				rxCwords := StrSplit(rxC, A_Space).Count()
+				rxMwords := StrSplit(mainword, A_Space).Count()
+				If	(mpos := mpos2 ? mpos2 : mpos1) && (rxCwords/rxMwords <= 3) {   ; das Verhältnis Trefferwortzahl zu Patternwortzahl sollte das 3fache nicht übersteigen
 					caseMatched   +=	mwordsCount
 					caseFactor    	:=	RegExMatch(mainword, "^[A-ZÄÖÜ]") ? 2 : 1
 					posFactor      	:= 	Round((10-(mpos/txtlen)*10)/3)
@@ -647,7 +666,7 @@ class autonamer {
 			If (data.main.Count()>1) {
 
 			  ; in Regex String umformen
-				rxmatch    	:= this.RegExTransformGerman(maintitle)
+				rxmatch    	:= this.RegExTransformUmlauts(maintitle)
 				rxmatch       	:= RegExReplace(Trim(rxmatch), "\s{2,}", " ")   	; doppelte Leerzeichen entfernen
 				rxmatchTight := RegExReplace(rxmatch, "\s", "\s+")            		; es wird kein Wort übersprungen, alle müssen exakt treffen!    ➧  ➧  ➧  ➧   !
 				rxmatchSkip	:= RegExReplace(rxmatch, "\s", ".*?\s")              	; Worte werden übersprungen. (z.b. Universität ➧ ➧ ? ➧ ➧ Hauptstadt ➤ Universität des Wissens
@@ -702,7 +721,7 @@ class autonamer {
 				For windex, words in subwords {
 
 				  ; in Regex String umformen
-					rxmatch := this.RegExTransformGerman(words)                	; words -
+					rxmatch := this.RegExTransformUmlauts(words)               	; words -
 					rxmatch := RegExReplace(Trim(rxmatch), "\s{2,}", " ")    		; doppelte Leerzeichen entfernen
 					rxmatch := RegExReplace(rxmatch, "\s", "\s+")            		; es wird kein Wort übersprungen, alle müssen exakt treffen
 					rxmatch := RegExReplace(rxmatch, "\*", ".*?")               		; * in den Stichworten ist ein Platzhalter, dann Suche bis zum ersten Treffer
@@ -828,7 +847,7 @@ class autonamer {
 				        		, 	{rx: 	"\d\d\.\d\d\.\d*"   	, rp: " "          	}
 								, 	{rx: 	"\d+\."                    	, rp: " "          	}
 								, 	{rx: 	"\s\pL(\s|$)"          	, rp: " "          	}
-		        				, 	{rx:	"(\pL\.)(\pL)"          	, rp: "$1.\s*$2"	}
+		        				, 	{rx:	"([\pL\d])([\.\,])(\pL)" 	, rp: "$1\s*.\s*$2"	}
 								, 	{rx:	"\-(\d+)"                	, rp: "\-*\s*$1"  	}
 								, 	{rx:	"(\d+)\-"                	, rp: "$1\-*\s*"	}
 								, 	{rx:	"([^\pL])\+([^\pL])"	, rp: "$1 $2"  	}]
@@ -900,38 +919,43 @@ class autonamer {
 	return retItems
 	}
 
-	cleanup(txt)                                                                               	{ ;-- Dokumententext vorbereiten
+	cleanup(txt, removeEOL:=false)                                                  	{ ;-- Dokumententext vorbereiten
 
 		; entfernt Stopworte, vereinheitlicht medizinische Bezeichnungen und
-		; korrigiert ein paar OCR Zeichenfehler
+		; korrigiert ein paar OCR Zeichenfehler und schreibt Abkürzungen aus
 
-		static replacers := {"(c|k)raniale\s+Magnetresonanztomo[ag]ra[fph]+ie\s"                      	: "cMRT"
-								,	"Magnetresonanztomo[ag]ra[fph]+ie\s"                                              	: "MRT"
-								, 	"Computertomogra(ph|f)ie\s"                                                              	: "CT"
-								, 	"(Halswirbels(ä|ae)ule|HWK)\s"                                                          	: "HWS"
-								,	"(Brustwirbels(ä|ae)ule|BWK)\s"                                                            	: "BWS"
-								, 	"(Lendenwirbels(ä|ae)ule|LWK)\s"                                                      	: "LWS"
+		static replacers := {"(c|k)raniale\s+Magnetresonanztomo[ag]ra[fph]+ie\s"                      	: "cMRT "
+								,	"Magnetresonanztomo[ag]ra[fph]+ie\s"                                              	: "MRT "
+								, 	"Computertomogra(ph|f)ie\s"                                                              	: "CT "
+								, 	"(Halswirbels(ä|ae)ule|HWK)\s"                                                          	: "HWS "
+								,	"(Brustwirbels(ä|ae)ule|BWK)\s"                                                            	: "BWS "
+								, 	"(Lendenwirbels(ä|ae)ule|LWK)\s"                                                      	: "LWS "
 								;~ , 	"(Abdomen|Bauch|Oberbauch|Mittelbauch|Unterbauch)\s"                	: "Abdomen"
-								, 	"(Sch(ä|ae)del|Kalotten*|Cranium|Neurocranium)\s"                          	: "Kopf"
-								, 	"(Hüftgelenk(es|s|e)*|Hüfte*)\-*\s"                                                       	: "Hüfte"
-								, 	"(OP\s|Operation*\s|OP\-)"                                                                 	: "OP"
-								, 	"(TEP|Totalendoprothese|Endoprothese)\s"                                          	: "TEP"
-								, 	"Schultergelenk*\s"                                                                             	: "Schulter"
-								, 	"Brustkorb\s"                                                                                     	: "Thorax"
+								, 	"(Sch(ä|ae)del|Kalotten*|Cranium|Neurocranium)\s"                          	: "Kopf "
+								, 	"(Hüftgelenk(es|s|e)*|Hüfte*)\-*\s"                                                       	: "Hüfte "
+								, 	"(OP|Operation)([\-\s])"                                                                     	: "OP$2"
+								, 	"(TEP|Totalendoprothese|Endoprothese)\s"                                          	: "TEP "
+								, 	"Schultergelenk*\s"                                                                             	: "Schulter "
+								, 	"Brustkorb\s"                                                                                     	: "Thorax "
 								, 	"(Dialysezentrum|Dialysepartner|Nephrologe|Nephrologische*r*s*)\s"   	: "Nephrologie"
 								, 	"(Kardiologische Praxis|Kardiolog(en|in|isches|e))"                              	: "Kardiologie"
 								, 	"(nuklearmedizin(ische\sPraxis)*|Nuklearmedizin\.)"                            	: "Nuklearmedizin"
-								, 	"(Radiologie|Radiologische Praxis|Radiologen|MVZ\s*Diagnostikum|Radiologisches)\s"               	: "Radiologie"
-								, 	"Daumen\s"                                                                                         	: "Finger"
+								, 	"(Radiologische Praxis|Radiologen|MVZ\s*Diagnostikum|Radiologisches)\s"               	: "Radiologie"
+								, 	"Daumen\s"                                                                                         	: "Finger "
 								, 	"(Krankenversicherung|Gesundheitskasse|Kasse)"                               	: "Krankenkasse"
-								, 	"Deutsche\sRentenversicherung\s"                                                      	: "DRV"
-								, 	"obere(s|n)\s+Sprunggelenk(s|es)*\s"                                                 	: "OSG"
-								, 	"untere(s|n)\s+Sprunggelenk(s|es)*\s"                                                  	: "USG"
+								, 	"Deutsche\s+Rentenversicherung\s"                                                      	: "DRV "
+								, 	"obere(s|n)\s+Sprunggelenk(s|es)*\s"                                                 	: "OSG "
+								, 	"untere(s|n)\s+Sprunggelenk(s|es)*\s"                                                  	: "USG "
 								, 	"(Lungenheilkunde|Lungen-\s+und|Bronchialheilkunde|Lungenarztpraxis|Pneumolog(ie|e|in|en))" : "Pulmologie"
-								, 	"(Ebenen|Ebn(\.|\s)|Eb(\.|\s))\s"                                                           	: "Ebenen"
-								, 	"re(\.|\s)\s"                                                                                        	: "rechts"
-								, 	"li(\.|\s)\s"                                                                                           	: "links"
-								, 	"Rö\.*\s"                                                                                               	: "Röntgen"}
+								, 	"(Ebn(\.\s|\s)|Eb(\.\s|\s))"                                                                   	: "Ebenen "
+								, 	"(D|d)igitate"                                                                                      	: "$1igitale"
+								,	"([^\pL])(Prof|Priv|Doz|Dr|med|jur|Str|Nr)[,;.]"                                 	: "$1 $2."
+								, 	"re(\.\s|\s)"                                                                                        	: "rechts "
+								, 	"li(\.\s|\s)"                                                                                           	: "links "
+								, 	"bds(\.\s|\s)"                                                                                        	: "beidseits "
+								, 	"Rö(\.\s|\s)"                                                                                        	: "Röntgen "
+								, 	"(\d)\s*[\-]\s*(\d)"                                                                                	: "$1 - $2 "
+								, 	"(\p{Ll}{2,})\s+@"                                                                              	: "$1@"}
 
 		txt := " " txt " "
 
@@ -946,8 +970,7 @@ class autonamer {
 	 ; - - - -
 
 	  ; OCR Zeichenfehler korrigieren
-		txt := RegExReplace(txt, "([^\pL])(Prof|Priv|Doz|Dr|med|jur|Str|Nr)[,;.]", "$1 $2.")
-		txt := RegExReplace(txt, "\s[a-zäöüß]\s", " ")
+		txt := RegExReplace(txt, "\s\p{Ll}\s", " ")
 		;~ txt := RegExReplace(txt, "nfer", "nter")
 		txt := RegExReplace(txt, "i)ch[lf]r", "chir")
 		txt := RegExReplace(txt, "Giie", "Glied")
@@ -957,18 +980,20 @@ class autonamer {
 		txt := RegExReplace(txt, "Barlin", "Berlin")
 		txt := RegExReplace(txt, "hellos", "helios")
 		txt := RegExReplace(txt, "i)\bFra[lf]en\b", "Freien")
-		txt := RegExReplace(txt, "(D|d)igitate", "$1igitale")
+	  ; Trestr. -> Treststreifen
+		txt := RegExReplace(txt, "(T|t)eststr\.", "$1eststreifen")
+	  ; Hauptstr. 9-> Hauptstrasse 9
+		txt := RegExReplace(txt, "(\p{Lu}[\pLl]+str)\.([^\pL])", "$1asse$2")
 		txt := RegExReplace(txt, "i)Magnetresonanztomo[ag]ra[fph]+ie", "Magnetresonanztomographie")
-
 	  ; Leerzeichen zwischen einem Klein- und Großbuchstaben einfügen
 		txt := RegExReplace(txt, "([a-zß\d])([A-ZÄÖÜ][a-zäöüß]+)", "$1 $2")
 		txt := RegExReplace(txt, "([a-zß\d][\)\.,;:\!\?]*)([A-ZÄÖÜ][a-zäöüß]+)", "$1 $2")
 	  ; alle Zeichen außer die Zeichen in der eckigen Klammer entfernen
-		txt := RegExReplace(txt, "[^\pL\d\-\.\/\\\!\?\$%&°§\n]", " ")
+		txt := RegExReplace(txt, "[^\pL\d\-\.\/\\\!\?\$%&°§@:\n]", " ")
 	  ; an Bindestrichen angehängte Leerzeichen entfernen
 		txt := RegExReplace(txt, "\-\s+", "-")
 	  ; Leerzeichen nach einem Punkt (Satzende)
-		txt := RegExReplace(txt, "([\pL\d])\.([\pL\d])", "$1. $2  ")
+		txt := RegExReplace(txt, "([\pL\d]{2,})\.(\p{Lu}[\pL\d]+[^\.])", "$1. $2  ")
 	  ; Wort mit einem Großbuchstaben nach einem anderen Wort abrücken: UniversitätBerlin -> Universität Berlin
 		txt := RegExReplace(txt, "([a-zäöüß]{2,})([A-ZÄÖÜ][a-zäöüß])", "$1 $2")
 	  ; groß geschriebenes Wort aus mind. 3 aufeinanderfolgenden Großbuchstaben abrücken:  MRTder -> MRT der
@@ -976,7 +1001,9 @@ class autonamer {
 	  ; gezielt wissenschaftliche Titel mit einem Punkt versehen
 		txt := RegExReplace(txt, "(\S)(Univ|Prof|Dr|med)[\.,;\s]", "$1 $2. ")
 	  ; Links/EMail Adressen korrigieren: ,de -> .de
-		txt := RegExReplace(txt, "[,;]([a-z]{2,3})", ".$1")
+		txt := RegExReplace(txt, "[,;:]([a-z]{2,4})", ".$1")
+	  ; Internetadresse Interpunktion korrigieren: www. rheumatologie.de -> www.rheumatologie.de
+		txt := RegExReplace(txt, "(www)[,;.:\s]+([\w\-]+)[,;.:\s]+([a-z]{2,4})", "$1.$2.$3")
 	  ; Komma zu Punkt (Dr, M, Klump > Dr. M. Klump)
 		txt := RegExReplace(txt, "([A-ZÄÖÜ][a-zäöüß]{0,1})[\s,,;.]+([A-ZÄÖÜ]{0,1}[a-zäöüß]{0,1})[\s,,;.]+([A-ZÄÖÜ][a-zäöüß]+)", "$1. $2. $3")
       ; fügt 6 oder 8 stellige Zahlenkombinationen welche Leerzeichen enthalten zusammen, damit diese als Datum erkannt werden können
@@ -984,12 +1011,46 @@ class autonamer {
 		 txt := RegExReplace(txt, "(\d)*\s*(\d)\s*[\.\,]\s*(\d)*\s*(\d)\s*[\.\,]\s*(\d)\s*(\d)\s*(\d)\s*(\d)(?=\D|\pL|\s|$)", "$1$2.$3$4.$5$6$7$8")
 		 txt := RegExReplace(txt, "(\d)*\s*(\d)\s*[\.\,]\s*(\d)*\s*(\d)\s*[\.\,]\s*(\d)\s*(\d)\s*(?=\D|\pL|\s|$)", "$1$2.$3$4.$5$6$7$8")
 
-		txt := RegExReplace(txt, "\s{2,}", " ")
+		If !removeEOL
+			txt := RegExReplace(txt, "\v{2,}", " ")
+		else
+			txt := RegExReplace(txt, "\s{2,}", " ")
 
 		If this.shwclean
 			SciTEOutput(A_ThisFunc "`n" txt)
 
 	return txt
+	}
+
+	DeduplicateString(String,Delimiter="`n",CaseSensitivity=0,Sort=0)	{ ;-- Doppeltes entfernen ohne Sort-Befehl
+
+		; https://www.autohotkey.com/boards/viewtopic.php?f=7&t=29232#p137390
+
+		Output := Array()
+		Output.SetCapacity(StrLen(String)*2*2)
+		If Sort
+			Sort, String, % "D" Delimiter
+
+		If (!CaseSensitivity) {
+			Array := {}
+			StrReplace(String, Delimiter,, Count)
+			Array.SetCapacity(Count + 1)
+			For each, splitStr in StrSplit(String, Delimiter)
+				If (splitStr := Trim(splitStr))
+					If !Array.HasKey("Z" splitStr)                                     	; Z is used to avoid creating a key with the same name as a method.
+						Array["Z" splitStr] := True, Output.Push(splitStr)
+		}
+		Else {
+			Array := ComObjCreate("Scripting.Dictionary")
+			For each, splitStr in StrSplit(String, Delimiter)
+				If (splitStr := Trim(splitStr))
+					If !Array.Exists("" splitStr)
+						Array.Item["" splitStr] := True, Output.Push(splitStr)
+		}
+
+		Array := ""
+
+	Return Output
 	}
 
 	spokennumber(number, uppercase:=true, separator:=" ")            	{ ;-- Darstellung ganzer Zahlen als Zahlwörter (deutsche Sprache)
@@ -1080,7 +1141,30 @@ class autonamer {
 	return RegExReplace(str, "[;:_,'\-\.\+\*\(\)\{\}\[\]\/\\]")
 	}
 
-	RegExTransformGerman(str)                                                         	{ ;-- für Stringmatching Algorithmen
+	isRegEx(str)                                                                                	{ ;-- Zeichenkette ist ein RegExMatch String
+	return RegExMatch(mainword, "i)(\(.*\)|\||\\[swvbtrndk\-](\+|\*|\{.*\}|\s|$)|\?\<.*\>|\?|\*|\$|\^)")
+	}
+
+	isEmailAddress(str)                                                                        	{ ;-- enthält EMail Adresse?
+
+	return RegExMatch(mainword, "^\s*([\w\.\_\-]+@[\w\.\_\-]+\.\w+|[\d\s\(\)\-]+)\s*")
+	}
+
+	RegExFree(str)                                                                              	{ ;-- entfernt RegEx Code
+
+		str := RegExReplace(str, "\\[swvbtrndK]")
+		str := RegExReplace(str, "\.([\*\+]|\{.*\})\?*"      	, " ")
+		str := RegExReplace(str, "(\*|\+|\{.*\})"             	, " ")
+		str := RegExReplace(str, "\\-"                                 	, "-")
+		str := RegExReplace(str, "\((.*)\)"                          	, "$1")
+		str := RegExReplace(str, "\{.*\}"                          	, " ")
+		str := RegExReplace(str, "\[.*\]"                           	, " ")
+		str := RegExReplace(str, "\s{2,}"                           	, " ")
+
+	return str
+	}
+
+	RegExTransformUmlauts(str)                                                        	{ ;-- für Stringmatching Algorithmen
 		str   	:= StrReplace(str, "ä"	, "(ä|ae)")
 		str   	:= StrReplace(str, "ö"	, "(ö|oe)")
 		str   	:= StrReplace(str, "ü"	, "(ü|ue)")
@@ -1110,7 +1194,7 @@ class autonamer {
 
 	UCLCRatio(tx)                                                                             	{ ;-- Großbuchstaben/Kleinbuchstabenverhältnis
 
-	  ; Tesseract scheint mehr Großbuchstaben zu erkennen umso schlechter die Qualität der zu scannenden Datei ist
+	  ; Tesseract scheint mehr Großbuchstaben auszugeben je schlechter die Qualität der gescannten Datei war oder weil der Text auf dem Kopf oder seitlich stand
 	  ; eine Ratio zwischen 0.09 und 0.25 ist gut zu lesen, ab 0.35 wird es sehr schwierig, ab 1.00 kann man von einer verdrehten Vorlage ausgehen (Text stand auf dem Kopf)
 
 	    txtA   	:= RegExReplace(txt, "[^\pL]")
@@ -1126,9 +1210,23 @@ class autonamer {
 		FileGetTime, ftime, % this.classifierfilepath, M
 	return ftime
 	}
+
 }
 
+/* 	Resterampe
 
+
+		;~ Sort, words, U                                                                         	; doppelte Wörter werden aussortiert
+		;~ this.autonames[mainclass].main := Array()                               	; Array löschen
+		;~ For each, mainword in StrSplit(words, "`n")
+			;~ this.autonames[mainclass].main.Push(mainword)
+
+		;~ Sort, words, U
+		;~ this.autonames[mainclass].sub[subclass] := Array()                 	; Array löschen
+		;~ For each, subword in StrSplit(words, "`n")
+			;~ this.autonames[mainclass].sub[subclass].Push(Trim(subword))
+
+ */
 
 
 

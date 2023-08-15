@@ -1,7 +1,7 @@
 ﻿;-----------------------------------------------------------------------------------------------------------------------------------
 ;------------------------------------------------ ADDENDUM MONITOR ----------------------------------------------------
 ;-----------------------------------------------------------------------------------------------------------------------------------
-													Version:= "1.28" , vom:= "15.09.2022"
+													Version:= "1.29" , vom:= "23.12.2022"
 ;------------------------------------------------------ Runtime-Skript ----------------------------------------------------------
 ;-------------------- startet Addendum bei einem Absturz oder (un-)absichtlichen Beenden neu ----------------------
 ;-------------------------------------------- Addendum für AlbisOnWindows -----------------------------------------------
@@ -57,6 +57,7 @@ GNU Lizenz can be found in Docs directory  - 2017
 	Addendum.Dir               	:= AddendumDir
 	Addendum.Ini                	:= AddendumDir 	"\Addendum.ini"
 	Addendum.ScriptPath      	:= AddendumDir 	"\Module\Addendum\" Addendum.ScriptName
+	Addendum.Restarts        	:= 0
 
 	If FileExist(A_AppData "\AutoHotkeyH\AutoHotkeyH_U64.exe")
 		Addendum.AHKH_exe	:= A_AppData "\AutoHotkeyH\AutoHotkeyH_U64.exe"
@@ -88,17 +89,25 @@ GNU Lizenz can be found in Docs directory  - 2017
 	IniReadExt(Addendum.Ini)
 
   ; Addendum DBPath und Logfile Pfad ;{
-	Addendum.DBPath := IniReadExt("Addendum", "AddendumDBPath")
-	If InStr(Addendum.DBPath, "Error") || !RegExMatch(Addendum.DBPath, "i)[a-z]\:\\") || !InStr(FileExist(Addendum.DBPath), "D")
+	Addendum.DBPath	:= IniReadExt("Addendum", "AddendumDBPath")
+	If InStr(Addendum.DBPath, "Error") || !RegExMatch(Addendum.DBPath, "i)[a-z]\:\\") || !InStr(FileExist(Addendum.DBPath), "D") {
 		Addendum.DBPath := ""
-	else
-		Addendum.MonLogPath := Addendum.DBPath 	"\sonstiges\AddendumMonitorLog.txt"
-
-	If Addendum.DBPath && !InStr(FileExist(Addendum.DBPath "\sonstiges"), "D") {
-		FileCreateDir, % Addendum.DBPath "\sonstiges"
-		If ErrorLevel
-			Addendum.MonLogPath := Addendum.DBPath
+		MsgBox, Das Datenverzeichnis von Addendum für Albis on Windows ist konnte nicht ermittelt werden. Bitte hinterlegen Sie dieses in der Addendum.ini
+		ExitApp
 	}
+
+	Addendum.LogPath	:= IniReadExt("Addendum", "AddendumLogPath")
+	If InStr(Addendum.LogPath, "Error") || !RegExMatch(Addendum.LogPath, "i)[a-z]\:\\") || !InStr(FileExist(Addendum.LogPath), "D") {
+		MsgBox, Das Datenverzeichnis von Addendum für Albis on Windows ist konnte nicht ermittelt werden. Bitte hinterlegen Sie dieses in der Addendum.ini
+		ExitApp
+	}
+	Addendum.MonLogPath := Addendum.LogPath "\AddendumMonitorLog.txt"
+
+	;~ If Addendum.DBPath && !InStr(FileExist(Addendum.DBPath "\logs"), "D") {
+		;~ FileCreateDir, % Addendum.DBPath "\logs"
+		;~ If ErrorLevel
+			;~ Addendum.MonLogPath := Addendum.DBPath
+	;~ }
 ;}
 
   ; Interskript communication gui ;{
@@ -130,12 +139,14 @@ GNU Lizenz can be found in Docs directory  - 2017
 	Addendum.RestartAfter       	:= IniReadExt("AddendumMonitor", "HighCPU_RestartAfter"         	, 360) 	; seconds
 	Addendum.MinIdleTime     	:= IniReadExt("AddendumMonitor", "HighCPU_MinIdleTime"         	, 180)	; seconds
 	Addendum.TimedCheck     	:= IniReadExt("AddendumMonitor", "HighCPU_Timer"                    	, 180)	; seconds
-	Addendum.CrashCheck     	:= IniReadExt("AddendumMonitor", "HighCPU_CrashCheck"          	, 20)		; seconds  (leider werden Abstürze übersehen, lasse den Monitor dazwischen per Timer prüfen)
-	TrTip1 := 	"CPU Last Grenze:   "    	Addendum.MaxAverageCPU 	"%`n"
-			  .		"Neustart nach:      " 		Addendum.RestartAfter        	"s`n"
-			  .		"Überprüfung alle: "   	Addendum.TimedCheck      	"s"
-	TrTip2 := 	"CPU Überlastung:  nicht geprüft`n"
-			 . 	  	"nächster Check in: "  	Addendum.TimedCheck      	"s"
+	Addendum.CrashCheck     	:= IniReadExt("AddendumMonitor", "HighCPU_CrashCheck"          	, 0)		; seconds  (leider werden Abstürze übersehen, lasse den Monitor dazwischen per Timer prüfen)
+	TrTip1 := 	"CPU-Last Grenze:    "      	Addendum.MaxAverageCPU 	"%  `n"
+			  ;~ .		"Neustart nach:        " 		Addendum.RestartAfter        	"s`n"
+			  .		"Überprüfung alle:    "      	Addendum.TimedCheck      	"s"
+
+	TrTip2 := 	"Addendum-Neustarts: "   	Addendum.Restarts               	"s`n"
+			 .		"CPU Überlastung:     nicht geprüft`n"
+			 . 	  	"nächster Check: "         	Addendum.TimedCheck      	"s"
 	Menu, Tray, Tip, % TrTip1 "`n" TrTip2
 	Addendum.TimerCall := A_TickCount
   ;}
@@ -148,16 +159,22 @@ GNU Lizenz can be found in Docs directory  - 2017
 	sinks.Create()
 
   ; Timerfunktion für 5 minütige Skriptausführungskontrolle (Skript hängt oder ist abgestürzt)
-	fnADM := Func("RestartAddendum").Bind(true)
-	SetTimer, % fnADM, % Addendum.TimedCheck*1000
-	Addendum.TimerCall := A_TickCount
-	SetTimer, % fnADM, % Addendum.CrashCheck*1000
+	If Addendum.TimedCheck {
+		fnTimedCheck := Func("RestartAddendum").Bind(true)
+		SetTimer, % fnTimedCheck, % Addendum.TimedCheck * 1000
+		Addendum.TimerCall := A_TickCount
+	}
+
+	If Addendum.ChrashCheck {
+		fnCrashCheck := Func("RestartAddendum").Bind(false)
+		SetTimer, % fnCrashCheck, % Addendum.CrashCheck * 1000
+	}
 
   ; erster Check von Addendum.ahk
 	RestartAddendum()
 
-  ; alle 8h Neustart bis ich den Verursacher für das Speicherbelegungsproblem gefunden habe
-	SetTimer, admRestartMonitor, % -1*8*60*60*1000
+  ; alle 2h Neustart bis ich den Verursacher für das Speicherbelegungsproblem gefunden habe
+	SetTimer, admRestartMonitor, % -2*3600*1000
 
 	TrayTip, AddendumMonitor, Überwachung gestartet, 1
 
@@ -177,7 +194,7 @@ return ;}
 ~Esc::  	;{ Tastenkombination um Skriptneustart während der Anzeige des Countdownfenster abzubrechen
 	If DoRestart {
 		DoRestart := false
-		FileAppend, % "Abbruch des Addendumneustart durch Nutzer, Zeit: " TimeStamp() ", Client: " A_ComputerName "`n", % Addendum.Dir "\logs'n'data\OnExit-Protokoll.txt"
+		FileAppend, % "Abbruch des Addendumneustart durch Nutzer, Zeit: " TimeStamp() ", Client: " A_ComputerName "`n", % Addendum.LogPath "\OnExit-" A_YYYY "-Protokoll.txt"
 	}
 return
 #IfWinExist
@@ -201,8 +218,9 @@ admMonTimerInfo: 	;{
 	nextcall 		:= Addendum.TimedCheck-((A_TickCount - Addendum.TimerCall)/1000)
 	nextcall_min	:= Floor(nextcall/60)
 	nextcall_sec	:= Floor(nextcall - (nextcall_min*60))
-	TrTip2   		:= "CPU Überlastung:  " 	(ObservationRuns ? "ja":"nein") "`n"
-						. 	 "nächster Check in: " 	nextcall_min "m " SubStr("00" nextcall_sec, -1) "s"
+	TrTip2       	:=	"Addendum-Neustarts:  "     	Addendum.Restarts               	"x`n"
+						.		"CPU Überlastung: "          	(ObservationRuns ? "läuft":"pausiert") "`n"
+						. 	 	"Check in:     "                    	nextcall_min "m " SubStr("00" nextcall_sec, -1) "s"
 	Menu, Tray, Tip, % TrTip1 "`n" TrTip2
 return ;}
 
@@ -223,7 +241,7 @@ admRestartNow:    	;{
 	TrayMsg1 := "Addendum.ahk wird in 2s beendet und neu gestartet!"
 	TrayMsg2 := "Addendum.ahk konnte nicht beendet werden!"
 	TrayMsg3 := "Addendum.ahk ProcessID= "
-	TrayMsg3 := "Addendum.ahk konnte nicht gestartet werden!"
+	TrayMsg4 := "Addendum.ahk konnte nicht gestartet werden!"
 
 	TrayTip, AddendumMonitor, % TrayMsg1, 2
 	Sleep 2000
@@ -236,8 +254,8 @@ admRestartNow:    	;{
 		}
 
   ; neu starten
-	PID := RestartAddendum("override")
-	TrayTip, AddendumMonitor, % (PID ? TrayMsg3 . PID : TrayMsg4), 2
+	admPID := RestartAddendum("override")
+	TrayTip, AddendumMonitor, % (admPID ? TrayMsg3 . admPID : TrayMsg4), 2
 
 return ;}
 
@@ -533,7 +551,7 @@ class SinkObjects {
 			. " within " 1                                                                  	; Set event polling interval, in seconds.
 			. " WHERE TargetInstance ISA 'Win32_Process'"
 			. " and TargetInstance.Name LIKE 'Autohotkey%'"
-			. WQL)
+			. this.WQL)
 
 	}
 
@@ -551,19 +569,24 @@ class SinkObjects {
 
 
 ;{ Funktionen
-RestartAddendum(TimedCheck:=false) {                                             	;-- startet(prüft) Addendum.ahk
+RestartAddendum(TimedCheck:=false, dbg:=false) {                                             	;-- startet(prüft) Addendum.ahk
 
 	; Variablen ;{
+		global 	ObservationRuns
 		static 	msgEnd 	:= "`n---------------------------------------------------------------`n"
 
 		Addendum.TimerCall	:= A_TickCount
 		PTSum 		              		:= 0
-		Addendum.PID           	:= AHKProcessExist(Addendum.ScriptName)
+
 	;}
+
+	; während Autonaming nichts machen
+		If WinExist("Addendum (Datei umbenennen) ahk_class AutoHotkeyGUI")
+			return
 
 	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	; Addendum.ahk Prozeß ist nicht vorhanden
-		If !Addendum.PID {
+		If !(Addendum.PID := AHKProcessExist(Addendum.ScriptName)) {
 
 			If (A_TimeIdlePhysical > 0) {
 				idle       	:= GetTimestrings(A_TimeIdlePhysical)
@@ -575,110 +598,96 @@ RestartAddendum(TimedCheck:=false) {                                            
 								.     	A_ComputerName                                           	", "
 								.     	(TimedCheck ? "TIMER" : "EVENT")
 								.    	(StrLen(idleTime) > 0 ? ", idle: " idleTime : "")  	"`n"
-								, % 	Addendum.Dir "\logs'n'data\_DB\logs\OnExit-" A_YYYY "-Protokoll.txt", UTF-8
+								, % 	Addendum.LogPath "\OnExit-" A_YYYY "-Protokoll.txt", UTF-8
 
 			Run   	    	, % Addendum.AHKH_exe " /f " q Addendum.ScriptPath q
 
-			; Ausführung max. 20s
-				PID := 0
-				while (!PID && A_Index <= 200) {
-					PID := AHKProcessExist(Addendum.ScriptName)
+			; wartet max. 20s auf den Autohotkeyprozeß
+				while (!(PID := AHKProcessExist(Addendum.ScriptName)) && A_Index <= 200)
 					Sleep 100
-				}
 
 		return PID
 		}
 
 	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	; über 4 Sekunden die CPU-Auslastung von Addendum messen
+	; Addendum.ahk Prozeß (PID) gefunden
+ 	; dann wird über die Länge von 10 Sek. die CPU-Auslastung von Addendum messen
 		else {
 
-		  ; eine Überwachung läuft noch dann nichts machen
-			If (TimedCheck <> "override") && ObservationRuns
+
+		  ; eine Überwachung läuft noch, dann nichts machen
+			If (TimedCheck != "override") && ObservationRuns
 				return
 
 			If (TimedCheck = "override")
 				TrayTip, Überprüfung von Addendum.ahk, % "Zeitdauer bis Abschluß: circa 10s", 15, 16
 
 		  ; CPU Status (CPU Auslastung überschritten) oder Addendum.ahk antwortet nicht
+			ObservationRuns := true
 			cpuStatus		:= GetCPUStatus(Addendum.PID, 10, Addendum.MaxAverageCPU)
-			admStatus 	:= GetAddendumStatus()
+			ObservationRuns := true
+			;~ admScript 	:= GetAddendumStatus()  ; # ausgestellt, ist Addendum beschäftigt antwortet es nicht
+			admScript := {"status":true}
+			ObservationRuns := false
 
+		  ; admScript.status =  noanswers oder answers, noanswers = var noanswers, oberserveTime = recTime
 			If (TimedCheck = "override") {
-				healthstate := cpuStatus.HighLoad  	? "CPU Lastüberschreitung festgestellt"
-																		: !admStatus ? "Prozeß hat sich möglicherweise aufgehängt" : "keine Probleme festgestellt"
-				TrayTip	, Überprüfung von Addendum.ahk
-							, % "abgeschlossen: " TimeStamp() "`n"
-							.	 "Bewertung: "      	healthstate "`n"
-							.    "CPU: "             	cpuStatus.Average "`n"
-							. 	 "Addendum: "    	(admStatus ? admStatus " s" : "keine Antwort"), 12, 16
+				healthstate := cpuStatus.HighLoad	? 	(!admScript.status 	? "1.":"")           	"CPU Lastüberschreitung festgestellt (" cpuStatus.Average ")`n"
+																	: 	""
+				healthstate .= !admScript.status    	? 	(healthstate 	? "           2.":"") "Addendum hat sich möglicherweise aufgehängt (keine Antwort)"
+																	: 	(!healthstate && admScript.status ? "Es wurden keine Probleme festgestellt." : "")
+				TrayTip	, % "Überprüfung von Addendum.ahk", % "abgeschlossen: " TimeStamp() "`nBewertung: " healthstate, 12, 16
 			}
 
-		  ; cpuStatus > 0 - Kontrollwert überschritten, admStatus = false = Addendum.ahk hat nicht geantwortet
-			If cpuStatus.HighLoad || !admStatus {
+			If (dbg = true || !admScript.status || cpuStatus.HighLoad) {
+				SciTEOutput(" " TimeStamp())
+				scitemsg := "  "  A_ThisFunc ": Addendum hat innerhalb von " . admScript.oberserveTime . "s " . (!admScript.status ? admScript.noanswers "x nicht" : "") . " geantwortet "
+				SciTEOutput(scitemsg)
+				SciTEOutput((admScript.status ? "  " A_ThisFunc ": Innerhalb der Beobachtungszeit wurde " (!admScript.allnoanswers ? "immer geantwortet." : admScript.allnoanswers "x nicht geantwortet.") : ""))
+				SciTEOutput((cpuStatus.HighLoad ? "  " A_ThisFunc ": cpuStatus.Average: " cpuStatus.Average "%" : ""))
+			}
+
+		  ; cpuStatus > 0 - Kontrollwert überschritten, admScript = false = Addendum.ahk hat nicht geantwortet
+			If cpuStatus.HighLoad || !admScript.status {
+
 
 			  ; Protokoll schreiben
 				If Addendum.MonLogPath {
 					msg :=	(cpuStatus.HighLoad ? "hohe CPU Auslastung registriert (" cpuStatus.Average ")`n                                `t" : "")
-					msg .=	"Addendum: " (!admStatus ? "keine Antwort" : "Antwort brauchte " admStatus " s")
+					msg .=	"Addendum: " (!admScript ? "keine Antwort" : "Antwort brauchte " admScript " s")
 				}
 
 			  ; Addendum sendet keinen Status zurück => Neustart!
-				msg .= (msg?"`n":"")
-				If !admStatus
+				msg .= (msg ? "`n" : "")
+				If !admScript.status {
+					Addendum.Restarts += 1
 					msg .= (!ProcessClose(Addendum.PID) 	?	"Addendum.ahk konnte nicht mittels Process, Close beendet werden."
 																				:	"Addendum.ahk wurde mittels Process, Close beendet.")
-
+				}
 			  ; HighLoad wurde registriert, Messung der CPU-Last über mehrere Sekunden erfolgt jetzt
-				else if cpuStatus.HighLoad
+				else if cpuStatus.HighLoad {
+					Addendum.Restarts += 1
 					If (procDelMsg := ProcessDelete_OnHighCPULoad(Addendum.ScriptName
 																							,	Addendum.PID
 																							,	Addendum.RestartAfter
 																							, 	Addendum.IdleTime
 																							, 	Addendum.MaxAverageCPU))
-						msg .= (msg?"`n":"")  procDelMsg
+							msg .= (msg ? "`n" : "")  procDelMsg
+				}
+
+			  ; Tray Symbole beendeter Autohotkey Programme entfernen
+				If (!admScript.status || cpuStatus.HighLoad) {
+					RefreshTray()
+				}
 
 			  ; schreibt das Protokoll
-				If (Addendum.MonLogPath & msg)
+				If (Addendum.MonLogPath && msg)
 					FileAppend, % TimeStamp() "|`t" msg . msgEnd, % Addendum.MonLogPath, UTF-8
 
 			}
 
 		}
 
-}
-
-
-AddendumMonitor_ico(NewHandle := False) {
-Static hBitmap := AddendumMonitor_ico()
-If (NewHandle)
-   hBitmap := 0
-If (hBitmap)
-   Return hBitmap
-VarSetCapacity(B64, 9812 << !!A_IsUnicode)
-B64 := "AAABAAEAMDAAAAEAGACoHAAAFgAAACgAAAAwAAAAYAAAAAEAGAAAAAAAAAAAAGQAAABkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB0iWNYjS5IkA9BkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBGkAtTjiRtileFhoUAAAAAAAAAAAAAAAAAAACDh39WjStAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBQjiB/h3kAAAAAAAAAAACCh35MjxhAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBKjxKBhnsAAAAAAABVjihAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBUjiYAAABxiV5AkQBAkQBtqzyZxHeZxHeZxHeZxHd5skxAkQBAkQBAkQBAkQBAkQBAkQBAkQBElAaZxHeZxHeZxHeZxHeZxHdJlgxAkQBAkQBAkQBipS6ZxHeZxHeZxHeZxHeJu2JAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCTwW+ZxHeZxHeZxHeZxHdZoCJAkQByiWBVjihAkQBAkQBwrUD////////////////l8NxAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDX6Mr///////////////99tFFAkQBAkQBAkQC01Jv///////////////+rz49AkQBAkQBAkQBAkQBAkQBAkQBAkQBboST////////////////5/PdLlw9AkQBXjS1FjwxAkQBAkQBBkgLq8+P///////////////9foypAkQBAkQBAkQBAkQBAkQBAkQBAkQCVwnH///////////////+41qBAkQBAkQBBkgLt9ef///////////////9oqDVAkQBAkQBAkQBAkQBAkQBAkQBAkQCXw3T////////////////A26tAkQBAkQBJkBFAkQFAkQBAkQBAkQCqzo3///////////////+bxXlAkQBAkQBAkQBAkQBAkQBAkQBAkQBTnBn9/vz////////////x9+xDkwRAkQBpqTf////////////////l8NxBkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQDR5MH///////////////99tFFAkQBAkQBCkQVAkQBAkQBAkQBAkQBnpzT////////////////W58hAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDO477///////////////9urD5AkQCjyoT///////////////+gyIBAkQBAkQBAkQBAkQBAkQBAkQBAkQBNmRL8/fv////////////1+fFGlAhAkQBAkQBCkQVAkQBAkQBAkQBAkQBAkQDj79n////////////+//5UnRtAkQBAkQBAkQBAkQBAkQBAkQBAkQCMvWX///////////////+pzYxAkQDd69H///////////////9foypAkQBAkQBAkQBAkQBAkQBAkQBAkQCFuVz///////////////+11JxAkQBAkQBAkQBCkQVAkQBAkQBAkQBAkQBAkQChyYH///////////////+MvWZAkQBAkQBAkQBAkQBAkQBAkQBAkQBNmBH7/Pn////////////l8NxXnh/////////////////Z6cxAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQC/2qn///////////////9xrUJAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBdoif////////////////I37VAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDF3bH///////////////+y05j///////////////+Ww3NAkQBAkQBAkQBAkQBAkQBAkQBAkQBElAb0+fD////////////s9OVCkgNAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQDa6c3////////////6/PhJlgxAkQBAkQBAkQBAkQBAkQBAkQBAkQCCt1j////////////////9/v3////////////9/v1UnRtAkQBAkQBAkQBAkQBAkQBAkQBAkQBzrkT///////////////+qzo5AkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQCXw3T///////////////9/tVRAkQBAkQBAkQBAkQBAkQBAkQBAkQBIlgv2+vP////////////////////////////O471AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCt0JH///////////////9npzRAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQBWnh39/v3///////////+516JAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQC82KX///////////////////////////+LvGRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDm8d7////////////j79lAkQBAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQBAkQDR5MH////////////y9+1DkwRAkQBAkQBAkQBAkQBAkQBAkQBAkQB5skz////////////////////////6/PhNmBFAkQBAkQBAkQBAkQBAkQBAkQBAkQBhpCz///////////////+gyIBAkQBAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQBAkQCPvmn///////////////9wrUBAkQBAkQBAkQBAkQBAkQBAkQBAkQBEkwXx9+z////////////////////C3K5AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCbxXn///////////////9coSZAkQBAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQBAkQBPmhT7/fr///////////+rz49AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCz05r///////////////////+AtlVAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDU5sb////////////X6MpAkQBAkQBAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDI4Lb////////////n8d9AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBxrUH////////////////1+fJHlQlAkQBAkQBAkQBAkQBAkQBAkQBAkQBQmhb9/vz///////////+UwXBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCFuVz///////////////9ipS5AkQBAkQBAkQBAkQBAkQBAkQBAkQBBkgL1+fL////////////I4LZAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCJu2H////////////9/vxTnBpAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBJlgz4+/X///////////+ex31AkQBAkQBAkQBAkQBAkQBAkQBAkQBcoSX////////////////y9+1EkwVAkQBAkQBAkQBAkQBAkQBAkQBAkQDD3K/////////////M4rtAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQC/2qn////////////b6s9AkQBAkQBAkQBAkQBAkQBAkQBAkQCbxnr///////////////////9zrkRAkQBAkQBAkQBAkQBAkQBAkQBJlgz4+/b///////////+Ju2FAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQB8tFD///////////////9aoCNAkQBAkQBAkQBAkQBAkQBAkQDb6s////////////////////+x0pdAkQBAkQBAkQBAkQBAkQBAkQCDt1n////////////5/PdMmBBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBElAby9+3///////////+YxHZAkQBAkQBAkQBAkQBAkQBaoCP////////////////////////u9ehCkgNAkQBAkQBAkQBAkQBAkQDC3K7////////////B26xAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQC21Z3////////////X6MlAkQBAkQBAkQBAkQBAkQCcxnv///////////////////////////9urD5AkQBAkQBAkQBAkQBKlw34+/b///////////9+tVNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQByrkP////////////+//5Wnh5AkQBAkQBAkQBAkQDc69D///////////////////////////+t0JJAkQBAkQBAkQBAkQCDuFr////////////0+fBGlAhAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkgLs9OX///////////+UwXBAkQBAkQBAkQBcoSb///////////////+31p/////////////r8+RBkQFAkQBAkQBAkQDE3bD///////////+21Z1AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCt0JH////////////S5cNAkQBAkQBAkQCdxnz////////////a6s5Wnh39/v3///////////9qqThAkQBAkQBKlw34+/b///////////9zrkRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBqqTj////////////9/v1TnBpAkQBAkQDd69H///////////+Xw3RAkQDR5cL///////////+ozYtAkQBAkQCFuVz////////////t9edCkgNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDk79v///////////+Pv2pAkQBdoif////////////9/v1VnRxAkQCPvmn////////////n8d9BkQFAkQDF3bH///////////+rz49AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCkyoX////////////O471AkQCex37////////////P479AkQBAkQBPmhT7/fr///////////9mpzNKlw35/Pf///////////9oqDVAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBfoyn////////////9/vxQmhXe7NP///////////+MvWVAkQBAkQBAkQDI4Lb///////////+ky4aGuV3////////////l8NxBkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDd7NL///////////+ozYv////////////7/PlOmRNAkQBAkQBAkQCGuV3////////////j79rF3rL///////////+gyIBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCaxXj////////////9/v3////////////F3bFAkQBAkQBAkQBAkQBJlgz4+/X////////////9/vz///////////9doidAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBXnh/+//7///////////////////////+Bt1dAkQBAkQBAkQBAkQBAkQC/2qr////////////////////////Y6ctAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDU5sb////////////////////1+fJHlQpAkQBAkQBAkQBAkQBAkQB9tFH///////////////////////+VwnJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCSwG3///////////////////+51qFAkQBAkQBAkQBAkQBAkQBAkQBElAby9+3////////////////9/v1UnRtAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBA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"
-If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", 0, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
-   Return False
-VarSetCapacity(Dec, DecLen, 0)
-If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", &Dec, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
-   Return False
-; Bitmap creation adopted from "How to convert Image data (JPEG/PNG/GIF) to hBITMAP?" by SKAN
-; -> http://www.autohotkey.com/board/topic/21213-how-to-convert-image-data-jpegpnggif-to-hbitmap/?p=139257
-hData := DllCall("Kernel32.dll\GlobalAlloc", "UInt", 2, "UPtr", DecLen, "UPtr")
-pData := DllCall("Kernel32.dll\GlobalLock", "Ptr", hData, "UPtr")
-DllCall("Kernel32.dll\RtlMoveMemory", "Ptr", pData, "Ptr", &Dec, "UPtr", DecLen)
-DllCall("Kernel32.dll\GlobalUnlock", "Ptr", hData)
-DllCall("Ole32.dll\CreateStreamOnHGlobal", "Ptr", hData, "Int", True, "PtrP", pStream)
-hGdip := DllCall("Kernel32.dll\LoadLibrary", "Str", "Gdiplus.dll", "UPtr")
-VarSetCapacity(SI, 16, 0), NumPut(1, SI, 0, "UChar")
-DllCall("Gdiplus.dll\GdiplusStartup", "PtrP", pToken, "Ptr", &SI, "Ptr", 0)
-DllCall("Gdiplus.dll\GdipCreateBitmapFromStream",  "Ptr", pStream, "PtrP", pBitmap)
-DllCall("Gdiplus.dll\GdipCreateHICONFromBitmap", "Ptr", pBitmap, "PtrP", hBitmap, "UInt", 0)
-DllCall("Gdiplus.dll\GdipDisposeImage", "Ptr", pBitmap)
-DllCall("Gdiplus.dll\GdiplusShutdown", "Ptr", pToken)
-DllCall("Kernel32.dll\FreeLibrary", "Ptr", hGdip)
-DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
-Return hBitmap
 }
 
 AHK_NOTIFYICON(wParam, lParam) {                                                	;-- OnMessage Callback
@@ -702,7 +711,7 @@ AHKProcessExist(ProcName, cmd="") {                                             
 return false
 }
 
-GetCPUStatus(PID,WatchTime=4, MaxLoad=5, checkInterval:=100) {  	;-- Messung der CPU Auslastung
+GetCPUStatus(PID,ObserveTime=4, MaxLoad=5, checkInterval:=100) {	;-- Messung der CPU Auslastung
 
 	; Rückgabeparameter ist 0 wenn der Grenzwert nicht überschritten wurden
 	; andernfalls wird die ermittelte CPU Last zurückgegeben
@@ -713,19 +722,18 @@ GetCPUStatus(PID,WatchTime=4, MaxLoad=5, checkInterval:=100) {  	;-- Messung der
 
 	;Loop % (loops := Floor((WatchTime*1000)/checkInterval)) {
 	Loop {
-		loops     	:=  	A_Index
+		checks    	:=  	A_Index
 		CPULoad 	:= 	GetProcessCpu(PID)
-		PTSum  	+= 	CPULoad ? CPULoad : 0
+		PTSum     += 	CPULoad ? CPULoad : 0
 		loopTime 	:= 	Round((A_TickCount - starttime)/1000, 1)
-		If (loopTime >= WatchTime)
+		If (loopTime >= ObserveTime)
 			break
 		Sleep % checkInterval
 	}
 
-	PTAverage := PTSum/loops
-	Average := StrSplit(PTAverage, ".").1 "." SubStr(StrSplit(PTAverage, ".").2, 1, 3)
+	PTAverage	:= Round(PTSum/checks, 2)
 
-return {"Average": Average, "HighLoad": (PTAverage>MaxLoad?1:0)}
+return {"Average": PTAverage, "HighLoad": (PTAverage>MaxLoad?1:0)}
 }
 
 GetAddendumID() {                                                                          	;-- für Interskriptkommunikation
@@ -741,6 +749,8 @@ return AddendumID
 
 GetAddendumStatus() {                                                                     	;-- testet ob Addendum.ahk antwortet
 
+	; letzte Änderung: 22.10.2022
+
 		global MsgRec
 
 	; die ID des Addendum Fensters läßt sich nicht ermitteln
@@ -749,12 +759,38 @@ GetAddendumStatus() {                                                           
 
 	; versucht Addendum zur einer Antwort zu überreden (wartet max 4s auf eine Antwort)
 		MsgRec := ""
+		noanswers := 0
+		maxnoanswers := 40
+		ObserveTime := 12
+		ObserveTimeMax := 40
 		QPC(true)
-		Send_WM_COPYDATA("Status||" Addendum.hMsgGui, AddendumID)
-		while (MsgRec <> "okay" && (recTime:=QPC(false)) <= 4)
-			Sleep 1
+		starttime := A_TickCount
 
-return (MsgRec = "okay" ? Format("{1:.3f}", recTime) : 0)
+	; wenn Addendum 10x hintereinander nicht antwortet innerhalb von mindestens 4 Sekunden und max. 10 Sekunden Beobachtungsdauer
+		while ((recTime:=QPC(false)) <= ObserveTimeMax ) {
+			MsgRec := ""
+			Send_WM_COPYDATA("Status||" Addendum.hMsgGui, AddendumID)		; Statusabfrage senden
+			Loop 10 {                                                                                            	; 500 ms warten
+				Loops := A_Index
+				If (MsgRec = "okay")
+					break                                                                                        	; Abbruch wenn MsgRec Okay enthält
+				Sleep 50
+			}
+			Sleep % (10-Loops)*50                                                                      	; den Rest bis 500ms ausschlafen
+
+			noanswers 	:=  	lastanswer = "okay" 	? 0 : noanswers                         	; Zähler wird zurück gesetzt, wenn zwischendurch eine Antwort eintraf
+			noanswers 	+= 	MsgRec != "okay"  	? 1 : 0
+			allnoanswers += 	MsgRec != "okay"  	? 1 : 0
+			lastanswer 	:= 	MsgRec
+			If (noanswers >= maxnoanswers)                                                                         	; Abbruch nach 10 ausbleibenden Antworten entspricht 1s
+				break
+
+		  ;~ ; wenn die minimale Oberservierungszeit abglaufen ist, aber aktuell keine Antworten von Addendum kamen, wird die Oberservierungszeit verlängert
+			;~ If (rectTime >= ObserveTime && noanswers > 0)
+
+		}
+
+return {"status": noanswers>=maxnoanswers ? false : true, "noanswers": noanswers, "allnoanswers":allnoanswers, "oberserveTime": Format("{1:.1f}", recTime)}
 }
 
 GetAppImagePath(appname) {                                                             	;-- Installationspfad eines Programmes
@@ -1149,6 +1185,8 @@ ProcessDelete_OnHighCPULoad(ProcName, PID, WTime                      	;-- monit
 
 	*/
 
+		global ObservationRuns
+
 		ObservationRuns    	:= true
 		InactiveObservation	:= false
 		InactiveWait          	:= false
@@ -1245,6 +1283,21 @@ CountInactive: ;{
 	InactiveWait := false
 
 return ;}
+}
+
+RefreshTray() {                                                                                    	;-- by SWIN - http://www.autohotkey.com/community/viewtopic.php?t=8086
+   WM_MOUSEMOVE := 0x200
+   ControlGetPos, xTray,, wTray,, ToolbarWindow321, ahk_class Shell_TrayWnd
+   endX := xTray + wTray
+   x := 5
+   y := 12
+   Loop {
+      if (x > endX)
+         break
+      point := (y << 16) + x
+      PostMessage, %WM_MOUSEMOVE%, 0, %point%, ToolbarWindow321, ahk_class Shell_TrayWnd
+      x += 18
+   }
 }
 
 QPC(R := 0) {                                                                                      	;-- genaueste Zeitmessung, Rückgabe in Sekunden (floating point)
@@ -1384,6 +1437,39 @@ ReadChats() {
 	}
 
 }
+
+AddendumMonitor_ico(NewHandle := False) {
+Static hBitmap := AddendumMonitor_ico()
+If (NewHandle)
+   hBitmap := 0
+If (hBitmap)
+   Return hBitmap
+VarSetCapacity(B64, 9812 << !!A_IsUnicode)
+B64 := "AAABAAEAMDAAAAEAGACoHAAAFgAAACgAAAAwAAAAYAAAAAEAGAAAAAAAAAAAAGQAAABkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB0iWNYjS5IkA9BkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBGkAtTjiRtileFhoUAAAAAAAAAAAAAAAAAAACDh39WjStAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBQjiB/h3kAAAAAAAAAAACCh35MjxhAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBKjxKBhnsAAAAAAABVjihAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBUjiYAAABxiV5AkQBAkQBtqzyZxHeZxHeZxHeZxHd5skxAkQBAkQBAkQBAkQBAkQBAkQBAkQBElAaZxHeZxHeZxHeZxHeZxHdJlgxAkQBAkQBAkQBipS6ZxHeZxHeZxHeZxHeJu2JAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCTwW+ZxHeZxHeZxHeZxHdZoCJAkQByiWBVjihAkQBAkQBwrUD////////////////l8NxAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDX6Mr///////////////99tFFAkQBAkQBAkQC01Jv///////////////+rz49AkQBAkQBAkQBAkQBAkQBAkQBAkQBboST////////////////5/PdLlw9AkQBXjS1FjwxAkQBAkQBBkgLq8+P///////////////9foypAkQBAkQBAkQBAkQBAkQBAkQBAkQCVwnH///////////////+41qBAkQBAkQBBkgLt9ef///////////////9oqDVAkQBAkQBAkQBAkQBAkQBAkQBAkQCXw3T////////////////A26tAkQBAkQBJkBFAkQFAkQBAkQBAkQCqzo3///////////////+bxXlAkQBAkQBAkQBAkQBAkQBAkQBAkQBTnBn9/vz////////////x9+xDkwRAkQBpqTf////////////////l8NxBkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQDR5MH///////////////99tFFAkQBAkQBCkQVAkQBAkQBAkQBAkQBnpzT////////////////W58hAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDO477///////////////9urD5AkQCjyoT///////////////+gyIBAkQBAkQBAkQBAkQBAkQBAkQBAkQBNmRL8/fv////////////1+fFGlAhAkQBAkQBCkQVAkQBAkQBAkQBAkQBAkQDj79n////////////+//5UnRtAkQBAkQBAkQBAkQBAkQBAkQBAkQCMvWX///////////////+pzYxAkQDd69H///////////////9foypAkQBAkQBAkQBAkQBAkQBAkQBAkQCFuVz///////////////+11JxAkQBAkQBAkQBCkQVAkQBAkQBAkQBAkQBAkQChyYH///////////////+MvWZAkQBAkQBAkQBAkQBAkQBAkQBAkQBNmBH7/Pn////////////l8NxXnh/////////////////Z6cxAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQC/2qn///////////////9xrUJAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBdoif////////////////I37VAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDF3bH///////////////+y05j///////////////+Ww3NAkQBAkQBAkQBAkQBAkQBAkQBAkQBElAb0+fD////////////s9OVCkgNAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQDa6c3////////////6/PhJlgxAkQBAkQBAkQBAkQBAkQBAkQBAkQCCt1j////////////////9/v3////////////9/v1UnRtAkQBAkQBAkQBAkQBAkQBAkQBAkQBzrkT///////////////+qzo5AkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQCXw3T///////////////9/tVRAkQBAkQBAkQBAkQBAkQBAkQBAkQBIlgv2+vP////////////////////////////O471AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCt0JH///////////////9npzRAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQBWnh39/v3///////////+516JAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQC82KX///////////////////////////+LvGRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDm8d7////////////j79lAkQBAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQBAkQDR5MH////////////y9+1DkwRAkQBAkQBAkQBAkQBAkQBAkQBAkQB5skz////////////////////////6/PhNmBFAkQBAkQBAkQBAkQBAkQBAkQBAkQBhpCz///////////////+gyIBAkQBAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQBAkQCPvmn///////////////9wrUBAkQBAkQBAkQBAkQBAkQBAkQBAkQBEkwXx9+z////////////////////C3K5AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCbxXn///////////////9coSZAkQBAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQBAkQBPmhT7/fr///////////+rz49AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCz05r///////////////////+AtlVAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDU5sb////////////X6MpAkQBAkQBAkQBAkQBAkQBAkQBCkQRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDI4Lb////////////n8d9AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBxrUH////////////////1+fJHlQlAkQBAkQBAkQBAkQBAkQBAkQBAkQBQmhb9/vz///////////+UwXBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCFuVz///////////////9ipS5AkQBAkQBAkQBAkQBAkQBAkQBAkQBBkgL1+fL////////////I4LZAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCJu2H////////////9/vxTnBpAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBJlgz4+/X///////////+ex31AkQBAkQBAkQBAkQBAkQBAkQBAkQBcoSX////////////////y9+1EkwVAkQBAkQBAkQBAkQBAkQBAkQBAkQDD3K/////////////M4rtAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQC/2qn////////////b6s9AkQBAkQBAkQBAkQBAkQBAkQBAkQCbxnr///////////////////9zrkRAkQBAkQBAkQBAkQBAkQBAkQBJlgz4+/b///////////+Ju2FAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQB8tFD///////////////9aoCNAkQBAkQBAkQBAkQBAkQBAkQDb6s////////////////////+x0pdAkQBAkQBAkQBAkQBAkQBAkQCDt1n////////////5/PdMmBBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBElAby9+3///////////+YxHZAkQBAkQBAkQBAkQBAkQBaoCP////////////////////////u9ehCkgNAkQBAkQBAkQBAkQBAkQDC3K7////////////B26xAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQC21Z3////////////X6MlAkQBAkQBAkQBAkQBAkQCcxnv///////////////////////////9urD5AkQBAkQBAkQBAkQBKlw34+/b///////////9+tVNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQByrkP////////////+//5Wnh5AkQBAkQBAkQBAkQDc69D///////////////////////////+t0JJAkQBAkQBAkQBAkQCDuFr////////////0+fBGlAhAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkgLs9OX///////////+UwXBAkQBAkQBAkQBcoSb///////////////+31p/////////////r8+RBkQFAkQBAkQBAkQDE3bD///////////+21Z1AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCt0JH////////////S5cNAkQBAkQBAkQCdxnz////////////a6s5Wnh39/v3///////////9qqThAkQBAkQBKlw34+/b///////////9zrkRAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBqqTj////////////9/v1TnBpAkQBAkQDd69H///////////+Xw3RAkQDR5cL///////////+ozYtAkQBAkQCFuVz////////////t9edCkgNAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDk79v///////////+Pv2pAkQBdoif////////////9/v1VnRxAkQCPvmn////////////n8d9BkQFAkQDF3bH///////////+rz49AkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCkyoX////////////O471AkQCex37////////////P479AkQBAkQBPmhT7/fr///////////9mpzNKlw35/Pf///////////9oqDVAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBfoyn////////////9/vxQmhXe7NP///////////+MvWVAkQBAkQBAkQDI4Lb///////////+ky4aGuV3////////////l8NxBkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDd7NL///////////+ozYv////////////7/PlOmRNAkQBAkQBAkQCGuV3////////////j79rF3rL///////////+gyIBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBBkQJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCaxXj////////////9/v3////////////F3bFAkQBAkQBAkQBAkQBJlgz4+/X////////////9/vz///////////9doidAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBXnh/+//7///////////////////////+Bt1dAkQBAkQBAkQBAkQBAkQC/2qr////////////////////////Y6ctAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQDU5sb////////////////////1+fJHlQpAkQBAkQBAkQBAkQBAkQB9tFH///////////////////////+VwnJAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQCSwG3///////////////////+51qFAkQBAkQBAkQBAkQBAkQBAkQBElAby9+3////////////////9/v1UnRtAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQBAkQFAkQBAkQBAkQBA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"
+If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", 0, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+   Return False
+VarSetCapacity(Dec, DecLen, 0)
+If !DllCall("Crypt32.dll\CryptStringToBinary", "Ptr", &B64, "UInt", 0, "UInt", 0x01, "Ptr", &Dec, "UIntP", DecLen, "Ptr", 0, "Ptr", 0)
+   Return False
+; Bitmap creation adopted from "How to convert Image data (JPEG/PNG/GIF) to hBITMAP?" by SKAN
+; -> http://www.autohotkey.com/board/topic/21213-how-to-convert-image-data-jpegpnggif-to-hbitmap/?p=139257
+hData := DllCall("Kernel32.dll\GlobalAlloc", "UInt", 2, "UPtr", DecLen, "UPtr")
+pData := DllCall("Kernel32.dll\GlobalLock", "Ptr", hData, "UPtr")
+DllCall("Kernel32.dll\RtlMoveMemory", "Ptr", pData, "Ptr", &Dec, "UPtr", DecLen)
+DllCall("Kernel32.dll\GlobalUnlock", "Ptr", hData)
+DllCall("Ole32.dll\CreateStreamOnHGlobal", "Ptr", hData, "Int", True, "PtrP", pStream)
+hGdip := DllCall("Kernel32.dll\LoadLibrary", "Str", "Gdiplus.dll", "UPtr")
+VarSetCapacity(SI, 16, 0), NumPut(1, SI, 0, "UChar")
+DllCall("Gdiplus.dll\GdiplusStartup", "PtrP", pToken, "Ptr", &SI, "Ptr", 0)
+DllCall("Gdiplus.dll\GdipCreateBitmapFromStream",  "Ptr", pStream, "PtrP", pBitmap)
+DllCall("Gdiplus.dll\GdipCreateHICONFromBitmap", "Ptr", pBitmap, "PtrP", hBitmap, "UInt", 0)
+DllCall("Gdiplus.dll\GdipDisposeImage", "Ptr", pBitmap)
+DllCall("Gdiplus.dll\GdiplusShutdown", "Ptr", pToken)
+DllCall("Kernel32.dll\FreeLibrary", "Ptr", hGdip)
+DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Ptr", pStream)
+Return hBitmap
+}
+
 ;}
 
 ;{ Includes

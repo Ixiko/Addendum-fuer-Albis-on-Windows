@@ -8,7 +8,7 @@
 ;       Abhängigkeiten:		Addendum_Gui.ahk, Addendum.ahk
 ;       -------------------------------------------------------------------------------------------------------------------------------------------------------------
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
-;       Addendum_Calc started:    	12.07.2022
+;       Addendum_Calc started:    	17.12.2022
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 return
 
@@ -66,8 +66,9 @@ FindDocStrings()                                                              	{
 
 	;~ global rxDate	    	:= 	"\d{1,2}" rx "[\wäöü]+" rx "(\d{4}|\d{2})"                                               	; 12. Juli 1981 o. 12.7.1981 o. 12.07.1981
 	global rxDate	    	:= 	"(\d{1,2})" rx "(0[123456789]|1[012]|[a-zäöüß]+)" rx "(\d{4}|\d{2})"          	; 12. Juli 1981 o. 12.7.1981 o. 12.07.1981
-	global rxDateLong 	:= 	"\d{1,2}" rx "(" rxMonths ")" rx "(\d{4}|\d{2})*"                                               	; 12. Jul. 81
-	global rxDateStr     	:=	"\d{2}\.\d{2}\.(\d{4}|\d{2})*"
+	global rxDateLong 	:= 	"\d{1,2}" rx "(" rxMonths ")" rx "(\d{4}|\d{2})*"                                              	; 12. Jul. 81
+	;~ global rxDateStr     	:=	"\d{2}\.\d{2}\.(\d{4}|\d{2})*"
+	global rxDateStr     	:=	"\d{1,2}\.\d{1,2}\.(\d{4}|\d{2})*"                                                            	; 12.01.81 oder 12.1.1981
 	global rxGb1        	:= 	"(geb(\.|oren)(\sam)*|Geb(urts)*" rxS "Dat(um)*|\*" rxS ")"                           	; geb. am o. Geb. Dat.   und mehr
 	global rxGb2        	:= 	"(geb(\.|oren)(\sam)*|Geb([.,;]|urts)\s*(D|d)at([.,;]|um)|\*)"                              	;
 	global rxBirth         	:= 	"(?<Birth>(?<Tag>\d{1,2})" rx "(?<Monat>\d{1,2})" rx "(?<Jahr>\d{4}|\d{2}))"  ; Datum wird als Geburtsdatum interpretiert
@@ -116,22 +117,26 @@ FindDocStrings()                                                              	{
 	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	; REGEXSTRINGS FÜR DOKUMENTDATUM (FindDocDate)
 	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	global rxTags	       	:= {	1:	"Druckdatum|Erstellungszeitpunkt|Dokumentdatum|D[ae]tum|Untersuchungsdatum|Beginn|Probenentnahmedatu*m*|"
-											. 	"Abnahmedat(\.|um)*|Berichtsdat(\.|um)*|Eingangsdat(\.|um)*|Eingang(\s+am)*|(aus)*gedruckt\s+(am)*|angelegt(\s+am)*|"
-											. 	"Ausgedruckt(\s+am)*|Anfrage\s+vom|Arztbrief\s+vom|Befund\s+vom|Befundbericht\s+vom|Behandlung(sbericht)*\s+vom|"
-											.	"Ebenen\s+vom|Ebenen\/axial\s+vom|Echokardiogra(f|ph)ie\s+vom|Konsil\s+vom|Labor\s+vom|Laborblatt\s+vom|"
-											. 	"Nachricht\s+vom|Startzeit|Aufgezeichnet|Erstellt\s+am|Eing[.,\-\s]+Dat[.,-]+|Ausg[.,\-\s]+Dat[.,-]+Labor(blatt)*\svom|"
-											. 	"festgestellt(\s+am)*|Aufnahme\s*vom.*?|festgestellt(\s+am)*|freigegeben\s+durch.*?am"
+	global rxTags	       	:= {	1:	"Druckdatum|Erstellungszeitpunkt|Dokumentdatum|D[ae]tum|Untersuchungsdatum|die\s+sich\s+am|der\s+sich\s+am"
+											. 	"Beginn|Probenentnahmedatu*m*|Abnahmedat(\.|um)*|Berichtsdat(\.|um)*|Eingangsdat(\.|um)*|"
+											.	"Eingang(\s+am)*|(aus)*gedruckt\s+(am)*|angelegt(\s+am)*|Ausgedruckt(\s+am)*|Anfrage\s+vom|Arztbrief\s+vom|"
+											.	"Befund\s+vom|Befundbericht\s+vom|Behandlung(sbericht)*\s+vom|Ebenen\s+vom|Ebenen\/axial\s+vom|"
+											.	"Echokardiogra(f|ph)ie\s+vom|Konsil\s+vom|Labor\s+vom|Laborblatt\s+vom|Nachricht\s+vom|Startzeit|Aufgezeichnet|"
+											. 	"Erstellt\s+am|Eing[.,\-\s]+Dat[.,-]+|Ausg[.,\-\s]+Dat[.,-]+Labor(blatt)*\svom|festgestellt(\s+am)*|Aufnahme\s*vom.*?|"
+											.	"festgestellt(\s+am)*|freigegeben\s+durch.*?am"
 										,	2:	"Untersuchungstag|Behandlungstag|Behandlung|haben wir|sich|(wir\s+berichten|ich\s+berichte).*?untersuchung\s+(vom|am)"}
 
 										; 	Behandlungszeiträume
 	global rxBehandlung	:= [	"i)\s+vom"   	 rxNL "(?<Datum1>" rxDateStr "*|" rxDateLong ")" rxNL
 										. 	"(bis(\szum)*)" rxNL "(?<Datum2>\d+[.,;]+\d+[.,;]+(\d{4}|\d{2}))"               ; 	1| vom Datum1 bis (zum) Datum2
 										, 	"i)(?<Datum1>[\d.,;]+)\s*(\-)\s*(?<Datum2>[\d.,;]+)"                                 	; 	2| vom Datum1 - Datum2.
-										, 	"i)Behandlungstag" rxNL "(?<Datum1>\d+[.,;]+\d+[.,;]+(\d{4}|\d{2})*)"     	;	3| Behandlungstag: 02.01.2020
-										,	"i)(" rxTags[2] ")" rxNL "(?<Datum1>\d{1,2}" rx "\d{1,2}" rx "(\d{4}|\d{2})"  	; 	4| wir berichten v. d. MRT-Untersuchung am 02.01.2020
-										,	"i)der" ry "sich" ry "am" ry "(?<Datum1>" rxDateStr "*|" rxDateLong ")"				;	5| der sich am 25.05.22 in meiner Behandlung...(befand)
-										  .	"in" ry "meiner" ry "Behandlung"]
+										, 	"i)(?<Datum1>[\d.,;\s]+).*?(\-*|bis\s*zum).*?(?<Datum2>[\d.,;\s]+)*"         	; 	3| vom Datum
+										, 	"i)Behandlungstag" rxNL "(?<Datum1>\d+[.,;]+\d+[.,;]+(\d{4}|\d{2})*)"     	;	4| Behandlungstag: 02.01.2020
+										,	"i)(" rxTags[2] ")" rxNL "(?<Datum1>\d{1,2}" rx "\d{1,2}" rx "(\d{4}|\d{2})"  	; 	5| wir berichten v. d. MRT-Untersuchung am 02.01.2020
+										,	"i)sich" ry "am" ry "(?<Datum1>" rxDateStr "*|" rxDateLong ")"		            		;	6| der sich am 25.05.22 in meiner Behandlung...(befand)
+										  .	"in" ry "(meiner|unserer)" ry "Behandlung"]
+
+	global rxExamDateStr	:= "i)vom.*?(?<Datum1>\d[\d.,;\s]+).+?(\-|(bis\s*zum)).+?(?<Datum2>\d[\d.,;\s]+)* "
 
 	global rxDokDatum	:=[	"i)\s*(" rxTags[1] ")" rx "(?<Datum1>" rxDateStr "|" rxDateLong ")"                                               	;   1| Eingang 02.03.22
 							    		,	"i)\s*(" rxTags[1] ")" rx "(" rxWDay ")*[.,;\s]+(?<Datum1>" rxDateStr "|" rxDateLong ")"                 	;   2| Erstellungszeitpunkt:
@@ -162,19 +167,24 @@ FindDocStrings()                                                              	{
 
 FindDocNames(Text, debug:=false, callbackFunc:="")       	{               	;-- sucht Namen von Patienten im Dokument
 
-	; letzte Änderung: 12.07.2022 - Methode 2 - stringsimilarity Suche und Umlaute ÄÖÜ äöü durch AeOeUe aeueoe erstetzen
+	; letzte Änderung: 19.11.2022 - Methode 2 - stringsimilarity Suche und Umlaute ÄÖÜ äöü durch AeOeUe aeueoe erstetzen
 
-		static methode := ["Methode 1: finden über Namen"
-								, 	"Methode 2: finden über Geburtstage"
-								, 	"Methode 3: finden über Namensvergleich"
-								, 	"Methode 4: finden über Adressen (cPat Objekt wird benötigt)"]
+		static methode := {"1"	: "Methode 1: finden über Namen"
+								, 	"1a"	: "Methode 2: finden über Geburtstage"
+								, 	"2"	: "Methode 2: finden über Geburtstage"
+								, 	"3"	: "Methode 3: finden über Namensvergleich"
+								, 	"4"	: "Methode 4: finden über Adressen (cPat Objekt wird benötigt)"}
 
-		Text := RegExReplace(Text, "(\pL)[^\pL\d\s\-\.\*\@](\pL)", "$1 $2")
-		Text := RegExReplace(Text, "([a-zäöü])\-\s\s*([a-zäöü])", "$1$2")                                             		; Silbentrennung aufheben
-		Text := RegExReplace(Text, "([A-ZÄÖÜ])([A-ZÄÖÜ][a-zäöüß]{2,}[\s\-\@\.;,:])", "$1 $2")     	    	; Großbuchstaben abtrennen
-																																						; KGeriatrie@Krankenhaus.de -> K Geriatrie....
-		Text := RegExReplace(Text, "(Seite|\f)\s(\d+[\\\/\-v]*\d*)", "$1 $2`n`n")                                    		; bei Seitenangaben im Dokument eine Trennung einsetzen
-		Text := RegExReplace(Text, "(\d{1,2})[\,\.;\s]+(\d{1,2})[\,\.;\s]+(\d{4}|\d{2})", "$1.$2.$3")		; fehlerhaftes Datum ändern 12.07, 2022 >> 12.07.2022
+		Text := RegExReplace(Text, "\b(?<I>[A-Z])\s*(?<C>\d{1,2})\s*\.\s*(?<D>\d)\s*(?<G>[VGZA])\b", "$1$2.$3$4")        	; ICD Diagnose zusammenfügen
+		Text := RegExReplace(Text, "(^|\s)(?<I>[A-Z])\s*(?<C>\d{1,2})\s*(?<G>[VGZA])(\W)", "$1$2$3$4$5")                    	; ICD Diagnose zusammenfügen
+		Text := RegExReplace(Text, "(\pL)(\d+x\d+)", "$1 $2")                                                                    	; auf2x1 erhöhen
+		Text := RegExReplace(Text, "(\pL)[^\pL\d\s\-\.\*\@](\pL)", "$1 $2")                                             	; EMail
+		Text := RegExReplace(Text, "([a-zäöü])\-\s\s*([a-zäöü])", "$1$2")                                             	    	; Silbentrennung aufheben
+		Text := RegExReplace(Text, "([A-ZÄÖÜ]|\p{Ll}\.)([A-ZÄÖÜ][a-zäöüß]{2,}[\s\-\@\.;,:])", "$1 $2")     	; Großbuchstaben abtrennen
+																																			    			; KGeriatrie@Krankenhaus.de -> K Geriatrie....
+		Text := RegExReplace(Text, "(Seite|\f)\s(\d+[\\\/\-v]*\d*)", "$1 $2`n`n")                                      	; bei Seitenangaben im Dokument eine Trennung einsetzen
+		Text := RegExReplace(Text, "(\d{1,2})[\,\.;\s]+(\d{1,2})[,;\.\s]+(\d{4}|\d{2})", "$1.$2.$3")    		; fehlerhaftes Datum ändern 12.07, 2022 >> 12.07.2022
+		;~ Text := RegExReplace(Text, "([A-ZÄÖÜ])([A-ZÄÖÜ][a-zäöüß]{2,}[\s\-\@\.;,:])", "$1 $2")     	    	; Großbuchstaben abtrennen
 
 		Text := RegExReplace(Text, "\s{2,}", " ")
 		words := StrSplit(Text, A_Space)
@@ -195,12 +205,12 @@ FindDocNames(Text, debug:=false, callbackFunc:="")       	{               	;-- s
 			global rx, ry, rz, rs, rp1, rp2
 		; ----------------------------- Datum
 			global ThousandYear, HundredYear, rxDay, rxWDay, rxWDay2, rxMonths, rxMonths2, rxYear  	; Teile des Datum
-			global rxDate, rxDates                                                                                                         	; Komplett
+			global rxDate, rxDates                                                                                                             	; Komplett
 			global rxGb1, rxGb2                                                                                                             	; Startstrings
 		; ----------------------------- Eigen- oder Personennamen
 			global rxPerson, rxPerson1, rxPerson2, rxPerson3, rxPerson4, rxNames1, rxNames2                  	; Teile
 			global RxNames, RxNames2                                                                                                  	; Komplett
-			global rxGN, rxAnrede, rxAnredeM, rxAnredeF, rxVorname, rxNachname, rxNameW				; Startstrings
+			global rxGN, rxAnrede, rxAnredeM, rxAnredeF, rxVorname, rxNachname, rxNameW	    			; Startstrings
 		; ----------------------------- sonstige
 			global rxContinue
 
@@ -222,7 +232,9 @@ FindDocNames(Text, debug:=false, callbackFunc:="")       	{               	;-- s
 		If debug {
 			SciTEOutput("`n" Text)
 			SciTEOutput("`n --------------------------------------`n {" methode.1 "}")
-	  }
+		}
+		;~ If IsFunc(callbackFunc)
+			;~ %callbackFunc%(progress)
 
 	; - benutzt RegEx-Strings aus RxNames um Patientennamen zu finden
 		For RxStrIndex, rxNameStr in RxNames {
@@ -286,10 +298,7 @@ FindDocNames(Text, debug:=false, callbackFunc:="")       	{               	;-- s
 			}
 
 			If IsFunc(callbackFunc)
-					%callbackFunc%("update message", methode.1 "`n`m"
-									                        			. "Position:`t" 	SubStr("0000000" spos, -1*sChars) "/" TextLen "`n"
-									                        			. "Treffer: `t"  	PatBuf.Count()
-									                        			, "admJournal")
+				%callbackFunc%("1", SubStr("0000000" spos, -1*sChars), TextLen, PatBuf.Count(), Extra)  ; Name der Methode, Position im Text, Textlänge, Anzahl der Treffer, ExtraInformationen
 
 		}
 
@@ -317,10 +326,7 @@ FindDocNames(Text, debug:=false, callbackFunc:="")       	{               	;-- s
 				SciTEOutput("   " PatID " , hits: " PatBuf[PatID].hits ", Datum: " Pat.Gd " +" GdCount " hits")
 
 			If IsFunc(callbackFunc)
-					%callbackFunc%("update message", methode.1 "a`n`m"
-									                        			. "PatID:  `t"  	PatID "`n"
-									                        			. "Treffer: `t"  	PatBuf.Count()
-									                        			, "admJournal")
+				%callbackFunc%("1a", PatID " - " Pat.Gd, GdCount, PatBuf[PatID].hits, Extra)
 		}
 
 
@@ -343,10 +349,7 @@ FindDocNames(Text, debug:=false, callbackFunc:="")       	{               	;-- s
 
 				spos += StrLen(D)
 				If IsFunc(callbackFunc)
-					%callbackFunc%("update message", methode.2 "`n`m"
-									                        			. "Position:`t" 	SubStr("0000000" spos, -1*sChars) "/" TextLen "`n"
-									                        			. "Treffer: `t"  	PatBuf.Count()
-									                        			, "admJournal")
+					%callbackFunc%("2", SubStr("0000000" spos, -1*sChars), TextLen, PatBuf.Count(), Extra)
 
 			  ; Monat wurde als Wort geschrieben, dann die Nummer des Monats ermitteln
 				If !RegExMatch(DMonat, "\d{1,2}")
@@ -451,7 +454,6 @@ FindDocNames(Text, debug:=false, callbackFunc:="")       	{               	;-- s
 					name1 := RegExReplace(name1, "[\s\n\r\f]")
 					name2 := RegExReplace(name2, "[\s\n\r\f]")
 
-
 				; Bindestrichworte ignorieren
 					If RegExMatch(name1, "\-$") {
 						spos += StrLen(name1)                    ; ein Wort weiter
@@ -476,10 +478,8 @@ FindDocNames(Text, debug:=false, callbackFunc:="")       	{               	;-- s
 								addSign := " "
 								PatBuf[PatID].hits += 1
 								PatBuf[PatID].rxMatch.Push(D)
-								If (debug>1) {
-									out := _JSONMiniDump(PatBuf)
-									SciTEOutput(out)
-								}
+								If (debug>1)
+									SciTEOutput(out := _JSONMiniDump(PatBuf))
 							}
 							else {
 								addSign := "+"
@@ -489,10 +489,8 @@ FindDocNames(Text, debug:=false, callbackFunc:="")       	{               	;-- s
 														, "rxmatch"	: [D]
 														, "hits"       	: 1
 														, "method"  	: 3}
-								If (debug>1) {
-									out := _JSONMiniDump(PatBuf)
-									SciTEOutput(out)
-								}
+								If (debug>1)
+									SciTEOutput(out := _JSONMiniDump(PatBuf))
 							}
 
 							If debug
@@ -502,10 +500,7 @@ FindDocNames(Text, debug:=false, callbackFunc:="")       	{               	;-- s
 					}
 
 				If IsFunc(callbackFunc)
-					%callbackFunc%("update message", methode.3 "`n`m"
-											                        	. "Position:`t" 	SubStr("0000000" spos, -1*sChars) "/" TextLen "`n"
-											                        	. "Treffer: `t"  	PatBuf.Count()
-											                        	, "admJournal")
+					%callbackFunc%("3", SubStr("0000000" spos, -1*sChars), TextLen, PatBuf.Count(), Extra)
 
 			}
 
@@ -570,17 +565,9 @@ FindDocNames(Text, debug:=false, callbackFunc:="")       	{               	;-- s
 					If InStr(Text, cPat.Get(PatID, "VORNAME"))
 						PatBuf[PatID].hits += 1
 
-
-					If debug
-						SciTEOutput("   " strasse ", " Hausnr ", " PLZ " " Ort ":   [" PatID "] " PatBuf[PatID].Nn ", " PatBuf[PatID].Vn " *" PatBuf[PatID].Gd  " , hits: " PatBuf[PatID].hits)
-
 				}
-
 				If IsFunc(callbackFunc)
-					%callbackFunc%("update message", methode.4 "`n`m"
-									                        			. "Position:`t" 	SubStr("0000000" spos, -1*sChars) "/" TextLen "`n"
-									                        			. "Treffer: `t"  	PatBuf.Count()
-									                        			, "admJournal")
+					%callbackFunc%("4", SubStr("0000000" spos, -1*sChars), TextLen, PatBuf.Count(), Extra)
 
 			}
 
@@ -590,7 +577,7 @@ FindDocNames(Text, debug:=false, callbackFunc:="")       	{               	;-- s
 	;}
 
 	; ---------------------------------------------------------------------------------------------------------------------------------------------------
-	; Methode 5: mehrere Patienten gefunden. Welche Patientennamen findest man im Text
+	; Methode 5: im Falle mehrer gefundener Patienten. Welche Patienten finden sich im Text und wie oft?
 	; ---------------------------------------------------------------------------------------------------------------------------------------------------;{
 		If (PatBuf.Count() > 1) {
 
@@ -598,26 +585,39 @@ FindDocNames(Text, debug:=false, callbackFunc:="")       	{               	;-- s
 			  SciTEOutput("`n {Methode 5: mehrere Patienten gefunden, zählen wie oft die Namen vorkommen}")
 
 		  ; alle Worte mit einem Großbuchstaben am Anfang finden
-			spos := 1, PNames := Object()
+			PNames := Object()
+			textB := RegExReplace(text, "(\p{Ll})(\s\-\s|\-\s|\s\-)(\p{Lu})", "$1-$3")  ; r - W => Müller-Wachtendonk
 			textB := RegExReplace(text, "[^\pL\-\s]", " ")
-			textB := RegExReplace(textB, "\s{2, }", " ") " "
+			textB := Trim(RegExReplace(textB, "\s{2, }", " "))
+			textB := StrSplit(txtB, A_Space)
 
 			If debug
 				SciTEOutput(textB "`n - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - `n")
 
-			while (spos := RegExMatch(textB, "\s" rxPerson4, P, spos)) {
+           ; stellt aus dem Text alle Worte zusammen, die Namen entsprechen könnten
+		   ; die Worte werden transformiert (äöü wird ersetzt) so daß eine andere Schreibung auch zu einem Treffer führt
+			spos := 1
+			;~ while (spos := RegExMatch(textB, "\s" rxPerson4, P, spos)) {
+			; #### geändert --- nicht getestet bisher
+			For wIndex, word in textB {
 
-				PName     	:= RegExReplace(Trim(PName)	, "[^\pL]"	, " ")
-				PName      	:= RegExReplace(PName       	, "\s{2,}"	, " ")
-				PName      	:= StrSplit(PName, A_Space)
-				PNameKey1	:= xstring.TransformGerman(PName.1) xstring.TransformGerman(PName.2)
-				PNameKey2	:= xstring.TransformGerman(PName.2) xstring.TransformGerman(PName.1)
-				If !IsObject(PNames[PNameKey1] && !IsObject(PNameKey2))
-					PNames[PNameKey1] := {"N1":xstring.TransformGerman(PName.1) , "N2":xstring.TransformGerman(PName.2), "cnt":1}
-				else
-					PNames[PNameKey1].cnt +=1
+				If !RegExMatch(word, rxPerson4, P) || !RegExMatch(nextword := textB[wIndex+1], rxPerson4, N)
+					continue
 
-				spos += StrLen(P)
+				PNameKey1	:= xstring.TransformGerman(PName) xstring.TransformGerman(NName)
+				PNameKey2	:= xstring.TransformGerman(NName) xstring.TransformGerman(PName)
+				If !IsObject(PNames[PNameKey1]) && !IsObject(PNames[PNameKey2])
+					PNames[PNameKey1] := {"N1":xstring.TransformGerman(PName) , "N2":xstring.TransformGerman(NName), "cnt":1}
+				else {
+					If IsObject(PNames[PNameKey1])
+						PNames[PNameKey1].cnt +=1
+					else
+						PNames[PNameKey2].cnt +=1
+
+				}
+
+				If IsFunc(callbackFunc)
+					%callbackFunc%("5", wIndex, textB.Count(), PNames.Count(), Extra)
 
 			}
 
@@ -631,10 +631,8 @@ FindDocNames(Text, debug:=false, callbackFunc:="")       	{               	;-- s
 				For pidx, word in PNames {
 
 					DiffA	:= StrDiff(word, NAME), DiffB := StrDiff(word, VORNAME)
-					If (DiffA <= 0.21)
-						thisPatNn += 1
-					If (DiffB <= 0.21)
-						thisPatVn += 1
+					thisPatNn	+= DiffA <= 0.21 ? 1 : 0
+					thisPatVn	+= DiffB <= 0.21 ? 1 : 0
 
 					If (debug) && (thisPatVn+thisPatNn>=2) && (thisPatVn = thisPatNn)
 						SciTEOutput("   PatID:    `t[" PatID "] " Pat.Nn ", " Pat.Vn ", Position: " pidx ", vollst. Namenstreffer: " thisPatVn)
@@ -643,8 +641,8 @@ FindDocNames(Text, debug:=false, callbackFunc:="")       	{               	;-- s
 
 				If (thisPatVn+thisPatNn>=2) {
 
-					hits := Min(thisPatVn, thisPatNn)
-					PatBuf[PatID].hits += hits
+					PNMatches := Min(thisPatVn, thisPatNn)
+					PatBuf[PatID].hits += PNMatches
 
 					If debug
 						SciTEOutput("   PatID:    `t[" PatID "] " Pat.Nn ", " Pat.Vn " , hits: " PatBuf[PatID].hits)
@@ -721,6 +719,8 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 	;}
 
 	; Behandlung von ... bis ....
+		;~ If RegExMatch(text, rxExamDateStr, D)
+			;~ SciTEOutput("Behandlungsdaten gefunden: " DDatum1 (DDatum2 ? " - " DDatum2 : "") )
 		For RxStrIndex, rxDateStr in rxBehandlung {
 
 			spos := 1
@@ -733,6 +733,7 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 			; Datum formatieren, fehlerhafte Interpunktion ändern
 				DDatum1	:= RegExReplace(DDatum1	, "[\.\,\;\:\s]+", ".")
 				DDatum1	:= RegExReplace(DDatum1	, "\.{2,}", ".")
+				DDatum1	:= RTrim(DDatum1, ".")
 				DDatum1 := _FormatDateEx(DDatum1	, "DMY", "dd.MM.yyyy")
 				DDatum1 := DateValidator(DDatum1	, A_YYYY)
 
@@ -744,16 +745,16 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 				If debug && DDatum1 && DDatum2
 					SciTEOutput("  von | bis : " DDatum1 " | " DDatum2)
 
-			; prüft ob die Daten Geburtstage sind, löscht diese dann
+			; wenn die gefundenen Tage Patientengeburtstage sind, werden diese aus dem Text entfernt
 				If (StrLen(DDatum1 DDatum2) > 0)
 					For PatID, Pat in names {
 						DDatum1 := DDatum1 && (Pat.Gd = DDatum1)	? "" : DDatum1
 						DDatum2 := DDatum2 && (Pat.Gd = DDatum2)	? "" : DDatum2
-						If (StrLen(DDatum1 DDatum2) = 0)
+						If (StrLen(DDatum1 . DDatum2) = 0)
 							break
 					}
 
-				If (StrLen(DDatum1 DDatum2) = 0)
+				If (StrLen(DDatum1 . DDatum2) = 0)
 					continue
 
 			; DDatum1 ist leer und DDatum2 enthält eine Datum dann das Datum nach DDatum1 kopieren
@@ -914,6 +915,28 @@ FindDocDate(Text, names="", debug=false) 						{                	;-- Behandlungs
 
 
 return retDates
+}
+
+FindDocDateFast(Text, names, debug=false) {
+
+	DocDates := Object()
+	rxDateL1 := "(?<Date1>\d{1,2}[\s\.]+\d{1,2}[\s\.]+(\d{4}|\d{2}))"
+	rxDateL2 := "(?<Date2>\d{1,2}[\s\.]+\d{1,2}[\s\.]+(\d{4}|\d{2}))"
+	rxUpperword := "\p{Lu}\p{Ll}+"
+	rxDates := [	"i)" rxDateL1 "(\s*bis\s*zum\s*)" rxDateL2										; Priorität 	1
+					,	"i)vom\s*" rxDateL1 "(\s*bis\s*)" rxDateL2	    	             				; Priorität 	1
+					,	"i)(Dokumentdatum|Druckdatum|Datum|Ausgang|Aufnahme\s*vom)" "\s*[;:,]{0,1}\s*" rxDateL1 "\s"
+					,	"*[\n\r]\s*" rxDateL1 "\s*[\n\r]"
+					,	rxUpperWord "\s*[,;:]\s*" rxDateL1 "\s*[\n\r]"
+					,	""
+					,	""]
+
+	dates := RegExReplace(text, "[^\d\-\.\s]", "  ")
+	dates := RegExReplace(dates, "\s", "  ")
+	dates := RegExReplace(dates, "\s\d+\s", "  ")
+	dates := RegExReplace(dates, "\s\.+\s", "  ")
+	dates := Trim(RegExReplace(dates, "\s{2,}", " "))
+
 }
 
 FindDocInhalt(Text)                                                         	{                	;-- Kategorisierung/Autonaming

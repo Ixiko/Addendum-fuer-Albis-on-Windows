@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                             	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                             	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                              	by Ixiko started in September 2017 - last change 29.09.2021 - this file runs under Lexiko's GNU Licence
+;                                              	by Ixiko started in September 2017 - last change 12.10.2022 - this file runs under Lexiko's GNU Licence
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -118,7 +118,7 @@ TProtGetDay(datestring, client)                                        	{       
 	If !Tproto[TProto.Count()]
 		TProto.RemoveAt(TProto.Count())
 
-return TPRoto
+return Tproto
 }
 ;3
 TProtMatchID(matchID, datestring:="", client:="")             	{               	; sucht nach bereits gespeicherten PatID's

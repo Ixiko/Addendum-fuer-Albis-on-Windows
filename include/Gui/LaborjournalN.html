@@ -269,37 +269,38 @@ TD.tooltip:hover:after {
 }
 .virus-container {
 	display: flex;
-  	flex-direction: row;
+  flex-direction: row;
 	height: 150px;
 	overflow:hidden;
-  	padding-right: 10px;
+  padding-right: 10px;
 	background: #080e1e;
 	background: -webkit-radial-gradient(circle at 60px 50%, #6eabb3 -60px, rgb(0, 53, 66) 210px, rgba(0, 16, 20, 1) 420px);
 	background: -moz-radial-gradient(circle at 60px 50%, #6eabb3 -60px, rgb(0, 53, 66) 210px, rgba(1, 16, 20, 1) 420px);
 	background: -o-radial-gradient(circle at 60px 50%, #6eabb3 -60px, rgb(0, 53, 66) 210px, rgba(1, 16, 20, 1) 420px);
 	background: radial-gradient(circle at 60px 50%, #33a1af -60px, rgb(0, 53, 66) 210px, rgba(0, 16, 20, 1) 420px);
-  	justify-content: space-between;
+  justify-content: space-between;
 }
 .cvirus {
 	width: 200px;
+
 }
 .Statistik {
-  	font-family:      "Futura Md BT";
+  font-family:      "Futura Md BT";
 	color: white ;
 }
 .Statistik-Title {
-  	width:            100%;
+  width:            100%;
 	margin-top:       5px;
 	padding-top:      5px;
 	padding-bottom:   5px;
 	margin-bottom:    5px;
 	font-size:        .9em;
 	font-style:       normal;
-  	letter-spacing:   0.25em;
-  	background:       rgba(61, 114, 173, 0.373);
-  	border-radius:    5px;
+  letter-spacing:   0.25em;
+  background:       rgba(61, 114, 173, 0.373);
+  border-radius:    5px;
 	color:            white;
-  	text-align:       center;
+  text-align:       center;
 }
 .tablecols {
 	display:flex;
@@ -339,7 +340,7 @@ TD.tooltip:hover:after {
 }
 .tablecovidstats2 thead {
 	border-radius: 5px;
-  	background:     rgba(12, 24, 36, 0.521);
+  background:     rgba(12, 24, 36, 0.521);
 }
 .tablecovidstats2 th {
 	width:40px;
@@ -348,7 +349,7 @@ TD.tooltip:hover:after {
 	padding-right: 10px;
 }
 .thl {
-  	padding-left: 5px;
+  padding-left: 5px;
 	text-align:left;
 }
 .thc {
@@ -359,8 +360,8 @@ TD.tooltip:hover:after {
 }
 .cststd1 {
 	font-family:        "Futura Md BT";
-  	font-size:          0.9em;
-  	font-style:         normal;
+  font-size:          0.9em;
+  font-style:         normal;
 	text-align:         right;
 	padding-right:      5px;
 }
@@ -373,11 +374,11 @@ TD.tooltip:hover:after {
 .LaborAbruf {
 	display: flex;
 	flex-direction: column;
-  	text-align: right;
-  	padding: 10px;
-  	margin: 5px;
-  	background:rgba(255, 255, 255, 0.1);
-  	border-radius: 10px;
+  text-align: right;
+  padding: 10px;
+  margin: 5px;
+  background:rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
 }
 .laEmpty {
 	height: 10px;
@@ -413,16 +414,16 @@ TD.tooltip:hover:after {
 	animation-timing-function: ease-in-out;
 }
 .theVirus {
-  filter:         hue-rotate(0deg) saturate(1);
-  transition: 	  all 2s ease-in-out;
+  filter:        hue-rotate(0deg) saturate(1);
+  transition: all 2s ease-in-out;
 }
 .theVirus:hover {
    filter:        hue-rotate(45deg) saturate(2);
    cursor:        grabbing;
-   transition: 	  all 2s ease-in-out;
+   transition: all 2s ease-in-out;
 }
 .mask {
-  visibility: 	  hidden;
+  visibility: hidden;
 }
 g.evelope {
 	animation-name: rotate;
@@ -436,7 +437,7 @@ ellipse.left-eyeball,
 ellipse.right-eyeball {
 	animation-name: moveEyeBalls;
 	transform-origin: 100% 100%;
-	animation-duration: 6s;
+	animation-duration: 3s;
 	animation-direction: normal;
 	animation-iteration-count: infinite;
 	animation-timing-function: ease-in-out;
@@ -520,19 +521,20 @@ ellipse.right-eyeball {
 }
 
 </style>
+
 <script type="text/javascript">
 
   function blamevirus(state) {
 
       var skin = document.getElementById('virus-skin');
-      skin.style = "fill:rgb(22, 134, 56); fill-opacity: 1; transition: all 0.8s ease-in-out";
+      skin.Style = "fill:rgb(22, 134, 56); fill-opacity: 1; transition: all 0.8s ease-in-out";
       switch(state) {
 
         case 1:
-		  skin.style = "fill:rgb(22, 134, 56); fill-opacity: 1; transition: all 0.8s ease-in-out";
+		  skin.Style = "fill:rgb(22, 134, 56); fill-opacity: 1; transition: all 0.8s ease-in-out";
 
         case 2:
-          skin.style = "fill:rgb(199, 118, 12);  fill-opacity: 1; transition: all 0.8s ease-in-out";
+          skin.Style = "fill:rgb(199, 118, 12);  fill-opacity: 1; transition: all 0.8s ease-in-out";
 
 		  }
 
@@ -623,17 +625,6 @@ ellipse.right-eyeball {
 </header>
 
 <body>
-
-	<script>
-		onmousemove = function(e){
-
-			lball = document.getElementById("leball")
-			console.log("left eyeball location:", lball.cX, lball.cY)
-			// console.log("mouse location:", e.clientX, e.clientY)
-
-		}
-
-	  </script>
 
   <div class='virus-container'>
 
@@ -816,7 +807,7 @@ ellipse.right-eyeball {
                   style="fill: #d47a04; fill-opacity: 1; transition: all 0.8s ease-in-out"
                 />
                 <g class="face"     id="g1222">
-                  <ellipse class="left-eye" id="leye"
+                  <ellipse class="left-eye"
                     fill="#ffffff"
                     cx="98.2"
                     cy="100.9"
@@ -826,7 +817,7 @@ ellipse.right-eyeball {
                     style="stroke-width: 1"
                     transform="rotate(5.4)"
                   />
-                  <ellipse class="left-eyeball" id="leball"
+                  <ellipse class="left-eyeball"
                     fill="#1e1e1e"
                     cx="88"
                     cy="108.8"

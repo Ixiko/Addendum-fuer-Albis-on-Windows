@@ -10,9 +10,9 @@
 ;		Abhängigkeiten: 	-	siehe #includes
 ;
 ;	                    				Addendum für Albis on Windows
-;                        				by Ixiko started in September 2017 - last change 15.05.2022 - this file runs under Lexiko's GNU Licence
+;                        				by Ixiko started in September 2017 - last change 03.03.2022 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;	Version 1.01
+;	Version 1.05
 
 	; Skripteinstellungen                                        	;{
 
@@ -33,7 +33,7 @@
 	; Variablen                                                       	;{
 
 		global q := Chr(0x22)
-		global DBFPatient, AlbisPath, AlbisDBPath, exportordner, AddendumDir, suchfeldeintragung, qpdfPath
+		global DBFPatient, exportordner, AddendumDir, suchfeldeintragung, qpdfPath
 		global DXP, hDXP, DXP_Pat, DXPhPat, DXP_PLV, DXP_DLV, DXP_PE, DXP_SB, DXP_FF, DXP_AB, DXP_EB, DXP_FB, DXP_NR, DXP_NV
 		global FSize, edWidth
 		global docfilter_full, docfilter_checked, pdfViewer, imgViewer, docViewer
@@ -44,8 +44,11 @@
 		global SumatraCMD, SumatraExist
 
 		RegExMatch(A_ScriptDir, ".*(?=\\Module)", AddendumDir)
+		Addendum.Dir             	:= AddendumDir                                    	; Addendum Basispfad
 		Addendum.qpdfPath    	:= AddendumDir "\include\OCR\qpdf"
-		Addendum.AlbisDBPath	:= GetAlbisPath() "\db"
+		Addendum.AlbisPath 	:= GetAlbisPath()                                   	; Albis Basispfad
+		Addendum.AlbisDBPath	:= Addendum.AlbisPath "\db"
+		Addendum.AlbisBriefe	:= Addendum.AlbisPath "\Briefe"
 
 	; Sumatra für Vorschau und den Druck von PDF Dokumenten
 		SumatraCMD := GetAppImagePath("SumatraPDF")
@@ -58,12 +61,6 @@
 		;~ else
 			;~ Menu, Tray,  Icon, % AddendumDir "\assets\ModulIcons\DocPrinz.ico"
 
-	;}
-
-	; Albis Basispfad                                            	;{
-		SetRegView, % (A_PtrSize = 8 ? 64 : 32)
-		RegRead, AlbisPath, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, Installationspfad
-		AlbisDBPath := AlbisPath "\DB"
 	;}
 
 	; INI Read                                                     	;{
@@ -131,6 +128,7 @@
 	; Karteikartenkürzel                                         	;{
 		DBaccess 	:= new AlbisDB(Addendum.AlbisDBPath)
 		KKFilter 	:= DBaccess.Karteikartenfilter()
+		DBaccess	:= ""
 		DbFilter 	:= ""
 
 		For filtername, data in KKFilter
@@ -283,7 +281,7 @@
 		Gui, DXP: Add, Text, % "x" cpX+2 " y" Y1-17 "          BackgroundTrans    	               "   						, % "Dokumente für den Export auswählen"
 
 		Gui, DXP: Font, % "s" FSize-1 " Normal"
-		Gui, DXP: Add, Button        	, % "x" cpX " y" Y1 "	                            	vDXP_AB"		gdxp              	, % "Alle"
+		Gui, DXP: Add, Button        	, % "x" cpX " y" Y1 "	                           	vDXP_AB"		gdxp              	, % "Alle"
 		Gui, DXP: Add, Button        	, % "x+5           	                            	vDXP_KB"		gdxp              	, % "Keines"
 		Gui, DXP: Add, Button        	, % "x+5           	                            	vDXP_LB"		gdxp              	, % "zurückliegende Jahre"
 
@@ -445,12 +443,12 @@
 
 		sb1Width	:= Round(ww/3)
 		sb2Width	:= 5 * FSize
-		sb3Width	:= Round(ww/3.5)
+		sb3Width	:= Round(ww/5.5)
 		sb4Width	:= ww - sb1Width - sb2Width - sb3Width
 
 		SB_SetParts(sb1Width, sb2Width, sb3Width, sb4Width )
 		SB_SetText("...warte auf Deine Eingabe", 1)
-		SB_SetText(AlbisPath " | " exportordner, 3)
+		SB_SetText(Addendum.AlbisPath " | " exportordner, 4)
 	;}
 
 	;-: HOTKEY                                                    	;{
@@ -539,7 +537,8 @@ DXP_Handler:                                                    	;{
 				Dokumente_ShowWithExplorer()
 
 		Case "DXP_PB":                                                  	; Exportordner ändern
-			ChangeFolder()
+			If (newfolder := ChangeFolder())
+				Dokumente_Update(newfolder)
 
 		; --------------------------------------------------------------------------------------------------------------------------------------------------
 		; -- Filter --
@@ -667,7 +666,7 @@ DimmerGui(show, DBASEFileName:="")             	{       ;-- Fortschrittsanzeige
 
 	Gui, DMR: Font	   	, s28 q5 bold cDarkBlue
 	Gui, DMR: Add    	, Text    	, % "x0 y+15 Right vDMR_SL2 Backgroundtrans"                                                           	, % "0000000"
-	Gui, DMR: Add    	, Text    	, % "x+0 Left vDMR_SL3 Backgroundtrans"                                                                  	, % "/0000000"
+	Gui, DMR: Add    	, Text    	, % "x+0 Left vDMR_SL3 Backgroundtrans"                                                                  	, % "/0000000 [000 Dokumente]"
 
 	GuiControlGet, cp	, DMR: Pos	, DMR_SL2
 	Gui, DMR: Add    	, Progress	, % "x10 	y" cpY+cpH " w" DXPPos.CW-20 " h40 vDMR_PGS1 HWNDDMR_hPGS1 ", 0
@@ -697,14 +696,17 @@ DimmerGui(show, DBASEFileName:="")             	{       ;-- Fortschrittsanzeige
 return
 }
 
-DimmerPGS(recordNr, RecordsMax, len)             	{		;-- Callbackfunktion für die Fortschrittsanzeige
+DimmerPGS(FuncName, recordNr, RecordsMax, len, matchCount:=0)             	{		;-- Callbackfunktion für die Fortschrittsanzeige
 
-	global DPGS_init, DBASEFileName, DBASEFileName_old
+	; DBASE.Search() callback: A_ThisFunc, setNR, this.records, this.slen, matches.Count()
+
+	global DPGS_init, DBASEFileName, DBASEFileName_old, matchCount_old
 
 	Gui, DMR: Default
 
 	If DPGS_init {
 		DPGS_init := 0
+		GuiControl, DMR: , DMR_SL2	, % 0
 		GuiControl, DMR: , DMR_SL3	, % "/" RecordsMax
 		GuiControl, DMR: , DMR_DBFN	, % DBASEFileName
 		DBASEFileName_old := DBASEFileName
@@ -715,8 +717,14 @@ DimmerPGS(recordNr, RecordsMax, len)             	{		;-- Callbackfunktion für d
 		DBASEFileName_old := DBASEFileName
 	}
 
-	GuiControl, DMR: , DMR_SL2, % recordNr
-	GuiControl, DMR:, DMR_PGS1, % Floor(pgs := recordNr*100/RecordsMax)
+	GuiControl, DMR: , DMR_SL2	, % recordNr
+
+	If (matchCount_Old != matchCount) {
+		GuiControl, DMR: , DMR_SL3	, % "/" RecordsMax (matchCount ? " [" matchCount  " Dokumente]" : "")
+		matchCount_Old := matchCount
+	}
+
+	GuiControl, DMR:, DMR_PGS1	, % Floor(pgs := recordNr*100/RecordsMax)
 
 	Gui, DXP: Default
 	SB_SetText("`t`t" Round(pgs), 2)
@@ -738,7 +746,7 @@ GetCheckedFilter()                                             	{
 
 
 ;--- Dokumente auflisten        	;{
-Dokumente_Show(row)                                                                                       	{
+Dokumente_Show(row)                                                                                                  	{
 
 	; Variablen [PatDok]
 		global DPGS_init, PatChoosed, DXP, DXP_DLV
@@ -812,7 +820,7 @@ Dokumente_Show(row)                                                             
 		lvdocNr := AllPages := ExportedDocs := exportedPages := 0
 		For lfdnr, file in PatDok[Pat.NR] {
 
-				DimmerPGS(lvdocNr ++, DokMax, StrLen(DokMax))
+				DimmerPGS(A_ThisFunc, lvdocNr ++, DokMax, StrLen(DokMax))
 				Gui, DXP: Default
 				Gui, DXP: ListView, DXP_DLV
 
@@ -829,7 +837,7 @@ Dokumente_Show(row)                                                             
 			RegExMatch(file.filename, "i)\.(?<xt>[a-z]+)$", e)
 			datum 	        	:= SubStr(file.datum, 7, 2) "." SubStr(file.datum, 5, 2) "." SubStr(file.datum, 1, 4)
 			docPath        	:= PatPath "\" file.datum " - " file.Bezeichnung "." file.ext
-			originalPath     	:= AlbisPath "\Briefe\" file.filename
+			originalPath     	:= Addendum.AlbisBriefe "\" file.filename
 			exported        	:= searchable := ""
 			docExist         	:= false
 			pages           	:= 0
@@ -847,7 +855,7 @@ Dokumente_Show(row)                                                             
 				viewPath 	:= originalPath
 			}
 
-		  ; Dokumenteigenschaften: durchsuchbar (OCR oder Text) und Seitenzahl, wenn Seitenzahl nicht verfügbar dann Dateigröße
+		  ; Dokumenteigenschaften: durchsuchbar (OCR oder Text) und Seitenzahl, wenn Seitenzahl nicht verfügbar dann Dateigröße ;{
 				If (docExist && RegExMatch(file.ext,"i)pdf")) {
 					searchable 	:= PDFisSearchable(viewPath) ? "Ja" : ""
 					pages       	:= PDFGetPages(viewPath, Addendum.qpdfPath)
@@ -866,7 +874,9 @@ Dokumente_Show(row)                                                             
 					fileSize     	:= FSize >= 1024 ? Round(FSize/1024, 1) " MB" : FSize " KB"
 				}
 
-		; Eintragen in die Listview
+			;}
+
+		; Eintragen in die Listview ;{
 				Gui, DXP: Default
 				Gui, DXP: ListView, DXP_DLV
 				LV_Add(""	, datum
@@ -880,10 +890,11 @@ Dokumente_Show(row)                                                             
 				AllPages += pages
 				If (exported = "Ja")
 					ExportedPages 	+= pages
+			;}
 
 		}
 
-	; Spaltenbreite an den Inhalt anpassen
+	; Spaltenbreite an den Inhalt anpassen ;{
 		If (LV_GetCount() > 0) || (PatDok[Pat.NR].Count() > 0) {
 			LV_ModifyCol()
 			LV_ModifyCol(4, "40")
@@ -895,19 +906,29 @@ Dokumente_Show(row)                                                             
 			GuiControl, DXP: Enable, DXP_LB
 			GuiControl, DXP: Enable, DXP_EP
 		}
+		;}
 
-	; neuen Statustest setzen
+	; neuen Statustext setzen ;{
 		DokumentInfo := (PatDok[Pat.NR].Count() > 0 ? PatDok[Pat.NR].Count() " Dokumente, exportiert: " ExportedDocs : "keine Dokumente")
 		DokumentInfo .= (PatDok[Pat.NR].Count() > 0 ? "| Seiten gesamt: " AllPages ", exportiert: " ExportedPages : "")
 		SB_SetText(DokumentInfo)
 		SB_SetText("", 2)
 		SB_SetText("PatNR: " Pat.NR, 3)
 		SB_SetText("Anzahl Patienten in PatDOK: " PatDok.Count(), 4)
+	;}
 
 	; Overlay-Gui ausschalten
 		DimmerGui("off")
 
 return PATDok
+}
+
+Dokumente_Update(newfolder)                                                                                      	{
+
+	; Variablen [PatDok]
+		global DPGS_init, PatChoosed, DXP, DXP_DLV
+		global PatMatches
+
 }
 
 Dokumente_GetFromDB(PATNR, dokext="pdf,jpg,gif,bmp,tif,png,wav,avi,mov,doc,docx") 	{
@@ -927,12 +948,14 @@ Dokumente_GetFromDB(PATNR, dokext="pdf,jpg,gif,bmp,tif,png,wav,avi,mov,doc,docx"
 		DimmerGui("on", DBASEFileName)
 
 	  ; Dateinamen
-		beftexte   	:= new dBase(AlbisDBPath "\BEFTEXTE.dbf", false, {"name":"DXP", "control":"Statusbar", "sbNR":2})
-		pattern  	:= {"PATNR": "rx:\s*" PATNR, "TEXT": "rx:\w+\\\w+\.[a-z]{1,4}"}
+		beftexte   	:= new dBase(Addendum.AlbisDBPath "\BEFTEXTE.dbf", 0, {"name":"DXP", "control":"Statusbar", "sbNR":2})
+		pattern  	:= {"PATNR": "rx:\s*" PATNR, "TEXT": "rx:\w+\\\w+\.\pL{1,4}"}
 		res2        	:= beftexte.OpenDBF()
-		matches2 	:= beftexte.Search(pattern, 0, "DimmerPGS")
+		matches2 	:= beftexte.Search(pattern, 0, "DimmerPGS", {"ReturnDeleted"         	: true
+																						, 	 "debug"                     	: 0x0
+																						, 	 "LogicalComparison" 	: "and"         	; "and" = Treffer nur wenn das gesamte Muster übereinstimmt
+																						, 	 "maxMatches"             	: 12000 })   	; maximale Items um RAM-Fehler zu vermeiden
 		res2         	:= beftexte.CloseDBF()
-		;~ SciTEOutput("BefTexte rx: " beftexte.SearchRegExStr )
 		beftexte 	:= ""
 
 		For i, m in matches2 {
@@ -950,10 +973,10 @@ Dokumente_GetFromDB(PATNR, dokext="pdf,jpg,gif,bmp,tif,png,wav,avi,mov,doc,docx"
 		DimmerGui("on", DBASEFileName)
 
 	  ; Bezeichnungstext in der Karteikarte
-		befund   	:= new dBase(AlbisDBPath "\BEFUND.dbf", 0, {"name":"DXP", "control":"Statusbar", "sbNR":2})
+		befund   	:= new dBase(Addendum.AlbisDBPath "\BEFUND.dbf", 0, {"name":"DXP", "control":"Statusbar", "sbNR":2})
 		pattern		:= {"PATNR": "rx:\s*" PATNR, "TEXTDB": ("rx:(" RTrim(lfds, "|") ")")}
 		res1        	:= befund.OpenDBF()
-		matches1 	:= befund.Search(pattern, 0, "DimmerPGS")
+		matches1 	:= befund.Search(pattern, 0, "DimmerPGS", {"ReturnDeleted" : true, "debug":0})
 		res1         	:= befund.CloseDBF()
 		;~ SciTEOutput("Befund rx: " befund.SearchRegExStr )
 		befund 		:= ""
@@ -974,7 +997,7 @@ Dokumente_GetFromDB(PATNR, dokext="pdf,jpg,gif,bmp,tif,png,wav,avi,mov,doc,docx"
 				INHALT 	:=  RegExReplace(INHALT, "\s{2,}", " ")
 				INHALT 	:=  RegExReplace(INHALT, "([a-z])(\d)", "$1 $2")
 			}
-			; unbenannte Dokumente als unbenannt kennzeichnen
+			; unbenannte Dokumente durch ein 'unbenannt' kennzeichnen
 			else
 				INHALT := "unbenannt"
 
@@ -995,7 +1018,7 @@ return ftoex
 ;}
 
 ;--- Dokumente exportieren    	;{
-Dokumente_Export(Pat:="")                                   	{	;-- exportiert ausgewählte Dokumente
+Dokumente_Export(Pat:="")                                                             	{	;-- exportiert ausgewählte Dokumente
 
 		global PATDok, exportordner
 
@@ -1017,31 +1040,49 @@ Dokumente_Export(Pat:="")                                   	{	;-- exportiert au
 
 	; Exportvorgang ausführen
 		If !dokumente.Count() {
-			SB_SetText(msg := "KEINE EXPORTAUSWAHL GETROFFEN!", 4)
-			MsgBox, 0x1000, DocPrinz, % msg, 3
+			Gui, DXP: Default
+			SB_SetText(msg := "Es wurde keine Exportauswahl getroffen!", 1)
+			PraxTT(DocPrinz "`n- - - - - - - - - - - - - - - - - - -`n" msg, "3 0")
 			return 0
 		}
 
 		filesLeft :=Dokumente_Filecopy(Pat.NR, Pat.NAME ", " Pat.VORNAME, dokumente, exportordner)
-		If (filesLeft = -99)  {
-			PraxTT(StrReplace(A_ScriptName, ".ahk") "`n" A_ThisFunc "`nDer Patientenexportpfad konnte nicht angelegt werden.`n"
-					. "Dokumente zum Exportieren: " dokumente.Count(), "3 1")
+
+		If (filesLeft < 0)  {
+			PraxTT("Der Patientenexportpfad konnte nicht angelegt werden.`nDokumente zum Exportieren: " dokumente.Count(), "3 1")
+			Gui, DXP: Default
+			SB_SetText("Anlegen des Exportpfad fehlgeschlagen", 1)
+			return
 		}
-		else
-			PraxTT(dokumente.Count() " Dokumente sollten exportiert werden. Rest " filesLeft, "3 0")
+
+		docExportCount	:= dokumente.Count() - filesLeft
+		docExportMsg   	:= docExportCount (docExportCount>1 ? " Dokumente wurden" : " Dokument wurde") " exportiert."
+
+		n1:= filesLeft>1 ? "e":""
+		n2:= filesLeft>1 ? "n":""
+		filesLeftMsg := filesLeft ? " Dokument " n1 " konnte" n2 " nicht exportiert werden." : ""
+
+		PraxTT(docExportMsg "`n" filesLeftMsg, "3 0")
+		Gui, DXP: Default
+		SB_SetText(filesLeftMsg ? filesLeftMsg : docExportMsg, 1)
 
 return filesLeft = 0 ? 1 : -1*filesLeft
 }
 
-Dokumente_Filecopy(PatID, PatName, FilesToCopy, exportPath)         	{	;-- kopiert die ausgewählten Dokumente aus albiswin/briefe in den Exportordner
+Dokumente_Filecopy(PatID, PatName, FilesToCopy, exportPath)      	{	;-- kopiert die ausgewählten Dokumente aus albiswin/briefe in den Exportordner
 
-		global AlbisPath, exportordner
+		global exportordner
 
-		copynr := 0
+		If !IsObject(FilesToCopy) || !FilesToCopy.Count()
+			return
+
+		SB_SetText("...exportiere " FilesToCopy.Count() " Dokument" (FilesToCopy.Count()>1 ? "e":""), 1)
 
 	; Dokumentenexportpfad anlegen
 		If !(PatPath := CreatePatPath(PatID, PatName, exportPath)) {
 			PraxTT(A_ScriptName "`n" A_ThisFunc "`nDer Patientenexportpfad konnte nicht angelegt werden", "3 1")
+			Gui, DXP: Default
+			SB_SetText("Patientenexportpfad konnte nicht angelegt werden", 1)
 			return -99
 		}
 
@@ -1050,22 +1091,23 @@ Dokumente_Filecopy(PatID, PatName, FilesToCopy, exportPath)         	{	;-- kopie
 		Gui, DXP: ListView, DXP_DLV
 
 	; Dateien kopieren
+		copynr := 0
 		For row, file in FilesToCopy {
 			exportFile := PatPath "\" file.datum " - " file.Bezeichnung "." file.ext
+			If !FileExist(exportFile)
+				FileCopy, % Addendum.AlbisBriefe "\" file.filename, % exportFile, 1
 			If FileExist(exportFile) {
+				copynr += 1
 				Dokumente_Uncheck(file.Bezeichnung)
-				continue
 			}
-			FileCopy, % AlbisPath "\Briefe\" file.filename, % exportFile, 1
-			If exportFile {
-				copynr ++
-				Dokumente_Uncheck(file.Bezeichnung)
-				SB_SetText(copynr " von " FilesToCopy.Count() " Dateien exportiert.")
-			}
-			SB_SetText(AlbisPath "\Briefe\" file.filename, 1)
-			SB_SetText(PatPath "\" file.datum " - " file.Bezeichnung "." file.ext, 4)
-			SB_SetText(ErrorLevel, 2)
+			Gui, DXP: Default
+			SB_SetText(copynr, 2)
+			SB_SetText(" von " FilesToCopy.Count() " Datei(en) kopiert", 3)
+			SB_SetText(Addendum.AlbisBriefe "\" file.filename, 4)
 		}
+
+		SB_SetText(" von " FilesToCopy.Count() " Datei(en) kopiert nach", 3)
+		SB_SetText(PatPath, 4)
 
 return FilesToCopy.Count() - copynr
 }
@@ -1109,7 +1151,7 @@ Dokumente_Print()                                                               
 					continue
 			}
 
-			filepath := AlbisPath "\Briefe\" PATDok[Pat.NR][LFDNR].filename
+			filepath := Addendum.AlbisBriefe "\" PATDok[Pat.NR][LFDNR].filename
 			RegExMatch(filepath, "\.(?<ext>[a-z]+)$", file)
 
 			If (fileext="pdf") {
@@ -1196,13 +1238,13 @@ Karteikarte_Export(Pat:="")                                                     
 	; Laborblatt drucken
 	;----------------------------------------------------------------------------------------------------------------------------------------------
 		; Werte exportieren
-			If !FileExist(PatPath "\Laborkarte von " Pat.NAME ", " Pat.VORNAME) {
+			If !FileExist(PatPath "\Laborblatt von " Pat.NAME ", " Pat.VORNAME ".pdf") {
 				PraxTT("Laborwerte werden exportiert.", "20 1")
 				LBlattRes := Laborblatt_Export(Pat.NAME ", " Pat.VORNAME, PatPath)
 			}
 			else {
-				PraxTT("Laborwerte wurden bereits exportiert.", "3 1")
-				Sleep 3000
+				PraxTT("Die Laborwerte wurden bereits exportiert.", "3 1")
+				Sleep 1000
 			}
 
 	;----------------------------------------------------------------------------------------------------------------------------------------------
@@ -1225,10 +1267,10 @@ Karteikarte_Export(Pat:="")                                                     
 			AlbisMDIChildActivate("Tagesprotokoll")
 
 		; Protokoll über Drucken speichen
-			KKFilePath	:= PatPath "\Karteikartenauszug von " Pat.NAME ", " Pat.VORNAME
+			KKFilePath	:= PatPath "\Karteikartenexport von " Pat.NAME ", " Pat.VORNAME
 			If FileExist(KKFilepath ".pdf")
 				FileDelete, % KKFilepath ".pdf"
-			MsgBox, Bitte manuell als PDF ausdrucken!
+			MsgBox, 0x1000, DocPrinz, Bitte manuell als PDF ausdrucken!, 30
 
 			;~ TProtRes := AlbisSaveAsPDF(KKFilePath,, true)
 			;~ If (TProtRes <> 1)
@@ -1246,7 +1288,7 @@ Laborblatt_Export(name, PatPath, Printer="", Spalten="Alles")             	{ 	;-
 		static AlbisViewType
 
 		AlbisViewType	:= AlbisGetActiveWindowType(true)
-		savePath       	:= PatPath "\Laborbefunde von " name
+		savePath       	:= PatPath "\Laborblatt von " name
 		Printer            	:= Printer  	? Printer 	: "Microsoft Print to PDF"
 		Spalten         	:= Spalten	? Spalten 	: "Alles"
 
@@ -1254,7 +1296,8 @@ Laborblatt_Export(name, PatPath, Printer="", Spalten="Alles")             	{ 	;-
 			FileDelete, % savePath ".pdf"
 
 	; Aufruf der Automatisierungsfunktion
-		res := AlbisLaborblattExport(Spalten, savePath, Printer)
+		res := AlbisActivate(1)
+		res := AlbisLaborblattExport(Spalten, savePath, Printer, 1)
 
 	; ursprüngliche Ansicht wiederherstellen
 		If (AlbisViewType <> AlbisGetActiveWindowType(true))
@@ -1335,7 +1378,7 @@ DXPSearch(callfrom)                                                             
 			GEBURT	:= ConvertDBASEDate(m.GEBURT)
 			LASTBEH	:= ConvertDBASEDate(m.LAST_BEH)
 			Mortal   	:= m.Mortal ? "♱" : ""
-			LV_Add("", m.NR, m.NAME ,m.VORNAME, GEBURT, m.PLZ, m.ORT ,m.STRASSE " " m.HAUSNUMMER, m.TELEFON, m.ARBEIT, LASTBEH, m.GEBURT, m.Seit)
+			LV_Add("", m.NR, m.NAME ,m.VORNAME, GEBURT, m.PLZ, m.ORT ,m.STRASSE " " m.HAUSNUMMER, m.TELEFON, m.ARBEIT, LASTBEH, m.GEBURT, ConvertDBASEDate(m.SEIT))
 		}
 
 	; Spaltenbreite anpassen
@@ -1367,7 +1410,7 @@ DBASEGetPatID(searchstr, debug=false)                                         	{
 
 	; Öffnen der Datenbankdatei
 		If !IsObject(DBFPatient) {
-			DBFPatient := new dBase(AlbisDBPath "\PATIENT.dbf", debug)
+			DBFPatient := new dBase(Addendum.AlbisDBPath "\PATIENT.dbf", debug)
 			If !IsObject(DBFPatient) {
 				MsgBox, 1, % "Addendum für Albis on Windows", % "Es gab ein Problem beim Öffnen der PATIENT.dbf Datenbanl.`nDas Skript wird beendet."
 				ExitApp
@@ -1662,6 +1705,7 @@ ChangeFolder() {
 	GuiControl, DXP:, DXP_PE, % (exportordner := newfolder)
 	IniWrite, % exportordner, % scriptini, Exporter, exportordner
 
+return exportordner
 }
 
 CB_GetEntries(hwnd) {
@@ -1799,7 +1843,6 @@ EndPreviewers(PATNR)                                         	{  ; maybe sometim
 
 Dokumente_Vorschau(row)                                	{
 
-		global AlbisPath
 		static SumatraWasMovedBefore := false
 
 		PreVID := Object()
@@ -1822,7 +1865,7 @@ Dokumente_Vorschau(row)                                	{
 			return
 
 		file      	:= PATDok[PAT.NR][LFDNR]
-		filepath	:= AlbisPath "\Briefe\" file.filename
+		filepath	:= Addendum.AlbisBriefe "\" file.filename
 
 	; Prüfen ob das Dokument vorhanden ist
 		If FileExist(filepath)
@@ -1945,145 +1988,7 @@ return
 }
 ;}
 
-;--- Dateidialog Funktionen    	;{
-IFileDialogEvents_new(){
-
-	vtbl := IFileDialogEvents_Vtbl()
-	fde := DllCall("GlobalAlloc", "UInt", 0x0000, "Ptr", A_PtrSize + 4, "Ptr")
-	if (!fde)
-		return 0
-
-	NumPut(vtbl, fde+0,, "Ptr")
-	NumPut(1, fde+0, A_PtrSize, "UInt")
-
-return fde
-}
-
-IFileDialogEvents_Vtbl(ByRef vtblSize := 0){
-	static vtable
-	if (!VarSetCapacity(vtable)) {
-
-		extfuncs := ["QueryInterface", "AddRef", "Release", "OnFileOk", "OnFolderChanging", "OnFolderChange", "OnSelectionChange", "OnShareViolation", "OnTypeChange", "OnOverwrite"]
-
-		VarSetCapacity(vtable, extfuncs.Length() * A_PtrSize)
-
-		for i, name in extfuncs
-			NumPut(RegisterCallback("IFileDialogEvents_" . name), vtable, (i-1) * A_PtrSize)
-	}
-	if (IsByRef(vtblSize))
-		vtblSize := VarSetCapacity(vtable)
-return &vtable
-}
-
-IFileDialogEvents_QueryInterface(this_, riid, ppvObject){                                         	; Called on a "ComObjQuery"
-	static IID_IUnknown, IID_IFileDialogEvents
-	if (!VarSetCapacity(IID_IUnknown))
-		VarSetCapacity(IID_IUnknown, 16), VarSetCapacity(IID_IFileDialogEvents, 16)
-		,DllCall("ole32\CLSIDFromString", "WStr", "{00000000-0000-0000-C000-000000000046}", "Ptr", &IID_IUnknown)
-		,DllCall("ole32\CLSIDFromString", "WStr", "{973510db-7d7f-452b-8975-74a85828d354}", "Ptr", &IID_IFileDialogEvents)
-
-	if (DllCall("ole32\IsEqualGUID", "Ptr", riid, "Ptr", &IID_IFileDialogEvents) || DllCall("ole32\IsEqualGUID", "Ptr", riid, "Ptr", &IID_IUnknown)) {
-		NumPut(this_, ppvObject+0, "Ptr")
-		IFileDialogEvents_AddRef(this_)
-		return 0
-	}
-
-	; Else
-	NumPut(0, ppvObject+0, "Ptr")
-	return 0x80004002
-}
-
-IFileDialogEvents_AddRef(this_){                                                                             	; Called on an "ObjAddRef"
-	NumPut((_refCount := NumGet(this_+0, A_PtrSize, "UInt") + 1), this_+0, A_PtrSize, "UInt")
-	return _refCount
-}
-
-IFileDialogEvents_Release(this_) {                                                                              	; Called on an "ObjRelease"
-	_refCount := NumGet(this_+0, A_PtrSize, "UInt")
-	if (_refCount > 0) {
-		_refCount -= 1
-		NumPut(_refCount, this_+0, A_PtrSize, "UInt")
-		if (_refCount == 0)
-			DllCall("GlobalFree", "Ptr", this_, "Ptr")
-	}
-	return _refCount
-}
-
-IFileDialogEvents_OnFileOk(this_, pfd){
-	return 0x80004001
-}
-
-IFileDialogEvents_OnFolderChanging(this_, pfd, psiFolder){
-	return 0x80004001
-}
-
-IFileDialogEvents_OnFolderChange(this_, pfd){
-	return 0x80004001
-}
-
-IFileDialogEvents_OnSelectionChange(this_, pfd){
-	if (DllCall(NumGet(NumGet(pfd+0)+14*A_PtrSize), "Ptr", pfd, "Ptr*", psi) >= 0) {
-         GetDisplayName := NumGet(NumGet(psi + 0, "UPtr"), A_PtrSize * 5, "UPtr")
-         If !DllCall(GetDisplayName, "Ptr", psi, "UInt", 0x80028000, "PtrP", StrPtr) {
-            SelectedFolder := StrGet(StrPtr, "UTF-16"), DllCall("Ole32.dll\CoTaskMemFree", "Ptr", StrPtr)
-			ToolTip % SelectedFolder
-		 }
-		ObjRelease(psi)
-	}
-	return 0
-}
-
-IFileDialogEvents_OnShareViolation(this_, pfd, psi, pResponse){
-	return 0x80004001
-}
-
-IFileDialogEvents_OnTypeChange(this_, pfd){
-	return 0x80004001
-}
-
-IFileDialogEvents_OnOverwrite(this_, pfd, psi, pResponse){
-	return 0x80004001
-}
-
-SelectFolder(fde:=0, initFolder:="") {
-
-   Static OsVersion 	:= DllCall("GetVersion", "UChar")
-   Static Show          	:= A_PtrSize * 3
-   Static SetOptions	:= A_PtrSize * 9
-   Static GetResult    	:= A_PtrSize * 20
-   SelectedFolder    	:= initFolder
-
-   If (OsVersion < 6) {
-      FileSelectFolder, SelectedFolder
-      Return SelectedFolder
-   }
-
-   If !(FileDialog := ComObjCreate("{DC1C5A9C-E88A-4dde-A5A1-60F82A20AEF7}", "{42f85136-db7e-439c-85f1-e4075d135fc8}"))
-      Return ""
-   VTBL := NumGet(FileDialog + 0, "UPtr")
-   DllCall(NumGet(VTBL + SetOptions, "UPtr"), "Ptr", FileDialog, "UInt", 0x00000028, "UInt")
-
-	if (fde)
-		DllCall(NumGet(NumGet(FileDialog+0)+7*A_PtrSize), "Ptr", FileDialog, "Ptr", fde, "UInt*", dwCookie := 0)
-
-	showSucceeded := DllCall(NumGet(VTBL + Show, "UPtr"), "Ptr", FileDialog, "Ptr", 0) >= 0
-
-	if (dwCookie)
-		DllCall(NumGet(NumGet(FileDialog+0)+8*A_PtrSize), "Ptr", FileDialog, "UInt", dwCookie)
-
-   If (showSucceeded) {
-	   If !DllCall(NumGet(VTBL + GetResult, "UPtr"), "Ptr", FileDialog, "PtrP", ShellItem, "UInt") {
-         GetDisplayName := NumGet(NumGet(ShellItem + 0, "UPtr"), A_PtrSize * 5, "UPtr")
-         If !DllCall(GetDisplayName, "Ptr", ShellItem, "UInt", 0x80028000, "PtrP", StrPtr)
-            SelectedFolder := StrGet(StrPtr, "UTF-16"), DllCall("Ole32.dll\CoTaskMemFree", "Ptr", StrPtr)
-         ObjRelease(ShellItem)
-      }
-   }
-
-   ObjRelease(FileDialog)
-
-Return SelectedFolder
-}
+;--- andere Funktionen    	;{
 
 SciTEOutput(Text:="", Clear=false, LineBreak=true, Exit=false) {                               	;-- modified version for Addendum für Albis on Windows
 
@@ -2171,6 +2076,7 @@ Return hBitmap
 #Include %A_ScriptDir%\..\..\lib\acc.ahk
 #Include %A_ScriptDir%\..\..\lib\class_cJSON.ahk
 #Include %A_ScriptDir%\..\..\lib\class_JSON.ahk
+#Include %A_ScriptDir%\..\..\lib\class_Loaderbar.ahk
 #Include %A_ScriptDir%\..\..\lib\FindText.ahk
 #include %A_ScriptDir%\..\..\lib\GDIP_All.ahk
 #Include %A_ScriptDir%\..\..\lib\ini.ahk

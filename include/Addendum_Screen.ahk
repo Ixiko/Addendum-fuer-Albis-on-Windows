@@ -11,12 +11,12 @@
 ; (08) MonitorFromWindow                   	(09) GetMonitorInfo   				    	(10) IsInsideVisibleArea
 ; __________________________________________________________________________________________________________________________
 
-GetMonitorIndexFromWindow(windowHandle) {
+GetMonitorIndexFromWindow(windowHandle, getInfos := false) {
 
 	; Starts with 1.
 	; https://autohotkey.com/board/topic/69464-how-to-determine-a-window-is-in-which-monitor/
 
-	monitorIndex := 1
+	;~ monitorIndex := 1
 	VarSetCapacity(monitorInfo, 40)
 	NumPut(40, monitorInfo)
 
@@ -26,20 +26,25 @@ GetMonitorIndexFromWindow(windowHandle) {
 		monitorTop    	:= NumGet(monitorInfo,  8, "Int")
 		monitorRight  	:= NumGet(monitorInfo, 12, "Int")
 		monitorBottom 	:= NumGet(monitorInfo, 16, "Int")
-		workLeft      		:= NumGet(monitorInfo, 20, "Int")
+		workLeft     		:= NumGet(monitorInfo, 20, "Int")
 		workTop       	:= NumGet(monitorInfo, 24, "Int")
-		workRight     		:= NumGet(monitorInfo, 28, "Int")
+		workRight    		:= NumGet(monitorInfo, 28, "Int")
 		workBottom    	:= NumGet(monitorInfo, 32, "Int")
-		isPrimary     		:= NumGet(monitorInfo, 36, "Int") & 1
+		isPrimary    		:= NumGet(monitorInfo, 36, "Int") & 1
 
 		SysGet, MonCount, MonitorCount
 		Loop % MonCount 	{                                    		; Compare location to determine the monitor index.
-			SysGet, tempMon, Monitor, %A_Index%
+			SysGet, tempMon, Monitor, % A_Index
 			if ((monitorLeft = tempMonLeft) && (monitorTop = tempMonTop) && (monitorRight = tempMonRight) && (monitorBottom = tempMonBottom))
 				return monitorIndex
 		}
 
 	}
+
+	If getInfos
+		return {L: monitorLeft, R: monitorRight, T: monitorTop, B: monitorBottom, WL: workLeft, WR: workRight, WT: wortTop, WB: workBottom
+					, DPI: A_ScreenDPI, Primary: NumGet(monitorInfo, 36, "Int"), yEdge:	DllCall("GetSystemMetrics", "Int", SM_CYEDGE)
+					, yBorder: DllCall("GetSystemMetrics", "Int", SM_CYBORDER), isPrimary: isPrimary, monIndex: monIndex, MonCount: MonCount}
 
 return monitorIndex
 }
@@ -71,17 +76,29 @@ GetMonitorInfo(hMonitor) {
     NumPut(104, &MONITORINFOEX, "UInt")
     if (!DllCall("User32.dll\GetMonitorInfoW", "Ptr", hMonitor, "UPtr", &MONITORINFOEX))
         return FALSE
-    return {  L:    	     NumGet(&MONITORINFOEX+ 4      	, "Int")
-		    	, T:    	     NumGet(&MONITORINFOEX+ 8      	, "Int")
-		    	, R:   	     NumGet(&MONITORINFOEX+12     	, "Int")
-		    	, B:    	     NumGet(&MONITORINFOEX+16     	, "Int")
-		    	, WL: 	     NumGet(&MONITORINFOEX+20     	, "Int")
-		    	, WT: 	     NumGet(&MONITORINFOEX+24     	, "Int")
-		    	, WR:	     NumGet(&MONITORINFOEX+28     	, "Int")
-				, WB: 	     NumGet(&MONITORINFOEX+32     	, "Int")
-		    	, Primary:   NumGet(&MONITORINFOEX+36    	, "UInt")
-		    	, Name:     StrGet(&MONITORINFOEX+40,64	, "UTF-16") }
+    return {  L:        	NumGet(&MONITORINFOEX+ 4     	, "Int")
+		       	, T:   	     	NumGet(&MONITORINFOEX+ 8     	, "Int")
+		       	, R:   	     	NumGet(&MONITORINFOEX+12    	, "Int")
+		       	, B:   	     	NumGet(&MONITORINFOEX+16    	, "Int")
+		       	, WL: 	     	NumGet(&MONITORINFOEX+20    	, "Int")
+		       	, WT: 	     	NumGet(&MONITORINFOEX+24    	, "Int")
+		       	, WR:	      	NumGet(&MONITORINFOEX+28    	, "Int")
+		     		, WB: 	     	NumGet(&MONITORINFOEX+32    	, "Int")
+		       	, Primary:   	NumGet(&MONITORINFOEX+36   	, "UInt")
+		       	, Name:     	StrGet(&MONITORINFOEX+40,64  	, "UTF-16")
+		     		, X:         	NumGet(&MONITORINFOEX+ 4     	, "Int")
+		       	, Y:        	NumGet(&MONITORINFOEX+ 8     	, "Int")
+		       	, W:       	 	NumGet(&MONITORINFOEX+12    	, "Int") - NumGet(&MONITORINFOEX+4, "Int")
+		       	, H:       	 	NumGet(&MONITORINFOEX+16    	, "Int") - NumGet(&MONITORINFOEX+8, "Int")
+		    		, yEdge:  	 	DllCall("GetSystemMetrics", "Int", SM_CYEDGE)
+		    		, yBorder: 	 	DllCall("GetSystemMetrics", "Int", SM_CYBORDER)
+		    		, DPI:     	 	A_ScreenDPI
+		    		, hMonitor: 	hMonitor}
 
+}
+
+GetMonitorInfoFromWindow(Hwnd) {                                         	;-- wrapper für MonitorFromWindow & GetMonitorInfo
+return GetMonitorInfo(MonitorFromWindow(Hwnd))
 }
 
 IsInsideVisibleArea(x, y, w, h, ByRef CoordInjury) {
@@ -130,7 +147,7 @@ IsInsideVisibleArea(x, y, w, h, ByRef CoordInjury) {
 return CoordInjury  ? false : true
 }
 
-ScreenDims(MonNr:=1) {	                                                       		;-- Monitordaten erhalten (Auflösung, DPI, Ausrichtung...)
+ScreenDims(MonNr:=1) {	                                                       		;-- returns a key:value pair of screen dimensions
 
 	Sysget, MonitorInfo, Monitor, % MonNr
 	X	:= MonitorInfoLeft
@@ -188,24 +205,25 @@ MonitorScreenShot(MonNr, ScriptName:="", Path:="") {              	;-- erstellt 
 }
 
 TaskbarHeight(MonNr:=1) {                                                       	;-- Höhe der Taskbar zurück (Monitorspez. ist noch nicht programmiert)
-	hMSTaskList := WinExist("ahk_class Shell_TrayWnd")
+	If !(hMSTaskList := WinExist("ahk_class Shell_TrayWnd"))
+		return 0
 	TaskList := GetWindowSpot(hMSTaskList)
 return TaskList.H
 }
 
-DPIFactor() {                                                                              	;-- liest die DPI-Einstellung aus der Windowsregistrierung
+DPIFactor() {
 RegRead, DPI_value, HKEY_CURRENT_USER, Control Panel\Desktop\WindowMetrics, AppliedDPI
 ; the reg key was not found - it means default settings
 ; 96 is the default font size setting
 return (errorlevel=1 || DPI_value=96 ) ? 1 : DPI_Value/96
 }
 
-DPI(in="", setdpi=1) 	{                                                               	;-- Return scaling factor or calculate position/values
+DPI(in="",setdpi=1) 	{
 
 	/*
 	Name                  	: DPI
-	Purpose             	: Return scaling factor or calculate position/values for AHK controls (font size, position (x y), width, height)
-	Version              	: 0.31
+	Purpose            	: Return scaling factor or calculate position/values for AHK controls (font size, position (x y), width, height)
+	Version             	: 0.31
 	Source               	: https://github.com/hi5/dpi
 	AutoHotkey Forum : https://autohotkey.com/boards/viewtopic.php?f=6&t=37913
 	License              	: see license.txt (GPL 2.0)

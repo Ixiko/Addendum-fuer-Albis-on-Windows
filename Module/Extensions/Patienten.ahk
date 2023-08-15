@@ -43,8 +43,7 @@
 	If (hIconPatienten := Create_Patienten_ico())
     	Menu, Tray, Icon, % "hIcon: " hIconPatienten
 
-  ; Albis Datenbankpfad / Addendum Verzeichnis
-	RegRead, AlbisPath, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, Installationspfad
+  ; Addendum Verzeichnis
 	RegExMatch(A_ScriptDir, "[A-Z]\:.*?AlbisOnWindows", AddendumDir)
 	workini := IniReadExt(AddendumDir "\Addendum.ini")
 
@@ -53,7 +52,8 @@
 	Addendum.Ini              	:= AddendumDir "\Addendum.ini"
 	Addendum.DBPath      	:= AddendumDir "\logs'n'data\_DB"
 	Addendum.DBasePath  	:= AddendumDir "\logs'n'data\_DB\DBase"
-	Addendum.AlbisDBPath	:= AlbisPath "\db"
+	Addendum.AlbisPath 	:= GetAlbisPath()                                   	; Albis Basispfad
+	Addendum.AlbisDBPath	:= Addendum.AlbisPath "\db"
 	Addendum.compname	:= StrReplace(A_ComputerName, "-")                                           	; der Name des Computer auf dem das Skript läuft
 	Addendum.propsPath 	:= A_ScriptDir "\Coronaimpfdokumentation.json"
 	Addendum.Default     	:= Object()
@@ -127,7 +127,7 @@ Patienten()                                                                     
 		Gui, PAT: Add	, Text     	, % "x+100 ym Backgroundtrans vPATSText2" 	, % "⮚ in allen Feldern ⮚"
 
 		Gui, PAT: Font	, s9 cBlack
-		Gui, PAT: Add	, Edit	     	, % "x+1 ym w600 r1 AltSubmit hwndhPATSAF vPATSAF gSUCHFELD"
+		Gui, PAT: Add	, Edit	     	, % "x+1 ym w600 r1 hwndhPATSAF vPATSAF gSUCHFELD"    ; AltSubmit
 		WinSet, ExStyle, 0x0 , % "ahk_id " hPATSAF
 		EM_SetMargins(hPATSAF, 2, 2)
 		GuiControlGet, cp, Pat: Pos, PatSAF
@@ -135,7 +135,7 @@ Patienten()                                                                     
 		y := cpY + cpH - 3 + 2
 
 		For i, width in colWidth {
-			Gui, PAT: Add, Edit	     	, % (i = 1 ? "xm y" y : "x+1") " w" (i = 1 ? width : width-1) " r1 AltSubmit hwndhwnd vPATSF" i " gSUCHFELD"
+			Gui, PAT: Add, Edit	     	, % (i = 1 ? "xm y" y : "x+1") " w" (i = 1 ? width : width-1) " r1  hwndhwnd vPATSF" i " gSUCHFELD" ; AltSubmit
 			WinSet, ExStyle, 0x0 , % "ahk_id " hwnd
 			EM_SetMargins(Hwnd, 2, 2)
 			GuiControlGet, cp, Pat: Pos, % "PATSF" i
@@ -843,6 +843,7 @@ Return hIcon
 #Include %A_ScriptDir%\..\..\lib\acc.ahk
 #Include %A_ScriptDir%\..\..\lib\class_JSON.ahk
 #include %A_ScriptDir%\..\..\lib\GDIP_All.ahk
+#include %A_ScriptDir%\..\..\lib\class_loaderbar.ahk
 #Include %A_ScriptDir%\..\..\lib\ini.ahk
 #include %A_ScriptDir%\..\..\lib\RemoteBuf.ahk
 #Include %A_ScriptDir%\..\..\lib\SciTEOutput.ahk

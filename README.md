@@ -1,7 +1,7 @@
 ![Addendum.svg](assets/AddendumLogo2021-2.svg)
 #### Extends the possibilities through surface analysis and manipulation
 
-### V2.13 vom 29.10.2022
+### V2.16 vom 14.12.2022
 
 ![Trenner](Docs/TrennerExtraBreit.svg)
 
@@ -24,21 +24,21 @@
 
 ### ![AlbisIcon.svg](Docs/Icons/AlbisIcon.svg)<u>Albis</u>
 
-- Auto-Login
-- Suchen von Menupunkten im Albismenu
-- ⌨ Vereinfachung der Bedienung durch logischere Tastenkombinationen
+- 🖮 Auto-Login
+- 🗟 Suchen von Menupunkten im Albismenu
+- ⌨ **Vereinfachung** der Bedienung durch logischere Tastenkombinationen
 - ![AED.svg](Docs/Icons/AED.svg) **Albis Reanimator**: ein abgestürztes Albis und/oder seine Komponeten beenden und neustarten
-- 💾 **Patientendatenexport**
+- 💾 **Datenexport**
 
 
 
 ### 📄 <u>Dokumente</u>
 
 - 💡 **Auto-OCR** mit Tesseract
-- 👪 automatische Erkennung von Patientennamen und des Dokumentdatums aus dem Dokumenttext
+- 👪 **automatische Erkennung** von Patientennamen und des Dokumentdatums aus dem Dokumenttext
 - ![rename.svg](Docs/Icons/rename.svg) **Autonaming** für Dokumente (automatische Klassifizierung von PDF-Dokumenten)
 - ✍ Unterstützung für **PDF-Signierung**
-- **Dokument Finder** - Volltextsuche in PDF, Word und Text Dokumenten
+- 🔎 **Dokument Finder** - Volltextsuche in PDF, Word und Text Dokumenten
 
 
 
@@ -59,12 +59,12 @@
 
 
 
-### ☎ <u>FritzBox AnrufMonitor</u>
+### <img src="Docs/Icons/FritzboxAnrufmonitor24x24.png" style="zoom:120%;" /> **<u>Fritz!Anrufmonitor</u>**<br>
 Erkennen Sie dringende Anrufe und rufen Sie die Anrufer zurück!<br>
 - zeigt die Telefonnummern aller nicht angenommenen Anrufe des aktuellen Tages an
 - die Anrufhäufigkeit wird für jede Telefonnummer erfasst und angezeigt
-- zeigt bei bekannten Telefonnummern (in Albis-Datenbank) die Namen der Anrufer an
-- hat ein rudimentäres eigenes Telefonbuch
+- nutzt Albisdatenbanken (PATTELNR.dbf und PATIENT.dbf) um Anrufer zu identifizieren
+- führt zusätzlich ein eigenes Telefonbuch  
 - bietet Filtermöglichkeiten
 	- kann bestimmte Telefonnummern ignorieren
 	- automatische Faxerkennung
@@ -77,11 +77,11 @@ Erkennen Sie dringende Anrufe und rufen Sie die Anrufer zurück!<br>
 
 - 📞 **Laborabruf** - automatisch zu bestimmten Tageszeiten
 
-- 📥 **Laborimport** - automatisch neue Werte in die Laborblätter aufnehmen lassen
+- 🧪 **Laborimport** - automatisch neue Werte in die Laborblätter aufnehmen lassen
 
 - 📜 **Laborjournal** - Zusammenstellung klinisch relevanter Werte der letzten Werktage
 
-- **EMailversand** eines Laborbefundes direkt aus dem Patienten Laborblatt
+- 📧 **EMailversand** eines Laborbefundes direkt aus dem Patienten Laborblatt
 
 
 
@@ -96,9 +96,8 @@ Erkennen Sie dringende Anrufe und rufen Sie die Anrufer zurück!<br>
 
 - ⌨ rund **165 Funktionen** für die **Automatisierung von Albis**
 - ![Calculator.svg](Docs/Icons/Calculator.svg) **medizinische Berechnungen**
-- 📀 **dBase**: native Funktionsklasse zum Lesen von Daten
-  - plus Klassenbibliotheken für erweiterte Daten
-
+- 📀 **dBase**: native Funktionsklasse zum Auslesen von DBase Datenbanken
+  - +Klassenbibliotheken für erweitertes Datenmanagement (Datensuche, Statistiken, Abrechnungsregeln)
 - ⚗ **Addendum_LDT** - dekodiert Dateien der elektronischen Labordatenübertragung (LDT-Format)
 - **PDF** - Funktionen für die **Automatisierung von Foxit- und SumatraPDF Reader**
 
@@ -110,8 +109,8 @@ Erkennen Sie dringende Anrufe und rufen Sie die Anrufer zurück!<br>
 - ![Telegram.svg](Docs/Icons/Telegram.svg) **PushToTelegram** - EMails an den beliebten Messenger senden
 - 🔎 **QuickSearch**: Analyse und Suche von Daten in allen Albis (dBase) Dateien
 - 👪 **Patientensuche**: beliebige Kriterien für die Suche nach Patienten
-- **Fritz!FaxBox**: kopiert Faxe von einem freigestellten Pfad auf der Fritzbox in den Addendum Befundeingangsordner. 
-- **Dicom-CDs**: erstellt automatisiert Kopien von Dicom-CD’s 
+- 📠 **Fritz!FaxBox**: kopiert Faxe von einem freigegeben Pfad der Fritzbox in den Addendum Befundordner. 
+- 💽 **Dicom-CDs**: erstellt automatisiert Kopien von Dicom-CD’s (*!defekt)
 
 
 
@@ -144,21 +143,11 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
 ![](Docs/TrennerExtraBreit.svg)
 <br>
 
-![Addendum-Funktionen](Docs/Addendum-Funktionen.svg)
+<img src="Docs/Addendum-Funktionen.svg" alt="Addendum-Funktionen" style="width:80%;" />
 
-![](Docs/TrennerExtraBreit.svg)
+<img src="Docs/TrennerExtraBreit.svg" style="zoom:60%;" />
 
-<br><br><img src="Docs/Addendum-Infofenster.svg" alt="Addendum-Infofenster.svg"/><br>
-
-<br>
-
-<img src="Docs/TrennerExtraBreit.svg" style="zoom:80%;" />
-
-
-
-![Diagnosenliste](Docs/Diagnosenliste.svg)
-
-
+<img src="Docs/Diagnosenliste.svg" alt="Diagnosenliste" style="width:80%;" />
 
 - es können mehrere Diagnosen gleichzeitig ausgewählt und übernommen werden
 - weitere Listen können im Skript angelegt werden
@@ -177,11 +166,11 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
 
 
 
-<img src="Docs/TrennerExtraBreit.svg" style="zoom:80%;" />
+<img src="Docs/TrennerExtraBreit.svg" style="zoom:60%;" />
 
 
 
-![Texterweiterung-Diagnosen](Docs/Texterweiterung-Diagnosen.svg)
+<img src="Docs/Texterweiterung-Diagnosen.svg" alt="Texterweiterung-Diagnosen" style="width:80%;" />
 
 
 
@@ -192,44 +181,47 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
 
 
 
-
-
-<img src="Docs/TrennerExtraBreit.svg" style="zoom:100%;" />
-
-
-
-![](Docs/Erweiterungen.svg)
-
-<img src="Docs/TrennerExtraBreit.svg" style="zoom:100%;" />
-
-<br>
-
-![Laborjournal](Docs/Laborjournal.svg)
-
-- ***Responsives interaktives Webinterface*** (Basis: Internet Explorers).
-
-- ***Gruppierung der Laborparameter*** nach klinischer Bedeutung, erkennbar durch die dickere Schrift und die unterschiedliche farbliche Hervorhebung.
-
-  ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) ’‘**immer**‘’ (Anzeige: immer (nur) wenn pathologisch) und ![#9400D3](https://via.placeholder.com/15/9400D3/000000?text=+) ‘’**exklusiv**‘’ (Anzeige: auch bei Normwert).
-
-- ***durchschnittliche Über- oder Unterschreitung:***
-
-  - Berechnet die durchschnittliche prozentuale Über- bzw. Unterschreitung der Normwertgrenzen je Laborparameter.
-  - Für eventuelle Anpassungen wird die maximale Über- oder Unterschreitung als Einzelwert gespeichert.
-  - Durch Nutzung eines Faktors (Prozentwert) erscheinen mir, die durch Annährung erreichten "Warngrenzen", auch bei unterschiedlichen			Einheiten und altersabhängigen Normwertgrenzen klinisch bedeutsame Laborwertveränderungen sicher herauszufiltern.
-
-- **PCR Abstrich Statistik**:
-
-  - zeigt aktuelle pos. SARS-CoV-PCR-Fälle (Anzeigezeitraum) und
-  - Zahlen seit Beginn der Pandemie
-
-
-
 <img src="Docs/TrennerExtraBreit.svg" style="zoom:80%;" />
 
 
 
-![Dokument-Finder](Docs/Dokument-Finder.svg)
+<img src="Docs/Erweiterungen.svg" style="width:80%;" />
+
+<img src="Docs/TrennerExtraBreit.svg" style="zoom:60%;" />
+
+<img src="Docs/Laborjournal.svg" alt="Laborjournal" style="width:80%;" />
+
+- ***Responsives interaktives Webinterface*** (Basis: Internet Explorers).
+
+- ***Gruppierung der Laborparameter*** nach klinischer Bedeutung, erkennbar durch die dickere Schrift und die unterschiedliche farbliche Hervorhebung.
+         -  ![#f03c15](https://via.placeholder.com/15/f03c15/000000?text=+) ’‘**immer**‘’ (Anzeige: immer (nur) wenn pathologisch) und
+         -  ![#9400D3](https://via.placeholder.com/15/9400D3/000000?text=+) ‘’**exklusiv**‘’ (Anzeige: auch bei Normwert).
+
+- ***durchschnittliche Über- oder Unterschreitung:***
+  
+  - Berechnet die durchschnittliche prozentuale Über- bzw. Unterschreitung der Normwertgrenzen je Laborparameter.
+  - Für eventuelle Anpassungen wird die maximale Über- oder Unterschreitung als Einzelwert gespeichert.
+  - Durch Nutzung eines Faktors (Prozentwert) erscheinen mir, die durch Annährung erreichten "Warngrenzen", auch bei unterschiedlichen			Einheiten und altersabhängigen Normwertgrenzen klinisch bedeutsame Laborwertveränderungen sicher herauszufiltern.
+  
+- **PCR Abstrich Statistik**:
+
+  - zeigt aktuelle pos. SARS-CoV-PCR-Fälle (Anzeigezeitraum) und
+  
+  - **Zahlen seit Beginn der Pandemie**
+  
+    
+  
+    <img src="Docs/TrennerExtraBreit.svg" style="zoom:60%;" />
+    
+    ### <img src="Docs/Icons/FritzboxAnrufmonitor24x24.png" style="zoom:200%;" /> **Fritz!Anrufmonitor**<br>
+
+<img src="Docs/FritzAnrufmonitor.jpg" alt="FritzAnrufmonitor" style="zoom:70%;" />
+
+
+
+<img src="Docs/TrennerExtraBreit.svg" style="zoom:60%;" />
+
+<img src="Docs/Dokument-Finder.svg" alt="Dokument-Finder" style="width:80%;" />
 
 - kleines Skript hilft Dokumente wiederzufinden
 
@@ -239,33 +231,25 @@ Da alles in Autohotkey geschrieben ist, läßt sich sämtlicher Code in einem no
   
   
 
+<img src="Docs/TrennerExtraBreit.svg" style="zoom:60%;" />
 
+## ![Addendum](Docs/Icons/Addendum48x48.png) Shift+F3 Kalender
 
-<img src="Docs/TrennerExtraBreit.svg" style="zoom:80%;" />
-
-## ![Addendum](Docs/Icons/Addendum48x48.png) neuer Shift+F3 Kalender
-
-![Menu-Suche](Docs/Screenshot-ShiftF3Kalender.png)
-
+<img src="Docs/Screenshot-ShiftF3Kalender.png" alt="Menu-Suche" style="width:80%;" />
 
 
 
-
-
-
-<img src="Docs/TrennerExtraBreit.svg" style="zoom:80%;" />
+<img src="Docs/TrennerExtraBreit.svg" style="zoom:60%;" />
 
 ## ![Addendum](Docs/Icons/KontextMenu.png) Menu-Suche
 
-![Menu-Suche](Docs/Screenshot-Menu_Suche.png)
+<img src="Docs/Screenshot-Menu_Suche.png" alt="Menu-Suche" style="width:80%;" />
 
 Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu finden dauert meist ziemlich lange. Drücke ![](Docs/Icons/Alt.png) + ![](Docs/Icons/Key-White-M.png) für einen Suchdialog und öffne den Menupunkt von hier aus - Danke an *Lexikos* dem Author von Autohotkey für dieses wunderbare Skript.
 
 
 
-
-
-<img src="Docs/TrennerExtraBreit.svg" style="zoom:80%;" />
+<img src="Docs/TrennerExtraBreit.svg" style="zoom:60%;" />
 
 ## ![Hotkey](Docs/Icons/Hotkey.png) sinnvollere Albiskürzel
 
@@ -309,9 +293,7 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
 
 <br>
 
-
-
-<img src="Docs/TrennerExtraBreit.svg" style="zoom:80%;" />
+<img src="Docs/TrennerExtraBreit.svg" style="zoom:60%;" />
 
 
 
@@ -320,25 +302,23 @@ Albis On Windows hat mehr als **740** Menupünkte. Seltene genutzte Formulare zu
 - automatische Erweiterung der Fenstergröße und der Steuerelemente für mehr Übersicht
 - weitere Fenster welche sich an die automatisch an die Bildschirmgröße anpassen: Rentenversicherung Befundbericht V015, S0051
 
-![Labor Anzeigegruppen](Docs/LBAZGGNANI.svg)
+<img src="Docs/LBAZGGNANI.svg" alt="Labor Anzeigegruppen" style="width:70%;" />
 
 
 
+<img src="Docs/TrennerExtraBreit.svg" style="zoom:60%;" />
 
 
-
-
-<img src="Docs/TrennerExtraBreit.svg" style="zoom:80%;" />
 
 ##  ![Rezepthelfer.png](Docs/Icons/Schnellrezept.png) Schnellrezepte
 
-![](Docs/Schnellrezepte.gif)
-
-
+<img src="Docs/Schnellrezepte.gif" style="width:80%;" />
 
 
 
 <img src="Docs/TrennerExtraBreit.svg" style="zoom:80%;" />
+
+
 
 ### ![KontextMenu](Docs/Icons/KontextMenu.png) Erweitertes Kontextmenu
 
@@ -350,42 +330,15 @@ Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter ande
 
 
 
-<br>
-
-<img src="Docs/TrennerExtraBreit.svg" style="zoom:80%;" />
+<img src="Docs/TrennerExtraBreit.svg" style="zoom:60%;" />
 
 
-
-
-
-![](Docs/TrennerExtraBreit.svg)
-
-## ![Hausbesuche.png](Docs/Icons/Hausbesuch.png) Formularhelfer Hausbesuche
-
-**Ausdrucken von Rezepten/Über- und Einweisungen ohne gedrucktes Datum**
-
-![Formularhelfer](Docs/Screenshot-Formularhelfer.png)
-
-* ein Fenster mit 5 Formularen (Kassenrezept, Privatrezept, Krankenhauseinweisung, Krankenbeförderung, Überweisung)
-* Auswahl der Formularanzahl 0 für keine und maximal 9 (auch über die Zifferntastatur), nach Eingabe einer Ziffer rückt der Eingabefocus zum nächsten Feld weiter. Ist alles eingegeben, dann nur noch Enter drücken. Den Rest übernimmt das Skript. Es ruft die jeweiligen Formulare auf, entfernt wenn notwendig den Haken am Datumsfeld, setzt automatisch die Anzahl und drückt den Knopf für Drucken.
-* im Addendumskript ist ein Hotstring hinterlegt (*FHelfer*). Diesen in irgendeinem Eingabefeld in Albis eingegeben und das Skript startet.
-* 1 Mausklick, 7 Buchstabentasten, max. 5 Ziffern und 1xEnter müssen gedrückt werden. **Das wars!** Für einen Hausbesuch sind die Unterlagen vorbereitet. Optional kann für jeden Patienten noch sein Patientenstammblatt ausgedruckt werden.
-
-
-
-
-
-![](Docs/TrennerExtraBreit.svg)
 
 ## ![Abrechnungshelfer](Docs/Icons/Abrechnungsassistent.png) Abrechnungsassistent
 
 - bietet Vorschläge zu bestimmten Abrechnungspositionen zu Patienten an
 
 <img src="Docs/Abrechnungsassistent.png" alt="Screenshot Abrechnungshelfer" style="zoom: 50%;" />
-
-
-
-
 
 
 
@@ -407,10 +360,6 @@ Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter ande
 
 <img src="Docs/TrennerExtraBreit.svg" style="zoom:60%;" />
 
-
-
-![](Docs/TrennerExtraBreit.svg)
-
 ## ![Laborabruf](Docs/Icons/LaborAbruf.png) Laborabruf
 
 **Die Automatisierung für den Abruf der Laborwerte**
@@ -426,13 +375,9 @@ Je nach Karteikartenkürzel werden verschiedene Funktionen angeboten. Unter ande
 
 
 
-
-
-
-
 <img src="Docs/TrennerExtraBreit.svg" style="zoom: 100%;" />
 
-###     🕗 🕐 🕑 🕒 🕓 🕔 🕕 🕖 🕗 🕘 🕙 🕚 🕛 🕜 🕝 🕞 🕟 🕠 🕡 🕢 🕣 🕤 🕥 🕦 🕧 🕗 🕐 🕑
+###            🕗 🕐 🕑 🕒 🕓 🕔 🕕 🕖 🕗 🕘 🕙 🕚 🕛 🕜 🕝 🕞 🕟 🕠 🕡 🕢 🕣 🕤 🕥 🕦 🕧 🕗 
 <img src="Docs/TrennerExtraBreit.svg" style="zoom: 100%;"/>
 
 

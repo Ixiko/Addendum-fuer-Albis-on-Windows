@@ -1,39 +1,39 @@
-﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
-;                                                                                	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                              by Ixiko started in September 2017 - last change 14.07.2022 - this file runs under Lexiko's GNU Licence
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                           	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
+;                                              	!diese Bibliothek wird von fast allen Skripten benötigt!
+;                          by Ixiko started in September 2017 - last change 01.01.2023 - this file runs under Lexiko's GNU Licence
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
-; FENSTER                                                                                                                                                                                            	(46)
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; FENSTER                                                                                                                    	(46)
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; ----- Get -----
-; GetAncestor                                	GetLastActivePopup                   	GetParentList	                            	GetParentClassList                        	GetParent
-; GetNextWindow                           	GetWindowInfo								GetWindowSpot							GetWindow
+; GetAncestor                 GetLastActivePopup             	GetParentList	             	GetParentClassList             	GetParent
+; GetNextWindow               GetWindowInfo							    	GetWindowSpot				  			GetWindow
 ; FindChildWindow							FindWindow
-; WinForms_GetClassNN               	WinForms_GetElementID
-; ClientToScreen								RectOverlapsRect
-; IsClosed											IsResizable									IsWindow                                    	IsWindowVisible                        	CheckWindowStatus
-; WinGetTitle                                 	WinGetClass                             	WinGetText                               	WinGet                                  		WinGetMinMaxState
-; WinIsBlocked
+; WinForms_GetClassNN         WinForms_GetElementID
+; ClientToScreen							RectOverlapsRect
+; IsClosed										IsResizable							     		IsWindow                   	IsWindowVisible                	CheckWindowStatus
+; WinGetTitle                 WinGetClass                    	WinGetText                	WinGet                       		WinGetMinMaxState
+; WinIsBlocked                WinSetStyle
 
 ; ----- Set -----
-; SetWindowPos                             	WinMoveZ									MoveWinToCenterScreen				UpdateWindow								Redraw
+; SetWindowPos                WinMoveZ								      	MoveWinToCenterScreen				UpdateWindow			       				Redraw
 ; SetParentByID
-; WaitForNewPopUpWindow            	WaitAndActivate                        	ActivateAndWait
-; AnimateWindow                           	VerifiedWindowClose
+; WaitForNewPopUpWindow       WaitAndActivate               	ActivateAndWait
+; AnimateWindow               VerifiedWindowClose
 
 
 ; ---- get informations ----
-GetAncestor(hWnd, Flag=2) {                                                                                                    	;--
+GetAncestor(hWnd, Flag=2) {                                                                                	;--
 	;1 - Parent , 2 - Root
     Return DllCall("GetAncestor", "Ptr", hWnd, "UInt", Flag)
 }
 
-GetLastActivePopup(hwnd) {                                                                                                 			;-- get the last active popup window
+GetLastActivePopup(hwnd) {                                                                             			;-- get the last active popup window
 	return DLLCall("GetLastActivePopup", "uint", hwnd)
 }
 
-GetParentList(ChildHwnd) {                                                                                                        	;-- comma separated WinTitles and WinClasses of all parent windows
+GetParentList(ChildHwnd) {                                                                                 	;-- comma separated WinTitles and WinClasses of all parent windows
 
 	;15.05.2019: Code shortend - using extra functions and while loop
 	while (pHwnd:= GetParent(ChildHwnd)) {
@@ -41,10 +41,10 @@ GetParentList(ChildHwnd) {                                                      
 		ChildHwnd:= pHwnd
 	}
 
- return List
+return List
 }
 
-GetParentClassList(ChildHwnd, WinHwnd) {                                                                                  	;-- list of WinClasses of all parent windows/controls
+GetParentClassList(ChildHwnd, WinHwnd) {                                                                  	;-- list of WinClasses of all parent windows/controls
 
 	; 27.11.2021
 	parentlist 	:= ""
@@ -53,19 +53,19 @@ GetParentClassList(ChildHwnd, WinHwnd) {                                        
 		ChildHwnd := pHwnd
 	}
 
- return RTrim(parentlist, ",")
+return RTrim(parentlist, ",")
 }
 
-GetParent(hWnd) {                                                                                                                     	;-- ermittelt das Parent Fenster
- return GetHex(DllCall("GetParent", "Ptr", hWnd, "Ptr"))
+GetParent(hWnd) {                                                                                          	;-- ermittelt das Parent Fenster
+return GetHex(DllCall("GetParent", "Ptr", hWnd, "Ptr"))
 }
 
-GetNextWindow(hwnd, wCmd) {                                                                                                	;-- ermittelt die Fenster-Z Ordnung
+GetNextWindow(hwnd, wCmd) {                                                                                	;-- ermittelt die Fenster-Z Ordnung
 
-	/* wCMD
+/* wCMD
 		GW_HWNDNEXT = 2		Returns a handle to the window below the given window.
 		GW_HWNDPREV = 3		Returns a handle to the window above the given window.
-	*/
+*/
 	return DllCall("GetNextWindow", "Ptr", hWnd, "uint", wCMD, "Ptr")
 }
 
@@ -100,25 +100,25 @@ GetWindow(hWnd, uCmd) {
 		4
 
 	*/
- return DllCall( "GetWindow", "Ptr", hWnd, "uint", uCmd, "Ptr")
+return DllCall( "GetWindow", "Ptr", hWnd, "uint", uCmd, "Ptr")
 }
 
-GetWindowInfo(hWnd) {                                                                                                            	;-- returns an Key:Val Object with informations about a window
+GetWindowInfo(hWnd) {                                                                                      	;-- returns an Key:Val Object with informations about a window
 	; returns an Key:Val Object with the most informations about a window (Pos, Client Size, Style, ExStyle, Border size...)
     NumPut(VarSetCapacity(WININFO, 60, 0), WININFO)
     DllCall("GetWindowInfo", "Ptr", hWnd, "Ptr", &WININFO)
     wInfo := Object()
-    wInfo.WindowX := NumGet(WININFO, 4	, "Int")
+    wInfo.WindowX 	:= NumGet(WININFO, 4	, "Int")
     wInfo.WindowY	:= NumGet(WININFO, 8	, "Int")
-    wInfo.WindowW:= NumGet(WININFO, 12, "Int") 	- wInfo.WindowX
+    wInfo.WindowW 	:= NumGet(WININFO, 12, "Int") 	- wInfo.WindowX
     wInfo.WindowH	:= NumGet(WININFO, 16, "Int") 	- wInfo.WindowY
-    wInfo.ClientX		:= NumGet(WININFO, 20, "Int")
-    wInfo.ClientY		:= NumGet(WININFO, 24, "Int")
+    wInfo.ClientX	:= NumGet(WININFO, 20, "Int")
+    wInfo.ClientY	:= NumGet(WININFO, 24, "Int")
     wInfo.ClientW 	:= NumGet(WININFO, 28, "Int") 	- wInfo.ClientX
     wInfo.ClientH 	:= NumGet(WININFO, 32, "Int") 	- wInfo.ClientY
-    wInfo.Style   		:= NumGet(WININFO, 36, "UInt")
-    wInfo.ExStyle		:= NumGet(WININFO, 40, "UInt")
-    wInfo.Active 		:= NumGet(WININFO, 44, "UInt")
+    wInfo.Style  	:= NumGet(WININFO, 36, "UInt")
+    wInfo.ExStyle	:= NumGet(WININFO, 40, "UInt")
+    wInfo.Active 	:= NumGet(WININFO, 44, "UInt")
     wInfo.BorderW 	:= NumGet(WININFO, 48, "UInt")
     wInfo.BorderH 	:= NumGet(WININFO, 52, "UInt")
     wInfo.Atom    	:= NumGet(WININFO, 56, "UShort")
@@ -126,7 +126,7 @@ GetWindowInfo(hWnd) {                                                           
     Return wInfo
 }
 
-GetWindowSpot(hWnd) {                                                                                                           	;-- like GetWindowInfo, but faster
+GetWindowSpot(hWnd) {                                                                                      	;-- like GetWindowInfo, but faster
     NumPut(VarSetCapacity(WININFO, 60, 0), WININFO)
     DllCall("GetWindowInfo", "Ptr", hWnd, "Ptr", &WININFO)
     wi := Object()
@@ -148,7 +148,7 @@ GetWindowSpot(hWnd) {                                                           
 Return wi
 }
 
-GetGUIThreadInfo(retVal:="", idThread:=0)  {                                                                            	;-- calls the GetGUIThreadInfo function
+GetGUIThreadInfo(retVal:="", idThread:=0)  {                                                              	;-- calls the GetGUIThreadInfo function
 
 	/* 			‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹›‹‹›‹›‹‹›‹›‹›‹›‹›‹›‹›
 																 CAPTURE MOUSE- AND KEYBOARD FOCUS
@@ -299,12 +299,12 @@ GetGUIThreadInfo(retVal:="", idThread:=0)  {                                    
 		If retVal
 			return gTInfo[retVal]
 
- Return gTInfo
+Return gTInfo
 }
 
 FindChildWindow(Parent, Child, DetectHiddenWindow="On") {                                                  	;{-- finds childWindow Hwnds of the parent window
 
- /*                                                                                     	READ THIS FOR MORE INFORMATIONS
+/*                                                                                     	READ THIS FOR MORE INFORMATIONS
                                 			    	a function from AHK-Forum : https://autohotkey.com/board/topic/46786-enumchildwindows/
                                                                                       it has been modified by IXIKO on May 09, 2018
 
@@ -313,7 +313,7 @@ FindChildWindow(Parent, Child, DetectHiddenWindow="On") {                       
 
 	-Parent parameter is an object(). Pass the following {Key:Value} pairs like this - WinTitle: "Name of window", WinClass: "Class (NN) Name", WinID: ParentWinID
 	FindChildWindow({"ID":hwnd, "exe":"albis"}, {"class":"#32770"})
- */
+*/
 
 		detect:= A_DetectHiddenWindows
 		global ChildTitle, ChildNN, ChildClass, ChildExe, active_id
@@ -344,7 +344,7 @@ FindChildWindow(Parent, Child, DetectHiddenWindow="On") {                       
 
 		DetectHiddenWindows, % detect
 
- return RTrim(ChildHwnds, ";")
+return RTrim(ChildHwnds, ";")
 }
 ; sub of FindChildWindow
 EnumChildWindow(hwnd, lParam) {                                                                                             	;--sub function of FindChildWindow
@@ -364,11 +364,11 @@ EnumChildWindow(hwnd, lParam) {                                                 
 	If InStr(WinGetTitle(hwnd), ChildTitle) && classMatched && InStr(ProcName, ChildExe)
 		ChildHwnds.= GetHex(hwnd) "`;"
 
- return true  ; Tell EnumWindows() to continue until all windows have been enumerated.
+return true  ; Tell EnumWindows() to continue until all windows have been enumerated.
 }
 ;}
 
-FindWindow(WTitle,WClass="",WText="",PTitle="",PClass="",HiddenWins="on",HiddenText="on") {	;-- Finds the requested window,and return it's ID
+FindWindow(WTitle,WClass="",WText="",PTitle="",PClass="",HiddenWins="on",HiddenText="on") {                	;-- Finds the requested window,and return it's ID
 
 	; 0 if it wasn't found or chosen from a list
 	; originally from Evan Casey Copyright (c) under MIT License.
@@ -443,7 +443,7 @@ WinForms_GetClassNN(WinID, fromElement, ElementName) {                          
 
 }
 
-WinForms_GetElementID(WinID, ElementName) {  	                                                                   	;-- schaut nach welche ID das gesuchte Element hat
+WinForms_GetElementID(WinID, ElementName) {  	                                                            	;-- schaut nach welche ID das gesuchte Element hat
 
 	;-- schaut nach welche ID das gesuchte Element hat - z.B. Name eines Buttons kann hier eingetragen werden
 
@@ -468,7 +468,7 @@ ClientToScreen(hwnd, ByRef x, ByRef y) {
     y := NumGet(pt, 4, "int")
 }
 
-RectOverlapsRect(vX1, vY1, vW1, vH1, vX2, vY2, vW2, vH2, vOpt="") {                                          	;-- check if rectangles (windows) overlap
+RectOverlapsRect(vX1, vY1, vW1, vH1, vX2, vY2, vW2, vH2, vOpt="") {                                        	;-- check if rectangles (windows) overlap
 
 		/*    	DESCRIPTION
 			Link:             https://autohotkey.com/boards/viewtopic.php?t=30809
@@ -503,7 +503,7 @@ RectOverlapsRect(vX1, vY1, vW1, vH1, vX2, vY2, vW2, vH2, vOpt="") {             
 
 }
 
-OverlappingWindows(HWND1, HWND2) {                                                                                   	;-- hope its faster
+OverlappingWindows(HWND1, HWND2) {                                                                         	;-- hope its faster
   ; // modified from:    http://www.autohotkey.com/community/viewtopic.php?f=2&t=86283
 	VarSetCapacity(RECT1, 16, 0)
 	VarSetCapacity(RECT2, 16, 0)
@@ -514,25 +514,25 @@ OverlappingWindows(HWND1, HWND2) {                                              
 return DllCall("User32.dll\IntersectRect", PtrType, &RECT2, PtrType, &RECT1, PtrType, &RECT2, "UInt") ? true : false
 }
 
-IsClosed(win, wait) {                                                                                                                  	;-- waits until the specific window is closed
+IsClosed(win, wait) {                                                                                      	;-- waits until the specific window is closed
 	WinWaitClose, % "ahk_id " win,, % wait
 	return ((ErrorLevel = 1) ? False : True)
 }
 
-IsResizable() {                                                                                                                            	;-- feststellen ob das untersuchte Fenster in der Größe änderbar ist
+IsResizable() {                                                                                           	;-- feststellen ob das untersuchte Fenster in der Größe änderbar ist
     WinGet, Style, Style
     return (Style & 0x40000) ; WS_THICKFRAME
 }
 
-IsWindow(hWnd) {                                                                                                                   		;-- wrapper for IsWindow DllCall
+IsWindow(hWnd) {                                                                                         		;-- wrapper for IsWindow DllCall
 Return DllCall("IsWindow", "Ptr", hWnd)
 }
 
-IsWindowVisible(hWnd) {                                                                                                            	;-- ist Fenster sichtbar
+IsWindowVisible(hWnd) {                                                                                    	;-- ist Fenster sichtbar
 	return DllCall("IsWindowVisible","Ptr", hWnd)
 }
 
-CheckWindowStatus(hwnd, timeout:=100) {                                                               					;-- check's if a window is responding (hung or crashed)
+CheckWindowStatus(hwnd, timeout:=100) {                                                             				;-- check's if a window is responding (hung or crashed)
 
 	/*
 
@@ -562,7 +562,7 @@ return DllCall("SendMessageTimeout", "UInt", hwnd, "UInt", 0x0000, "Int", 0, "In
 
 }
 
-WinGetMinMaxState(hwnd) {                                                                                                			;-- get state if window ist maximized or minimized
+WinGetMinMaxState(hwnd) {                                                                              			;-- get state if window ist maximized or minimized
 
 	; this function is from AHK-Forum: https://autohotkey.com/board/topic/13020-how-to-maximize-a-childdocument-window/
 	; it returns z for maximized("zoomed") or i for minimized("iconic") and nothing if either maximized nor minimized
@@ -575,7 +575,7 @@ WinGetMinMaxState(hwnd) {                                                       
 return !zoomed && !iconic ? "" : zoomed ? "z" : "i"
 }
 
-WinGetTitle(hwnd) {                                                                                                                   	;-- schnellere Fensterfunktion
+WinGetTitle(hwnd) {                                                                                        	;-- schnellere Fensterfunktion
 	if (hwnd is not Integer)
 		hwnd :=GetDec(hwnd)
 	vChars := DllCall("user32\GetWindowTextLengthW", "Ptr", hWnd) + 1
@@ -585,7 +585,7 @@ WinGetTitle(hwnd) {                                                             
 Return wtitle
 }
 
-WinGetClass(hwnd) {                                                                                                                	;-- schnellere Fensterfunktion
+WinGetClass(hwnd) {                                                                                       	;-- schnellere Fensterfunktion
 	if (hwnd is not Integer)
 		hwnd := GetDec(hwnd)
 	VarSetCapacity(sClass, 80, 0)
@@ -594,24 +594,52 @@ WinGetClass(hwnd) {                                                             
 Return wclass
 }
 
-WinGetText(hwnd) {                                                                                                                  	;-- Wrapper
+WinGetText(hwnd) {                                                                                         	;-- Wrapper
 	WinGetText, wtext, % "ahk_id " hwnd
 Return wtext
 }
 
-WinGet(hwnd, cmd) {                                                                                                                	;-- Wrapper
+WinGet(hwnd, cmd) {                                                                                        	;-- Wrapper
 	WinGet, res, % cmd, % "ahk_id " hwnd
 return res
 }
 
-WinIsBlocked(hwnd) {                                                                                                                 	;-- Fenster ist blockiert
+WinIsBlocked(hwnd) {                                                                                       	;-- Fenster ist blockiert
  ; WS_DISABLED:= 0x8000000
 	WinGet, Style, Style, % "ahk_id " hwnd
 return (Style & 0x8000000) ? true : false
 }
 
+WinSetStyle(Win, Ctrl, Style, State:="on", Ex:=false) {                                                    	;-- setzt oder entfernt einen Ex/Style
+
+	; MsgBox % WinSetStyle( "Muster 1a ahk_class #32770", "Button5", 0x8000000, "on")  ; Disabled Style
+	; neu seit: 01.01.2023
+
+  ; zurück wenn Handle des Steuerelementes nicht gefunden wurde
+	ControlGet, cHwnd, hwnd,, % Ctrl, % "ahk_id " (whwnd := Win~="i)^\s*(\d+|0x[A-F\d]+)\s*$" ? Win : WinExist(Win))
+	If !cHwnd
+		return 0
+
+  ; Styleflags ändern
+	State := State ~= "i)(On|1|true)" ? true : false
+	WinGet, WStyle, % (ExOrStyle := (Ex ? "Ex":"") "Style") , % "ahk_id " cHwnd
+	If ErrorLevel
+		return -1*A_LastError  ; wenn hier überhauptwas passiert
+
+	newStyle := 	State 	&& !(WStyle & Style)	? WStyle|Style
+				:	!State 	&& (WStyle & Style)	? WStyle^Style : WStyle
+
+ ; WinSet wird nur aufgerufen wenn der Style geändert werden muss
+	If (newStyle != WStyle) {
+		WinSet, % ExOrStyle, % newStyle, % "ahk_id " cHwnd
+		return ErrorLevel ? 0 : 1
+	}
+
+return 1
+}
+
 ; set
-AnimateWindow(hWnd, Duration, Flag) {                                                                                     	;-- DllCall Wrapper für Windows interne Fensteranimation
+AnimateWindow(hWnd, Duration, Flag) {                                                                      	;-- DllCall Wrapper für Windows interne Fensteranimation
 
 ;{ example DllCall("AnimateWindow,
 
@@ -630,11 +658,11 @@ AnimateWindow(hWnd, Duration, Flag) {                                           
 	Return DllCall("AnimateWindow", "UInt",hWnd, "Int",Duration, "UInt",Flag)
 }
 
-SetParentByID(ParentID, ChildID) {                                                                                                 ;-- title text is the start of the title of the window, gui number is e.g. 99
+SetParentByID(ParentID, ChildID) {                                                                          ;-- title text is the start of the title of the window, gui number is e.g. 99
     Return DllCall("SetParent", "uint", childID, "uint", ParentID) ; success = handle to previous parent, failure =null
 }
 
-SetWindowPos(hWnd, x, y, w, h, hWndInsertAfter := 0, uFlags := 0x40) {                                		;--works better than the internal command WinMove - why?
+SetWindowPos(hWnd, x, y, w, h, hWndInsertAfter := 0, uFlags := 0x40) {                                  		;--works better than the internal command WinMove - why?
 
 	/*  ; https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-setwindowpos
 
@@ -642,7 +670,7 @@ SetWindowPos(hWnd, x, y, w, h, hWndInsertAfter := 0, uFlags := 0x40) {          
 	SWP_NOMOVE                 	:= 0x0002	; Retains the current position (ignores X and Y parameters).
 	SWP_NOZORDER              	:= 0x0004	; Retains the current Z order (ignores the hWndInsertAfter parameter).
 	SWP_NOREDRAW             	:= 0x0008	; Does not redraw changes.
-	SWP_NOACTIVATE   	         	:= 0x0010	; Does not activate the window.
+	SWP_NOACTIVATE            	:= 0x0010	; Does not activate the window.
 	SWP_DRAWFRAME            	:= 0x0020	; Draws a frame (defined in the window's class description) around the window.
 	SWP_FRAMECHANGED     	:= 0x0020	; Applies new frame styles set using the SetWindowLong function.
 	SWP_SHOWWINDOW        	:= 0x0040	; Displays the window.
@@ -659,7 +687,7 @@ SetWindowPos(hWnd, x, y, w, h, hWndInsertAfter := 0, uFlags := 0x40) {          
 Return DllCall("SetWindowPos", "Ptr", hWnd, "Ptr", hWndInsertAfter, "Int", x, "Int", y, "Int", w, "Int", h, "UInt", uFlags)
 }
 
-WinMoveZ(hWnd, C, X, Y, W, H, Redraw:=0) {                                                                           	;-- WinMoveZ v0.5 by SKAN on D35V/D361 @ tiny.cc/winmovez
+WinMoveZ(hWnd, C, X, Y, W, H, Redraw:=0) {                                                                	;-- WinMoveZ v0.5 by SKAN on D35V/D361 @ tiny.cc/winmovez
 	; https://www.autohotkey.com/boards/viewtopic.php?f=6&t=76745&hilit=WinMoveZ
 	Local V:=VarSetCapacity(R,48,0), A:=&R+16, S:=&R+24, E:=&R, NR:=&R+32, TPM_WORKAREA:=0x10000
 	C:=( C:=Abs(C) ) ? DllCall("SetRect", "Ptr",&R, "Int",X-C, "Int",Y-C, "Int",X+C, "Int",Y+C) : 0
@@ -669,41 +697,63 @@ WinMoveZ(hWnd, C, X, Y, W, H, Redraw:=0) {                                      
 Return DllCall("MoveWindow", "Ptr",hWnd, "Int",X, "Int",Y, "Int",W, "Int",H, "Int",Redraw)
 }
 
-MoveWinToCenterScreen(hWin) {                                                                                               	;-- moves a window to center of screen if its outside the visible area
+MoveWinToCenterScreen(hWin) {                                                                              	;-- moves a window to center of screen if its outside the visible area
 
 	 /*  dependencies:
 
 			GetWindowSpot()
-			IsInsideVisibleArea
-			GetMonitorIndexFromWindow()
-			screenDims()
+			MonitorFromWindow()
+			GetMonitorInfo()
 
 	 */
 
-	w := GetWindowSpot(hWin)
-	If !IsInsideVisibleArea(w.X, w.Y, w.W, w.H, CoordInjury)	{
-		mon	:= GetMonitorIndexFromWindow(hWin)
-		scr	:= screenDims(mon)
-		DllCall("MoveWindow"
-					, "Ptr",hWin
-					,"Int", (w.X := Floor(scr.W/2-w.W/2))
-					,"Int", (w.Y := Floor(scr.H/2-w.H/2))
-					,"Int", w.W
-					,"Int", w.H
-					, 0) ; Redraw := 0
+	static LastWin:=Object()
+
+  ; Objekt vor dem Vergleich aufräumen
+	For LastWID, hLastWin in LastWin {
+
+		If (LastWID ~= "i)^(0x[A-F\d]+|\d+)$") {  ; keine ID nur Handle gesichert
+			If !IsWindow(LastWID)
+				LastWin.Delete(LastWID)
+		}
+		else { ; ID aus Teilen des Fenstertitels und -textes
+			matchWID := RegExReplace(SubStr(WinGetTitle(hLastWin), 1, 20) SubStr(WinGetText(hLastWin), 1, 20), "[^\pL]")
+			If (!matchWID || matchWID != LastWID)
+				LastWin.Delete(LastWID)
+		}
+
 	}
+
+ ; Dialog kann noch identifiziert werden
+	winID := RegExReplace(SubStr(WinGetTitle(hWin), 1, 20) SubStr(WinGetText(hWin), 1, 20), "[^\pL]")
+	If (winID && LastWin[WinID] = hWin) || (!winID && !isWindow(hWin))
+		return 0
+
+  ; Fensterdaten sichern
+	LastWin[(WinID ? WinID: hWin)] := hWin
+
+	w := GetWindowSpot(hWin)
+	hmon	:= MonitorFromWindow(hWin)
+	scr    	:= GetMonitorInfo(hmon)
+	dxy    	:= 150
+
+	newX := Floor(scr.W/2-w.W/2)
+	newY := Floor(scr.H/2-w.H/2)
+
+	SetWindowPos(hWin, w.X:=newX , w.Y:=newY, w.W, w.H)
+
 
 return {hwnd:hWIN, X:w.X, Y:w.Y, W:w.W, H:w.H}
 }
 
-ActivateAndWait(WinTitle, MaxSecondsToWait) {                                                                            	;-- activates a window and wait for activation
+ActivateAndWait(WinTitle, MaxSecondsToWait) {                                                             	;-- activates a window and wait for activation
 	If !WinActive(WinTitle)
 		WinActivate, % WinTitle
            	WinWaitActive, % WinTitle, , % MaxSecondsToWait
 return ErrorLevel
 }
 
-WaitAndActivate(WinTitle, WinText="", wait:= 3) {                                                             				;-- wait for a window and then activate it
+WaitAndActivate(WinTitle, WinText="", wait:= 3) {                                                        		;-- wait for a window and then activate it
 
 		WinWait, % WinTitle,, % delay
 		while !WinExist(WinTitle, WinText) {
@@ -719,7 +769,7 @@ WaitAndActivate(WinTitle, WinText="", wait:= 3) {                               
 return ErrorLevel
 }
 
-WaitForNewPopUpWindow(ParentWinID, LastWinID, WaitTime, RequestedTitle:="") {   					;-- waits for a new PopUpWindow
+WaitForNewPopUpWindow(ParentWinID, LastWinID, WaitTime, RequestedTitle:="") {   				                  	;-- waits for a new PopUpWindow
 
 		; for a given parent window and returns Title, Class, Text and Hwnd
 
@@ -775,7 +825,7 @@ WFNPUPWTT:
 return
 }
 
-Redraw(hwnd) {                                                                                                                           	;-- redraw's a window
+Redraw(hwnd) {                                                                                             	;-- redraw's a window
 
    static 	RDW_ALLCHILDREN      	:= 0x80	, RDW_ERASE             	:= 0x4    	, RDW_ERASENOW	:= 0x200
 		, 	RDW_FRAME                    	:= 0x400	, RDW_INTERNALPAINT	:= 0x2   	, RDW_INVALIDATE	:= 0x1
@@ -787,7 +837,7 @@ Redraw(hwnd) {                                                                  
 return DllCall("RedrawWindow", "uint", hwnd, "uint", 0, "uint", 0, "uint", style)
 }
 
-UpdateWindow(hwnd) {                                                                                                               	;-- sends WM_Paint to update a window
+UpdateWindow(hwnd) {                                                                                       	;-- sends WM_Paint to update a window
 return dllcall("UpdateWindow", "Ptr", hwnd)
 }
 

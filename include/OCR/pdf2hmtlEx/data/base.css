@@ -1,7 +1,7 @@
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab filetype=css: */
-/*! 
+/*!
  * Base CSS for pdf2htmlEX
- * Copyright 2012,2013 Lu Wang <coolwanglu@gmail.com> 
+ * Copyright 2012,2013 Lu Wang <coolwanglu@gmail.com>
  * https://github.com/coolwanglu/pdf2htmlEX/blob/master/share/LICENSE
  */
 /* Part 1: Web Page Layout: Free to modify, except for a few of them which are required by pdf2htmlEX.js, see the comments */
@@ -19,7 +19,7 @@
   position:absolute; /* required for calculating relative positions of pages in pdf2htmlEX.js */
   top:0;
   left:0px;
-  margin:0; 
+  margin:0;
   padding:0;
   border:0; /* required for lazy page loading in pdf2htmlEX.js (page visibility test) */
 }
@@ -55,11 +55,11 @@
     right:0;
   }
 }
-@media print { 
+@media print {
   @page { margin:0; }
   html { margin:0; }
-  body { 
-    margin:0; 
+  body {
+    margin:0;
     -webkit-print-color-adjust:exact; /* enable printing background images for WebKit */
   }
   #sidebar { display:none; }
@@ -79,7 +79,7 @@
   position:relative;
   background-color:white;
   overflow: hidden;
-  margin:0; 
+  margin:0;
   border:0; /* required by pdf2htmlEX.js for page visibility test */
 }
 .pc { /* content of a page */
@@ -157,6 +157,7 @@
   unicode-bidi:bidi-override;/* For rtl languages, e.g. Hebrew, we don't want the default Unicode behaviour */
   -moz-font-feature-settings:"liga" 0;/* We don't want Firefox to recognize ligatures */
 }
+
 .t:after { /* webkit #35443 */
   content: '';
 }
@@ -177,10 +178,11 @@
 }
 /* selection background should not be opaque, for fallback mode */
 ::selection{
-  background: rgba(127,255,255,0.4);
+  background: rgba(127, 255, 255, 0.883);
+	border: 1px solid black;
 }
 ::-moz-selection{
-  background: rgba(127,255,255,0.4);
+  background: rgba(127,255,255,0.88);
 }
 .pi { /* info for Javascript */
   display:none;

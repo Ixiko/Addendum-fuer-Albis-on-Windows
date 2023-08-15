@@ -108,7 +108,7 @@ SumatraInvoke(command, hSumatra="", ShowExceptions:=true) {  	;-- wm_command wra
 		Remark:
 		- SumatraPDF has changed all wm_command codes from V3.1 to V3.4
 		- the script tries to automatically recognize the version of the addressed SumatraPDF
-		  process in order to send the correct commands
+		  process in order to send the correct menu commands
 		- maybe not all commands are listed!
 		-----------------------------------------------------------------------------------------------------
 		Parameters:
@@ -287,81 +287,81 @@ SumatraInvoke(command, hSumatra="", ShowExceptions:=true) {  	;-- wm_command wra
 												,	"AnnotationFromSelection":      	628  	; Debug
 												,	"DownloadSymbols":                 	630}  	; Debug
          	SumatraCmds["3.3"] := { 	"NewWindow":                      	230  	; File
-										, 	"Open":                                 	220  	; File
-										,	"Close":                                 	204  	; File
-										,	"ShowInFolder":                        	207  	; File
-										,	"SaveAs":                               	205  	; File
-										,	"Rename":                              	208  	; File
-										,	"Print":                                   	206  	; File
-										,	"SendMail":                           	212  	; File
-										,	"Properties":                           	213  	; File
-										,	"OpenLast1":                         	362  	; File
-										,	"OpenLast2":                         	363  	; File
-										,	"OpenLast3":                         	364  	; File
-										,	"Exit":                                    	209  	; File
-										,	"SinglePage":                         	215  	; View
-										,	"DoublePage":                       	216  	; View
-										,	"BookView":                           	217  	; View
-										,	"ShowPagesContinuously":     	218  	; View
-										,	"MangaMode":                       	219  	; View
-										,	"RotateLeft":                              	220  	; View
-										,	"RotateRight":                           	221  	; View
-										,	"Presentation":                        	224  	; View
-										,	"Fullscreen":                          	223  	; View
-										,	"Bookmark":                          	000  	; View - do not use! empty call!
-										,	"ShowToolbar":                      	225  	; View
-										,	"SelectAll":                             	446  	; View
-										,	"CopyAll":                              	442  	; View
-										,	"NextPage":                           	235  	; GoTo
-										,	"PreviousPage":                      	236  	; GoTo
-										,	"FirstPage":                            	464  	; GoTo
-										,	"LastPage":                            	466  	; GoTo
-										,	"GotoPage":                          	468  	; GoTo
-										,	"Back":                                  	596  	; GoTo
-										,	"Forward":                             	598  	; GoTo
-										,	"Find":                                   	245  	; GoTo
-										,	"FindNext":                             	243  	; Toolbar
-										,	"FindPrevious":                         	244  	; Toolbar
-										,	"MatchCase":                          	476  	; Toolbar
-										,	"FitWithContinuously":               	3026	; Toolbar
-										,	"FitASinglePage":                    	3027	; Toolbar
-										,	"ZoomIn":                               	269  	; Toolbar
-										,	"ZoomOut":                            	270   	; Toolbar
-										,	"FitPage":                              	251  	; Zoom
-										,	"ActualSize":                          	252  	; Zoom
-										,	"FitWidth":                             	271  	; Zoom
-										,	"FitContent":                          	272  	; Zoom
-										,	"CustomZoom":                     	268  	; Zoom
-										,	"Zoom6400":                        	254  	; Zoom
-										,	"Zoom3200":                        	255  	; Zoom
-										,	"Zoom1600":                        	256  	; Zoom
-										,	"Zoom800":                          	257  	; Zoom
-										,	"Zoom400":                          	258  	; Zoom
-										,	"Zoom200":                          	259  	; Zoom
-										,	"Zoom150":                          	260  	; Zoom
-										,	"Zoom125":                          	261  	; Zoom
-										,	"Zoom100":                          	262  	; Zoom
-										,	"Zoom50":                            	263  	; Zoom
-										,	"Zoom25":                            	264  	; Zoom
-										,	"Zoom12.5":                          	265  	; Zoom
-										,	"Zoom8.33":                          	266  	; Zoom
-										,	"AddPageToFavorites":           	600  	; Favorites
-										,	"RemovePageFromFavorites": 	602  	; Favorites
-										,	"ShowCloseFavorites":               	604  	; Favorites
-										,	"CurrentFileFavorite1":           	700  	; Favorites
-										,	"CurrentFileFavorite2":           	701  	; Favorites -> I think this will be increased with every page added to favorites
-										,	"ChangeLanguage":               	588  	; Settings
-										,	"Options":                             	586  	; Settings
-										,	"AdvancedOptions":               	632  	; Settings
-										,	"VisitWebsite":                        	582  	; Help
-										,	"Manual":                              	592  	; Help
-										,	"CheckForUpdates":               	590  	; Help
-										,	"About":                                	584  	; Help
-										,	"HighlightLinks":                       	616  	; Debug
-										,	"ToggleEBookUI":                     	624  	; Debug
-										,	"MuiDebugPaint":                     	626  	; Debug
-										,	"AnnotationFromSelection":      	628  	; Debug
-										,	"DownloadSymbols":                 	630}  	; Debug
+								        		, 	"Open":                                 	220  	; File
+								        		,	"Close":                                 	204  	; File
+								        		,	"ShowInFolder":                        	207  	; File
+								        		,	"SaveAs":                               	205  	; File
+								        		,	"Rename":                              	208  	; File
+								        		,	"Print":                                   	206  	; File
+								        		,	"SendMail":                           	212  	; File
+								        		,	"Properties":                           	213  	; File
+								        		,	"OpenLast1":                         	362  	; File
+								        		,	"OpenLast2":                         	363  	; File
+								        		,	"OpenLast3":                         	364  	; File
+								        		,	"Exit":                                    	209  	; File
+								        		,	"SinglePage":                         	215  	; View
+								        		,	"DoublePage":                       	216  	; View
+								        		,	"BookView":                           	217  	; View
+								        		,	"ShowPagesContinuously":     	218  	; View
+								        		,	"MangaMode":                       	219  	; View
+								        		,	"RotateLeft":                              	220  	; View
+								        		,	"RotateRight":                           	221  	; View
+								        		,	"Presentation":                        	224  	; View
+								        		,	"Fullscreen":                          	223  	; View
+								        		,	"Bookmark":                          	000  	; View - do not use! empty call!
+								        		,	"ShowToolbar":                      	225  	; View
+								        		,	"SelectAll":                             	446  	; View
+								        		,	"CopyAll":                              	442  	; View
+								        		,	"NextPage":                           	235  	; GoTo
+								        		,	"PreviousPage":                      	236  	; GoTo
+								        		,	"FirstPage":                            	464  	; GoTo
+								        		,	"LastPage":                            	466  	; GoTo
+								        		,	"GotoPage":                          	468  	; GoTo
+								        		,	"Back":                                  	596  	; GoTo
+								        		,	"Forward":                             	598  	; GoTo
+								        		,	"Find":                                   	245  	; GoTo
+								        		,	"FindNext":                             	243  	; Toolbar
+								        		,	"FindPrevious":                         	244  	; Toolbar
+								        		,	"MatchCase":                          	476  	; Toolbar
+								        		,	"FitWithContinuously":               	3026	; Toolbar
+								        		,	"FitASinglePage":                    	3027	; Toolbar
+								        		,	"ZoomIn":                               	269  	; Toolbar
+								        		,	"ZoomOut":                            	270   	; Toolbar
+								        		,	"FitPage":                              	251  	; Zoom
+								        		,	"ActualSize":                          	252  	; Zoom
+								        		,	"FitWidth":                             	271  	; Zoom
+								        		,	"FitContent":                          	272  	; Zoom
+								        		,	"CustomZoom":                     	268  	; Zoom
+								        		,	"Zoom6400":                        	254  	; Zoom
+								        		,	"Zoom3200":                        	255  	; Zoom
+								        		,	"Zoom1600":                        	256  	; Zoom
+								        		,	"Zoom800":                          	257  	; Zoom
+								        		,	"Zoom400":                          	258  	; Zoom
+								        		,	"Zoom200":                          	259  	; Zoom
+								        		,	"Zoom150":                          	260  	; Zoom
+								        		,	"Zoom125":                          	261  	; Zoom
+								        		,	"Zoom100":                          	262  	; Zoom
+								        		,	"Zoom50":                            	263  	; Zoom
+								        		,	"Zoom25":                            	264  	; Zoom
+								        		,	"Zoom12.5":                          	265  	; Zoom
+								        		,	"Zoom8.33":                          	266  	; Zoom
+								        		,	"AddPageToFavorites":           	600  	; Favorites
+								        		,	"RemovePageFromFavorites": 	602  	; Favorites
+								        		,	"ShowCloseFavorites":               	604  	; Favorites
+								        		,	"CurrentFileFavorite1":           	700  	; Favorites
+								        		,	"CurrentFileFavorite2":           	701  	; Favorites -> I think this will be increased with every page added to favorites
+								        		,	"ChangeLanguage":               	588  	; Settings
+								        		,	"Options":                             	586  	; Settings
+								        		,	"AdvancedOptions":               	632  	; Settings
+								        		,	"VisitWebsite":                        	582  	; Help
+								        		,	"Manual":                              	592  	; Help
+								        		,	"CheckForUpdates":               	590  	; Help
+								        		,	"About":                                	584  	; Help
+								        		,	"HighlightLinks":                       	616  	; Debug
+								        		,	"ToggleEBookUI":                     	624  	; Debug
+								        		,	"MuiDebugPaint":                     	626  	; Debug
+								        		,	"AnnotationFromSelection":      	628  	; Debug
+								        		,	"DownloadSymbols":                 	630}  	; Debug
 			SumatraCmds["3.4"] := { 	"NewWindow":                      	234  	; File !
 												, 	"Open":                                 	201  	; File !
 												,	"Close":                                 	203  	; File !
@@ -482,14 +482,17 @@ SumatraInvoke(command, hSumatra="", ShowExceptions:=true) {  	;-- wm_command wra
 		; execute stream-like commands
 			If IsObject(SumatraCmds[version][command]) {
 				For cmdindex, cmd in SumatraCmds[version][command] {
-					PostMessage, 0x111, % cmd,,, % "ahk_id " hSumatra
-					If (cmdindex < wmcmds.Count())
-						Sleep, 300                                                               	; I think a delay is necessary here
+					SendMessage, 0x111, % cmd,,, % "ahk_id " hSumatra		; ## maybe I will change it  back to PostMessage, if this takes to long
+					EL .= (EL ? "|" : "") ErrorLevel
+					;~ If (cmdindex < wmcmds.Count())
+						;~ Sleep, 300                                                               	; I think a delay is necessary here
 				}
 			}
 		; execute single command
-			else
-				PostMessage, 0x111, % SumatraCmds[version][command],,, % "ahk_id " hSumatra
+			else {
+				SendMessage, 0x111, % SumatraCmds[version][command],,, % "ahk_id " hSumatra
+				return ErrorLevel
+			}
 
 		}
 	; returns wm_command code for this Sumatra Programmversion

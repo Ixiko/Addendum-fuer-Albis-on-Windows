@@ -87,6 +87,10 @@
         "ingredient": "Valsartan und Amlodipin",
         "use": "Bluthochdruck"
     },
+    "Amoxicillin/Cla Dev": {
+        "ingredient": "Amoxicillin + Clavulansäure",
+        "use": "Harnwegsinfekt"
+    },
     "Ampho Moronal": {
         "ingredient": "Amphotericin B",
         "use": "Candida/Soor"
@@ -159,6 +163,10 @@
         "ingredient": "Metoprolol",
         "use": "Bluthochdruck"
     },
+    "Benazepril": {
+        "ingredient": "Benazepril",
+        "use": "Blutdruck"
+    },
     "Berlinsulin H Basal": {
         "ingredient": "Insulin (human), normal",
         "use": "Diabetes"
@@ -182,6 +190,14 @@
     "Betmiga": {
         "ingredient": "Mirabegon",
         "use": "Blasenentleerungsstörung"
+    },
+    "Bicalutin": {
+        "ingredient": "Biculatamid",
+        "use": "Prostatakarzinom"
+    },
+    "Bipreterax": {
+        "ingredient": "Perindopril und Indapamid",
+        "use": "Blutdruck"
     },
     "Biso": {
         "ingredient": "Bisoprolol",
@@ -283,6 +299,10 @@
         "ingredient": "Chloraldurat",
         "use": "Schlaf"
     },
+    "Cilostazol Elpen": {
+        "ingredient": "Cilostazol",
+        "use": "Gerinnung"
+    },
     "Cipralex": {
         "ingredient": "Citalopram",
         "use": "Stimmung/Psyche"
@@ -311,6 +331,10 @@
         "ingredient": "Clonidin",
         "use": "grüner Star"
     },
+    "Clonidin": {
+        "ingredient": "Clonidin",
+        "use": "Blutdruck "
+    },
     "Clopidogrel": {
         "ingredient": "Clopidogrel",
         "use": "Gerinnung"
@@ -331,6 +355,7 @@
         "ingredient": "Colestyramin 20",
         "use": "Galle"
     },
+    "Corifeo": {},
     "Cymbalta": {
         "ingredient": "Duloxetin",
         "use": "Stimmung/Psyche"
@@ -346,6 +371,10 @@
     "Dekristol": {
         "ingredient": "Colecalciferol",
         "use": "Osteoporoseprophylaxe/Immunsystem"
+    },
+    "Delmuno": {
+        "ingredient": "Ramipril und Felodipin",
+        "use": "Blutdruck"
     },
     "Dexamethason": {
         "ingredient": "Dexamethason",
@@ -486,6 +515,10 @@
     "Falithrom": {
         "ingredient": "Phenprocoumon",
         "use": "Gerinnung"
+    },
+    "Falithrom N3": {
+        "ingredient": "",
+        "use": ""
     },
     "Fastjekt Autoinjektor": {
         "ingredient": "Epinephrin",
@@ -760,6 +793,10 @@
         "ingredient": "Lercanidipin",
         "use": "Blutdruck"
     },
+    "Letrozol": {
+        "ingredient": "Letrozol",
+        "use": "Brustkrebs"
+    },
     "Levetiracetam": {
         "ingredient": "Levetiracetam",
         "use": "Epilepsie"
@@ -796,6 +833,10 @@
         "ingredient": "Lisinopril",
         "use": "Blutdruck"
     },
+    "Lisinopril Comp": {
+        "ingredient": "Lisinipril und Hydrochlorothiazid",
+        "use": "Blutdruck"
+    },
     "Lixiana": {
         "ingredient": "Edoxaban",
         "use": "Gerinnung"
@@ -827,6 +868,10 @@
     "Marcumar": {
         "ingredient": " Phenprocoumon",
         "use": "Gerinnung"
+    },
+    "Mcp": {
+        "ingredient": "Metoclopramid",
+        "use": "Übelkeit/Erbrechen"
     },
     "Melneurin": {
         "ingredient": "Melperon",
@@ -1040,6 +1085,14 @@
     "Opipram": {
         "ingredient": "Opipramol",
         "use": "Stimmung/Psyche"
+    },
+    "Opipramol": {
+        "ingredient": "Opipramol",
+        "use": "Depression"
+    },
+    "Orfiril Long": {
+        "ingredient": "Valproinsäure",
+        "use": "Epilepsie"
     },
     "Oxycocomp": {
         "ingredient": "Oxycodon und Naloxon [MORPHIN]",
@@ -1275,6 +1328,10 @@
         "remark": "Notfallspray",
         "use": "Asthma/COPD (Notfall)"
     },
+    "Salbutamol N": {
+        "ingredient": "Salbutamol",
+        "use": "COPD/Asthma"
+    },
     "Sativex": {
         "ingredient": "Cannabinoide",
         "use": "Muskelkrämpfe bei neurologischer Grunderkrankung"
@@ -1294,6 +1351,10 @@
     "Simbrinza": {
         "ingredient": "Brinzolamid und Brimonidin",
         "use": "grüner Star"
+    },
+    "Simva": {
+        "ingredient": "Simvastatin",
+        "use": "Cholesterin"
     },
     "Simvabeta": {
         "ingredient": "Simvastatin",
@@ -1371,6 +1432,10 @@
         "ingredient": "Tamoxifen",
         "use": "adjuvante Therapie bei Brustkrebs"
     },
+    "Tamsublock": {
+        "ingredient": "Tamsulosin",
+        "use": "Prostata"
+    },
     "Tamsulosin": {
         "ingredient": "Tamsulosin",
         "use": "Prostata"
@@ -1380,6 +1445,10 @@
         "use": "Prostata"
     },
     "Tamsulosin Zen": {
+        "ingredient": "Tamsulosin",
+        "use": "Prostata"
+    },
+    "Tamsunar": {
         "ingredient": "Tamsulosin",
         "use": "Prostata"
     },

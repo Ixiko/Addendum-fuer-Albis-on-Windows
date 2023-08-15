@@ -1,47 +1,48 @@
-﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
-;                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                            	by Ixiko started in September 2017 - last change 22.07.2022 - this file runs under Lexiko's GNU Licence
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;                        	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
+;                                                	!diese Bibliothek wird von fast allen Skripten benötigt!
+;                      	by Ixiko started in September 2017 - last change 14.08.2023 - this file runs under Lexiko's GNU Licence
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; FUNKTIONEN  	|                                                 	|                                                 	|                                                 	|                                             	(36)
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; Umwandeln:		|	GetHex                                    	GetDec
-; WinEventhook: 	|	SetWinEventHook                     	UnhookWinEvent
-; Prozesse:			|	StdOutToVar                            	IsProcessElevated				     		ScriptIsRunning								ScriptMem
-;                         	|	getProcessName                   	GetProcessNameFromID             	GetProcessProperties
-; IPC:					|	Receive_WM_COPYDATA	    	Send_WM_COPYDATA			    	GetAddendumID
-; INI: 					|	IniReadExt                                	IniAppend                                  	StrUtf8BytesToText
-; MsgBox:				|	KurzePause	                          	Weitermachen
-; Dateien:				|	FileIsLocked                             	FilePathCreate						    	FilePathExist                               	isFullFilePath
-;							|	FileGetDetail                          	FileGetDetails                             	GetDetails
-;							|	GetAppImagePath						GetAppsInfo                              	GetFileSize                                  	GetAlbisPaths
-; Sonstiges:			|	IsRemoteSession                     	HasVal                                        	GetDrives
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; FUNKTIONEN  	|                      	|                      	|                      	|                       	(39)
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; Umwandeln:		|	GetHex                 	GetDec
+; WinEventhook:	|	SetWinEventHook        	UnhookWinEvent
+; Prozesse:	   	|	StdOutToVar            	IsProcessElevated				ScriptIsRunning			  	ScriptMem
+;              	|	getProcessName         	GetProcessNameFromID   	GetProcessProperties
+; IPC:					|	Receive_WM_COPYDATA	   	Send_WM_COPYDATA			 	GetAddendumID
+; INI: 					|	IniReadExt             	IniAppend              	StrUtf8BytesToText
+; MsgBox:				|	KurzePause	           	Weitermachen
+; Dateien:			|	FileIsLocked           	FilePathCreate				 	FilePathExist          	isFullFilePath
+;						  	|	FileGetDetail          	FileGetDetails         	GetDetails             	GetFilesFolder
+;						  	|	GetAppImagePath					GetAppsInfo            	GetFileSize            	GetAlbisPath		  			GetAlbisPaths
+;								| SetExplorerFilename
+; Sonstiges:		|	IsRemoteSession        	HasVal                 	GetDrives				  			FormatedFileSize
 ;______________________________________________________________________________________________________________________________________________
 ; UMWANDELN (2)
-GetHex(hwnd) {                                                                                                                    	;-- Umwandlung Dezimal nach Hexadezimal
+GetHex(hwnd) {                                                                           	;-- Umwandlung Dezimal nach Hexadezimal
 return Format("0x{:X}", hwnd)
 }
 
-GetDec(hwnd) {                                                                                                                    	;-- Umwandlung Hexadezimal nach Dezimal
+GetDec(hwnd) {                                                                           	;-- Umwandlung Hexadezimal nach Dezimal
 return Format("{:u}", hwnd)
 }
 
 ;______________________________________________________________________________________________________________________________________________
 ; WINEVENTHOOK (2)
-SetWinEventHook(evMin, evMax, hmodWEvProc, lpfnWEvProc, idProcess, idThread, dwFlags) { 	;-- WinEventHook starten
+SetWinEventHook(evMin, evMax, hmodWEvProc, lpfnWEvProc, idProcess, idThread, dwFlags) {  	;-- WinEventHook starten
 	return DllCall("SetWinEventHook", "uint", evMin, "uint", evMax, "Uint", hmodWEvProc	, "uint", lpfnWEvProc, "uint", idProcess, "uint", idThread, "uint", dwFlags)
 }
 
-UnhookWinEvent(hWinEventHook, HookProcAdr) {                                                                    	;-- WinEventHook beenden
+UnhookWinEvent(hWinEventHook, HookProcAdr) {                                             	;-- WinEventHook beenden
 	DllCall( "UnhookWinEvent", "Ptr", hWinEventHook )
 	DllCall( "GlobalFree", "Ptr", HookProcAdr ) ; free up allocated memory for RegisterCallback
 }
 
 ;______________________________________________________________________________________________________________________________________________
 ; PROZESSE (7)
-StdoutToVar(sCmd, sEncoding:="UTF-8", sDir:="", ByRef nExitCode:=0) {                               	;-- cmdline Ausgabe in einen String umleiten
+StdoutToVar(sCmd, sEncoding:="UTF-8", sDir:="", ByRef nExitCode:=0) {                    	;-- cmdline Ausgabe in einen String umleiten
 
     DllCall( "CreatePipe"					, "PtrP"	,hStdOutRd, "PtrP",hStdOutWr, "Ptr",0, "UInt",0 )
     DllCall( "SetHandleInformation"	, "Ptr"	,hStdOutWr, "UInt"	,1, "UInt",1)
@@ -84,7 +85,7 @@ StdoutToVar(sCmd, sEncoding:="UTF-8", sDir:="", ByRef nExitCode:=0) {           
 Return sOutput
 }
 
-IsProcessElevated(ProcessID) {                                                                                                	;-- ermittelt ob ein Prozess mit UAC-Virtualisierung läuft
+IsProcessElevated(ProcessID) {                                                           	;-- ermittelt ob ein Prozess mit UAC-Virtualisierung läuft
     if !(hProcess := DllCall("OpenProcess", "uint", 0x0400, "int", 0, "uint", ProcessID, "ptr"))
         throw Exception("OpenProcess failed", -1)
     if !(DllCall("advapi32\OpenProcessToken", "ptr", hProcess, "uint", 0x0008, "ptr*", hToken))
@@ -94,7 +95,7 @@ IsProcessElevated(ProcessID) {                                                  
     return IsElevated, DllCall("CloseHandle", "ptr", hToken) && DllCall("CloseHandle", "ptr", hProcess)
 }
 
-ScriptIsRunning(scriptname) {                                                                                                 	;-- ein bestimmtes Skript wird ausgeführt?
+ScriptIsRunning(scriptname) {                                                            	;-- ein bestimmtes Skript wird ausgeführt?
 
 	for process in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process")
         If RegExMatch(process.commandline, scriptname "\.ahk")
@@ -103,7 +104,7 @@ ScriptIsRunning(scriptname) {                                                   
 return 0
 }
 
-ScriptMem() {                                                                                                                        	;-- gibt belegten Speicher frei
+ScriptMem() {                                                                            	;-- gibt belegten Speicher frei
 
 	static PID := 0
 
@@ -122,7 +123,7 @@ ScriptMem() {                                                                   
 return result
 }
 
-getProcessName(PID) { 			                                                           		                 					;-- get running processes with search using comma separated list
+getProcessName(PID) { 			                                                              ;-- get running processes with search using comma separated list
 
 		s := 100096  ; 100 KB will surely be HEAPS
 		array := []
@@ -178,7 +179,7 @@ Return Process
 
 ;______________________________________________________________________________________________________________________________________________
 ; INTERPROZESSCOMMUNICATION (4)
-Receive_WM_COPYDATA(wParam, lParam) {                                                                         	;-- empfängt Nachrichten von anderen Skripten
+Receive_WM_COPYDATA(wParam, lParam) {                                                   	;-- empfängt Nachrichten von anderen Skripten
 
     StringAddress	:= NumGet(lParam + 2*A_PtrSize)
 	fn_MsgWorker	:= Func("MessageWorker").Bind(StrGet(StringAddress))
@@ -187,7 +188,7 @@ Receive_WM_COPYDATA(wParam, lParam) {                                           
 return
 }
 
-Send_WM_COPYDATA(ByRef StringToSend, ScriptID) {                                                            	;-- für die Interskriptkommunikation - keine Netzwerkkommunikation!
+Send_WM_COPYDATA(ByRef StringToSend, ScriptID) {                                         	;-- für die Interskriptkommunikation - keine Netzwerkkommunikation!
 
     static TimeOutTime            	:= 4000
 
@@ -210,7 +211,7 @@ Send_WM_COPYDATA(ByRef StringToSend, ScriptID) {                                
 return eL  ; Return SendMessage's reply back to our caller.
 }
 
-GetAddendumID() {                                                                                                              	;-- für Interskriptkommunikation
+GetAddendumID() {                                                                        	;-- für Interskriptkommunikation
 	Prev_DetectHiddenWindows := A_DetectHiddenWindows
     Prev_TitleMatchMode := A_TitleMatchMode
     DetectHiddenWindows On
@@ -221,7 +222,7 @@ GetAddendumID() {                                                               
 return AddendumID
 }
 
-GetScriptID(scriptname) {                                                                                                       	;-- nur für Skripte mit eigener Message-Gui
+GetScriptID(scriptname) {                                                                	;-- nur für Skripte mit eigener Message-Gui
 	Prev_DetectHiddenWindows := A_DetectHiddenWindows
     Prev_TitleMatchMode := A_TitleMatchMode
     DetectHiddenWindows On
@@ -234,7 +235,7 @@ return hwnd
 
 ;______________________________________________________________________________________________________________________________________________
 ; INI (3)
-IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="", convert:=true) {                             	;-- eigene IniRead funktion für Addendum
+IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="", convert:=true) {           	;-- eigene IniRead funktion für Addendum
 
 	/* Beschreibung
 
@@ -296,7 +297,7 @@ IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="", convert:=true) {   
 return value
 }
 
-IniInsertSection(iniPath, InsertBeforeSection, newSectionName, backupPath:="") {                     	;-- eine Sektion in eine Ini-Datei einfügen
+IniInsertSection(iniPath, InsertBeforeSection, newSectionName, backupPath:="") {         	;-- eine Sektion in eine Ini-Datei einfügen
 
 	If !FileExist(iniPath)
 		return 0
@@ -322,7 +323,7 @@ IniInsertSection(iniPath, InsertBeforeSection, newSectionName, backupPath:="") {
 return 1
 }
 
-IniAppend(value, filename, section, key) {                                                                                 	;-- vorhandenen Werten weitere Werte hinzufügen
+IniAppend(value, filename, section, key) {                                               	;-- vorhandenen Werten weitere Werte hinzufügen
 
 	IniRead, schreib, % filename, % section, % key
 	If Instr(schreib, "Error")
@@ -331,7 +332,7 @@ IniAppend(value, filename, section, key) {                                      
 
 }
 
-StrUtf8BytesToText(vUtf8) {                                                                                                       	;-- Umwandeln von Text aus .ini Dateien in UTF-8
+StrUtf8BytesToText(vUtf8) {                                                              	;-- Umwandeln von Text aus .ini Dateien in UTF-8
 	if A_IsUnicode 	{
 		VarSetCapacity(vUtf8X, StrPut(vUtf8, "CP0"))
 		StrPut(vUtf8, &vUtf8X, "CP0")
@@ -342,7 +343,7 @@ StrUtf8BytesToText(vUtf8) {                                                     
 
 ;______________________________________________________________________________________________________________________________________________
 ; MESSAGEBOX (2)
-KurzePause(Pausenzeit:=5) {                                                                                                   	;-- kurze Pause (Debug Hilfe)
+KurzePause(Pausenzeit:=5) {                                                              	;-- kurze Pause (Debug Hilfe)
 
 	MsgBox, 0x1024, % "Kurze Pause", % "MACH WEITER !!!", % Pausenzeit
 	IfMsgBox, No
@@ -351,7 +352,7 @@ KurzePause(Pausenzeit:=5) {                                                     
 return 1
 }
 
-Weitermachen(Message="", Title="Guck!", TimeOut=0) {                                                          	;-- weiter oder abbrechen (Debug Hilfe)
+Weitermachen(Message="", Title="Guck!", TimeOut=0) {                                     	;-- weiter oder abbrechen (Debug Hilfe)
 
 	MsgBox, 0x1021	, % Title
 								, % (StrLen(Message) > 0  ? Message "`n" : "Weiter oder Abbrechen?")
@@ -365,7 +366,7 @@ return 1
 
 ;______________________________________________________________________________________________________________________________________________
 ; DATEIEN (13)
-FileIsLocked(FullFilePath)  {                                                                                                       	;-- ist die Datei gesperrt?
+FileIsLocked(FullFilePath)  {                                                            	;-- ist die Datei gesperrt?
 
 	If !FileExist(FullFilePath)
 		return false
@@ -378,30 +379,30 @@ FileIsLocked(FullFilePath)  {                                                   
 return LE = 32 ? true : false
 }
 
-FilePathCreate(path) {                                                                                                              	;-- erstellt einen Dateipfad falls dieser noch nicht existiert
+FilePathCreate(path) {                                                                   	;-- erstellt einen Dateipfad falls dieser noch nicht existiert
 	If !FilePathExist(path) {
 		FileCreateDir, % path
 		return ErrorLevel ? 0 : 1
 	}
-return 1
+return true
 }
 
-FilePathExist(path) {                                                                                                                 	;-- prüft ob ein Dateipfad vorhanden ist
+FilePathExist(path) {                                                                    	;-- prüft ob ein Dateipfad vorhanden ist
 	; akzeptiert keine leeren Pfade
-	If (StrLen(path)>0)
+	If (StrLen(path := Trim(path))>0)
 		If (StrLen(pathExist := FileExist(path)) > 0)
 			If InStr(pathExist, "D")
 				return true
 return false
 }
 
-isFullFilePath(path) {                                                                                                               	;-- prüft Pfadstring auf die Angabe eines Laufwerkes
+isFullFilePath(path) {                                                                  	;-- prüft Pfadstring auf die Angabe eines Laufwerkbuchstabens
 	If RegExMatch(path, "[A-Z]\:\\")
 		return true
 return false
 }
 
-FileGetDetail(FilePath, Index) {                                                                                               	;-- Bestimmte Dateieigenschaft per Index abrufen
+FileGetDetail(FilePath, Index) {                                                         	;-- Bestimmte Dateieigenschaft per Index abrufen
    Static MaxDetails := 350
    SplitPath, FilePath, FileName , FileDir
 	FileDir 			:=!FileDir ? A_WorkingDir : ""
@@ -411,7 +412,7 @@ FileGetDetail(FilePath, Index) {                                                
    Return Folder.GetDetailsOf(Item, Index)
 }
 
-FileGetDetails(FilePath) {                                                                                                        	;-- Array der konkreten Dateieigenschaften erstellen
+FileGetDetails(FilePath) {                                                              	;-- Array der konkreten Dateieigenschaften erstellen
    Static MaxDetails := 350
    Shell := ComObjCreate("Shell.Application")
    Details := []
@@ -427,7 +428,7 @@ FileGetDetails(FilePath) {                                                      
    Return Details
 }
 
-GetDetails() {                                                                                                                        	;-- Array der möglichen Dateieigenschaften erstellen
+GetDetails() {                                                                           	;-- Array der möglichen Dateieigenschaften erstellen
    Static MaxDetails := 350
    Shell := ComObjCreate("Shell.Application")
    Details := []
@@ -441,7 +442,7 @@ GetDetails() {                                                                  
    Return Details
 }
 
-GetAppImagePath(appname) {                                                                                                	;-- Installationspfad eines Programmes
+GetAppImagePath(appname) {                                                               	;-- Installationspfad eines Programmes
 
 	headers:= {	"DISPLAYNAME"                  	: 1
 					,	"VERSION"                         	: 2
@@ -461,8 +462,7 @@ GetAppImagePath(appname) {                                                      
 					, 	"IMAGE"                            	: 16
 					, 	"UPDATEINFOURL"            	: 17}
 
-   ;~ appImages := GetAppsInfo({mask: "IMAGE", offset: A_PtrSize*(headers["IMAGE"] - 1) })
-   appImages := GetAppsInfo({mask: "INSTALLLOCATION", offset: A_PtrSize*(headers["INSTALLLOCATION"] - 1) })
+   appImages := GetAppsInfo({mask: "IMAGE", offset: A_PtrSize*(headers["IMAGE"] - 1) })
    Loop, Parse, appImages, "`n"
 	If Instr(A_loopField, appname)
 		return A_loopField
@@ -523,7 +523,7 @@ GetFileAssoc(extension){
     return StrGet(&progPath,NumGet(&numChars, 0, "UInt"),"UTF-16")
 }
 
-GetFileSize(path, units="") {                                                                                                      	;-- FileGetSize wrapper
+GetFileSize(path, units="") {                                                            	;-- FileGetSize wrapper
 	FileGetSize, fSize, % path, % units
 return fSize
 }
@@ -534,19 +534,112 @@ GetFileSemVer(path) {
     return Format("{}.{}.{}", _match1,_match2,_match3)
 }
 
-GetAlbisPaths() {                                                                                                                   	;-- Albisverzeichnisse
+GetFilesFolder(folder, pattern:="", recurse:=0) {                                        	;-- ermittelt alle Dateien in einem Verzeichnis
 
+	If !InStr(FileExist(folder), "D")
+		return 0
+
+	files := []
+	Loop, % folder "/" (!pattern ?  "*.*" : pattern="^\*$" ? "*.*" : Pattern ), % recurse
+		files.Push(A_LoopFileName)
+
+return files
+}
+
+GetAlbisPath() {                                                                         	;-- liest das Albisinstallationsverzeichnis aus der Registry
+
+	SetRegView, % (A_PtrSize=8 ? 64 : 32)
+	RegRead, PathAlbis, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, 1-MainPath
+	If (StrLen(PathAlbis) = 0) || (PathAlbis ~= "i)albis_demo")
+		RegRead, PathAlbis, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, 2-MainPath
+	If (StrLen(PathAlbis) = 0) || (PathAlbis ~= "i)albis_demo")
+		RegRead, PathAlbis, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, Installationspfad
+	If (StrLen(PathAlbis) = 0) || (PathAlbis ~= "i)albis_demo")
+		throw " Parameter 'basedir' enthält keine Pfadangabe"
+
+
+return PathAlbis
+}
+
+GetAlbisPaths() {                                                                       	;-- ermittelt das Albisverzeichniss, sowie Unterverzeichnisse im albiswin Ordner
+
+	nr := 1
 	SetRegView	, % (A_PtrSize = 8 ? 64 : 32)
-	RegRead   	, MainPath	, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, 1-MainPath
-	RegRead    	, LocalPath 	, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, 1-LocalPath
-	RegRead   	, Exe         	, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, 1-Exe
+
+	regPathAlbis1 := "HKEY_CURRENT_USER\SOFTWARE\ALBIS\Albis on Windows\Albis_Versionen"
+
+	Loop {
+
+		nr := A_Index
+		RegRead, MainPath	, % regPathAlbis1, % nr "-MainPath"
+		RegRead, LocalPath 	, % regPathAlbis1, % nr "-LocalPath"
+		RegRead, Exe         	, % regPathAlbis1, % nr "-Exe"
+
+		If  !(MainPath ~= "i)albis_demo") && InStr(FileExist(MainPath), "D") && FileExist(MainPath "\" Exe ){
+			albisfound := true
+			break
+		}
+		else if (A_Index > 10)
+			break
+	}
+
+
+ ; HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows,
+	If !albisfound {
+		RegRead, MainPath		, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, Installationspfad
+		RegRead, LocalPath		, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, % LocalPath-2
+		IF FileExist(MainPath "\albisCS.exe")
+			Exe := "albisCS.exe"
+		albisfound := true
+	}
+
+ ; Abbruch
+	If !albisfound {
+		throw "Der Dateipfad mit einer albis.exe oder albisCS.exe konnte nicht bestimmt werden"
+		return
+	}
+
 
 return {"MainPath":MainPath, "LocalPath":LocalPath, "Exe":Exe, "Briefe":MainPath "\Briefe", "db":MainPath "\db", "Vorlagen":MainPath "\tvl"}
 }
 
+DriveLetterReplace(path, rplDriveLetter:="") {                                          	;-- Gerätebuchstaben im Pfad tauschen
+	If (path ~= "i)^\s*ERROR\s*$")    ; leert eine Pfadangabe wenn diese nur "ERROR" enthält > IniRead
+		return
+return !(rplDriveLetter~="i)^[A-Z]\s*$") ? path : RegExReplace(path, "i)^[A-Z]\:", rplDriveLetter ":")
+}
+
+SetExplorerFilename(fname, hDruckausgabe, replacePath:="") {                             	;-- Dateidialogfenster - Setzen des Dateinamens
+
+	; replacePath = enthält den neuen Pfad
+
+  ; die Dateierweiterung wird nicht benötigt
+	SplitPath, fname,, outDir, outExtension, outNameNoExt
+
+  ; Daten von Dialog-Steuerelementen ermitteln
+	Controls("","reset","")
+	hFilePath    	:= Controls("ToolbarWindow324"	, "hwnd"	, hDruckausgabe)
+	hFileName 	:= Controls("Edit1"                     	, "hwnd"	, hDruckausgabe)   ; Feld: "Dateiname"
+	RegExMatch(Controls("ToolbarWindow324"    	, "GetText"	, hDruckausgabe), "(?<Path>(?<Drive>[A-Z]:|\\\\\w+\\).*)", explorer)
+
+  ; Pfadersetzung
+	If replacePath
+		outDir := replacePath
+
+	If (outDir != explorerPath) {
+		VerifiedSetText("", outDir, hFilePath)
+		ControlSend,, {TAB}, % "ahk_id " hFilePath
+		Sleep 300
+	}
+
+  ; vorgeschlagenen Dateinnamen einsetzen
+	return VerifiedSetText("", outNameNoExt, hFileName)
+
+}
+
 ;______________________________________________________________________________________________________________________________________________
 ; SONSTIGES (3)
-IsRemoteSession() {                                                                                                                 	;-- true oder false wenn eine RemoteSession besteht
+IsRemoteSession() {                                                                     	;-- true oder false wenn eine RemoteSession besteht
 	SysGet, SessionRS, 4096
 return SessionRS
 }
@@ -560,7 +653,7 @@ HasVal(haystack, needle) {
     return 0
 }
 
-DriveTypeExist(DriveType:="CDROM", ByRef DrvType:="") {                                                       	; gibt true zurück wenn ein bestimmter Laufwerkstyp angeschlossen ist
+DriveTypeExist(DriveType:="CDROM", ByRef DrvType:="") {                                  	; gibt true zurück wenn ein bestimmter Laufwerkstyp angeschlossen ist
 
 	; oder gibt false zurück wenn nicht
 
@@ -578,7 +671,7 @@ DriveTypeExist(DriveType:="CDROM", ByRef DrvType:="") {                         
 return drvType.Count() ? true : false
 }
 
-GetDrives() {                                                                                                                           	;-- ermittelt verfügbare Laufwerke und deren Daten
+GetDrives() {                                                                           	;-- ermittelt verfügbare Laufwerke und deren Daten
 
 	static DriveGetCmds := ["Type", "Capacity", "Label", "Filesystem", "Serial", "Status", "StatusCD"]
 
@@ -597,4 +690,27 @@ GetDrives() {                                                                   
 return Drives
 }
 
+FormatedFileSize(filesize, NDecimal:=1) {                                               	;-- automatische Dateigrößenangaben sobald eine Einheitengröße überschritten wurde
 
+  ; filesize : wird als Bytes übergeben
+	static bytes := _initByteSizes()
+	static firstcall := 1
+
+	For each, byte in bytes
+		If (Floor(bytesize := filesize/byte.size) > 0)
+			return Round(bytesize, NDecimal) " " byte.name
+
+	return filesize " B"
+
+}
+_initByteSizes() {
+	bytes := Array()
+	bytes.InsertAt(1, {"name":"KB" 	, "size":1024})
+	bytes.InsertAt(1, {"name":"MB"	, "size":bytes[1].size*1024})
+	bytes.InsertAt(1, {"name":"GB"	, "size":bytes[1].size*1024})
+	bytes.InsertAt(1, {"name":"TB" 	, "size":bytes[1].size*1024})
+	bytes.InsertAt(1, {"name":"PB" 	, "size":bytes[1].size*1024})
+	bytes.InsertAt(1, {"name":"EB" 	, "size":bytes[1].size*1024})
+
+	return bytes
+}

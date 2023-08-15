@@ -1,12 +1,4 @@
-﻿# For documentation, see https://www.sumatrapdfreader.org/settings/settings3-3-1.html
-
-MainWindowBackground = #80e6e8e3
-EscToExit = false
-ReuseInstance = true
-UseSysColors = false
-RestoreSession = false
-TabWidth = 200
-
+﻿# For documentation, see https://www.sumatrapdfreader.org/settings/settings3-4-6.html
 FixedPageUI [
 	TextColor = #000000
 	BackgroundColor = #ffffff
@@ -16,13 +8,6 @@ FixedPageUI [
 	HideScrollbars = true
 	ShowStartPage = false
 ]
-EbookUI [
-	FontName = Georgia
-	FontSize = 12.5
-	TextColor = #5f4b32
-	BackgroundColor = #fbf0d9
-	UseFixedPageUI = false
-]
 ComicBookUI [
 	WindowMargin = 0 0 0 0
 	PageSpacing = 4 4
@@ -31,11 +16,12 @@ ComicBookUI [
 ChmUI [
 	UseFixedPageUI = false
 ]
+
+SelectionHandlers [
+]
 ExternalViewers [
 ]
-ShowMenubar = true
-ReloadModifiedDocuments = true
-FullPathInTitle = false
+
 ZoomLevels = 8.33 12.5 18 25 33.33 50 66.67 75 100 125 150 200 300 400 600 800 1000 1200 1600 2000 2400 3200 4800 6400
 ZoomIncrement = 0
 
@@ -50,28 +36,44 @@ ForwardSearch [
 ]
 Annotations [
 	HighlightColor = #ffff00
+	UnderlineColor = #00ff00
+	TextIconColor = #ffff00
+	TextIconType = 
+	DefaultAuthor = 
 ]
-CustomScreenDPI = 144
 
-RememberStatePerDocument = false
-UiLanguage = de
-ShowToolbar = false
-ShowFavorites = false
-AssociatedExtensions = .pdf
-AssociateSilently = false
-CheckForUpdates = false
 RememberOpenedFiles = false
+RememberStatePerDocument = false
+RestoreSession = false
+UiLanguage = de
 EnableTeXEnhancements = false
 DefaultDisplayMode = automatic
 DefaultZoom = fit page
-WindowState = 1
-WindowPos = 3615 219 678 960
+Shortcuts [
+]
+EscToExit = false
+ReuseInstance = true
+ReloadModifiedDocuments = true
+
+MainWindowBackground = #80e6e8e3
+FullPathInTitle = false
+ShowMenubar = true
+ShowToolbar = false
+ShowFavorites = false
 ShowToc = true
-SidebarDx = 252
 TocDy = 0
+SidebarDx = 252
+ToolbarSize = 18
+TabWidth = 200
 TreeFontSize = 0
+SmoothScroll = false
 ShowStartPage = false
+CheckForUpdates = false
+WindowState = 1
+WindowPos = 5125 214 678 960
 UseTabs = true
+UseSysColors = false
+CustomScreenDPI = 144
 
 FileStates [
 	[
@@ -91,6 +93,15 @@ FileStates [
 SessionData [
 ]
 TimeOfLastUpdateCheck = 30942770 1248710396
-OpenCountWeek = 599
+OpenCountWeek = 648
 
-# Settings after this line have not been recognized by the current version
+# Settings below are not recognized by the current version
+EbookUI [
+	FontName = Georgia
+	FontSize = 12.5
+	TextColor = #5f4b32
+	BackgroundColor = #fbf0d9
+	UseFixedPageUI = false
+]
+AssociatedExtensions = .pdf
+AssociateSilently = false

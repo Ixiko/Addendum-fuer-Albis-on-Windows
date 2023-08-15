@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                                                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                                                                            	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                                                            	by Ixiko started in September 2017 - last change 19.06.2022 - this file runs under Lexiko's GNU Licence
+;                                                            	by Ixiko started in September 2017 - last change 19.03.2023 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
 return
@@ -93,11 +93,11 @@ GetChildHWND(ParentWindowID, ChildClassNN) {
 	; Otherwise, the HWND is returned.
 
 	WinGetPos, ParentX, ParentY,,, % "ahk_id " ParentWindowID
-	if ParentX =
+	if !ParentX
 		return  ; Parent window not found (possibly due to DetectHiddenWindows).
 
 	ControlGetPos, ChildX, ChildY,,, % ChildClassNN, % "ahk_id " ParentWindowID
-	if ChildX =
+	if !ChildX
 		return  ; Child window not found.
 
 return DllCall("WindowFromPoint", "int", ChildX + ParentX, "int", ChildY + ParentY)
@@ -109,16 +109,15 @@ GetControls(hwnd, class_filter:="", type_filter:="", info_filter:="") {         
 	;type_filter 	- comma separated list of control types 	you don't want to store
 	;info_filter 	- comma separated list of classes       	you !want! to store
 
-		If StrLen(info_filter) = 0
-			info_filter:="hwnd,Pos,Enabled,Visible,Style,ExStyle"
+		static Control_Style           	:= "Style"
+		static Control_IsEnabled 	:= "Enabled"
+		static Control_IsVisible    	:= "Visible"
+		static Control_ExStyle      	:= "ExStyle"
+		static Control_Pos          	:= "Pos"
+		static Control_Handle      	:= "hwnd"
 
 		controls := Array()
-		Control_Style           	:= "Style"
-		Control_IsEnabled 	:= "Enabled"
-		Control_IsVisible    	:= "Visible"
-		Control_ExStyle      	:= "ExStyle"
-		Control_Pos          	:= "Pos"
-		Control_Handle      	:= "hwnd"
+		info_filter := info_filter ? info_filter : "hwnd,Pos,Enabled,Visible,Style,ExStyle"
 
 		WinGet, classnnList  	, ControlList        	, % "ahk_id " hwnd
 		WinGet, controlIdList	, controllisthwnd	, % "ahk_id " hwnd
@@ -183,24 +182,25 @@ return controls
 ; 09
 GetButtonType(hwndButton) {                                                                         	;-- ermittelt welcher Art ein Button ist, liest dazu den Buttonstyle aus
 	;Link: https://autohotkey.com/board/topic/101341-getting-type-of-control/
-  static types := [ "Button"            	;BS_PUSHBUTTON
-                     	, "Button"            	;BS_DEFPUSHBUTTON
-                     	, "Checkbox"      	;BS_CHECKBOX
-                     	, "Checkbox"      	;BS_AUTOCHECKBOX
-                     	, "Radio"             	;BS_RADIOBUTTON
-                     	, "Checkbox"      	;BS_3STATE
-                     	, "Checkbox"      	;BS_AUTO3STATE
-                     	, "Groupbox"      	;BS_GROUPBOX
-                     	, "NotUsed"       	;BS_USERBUTTON
-                     	, "Radio"             	;BS_AUTORADIOBUTTON
-                     	, "Button"            	;BS_PUSHBOX
-                     	, "AppSpecific"   	;BS_OWNERDRAW
-                     	, "SplitButton"       	;BS_SPLITBUTTON    (vista+)
-                     	, "SplitButton"       	;BS_DEFSPLITBUTTON (vista+)
-                     	, "CommandLink"	;BS_COMMANDLINK    (vista+)
-                     	, "CommandLink"]	;BS_DEFCOMMANDLINK (vista+)
+  static types := [ "Button"            	;0x0 BS_PUSHBUTTON
+                     	, "Button"            	;0x1 BS_DEFPUSHBUTTON
+                     	, "Checkbox"      	;0x2 BS_CHECKBOX
+                     	, "Checkbox"      	;0x3 BS_AUTOCHECKBOX
+                     	, "Radio"             	;0x4 BS_RADIOBUTTON
+                     	, "Checkbox"      	;0x5 BS_3STATE
+                     	, "Checkbox"      	;0x6 BS_AUTO3STATE
+                     	, "Groupbox"      	;0x7 BS_GROUPBOX
+                     	, "NotUsed"       	;0x8 BS_USERBUTTON
+                     	, "Radio"             	;0x9 BS_AUTORADIOBUTTON
+                     	, "Button"            	;0xA BS_PUSHBOX
+                     	, "AppSpecific"   	;0xB BS_OWNERDRAW
+                     	, "SplitButton"       	;0xC BS_SPLITBUTTON    (vista+)
+                     	, "SplitButton"       	;0xD BS_DEFSPLITBUTTON (vista+)
+                     	, "CommandLink"	;0xE BS_COMMANDLINK    (vista+)
+                     	, "CommandLink"]	;0xF BS_DEFCOMMANDLINK (vista+)
 
   WinGet, btnStyle, Style, % "ahk_id " hwndButton
+  ;~ SciTEOutput(A_ThisFunc ": " GetHex(btnStyle) ", Type: " types[1+(btnStyle & 0xF)])
  return types[1+(btnStyle & 0xF)]
 }
 ; 10
@@ -266,12 +266,12 @@ Return HDInfo
 ; 11
 Controls(Control="",cmd="",WinTitle="",HidT=1,HidW=1,MMSpeed="slow") {  	;-- Universalfunktion für Steuerelemente
 
-	;  ********	    ********		Function grows and thrives, watered at the 16.04.2022
-	; ***	     *    ***	    ***	dependencies: 	Function: ClientToScreen()
-	; ***            ***      ***                        	Function: KeyValueObjectFromLists()
-	; ***            ***      ***                         	Function: VerifiedSetText() - [ ControlGetText() ]
-	; ***        *   ***      ***                        	Function: VerifiedClick()
-	;   *******      ********
+	;  ********	       ********		Function grows and thrives, watered at the 16.04.2022
+	; ***	     *     ***	    ***	dependencies: 	Function: ClientToScreen()
+	; ***            ***      ***                	Function: KeyValueObjectFromLists()
+	; ***            ***      ***                	Function: VerifiedSetText() - [ ControlGetText() ]
+	; ***       *    ***      ***                	Function: VerifiedClick()
+	;   *******        ********
 	;
 	/* DESCRIPTION:
 
@@ -300,13 +300,13 @@ Controls(Control="",cmd="",WinTitle="",HidT=1,HidW=1,MMSpeed="slow") {  	;-- Uni
 
 		static HiddenTextStatus, HiddenWinStatus, MatchModeSpeedStatus, CoordModeWinStatus
 
-		HiddenTextStatus        	:= A_DetectHiddenText
+		HiddenTextStatus       	:= A_DetectHiddenText
 		HiddenWinStatus        	:= A_DetectHiddenWindows
-		MatchModeSpeedStatus	:= A_TitleMatchModeSpeed
-		CoordModeWinStatus	:= A_CoordModeMouse
+		MatchModeSpeedStatus  	:= A_TitleMatchModeSpeed
+		CoordModeWinStatus    	:= A_CoordModeMouse
 		DetectHiddenText      	, % HidT	? "On":"Off"
-		DetectHiddenWindows	, % HidW	? "On":"Off"
-		SetTitleMatchMode    	, % MMSpeed
+		DetectHiddenWindows   	, % HidW	? "On":"Off"
+		SetTitleMatchMode      	, % MMSpeed
 		CoordMode              	, Mouse	, Screen
 		CoordMode              	, Pixel   	, Screen
 
@@ -321,13 +321,16 @@ Controls(Control="",cmd="",WinTitle="",HidT=1,HidW=1,MMSpeed="slow") {  	;-- Uni
 		If !(knWinTitle = WinTitle) 		{
 
 			knWinTitle	 := WinTitle
-			WinTitle	:= RegExMatch(WinTitle, "^0x[\w]+$")	? ("ahk_id " WinTitle)	: (WinTitle)
+			WinTitle	:= RegExMatch(WinTitle, "^0x\w+$")  	? ("ahk_id " WinTitle)	: (WinTitle)
 			RegExMatch(WinTitle, "^\d+$", digits)
-			WinTitle	:= StrLen(WinTitle) = StrLen(digits)     	? ("ahk_id " digits)  	: (WinTitle)
+			WinTitle	:= StrLen(WinTitle) = StrLen(digits) 	? ("ahk_id " digits)  	: (WinTitle)
 
 			WinGet, cClasses	, ControlList			, % WinTitle                                                   	; use this for example: "ahk_id " hWin
-			WinGet, cHwnds	, ControlListHwnd	, % WinTitle
+			WinGet, cHwnds  	, ControlListHwnd	, % WinTitle
 			Ctrl := KeyValueObjectFromLists(cClasses, cHwnds, "`n", "", "", "", "")                        	; ergibt ein Object mit ClassNN als key und handle als value
+
+			If (cmd ~= "i)^\sGetControls")
+				return Ctrl
 
 		}
 	;}
@@ -336,7 +339,7 @@ Controls(Control="",cmd="",WinTitle="",HidT=1,HidW=1,MMSpeed="slow") {  	;-- Uni
 	; Befehlsbereich -
 	;----------------------------------------------------------------------------------------------------------------------------------------------;{
 		;~ cmd := Trim(cmd)
-	    if        RegExMatch(cmd	, "i)^\s*(Hwnd|ID)"              	)         	{   	; returns the handle for a ClassNN
+	    if    RegExMatch(cmd	, "i)^\s*(Hwnd|ID)"              	)         	{   	; returns the handle for a ClassNN
 
 				; empty Control parameter returns the array with class
 					If (StrLen(Control) = 0)
@@ -698,8 +701,8 @@ ControlGetFocus(hWin) {                                                         
 return FocusedControlId
 }
 ; 16
-GuiControlGet(guiname, cmd, vcontrol) {                                                        	;-- GuiControlGet wrapper
-	GuiControlGet, cp, % guiname ": " cmd, % vcontrol
+GuiControlGet(guiname, cmd:="", vcontrol:="", value:="") {                           	;-- GuiControlGet wrapper
+	GuiControlGet, cp, % guiname ": " cmd, % vcontrol, % value  ; value := "Text" - um Text bzw. Beschriftung einer CheckBox, DropDownList, ComboBox oder eines Radio-Buttons abzurufen
 	If (cmd = "Pos")
 		return {"X":cpX, "Y":cpY, "W":cpW, "H":cpH}
 return cp
@@ -878,27 +881,34 @@ VerifiedClick(CName, WTitle="", WText="", WinID="", WaitClose=false) {       	;-
 	; letzte Änderung: 23.09.2021
 
 		CoordMode, Mouse, Screen
-		EL := 0, CName := RegExReplace(CName, "[\&]", "")
+		EL := 0
+		CName := RegExReplace(CName, "[\&]", "")
 
 	; leeren des Fenster-Titel und Textes wenn ein Handle übergeben wurde
-		if WinID
-			WText := "", WTitle := "ahk_id " WinID
-		else if RegExMatch(WTitle, "i)^(0x[A-F\d]+|[\d]+)$")
-			WText := "", WTitle := "ahk_id " WTitle
+		if WinID {
+			WText := ""
+			WTitle := "ahk_id " WinID
+		}
+		else if RegExMatch(WTitle, "i)^(0x[A-F\d]+|[\d]+)$") {
+			WText := ""
+			WTitle := "ahk_id " WTitle
+		}
 
 	; 3 verschiedene Wege einen Buttonklick auszulösen
-		ControlClick, % CName, % WTitle, % WText,,, NA
+		ControlClick, % CName, % WTitle, % WText, Left, 1
 		If (EL := ErrorLevel) {                                                                            ; Misserfolg = 1 , Erfolg = 0
-			ControlClick, % CName, % WTitle, % WText
+			ControlClick, % CName, % WTitle, % WText, Left, 1, NA
 			If (EL := ErrorLevel) {
                	SendMessage, 0x0201, 1, 0, % CName, % WTitle, % WText                 	;0x0201 - WM_Click
 				EL := ErrorLevel = "FAIL" ? 1 : 0
 				If EL {
 					BlockInput, On                                                                       	; funktioniert nur mit Systemrechten
-					WinGetPos    	, wx, wy,,, % WTitle, % WText
-                   	ControlGetPos	, cx, cy, cw, ch, % CName, % WTitle, % WText
+					hWin := WinExist(WTitle, WText)
+					ControlGet,hCtrl, Hwnd,, % CName,  % WTitle, % WText
+					w := GetWindowSpot(hWin)
+					c :=   GetWindowSpot(hCtrl)
                    	MouseGetPos	, mx, my
-                   	MouseClick   	, Left, % wx + cx + Floor(cw/2), % wy + cy + Floor(ch/2), 1, 0
+                   	MouseClick   	, Left, % w.x + c.x + Floor(c.w/2), % w.y + c.y + Floor(c.h/2), 1, 0
                    	MouseMove  	, % mx, % my, 0
 					BlockInput, Off
                     EL := 0
@@ -914,42 +924,57 @@ VerifiedClick(CName, WTitle="", WText="", WinID="", WaitClose=false) {       	;-
 return (EL = 0 ? 1 : 0)
 }
 ; 24
-VerifiedCheck(CName, WTitle="", WText="", WinID="", CheckIt=true) {          	;-- prüft den checked Status
+VerifiedCheck(CtrlName, WTitle="", WText="", WinID="", CheckIt=true) {          	;-- prüft den checked Status
 
-	; falls nur die WinID und kein Steuerelement Name (CName), Fenstertitel (WTitle) oder Fenstertext (WText) übergeben wird,
+	; falls nur die WinID und kein Steuerelement Name (CtrlName), Fenstertitel (WTitle) oder Fenstertext (WText) übergeben wird,
 	; dann wird WinID als das Steuerelementhandle interpretiert
 	; CheckIt: bei 'true' wird ein Häkchen gesetzt , bei 'false' entfernt.
 
-		CName := RegExReplace(CName, "[\&]", "")
+		CtrlName := RegExReplace(CtrlName, "\&", "")
 
-		if RegExMatch(WTitle, "Oi)^(0x[A-F\d]+|[\d]+)$")
-			WinID := WTitle
-		else if WTitle && WText && CName
+		If RegExMatch(WTitle, "i)^(0x[A-F\d]+|\d+)$")
+			WinID := WTitle, WTitle := ""
+		else if (WTitle || WText) && CtrlName
 			WinID := WinExist(WTitle, WText)
-		else if !CName && !WTitle && !WText && WinID
-			hCName := WinID
+		else if !CtrlName && WinID
+			hCtrl := WinID
 
-		WTitle := "ahk_id " WinID
-		WText := ""
+		WTitle := "ahk_id " WinID, WText := ""
 
-		If CName && !hCName
-			ControlGet, hCName, hwnd,, % Trim(CName), % WTitle
+		If !hCtrl {
+			ControlGet, hCtrl, hwnd,, % Trim(CtrlName), % WTitle
+			If ErrorLevel {
+				SciTEOutput(A_ThisFunc ": " CtrlName ", " WTitle )
+				return 0
+			}
+		}
+		WinGetTitle, xTitle, % WTitle
+		ButtonType := GetButtonType(hCtrl)
+		;~ SciTEOutput(A_ThisFunc ": " GetHex(hCtrl) ", Type: " ButtonType " - " xTitle " , " WTitle " , " WinID)
+		If !RegExMatch(ButtonType, "i)(Checkbox|Radio)")	{
 
-		ButtonType := GetButtonType((hCName ? hCName : WinID))
-		If !RegExMatch(ButtonType, "Autocheckbox|Checkbox|Radio")	{
-			If !CName
-				ControlGetText, CName,, % WTitle
-			PraxTT := "PraxTT"
+			ControlGetText, CtrlText,, % "ahk_id " hCtrl
+			ctrlClass := GetClassName(hCtrl)
+		  ; show failure
+			failure   	:= "Fehler in der Funktion VerifiedCheck()`n"
+							.	"Das Steuerelement (Name: " CtrlName (CtrlName ? ", " : "") . "Text: " CtrlText ", Class: " ctrlClass ")`n"
+							.	"ist keine Standard-Checkbox {Checkbox o. Radio} Type: " ButtonType " !"
+			PraxTT   	:= "PraxTT"
+			sciteOut 	:= "SciteOutPut"
 			If IsFunc(PraxTT)
-				%PraxTT%("Fehler in der Funktion VerifiedCheck()`nDas angesprochene Steuerelement (" CName ")`nist keine Standard-Checkbox [ " ButtonType " ]!", "1 0")
-			return 0
+				%PraxTT%(failure, "5 2")
+			else if IsFunc(sciteOut)
+				%sciteOut%(failure)
+
+			;~ SciTEOutput(A_ThisFunc ": " failure)
+			return ButtonType
 		}
 
 		Loop {
-			Control, % (CheckIt ? "check" : "uncheck"),, % CName, % WTitle
-			sleep 20
-			ControlGet, isChecked, checked,, % CName, % WTitle
-		} until (isChecked = CheckIt) || (A_Index > 50)
+			Control, % (CheckIt ? "check" : "uncheck"),, % CtrlName, % WTitle
+			sleep 30
+			ControlGet, isChecked, checked,, % CtrlName, % WTitle
+		} until (isChecked = CheckIt) || (A_Index > 30)
 
 return (isChecked = CheckIt ? true : false)
 }
@@ -958,7 +983,7 @@ VerifiedChoose(CName, WTitle, RxStrOrPos ) {                                    
 
 	; das gewünschte Listboxelement kann per Übergabe eines String, RegExString
 	; oder direkt über seine Position ausgewählt werden
-	; letzte Änderung: 23.10.2021
+	; letzte Änderung: 21.03.2023
 
 	; für flexible Übergabe des Fenstertitel, von String, Dezimalzahl oder Hexzahl alles möglich
 		If RegExMatch(WTitle, "^0x[\w]+$")
@@ -969,7 +994,7 @@ VerifiedChoose(CName, WTitle, RxStrOrPos ) {                                    
 			WTitle:= "ahk_id " WinID := GetHex(WinExist(WTitle, WText))
 
 	; Funktionsabbruch bei inkompatiblem Steuerelement
-		If !RegExMatch(CName, "i)^(Listbox|ComboBox)")
+		If !RegExMatch(CName, "i)(Listbox|ComboBox)")
 			return 2
 
 	; Funktionsabbruch wenn Steuerelement nicht existiert
@@ -989,7 +1014,7 @@ VerifiedChoose(CName, WTitle, RxStrOrPos ) {                                    
 		If !RegExMatch(RxStrOrPos, "^\d+$") {
 			found := false
 			For idx, item in Items
-				If InStr(item, RxStrOrPos) {
+				If InStr(item, RxStrOrPos) || (item = RxStrOrPos) {
 					found := true, RxStrOrPos := idx
 					break
 				}
@@ -998,14 +1023,13 @@ VerifiedChoose(CName, WTitle, RxStrOrPos ) {                                    
 		}
 
 	;Abbruch wenn die Positionsnummer nicht existiert
-		If (Items.MaxIndex() < RxStrOrPos) || (RxStrOrPos <= 0)
+		If (Items.Count() < RxStrOrPos || RxStrOrPos <= 0)
 			return 6
 
 	; Auswählen des Eintrages im Steuerelement [0x014E CB_SetCursel, 0x0186 LB_SetCursel]
-		SendMessage, % InStr(CName, "ComboBox") ? 0x014E : 0x0186, % RxStrOrPos-1,,, % "ahk_id " CHwnd
-		return ErrorLevel ? 1 : 7
+		SendMessage, % (CName ~= "i)ComboBox" ? 0x014E : 0x0186), % RxStrOrPos-1,,, % "ahk_id " CHwnd
 
-return 0
+return ErrorLevel ? 1 : 7
 }
 ; 25
 VerifiedSetFocus(CName, WTitle="", WText="", WinID="", activate=false) {       	;-- setzt den Eingabefokus und überprüft das dieser auch gesetzt wurde
@@ -1255,15 +1279,13 @@ LV_GetScrollViewPos(hwnd) {
 
 	Loop, % LV_GetCount() {
 		SendMessage, 0x10B6, % A_Index - 1,,, % "ahk_id " hwnd 	; LVM_ISITEMVISIBLE -> findet das erste sichtbares Item
-		If ErrorLevel {
-			SciTEOutput("firstvisible item:" A_Index)
+		If ErrorLevel
 			return A_Index
-		}
 	}
 
 }
 ; 34
-LVM_GetColWidth(hLV, c)                                                                    	{
+LVM_GetColWidth(hLV, c) {
 
 	; h = ListView handle.
 	; c = 1 based column index to get width of.
@@ -1271,7 +1293,7 @@ LVM_GetColWidth(hLV, c)                                                         
 Return DllCall("SendMessage", "uint", hLV, "uint", 4125, "uint", c-1, "uint", 0) ; LVM_GETCOLUMNWIDTH
 }
 ;35
-LVM_GetColOrder(hLV, ret:="string")                                                   	{
+LVM_GetColOrder(hLV, ret:="string") {
 
 	; h = ListView handle.
 	; ret = return as comma delimited list or as indexed array
@@ -1287,6 +1309,7 @@ LVM_GetColOrder(hLV, ret:="string")                                             
 
 Return ret="array" ? StrSplit(result, ",") : result
 }
+
 
 ;\/\/\/\/\/\/\/\/\/\/ Listbox Control Funktionen \/\/\/\/\/\/\/\/\/\/
 ;36
@@ -1349,9 +1372,9 @@ return, CaretPos
 ; 38
 Edit_Append(hEdit, txt)                                                                      		{         	;-- Modified version by SKAN
 	Local        ; Original by TheGood on 09-Apr-2010 @ autohotkey.com/board/topic/52441-/?p=328342
-	L :=	DllCall("SendMessage", "Ptr",hEdit, "UInt",0x0E, "Ptr",0 , "Ptr",0)     	; WM_GETTEXTLENGTH
-	    	DllCall("SendMessage", "Ptr",hEdit, "UInt",0xB1, "Ptr",L , "Ptr",L)       	; EM_SETSEL
-	    	DllCall("SendMessage", "Ptr",hEdit, "UInt",0xC2, "Ptr",0, "Str",txt )   	; EM_REPLACESEL
+	L :=	DllCall("SendMessage", "Ptr",hEdit, "UInt",0x0E, "Ptr",0 , "Ptr",0)             	; WM_GETTEXTLENGTH
+	    	DllCall("SendMessage", "Ptr",hEdit, "UInt",0xB1, "Ptr",L , "Ptr",L)              	; EM_SETSEL
+	    	DllCall("SendMessage", "Ptr",hEdit, "UInt",0xC2, "Ptr",0, "Str",txt "`r`n")   	; EM_REPLACESEL
 	If RegExMatch(txt, "[\n\r]+$")
 		ControlSend,, {Enter}, % "ahk_id " hEdit
 }

@@ -97,9 +97,15 @@
 			ExitApp
 		}
 
+		adm.LogPath	:= IniReadExt("Addendum", "AddendumLogPath")
+		If InStr(adm.LogPath, "Error") || !RegExMatch(adm.LogPath, "i)[a-z]\:\\") || !InStr(FileExist(adm.LogPath), "D") {
+			MsgBox, Das Datenverzeichnis von Addendum für Albis on Windows ist konnte nicht ermittelt werden. Bitte hinterlegen Sie dieses in der Addendum.ini
+			ExitApp
+		}
+
 		; neues Tagesdatum in die Logdatei schreiben
 		FileAppend	, % "---------------------------------------- " A_DD "." A_MM "." A_YYYY "," A_Hour ":" A_Min " ----------------------------------------`n"
-							, % adm.LogFilePath := adm.DBPath "\Labordaten\LaborabrufLog.txt"
+							, % adm.LogFilePath := adm.LogPath "\LaborabrufLog.txt"
 	;}
 
 	; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -135,15 +141,15 @@
 				; die Nummer ihres Telegram Bots und + oder - Tel z.b. "1+Tel"
 					adm.Labor.TGramOpt   	:= IniReadExt("LaborAbruf"	, "TGramOpt"        	                	, "+Tel -Crypt"  	)
 					If !RegExMatch(adm.Labor.TGramOpt, "i)([\+\-][a-z]+)\V*([\+\-][a-z]+)")
-						Addendum.Labor.TGramMsg := false
+						adm.Labor.TGramMsg := false
 
 				; BotNr muss eine Zahl sein
 					adm.Labor.TGramBotNr	:= IniReadExt("LaborAbruf"	, "TGramBotNr"     	                	, "1"      	    	)
 					If !RegExMatch(adm.Labor.TGramBotNr, "\d+")
-						Addendum.Labor.TGramMsg := false
+						adm.Labor.TGramMsg := false
 
 				; Telegram-Bot-Daten laden
-					If Addendum.Labor.TGramMsg {
+					If adm.Labor.TGramMsg {
 
 						BotNr    	:= adm.Labor.TGramBotNr
 						BotName 	:= IniReadExt("Telegram", "Bot" BotNr)
@@ -249,7 +255,17 @@
 		;~ If WinExist("Labordaten ahk_class #32770")
 
 	; ―――――――――――――――――――――――――――――――――――――――――――
-	; prüft auf noch vorhandene Labordaten im gdt Laborverzeichnis
+	; startet den Labordatenimport, im Falle bereits erhaltener Daten, um diese nicht zu löschen (nur das bietet Albis an!)
+	; ―――――――――――――――――――――――――――――――――――――――――――
+		res := AlbisLaborImport(adm.Labor.LbName)
+		SciTEOutput("res: " res)
+		If (res > 0x1) {
+			SciTEOutput("res: " res)
+			FuncExitApp()
+		}
+
+	; ―――――――――――――――――――――――――――――――――――――――――――
+	; prüft ob noch Labordaten im gdt Laborverzeichnis vorliegen
 	; ―――――――――――――――――――――――――――――――――――――――――――
 		Loop, Files, % adm.Labor.LDTDirectory "\*.LDT"
 		{
@@ -268,20 +284,20 @@
 
 			PraxTT("Es ist noch eine unverarbeitete Labordatei vorhanden.`nEs wird zunächst der Labordatenimport in Albis ausgelöst", "10 1")
 
-			Addendum.Labor.AbrufStatus := "invoke_dialog_LaborDatenHolen"
-			Addendum.Labor.Reset      	:= fcRLStat := Func("ResetLaborabrufStatus")
+			adm.Labor.AbrufStatus := "invoke_dialog_LaborDatenHolen"
+			adm.Labor.Reset      	:= fcRLStat := Func("ResetLaborabrufStatus")
 			SetTimer, % fcRLStat, -180000   ; nach 180 Sekunden wird der Laborstatus und alle zugehörigen Variablen zurückgesetzt
 
+		  ; Dialog Labor auswählen aufrufen und bearbeiten
 			If !AlbisLaborWaehlen()
 				FuncExitApp()
-
 			WinWait, % "Labor auswählen ahk_class #32770",, 5
-
 			If !AlbisLaborAuswählen(adm.Labor.LbName)
 				FuncExitApp()
 
-
 			Sleep 3000
+
+		  ; Dialog Labordaten importieren aufrufen und bearbeiten
 			If !AlbisLaborImport(adm.Labor.LbName)
 				FuncExitApp()
 
@@ -294,6 +310,7 @@
 	; ―――――――――――――――――――――――――――――――――――――――――――
 	; 1. externes Programm für Download der LDT Datei starten
 	; ―――――――――――――――――――――――――――――――――――――――――――
+		MsgBox, 0x1028, % A_ScriptName, % "manuelle Eingriffsmöglichkeit!`nAbruf mit 'Ja' beenden. Ansonsten weiter mit 'Nein' oder 30s warten.", 30
 		If !ldt.Count()                      ; nur starten wenn LDT-Verzeichnis keine Dateien enthält
 			If !infoBoxWebClient()
 				FuncExitApp()
@@ -301,18 +318,35 @@
 	; ―――――――――――――――――――――――――――――――――――――――――――
 	; 3. LDT Datei importieren
 	; ―――――――――――――――――――――――――――――――――――――――――――
+	onlyLDTImport:
 		If !AlbisLaborImport(adm.Labor.LbName)
 			FuncExitApp()
 
 	; ―――――――――――――――――――――――――――――――――――――――――――
 	; 2. Dialog Labor auswählen
 	; ―――――――――――――――――――――――――――――――――――――――――――
+		WinWait, % "Labor auswählen ahk_class #32770",, 15
+		If !AlbisLaborAuswählen(adm.Labor.LbName) {
+			VerifiedClick("OK", "Labor auswählen ahk_class #32770",,, true)
+			If WinExist("Labor auswählen ahk_class #32770")
+				VerifiedClick("Button1", "Labor auswählen ahk_class #32770",,, true)
+			If WinExist("Labor auswählen ahk_class #32770") {
+				WinActivate, % "Labor auswählen ahk_class #32770"
+				WinWaitActive, % "Labor auswählen ahk_class #32770",, 3
+				SendInput, {Enter}
+			}
+			If WinExist("Labor auswählen ahk_class #32770") {
+				WinActivate, % "Labor auswählen ahk_class #32770"
+				WinWaitActive, % "Labor auswählen ahk_class #32770",, 3
+				SendInput, {Enter}
+			}
 
+		}
 
 	; ―――――――――――――――――――――――――――――――――――――――――――
 	; 3. Laborbuch aufrufen
 	; ―――――――――――――――――――――――――――――――――――――――――――
-		adm.hLabbuch := AlbisLaborbuchOeffnen()
+		adm.hLabbuch := AlbisLaborbuchOeffnen()                  	; soll erst bei Erscheinen weiter machen
 
 	; ―――――――――――――――――――――――――――――――――――――――――――
 	; 4. alle ins Laborblatt übertragen
@@ -327,7 +361,9 @@
 			; ansonsten Laborblattübertragung (LaborImport - nutzt ein anderes Logfile) starten
 				amsg 	.= datestamp(2) "|" adm.scriptname "`t- warte auf Dialog ' Laborbuch übertragen '`n"
 				result	:= AlbisLaborAlleUebertragen()
+
 				writeStr := "Laborabruf            `t- Laborbuch 'alle übertragen' ausgeführt [" result "]`n"
+
 				;~ if (adm.Labor.AutoImport && adm.Labor.AbrufStatus && !adm.Labor.AutoAbruf)
 					;~ writeStr :=  "Laborabruf            `t- Labordatenimport nicht möglich! AutoAbruf ist in Addendum ausgeschaltet!`n"
 				;~ else {
@@ -423,15 +459,14 @@ infoBoxWebClient() {                                                            
 
 	; Logdaten schreiben
 		IniWrite	, % datestamp(1) , % adm.ini, % "LaborAbruf", % "Letzter_Abruf"
-		If (StrLen(writeTExt) > 0) {
+		If writeText {
 			IniWrite			, % datestamp(1) , % adm.ini, % "LaborAbruf", % "Letzter_Abruf_mit_Daten"
-			FileAppend	, % (amsg .= datestamp(2) "|" A_ThisFunc "()`t- # Daten vorhanden [" RTrim(writeText, ", ") "]`n")
-								, % adm.LogFilePath, UTF-8
+			FileAppend	, % (amsg .= datestamp(2) "|" A_ThisFunc "()`t- # Daten vorhanden [" RTrim(writeText, ", ") "]`n")			, % adm.LogFilePath, UTF-8
+			writeText := ""
 			LabDataReceived := true
 		}	else {
 			IniWrite			, % datestamp(1) , % adm.ini, % "LaborAbruf", % "Letzter_Abruf_ohne_Daten"
-			FileAppend	, % (amsg .= datestamp(2) "|" A_ThisFunc "()`t- # Keine Daten vorhanden`n")
-								, % adm.LogFilePath, UTF-8
+			FileAppend	, % (amsg .= datestamp(2) "|" A_ThisFunc "()`t- # Keine Daten vorhanden`n")      								, % adm.LogFilePath, UTF-8
 			LabDataReceived := false
 		}
 

@@ -1,13 +1,13 @@
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab filetype=javascript : */
-/** 
- * @license pdf2htmlEX.js: Core UI functions for pdf2htmlEX 
- * Copyright 2012,2013 Lu Wang <coolwanglu@gmail.com> and other contributors 
- * https://github.com/coolwanglu/pdf2htmlEX/blob/master/share/LICENSE 
+/**
+ * @license pdf2htmlEX.js: Core UI functions for pdf2htmlEX
+ * Copyright 2012,2013 Lu Wang <coolwanglu@gmail.com> and other contributors
+ * https://github.com/coolwanglu/pdf2htmlEX/blob/master/share/LICENSE
  */
 
 /*
  * Attention:
- * This files is to be optimized by closure-compiler, 
+ * This files is to be optimized by closure-compiler,
  * so pay attention to the forms of property names:
  *
  * string/bracket form is safe, won't be optimized:
@@ -15,7 +15,7 @@
  * name/dot form will be optimized, the name is likely to be modified:
  * var obj={ a:'b' }; obj.a = 'b';
  *
- * Either form can be used for internal objects, 
+ * Either form can be used for internal objects,
  * but must be consistent for each one respectively.
  *
  * string/bracket form must be used for external objects
@@ -28,8 +28,8 @@
 
 var pdf2htmlEX = window['pdf2htmlEX'] = window['pdf2htmlEX'] || {};
 
-/** 
- * @const 
+/**
+ * @const
  * @struct
  */
 var CSS_CLASS_NAMES = {
@@ -42,9 +42,9 @@ var CSS_CLASS_NAMES = {
   __dummy__        : 'no comma'
 };
 
-/** 
+/**
  * configurations of Viewer
- * @const 
+ * @const
  * @dict
  */
 var DEFAULT_CONFIG = {
@@ -133,8 +133,8 @@ function clone_and_extend_objs(var_args) {
   return result_obj;
 };
 
-/** 
- * @constructor 
+/**
+ * @constructor
  * @param{Element} page The element for the page
  */
 function Page(page) {
@@ -148,7 +148,7 @@ function Page(page) {
 
   // page size
   // Need to make rescale work when page_content_box is not loaded, yet
-  this.original_height = page.clientHeight;     
+  this.original_height = page.clientHeight;
   this.original_width = page.clientWidth;
 
   // content box
@@ -229,7 +229,7 @@ Page.prototype = {
   }
 };
 
-/** 
+/**
  * @constructor
  * @param{Object=} config
  */
@@ -246,7 +246,7 @@ function Viewer(config) {
 
 Viewer.prototype = {
   scale : 1,
-  /* 
+  /*
    * index of the active page (the one with largest visible area)
    * which estimates the page currently being viewed
    */
@@ -265,7 +265,7 @@ Viewer.prototype = {
 
   initialize_radio_button : function() {
     var elements = document.getElementsByClassName(CSS_CLASS_NAMES.input_radio);
-    
+
     for(var i = 0; i < elements.length; i++) {
       var r = elements[i];
 
@@ -281,7 +281,7 @@ Viewer.prototype = {
     this.container = document.getElementById(this.config['container_id']);
     this.loading_indicator = document.getElementsByClassName(this.config['loading_indicator_cls'])[0];
 
-    
+
     {
       // Open the outline if nonempty
       var empty = true;
@@ -472,7 +472,7 @@ Viewer.prototype = {
    */
   render : function () {
     var container = this.container;
-    /* 
+    /*
      * show the pages that are 'nearly' visible -- it's right above or below the container
      *
      * all the y values are in the all-page element's coordinate system
@@ -517,7 +517,7 @@ Viewer.prototype = {
     var pages_len = pages.length;
     // there is no chance that cur_page_idx or first_page_idx is modified
     if (pages_len < 2) return;
-   
+
     var container = this.container;
     var container_min_y = container.scrollTop;
     var container_max_y = container_min_y + container.clientHeight;
@@ -538,7 +538,7 @@ Viewer.prototype = {
       }
       rest_len = last_idx - first_idx;
     }
-    
+
     /*
      * with malformed settings it is possible that no page is visible, e.g.
      * - the container is to thin, which lies in the margin between two pages
@@ -560,7 +560,7 @@ Viewer.prototype = {
       if (page_min_y > container_max_y) break;
 
       // check the visible fraction of the page
-      var page_visible_ratio = ( Math.min(container_max_y, page_max_y) 
+      var page_visible_ratio = ( Math.min(container_max_y, page_max_y)
                                  - Math.max(container_min_y, page_min_y)
                                ) / page_height;
 
@@ -603,7 +603,7 @@ Viewer.prototype = {
    * Handling key events, zooming, scrolling etc.
    */
   register_key_handler: function () {
-    /* 
+    /*
      * When user try to zoom in/out using ctrl + +/- or mouse wheel
      * handle this and prevent the default behaviours
      *
@@ -653,7 +653,8 @@ Viewer.prototype = {
           break;
         case 48: // '0'
           if (with_ctrl){
-            self.rescale(0, false);
+            //self.rescale(0, false);
+            self.fit_height();
             handled = true;
           }
           break;
@@ -732,7 +733,7 @@ Viewer.prototype = {
     // the other is outside, (e.g. borders and margins), which is not affected
 
     // if the fixed_point is above the first page, use the first page as the reference
-    if (fixed_point_page_idx < 0) 
+    if (fixed_point_page_idx < 0)
       fixed_point_page_idx = 0;
 
     var fp_p = pl[fixed_point_page_idx].page;
@@ -754,8 +755,8 @@ Viewer.prototype = {
       fp_y_inside = fp_p_height;
 
     // Rescale pages
-    for (var i = 0; i < pl_len; ++i) 
-        pl[i].rescale(new_scale);  
+    for (var i = 0; i < pl_len; ++i)
+        pl[i].rescale(new_scale);
 
     // Correct container scroll to keep view aligned while zooming
     container.scrollLeft += fp_x_inside / old_scale * new_scale + fp_p.offsetLeft + fp_p.clientLeft - fp_x_inside - fp_x_ref;
@@ -901,8 +902,8 @@ Viewer.prototype = {
 
     var self = this;
     /**
-     * page should of type Page 
-     * @param{Page} page 
+     * page should of type Page
+     * @param{Page} page
      */
     var transform_and_scroll = function(page) {
       pos = transform(page.ctm, pos);
@@ -923,7 +924,7 @@ Viewer.prototype = {
       // In the meantime page gets loaded, scroll approximately position for maximum responsiveness.
       this.scroll_to(target_page_idx);
     }
-  }, 
+  },
 
   /**
    * @param{number} page_idx
@@ -957,7 +958,7 @@ Viewer.prototype = {
     cur_pos = transform(cur_page.ictm, [cur_pos[0], cur_page.height()-cur_pos[1]]);
     detail.push(cur_pos[0] / this.scale);
     detail.push(cur_pos[1] / this.scale);
-    
+
     detail.push(this.scale);
 
     return JSON.stringify(detail);

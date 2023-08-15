@@ -36,13 +36,13 @@ Class RichEdit {
    Static SubclassCB := 0
    ; Number of controls/instances
    Static Controls := 0
-
-
+   
+   
    ; ===================================================================================================================
    ; Instance variables and - do not change !!!
    ; ===================================================================================================================
    DefFont := ""
-
+   
    ; GUI Control Properties
    Gui := ""
    Hwnd := ""
@@ -109,7 +109,7 @@ Class RichEdit {
          this.ctrl.Visible := value
       }
    }
-
+   
    ;GUI Control Methods
    Move(Param*) {
       return this.ctrl.Move(Param*)
@@ -119,7 +119,7 @@ Class RichEdit {
    }
    OnEvent(event := "", cbFunc := "", MaxThreads := 1) {
       static AhkChangeEventRegistered := false
-      if event = "change"
+      if event = "change" 
          this.onEventChangeCB := cbFunc
       else if event = "focus"
          this.onEventFocusCB := cbFunc
@@ -130,10 +130,10 @@ Class RichEdit {
          r := this.SetEventMask("Change")
          if isObject(cbFunc) && cbFunc.isBuiltIn != "" {
             this.onEventFunc := cbFunc
-            OnMessage(0x111, (param*)=>this._onEventHandler(param*), MaxThreads)
+            OnMessage(0x111, (param*)=>this._onEventHandler(param*), MaxThreads) 
          }
          else r := false
-         r := true, AhkChangeEventRegistered := true
+         r := true, AhkChangeEventRegistered := true   
       }
       return r
    }
@@ -158,7 +158,7 @@ Class RichEdit {
                            , NOHIDESEL: 0x100, READONLY: 0x800, WANTRETURN: 0x1000
                            , SAVESEL: 0x8000, SELECTIONBAR: 0x01000000, VERTICAL: 0x400000}
       options := StrSplit(options, " ")
-
+      
       for _, v in options
          if reOptionsList.HasKey(v)
             reOptions .= v " "
@@ -168,7 +168,7 @@ Class RichEdit {
       this.ctrl.Options(_options)
       this.SetOptions(Trim(reOptions, " `t`n`r"), mode)
    }
-
+            
    ; ===================================================================================================================
    ; CONSTRUCTOR
    ; ===================================================================================================================
@@ -179,23 +179,23 @@ Class RichEdit {
            , ES_MULTILINE := 0x0004, ES_AUTOVSCROLL := 0x40, ES_AUTOHSCROLL := 0x80, ES_NOHIDESEL := 0x0100
            , ES_WANTRETURN := 0x1000, ES_DISABLENOSCROLL := 0x2000, ES_SUNKEN := 0x4000, ES_SAVESEL := 0x8000
            , ES_SELECTIONBAR := 0x1000000
-
+      
       ;list of option keyword and [funcName*, param*] pairs. Where funcName is an array that stores the classes and method,
       ;ie : ["RichEdit, "CallBack", "someMethod"]; and param* is a variadic array of parameters to be passed
       ;We will call these at the end of the constructor to set options found in array reOptions
       Static optionsList := {"-WRAP":[["WordWrap"], [false]], "+WRAP":[["WordWrap"], [true]], "readonly":[["SetOptions"], ["readonly"]]
                               ,"lowercase":[["SetStyles"], ["lowercase"]] ,"uppercase":[["SetStyles"], ["uppercase"]]} ;SetOptions(Options := ""SetStyles
-
+      
       ; Do not instantiate instances of RichEdit
       If (This.Base.HWND)
          Return False
-
+   
       If !(Gui) {
          ErrorLevel := "ERROR: Gui does not exist!"
          Return False
       }
       this.gui := gui
-
+      
       ; Load library if necessary
       If (This.Base.Instance == 0) {
          This.Base.Instance := DllCall("Kernel32.dll\LoadLibrary", "Str", This.Base.DLL, "UPtr")
@@ -212,7 +212,7 @@ Class RichEdit {
       ExStyles := WS_EX_STATICEDGE
       ; Create the control
       CtrlClass := This.Class
-
+      
       ;separate standard AHK control options and RE options (which we will set at the end)
       reOptions := [], ctrlOptions := []
       _options := StrSplit(Options, " ")
@@ -266,18 +266,18 @@ Class RichEdit {
       ;This.GetMargins()
       ; Initialize the text limit
       This.LimitText(2147483647)
-
+      
       ;IRichEditOleCallback interface
       ;https://docs.microsoft.com/en-us/windows/desktop/api/richole/nn-richole-iricheditolecallback
       this.Callback.SetOleCallback(hwnd)
-
+      
       ;Setting options for RichEdit
          ;Conditional options / defaults
          if MultiLine
             this.WordWrap(true)
          if DefaultText != ""
             this.text := DefaultText
-
+         
          ;RichEdit options
          for _, v in reOptions
             if v[1].Length() == 1
@@ -289,7 +289,7 @@ Class RichEdit {
                obj[ v[1][i++] ](v[2]*)
             }
    }
-
+   
    class CallBack {
    ; Authors:        just me & DigiDon
    ; Description:    IRichEditOleCallback interface AHK implementation for the RichEdit control
@@ -304,7 +304,7 @@ Class RichEdit {
          ContextMenu.Add("&Redo", ()=>Send("^y"))
          this.ContextMenu := ContextMenu
       }
-
+      
       SetOleCallback(hwnd) {
          static cb := RichEdit.Callback
          static VTBL := [CallbackCreate((p1, p2, p3, p4) => cb.IREOleCB_QueryInterface(p1, p2, p3, p4))
@@ -320,7 +320,7 @@ Class RichEdit {
                        , CallbackCreate((p1, p2, p3, p4) => cb.IREOleCB_GetClipboardData(p1, p2, p3, p4))
                        , CallbackCreate((p1, p2, p3, p4) => cb.IREOleCB_GetDragDropEffect(p1, p2, p3, p4))
                        , CallbackCreate((p1, p2, p3, p4, p5) => cb.IREOleCB_GetContextMenu(p1, p2, p3, p4, p5))]
-
+         
          ;this.RE_SetOleCallback(this.Hwnd)
          HeapSize := A_PtrSize * 20 ; VTBL pointer + 13 method pointers + 4 unused pointers + reference count + HEAP handle
          HeapOffset := A_PtrSize * 19 ; offset to store the heap handle within the heap
@@ -394,7 +394,7 @@ Class RichEdit {
          Return 0 ; S_OK
       }
       ; --------------------------------------------------------------------------------------------------------------------------------
-
+      
       ; --------------------------------------------------------------------------------------------------------------------------------
       IREOleCB_DeleteObject(IREOleCB, OleObj) { ; IRichEditOleCallback::DeleteObject - returns S_OK
          OutputDebug(A_ThisFunc)
@@ -424,7 +424,7 @@ Class RichEdit {
       }
 
       ; --------------------------------------------------------------------------------------------------------------------------------
-      IREOleCB_GetContextMenu(IREOleCB, SelType, OleObj, CharRange, HMENU) { ; IRichEditOleCallback::GetContextMenu
+      IREOleCB_GetContextMenu(IREOleCB, SelType, OleObj, CharRange, HMENU) { ; IRichEditOleCallback::GetContextMenu 
          if this.ContextMenu == ""
             this.makeContextMenu()
          ; GCM_RIGHTMOUSEDROP = 0x8000
@@ -437,10 +437,10 @@ Class RichEdit {
          Return 0
       }
    }
+   
 
 
-
-
+   
    ; ===================================================================================================================
    ; DESTRUCTOR
    ; ===================================================================================================================
@@ -674,7 +674,7 @@ Class RichEdit {
                Return False
          }
       }
-
+      
       r := SendMessage(0x0445, 0, Mask, , "ahk_id " . This.HWND)
       return r
    }
@@ -791,7 +791,7 @@ Class RichEdit {
       else
          return false
    }
-
+   
    FindText(Find, Mode := "") { ; Finds Unicode text within a rich edit control.
       ; Find : Text to search for.
       ; Mode : Optional array containing one or more of the keys specified in 'FR'.
@@ -819,7 +819,7 @@ Class RichEdit {
       This.ScrollCaret()
       Return
    }
-   ; -------------------------------------------------------------------------------------------------------------------
+   ; ------------------------------------------------------------------------------------------------------------------- 
    GotoPos(pos) {           ;Goto position
       This.SetSel(pos, pos)
       This.ScrollCaret()
@@ -897,7 +897,7 @@ Class RichEdit {
       NumPut(Max, TEXTRANGE, 4, "UInt")
       NumPut(&Text, TEXTRANGE, 8, "UPtr")
       SendMessage(0x044B, 0, &TEXTRANGE, , "ahk_id " . This.HWND)
-      VarSetCapacity(Text, -1) ; Länge des Zeichenspeichers korrigieren
+      VarSetCapacity(Text, -1) ; Länge des Zeichenspeichers korrigieren 
       Return Text
    }
    ; -------------------------------------------------------------------------------------------------------------------
@@ -1058,8 +1058,8 @@ Class RichEdit {
                   , LBSCROLLNOTIFY: 0x0100000, CTFALLOWEMBED: 0x0200000, CTFALLOWSMARTTAG: 0x0400000
                   , CTFALLOWPROOFING: 0x0800000}
       Flags := Mask := 0
-
-      if SetStyles is "Integer"
+      
+      if SetStyles is "Integer" 
          Flags := SetStyles
       else {
          SetStyles := StrSplit(SetStyles, " ")
@@ -1071,7 +1071,7 @@ Class RichEdit {
             }
          }
       }
-
+         
       if ClearStyles is "Integer"
          Mask := Flags | ClearStyles
       else {
@@ -1083,13 +1083,13 @@ Class RichEdit {
             }
          }
       }
-
+      
       If (Mask) {
          return SendMessage(0x04CC, Flags, Mask, , "ahk_id " This.HWND)
       }
       Return False
    }
-
+   
    ClearStyles(clearStyles) {
       return this.SetStyles(, clearStyles)
    }
@@ -1227,7 +1227,7 @@ Class RichEdit {
       ;                  "Auto" for "automatic" (system's default) background color
       ;        CharSet : optional font character set
       ;                  1 = DEFAULT_CHARSET, 2 = SYMBOL_CHARSET
-      ;        UlColor :
+      ;        UlColor : 
       ;        Empty parameters preserve the corresponding properties
       ; EM_SETCHARFORMAT = 0x0444
       ; SCF_DEFAULT = 0, SCF_SELECTION = 1

@@ -614,7 +614,7 @@ LoadBar_Gui(show:=1, opt:="") {
 
 }
 
-LoadBar_Callback() {
+LoadBar_Callback(param*) {
 
 
 }

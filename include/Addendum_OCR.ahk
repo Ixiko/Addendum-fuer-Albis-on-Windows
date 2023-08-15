@@ -274,7 +274,7 @@ tessOCRPdf(PDFName, params)                                         	{          
 			; OCR preprocessing mit Imagemagick
 				workExt      	:= "png"
 				tiffOpt       	:= "-colorspace gray -compress lzw "
-				pngOpt	    	:= "-colorspace gray -type Grayscale -quality 90% "
+				pngOpt	   	:= "-colorspace gray -type Grayscale -quality 90% "
 				preprocess	:= tess.imagick 		" -level 4%,98%,0.5 -deskew 40% "
 															.  (	workExt = "tiff"  	? tiffOpt
 															: 	 	workExt = "png" 	? pngOpt

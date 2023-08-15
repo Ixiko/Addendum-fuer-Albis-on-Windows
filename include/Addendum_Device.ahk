@@ -51,11 +51,11 @@ DriveData(Drv, FileSystemFilter:="FAT,FAT32,NTFS", opt:="") {                   
 			DICOMDevice := Object()
 
 	; Informationen abgreifen
-		DriveGet, Type      	, Type  	    	, % device
+		DriveGet, Type      	, Type  	   	, % device
 		DriveGet, Label     	, Label      	, % device
 		DriveGet, Filesystem	, Filesystem	, % device
-		DriveGet, Serial     	, Serial      	, % device
-		DriveGet, Status     	, Status      	, % device
+		DriveGet, Serial     	, Serial     	, % device
+		DriveGet, Status     	, Status     	, % device
 		DriveGet, StatusCD   	, StatusCD  	, % device
 
 	; Abbruch wenn Festplatte erkannt, zB ein Netzwerklaufwerk

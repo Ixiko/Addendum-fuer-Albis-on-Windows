@@ -77,7 +77,7 @@ Class LV_InCellEdit {
    ;                 EditCellWidth 	- optional parameter (ixiko)
    ;
    ; ===================================================================================================================
-	   __New(HWND, HiddenCol1 := False, BlankSubItem := False, EditUserFunc := "", EditCellWidth:= 1) {
+	   __New(HWND, HiddenCol1 := False, BlankSubItem := False, EditUserFunc := "", EditCellWidth:= 1) {     ; LV must have -ReadOnly to be editable
 
 		  If (This.Base.Base.__Class) ; do not instantiate instances
 			 Return False
@@ -318,7 +318,6 @@ Class LV_InCellEdit {
 		  NumPut(1024 + 1  	, LVITEM, 16 + (A_PtrSize * 2), "Int")                                                      	; cchTextMax in LVITEM
 		  SendMessage, % (A_IsUnicode ? 0x1073 : 0x102D), % This.Item, % &LVITEM, , % "ahk_id " H 	; LVM_GETITEMTEXT
 		  This.ItemText := StrGet(&ItemText, ErrorLevel)
-		SciTEOutput(This.ItemText ","  This.Item ", " This.SubItem )
 		  ; Call the user function, if any
 		  If (This.EditUserFunc)
 			 This.EditUserFunc.Call("BEGIN", This.HWND, This.HEDIT, This.Item + 1, This.Subitem + 1, This.ItemText)
@@ -389,10 +388,9 @@ Class LV_InCellEdit {
 			 This.Changed.Insert({"Row":This.Item+1, "Col":This.SubItem+1, "Txt":ItemText})
 		  }
 
-			SciTEOutput(This.ItemText ","  This.Item ", " This.SubItem )
 		  ; Restore subitem's text if changed or blanked out
 		  If (ItemText <> This.ItemText) || (This.SubItem > 0 && This.Blank) {
-				SciTEOutput( This.Item ", " This.SubItem )
+				;~ SciTEOutput( This.Item ", " This.SubItem )
 			 VarSetCapacity(LVITEM, 40 + (A_PtrSize * 5), 0) ; LVITEM structure
 			 NumPut(This.Item     	, LVITEM, 4                   	, "Int")
 			 NumPut(This.SubItem	, LVITEM, 8                    	, "Int")
@@ -404,7 +402,7 @@ Class LV_InCellEdit {
 		  This.Cancelled 	:= False
 		  This.Next         	:= False
 
-		  ; Call the user function, if any
+		  ; Call the user function, if any                                             row                 col                   cellText
 		  If (This.EditUserFunc)
 			 This.EditUserFunc.Call("END", This.HWND, This.HEDIT, This.Item+1, This.Subitem+1, ItemText)
 		  Return False

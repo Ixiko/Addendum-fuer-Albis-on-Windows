@@ -21,7 +21,7 @@
 ;									- 	hat 3 Filtermodi implementiert. Durch die Modi schaltet man sich mit einem Klick auf das Corona-Virus:
 ;										Modus 1 :	alle Ergebnisse
 ;										Modus 2 :	nur Corona-Abstrich-/Blutergebnisse
-;	                               		Modus 3 : alle Ergebnisse außer jene zu Corona
+;	                               		Modus 3 : alle Ergebnisse außer jene über Corona
 ;
 ;
 ;
@@ -33,7 +33,7 @@
 ;		Abhängigkeiten:	siehe includes
 ;
 ;	                    			Addendum für Albis on Windows
-;                        			by Ixiko started in September 2017 - last change 29.06.2022 - this file runs under Lexiko's GNU Licence
+;                        			by Ixiko started in September 2017 - last change 03.04.2023 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -42,18 +42,17 @@
   ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
 	#NoEnv
 	#Persistent
-	#SingleInstance               	, Force
+	#SingleInstance              	, Force
 	#KeyHistory                  	, Off
-
-	SetBatchLines                	, -1
 	ListLines                         	, Off
+	SetBatchLines                	, -1
 
-	SetKeyDelay, -1, -1
-	SetMouseDelay, -1
-	SetDefaultMouseSpeed, 0
-	SetWinDelay, -1
-	SetControlDelay, -1
-	SendMode Input
+	SetKeyDelay						, -1, -1
+	SetMouseDelay					, -1
+	SetDefaultMouseSpeed		, 0
+	SetWinDelay						, -1
+	SetControlDelay				, -1
+	SendMode 						, Input
 
 
   ; startet Windows Gdip
@@ -67,8 +66,8 @@
   ; Variablen / Einstellungen
   ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
   ; Albis Datenbankpfad / Addendum Verzeichnis
-	RegRead, AlbisPath, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, Installationspfad
-	RegExMatch(A_ScriptDir, "[A-Z]\:.*?AlbisOnWindows", AddendumDir)
+	;~ RegExMatch(A_ScriptDir, "[A-Z]\:.*?AlbisOnWindows", AddendumDir)
+	RegExMatch(A_ScriptDir, ".*(?=\\Module)", AddendumDir)
 
 	global LabJ := Object()
 	global adm := Object()
@@ -79,24 +78,29 @@
 	global q := Chr(0x22)
 
 	adm.Dir            	:= AddendumDir
-	adm.Ini              	:= AddendumDir "\Addendum.ini"
-	adm.DBPath      	:= AddendumDir "\logs'n'data\_DB"
-	adm.LabDBPath   	:= AddendumDir "\logs'n'data\_DB\LaborDaten"
-	adm.AlbisDBPath 	:= AlbisPath "\DB"
-
+	adm.Ini              	:= adm.Dir "\Addendum.ini"
+	adm.DBPath      	:= adm.Dir "\logs'n'data\_DB"
+	adm.LabDBPath   	:= adm.Dir "\logs'n'data\_DB\LaborDaten"
+	adm.Albis         	:= GetAlbisPaths()
 	adm.iconpath      	:= adm.Dir "\assets\ModulIcons\Laborjournal2.svg"
-
 	adm.PathLabj     	:= A_Temp "\labjournal_" A_YYYY "-" A_MM "-" A_DD ".html"
-	adm.LabPat      	:= A_Temp "\labPat_" A_YYYY "-" A_MM "-" A_DD ".json"
+	adm.LabPat       	:= A_Temp "\labPat_" A_YYYY "-" A_MM "-" A_DD ".json"
 	adm.LabTexte      	:= A_Temp "\labTexte_" A_YYYY "-" A_MM "-" A_DD ".json"
 	adm.COVIDStats  	:= A_Temp "\COVIDStats_" A_YYYY "-" A_MM "-" A_DD ".json"
-
 	adm.compname	:= StrReplace(A_ComputerName, "-")                                                    	; der Name des Computer auf dem das Skript läuft
 
+  ; Ini initialisieren
 	workini := IniReadExt(adm.Ini)
-	If !Instr(FIleExist(adm.AlbisDBPath), "D")
-		adm.AlbisDBPath 	:= IniReadExt("Albis", "AlbisWorkDir") "\Db"
 
+  ; auch Server lauffähig machen
+	adm.DriveLetter := Trim(IniReadExt(adm.compname, "Laufwerksbuchstabe"))
+	adm.DriveLetter := !(adm.DriveLetter ~= "i)^[A-Z]$") ? "" : adm.DriveLetter
+
+  ; Arbeitsdatenbank
+	If !Instr(FIleExist(adm.Albis.DB), "D")
+		adm.Albis.DB 	:= IniReadExt("Albis", "AlbisWorkDir") "\Db"
+
+ ; JSON AUsgabe in UTF-8
 	cJSON.EscapeUnicode := "UTF-8"
 
   ; Tray Icon erstellen
@@ -123,7 +127,10 @@
 			[Laborjournal]
 			htmlresource=%A_ScriptDir%\resources
 
+			;-: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 			;-: verschiedene Warnstufen und Anzeigebedingungen für Laborparameter
+			;-: Komma getrennte Laborparameter
+			;-: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 			Warnen_Nie=
 			Warnen_Immer=
 			Warnen_Hoch=
@@ -140,22 +147,32 @@
 			Warnen_Gruppe2=atyp. Ery::DIFANISO,DIFPOLYC,DIFPOIKL,DIFHYPOC,DIFMIKRO,DIFMAKRO,DIFOVALO,DIFECHIN
 			Warnen_Gruppe3=COVID-19::COVIPC-A,COVIP-SP,COVIGAB,COVIA,COVIG,COVMU371,COVMU452,COVMU484,COVMU501,COVM6970
 
-			;-: Laborkürzel deren Labortexte geladen werden sollen, um diese mit dem Laborjournal anzuzeigen oder zu verarbeiten
-			;-: Autohotkey RegEx Strings um gekürzte Ausgaben der Labortexte zu erhalten z.B. mit Regex: "i)(?<TXT>Ct\s(?<Wert>\d+))",
-			;-: Ct wird aus SARS-CoV-2-spezifische RNA nachgewiesen, Ct 25.
-			;-: Ein String (Ct-TXT: "Ct 25") für die Ausgabe extrahiert und ein Wert (Ct-Wert: 25) gleichzeitig ausgelesen.
-			;-: mehrere RegExStrings sind mit ## voneinander zu trennen
+			;-: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+			;-: Laborkürzel, deren Labortexte geladen werden sollen, um diese auszuwerten werden unter Verwendung der hier eingeschriebenen
+			;-: Autohotkey RegEx Zeichenketten ausgelesen
+			;-: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+			;-: 	um gekürzte Ausgaben der Labortexte zu erhalten z.B. mit Regex: "i)(?<TXT>Ct\s(?<Wert>\d+))",
+			;-: 	Ct wird aus SARS-CoV-2-spezifische RNA nachgewiesen, Ct 25.
+			;-: 	Ein String (Ct-TXT: "Ct 25") für die Ausgabe extrahiert und ein Wert (Ct-Wert: 25) gleichzeitig ausgelesen.
+			;-: 	mehrere RegExStrings sind mit ## voneinander zu trennen
+			;-: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 			Warnen_LabText1=
 
+			;-: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 			;-: vordefinierte Filtergruppen zum Ein- und Ausblenden nach bereits erstellter Anzeige
+			;-: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 			Tabellenfilter1=Abstriche::COV[\w\-]+
 			Tabellenfilter2=Vitamine::VD25
 
+			;-: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 			;-: die Variantenbezeichnungen werden von Labor zu Labor variieren
+			;-: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 			SARS-CoV-WHO-Namen=Alpha,Beta,Gamma,Delta,Omikron,Lambda,My
 			SARS-CoV-Varianten=COVM6970:Beta,COVMU501:Beta,COVMU452:Delta,COVMU371:Omikron,COVMU484:Beta
 
+			;-: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 			;-: sonstiges
+			;-: - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 			Statistik_Param=
 			LabParam_letztesUpdate=
 			Datenabgleich_LaborAbruf=
@@ -181,6 +198,8 @@
   ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ;{
 	adm.LabJ := Object()
 	adm.LabJ.htmlresource	:= IniReadExt("Laborjournal", "htmlresource", adm.Dir "\include\Gui") "\LaborjournalN.html"
+	adm.LabJ.htmlresource	:= DriveLetterReplace(adm.LabJ.htmlresource, adm.DriveLetter)
+
 
 	; Prüfen der HTML Datei
 	If !FileExist(adm.LabJ.htmlresource)
@@ -193,8 +212,7 @@
 	Warnen := Object()
 	Loop 6 {
 		iniVal := IniReadExt("Laborjournal", "Warnen_Exklusiv" A_Index)
-		If iniVal && !InStr(iniVal, "ERROR")
-			tmp .= iniVal ","
+		tmp 	 .= iniVal && !InStr(iniVal, "ERROR") ? iniVal "," : ""
 	}
 
 	Warnen.exklusiv 	:= RTrim(tmp, ",")
@@ -235,6 +253,8 @@
 		If (!iniVal || InStr(iniVal, "ERROR"))
 			break
 
+	  ; Trenne mit ::   LabName::LabParam::LabFilter
+	  ; Trenne mehrere Filterstrings mit #
 	  ; z.B. COVID::^COV[\w\-]+::i)Ct\s+(?<CtWert>\d+)#i)(Verdacht.*?SARS.*?[CoOV\s\-2]+\-.*?Variante)\s+(\(VOC\))*\s*
 	  ; 											. (?<Mutant>[\pL\d\-\.]+).*(?<MutantEx>[A-Z]\.\d+\.\s*\d+\.\s*\d+)
 		RegExMatch(iniVal, "^(?<Name>.*?)::(?<Param>.*?)::(?<Filter>.*)$", rxLab)
@@ -253,17 +273,18 @@
 		Warnen.SaveLabText := ""
 
   ; Nutzern eigene Statistiken (Zählungen) ermöglichen
-    tmp := IniReadExt("Laborjournal", "Statistik_Parameter")
-	tmp := "COVIPC-A:::Es wurden # PCR-Abstriche eingesendet§§COVIPC-A:i)(POSITIV|NEGATIV):i)POSITIV:Bei # lag ein positives Ergebnis vor."
+    iniVal := IniReadExt("Laborjournal", "Statistik_Parameter")
+	If (!iniVal || InStr(iniVal, "ERROR"))
+		iniVal := "COVIPC-A:::Es wurden # PCR-Abstriche eingesendet§§COVIPC-A:i)(POSITIV|NEGATIV):i)POSITIV:Bei # lag ein positives Ergebnis vor."
 
-	If !InStr(tmp, "Error") {
-		tmp := StrSplit(tmp, "§§")
+	If !InStr(iniVal, "Error") {
+		iniVal := StrSplit(iniVal, "§§")
 		Warnen.LabStats 	:= Object()
 		Warnen.LabStatsKeys :="i)("
-		For index, param in tmp {
-			split := StrSplit(param, ":")
-			key := split.1
-			index := 1
+		For index, param in iniVal {
+			split   	:= StrSplit(param, ":")
+			key    	:= split.1
+			index 	:= 1
 			while IsObject(Warnen.LabStats[key index])
 				index := A_Index + 1
 			Warnen.LabStats[key index] := {"countIf": split.2, "matchif":split.3, "output":split.4}
@@ -343,7 +364,7 @@
   ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -;{
 	If (!adm.LabJ.preRender), load_Bar.Set(0, "lade Patientendatenbank")
 	filter  	:= ["NR", "PRIVAT", "GESCHL", "NAME", "VORNAME", "GEBURT", "PLZ", "ORT", "STRASSE", "HAUSNUMMER", "TELEFON", "TELEFON2", "TELEFAX"]
-	PatDB 	:= ReadPatientDBF(adm.AlbisDBPath, filter, "allData")
+	PatDB 	:= ReadPatientDBF(adm.Albis.DB, filter, "allData")
 	If (!adm.LabJ.preRender), load_Bar.Set(1, "Patientendatenbank geladen")
   ;}
 
@@ -377,7 +398,7 @@
 	LaborJournal(LabPat, true, Warnen, COVIDStats)
 
 
-return
+return ;}
 
 ~ESC:: ;{
 	If WinActive("Laborjournal") {
@@ -474,7 +495,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 		; die Anzeige wird für x Werktage berechnet
 			If !Von && !Bis {
 
-				Tage	    	:= Tage ? Tage : 31                            	; kein Zeitraum, Defaulteinstellung sind 31 Tage
+				Tage	    	:= Tage ? Tage : 120                            	; kein Zeitraum, Defaulteinstellung sind 31 Tage
 				Von      	:= A_YYYY . A_MM . A_DD                	; aktueller Tag
 
 			; Zahl der Tage berechnen, die kein Werktag sind
@@ -489,8 +510,8 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 				Von     	  += -1*(DaysPlus), Days
 				Von 	    	:= SubStr(Von, 1, 8)
 
-				ViewStart 	:= FormatDate(Von, "YMD", "dd.MM.yyyy")
-				WTag    	:= GetWeekDay(ViewStart)
+				ViewStart 	:= FormatDate(Von, "YMD", "dd.MM.yyyy")	; von yyyyMMdd -> dd.MM.yyyy
+				WTag    	:= GetWeekDay(ViewStart)                  	; Wochentag
 
 				adm.LabJ.Tagesanzeige :=  "ab " WTag ", " StrReplace(ViewStart, A_YYYY) " (" Tage " Werktage)"
 
@@ -501,18 +522,19 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 			else
 				VB := (Von && !Bis) ? "Von" : (!Von && Bis) ? "Bis" : "VonBis"
 
+
 		If (!adm.LabJ.preRender), load_Bar.Set(8, "LABBLATT.dbf: öffnen")
 	;}
 
-	; Albis: Datenbank laden und entsprechend des Datums die Leseposition vorrücken	;{
-		labDB := new DBASE(adm.AlbisDBPath "\LABBLATT.dbf", 0)
-		labDB.OpenDBF()
+	; LABBLATT: öffen                                                                                             	;{
+		labDB 	:= new DBASE(adm.Albis.DB "\LABBLATT.dbf", 0)
+		res     	:= labDB.OpenDBF()
 	;}
 
-	; Datei: Startposition berechnen (ein Quartal vor dem Datum)                             	;{
-		If (VB = "Von") || (VB = "VonBis") {
+	; LABBLATT: Startposition berechnen (ein Quartal vor dem Datum)                       	;{
+		If (VB ~= "i)^(Von|VonBis)$") {
 
-			QJ := !QJ ? SubStr(Von, 1, 4) . Ceil(SubStr(Von, 5, 2)/3) : QJ 	; muss das Quartaljahr des Von-Datum sein
+			QJ := !QJ ? SubStr(Von, 1, 4) . Ceil(SubStr(Von, 5, 2)/3) : QJ 	; muss das Quartaljahr des "Von" Datum sein
 
 		  ; ein Quartal davor
 			If !lab.seeks.HasKey(QJ) {
@@ -529,52 +551,89 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 		}
 	;}
 
-	; Laborwerte: klinisch interessante Werte finden                                                    	;{
+	; LABBLATT: klinisch interessante Werte finden                                                     	;{
 		t :=  nieWarnen "`n" exklusivWarnen "`n" immerWarnen "`n`n"
-		ShowAt := StrLen(labDB.records)-2 > 0 ? 10**(StrLen(labDB.records)-2) : Floor(labDB.records/10)
+		stripAt       	:= StrLen(labDB.records) - 1
+		maxrecords 	:= SubStr("00000000" labDB.records, -1*stripAt)
+		ShowAt      	:= stripAt-3 > 0 ? 10**(stripAt-3) : Floor(labDB.records/10)            ; alle 10^x (jeder 100. wenn 10000, jeder 1000. wenn 100.000, ...)
 		If (!adm.LabJ.preRender), load_Bar.Set(9, "LABBLATT.dbf: lade neue Laborwerte")
+	;}
 
-	; filtert nach Datum und ab einer Überschreitung von der durchschnittlichen Abweichung von den Grenzwerten anhand
-	; der zuvor für jeden Laborwert berechneten durchschnittlichen prozentualen Überschreitung des Grenzwertes aus den
-	; Daten der LABBLATT.dbf [AlbisLaborwertGrenzen()]
-		while !(labDB.dbf.AtEOF) {
+	; LABBLATT: zeilenweise Lesen von Daten [AlbisLaborwertGrenzen()]                      	;{
+
+	  ; der zuvor für jeden Laborwert berechneten durchschnittlichen prozentualen Überschreitung des Grenzwertes aus den
+	  ; filtert nach Datum und ab einer Überschreitung von der durchschnittlichen Abweichung von den Grenzwerten anhand
+		while !labDB.dbf.AtEOF {
 
 			; Daten zeilenweise auslesen
 				data := labDB.ReadRecord(["PATNR", "ANFNR", "DATUM", "BEFUND", "PARAM", "ERGEBNIS", "EINHEIT", "GI", "NORMWERT", "TXTHINW", "ERGTXT", "TEXTE"])
 
-			; Fortschritt
-				If !adm.LabJ.preRender && Anzeige && (Mod(A_Index, ShowAt) = 0) {
+			; Fortschrittsanzeige
+			; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+				If !adm.LabJ.preRender && Anzeige && (Mod(labDB.recordNr, ShowAt) = 0) {
 					tt := "lade neue Laborwerte  [" ConvertDBASEDate(data.Datum) "]  "
-						. 	SubStr("00000000" labDB.recordnr, -5) "/"
-						. 	SubStr("00000000" labDB.records, -5)
+						. 	SubStr("00000000" labDB.recordnr, -1*stripAt) "/" maxrecords
 					percent := Round(lbarBase1*(labDB.recordnr/labDB.records),1)
 					load_Bar.Set(9+percent, tt)
 				}
 
-			; Datum passt nicht, weiter
+			; Datum passt nicht, dann weiter
+			; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 				Switch VB {
 					Case "Von":
-						If (data.Datum <= Von)
+						If (data.Datum < Von)
 							continue
 					Case "Bis":
-						If (data.Datum => Bis)
+						If (data.Datum > Bis)
 							continue
 					Case "VonBis":
 						If (data.Datum < Von || data.Datum > Bis)
 							continue
 				}
 
-			; IDs zu Texthinweisen bei bestimmten Laborwerten sichern  	;{
+
+			; LABTEXTE: IDs zu Texthinweisen für bestimmte Laborparameter sichern (festgelegt in der ini)
+			; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ;{
+			; Param: (Mikrobiologie,)
+			; TEXTE/ERGTXT: Helicobac.pylori.*?positiv
+			; TEXTE/ERGTXT: Trigger: "Wachstum von" bedeutet positives Ergebnis,
+			;                                      	Daten extrahieren per RegEx
+			; 										"Material:\s+(?<Material>.*?)([\n\r]|$)" z.B. Material:\rAbstrich Tonsille -> alias Tonsille
+			;										"Anforderung:\s+(?<Anforderung>.*?)([\n\r]|$)" z.B. Erreger und Resistenz -> alias E+R
+			;                                  		im Laborjournal als Tonsille E+R anzeigen (rot wenn pos., blau wenn okay)
+			;
+			;											Material         /           Anforderung                                                        	/         im weiteren Text ist positiv wenn       	 /       Alias
+			;                                       - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+			; weitere:                      	Abstrich Rachen / Anforderung: Influenza-Virus-Antigen-A                           	/ Influenza-Virus-Antigen-(A|B).*?positiv    		/		Influenza
+			;                                   	Abstrich Rachen / Anforderung: Pilznachweis                                              	/ Sproßpilz-Kultur:.*?positiv                    		/		Pilze
+			;                                   	Abstrich Wunde / Anforderung:  Erreger und Resistenz                                 	/ Aerobe Kultur:   !kein Wachstum
+			; 																															                             	   Anaerobe Kultur: !kein Wachstum
+			;                                                                                                                                                             Sproßpilz-Kultur:.*?positiv                             		/		Wundabstrich
+			;                                   	Wundabstrich  	/                                                                                       	/ Ergebnis der Kultur: 1.++ Staphylococcus....\r 	/ 		Wundabstrich
+			;                                       Stuhl                	/ Anforderung:  Nachweis von Salmonellen/Shigellen         	/ !NICHT  nachgewiesen!                                   	/		Stuhl
+			;                                       Stuhl                	/ Anforderung:  Nachweis von Campylobacter/Yersinien     	/ !NICHT  nachgewiesen!                                   	/		Stuhl
+			;                                       Stuhl                	/ Anforderung:  Clostridium difficile-Toxin-Nachweis            	/ Clost.diff. Toxin A+B (EIA):.*?positiv                   	/		Clostridien
+			;                                       Stuhl                	/ Anforderung:  Helicobacter pylori-Antigen-Nachweis          	/ Helicobac.pylori-AG (EIA):.*?positiv                    /		H.pylori
+			;                                                                                                                                                             Helicobacter pylori - Antigen-Nachweis:  p o s i t i v
+			;                                       Wurm             	/                                                                                         	/ irgendwo muss positiv stehen                             	/		Wurm
+			;                                       Stuhlprobe       	/ Ergebnis der Kultur:
+			; 																	Salmonella, Shigella und Yersinia  n i c h t  nachgewiesen. 	/ Helicobac.pylori-AG (EIA):.*?positiv                    /		H.pylori
+			;                                       Nativurin          	/ Anforderung:  Erreger und Resistenz                                 	/ Aerobe Kultur:   !kein Wachstum                    /		Urin E+R
+			;                                       Urinträgerkultur   	/ Ergebnis der Kultur: 1.     Escherichia coli  2. Enterococcus species                                                              /		Urin E+R
+			;                                       Sputum              	/                                                                                          	/ Pilzkultur:  (+) Candida species                     /		Sputum
+			;
+			;
+
 				PN := data.PARAM
 				If WarnLabTexte && RegExMatch(PN, SaveLabText) {
 
-					If !IsObject(LabTexte[PATNR := data.PATNR]) {
+					If !IsObject(LabTexte[PATNR := data.PATNR]) {                     ; PATNR u. Ref
 						LabTexte[PATNR] := Object()
 						LabTexte[PATNR].Ref := Object()
 					}
-					If !IsObject(LabTexte[PATNR][ANFNR	:= data.ANFNR])
+					If !IsObject(LabTexte[PATNR][ANFNR	:= data.ANFNR])     	; ANFNR
 						LabTexte[PATNR][ANFNR] := Object()
-					If !IsObject(LabTexte[PATNR][ANFNR][PN])
+					If !IsObject(LabTexte[PATNR][ANFNR][PN])                      	; PN - Parametername
 						LabTexte[PATNR][ANFNR][PN] := Object()
 
 					LabTexte[PATNR].Ref[data.TEXTE]     	:= [ANFNR, PN, "TEXTE"]
@@ -583,7 +642,8 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 				 }
 			;}
 
-			; kein pathologischer Wert und in keiner Filterliste dann weiter ;{
+			; kein pathologischer Wert und in keiner Filterliste dann weiter
+			; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ;{
 				PNImmer := PNExklusiv := PNLow := PNHigh := false
 				If RegExMatch(PN, nieWarnen)                   {        	; Parameter nieWarnen
 					continue
@@ -611,9 +671,11 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 
 			;}
 
-			; Strings lesbarer machen (oder auch nicht)                        	;{
+			; Strings lesbarer machen (oder auch nicht)
+			; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ;{
 
 				; Laborergebnis oder (P)arameter(W)ert
+				; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 					PWo	:= PW := StrReplace(data.ERGEBNIS, ",", ".")        	; Parameter - Wert
 					If !RegExMatch(PW, "i)(\d|positiv|negativ)")                             	;
 						continue
@@ -648,20 +710,21 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 			;}
 
 			; außer bei immer anzuzeigenden Parametern ausführen
+			; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 				If !PNExklusiv {
 
 					If (PW > PSO)                                                   	; Laborwert überschreitet die obere Grenze
-						ONG := Floor(Round((PW*100)/PSO, 3))       	; Obere Normgrenze in Prozent
+						ONG := Floor(Round((PW*100)/PSO, 3))       	; Obere Normgrenze als Prozentwert
 					else if (PW < PSU)                                              	; Laborwert ist kleiner als der untere Grenzwert
-						UNG := Floor(Round((PSU*100)/PW, 3))        	; Untere Normgrenze in Prozent
+						UNG := Floor(Round((PSU*100)/PW, 3))        	; Untere Normgrenze als Prozentwert
 
 					If !ONG && !UNG                                             	; ONG und UNG sind beide null -> weiter
 						continue
 
 					If (ONG > 0)                                                    	; ONG überschritten
-						plus := Floor(Round((ONG*100)/OD,1))           	; Überschreitung der ONG in Prozent
+						plus := Floor(Round((ONG*100)/OD,1))           	; Überschreitung der ONG als Prozentwert
 					else if (UNG > 0 )                                             	; UNG überschritten
-						plus := Floor(Round((UNG*100)/UD,1))           	; Unterschreitung der UNG in Prozent
+						plus := Floor(Round((UNG*100)/UD,1))           	; Unterschreitung der UNG als Prozentwert
 
 					If PNImmer && (plus <= 100)                              	; nur aufnehmen bei Überschreitung einer Normgrenzen
 						PNImmer := false
@@ -675,6 +738,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 				}
 
 			; Laborwert liegt über der Grenzwertabweichung (GWA) oder gehört zu einer Filterliste
+			; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 				If (plus > GWA || PNImmer || PNExklusiv) {
 
 					PatID 	:= data.PATNR
@@ -716,7 +780,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 
 	;}
 
-	; Lesezugriff beenden                                                                                         	;{
+	; LABBLATT: Lesezugriff beenden                                                                         	;{
 		labDB.CloseDBF()
 		LabDB := ""
 		If Anzeige
@@ -726,7 +790,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 		If (!adm.LabJ.preRender), load_Bar.Set(percent, "Labortexte auslesen")
 	;}
 
-	; LabTexte: auslesen                                                                                          	;{
+	; LABTEXTE: auslesen                                                                                          	;{
 		If WarnLabTexte {
 
 			PatIDs := "^("
@@ -735,11 +799,11 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 			PatIDs := RTrim(PatIDs, "|") ")$"
 
 		; Labtexte.dbf: zum Lesen bereit machen
-			labDB := new DBASE(adm.AlbisDBPath "\LABTEXTE.dbf", 0)
+			labDB := new DBASE(adm.Albis.DB "\LABTEXTE.dbf", 0)
 			labDB.OpenDBF()
 			ShowAt := StrLen(labDB.records)-2 > 0 ? 10**(StrLen(labDB.records)-2) : Floor(labDB.records/10)
 
-		; LabTexte: Daten auslesen
+		; LABTEXTE.dbf: Daten zeilenweise lesen
 			while !(labDB.dbf.AtEOF) {
 
 			; Daten zeilenweise auslesen
@@ -752,9 +816,8 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 				If (PN := LabTexte[PATNR].Ref[data.ID].2) {
 					ANFNR	:= LabTexte[PATNR].Ref[data.ID].1
 					FLabel 	:= LabTexte[PATNR].Ref[data.ID].3
-					txt := RegExReplace(data.Text, "([^\w])[\r\n]+", "$1")
-					txt := RegExReplace(txt, "[\r\n]+", " ")
-					txt := RegExReplace(txt, "([a-zäöüß])([A-ZÄÖÜ])", "$1 $2")
+					txt := RegExReplace(data.Text, "([^\w])[\r\n]+", "$1")                      	; RegEx Korrektur
+					;~ txt := RegExReplace(txt, "([a-zäöüß])([A-ZÄÖÜ])", "$1 $2")
 					txt := RegExReplace(txt, "\.([A-ZÄÖÜ])", ". $1")
 					LabTexte[PATNR][ANFNR][PN][FLabel] .= txt
 				}
@@ -780,14 +843,14 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 		; LabTexte: hinzufügen
 			For Datum, Patients in LabPat
 				For PATNR, LabParams in Patients {
-					For PN, Labval in LabParams {
-						IF (PN = "ANFNR") && !RegExMatch(PN, SaveLabText)
+					For PN, Labval in LabParams {                                                                     ; PN = Parameter Name
+						If (PN = "ANFNR") && !RegExMatch(PN, SaveLabText)
 							continue
 						ANFNR := LabVal.AN
 						If IsObject(LabTexte[PATNR][ANFNR][PN]) {
-							LabPat[Datum][PATNR][PN].TH := LabTexte[PATNR][ANFNR][PN]
+							LabPat[Datum][PATNR][PN].TH := LabTexte[PATNR][ANFNR][PN]			; TH = TextHinweis
 							LabTexte[PATNR][ANFNR].Delete(PN)
-							If !LabTexte[PATNR][ANFNR].Count()
+							If !LabTexte[PATNR][ANFNR].Count()                                                	; ANFNR wird entfernt wenn keine key:value Paare mehr vorhanden sind
 								LabTexte[PATNR].Delete(ANFNR)
 						}
 					}
@@ -811,7 +874,7 @@ AlbisLaborJournal(Von="", Bis="", Warnen="", GWA=100, Anzeige=true) {           
 			}
 
 		percent += 1
-		If (!adm.LabJ.preRender), load_Bar.Set(percent, "Datenausgabe erstellt")
+		If (!adm.LabJ.preRender), load_Bar.Set(percent, "Datenausgabe wird erstellt")
 	;}
 
 	; LabPat für erneutes Laden ohne Neuberechnung speichern
@@ -863,7 +926,7 @@ AlbisLaborwertGrenzen(LbrFilePath, Anzeige=true) {                              
 		cJSON.EscapeUnicode := "UTF-8"
 
 	; Albis Datenbank laden und entsprechend des Datums die Leseposition vorrücken
-		labDB := new DBASE(adm.AlbisDBPath "\LABBLATT.dbf", Anzeige)
+		labDB := new DBASE(adm.Albis.DB "\LABBLATT.dbf", Anzeige)
 		labDB.OpenDBF()
 
 	; filtert die Daten und berechnet die Abweichungen von den Grenzwerten
@@ -967,7 +1030,7 @@ AlbisLabParam(cmd:="load", data:="short", Anzeige:=false) {                     
 		If (filetime := Labjournal_NewLabParams()) {
 			data		:= "short"
 			cmd  	:= "rewrite"
-			LabDB	:= new DBASE(adm.AlbisDBPath "\LABPARAM.dbf", Anzeige)
+			LabDB	:= new DBASE(adm.Albis.DB "\LABPARAM.dbf", Anzeige)
 			IniWrite, % (adm.Labj.lastParams := filetime), % adm.Ini, % "Laborjournal", % "LabParam_letztesUpdate"
 			If (!adm.LabJ.preRender)
 				load_Bar.Set(7, "Bezeichnungen der Laborparameter müssen aktualisiert werden")
@@ -1046,7 +1109,7 @@ AlbisLabCOVID19(DateRegEx:="", LabParams:="") {                                 
 	mutants     	:= {"COVM6970" : "Beta", "COVMU501":"Beta", "COVMU452":"Delta", "COVMU371":"Omikron", "COVMU484":"N501Y"}
 
   ; Datenbank öffnen, auslesen und Lesezugriff beenden
-	labDB := new DBASE(adm.AlbisDBPath "\LABBLATT.dbf", 0)
+	labDB := new DBASE(adm.Albis.DB "\LABBLATT.dbf", 0)
 	labDB.OpenDBF()
 	dbfdata	:= labDB.Search({"Datum" : "rx:" DateRegEx, "Param" : "rx:" LabParams.Param}, 0,, {"LogicalComparison":"and"})
 	labDB.CloseDBF()
@@ -1813,7 +1876,7 @@ LabJournal_KarteiKarte(neutron, event) {                                        
 		RegExMatch(event.target.id, "^\s*(?<ID>\d+)?_(?<Name>.*)$", Pat)
 
 		PatName := StrReplace(PatName, "_", ", ")
-		SciTEOutput(A_ThisFunc ": [" PatID "] " PatName)
+		;~ SciTEOutput(A_ThisFunc ": [" PatID "] " PatName)
 
 		AlbisActivate(1)
 		If AlbisAkteOeffnen(PatName, PatID) {
@@ -1930,7 +1993,7 @@ LabJournal_Eyes(lparam, wparam) {                                               
 	If !IsObject(leye) {
 		leye := neutron.doc.getElementsByClassName("left-eyeball")[0]
 		leyeX := leye.cx
-		SciTEOutput("x: " leye.Count())
+		;~ SciTEOutput("x: " leye.Count())
 	}
 
 	MouseGetPos, mx, my
@@ -2068,15 +2131,16 @@ return lahtml
 
 Labjournal_NewLabData() {
 
-	FileGetTime, tmp, % adm.AlbisDBPath "\LABBLATT.dbf", M
+	FileGetTime, FTLabBlatt	, % adm.Albis.DB "\LABBLATT.dbf", M
+	FileGetTime, FTLabRead, % adm.Albis.DB "\LABREAD.dbf", M
 
 	If !adm.Labj.lastUpdate
 		adm.Labj.lastUpdate := IniReadExt("Laborjournal", "letztes_Journalupdate")
 
-	SciTEOutput(A_ThisFunc ": " adm.Labj.lastUpdate ", " tmp)
+	;~ SciTEOutput(A_ThisFunc ":`n " adm.Labj.lastUpdate "`n " FTLabBlatt "`n " FTLabRead)
 
-	If (tmp <> adm.Labj.lastUpdate) {
-		adm.Labj.lastUpdate := tmp
+	If (FTLabRead <> adm.Labj.lastUpdate+10) {
+		adm.Labj.lastUpdate := FTLabRead
 		return adm.Labj.Override := true
 	}
 
@@ -2085,7 +2149,7 @@ return false
 
 Labjournal_NewLabParams() {
 
-	FileGetTime, tmp, % adm.AlbisDBPath "\LABPARAM.dbf", M
+	FileGetTime, tmp, % adm.Albis.DB "\LABPARAM.dbf", M
 
 	If !adm.Labj.lastParams
 		adm.Labj.lastParams := IniReadExt("Laborjournal", "LabParam_letztesUpdate")
@@ -2342,149 +2406,6 @@ DllCall(NumGet(NumGet(pStream + 0, 0, "UPtr") + (A_PtrSize * 2), 0, "UPtr"), "Pt
 Return hBitmap
 }
 
-LoadBar_Gui(show:=1, opt:="") {
-
-	global load_BarGUI, load_Bar
-
-	If !IsObject(opt)
-		opt:={"col": ["0x4D4D4D","0xFFFFFF","0xEFEFEF"], "w":320,	"h":36}
-
-	Gui, load_BarGUI: -Border -Caption +ToolWindow +AlwaysOnTop HWNDhLoad_BarWin
-	Gui, load_BarGUI: Color, % opt.col.1, % opt.col.2
-
-	load_Bar := new LoaderBar("load_BarGUI", 3, 3, opt.W, opt.H, "LABORJOURNAL", 1, opt.col.3)
-
-	wW :=load_Bar.Width + 2*load_Bar.X
-	wH :=load_Bar.Height + 2*load_Bar.Y
-
-	Gui, load_BarGUI: Show, % "w" wW " h" wH, % "Laborjournal lädt..."
-	load_Bar.hWin := hLoad_BarWin
-
-}
-
-LoadBar_Callback() {
-
-
-}
-
-class LoaderBar {
-
-	__New(GUI_ID:="Default",x:=0,y:=0,w:=280,h:=28,Title:="",ShowDesc:=0,FontColorDesc:="2B2B2B",FontColor:="EFEFEF",BG:="2B2B2B|2F2F2F|323232",FG:="66A3E2|4B79AF|385D87") {
-		SetWinDelay,0
-		SetBatchLines,-1
-		if (StrLen(A_Gui))
-			_GUI_ID:=A_Gui
-		else
-			_GUI_ID:=1
-		if ( (GUI_ID="Default") || !StrLen(GUI_ID) || GUI_ID==0 )
-			GUI_ID:=_GUI_ID
-
-		this.GUI_ID := GUI_ID
-		Gui, %GUI_ID%:Default
-
-		this.X        	:= x
-		this.Y        	:= y
-		this.Width 	:=w
-		this.Height	:=h
-		this.BG     	:= StrSplit(BG,"|")
-		this.BG.W  	:= w
-		this.BG.H  	:= h
-		this.FG       	:= StrSplit(FG,"|")
-		this.FG.W  	:= this.BG.W - 2
-		this.FG.H   	:= (fg_h:=(this.BG.H - 2))
-		this.Percent 	:= 0
-		fg_x            	:= this.X + 1
-		fg_y            	:= this.Y + 1
-		this.FontColor := FontColor
-		this.ShowDesc := ShowDesc
-
-		;DescBGColor:="4D4D4D"
-		DescBGColor:="Black"
-		this.DescBGColor := DescBGColor
-		this.FontColorDesc := FontColorDesc
-
-		Gui,Font,s10
-		Gui, Add, Text, % "x" x " y" y " w" w " h" h " BackgroundTrans 0xE hwndhLoaderBarTitle", % Title
-		this.hLoaderBarTitle := hLoaderBarTitle
-
-		Gui,Font,s8
-		Gui, Add, Text, % "x" x " y+1 w" w " h" h " 0xE hwndhLoaderBarBG"
-		this.ApplyGradient(this.hLoaderBarBG	:= hLoaderBarBG, this.BG.1, this.BG.2, this.BG.3,1)
-
-		Gui, Add, Text, % "x" fg_x " y" fg_y " w0 h" fg_h " 0xE hwndhLoaderBarFG"
-		this.ApplyGradient(this.hLoaderBarFG   	:= hLoaderBarFG, this.FG.1, this.FG.2, this.FG.3,1)
-
-		Gui, Add, Text, % "x" x " y" y " w" w " h" h " 0x200 border center BackgroundTrans hwndhLoaderNumber c" FontColor, % "[ 0 % ]"
-		this.hLoaderNumber := hLoaderNumber
-
-		if (this.ShowDesc) {
-			Gui, Add, Text, % "xp y+2 w" w " h16 0x200 Center border BackgroundTrans hwndhLoaderDesc c" FontColorDesc, Loading...
-			this.hLoaderDesc 	:= hLoaderDesc
-			this.Height        	:= h+18
-		}
-
-		Gui, Font
-
-		Gui, %_GUI_ID%:Default
-	}
-
-	Set(p,w:="Loading...") {
-		if (StrLen(A_Gui))
-			_GUI_ID:=A_Gui
-		else
-			_GUI_ID:=1
-		GUI_ID := this.GUI_ID
-
-		Gui, %GUI_ID%:Default
-		GuiControlGet, LoaderBarBG, Pos, % this.hLoaderBarBG
-
-		this.BG.W 	:= LoaderBarBGW
-		this.FG.W  	:= LoaderBarBGW - 2
-		this.Percent	:= (p>=100) ? p:=100 : p
-
-		PercentNum	:= Round(this.Percent,0)
-		PercentBar	:= Floor((this.Percent/100)*(this.FG.W))
-
-		hLoaderBarTitle		:= this.hLoaderBarTitle
-		hLoaderBarFG  	:= this.hLoaderBarFG
-		hLoaderNumber 	:= this.hLoaderNumber
-
-		GuiControl,Move	,% hLoaderBarFG  	, % "w" PercentBar
-		GuiControl,       	,% hLoaderNumber 	, % "[" PercentNum "% ]"
-
-		if (this.ShowDesc) {
-			hLoaderDesc := this.hLoaderDesc
-			GuiControl,, % hLoaderDesc, % w
-		}
-		Gui, %_GUI_ID%:Default
-	}
-
-	ApplyGradient( Hwnd, LT := "101010", MB := "0000AA", RB := "00FF00", Vertical := 1 ) {
-		Static STM_SETIMAGE := 0x172
-		ControlGetPos,,, W, H,, ahk_id %Hwnd%
-		PixelData := Vertical ? LT "|" LT "|" LT "|" MB "|" MB "|" MB "|" RB "|" RB "|" RB : LT "|" MB "|" RB "|" LT "|" MB "|" RB "|" LT "|" MB "|" RB
-		hBitmap := this.CreateDIB( PixelData, 3, 3, W, H, True )
-		oBitmap := DllCall( "SendMessage", "Ptr",Hwnd, "UInt",STM_SETIMAGE, "Ptr",0, "Ptr",hBitmap )
-		Return hBitmap, DllCall( "DeleteObject", "Ptr",oBitmap )
-	}
-
-	CreateDIB( PixelData, W, H, ResizeW := 0, ResizeH := 0, Gradient := 1  ) {
-		; http://ahkscript.org/boards/viewtopic.php?t=3203                  SKAN, CD: 01-Apr-2014 MD: 05-May-2014
-		Static LR_Flag1 := 0x2008 ; LR_CREATEDIBSECTION := 0x2000 | LR_COPYDELETEORG := 8
-			,  LR_Flag2 := 0x200C ; LR_CREATEDIBSECTION := 0x2000 | LR_COPYDELETEORG := 8 | LR_COPYRETURNORG := 4
-			,  LR_Flag3 := 0x0008 ; LR_COPYDELETEORG := 8
-		WB := Ceil( ( W * 3 ) / 2 ) * 2,  VarSetCapacity( BMBITS, WB * H + 1, 0 ),  P := &BMBITS
-		Loop, Parse, PixelData, |
-		P := Numput( "0x" A_LoopField, P+0, 0, "UInt" ) - ( W & 1 and Mod( A_Index * 3, W * 3 ) = 0 ? 0 : 1 )
-		hBM := DllCall( "CreateBitmap", "Int",W, "Int",H, "UInt",1, "UInt",24, "Ptr",0, "Ptr" )
-		hBM := DllCall( "CopyImage", "Ptr",hBM, "UInt",0, "Int",0, "Int",0, "UInt",LR_Flag1, "Ptr" )
-		DllCall( "SetBitmapBits", "Ptr",hBM, "UInt",WB * H, "Ptr",&BMBITS )
-		If not ( Gradient + 0 )
-			hBM := DllCall( "CopyImage", "Ptr",hBM, "UInt",0, "Int",0, "Int",0, "UInt",LR_Flag3, "Ptr" )
-		Return DllCall( "CopyImage", "Ptr",hBM, "Int",0, "Int",ResizeW, "Int",ResizeH, "Int",LR_Flag2, "UPtr" )
-	}
-}
-
 DownloadToString(url, encoding = "utf-8") {
     static a := "AutoHotkey/" A_AhkVersion
     if (!DllCall("LoadLibrary", "str", "wininet") || !(h := DllCall("wininet\InternetOpen", "str", a, "uint", 1, "ptr", 0, "ptr", 0, "uint", 0, "ptr")))
@@ -2573,6 +2494,7 @@ GoogleApis() {
 
 #Include %A_ScriptDir%\..\..\lib\acc.ahk
 #Include %A_ScriptDir%\..\..\lib\class_cJSON.ahk
+#Include %A_ScriptDir%\..\..\lib\class_Loaderbar.ahk
 #Include %A_ScriptDir%\..\..\lib\class_Neutron.ahk
 #include %A_ScriptDir%\..\..\lib\GDIP_All.ahk
 #Include %A_ScriptDir%\..\..\lib\ini.ahk

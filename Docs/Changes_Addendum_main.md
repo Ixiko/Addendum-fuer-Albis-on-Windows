@@ -8,11 +8,57 @@
 
 <img src="Devider.svg" alt="Devider" align="center" margin="0" width="100%" />
 
-### ![Addendum-Symbol](Icons/Addendum18x18.ico) ***Addendum V2.10***  (15.09.2022)
+###  ![Addendum-Symbol](Icons/Addendum18x18.ico) ***Addendum V2.16***  (14.12.2022)
 
+<u>**Quicksearch**</u>   	
 
+▪ 	merkt sich für jede Datenbank den angezeigten Datenblock und stellt ihn nach einem Neustart wieder her <br>
+**<u>Gebuehren</u>**      	
 
+▪ 	Fehler beim Erstellen der Ausgabe behoben 
 
+**<u>Addendum</u>**		  
+
+▪	***Diagnosen Hotstrings*** - Diagnosen aus den Auswahlboxen werden im HotstringViewer angezeigt<br>
+▪	***Druckausgabe*** - mehr automatisierte Dateinamensvorschläge beim PDF-Druck
+
+**<u>Addendum_DB</u>**
+
+▪	***GetDocuments()*** - Methode um alle Dokumentverknüfpungen in allen Karteikarten auszulesen 
+
+<u>**Diagnosenhotstrings:**</u>
+
+**▪ 365 Diagnosen** über **741 Abkürzungen** erreichbar<br/>
+
+<img src="Devider.svg" alt="Devider" align="center" margin="0" width="100%" />
+
+### ![Addendum-Symbol](Icons/Addendum18x18.ico) ***Addendum V2.13***  (29.10.2022)
+
+###  Infofenster 
+
+<u>**AUTONAMING**</u>
+
+▪ 	Das Autonaming von Dokumenten ist deulich verbessert.<br>
+▪ 	Den Dialog für das Umbenennen von Dokumenten erweitert, um alle notwendigen<br>	   Daten über eine Maske eingeben zu können. <br>▪ 	Eingabe von subklassifizierenden Begriffen und Phrasen erleichtert.<br>▪ 	*NEUE MENU FUNKTION*: 
+		▪ Dokumentversand an Telegram-Empfänger (muss vorher festgelegt werden. Eingerichteter Bot notwendig)
+
+-----------------------
+
+**<u>Fritz!Anrufmonitor</u>** <br>▪ 	das Tagesdatum wird angezeigt
+▪ 	gespeicherte Fritzbox Tagesprotokolle lassen sich nochmals ansehen<br>
+▪ 	Tooltips für die Anzeige von Ortsnamen oder Mobilfunkbetreibern und<br>
+▪ 	Tooltips mit Beschreibung des Anruferstatus<br>
+
+**<u>Laborabruf</u>** <br>▪ 	fängt mehr Albisdialoge ab. <br>
+▪ 	Die Wartezeit für das Laborbuch auf maximal 3 min erweitert.<br>
+
+**<u>AddendumMonitor.ahk</u>**<br>▪ 	Fehlerbehebung bei der Laufzeit Überprüfung von Addendum.<br>
+▪ 	Tray Symbole beendeter Autohotkeyskripte werden entfernt<br><br>
+**<u>AddendumStarter.ahk</u>**<br>▪ 	das Startskript für Addendum sollte jetzt auf allen Rechnern in einem Netzwerk<br>  	funktionieren. Beim Auslesen des Addendum Hauptverzeichnisses auf einem<br>      Netzwerklaufwerk wird auf manchen PC der Laufwerkspfad in einer anderen <br>	  Schreibweise zurückgegeben (Server\\....). Nach Anpassung der IniReadExt Funktion<br>	   wird diese Schreibweise nicht mehr verworfen<br>▪ 	die Ermittlung der Albis Verzeichnisse erfolgt nicht mehr aus der Addendum.ini,<br>	   da z.B. ein lokaler Arbeitspfad jederzeit  geändert werden kann (AIS Betreuer machen<br>        sowas). Das Skript liest die Daten aus der Windows Registry oder nutzt <br>		***GetAppImagePath()*** für die Lokalisation der korrekten Albis(CS).exe Datei.<br>
+
+<u>**Diagnosenhotstrings:**</u>
+
+**▪ 365 Diagnosen** über **741 Abkürzungen** erreichbar<br/>
 
 
 
@@ -24,13 +70,11 @@
 
 •	startet automatisch nach dem Einlegen und Erkennen einer DICOM-CD.<br>•	Addendum aktiviert diese Funktion nur auf PC's mit angeschlossener CD/DVD/Blueray Hardware
 
-***<u>Einstellungen</u>***:<br>•	Es kann ein individueller Name für den Stammordner der DICOM-Untersuchungen des Patienten angelegt werden. Dazu werden Werte ausgelesener XML-Tags aus der ***DICOMDIR*** Datei der CD verwendet.
+***<u>Einstellungen</u>***:<br>•	Es kann ein individueller Name für den Stammordner der DICOM-Untersuchungen des Patienten angelegt werden.<br>  	Dazu werden Werte ausgelesener XML-Tags aus der ***DICOMDIR*** Datei der CD verwendet.
 
-•	sämtliche Einstellungen sind Clientabhängig und müssen unter den jeweiligen Clientnamen (z.B. [PC Sprechzimmer1] oder [PC1]) in die Addendum.ini geschrieben werden. Dazu hinterlegen sie einen String aus XML-Tags  bei DICOMCD-CopyDirPattern.
+•	sämtliche Einstellungen sind Clientabhängig und müssen unter den jeweiligen Clientnamen (z.B. [PC Sprechzimmer1] <br>	 oder [PC1]) in die Addendum.ini geschrieben werden. Dazu hinterlegen sie einen String aus XML-Tags  bei DICOMCD-CopyDirPattern.
 
-•	Über das Skript erhalten sie keine Liste aller verfügbaren XML-Tags. Diese Tag-Namen können sie möglicherweise mit dem auf der CD enthaltenen DICOM-Viewer ansehen, ganz sicher aber mit MicroDicom ab Version 2 (Menu Tools/DicomTags). Beim Browsen können Sie oftmals das gemessene Gewicht ihres Patienten einsehen. Ein unabhängiger Meßwert den es zu wissen lohnt. <br>  [Link zum Hersteller und zum Programm: [https://www.microdicom.com]
-
-•	Sie finden dort auch eine Erweiterung für den Dateiexplorer unter Windows 
+•	Über das Skript erhalten sie keine Liste aller verfügbaren XML-Tags. Die Tag-Namen können sie möglicherweise mit<br> 	 dem auf der CD enthaltenen  DICOM-Viewer ansehen, ganz sicher aber mit MicroDicom ab Version 2 (Menu Tools/DicomTags)<br>. 	[Link zum Hersteller und zum Programm: [https://www.microdicom.com]
 
 ***<u>Addendum.ini</u>***
 
@@ -46,25 +90,39 @@ Einträge für individuelle benannte Patienten Stammordner (mit Beispiel):
 
 <img src="ini3.svg" alt="ini3" align="left" width="50%" />
 
+---------------
+
+**<u>Abrechnungsassistent</u>** <br>*Optische Verbesserungen*<br>⬝	Bei ausreichend großer Monitorauflösung (>1920 Pixel horizontal) können Albis und der <br>  	Abrechnungsassistent nebeneinander so ausgerichtet werden, das sie sich die Monitorfläche<br>  	gut teilen. Es muss deshalb nicht zwischen den Fenstern hin- und her geschaltet werden.
+
 ------
 
-**Abrechnungsassistent**:	<u>Optische Verbesserungen</u><br> ⬝	Bei ausreichend großer Monitorauflösung (>1920 Pixel horizontal) können Albis und der Abrechnungsassistent nebeneinander so ausgerichtet werden das sie sich die Monitorfläche gut teilen. Es muss deshalb nicht zwischen den Fenstern hin- und her geschaltet werden.
+**<u>Chronikerpauschale</u>**:<br>⬝	Findet neue Patienten mit chronischen Krankheiten über eingetragene Quartalsdiagnosen</u>.<br>⬝	Findet deshalb auch Pat., welche bisher nicht als Chroniker erkannt/markiert wurden. <br>      Schlägt bei diesen Abrechnung der Chronikerpauschalen  03220 und/oder 03221 vor.<br>⬝	in Vorbereitung sind Funktionen für die erweiterte Auswertung und Fehlersuche für die Abrechnung.<br>⬝	findet abgerechnete Hautkrebsscreening Untersuchungen ohne angelegtes elektronisches Formular und umgekehrt
 
-**Chronikerpauschale**: <u>findet neue Patienten mit chronischen Krankheiten über eingetragene Quartalsdiagnosen</u>. <br>⬝	Findet deshalb auch Pat., welche bisher nicht als Chroniker erkannt/markiert wurden. <br>      Schlägt bei diesen Abrechnung der Chronikerpauschalen  03220 und/oder 03221 vor.<br>⬝	in Vorbereitung sind Funktionen für die erweiterte Auswertung und Fehlersuche für die Abrechnung.<br>⬝	findet abgerechnete Hautkrebsscreening Untersuchungen ohne angelegtes elektronisches Formular oder umgekehrt
+------------
 
-**Infofenster**:  <u>optische Korrekturen</u><br>⬝	Schriftgrößen werden jetzt hoffentlich auf verschiedenen Windowsumgebungen korrekt verwendet. Vermutlich hat Windows nicht überall die abgeschaltete automatische DPI-Skalierung erkannt.
+**<u>Infofenster</u>**: <br>*optische Korrekturen*<br>⬝	Schriftgrößen werden jetzt hoffentlich auf verschiedenen Windowsumgebungen korrekt verwendet. <br>  	Vermutlich hat Windows nicht überall die  abgeschaltete automatische DPI-Skalierung erkannt.	
 
-**Gesundheitsvorsorge**:  <u>„lko | GVU” erstellt Hautkrebsscreening Formular und Abrechnungsziffern</u>
+--------
 
-**Dauerdiagnosen**:  Fensterbreite wird automatisch angepasst so das der gesamte Diagnosentext sichtbar wird
+**<u>Gesundheitsvorsorge</u>**: <br>⬝	„**lko** | **GVU**” erstellt Hautkrebsscreening Formular und Abrechnungsziffern
 
-**Copy/Paste Diagnosen**: <u>Kontextbezogene Diagnosenformatierung</u><br>Diagnosen, die mit Strg+C in die Zwischenablage, z.B. aus einer PDF-Datei, kopiert wurden, werden vom Skript beim Einfügen nach dem Kürzel "dia" in das von Albis als Diagnosentext verstandene Format konvertiert.
+----------
+
+**<u>Dauerdiagnosen</u>**:  <br>⬝	Fensterbreite wird automatisch angepasst so das der gesamte Diagnosentext sichtbar wird
+
+-------
+
+**<u>Copy/Paste Diagnosen</u>**: <br>*Kontextbezogene Diagnosenformatierung*<br>Diagnosen, die mit Strg+C in die Zwischenablage, z.B. aus einer PDF-Datei, kopiert wurden, werden vom Skript beim Einfügen nach dem Kürzel "dia" in das von Albis als Diagnosentext verstandene Format konvertiert.
 
 ![](ICDkonvAlbis.svg)
 
-📝 oder aus "**Hypertonus Stadium I nach WHO (I10.90G)**" wird "**Hypertonus Stadium I nach WHO {I10.90G}; **"<br>⬝	reine Diagnosentexte (ohne ICD-Code) werden nicht erkannt<br>⬝	die Ausgabe im Albisformat erfolgt beim Einfügen über Strg+v, der Inhalt des Clipboards wird dabei nicht verändert. <br>📝 **Diagnosenhotstrings**⬝ Diagnosen an ICD-10-2022-GM angepasst. Weitere Kürzel und Diagnosen hinzugefügt. (Aktuell sind **326 Diagnosen** über **635 Abkürzungen** erreichbar<br/> <![Addendum-Symbol](Icons/Addendum18x18.ico) **Addendum V2.06**><br>
+📝 oder aus "***Hypertonus Stadium I nach WHO (I10.90G)***" wird "***Hypertonus Stadium I nach WHO {I10.90G};* **"<br>⬝	reine Diagnosentexte (ohne ICD-Code) werden nicht erkannt<br>⬝	die Ausgabe im Albisformat erfolgt beim Einfügen über Strg+v, der Inhalt des Clipboards wird dabei nicht verändert. <br>📝 **Diagnosenhotstrings**<br>⬝ 	Diagnosen an ICD-10-2022-GM angepasst. Weitere Kürzel und Diagnosen hinzugefügt.  <br>⬝ 	Aktuell sind **326 Diagnosen** über **635 Abkürzungen** erreichbar<br/>⫷![Addendum-Symbol](Icons/Addendum18x18.ico)**DDENDUM V2.06**⫸
 
-▪ **AutoClose-Timeout**<br>⬝	das automatische Schließen des EBM/KRW Hinweis Fensters (Regelprüfung) läßt sich über das Traymenu an- oder abschalten.<br/>⬝	Die Zeit bis zum Schließen der Hinweisfensters läßt sich individuell für jeden Client über einen weiteren Punkt im Traymenu festlegen.
+------------
+
+▪ **<u>AutoClose-Timeout:</u>**<br>⬝	das automatische Schließen des EBM/KRW Hinweis Fensters (Regelprüfung) läßt sich über das Traymenu an- oder abschalten.<br/>⬝	Die Zeit bis zum Schließen der Hinweisfensters läßt sich individuell für jeden Client über einen weiteren Punkt im Traymenu festlegen.
+
+
 
 <img src="Devider.svg" alt="Devider" align="center" margin="0" width="100%" />
 

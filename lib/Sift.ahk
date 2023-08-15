@@ -80,6 +80,8 @@ return Sifted
 ;{ ============================================================================================
 ; Sift_Ngram(Haystack, Needle, Delta, Haystack_Matrix, Ngram Size, Format)
 ;
+;	modificated for Addendum für Albis on Windows
+;
 ;	Parameters:
 ;	1) {Haystack}				String or array of information to search, ByRef for efficiency but Haystack is not changed by function
 ;   2) {Needle}					String providing search text or criteria, ByRef for efficiency but Needle is not changed by function
@@ -97,6 +99,7 @@ return Sifted
 ;										S%%%			Return Sorted string delimited by characters after S
 ;										U%%%			Return Unsorted string delimited by characters after U
 ;															Sorted results are by best match first
+;	7) (Haystack_Ref)			indexed array for referencing the matched data
 ;
 ;	Returns:
 ;		A string or array depending on Format parameter.
@@ -116,7 +119,7 @@ return Sifted
 ;
 ; ============================================================================================;}
 
-Sift_Ngram(ByRef Haystack, ByRef Needle, Delta := .7, ByRef Haystack_Matrix := false, n := 3, Format := "S`n" ) {
+Sift_Ngram(ByRef Haystack, ByRef Needle, Delta := .7, ByRef Haystack_Matrix := false, n := 3, Format := "S`n" , Haystack_Ref := "") {
 
 	Search_Results := Object()
 
@@ -128,21 +131,32 @@ Sift_Ngram(ByRef Haystack, ByRef Needle, Delta := .7, ByRef Haystack_Matrix := f
 	if IsObject(Haystack)	{
 		For key, Hay_Ngram in Haystack_Matrix		{
 			Result := Sift_Ngram_Compare(Hay_Ngram, Needle_Ngram)
-			if !(Result < Delta)
-				Search_Results[key,"Delta"] := Result, Search_Results[key,"Data"] := Haystack[key]
+			if !(Result < Delta) {
+				Search_Results[key,"Delta"] := Result
+				Search_Results[key,"Data"] := Haystack[key]
+				If IsObject(Haystack_Ref)
+					Search_Results[key,"Ref"] := Haystack_Ref[key]
+			}
 		}
 	}
 	else	{
 		Loop, Parse, Haystack, `n, `r
 		{
 			Result := Sift_Ngram_Compare(Haystack_Matrix[A_Index], Needle_Ngram)
-			if !(Result < Delta)
-				Search_Results[A_Index,"Delta"] := Result, Search_Results[A_Index,"Data"] := A_LoopField
+			if !(Result < Delta) {
+				Search_Results[A_Index,"Delta"]	:= Result
+				Search_Results[A_Index,"Data"] 	:= A_LoopField
+				If IsObject(Haystack_Ref)
+					Search_Results[A_Index,"Ref"]	:= Haystack_Ref[A_Index]
+			}
 		}
 	}
 
 	if (Format ~= "i)^S")
 		Sift_SortResults(Search_Results)
+
+	;~ If (Search_Results.Count() > 0)
+		;~ SciTEOutput(A_ThisFunc ": [" Needle "] " cJSON.Dump(Search_Results, 1))
 
 	if RegExMatch(Format, "i)^(S|U)(.+)$", Match)	{
 		For key, element in Search_Results
@@ -155,9 +169,12 @@ Sift_Ngram(ByRef Haystack, ByRef Needle, Delta := .7, ByRef Haystack_Matrix := f
 }
 
 Sift_Ngram_Get(ByRef String, n := 3) {
+	xString := RegExReplace(String, "[^\pL\s\-]" 	, " ")
+	xString := RegExReplace(xString, "\s{2,}" 	, " ")
 	Pos := 1, Grams := {}
-	Loop, % (1 + StrLen(String) - n)
-		gram := SubStr(String, A_Index, n), Grams[gram] ? Grams[gram] ++ : Grams[gram] := 1
+	For each, yString in StrSplit(xString, " ")
+		Loop, % (1 + StrLen(yString) - n)
+			gram := SubStr(yString, A_Index, n), Grams[gram] ? Grams[gram] ++ : Grams[gram] := 1
 return Grams
 }
 
@@ -177,6 +194,9 @@ Sift_Ngram_Matrix(ByRef Data, n := 3) {
 	else
 		Loop, Parse, Data, `n
 			Matrix.Insert(Sift_Ngram_Get(A_LoopField, n))
+
+	 ;~ SciTEOutput(A_ThisFunc ": [" Needle "] " cJSON.Dump(Matrix, 1))
+
 return Matrix
 }
 

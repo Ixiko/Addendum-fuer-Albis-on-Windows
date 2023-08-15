@@ -13,16 +13,18 @@
 		*					Innerhalb des Textes vergrößert #2 die Schriftgröße um 2 Punkte usw.                                      	(neu seit d. 18.05.2019)
 		*					ein #-2 verkleinert die Schriftgröße um 2 Punkte                                                                        	(neu seit d. 15.10.2020)
 		*
-		*	changes: 	01.06.2019	- Funktion gibt die Anzahl der Textzeilen der Gui zurück, damit können die Textzeilen später geändert werden ohne eine neue Gui erstellen zu müssen
-		*	             	11.06.2019	- Timer wird bei erneutem Funktionsaufruf beendet um das Schließen einer neuen Gui während des Aufbaus zu verhindern
-		*	             	18.06.2020	- Params kann jetzt ein Objekt sein (noch nicht vollständig umgesetzt!).
-		*                                   	   Beispiel: PraxTT("Textnachricht", {timeout:3, zoom:0, position:"Bottom", parent:"ahk_class OptoAppClass"} - OptoAppClass ist das Albisfenster
-		*                                    	- der ToolTip wird standardmäßig innerhalb des Albisfenster eingeblendet
-		*					15.02.2021	- Performanceverbesserungen, Code gekürzt
-		*					15.06.2021	- Performanceverbesserungen, Code gekürzt, mehr Kommentare
-		*					07.11.2021	- Text der in geschweiften Klammern {} gepackt wurde, wird für den Titel verwendet z.B. "{WARNUNG: Einstellungen fehlen}`n"
-		*                                      	   ergibt als Titel:                 WARNUNG: Einstellungen fehlen [Addendum]
-		*					13.09.2022	- Code effizienter gemacht
+		*	changes: 	01.06.2019	- 	Funktion gibt die Anzahl der Textzeilen der Gui zurück, damit können die Textzeilen später geändert werden
+		*  											ohne eine neue Gui erstellen zu müssen
+		*	             	11.06.2019	- 	Timer wird bei erneutem Funktionsaufruf beendet um das Schließen einer neuen Gui während des Aufbaus zu verhindern
+		*	             	18.06.2020	- 	Params kann jetzt ein Objekt sein (noch nicht vollständig umgesetzt!).
+		*                                   	   	Beispiel: PraxTT("Textnachricht", {timeout:3, zoom:0, position:"Bottom",
+		*											parent:"ahk_class OptoAppClass"} - OptoAppClass ist das Albisfenster
+		*                                    	- 	der ToolTip wird standardmäßig innerhalb des Albisfenster eingeblendet
+		*					15.02.2021	- 	Performanceverbesserungen, Code gekürzt
+		*					15.06.2021	- 	Performanceverbesserungen, Code gekürzt, mehr Kommentare
+		*					07.11.2021	- 	Text der in geschweiften Klammern {} gepackt wurde, wird für den Titel verwendet z.B. "{WARNUNG: Einstellungen fehlen}`n"
+		*                                      	   	ergibt als Titel:                 WARNUNG: Einstellungen fehlen [Addendum]
+		*					13.09.2022	- 	Code effizienter gemacht
 		*
 	   *
 	*/
@@ -167,7 +169,7 @@
 		}
 
 		Gui, PraxTT: Add, Text 	, % "x" MrgX " y+" cFontSize/4 " BackgroundTrans", % " "
-		Gui, PraxTT: Show     	, % "AutoSize Center NoActivate NA Hide"
+		Gui, PraxTT: Show     	, % "AutoSize Center NA Hide"
 
 	  ; Zentrieren des Textes
 		Prax       	:= GetWindowSpot(PraxTThGui)
@@ -207,7 +209,7 @@
 		GuiControl, MoveDraw, % hProgress  	, % "w" (Prax.CW + MrgX) " h" ( TitleH + 3 )
 
 	  ; Einblenden mit Animation wenn keine Teamviewerverbindung besteht
-		Gui, PraxTT: Show, % "AutoSize NoActivate NA", % "PraxTT-Info"
+		Gui, PraxTT: Show, % "AutoSize NA", % "PraxTT-Info"
 
 		If Addendum.PraxTTDebug
 			SciTEOutput("PraxTT: " StrReplace(TextMsg, "`n", " | "))
@@ -239,7 +241,7 @@ return
 ;}
 }
 
-OSDTIP_Pop(P*) {                                                                                                       	;-- OSDTIP_Pop v0.55 by SKAN on D361/D36E @ tiny.cc/osdtip
+OSDTIP_Pop(P*) {                                                                                                     	;-- OSDTIP_Pop v0.55 by SKAN on D361/D36E @ tiny.cc/osdtip
 Local
 Static FN:="", ID:=0, PM:="", PS:=""
 

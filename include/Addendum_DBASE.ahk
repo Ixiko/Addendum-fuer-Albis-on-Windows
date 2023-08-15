@@ -32,7 +32,7 @@
 ;										Auch wenn ich diese Klassenbibliothek regelmäßig verwende, gehen Sie dennoch davon aus das ich nicht
 ;										alle Fehler erzeugen und damit auch finden kann!
 ;
-;       Abhängigkeiten   		\lib\[SciteOutPut, class_JSON]
+;       Abhängigkeiten   		\lib\[SciteOutPut, class_cJSON]
 ;
 ;	    Addendum für Albis on Windows by Ixiko started in September 2017 - this file runs under Lexiko's GNU Licence
 ;       Addendum_DBASE begonnen am:          	12.11.2020
@@ -56,10 +56,10 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 				SplitPath, filepath,,dBASEPath,, baseName
 
 				this.headerrecordgap	:= 0                                            	; one byte after DBF Header, purpose?
-				this.baseName           	:= baseName
 				this.filepath                	:= filepath
+				this.baseName           	:= baseName
 				this.dBASEPath             	:= dBASEPath
-				this.encoding            	:= "CP1252"                             	; main encoding is ASCII CP1252
+				this.encoding             	:= "CP1252"                             	; main encoding is ASCII CP1252
 				this.debug                    	:= debug
 				this.debugGui           	:= debugGui
 				this.nofileaccess         	:= false
@@ -268,7 +268,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 					t .= " Number of Fields:`t"    	this.NrFields                          	"`n"
 					t .= x
 					t .= " ----------------------------------------------------------------"
-					SciTEOutput(t)
+					;~ SciTEOutput(t)
 				}
 			;}
 
@@ -371,12 +371,11 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 		; Initializing vars, examining options ;{
 			static rxStr   ; recordbuf
 			VarSetCapacity(recordbuf	, this.lendataset, 0x20)
-			;~ VarSetCapacity(matches	, this.maxBytes)
 			matches             	:= Object()                                 	; collects the findings
 			this.flagged       	:= 0
-			this.hits              	:= 0
+			this.hits              	:= !this.uselastRxStr ? 0 : this.hits
 			this.uselastRxStr 	:= false
-			this.callbackFunc 	:= Func(callbackFunc)
+			this.callbackFunc 	:= isFunc(callbackFunc) ? Func(callbackFunc) : ""
 			this.breakrec 		:= "#"                                       	; this variable is used to help external processing of data
 
 		  ; checks opt parameters (opt is made for debugging)
@@ -385,7 +384,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 				If opt.SaveMatchingSets {
 					path := opt.MSetsPath
 					SplitPath, path, MSetfilename, MSetDir
-					If !InStr(MSetDir, "D")
+					If !InStr(FileExist(MSetDir), "D")
 						throw A_ThisFunc ": " MSetDir "\ is not a directory."
 					else
 						MSets := FileOpen(opt.MSetsPath, "w", "UTF-8")
@@ -394,17 +393,27 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 				If !opt.haskey("ReturnDeleted")
 					opt.ReturnDeleted := false
 
+				If opt.dateRange {
+					If RegExMatch(opt.dateRange, "(?<if>\<|\>)*\s*(?<DD1>\d{1,2})\.(?<MM1>\d{1,2})\.(?<YY1>\d{2,4})\s*\-*\s*((?<DD2>\d{1,2})\.(?<MM2>\d{1,2})\.(?<YY2>\d{2,4}))*", _) {
+						opt.DateField	:= !opt.DateField ? "DATUM" : opt.DateField
+						DFieldStart    	:= this.dbfields[opt.DateField].Start
+						DFieldLen     	:= this.dbfields[opt.DateField].Len
+						opt.FilterByDate	:= {"mode" 	: (_if = "<" ? 1 : _if = ">" ? 2 : 3)
+													, "date1" 	: _YY1 _MM1 _DD1
+													, "date2"	: _YY2 _MM2 _DD2 }
+					; for debugging
+						If (RegExMatch(this.debug, "i)\bRxStr\b") || opt.debug&0x1)
+							SciTEOutput(A_ThisFunc " - opt.dateRange: `nDFieldStart: " DFieldStart ", Length: " DFieldLen "`n" opt.FilterByDate.Mode ", " opt.FilterByDate.date1 ", " opt.FilterByDate.date2)
+
+
+					}
+				}
+
 			}
 
 		;}
 
-		; Establish read access if not already done
-			If !IsObject(this.dbf) {
-				this.nofileaccess := true
-				this.filepos := this.OpenDBF()
-			}
-
-		; builds a regex string, regex string can be re used by command
+	; builds a regex string, regex string can be re used by command
 			If IsObject(pattern) && !this.uselastRxStr {
 
 			; build regexstring routine
@@ -416,7 +425,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 						if (rxPre > 0)
 							rxStr .= ".{" rxPre "}", rxPre := 0
 
-						If !RegExMatch(pattern[field.label], "i)^\s*rx\:") {
+						If !(pattern[field.label] ~= "i)^\s*rx\:") {
 
 							If (field.type = "D")
 								rxStr .= "\s*{" (field.len - StrLen(pattern[field.label])) "}" pattern[field.label]
@@ -478,7 +487,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 			}
 
 		; search loop
-			while (!this.dbf.AtEOF) {
+			while !this.dbf.AtEOF {
 
 			; reads a data set raw mode and converts it to a readable text format
 				bytes	:= this.dbf.RawRead(recordbuf, this.lendataset)
@@ -486,10 +495,26 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 			; debugging and callback function to show progress
 				If (Mod(setNR := A_Index, this.ShowAt) = 0) {
+					If IsFunc(callbackFunc)
+						%callbackFunc%(A_ThisFunc, setNR, this.records, this.slen, matches.Count())
 					If (this.debug = 1 || opt.debug&0x1)
 						ToolTip, % "Search rx: " rxStr "`n" SubStr("00000000" A_Index, this.slen) "/" SubStr("00000000" this.records, this.slen)
-					If (StrLen(callbackFunc) > 0)
-						%callbackFunc%(setNR, this.records, this.slen, matches.MaxIndex())
+				}
+
+			; datefiltering
+				If IsObject(opt.FilterByDate) {
+					dateToMatch := SubStr(set, this.dbfields[opt.DateField].Start, this.dbfields[opt.DateField].Len)
+					Switch opt.FilterByDate.Mode {
+						Case "1":
+							If (dateToMatch > opt.FilterByDate.date1)
+								continue
+						Case "2":
+							If (dateToMatch < opt.FilterByDate.date1)
+								continue
+						Case "2":
+							If (dateToMatch < opt.FilterByDate.date1 || dateToMatch > opt.FilterByDate.date2)
+								continue
+					}
 				}
 
 			; no match - continue
@@ -553,8 +578,8 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 		; end debug and last call the callback function
 			ToolTip
-			If (StrLen(callbackFunc) > 0)
-				%callbackFunc%(setNR, this.records, this.slen, matches.MaxIndex())
+			If IsFunc(callbackFunc)
+				%callbackFunc%(sA_ThisFunc, setNR, this.records, this.slen, matches.Count())
 
 			VarSetCapacity(recordbuf, 0)
 
@@ -719,22 +744,33 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 	  ; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 	  ; SIMPLE STRING COMPARE. 					| FOR FAST RESULTS
 	  ; ----------------------------------------------------------------------------------------------------------------------------------------------------------------
-		SearchFast(pattern, outfields, startrecord=0, options="", callbackFunc="") {
+		SearchFast(spattern, outfields, startrecord=0, options="", callbackFunc="") {
 
 			; Instr() - based comparison
-			; comparison is possible for dates with ranges, for everything else comparison will use Instr() operation. One date can be compared with another
-			; by only showing the dates that are greater, less or equal. This also works with pure numerical values.
+			; comparison is possible for dates with ranges, for everything else comparison will use Instr() operation.
+			; One date can be compared with another by only showing the dates that are greater, less or equal.
+			; This also works with pure numerical values.
+			;
+			; Options are:
+			;
+			;  	.LogicalComparison 	    	- only "and" can be choosed away from default "or"
+			; 	return_Deleted_Records 	- returns also data from deleted recordsets
+			; 	next                              	- to go to the next record after recalling this method
 
 				static recordpos  ; recordbuf
 
-				If !IsObject(pattern)
+				If !IsObject(spattern)
 					throw "Parameter: pattern must be an object"
+
+				pattern := Object()
+				For fLabel, val in spattern
+					If IsObject(this.dbfields[fLabel])
+						pattern[fLabel] := [Trim(val), (Trim(val) ~="^\d+$" ? 1 : 0), StrLen(Trim(val))]  ; Zahlen werden markiert
+
+				;~ SciTEOutput(A_ThisFunc "() |spattern: " cJSON.Dump(spattern,1) "`npattern: " cJSON.sump(pattern,1))
 
 			; processed only on first start or other option than "next"
 				If !RegExMatch(options, "i)\bnext\b") {
-
-					; initialize some vars
-						;~ VarSetCapacity(matches 	, this.maxBytes)
 
 					; establish read access if not already done
 						If !IsObject(this.dbf) {
@@ -747,10 +783,14 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 						If !IsObject(outfields) && RegExMatch(outfields, "all fields")
 							outfields := ""
 						this.retSubs := this.BuildSubstringData(outfields)
+
 				}
 
 			; more options
-				andlogic := options.LogicalComparison = "and" ? true : false
+				andlogic := options ~= "i)LogicalComparison\s*=\s*\band\b"   	? true : false
+
+			; noregex match
+				userxm	:= optioms ~= "i)useRegExMatch\s*=\s*\b(true|1)\b"	    	? true : false
 
 			; return data sets with delete flag, default is false
 				ReturnDeleted := RegExMatch(options, "i)return_Deleted_Records") ? true : false
@@ -767,15 +807,15 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 			; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 			; search loop
 				this.foundrecord := 0, this.hits := 0, matches := Array()
-				while (!this.dbf.AtEOF) {
+				while !this.dbf.AtEOF {
 
 					; debug some actions
 						this.recordpos := StartRecord + A_Index
 						If (Mod(setNR := A_Index, this.ShowAt) = 0) {
 							If (this.debug = 1)
 								ToolTip, % "Search rx: " rxStr "`n" SubStr("00000000" A_Index, this.slen) "/" SubStr("00000000" this.records, this.slen)
-							else if callbackFunc
-								%callbackFunc%(setNR, this.records, this.slen, matches.MaxIndex())
+							else if IsFunc(callbackFunc)
+								%callbackFunc%(A_ThisFunc, setNR, this.records, this.slen, matches.Count())
 						}
 
 					; reads one dataset from database
@@ -790,14 +830,15 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 					; compare pattern field condition with dataset
 						hits := 0
-						For fLabel, searchString in pattern {
-							val := Trim(SubStr(set, this.dbfields[fLabel].start, this.dbfields[fLabel].len))
-							If (val = searchString || RegExMatch(val, searchString)) {
-								hits ++
-								this.filepos_found 	:= this.dbf.Tell()
-								this.foundrecord 	:= this.recordpos
+						For fLabel, sStr in pattern {
+								val := Trim(SubStr(set, this.dbfields[fLabel].start, this.dbfields[fLabel].len))
+								If 	(sStr.2 && StrLen(val)=StrLen(sStr.1) && (val-sStr.1=0 ||  RegExMatch(val, "^" sStr "$")))
+								||	(!sStr.2 && (val=sStr.1 || RegExMatch(val, sStr))) {
+									hits ++
+									this.filepos_found 	:= this.dbf.Tell()
+									this.foundrecord 	:= this.recordpos
+								}
 							}
-						}
 
 						If (!andlogic && hits > 0) || (andlogic && hits = pattern.Count()) {
 							matches.Push(this.GetSubData(set, this.retSubs))
@@ -1096,9 +1137,9 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 					ReIndex := true, startrecord := 0, startfilepos := 0, iFile := Object()
 				} else {
 					iFile := cJSON.Load(FileOpen(indexFilePath, "r", "UTF-8").Read())
-					For quarter, StartRecord in iFile
+					For quarter, startrecord in iFile
 						continue
-					startfilepos := this._GetFilePosFromRecord(StartRecord)
+					startfilepos := this._GetFilePosFromRecord(startrecord)
 				}
 
 			; Establish read access if not already done
@@ -1109,7 +1150,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 			; indexing is only possible for one condition
 				FStart	:= this.dbfields[IndexField].start
-				FStart 	:= RegExMatch(this.baseName, "(BEFGONR|KSCHEIN|LABBUCH)") ? FStart+1 : FStart      ; das Lösch byte befindet sich am Anfang jedes Datensatzes
+				FStart 	:= RegExMatch(this.baseName, "(BEFGONR|KSCHEIN|LABBUCH)") ? FStart+1 : FStart      ; das Lösch-Byte befindet sich am Anfang jedes Datensatzes
 				FLen 	:= this.dbfields[IndexField].len
 				KeyN	:= "QNow"
 				If (!FStart || !FLen)
@@ -1128,7 +1169,6 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 					; reads a data set raw mode and converts it to a readable text format
 						bytes	:= this.dbf.RawRead(recordbuf, this.lendataset)
 						set 	:= StrGet(&recordbuf, this.lendataset, this.encoding)
-						;~ set	:= SubStr(set, 2, StrLen(set)-1)                      ; deletes remove flag from set
 						val   	:= SubStr(set, FStart, FLen)
 
 					; mode driven indexing, calculates dates to quarter
@@ -1150,6 +1190,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 							}
 						}
 
+					; continue if anything matches
 						If (indexKey = 0 || StrLen(indexKey) = 0 || indexKey_old = indexKey)
 							continue
 						indexKey_old := indexKey
@@ -1159,7 +1200,7 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 							iFile[indexKey] := [this._GetRecordFromFilepos(this.dbf.Tell())-1 , this.dbf.Tell()] 	   ; recordnr-1, filepointer position
 							If RegExMatch(this.debug, "^(1|4)$") {
 								thispos := SubStr("00000000" A_Index + StartRecord, this.slen)
-								SciTEOutput(KeyN	": " indexKey ", Pos: " iFile[indexKey].1 "/" maxRecs " #" SubStr(set, 1, 20))
+								;~ SciTEOutput(KeyN	": " indexKey ", Pos: " iFile[indexKey].1 "/" maxRecs " #" SubStr(set, 1, 20))
 							}
 						}
 				}
@@ -1173,7 +1214,8 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 				VarSetCapacity(recordbuf, 0)
 
 			; save index as json string
-				JSONData.Save(indexFilePath, iFile, true,, 1, "UTF-8")
+				FileOpen(indexFilePath, "w", "UTF-8").Write(cJSON.Dump(iFile, 1))
+				;~ JSONData.Save(indexFilePath, iFile, true,, 1, "UTF-8")
 
 		return iFile
 		}
@@ -1185,15 +1227,15 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 	; ⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌⚌;{
 
 	  ; --------------------------------------------------------------------------------------------------------------------------------------------------------
-	  ; creates an array with data for substring function to examine only certain fields. This restriction is essential for a faster search.
+	  ; creates an array with field names for substring function to examine only certain fields. This restriction is essential for a faster search.
 	  ; --------------------------------------------------------------------------------------------------------------------------------------------------------
 		BuildSubstringData(getfields) {
 
 			subs := Object()
 			If IsObject(getfields) {    ; specified fields
 
-				For FieldNr, fLabel in getfields
-					For FieldsIndex, field in this.fields
+				For each, fLabel in getfields
+					For fieldsIndex, field in this.fields
 						If (fLabel = field.Label) {
 							subs.Push({"label":field.label, "type":field.type, "start":field.start, "len":field.len})
 							break
@@ -1201,10 +1243,10 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 
 			} else {                        ; all fields
 
-				For FieldsIndex, field in this.fields {
+				For fieldsIndex, field in this.fields {
 					subs.Push({"label":field.label, "type":field.type, "start":field.start, "len":field.len})
 					If (this.debug > 2)
-						SciTEOutput(" [" FieldsIndex "] " "label:" field.label ",type:" field.type ",start:" field.start ",len:" field.len)
+						SciTEOutput(" [" fieldsIndex "] " "label:" field.label ",type:" field.type ",start:" field.start ",len:" field.len)
 				}
 
 			}
@@ -1213,16 +1255,16 @@ class dBASE {  ; native DBASE Klasse nur für Albis .dbf Files
 		}
 
 	  ; --------------------------------------------------------------------------------------------------------------------------------------------------------
-	  ; builds an object containing only fields and values that are specified by BuildSubstringData() function
+	  ; builds an object containing only with fields and values that are specified by BuildSubstringData() function
 	  ; --------------------------------------------------------------------------------------------------------------------------------------------------------
 		GetSubData(DataSet, SubstringData) {
 
 			; this function is mostly used to reduce the size of data returned
 
 			strobj := Object()
-			strobj["removed"]	:= InStr(SubStr(DataSet, -1), "*") || InStr(SubStr(DataSet, 1, 1), "*" ) ? true : false         	; Dataset ist removed?
-			strobj["recordnr"]	:= Floor((this.dbf.Tell() - this.recordsStart) / this.lendataset)                       	; saves the number of record
-			For index, substring in SubstringData
+			strobj["removed"]	:= InStr(SubStr(DataSet, -1), "*") || InStr(SubStr(DataSet, 1, 1), "*" ) ? true : false         	; Dataset is removed?
+			strobj["recordnr"]	:= Floor((this.dbf.Tell() - this.recordsStart) / this.lendataset)                                     	; saves the number of record
+			For each, substring in SubstringData
 				strobj[substring.label] := Trim(SubStr(DataSet, substring.start + (removed ? 1 : 0), substring.len))
 
 		return strobj

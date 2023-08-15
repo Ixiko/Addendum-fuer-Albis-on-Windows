@@ -319,12 +319,28 @@ AlbisAbsturzberichtSenden(params*)                     	{
 						, "DSVGO"       	: "static8"
 						, "Bemerkung"  	: "Edit1"}
 
-	hWin     	:= params.1
-	crashtime	:=params.2
-	idletime	:=params.3
+	hwin 		:= param.1 ? param.1 : WinExist("ALBIS\(TM\) ahk_class #32770 ahk_exe AoWDump2.exe")
+	crashtime	:= params.2
+	idletime	:= params.3
 
-	ControlSetText, % crashsend.Bemerkung, % aabProps.remark, % "ahk_id " hWin
+	;~ ControlSetText, % crashsend.Bemerkung, % aabProps.remark, % "ahk_id " hWin
+	VerifiedCheck(crashsend.starten,,, hWin, 1)
+	VerifiedCheck(crashsend.anonym,,, hWin, 0)
+	If !VerifiedClick(crashsend.beenden,,, hWin, 2)
+		VerifiedClick("&Beenden",,, hWin, 2)
 
+	WinWait, % "AoWDump2 ahk_class #32770 ahk_exe AoWDump2.exe",, 3
+	If !VerifiedClick("OK" ,"AoWDump2 ahk_class #32770 ahk_exe AoWDump2.exe",,, 2)
+		VerifiedClick("Button1" ,"AoWDump2 ahk_class #32770 ahk_exe AoWDump2.exe",,, 2)
+	WinWaitClose, % "AoWDump2 ahk_class #32770 ahk_exe AoWDump2.exe",, 3
+	WinWait, % "ALBIS ahk_class #32770", % "Online\-Update", 3
+	If (hUpdate := WinExist("ALBIS ahk_class #32770", "Online\-Update")) {
+		If !VerifiedClick("Nein",,, hUpdate, 2)
+			VerifiedClick("Button2",,, hUpdate, 2)
+		WinWaitClose, % "ALBIS ahk_class #32770", % "Online\-Update", 3
+	}
+
+ExitApp
 
 }
 

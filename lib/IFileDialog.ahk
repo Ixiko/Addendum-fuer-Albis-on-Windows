@@ -1,7 +1,4 @@
-﻿#NoEnv
-
-
-IFileDialogEvents_new(){
+﻿IFileDialogEvents_new(){
 
 	vtbl := IFileDialogEvents_Vtbl()
 	; VarSetCapacity apparently tries to emulate the peculiarities of stack allocation so use GlobalAlloc here
@@ -128,9 +125,9 @@ SelectFolder(fde:=0, initFolder:="") {
    ; IShellItem         -> msdn.microsoft.com/en-us/library/bb761140%28v=vs.85%29.aspx
 
    Static OsVersion 	:= DllCall("GetVersion", "UChar")
-   Static Show          	:= A_PtrSize * 3
+   Static Show       	:= A_PtrSize * 3
    Static SetOptions	:= A_PtrSize * 9
-   Static GetResult    	:= A_PtrSize * 20
+   Static GetResult  	:= A_PtrSize * 20
    SelectedFolder    	:= initFolder
 
    If (OsVersion < 6) { ; IFileDialog requires Win Vista+
@@ -165,8 +162,3 @@ SelectFolder(fde:=0, initFolder:="") {
 
 Return SelectedFolder
 }
-
-;~ if ((fde := IFileDialogEvents_new())) {
-	;~ MsgBox % SelectFolder(fde)
-	;~ ObjRelease(fde)
-;~ }

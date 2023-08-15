@@ -18,7 +18,7 @@
 ;		Abhängigkeiten:	⚬	siehe includes
 ;
 ;	                    			Addendum für Albis on Windows
-;                        			by Ixiko started in September 2017 - last change 02.07.2022 - this file runs under Lexiko's GNU Licence
+;                        			by Ixiko started in September 2017 - last change 03.07.2023 - this file runs under Lexiko's GNU Licence
 ; ＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿
 ; ￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣
 ; weitere Regeln: 	ICD T14.x -> Wundversorgung
@@ -41,7 +41,7 @@
 	DetectHiddenText          	, On
 	DetectHiddenWindows    	, On
 
-	ListLines                        	, On
+	ListLines                        	, Off
 
 	cJSON.EscapeUnicode   	:= "UTF-8"
 
@@ -95,19 +95,19 @@
 	Addendum.ChangeCave 	:= IniReadExt("Abrechnungshelfer", "Abrechnungsassistent_CaveBearbeiten"	, "Nein")
 	Addendum.letztesQuartal 	:= LTrim(IniReadExt("Abrechnungshelfer", "Abrechnungsassistent_letztesArbeitsquartal"), "0")
 	Addendum.abrOnTop    	:= IniReadExt(Addendum.compname "Abrechnungsassistent_AlwaysOnTop", "Nein")
-	SciTEOutput(Addendum.compname ", " Addendum.abrOnTop)
+	;~ SciTEOutput(Addendum.compname ", " Addendum.abrOnTop)
 	Addendum.abrOnTop     	:= InStr(Addendum.abrOntop, "ERROR") ? false : true
 	Addendum.abrOnPos    	:= IniReadExt(Addendum.compname "Abrechnungsassistent_TilingModus", "F")
-	SciTEOutput(Addendum.abrOnPos)
+	;~ SciTEOutput(Addendum.abrOnPos)
 	Addendum.abrOnPos     	:= InStr(Addendum.abrOnPos, "ERROR") ? "F" : Addendum.abrOnPos
 	Addendum.KeinBMP       	:= IniReadExt("Addendum", "KeinBMP", "Ja")
 	Addendum.ShowIndis       	:= IniReadExt("Addendum", "Zeige_Ausnahmeindikationen", "Nein")
-	Addendum.Debug          	:= false
+	Addendum.Debug          	:= true
 
   ; Befundkürzel laden
 	aDB := new AlbisDB(Addendum.AlbisDBPath)
 	Addendum.BefKuerzel := aDB.BefundKuerzel()
-	SciTEOutput(Addendum.BefKuerzel.Count())
+	;~ SciTEOutput(Addendum.BefKuerzel.Count())
 
   ; freie Tage und Praxisurlaub werden aus der Addendum.ini gelesen
   ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -126,7 +126,7 @@
 	PatDB := ReadPatientDBF(Addendum.AlbisDBPath, infilter, "EMail=0 allData")
 	SplashText(Skriptname := StrReplace(A_ScriptName, ".ahk"), "Patientendatenbank mit " PatDB.Count() " Namen geladen", 3)
 
-  ; Albisdatenbank Objekt für Zugriff und Datenauswertung erstellen
+  ; Albisdatenbank - Objekt für Zugriff und Datenauswertung erstellen
   ; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	global DBAccess := new AlbisDb(Addendum.AlbisDBPath, 0)
 
@@ -197,7 +197,7 @@ AbrAssistGui(Abrechnungsquartal, ReIndex=false, Anzeige=true)                   
 
 	; Variablen und Einstellungen   	;{
 
-		static EventInfo, empty := "- - - - - - -", LVCol, abrQuartal
+		static EventInfo, empty := "- - - - - - -", LVCol
 		static LVClear 	:= LVw := 0                                                                     	; (flag) 1 wenn beide Listviews keine Daten enthalten (sauber sind)
 		static FSize    	:= A_ScreenHeight > 1080 ? 11 : 10                      	; FSize - ist abhängig von der Monitorauflösung
 
@@ -219,28 +219,29 @@ AbrAssistGui(Abrechnungsquartal, ReIndex=false, Anzeige=true)                   
 			LVw += colsize
 		guiW := LVw + vertScrollw + 2*MarginX
 
-	; Euro Preise der Gebührennummern (wo speichert CG diese Daten?)
+	; Euro Preise der Gebührennummern (wo speichert Albis diese Daten?)
 		Euro := {"#01731"        	: 15.82
-					, "#01732"           	: 35.82
-					, "#01745"           	: 27.80
-					, "#01746"           	: 22.96
-					, "#01737"           	: 6.34
-					, "#01740"           	: 12.75
-					, "#01747"           	: 9.01
+					, "#01732"          	: 36.73
+					, "#01745"          	: 27.80
+					, "#01746"          	: 23.55
+					, "#01737"          	: 6.34
+					, "#01740"          	: 12.75
+					, "#01747"          	: 9.01
 					, "#03001"        	: 25.03
 					, "#03002"        	: 15.80
-					, "#03003" 	    	: 12.68
+					, "#03003" 	    	: 12.84
 					, "#03004"         	: 16.46
 					, "#03005" 	    	: 22.25
-					, "#03040" 	    	: 15.35
-					, "#03220"           	: 14.46
-					, "#03221"           	: 4.45
+					, "#03040" 	    	: 15.55
+					, "#03220"          	: 14.65
+					, "#03221"          	: 4.51
+					, "#03230"          	: 14.42
 					, "KVU"              	: 15.82
 					, "GVU"             	: 35.82
 					, "HKS1"            	: 27.80
 					, "HKS2"            	: 22.96
-					, "GB1"             	: 12.57
-					, "GB2"             	: 19.36
+					, "GB1"              	: 12.57
+					, "GB2"              	: 19.36
 					, "Colo"             	: 12.75
 					, "Aorta"            	: 9.01
 					, "Pausch0-4"        	: 25.03
@@ -325,6 +326,7 @@ AbrAssistGui(Abrechnungsquartal, ReIndex=false, Anzeige=true)                   
 		tcolorBG1      	:= "BCCCE4"
 		tcolorBG2      	:= "F8F5F5"
 		TextColor1     	:= "65DF00"
+		TextColor2     	:= "D9E137"
 		SelectionColor1	:= "0x0078D6"
 		abrTabNames	:= "Vorsorge-Guru|ICD-Krauler|Großer-Geriater|freier Statistiker|Einstellungen"
 	;}
@@ -333,7 +335,7 @@ AbrAssistGui(Abrechnungsquartal, ReIndex=false, Anzeige=true)                   
 
 	; Gui                                       	;{
 
-		Gui, abr: new    	, % "HWNDhabr -DPIScale " (ontop ? "+AlwaysOnTop " : "")   ;
+		Gui, abr: new    	, % "HWNDhabr  " (ontop ? " +AlwaysOnTop " : "")   ;
 		Gui, abr: Color  	, % "c" gcolor , % "c" tcolor
 		Gui, abr: Margin	, 5, 5
 		Gui, abr: Font    	, % "s" FSize-1 " q5 Normal c" TextColor1 , Futura Bk Bt
@@ -353,11 +355,15 @@ AbrAssistGui(Abrechnungsquartal, ReIndex=false, Anzeige=true)                   
 		Gui, abr: Add    	, Button        	, % "x" cpX+cpW " y" cpY+1 " h" cpH-2 "	      	vabrQUp       	gabrHandler"   	, % "▲"
 		Gui, abr: Add    	, Button        	, % "x+0 h" cpH-2 "                        	         	vabrQDown   	gabrHandler"   	, % "▼"
 
-		Gui, abr: Font    	, % "s" FSize "  c" TextColor1
+		Gui, abr: Font    	, % "s" FSize " c" TextColor1
 		Gui, abr: Add    	, Text        	, % "x+20     	BackgroundTrans             	"                                               	, % "mögliches EBM plus: "
+		Gui, abr: Font    	, % "s" FSize " c" TextColor2
 		Gui, abr: Add    	, Text        	, % "x+0       	BackgroundTrans  				vEBMEuroPlus"                        	, % "00000.00 €  "
+
+		Gui, abr: Font    	, % "s" FSize " c" TextColor1
 		Gui, abr: Add    	, Text        	, % "x+10       	BackgroundTrans             	"                                               	, % "Krankenscheine: "
-		Gui, abr: Add    	, Text        	, % "x+0       	BackgroundTrans  				vEBMScheine"                         	, % VSEmpf["_Statistik"].KScheine "  "
+		Gui, abr: Font    	, % "s" FSize " c" TextColor2
+		Gui, abr: Add    	, Text        	, % "x+0       	BackgroundTrans  				vEBMScheine"                         	, % VSEmpf["_Statistik"].KScheine
 
 	;-:      🔐
 		Gui, abr: Font	, % "s" FSize+1  " c" TextColor1
@@ -417,7 +423,7 @@ AbrAssistGui(Abrechnungsquartal, ReIndex=false, Anzeige=true)                   
 		GuiControlGet, cp, abr: Pos, abrYoungStars
 		Gui, abr: Add	, Checkbox   	, % "x+20 "                        	CBOpt "	vabrOldStars 	gabrHandler"     	, % "Alter ab 35 anzeigen"
 		Gui, abr: Add	, Checkbox   	, % "x+20 "                        	CBOpt " 	vabrAngels    	gabrHandler"    	, % "Verstorbene anzeigen"
-		Gui, abr: Add	, Text        	, % "x+40           	BackgroundTrans  	vabrLVRows"                                 	, % "[0000]"
+		Gui, abr: Add	, Text        	, % "x+40           	BackgroundTrans  	vabrLVRows"                               	, % "[0000 Patienten]"
 
 	;}
 
@@ -512,7 +518,7 @@ AbrAssistGui(Abrechnungsquartal, ReIndex=false, Anzeige=true)                   
 		LVLabels4 	:= "    ID|Name, Vorname|Geb.Datum|chron.Pauschale"
 
 		Gui, abr: Font	, % "s" FSize-2 " q5 Normal cBlack"
-		Gui, abr: Add	, ListView    	, % "xm+5 y+5 w" LVwidth+20 " r55 " LVOptions4                                    	, % LVLabels4
+		Gui, abr: Add	, ListView    	, % "xm+5 y+5 w" LVwidth+20 " r55 " LVOptions4                                              	, % LVLabels4
 		LV_ModifyCol(1 	, 80  	" Right Integer")
 		LV_ModifyCol(2 	, 160  	" Left Text")
 		LV_ModifyCol(3 	, 90  	" Lef Text")
@@ -600,49 +606,54 @@ AbrAssistGui(Abrechnungsquartal, ReIndex=false, Anzeige=true)                   
 	;}
 
 	;-: GUI - Position anpassen                                                     	;{
-		abrP := GetWindowSpot(habr)
+		abrP:= GetWindowSpot(habr)
+		aP 	:= GetWindowSpot(AlbisWinID())
 		GuiControlGet, cp, abr: Pos, abrLV
 		DeltaH := abrP.H - abrP.CH
-		GuiW := cpX + cpW + 5
+		GuiW   := cpX + cpW + 5
 
 	  ; Progressbalken
-		GuiControl, abr: Move, abrPS1, % "x4 w"  GuiW - 5
+		GuiControl, abr: Move, abrPS1 	, % "x4 w"  GuiW - 5
 		GuiControl, abr: Move, abrTabs	, % "w" GuiW - 5
 
-		WinSet, Style 	, -0x1       	, % "ahk_id " abrHPS1
+		WinSet, Style 	, -0x1     	, % "ahk_id " abrHPS1
 		WinSet, ExStyle	, -0x20000	, % "ahk_id " abrHPS1
-		WinSet, Style 	, -0x1       	, % "ahk_id " abrHPS2
-		WinSet, ExStyle 	, -0x20000	, % "ahk_id " abrHPS2
+		WinSet, Style 	, -0x1     	, % "ahk_id " abrHPS2
+		WinSet, ExStyle	, -0x20000	, % "ahk_id " abrHPS2
 
 		GuiControlGet, cp, abr: Pos, abrChrOut
 		GuiControlGet, dp, abr: Pos, abrTabs
 		GuiControl, abr: Move, abrChrOut, % "h" cpH-DeltaH
+		GuiControl, abr: Move, abrLvBT  , % "w645 h690"
 
-		Control, % (options.1 ? "Check":"UnCheck"),, Button9  	, % "ahk_id " habr
+		Control, % (options.1 ? "Check":"UnCheck"),, Button9 	, % "ahk_id " habr
 		Control, % (options.2 ? "Check":"UnCheck"),, Button10	, % "ahk_id " habr
 		Control, % (options.3 ? "Check":"UnCheck"),, Button11	, % "ahk_id " habr
 
-		Gui, abr: Show, % winpos " w" GuiW , Abrechnungsassistent
+		Gui, abr: Show, % winpos , Abrechnungsassistent
+		Gui, abr: Show, % " w" GuiW " h" ap.H
 
      ; Backup der Abrechnungsfensterposition
 		wpAbr := GetWindowSpot(habr)
+		SciTEOutput("w" wpAbr.w " h" wpAbr.H ", " ap.H)
 
 		SplashTextOff
 	;}
 
-	;-: Letzte Aufteilung Albis|Abrechnungsassistent eintrichten   ;{
+	;-: Letzte Aufteilung Albis|Abrechnungsassistent eintrichten       	;{
 		If (Addendum.abrOnPos ~= "i)(R|L)")
 			abrGui_WindowTiling(Addendum.abrOnPos)
 	;}
 
 	#IfWinActive Abrechnungsassistent ahk_class AutoHotkeyGUI
-		Hotkey, ~Enter              	, abrHotkeyHandler
+		Hotkey, ~Enter       	, abrHotkeyHandler
 		Hotkey, ~NumPadEnter 	, abrHotkeyHandler
-		Hotkey, ~Up                 	, abrHotkeyHandler
-		Hotkey, ~Down            	, abrHotkeyHandler
+		Hotkey, ~Up          	, abrHotkeyHandler
+		Hotkey, ~Down       	, abrHotkeyHandler
 	#If
 
-	SendMessage, 0x1330, 3 ,,, % "ahk_id " abrHTab
+	; umschalten auf anderen Tab
+	;~ SendMessage, 0x1330, 3 ,,, % "ahk_id " abrHTab
 
 return ;}
 
@@ -708,7 +719,7 @@ abrLVHandler:                            	;{
 		For feeIDX, fee in VSEmpf[PatID].Vorschlag 	{
 			RegExMatch(fee, "i)^(?<Name>[a-z]+)\-*(?<PossDate>\d+)*", fee)
 			feePossDate := ConvertDBASEDate(feePossDate)
-			GuiControl, abr: Show  	, % "abr_" feeName
+			GuiControl, abr: Show   	, % "abr_" feeName
 			GuiControl, abr:         	, % "abr_" feeName     	, 1
 			GuiControl, abr:         	, % "abr_Date" feeName, % "> " feePossDate
 		}
@@ -754,10 +765,10 @@ abrHandler:                              	;{
 	YY	:= SubStr(abrQ, 2, 2) + 0
 
   ; alles nullen
-	GuiControl, abr:, EBMEuroPlus	, % "00000.00 Euro"
-	GuiControl, abr:, EBMScheine	, % ""
+	;~ GuiControl, abr:, EBMEuroPlus	, % "00000.00 Euro"
+	;~ GuiControl, abr:, EBMScheine	, % ""
 
-	If     	  RegExMatch(A_GuiControl, "(abrQUp|abrQDown)")                            	{         	; Quartal - vor und zurück
+	If   	  RegExMatch(A_GuiControl, "(abrQUp|abrQDown)")                             	{      	; Quartal - vor und zurück
 
 		If !LVClear
 			LVClear := abrGui_LVClear()
@@ -796,7 +807,7 @@ abrHandler:                              	;{
 		}
 
 	}
-	else if RegExMatch(A_GuiControl, "i)(abrReIndex|abrRefresh)")                        	{         	; Abrechnungsquartal - Daten zusammenstellen, speichern und anzeigen
+	else if RegExMatch(A_GuiControl, "i)(abrReIndex|abrRefresh)")                     	{      	; Abrechnungsquartal - Daten zusammenstellen, speichern und anzeigen
 
 	  ; Listview-Steuerelemente zurücksetzen
 		LVClear := abrGui_LVClear()
@@ -827,7 +838,7 @@ abrHandler:                              	;{
 		SaveAbrechnungsquartal(Abrechnungsquartal)
 
 	}
-	else if (A_GuiControl = "abrBearbeitet")                                                      	{         	; bearbeitete Einträge - verstecken
+	else if (A_GuiControl = "abrBearbeitet")                                           	{     	; bearbeitete Einträge - verstecken
 
 			Gui, abr: Default
 			Gui, abr: ListView, abrLV
@@ -881,9 +892,9 @@ abrHandler:                              	;{
 			abrEBMPlus(Round(EBMPlus, 2))
 
 	}
-	else if (A_GuiControl = "abrUnHide")                                                         	{	     	; versteckte Einträge - wieder anzeigen
+	else if (A_GuiControl = "abrUnHide")                                               	{	     	; versteckte Einträge - wieder anzeigen
 
-			fn_msbx := Func("MsgBoxMove").Bind("Frage", "Wollen Sie wirklich die")
+			fn_msbx := Func("MsgBoxMove").Bind("Frage", "Wollen Sie wirklich die ausgeblendeten Fälle")
 			SetTimer, % fn_msbx, -100
 			MsgBox, 0x1004, Frage, % "Wollen Sie wirklich die ausgeblendeten Fälle wieder sehen?"
 			IfMsgBox, No
@@ -901,10 +912,10 @@ abrHandler:                              	;{
 			gosub abrVorschlaege
 
 	}
-	else if RegExMatch(A_GuiControl, "(abrYoungStars|abrAngels|abrOldStars)") 	{      	; Filterhandler
+	else if RegExMatch(A_GuiControl, "(abrYoungStars|abrAngels|abrOldStars)")          	{      	; Filterhandler
 		gosub abrVorschlaege
 	}
-	else if (A_GuiControl = "abrICDKrauler")                                                      	{      	; sucht neue Pat. für die Abrechnung der Chronikerpauschalen
+	else if (A_GuiControl = "abrICDKrauler")                                           	{      	; sucht neue Pat. für die Abrechnung der Chronikerpauschalen
 		Gui, abr: Submit, NoHide
 		chrPausch := ICDKrauler(abrQ)
 		For PatID, Pauschale in chrPausch
@@ -915,6 +926,8 @@ abrHandler:                              	;{
 return ;}
 
 abrVorschlaege:                        	;{
+
+		; global abrhLV, abrLVm, CLV
 
 		SplashText(Skriptname " .... bitte warten ...", "gefilterte Daten werden aufgelistet ...")
 
@@ -945,7 +958,7 @@ abrVorschlaege:                        	;{
 
 				qmismatch :=  false
 				For Tag, Behandlung in vs.BehTage {
-					If (GetQuartalEx(Tag, "QYY") <> Abrechnungsquartal) {
+					If RegExMatch(Tag, "[\d\.]+") && (GetQuartalEx(Tag, "QYY") != Abrechnungsquartal) {
 						qmismatch := true
 						break
 					}
@@ -978,12 +991,12 @@ abrVorschlaege:                        	;{
 						EBMplus += Euro.Aorta
 				}
 			}
-			If vs.CHRONISCHGRUPPE     	{     	; Chronikerpauschalen
+			If vs.CHRONISCHGRUPPE                                 	{     	; Chronikerpauschalen
 				EBMPlus += vs.chronisch 	= 1 	? EBM.Chron1 	: 0
 				EBMPlus += vs.chronisch 	= 2 	? EBM.Chron2 	: 0
 				EBMPlus += vs.chronisch 	= 3 	? EBM.Chron2 + EBM.Chron1 : 0
 			}
-			If vs.GERIATRISCHGRUPPE     	{   	; Geriatrische Basiskomplexe
+			If (vs.GERIATRISCHGRUPPE  && vs.Alter >= 55) 	{   	; Geriatrische Basiskomplexe
 				EBMPlus += vs.geriatrisch = 1 	? EBM.GB1   	: 0
 				EBMPlus += vs.geriatrisch = 2 	? EBM.GB2   	: 0
 				EBMPlus += vs.geriatrisch = 3 	? EBM.GB2 + EBM.GB1 : 0
@@ -994,23 +1007,24 @@ abrVorschlaege:                        	;{
 			;~ EBMPlus += vs.Pauschale	= 3 	? EBM.PauschGO + EBM.PauschZ : 0
 		  ;}
 
-
-		    f :=  	vs.chronisch  	? 1 : 0
-			f +=	vs.chronischQ 	? 1 : 0
+		    f := (vs.chronisch ? 1 : 0) + (vs.chronischQ ? 1 : 0)
 			Loop 5
 				f += e[A_Index] ? 1 : 0
 
-			If (f > 0) {
+			If (f) {
 
 				; Zeile anfügen
 					Mortal 	:= PatDB[PatID].Mortal ? "♱" : ""
 
-					If vs.CHRONISCHGRUPPE     	{     	; Chronikerpauschalen
+					If vs.CHRONISCHGRUPPE                              	{     	; Chronikerpauschalen
 						Chron	:= vs.chronisch	= 1 	? "03220" : vs.chronisch 	= 2 ? "03221" : vs.chronisch	= 3 ? "03220/1"
 						Chron	.= vs.chronischQ		? " [" vs.chronischQ " VQ" (vs.chronischQ = 1 ? " fehlt]" : " fehlen]") : ""
 					}
-					If vs.GERIATRISCHGRUPPE     	{   	; Geriatrische Basiskomplexe
-						GB   	:= vs.geriatrisch = 1	? "03360" : vs.geriatrisch	= 2 ? "03362" : vs.geriatrisch= 3 ? "03360/2"
+					If (vs.GERIATRISCHGRUPPE  && vs.Alter >= 55) {   	; Geriatrische Basiskomplexe
+						GB   	:=  vs.Alter >= 55 && vs.geriatrisch = 1 ? "03360"
+									:	  vs.Alter >= 55 && vs.geriatrisch = 2 ? "03362"
+									: 	  vs.Alter >= 55 && vs.geriatrisch = 3 ? "03360/2"
+									: 	  vs.Alter < 55 ? "" : ""
 					}
 					Pausch	:= vs.Pauschale     	?            	vs.Pauschale          	: ""
 
@@ -1049,7 +1063,7 @@ abrVorschlaege:                        	;{
 		SplashTextOff
 
 	;-: Zahl der angezeigten Patienten
-		GuiControl, abr:, abrLVRows, % "[" LV_GetCount() "]"
+		GuiControl, abr:, abrLVRows, % "[" LV_GetCount() " Patienten]"
 
 	;-: Euro Summe aller EBM Gebühren anzeigen (vorausgesetzt sie übernehmen die Vorschläge zu 100%)
 		GuiControl, abr:, EBMEuroPlus, % Round(EBMPlus, 2) " €"
@@ -1145,7 +1159,7 @@ abrGui_WindowTiling(Tiling)                                                     
 
 	global wpAlbis, wpAbr, hAbr
 
-	abrWin 	:= GetWindowSpot(hAbr)
+	abrWin  	:= GetWindowSpot(hAbr)
 	albisWin 	:= GetWindowSpot(hAlbis := AlbisWinID())
 	albisMon	:= ScreenDims(monIndex := GetMonitorIndexFromWindow(hAlbis))
 	TBarH   	:= TaskbarHeight(monIndex)
@@ -1154,15 +1168,15 @@ abrGui_WindowTiling(Tiling)                                                     
 	MonLA		:= albisMon.W - abrWin.CW + 15
 
 	If (Tiling="R") {
-		SetWindowPos(hAbr	, albisMon.W-abrWin.W+3, 0, abrWin.W, abrWin.H)
+		SetWindowPos(hAbr	, albisMon.W-abrWin.W+3, 0, abrWin.W, abrWin.H,, 0x1)
 		SetWindowPos(hAlbis, -8, 0, MonLA, albisMon.H-TBarH)
 	}
 	else If (Tiling="L") {
-		SetWindowPos(hAbr	, 0, 0, abrWin.W, abrWin.H)
+		SetWindowPos(hAbr	, 0, 0, abrWin.W, abrWin.H,, 0x1)
 		SetWindowPos(hAlbis, abrWin.W+1, 0, MonLA, albisMon.H-TBarH)
 	}
 	else {	; stellt die ursprüngliche Position wieder her
-		SetWindowPos(hAbr	, wpAbr.X, wpAbr.Y, wpAbr.W, wpAbr.H)
+		SetWindowPos(hAbr	, wpAbr.X, wpAbr.Y, wpAbr.W, wpAbr.H,, 0x1)
 		SetWindowPos(hAlbis, wpAlbis.X, wpAlbis.Y, wpAlbis.W , wpAlbis.H)
 	}
 
@@ -1185,18 +1199,84 @@ abrGui_LVClear()                                                                
 return 1
 }
 
-abrEBMPlus(EBMPlus:=0)                                                                                      	{  	;-- frischt nur ein paar Steuerelemente auf
+abrEBMPlus(Plus:=0)                                                                                          	{  	;-- frischt nur ein paar Steuerelemente auf
 
-	global abr, abrLV, abrLVRows, EBMEuroPlus
+	global abr, abrLV, abrLVRows, EBMEuroPlus, Abrechnungsquartal, abrQuartal, VSEmpf, Euro
 
 	Gui, abr: Default
+	Gui, abr: ListView, abrLV
+	Gui, abr: Submit, NoHide
+
+	GuiControlGet, ShowYoungStars	, abr:, % "abrYoungStars"
+	GuiControlGet, ShowAngels      	, abr:, % "abrAngels"
+	GuiControlGet, ShowOldStars      	, abr:, % "abrOldStars"
+
+	EBMPlus := 0
+	For PatID, vs in VSEmpf {
+
+	  ; wird für die Berechnung verwendet wenn eine Bedingung erfüllt ist
+		If !RegExMatch(PatID, "^\d+$") || VSEmpf[PatID].Hide || (!ShowYoungStars && vs.Alter < 35)
+			|| (!ShowOldStars && vs.Alter > 34) || (!ShowAngels && PatDB[PatID].Mortal)
+			continue
+
+	  ; #fehlerhaft einsortierte Patienten aus einem anderen Quartal nicht anzeigen (haben aus irgendeinem Grund auch eine nicht passende PatID)
+		If IsObject(vs.BehTage) {
+
+			qmismatch :=  false
+			For Tag, Behandlung in vs.BehTage {
+				If Tag && (GetQuartalEx(Tag, "QYY") != Abrechnungsquartal) {
+					qmismatch := true
+					break
+				}
+			}
+			If qmismatch
+				continue
+
+		}
+
+	  ; Vorschläge vorschlagen ∶-)
+		e := []
+		For idx, exam in vs.Vorschlag 	{       ; Vorsorgeuntersuchungen/Prävention
+			e[idx] := false
+			RegExMatch(exam, "i)(?<rdination>[A-Z]+)\-*(?<Date>\d+)*", o)
+			Switch ordination  	{
+				Case "GVU":
+					e.1 := true
+					EBMplus += Euro.GVU
+				Case "HKS":
+					e.2 := true
+					EBMplus += Euro.HKS2
+				Case "KVU":
+					e.3 := true
+					EBMplus += Euro.KVU
+				Case "Colo":
+					e.4 := true
+					EBMplus += Euro.Colo
+				Case "Aorta":
+					e.5 := true
+					EBMplus += Euro.Aorta
+			}
+		}
+		If vs.CHRONISCHGRUPPE     	{     	; Chronikerpauschalen
+			EBMPlus += vs.chronisch 	= 1 	? EBM.Chron1 	: 0
+			EBMPlus += vs.chronisch 	= 2 	? EBM.Chron2 	: 0
+			EBMPlus += vs.chronisch 	= 3 	? EBM.Chron2 + EBM.Chron1 : 0
+		}
+		If vs.GERIATRISCHGRUPPE     	{   	; Geriatrische Basiskomplexe
+			EBMPlus += vs.geriatrisch = 1 	? EBM.GB1   	: 0
+			EBMPlus += vs.geriatrisch = 2 	? EBM.GB2   	: 0
+			EBMPlus += vs.geriatrisch = 3 	? EBM.GB2 + EBM.GB1 : 0
+		}
+
+
+	}
 
 	GuiControl, abr:, EBMEuroPlus, % (!EBMPlus ? "00.00" : Round(EBMPlus, 2)) " €"
 	GuiControl, abr: Focus, EBMEuroPlus
 
 	Gui, abr: ListView, abrLV
 	KS := LV_GetCount()
-	GuiControl, abr:, abrLVRows, % "[" (!KS ? "0000" : KS) "]"
+	GuiControl, abr:, abrLVRows, % "[" (!KS ? "0000" : KS) " Patienten]"
 
 return KS
 }
@@ -1236,7 +1316,6 @@ ObjectReplace(NewObject)                                                        
 	If Addendum.Debug {
 		SciTEOutput("MaxElements in NewObject: " MaxElements )
 		SciTEOutput("VSEmpf enthält leer: " VSEmpf.Count() " Schlüssel")
-		FileOpen(A_Temp "\VSEmpfEmpty.json", "w", "UTF-8").Write(clip1 := cJSON.Dump(VSEmpf, 1))
 	}
 
 	For key, obj in NewObject
@@ -1289,8 +1368,7 @@ QuartalsKalender(Abrechnungsquartal,Urlaubstage,guiname="QKal",TextColor1=""){  
 	;--------------------------------------------------------------------------------------------------------------------
 	;	Kalender
 	;--------------------------------------------------------------------------------------------------------------------;{
-		CalOptions := " AltSubmit +0x50010051 vabrCal HWNDhmyCal gCalHandler"
-		lp 	:= GetWindowSpot(AbrhLV)
+		lp 	:= GetWindowSpot(abrhLV)
 		ap	:= GetWindowSpot(AlbisWinID())
 
 		GuiControlGet, cp, abr: Pos, CalQK
@@ -1306,7 +1384,9 @@ QuartalsKalender(Abrechnungsquartal,Urlaubstage,guiname="QKal",TextColor1=""){  
 
 		Gui, abr: Font     	, % "s10 Bold c" TextColor1, Futura Bk Bt
 		Gui, abr: Add     	, Text		, % "x+8 y" cpY+1                                        	, % SubStr(ConvertDBASEDate(begindate), 1,6) "-" ConvertDBASEDate(lastdate)
-		Gui, abr: Add     	, MonthCal, % "xm+4 y+2 W-3 4 w521"  CalOptions   	, % begindate
+
+		CalOptions := " AltSubmit +0x50010051 vabrCal HWNDhmyCal gCalHandler"
+		Gui, abr: Add     	, MonthCal, % "xm+4 y+2 W-3 4 w521 "  CalOptions   	, % begindate
 		GuiControlGet, cp, abr: Pos, abrCal
 		cX 	:= cpX + cpW + 5
 		cY		:= cpY + cpH
@@ -1314,35 +1394,34 @@ QuartalsKalender(Abrechnungsquartal,Urlaubstage,guiname="QKal",TextColor1=""){  
 		Gui, abr: Font     	, % "s10 Normal c" TextColor1
 		Gui, abr: Add     	, Text		, % "x" cX " y" cpY  " BackgroundTrans"           	, % "gewählter Tag: "
 		Gui, abr: Font     	, % "s11 Bold c" TextColor1
-		Gui, abr: Add     	, Text		, % "x" cX " y+5 vabrDayChoosed"                 	, % "--.--.----"
+		Gui, abr: Add     	, Text		, % "x" cX " y+5 vabrDayChoosed"                 	, % "  --.--.----  "
 		Gui, abr: Font     	, % "s10 Normal c" TextColor1
 		opt := "hwndabrHCalStart gCalHandler"
 		Gui, abr: Add     	, Button		, % "x" cX " y+5 vabrCalStart " opt                	, % "Ziffernauswahl`neintragen"
 		GuiControl, abr: Disable, abrCalStart
 
-		gcolor              	:= "0x00666666"    ; Hintergrund
+		gcolor              	:= "0x00333333"    	; Hintergrund
 		tcolor               	:= "0x00BCCCE4"		; Listview
 		tcolorD           	:= "0x003B8600"		; Markierung
 		tcolorP            	:= "0x00333333"		; Unterteilung
 		tcolorM            	:= "0x00DADEE7"   	; Vorschläge
-		tcolorI            	:= "0x005ED000"  	; Symbole
+		tcolorI            	:= "0x005ED000"  	; Symbole 3399FF
 		tcolorBG       	:= "0x00D0C1C1"
-		tcolorBG1      	:= "0x00BCCCE4"
+		tcolorBG1       	:= "0x000078D7"		; Zeilenauswahl im Listview
 		tcolorBG2      	:= "0x00F8F5F5"
+		tcolorBG2       	:= "0x003399FF"
 		TextColor1     	:= "0x0065DF00"
 		SelectionColor1	:= "0x000078D6"
 
-
 	; Kalenderfarben
-		SendMessage, 0x100A	, 0, % gcolor                      	,, % "ahk_id " hmyCal      	; MCSC_BACKGROUND 		background color displayed between months.
-		SendMessage, 0x100A	, 1, % tcolorBG                     	,, % "ahk_id " hmyCal      	; MCSC_MONTHBK   			background color displayed within the month.
-		SendMessage, 0x100A	, 2, % TextColor1                 	,, % "ahk_id " hmyCal      	; MCSC_TEXT 						color used to display text within a month.
-		SendMessage, 0x100A	, 3, % gcolor                     	,, % "ahk_id " hmyCal      	; MCSC_TITLEBK        			background color displayed in the calendar's title.
-		SendMessage, 0x100A	, 4, % tcolorI                      	,, % "ahk_id " hmyCal      	; MCSC_TITLETEXT           		color used to display text within the calendar's title.
-		SendMessage, 0x100A	, 5, % SelectionColor1			,, % "ahk_id " hmyCal      	; MCSC_TRAILINGTEXT	the color used to display header day and trailing day text.
-		SendMessage, 0x100A	, 5, 0xFFAA99, SysMonthCal321, % "ahk_id " habr      	; MCSC_TRAILINGTEXT	the color used to display header day and trailing day text.
-																																							; 	Header and trailing days are the days from the previous and
-																																							; 	following months that appear on the current month calendar.
+		SendMessage, 0x100A	, 0, % gcolor                      	,, % "ahk_id " hmyCal   	; MCSC_BACKGROUND 	background color displayed between months.
+		SendMessage, 0x100A	, 1, % tcolorBG                     	,, % "ahk_id " hmyCal   	; MCSC_MONTHBK   		background color displayed within the month.
+		SendMessage, 0x100A	, 2, % TextColor1                 	,, % "ahk_id " hmyCal   	; MCSC_TEXT 					color used to display text within a month.
+		SendMessage, 0x100A	, 3, % gcolor                     	,, % "ahk_id " hmyCal   	; MCSC_TITLEBK       		background color displayed in the calendar's title.
+		SendMessage, 0x100A	, 4, % tcolorI                      	,, % "ahk_id " hmyCal   	; MCSC_TITLETEXT       		color used to display text within the calendar's title.
+		SendMessage, 0x100A	, 5, % SelectionColor1			,, % "ahk_id " hmyCal   	; MCSC_TRAILINGTEXT		color used to display header day and trailing day text.
+		SendMessage, 0x100A	, 5, 0xFFAA99, SysMonthCal321, % "ahk_id " habr   	; MCSC_TRAILINGTEXT		color used to display header day and trailing day text.
+															; 	Header and trailing days are the days from the previous and following months that appear on the current month calendar.
 
 		WinSet, Style, 0x50010051, % "ahk_id " hmyCal
 
@@ -1357,24 +1436,26 @@ QuartalsKalender(Abrechnungsquartal,Urlaubstage,guiname="QKal",TextColor1=""){  
 		GuiControlGet, dp, abr: Pos, staticBT
 
 		Gui, abr: Font     	, % "s10 Normal c" TextColor1, Futura Bk Bd
-		Gui, abr: Add    	, Text      	, % "x" dpx " y+2 vabrBTage"                                                              	, % "--"
+		Gui, abr: Add    	, Text      	, % "x" dpx " y+2 vabrBTage"                                                              	, % "          ------         "
 		;~ GuiControl, abr: Move, staticBT, % "x" (nx := 5+lp.W-cpW-30)
 
-
+		GuiControlGet, cp, abr: Pos, abrCal
 		LVOptions 	:= " -Hdr vabrLvBT gCalHandler HWNDabrhLvBT -E0x200 -LV0x10 AltSubmit -Multi"
 		LVColumns	:= "Datum|Kürzel|Inhalt"
 		Gui, abr: Font     	, % "s10 Normal cBlack", Futura Bk Bt
-		Gui, abr: Add     	, ListView  	, % "xm+5 y" cY+2 " w" lp.W " h" ap.CH+1*ap.BH-cpY-cpH " "  LVOptions      	, % LVColumns
+		;~ Gui, abr: Add     	, ListView  	, % "xm+5 y" cY+2 " w" lp.W " h" (ap.H)-(cpY-cpH) " "  LVOptions      	, % LVColumns
+		Gui, abr: Add     	, ListView  	, % "xm+5 y" cY+2 " w968 h1060 "  LVOptions      	, % LVColumns
+
+		SciTEOutput("w: " lp.W " h" (ap.CH)-(cpY-cpH))
 
 		LV_ModifyCol(1, 50)
 		LV_ModifyCol(2, 65)
-		LV_ModifyCol(3, lp.CW-115)
+		LV_ModifyCol(3, 500)
 		WinSet, Style, 0x5021800D, % "ahk_id " abrhLvBT   ; No_HScroll
 
 		BLV := new LV_Colors(abrhLvBT)
 		BLV.Critical := 200
 		BLV.SelectionColors("0x0078D6")
-
 
 		Redraw(habr)
 		UpdateWindow(habr)
@@ -1435,8 +1516,8 @@ CalHandler: ;{
 					LV_GetText(sDate, (sRow := sRow - 1), 1)
 
 				If sDate {
-					GuiControl, abr:           	, abrDayChoosed	, % (DateChoosed := sDate . Addendum.ThousandYear . SubStr(abrQ, 2, 2))
-					GuiControl, abr:             	, abrCal             	, % ConvertToDBASEDate(DateChoosed)
+					GuiControl, abr:      	, abrDayChoosed	, % (DateChoosed := sDate . Addendum.ThousandYear . SubStr(abrQ, 2, 2))
+					GuiControl, abr:      	, abrCal      	, % ConvertToDBASEDate(DateChoosed)
 					GuiControl, abr: Enable	, abrCalStart
 				}
 			}
@@ -1450,7 +1531,7 @@ Behandlungstage(PatID, BehTage)                                                 
 
 		global abr, abrLV, abrLvBT, abrhLvBT, abrBTage, BLV, BefKuerzel, tcolorBG1, tcolorBG2, abrYear
 		global VSEmpf
-		cols := [], altFlag := true, rows := 0
+		cols := [], altFlag := true
 
 		Gui, abr:  Default
 		Gui, abr: ListView, abrLvBT
@@ -1460,38 +1541,52 @@ Behandlungstage(PatID, BehTage)                                                 
 		BLV.Clear(1, 1)
 		LV_Delete()
 
-		For DATUM, Leistung in BehTage {
-			abrYear := SubStr(ConvertDBASEDate(DATUM), 7, 4)
-			break
-		}
+		;~ For DATUM, Leistung in BehTage {
+			;~ abrYear := SubStr(ConvertDBASEDate(DATUM), 7, 4)
+			;~ break
+		;~ }
 
 		For DATUM, Leistung in BehTage {
 
-			DATUM := SubStr(ConvertDBASEDate(DATUM), 1, 6), BTrow := 1, rows ++
-			For row, col in Leistung {
-				If (col.KZL = "lle")
-					continue
-				cols.1 	:= BTRow = 1 ? DATUM : ""
-				cols.2	:= col.KZL
-				cols.3	:= col.INH
-				BTRow ++
-				LV_Add("", cols*)
-				bgColor:= "0x" (altFlag ? tcolorBG1 : tcolorBG2)
-				txtColor	:= RGBtoBGR(Format("0x{:06X}", BefKuerzel[col.KZL].Color))
-				BLV.Row(LV_GetCount() 	, bgColor, 0x000000)
-				BLV.Cell(LV_GetCount(), 2	, bgColor, txtColor)
-				BLV.Cell(LV_GetCount(), 3	, bgColor, txtColor)
+		  ; die Kürzel in diesselbe Reihenfolge wie in der Albiskarteikarte bringen
+			KKOrder := []
+			For row, col in Leistung
+				If !IsObject(KKOrder[col.ORD])
+					KKOrder[col.ORD] := [col]
+				else
+					KKOrder[col.ORD].Push(col)
 
-			}
+		  ; sortierte Daten ausgeben
+			BTRow :=	0
+			For order, rowdata in KKOrder
+				For each, col in rowdata {
+
+					If (col.KZL = "lle")
+						continue
+
+					BTRow ++
+					cols.1   	:= BTRow = 1 ? SubStr(ConvertDBASEDate(DATUM), 1, 6) : ""
+					cols.2   	:= col.KZL
+					cols.3   	:= col.INH
+					bgColor 	:= "0x" (altFlag ? tcolorBG1 : tcolorBG2)
+					txtColor	:= RGBtoBGR(Format("0x{:06X}", BefKuerzel[col.KZL].Color))
+					LV_Add("", cols*)
+					BLV.Row(LV_GetCount()   	, bgColor, 0x000000)
+					BLV.Cell(LV_GetCount(), 2	, bgColor, txtColor)
+					BLV.Cell(LV_GetCount(), 3	, bgColor, txtColor)
+
+				}
+
 			altFlag := !altFlag
+
 		}
 
 		If (row := LV_GetNext(0, "F"))
-			LV_Modify(row, "-Focus"), LV_Modify(row, "-Select")
+			LV_Modify(row, "-Focus -Select") ;, LV_Modify(row, "-Select")
 
 		WinSet, Style, 0x5021800D, % "ahk_id " abrhLvBT   ; No_HScroll
 
-return abrYear
+return SubStr(DATUM, 1, 4)  ; Abrechnungsjahr wird zurückgegeben  ;abrYear
 }
 
 
@@ -2376,7 +2471,7 @@ ICDKraulerGui(ShowGui:=true)                                                    
 
 }
 
-ICDKraulerCallback(itemIndex, maxItems) {
+ICDKraulerCallback(itemIndex, maxItems)                                                          	{
 
 	ToolTip, % "item: " SubStr("00000000" itemIndex, -1*(StrLen(maxItems)-1)) "/" SubStr("00000000" maxItems, -1*(StrLen(maxItems)-1)) ,  % A_ScreenWidth//2-100, % A_ScreenHeight//2, 15
 
@@ -2437,11 +2532,16 @@ CoronaEBM(Abrechnungsquartal)                                                   
 return
 }
 
+NoSchein(Abrechnungsquartal)                                                                            	{  	;-- soll Pat. mit möglichen Leistungen aber ohne angelegten Schein finden
+
+
+
+}
 
 ; - - - -
 ; vorbereitete Funktionen für Auswertungen und Fehlersuche
 ; - - - -
-eHKSFormularOderEBM(Abrechnungsquartal)                                                    	{  	;-- sucht nach abgerechneter Hautkrebsscreeningziffer und fehlendem eHKS Formular
+eHKSFormularOderEBM(Abrechnungsquartal)                                                    	{  	;-- sucht nach Hautkrebsscreeningziffer u. fehlendem eHKS Formular
 
 	; sucht nach abgerechneter Hautkrebsscreeningziffer und fehlendem eHKS Formular und umgekehrt
 
@@ -2969,10 +3069,9 @@ return
 
 MsgBoxMove(msgboxTitle, msgBoxText)                                                              	{    	;-- verschiebt einen MsgBox Dialog
 
-	global abr, habr, abrCalStart, abrHCalStart, abrHunhide
+	global abr, habr, abrCalStart, abrHCalStart, abrHunhide, abrHLV
 
 	hmsbx 	:= WinExist(msgboxTitle " ahk_class #32770", msgboxText)
-	msbx	:= GetWindowSpot(hmsbx)
 
 	If InStr(msgboxText, "ausgeblendeten") {
 		xhwnd 	:= abrHunhide
@@ -2983,8 +3082,13 @@ MsgBoxMove(msgboxTitle, msgBoxText)                                             
 		xtop  	:= true
 	}
 
+	msbx    	:= GetWindowSpot(hmsbx)
+	abrp     	:= GetWindowSpot(habr)
  	ctrlp      	:= GetWindowSpot(xhwnd)
+
 	msbx.X  	:= ctrlp.X-(msbx.W//2-ctrlp.W//2)
+	msbx.X 		:= msbx.X+msbx.W > abrp.X+abrp.W ? (abrp.X+abrp.W)-msbx.W : msbx.X   ; MsgBox soll innerhalb des Elternfensters bleiben
+	msbx.X		:= msbx.X < abrp.X ? abrp.X : msbx.X
 	msbx.Y  	:= xtop ? ctrlp.Y-msbx.H : ctrlp.Y+ctrlp.H
 
 	SetWindowPos(hmsbx, msbx.X, msbx.Y, msbx.W, msbx.H)
@@ -3357,6 +3461,7 @@ ObjFullyClone(obj)                                                              
 #Include %A_ScriptDir%\..\..\lib\acc.ahk
 #Include %A_ScriptDir%\..\..\lib\class_JSON.ahk
 #Include %A_ScriptDir%\..\..\lib\class_cJSON.ahk
+#Include %A_ScriptDir%\..\..\lib\class_Loaderbar.ahk
 #Include %A_ScriptDir%\..\..\lib\class_LV_Colors.ahk
 #include %A_ScriptDir%\..\..\lib\GDIP_all.ahk
 #Include %A_ScriptDir%\..\..\lib\ini.ahk

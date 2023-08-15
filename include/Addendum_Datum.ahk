@@ -1,7 +1,7 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                           	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                             	Funktionen für die Berechnung/Umwandlung von Tagesdaten, Quartalsdaten
-;                               	by Ixiko started in September 2017 - last change 09.07.2022 - this file runs under Lexiko's GNU Licence
+;                               	by Ixiko started in September 2017 - last change 07.03.2023 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ; Datum berechnen
@@ -169,7 +169,7 @@ GetQuartalEx(Datum, Format:="QQYY") {                                           
 		}
 		else {
 			 If !RegExMatch(Datum, "\d{1,2}\.(?<Monat>\d{1,2})\.(?<Jahr>\d{4}|\d{2})", D)
-				throw A_ThisFunc ": Ein falsches Datumsformat wurde übergeben!`nrichtig ist: D(1-2)[.]M(1-2)[.]YYYY(2-4) oder yyyyMMdd"
+				throw A_ThisFunc ": Das Datum(" Datum ") wurde in einem falschen Format übergeben!`nrichtig ist: D(1-2)[.]M(1-2)[.]YYYY(2-4) oder yyyyMMdd"
 
 			QMonat := DMOnat
 			QJahr  	:= LenY<3 && StrLen(DJahr)=4 ? SubStr(DJahr, 3, 2) : DJahr
@@ -207,9 +207,12 @@ HowLong(Date1, Date2) {                                                         
 return {"years":Y, "months":M, "days":d}
 }
 
-Age(birthday, CalculationDate) {                                                                        	;-- Lebensalter berechnen
+Age(birthday, CalculationDate:="") {                                                                    	;-- Lebensalter berechnen
 
 	; possible formats: d[d].M[M].YYYY or YYYY.M[M].d[d] or YYYYmmdd
+
+  ; CalculationDate: leave empty to get the today age
+	CalculationDate := CalculationDate ? CalculationDate : A_YYYY A_MM A_DD
 
 	If 	RegExMatch(birthday, "^\s*(?<D>\d{1,2})\.(?<M>\d{1,2})\.(?<Y>\d{4})$", birth)
 	|| RegExMatch(birthday, "^\s*(?<Y>\d{4})[.\-](?<M>\d{1,2})[.\-](?<D>\d{1,2})$", birth)
@@ -497,7 +500,7 @@ WeekDayNr(wday, short:=true) {                                                  
 return
 }
 
-DayOfWeek(dateStr, DayFormat:="short", format:="dd.MM.yyyy") {                          	;-- nutzt FormatTime anstatt eigene Berechnungen anzustellen
+DayOfWeek(dateStr, DayFormat:="short", format:="dd.MM.yyyy") {                    	;-- nutzt FormatTime anstatt eigene Berechnungen anzustellen
 
 	static retFormat := {"short":"ddd", "full":"dddd", "ddd":"ddd", "dddd":"dddd"}
 
@@ -512,13 +515,17 @@ DayOfWeek(dateStr, DayFormat:="short", format:="dd.MM.yyyy") {                  
 
 return DayOfWeek
 }
-;GetWeekday("26.08.2022", "dd.MM.yyyy", true, "full")
-GetWeekday(dateStr, format="dd.MM.yyyy", NameOfDay=true, DayFormat="full" ) {  	;-- Name oder Zahl des Wochentages vom übergebenen Datum
+
+GetWeekday(dateStr, format="", NameOfDay=true, DayFormat="full" ) {             	;-- Name oder Zahl des Wochentages vom übergebenen Datum
 
 	; jNizM Funktion modifiziert (https://www.autohotkey.com/boards/viewtopic.php?t=3352)
+	; GetWeekday("26.08.2022", "dd.MM.yyyy", true, "full")
+
 	; letzte Änderung: 14.09.2021
 
 	static WDays := ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
+
+	format := !format ? "dd.MM.yyyy" : format
 
 	dPos 	:= RegExMatch(format, "d+"	, d)
 	mPos	:= RegExMatch(format, "M+"	, m)
@@ -988,35 +995,37 @@ return SubStr(dateStr, 7, 4) . SubStr(dateStr, 4, 2) . SubStr(dateStr, 1, 2)
 }
 
 ConvertDBASEDate(DBASEDate) {                                                                        	;-- Datumskonvertierung von YYYYMMDD nach DD.MM.YYYY
-	return SubStr(DBaseDate, 7, 2) "." SubStr(DBaseDate, 5, 2) "." SubStr(DBaseDate, 1, 4)
+return SubStr(DBaseDate, 7, 2) "." SubStr(DBaseDate, 5, 2) "." SubStr(DBaseDate, 1, 4)
 }
 
 ConvertToDBASEDate(Date) {                                                                             	;-- Datumskonvertierung von DD.MM.YYYY nach YYYYMMDD
-	RegExMatch(Date, "((?<Y1>\d{4})|(?<D1>\d{1,2})).(?<M>\d+).((?<Y2>\d{4})|(?<D2>\d{1,2}))", t)
-return (tY1?tY1:tY2) . SubStr("00" tM, -1) . SubStr("00" (tD1?tD1:tD2), -1)
+	; Autoformatiert zweistellige Jahreszahlen anhand des aktuellen Jahres, im Jahr 2025 würde jede zweistellige Zahl die größer als das 25 ist
+	; das automatisch ergänzte Jahrtausend um 1 verringern also wäre eine Datum wie 01.01.26 in der Ausgabe 19260101
+	; falls Date nicht das richtige Format hat, wird Date wie es übergeben wurde, wird eine Null zurückgegeben um den Formatierungsfehler behandeln zu können
+	If !RegExMatch(Date, "(^|\D)((?<YMD>\d{8})|(?<D>\d{1,2})\.(?<M>\d{1,2})\.(?<Y>(\d{4}|\d{2})))(\D|$)", t)
+		return 0
+	If tYMD ; ist bereits im richtigen Format
+		return tYMD
+	If (StrLen(tY)=2)
+		tY := (SubStr(A_YYYY, 1, 2) - (SubStr(A_YYYY, 3, 2)<tY?1:0)) . tY
+return tY . SubStr("00" tM, -1) . SubStr("00" tD, -1)
 }
 
 
 ; Stempel
 datestamp(nr:=1) {                                                                                            	;-- für Protokolle
-	If (nr = 1)
-		return (A_YYYY "-" A_MM "-" A_DD " " A_Hour ":" A_Min ":" A_Min)
-	else
-		return (A_Hour ":" A_Min ":" A_Sec)
+return nr=1 ? (A_YYYY "-" A_MM "-" A_DD " " A_Hour ":" A_Min ":" A_Min) : (A_Hour ":" A_Min ":" A_Sec)
 }
 
 TimeCode(DaT) {                                                                                                 	;-- für Addendum_Protokoll - true für [YYYY.MM.DD,] hh:mm:ss.ms
-	TC := (DaT ? (A_YYYY "." A_MM "." A_DD ", ") : ("")) . A_Hour ":" A_Min ":" A_Sec "." A_MSec
-return TC
+return (DaT ? (A_YYYY "." A_MM "." A_DD ", ") : ("")) . A_Hour ":" A_Min ":" A_Sec "." A_MSec
 }
 
 
 ; sonstiges
 GetFileTime(filepath, WhichTime:="C", formatstring:="") {                                    	;-- formatiertes Datum aus der Dateierstellungszeit
-
 	FileGetTime, FTIME , % filepath, % WhichTime
 	FormatTime, RTIME, % FTIME, % (formatstring ? formatstring : "dd.MM.yyyy")
-
 return RTIME
 }
 
