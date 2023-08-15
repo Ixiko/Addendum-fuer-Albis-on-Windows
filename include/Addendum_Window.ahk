@@ -41,7 +41,7 @@ GetParentList(ChildHwnd) {                                                      
 		ChildHwnd:= pHwnd
 	}
 
-return List
+ return List
 }
 
 GetParentClassList(ChildHwnd, WinHwnd) {                                                                                  	;-- list of WinClasses of all parent windows/controls
@@ -53,19 +53,19 @@ GetParentClassList(ChildHwnd, WinHwnd) {                                        
 		ChildHwnd := pHwnd
 	}
 
-return RTrim(parentlist, ",")
+ return RTrim(parentlist, ",")
 }
 
 GetParent(hWnd) {                                                                                                                     	;-- ermittelt das Parent Fenster
-return GetHex(DllCall("GetParent", "Ptr", hWnd, "Ptr"))
+ return GetHex(DllCall("GetParent", "Ptr", hWnd, "Ptr"))
 }
 
 GetNextWindow(hwnd, wCmd) {                                                                                                	;-- ermittelt die Fenster-Z Ordnung
 
-/* wCMD
+	/* wCMD
 		GW_HWNDNEXT = 2		Returns a handle to the window below the given window.
 		GW_HWNDPREV = 3		Returns a handle to the window above the given window.
-*/
+	*/
 	return DllCall("GetNextWindow", "Ptr", hWnd, "uint", wCMD, "Ptr")
 }
 
@@ -100,7 +100,7 @@ GetWindow(hWnd, uCmd) {
 		4
 
 	*/
-return DllCall( "GetWindow", "Ptr", hWnd, "uint", uCmd, "Ptr")
+ return DllCall( "GetWindow", "Ptr", hWnd, "uint", uCmd, "Ptr")
 }
 
 GetWindowInfo(hWnd) {                                                                                                            	;-- returns an Key:Val Object with informations about a window
@@ -299,12 +299,12 @@ GetGUIThreadInfo(retVal:="", idThread:=0)  {                                    
 		If retVal
 			return gTInfo[retVal]
 
-Return gTInfo
+ Return gTInfo
 }
 
 FindChildWindow(Parent, Child, DetectHiddenWindow="On") {                                                  	;{-- finds childWindow Hwnds of the parent window
 
-/*                                                                                     	READ THIS FOR MORE INFORMATIONS
+ /*                                                                                     	READ THIS FOR MORE INFORMATIONS
                                 			    	a function from AHK-Forum : https://autohotkey.com/board/topic/46786-enumchildwindows/
                                                                                       it has been modified by IXIKO on May 09, 2018
 
@@ -313,7 +313,7 @@ FindChildWindow(Parent, Child, DetectHiddenWindow="On") {                       
 
 	-Parent parameter is an object(). Pass the following {Key:Value} pairs like this - WinTitle: "Name of window", WinClass: "Class (NN) Name", WinID: ParentWinID
 	FindChildWindow({"ID":hwnd, "exe":"albis"}, {"class":"#32770"})
-*/
+ */
 
 		detect:= A_DetectHiddenWindows
 		global ChildTitle, ChildNN, ChildClass, ChildExe, active_id
@@ -344,7 +344,7 @@ FindChildWindow(Parent, Child, DetectHiddenWindow="On") {                       
 
 		DetectHiddenWindows, % detect
 
-return RTrim(ChildHwnds, ";")
+ return RTrim(ChildHwnds, ";")
 }
 ; sub of FindChildWindow
 EnumChildWindow(hwnd, lParam) {                                                                                             	;--sub function of FindChildWindow
@@ -364,7 +364,7 @@ EnumChildWindow(hwnd, lParam) {                                                 
 	If InStr(WinGetTitle(hwnd), ChildTitle) && classMatched && InStr(ProcName, ChildExe)
 		ChildHwnds.= GetHex(hwnd) "`;"
 
-return true  ; Tell EnumWindows() to continue until all windows have been enumerated.
+ return true  ; Tell EnumWindows() to continue until all windows have been enumerated.
 }
 ;}
 

@@ -411,7 +411,7 @@ FileGetDetail(FilePath, Index) {                                                
    Return Folder.GetDetailsOf(Item, Index)
 }
 
-FileGetDetails(FilePath) {                                                                                                       	;-- Array der konkreten Dateieigenschaften erstellen
+FileGetDetails(FilePath) {                                                                                                        	;-- Array der konkreten Dateieigenschaften erstellen
    Static MaxDetails := 350
    Shell := ComObjCreate("Shell.Application")
    Details := []
@@ -461,7 +461,8 @@ GetAppImagePath(appname) {                                                      
 					, 	"IMAGE"                            	: 16
 					, 	"UPDATEINFOURL"            	: 17}
 
-   appImages := GetAppsInfo({mask: "IMAGE", offset: A_PtrSize*(headers["IMAGE"] - 1) })
+   ;~ appImages := GetAppsInfo({mask: "IMAGE", offset: A_PtrSize*(headers["IMAGE"] - 1) })
+   appImages := GetAppsInfo({mask: "INSTALLLOCATION", offset: A_PtrSize*(headers["INSTALLLOCATION"] - 1) })
    Loop, Parse, appImages, "`n"
 	If Instr(A_loopField, appname)
 		return A_loopField
