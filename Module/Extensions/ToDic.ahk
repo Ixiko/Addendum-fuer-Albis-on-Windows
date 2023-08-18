@@ -1,34 +1,35 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;                                                                                     TEXT TO DICTIONARY INTERFACE
+;                   TEXT TO DICTIONARY INTERFACE
 ;
 ;      Funktion:
 ;
-;      	Basisskript:    		-	keines
-;		Abhängigkeiten: 	-	siehe #includes
+;      	Basisskript:	-	keines
+;		 Abhängigkeiten: 	-	siehe #includes
 ;
-;	                    				Addendum für Albis on Windows
-;                        				by Ixiko started in September 2017 - last change 19.01.2022 - this file runs under Lexiko's GNU Licence
+;	    	Addendum für Albis on Windows
+;     	by Ixiko started in September 2017 - last change 17.08.2023 -
+;				this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;
 
 	; Skripteinstellungen                                        	;{
 
 		#NoEnv
-		#KeyHistory                   	, 0
-		#MaxThreads                  	, 100
-		#MaxThreadsBuffer       	, On
+		#KeyHistory               	, 0
+		#MaxThreads                	, 100
+		#MaxThreadsBuffer         	, On
 		#MaxMem                    	, 4096
 
-		SetBatchLines                	, -1
-		;ListLines                        	, Off
-		SetControlDelay               	, -1
-		SetWinDelay                 	, -1
-		AutoTrim                       	, On
-		FileEncoding                 	, UTF-8
+		SetBatchLines              	, -1
+		;ListLines                 	, Off
+		SetControlDelay            	, -1
+		SetWinDelay               	, -1
+		AutoTrim                   	, On
+		FileEncoding              	, UTF-8
 
 	;}
 
-	; Variablen                                                       	;{
+	; Variablen                                                  	;{
 
 		global q:=Chr(0x22)
 		global adm := Object()
@@ -38,52 +39,66 @@
 		global ngrams
 		global codetesting := 0
 
-		MFreq 	:= {}, maxMFreq	:= 0, minMFreq:= 10000000
-		SFreq	:= {}, maxSFreq	:= 0, minSFreq	:= 10000000
+		MFreq	:= {}, maxMFreq	:= 0, minMFreq := 10000000
+		SFreq	:= {}, maxSFreq	:= 0, minSFreq := 10000000
 
 		RegExMatch(A_ScriptDir, ".*(?=\\Module)", AddendumDir)
 		adm := AddendumBaseProperties(AddendumDir)
 		adm.albis := GetAlbisPaths()
+
+
 		Menu, Tray,  Icon, % adm.Dir "\assets\ModulIcons\Praxomat.ico"
 		cJSON.EscapeUnicode := "UTF-8"
 
-		global basePath               	:= adm.DBPath "\Dictionary"
-		global medicalWords     	:= basePath "\Medical.json"
-		global othersWords       	:= basePath "\Others.json"
-		global PathWordEndings 	:= basePath "\WordEndings.json"
-		global FilesProcessed      	:= basePath "\FilesP.json"
-		global FilesFromAlbis      	:= basePath "\FilesAlbis.json"
-		global OCRspath          	:= basePath "\FilesAlbisUnprocessed.json"
+
+		adm.basePath        := adm.DBPath "\Dictionary"
+		adm.FilesProcessed  := adm.basePath "\FilesP.json"
+		adm.medicalWords    := adm.basePath "\Medical.json"
+		adm.othersWords     := adm.basePath "\Others.json"
+		adm.PathWordEndings := adm.basePath "\WordEndings.json"
+		adm.FilesFromAlbis  := adm.basePath "\FilesAlbis.json"
+		adm.OCRspath        := adm.basePath "\FilesAlbisUnprocessed.json"
 
 	;}
 
-	; Wörterbücher laden                                     	;{
+	; Wörterbücher laden                                        	;{
 
-		Medical	:= FileExist(medicalWords) 	? cJSON.Load(FileOpen(medicalWords	, "r"	, "UTF-8").Read())	: Object()
-		Others   	:= FileExist(othersWords)    	? cJSON.Load(FileOpen(othersWords 	, "r"	, "UTF-8").Read()) 	: Object()
-		FilesP    	:= FileExist(FilesProcessed)    	? cJSON.Load(FileOpen(FilesProcessed	, "r"	, "UTF-8").Read())	: Array()
+		Medical	:= FileExist(adm.medicalWords)  	? cJSON.Load(FileOpen(adm.medicalWords  	, "r"	, "UTF-8").Read())	: Object()
+		Others 	:= FileExist(adm.othersWords)    	? cJSON.Load(FileOpen(adm.othersWords   	, "r"	, "UTF-8").Read()) 	: Object()
+		tempArr	:= FileExist(adm.FilesProcessed) 	? cJSON.Load(FileOpen(adm.FilesProcessed	, "r"	, "UTF-8").Read())	: Array()
+		FilesP	:= RemoveDriveLetter(tempArr)
+		tempArr := ""
+
+		SciTEOutput(cjSON.Dump(adm, 1))
+
 		MedicalCountAtStart	:= Medical.Count()
 		OthersCountAtStart 	:= Others.Count()
 
 
 	; Autobackup Medical Dictionary
-		If !InStr(FileExist(basePath "\backup"), "D")
-			FileCreateDir, % basePath "\backup"
-		FileOpen(basepath "\backup\" A_YYYY A_MM A_DD A_Hour A_Min A_Sec "_Medical.json" , "w", "UTF-8").Write(cJSON.Dump(Medical, 1))
+		If !InStr(FileExist(adm.basePath "\backup"), "D")
+			FileCreateDir, % adm.basePath "\backup"
+		if !FileExist(backupFilePath := adm.basepath "\backup\" A_YYYY A_MM A_DD A_Hour "-" (Floor(A_Min/15)+1) "_Medical.json")
+			FileOpen(backupFilePath , "w", "UTF-8").Write(cJSON.Dump(Medical, 1))
 
+		;SciTEOutput("backup file: " backupFilePath)
 		;~ endings := WordEndings(Medical)
 		;~ ExitApp
 
 		removedOthers := streetadds := 0
-		SciTEOutput("Others-Dictionary Worte: " Others.Count())
-		SciTEOutput("entferne Doubletten und ergänze Straßennamen ... " Others.Count())
+		SciTEOutput("Others Wörterbuch enthält: " Others.Count() " Worte")
+		SciTEOutput("entferne Doubletten und ergänze Straßennamen ... ")
 
 	; Others - doppelte Worte entfernen
 	; Medical - str auf straße ändern
 		For word, wcount in Medical {
 
+			if (wcount = "")
+				Medical[word] := wcount := 1
+
 			If Others.haskey(word) {
 				Medical[word] += Others[word]
+				wcount := Medical[word]
 				Others.Delete(word)
 				removedOthers ++
 			}
@@ -96,21 +111,20 @@
 				streetnames .= word ", "
 			}
 
-			maxMFreq:= wcount > maxMFreq	? wcount : maxMFreq
-			minMFreq	:= wcount > minMFreq	? wcount : minMFreq
+			maxMFreq := wcount > maxMFreq	? wcount : maxMFreq
+			minMFreq := wcount > minMFreq	? wcount : minMFreq
 			MFreq[wcount] := !MFreq.haskey(wcount) ? 1 : MFreq[wcount] += 1
+
 		}
 
-		SciTEOutput((removedOthers ? removedOthers " identical words removed from others dictionary (others.Count() = " Others.Count()  ")" : ""))
-		SciTEOutput((streetadds ? streetadds " Straßennamen ergänzt ... " streetnames  : ""))
+		SciTEOutput((removedOthers ? removedOthers " Worte aus d. Others WB entfernt. Wörterbuchgröße nach Bereinigung: " Others.Count()  " Worte)" : "keine zu bereinigenden Einträge gefunden"))
+		SciTEOutput((streetadds    ? streetadds    " Straßennamen ergänzt ... " streetnames  : ""))
 		justreturn := true
 		gosub SaveData1
 		justreturn := false
 
-		freqs := []
-		;~ points := "▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀"
-		;~ For num, freq in MFreq
-			;~ SciTEOutput( "|" num " " SubStr(points, 1, Floor(freq/8)) " " freq)
+		;~ freqs := []
+
 
 		; ___________________________________________
 
@@ -119,41 +133,67 @@
 			minSFreq 	:= wcount > minSFreq 	? wcount : minSFreq
 			SFreq[wcount] := !SFreq.haskey(wcount) ? 1 : SFreq[wcount] += 1
 		}
+		;~ SciTEOutput(PrintFrequenciesCount(MFreq))
+		;~ SciTEOutput(PrintFrequenciesCount(SFreq))
 
-		;~ For num, freq in SFreq
-			;~ SciTEOutput( "|" num " " SubStr(points, 1, Floor(freq/8)) " " freq)
-
+		;~ Sci
+		;~ ExitApp
 
 	;}
 
 	;ngrams := RunCrazyNGrams("3,4,5", true)
-	;clean := RemoveDoublettes(medicalWords, othersWords)
-	;medicalWords 	:= clean.objA
-	;othersWords  	:= clean.objB
+	;clean := RemoveDoublettes(adm.medicalWords, adm.othersWords)
+	;adm.medicalWords 	:= clean.objA
+	;adm.othersWords  	:= clean.objB
 	;~ gosub AlbisPDFOdner
-	gosub BefundOrdner
 	;ReIndexMedicalList()
 
+	FilesT := BefundOrdner(FilesP)
+
 	DicGui()
-	gosub CheckSyntax
+	CheckSyntaxGui()
 
 return
 
-AlbisPDFOdner:	; Albis PDF Ordner , PDF -> Text	;{
+AutoWortChecker() {
 
-		noOCRspath := adm.DBPath "\Dictionary\albisDir_NoOCR_PDF.json"
-		OCRspath		:= adm.DBPath "\Dictionary\albisDir_OCR_PDF.json"
-		FilesT        	:= FileExist(OCRspath) ? cJSON.Load(FileOpen(OCRspath, "r"	, "UTF-8").Read()) : Array()
-		FilesNT	    	:= Array()
+	; Medical ist global
+
+	wordEndings := {"de" : ["ung(?<end>en)"			  	, "([knrt])(?<end>en)"		, "[knrt](?<end>er)"		, "[kmnrt](?<end>es)"
+												, "([dgknrt])(?<end>e)"		, "(le)(?<end>n)"	  			, "[gn](?<end>s)"	    	, "ium"									, "ie"
+												, "isch"							  	, "ion"]}
+	wordBindings := {"de" : ["[tg](s)", "[l](en)", "lf(e)", "f(d)", "f(p)", "f(sy)", "ions", "s(th|[bdep])"]}
+
+	refObj := Object()
+
+	For word, wcount in Medical {
+
+		;~ Sub
+
+
+	}
+
+
+}
+
+AlbisPDFOdner:	; für nachträgliches OCR -- Albis PDF Ordner , PDF -> Text	;{
+
+		noadm.OCRspath := adm.DBPath "\Dictionary\albisDir_NoOCR_PDF.json"
+		adm.OCRspath   := adm.DBPath "\Dictionary\albisDir_OCR_PDF.json"
+		FilesT     := FileExist(adm.OCRspath) ? cJSON.Load(FileOpen(adm.OCRspath, "r"	, "UTF-8").Read()) : Array()
+		FilesNT	   := Array()
 
 ;~ return
 
 
+		; SciTEOutput(cJSON.dump(FilesT, 1))
+
 		;~ FilesT		:= Array()
 		startT       	:= A_TickCount
-		Loop, Files, % "M:\albiswin\Briefe\*.pdf", R
+		Loop, Files, % adm.albis.Briefe "\*.pdf", R
 		{
 
+		  ; Verlauf
 			If Mod(A_Index, 100) = 0 {
 				t 	:= Floor((A_TickCount - startT) / 1000)
 				m	:= Floor(t / 60)
@@ -161,58 +201,107 @@ AlbisPDFOdner:	; Albis PDF Ordner , PDF -> Text	;{
 				ToolTip, % A_Index " PDF-Dateien`nZeit: (" t ") " m ":" SubStr("0" s, -1), 1400, 1, 13
 			}
 
-			If inArr(A_LoopFileFullPath, FilesT) || inArr(A_LoopFileFullPath, FilesNT)
+			fpath := RegExReplace(A_LoopFileFullPath, "^\w+?(:|\\)")
+			If inArr(fpath, FilesT) || inArr(fpath, FilesNT)
 				continue
 
-			If !PDFisSearchable(A_LoopFileFullPath) {
-				FilesNT.Push(A_LoopFileFullPath)
-				continue
-			}
-
-			FileFound := false
-			For fidx, filepath in FilesP
-				If (filepath = A_LoopFileFullPath) {
-					FileFound := true
-					break
-				}
-			If FileFound
-				continue
-
-			FilesT.Push(A_LoopFileFullPath)
+			If !PDFisSearchable(A_LoopFileFullPath)
+				FilesNT.Push(fpath)
+			else
+				FilesT.Push(fpath)
 
 		}
 
 		ToolTip,,,,13
-		JSONData.Save(adm.DBPath "\sonstiges\albisDir_NoOCR_PDF.json", FilesNT, true,, 1, "UTF-8")
-		JSONData.Save(adm.DBPath "\sonstiges\albisDir_OCR_PDF.json", FilesT, true,, 1, "UTF-8")
+
+		; Speichern
+		FileOpen(adm.DBPath "\sonstiges\albisDir_NoOCR_PDF.json", "w", "UTF-8").Write(cJSON.Dump(FilesNT))
+		FileOpen(adm.DBPath "\sonstiges\albisDir_OCR_PDF.json"  , "w", "UTF-8").Write(cJSON.Dump(FilesT))
 
 ;}
 
-BefundOrdner:	; nicht bearbeitete Textdateien zusammenstellen	;{
+ObjectSaveBackup(object, filepath, backupPath:="\backup") {
 
-		FilesT := Array()
-		SciTEOutput("FilesP: " FilesP.Count() "`nstelle Befunde im Posteingang zusammen (FilesT)" )
-		Loop, Files, % "M:\Befunde\Text\*.txt", R
-		{
+	static nobackupDir
 
-			If (Mod(A_Index, 200) < 2) {
-				MouseGetPos, mx, my
-				ToolTip, % FilesT.Count() " unverarbeitete Dateien von " A_Index " gesamt.`naktuelle Datei: " A_LoopFileFullPath, % mx-20 , % my+50, 5
-			}
+	if nobackupDir
+		return
 
-			If inArr(A_LoopFileFullPath, FilesP)
-				continue
+	SplitPath, filepath, fdir, fname, fExt, fOutExt
 
-			FilesT.Push(A_LoopFileFullPath)
+	if !isObject(object) {
+		name := %object%
+		SciTEOutput("Es wurde kein Backup der Daten von " fOutExt " erstellt, da es kein Daten-Objekt ist.")
+		return
+	}
 
+	backupPath := backupPath ~= "i)^[A-Z]+(:|\\)" ? backupPath : fdir "\" LTrim(backupPath, "\")
+	if !Instr(FileExist(backupPath), "D") {
+		SciTEOutput("Das Verzeichnis für den Backup existiert nicht:`n - " backupPath)
+		nobackupDir := true
+		return
+	}
+
+	if !FileExist(backupFilePath := backupPath "\" fOutExt "_" A_YYYY A_MM A_DD A_Hour A_min "." fExt)
+			FileOpen(backupFilePath , "w", "UTF-8").Write(cJSON.Dump(object, 1))
+
+}
+PrintFrequenciesCount(Frequencies, maxHeight:=50) {
+
+	static pointsA := "▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉"
+	                   ;1                                                                         ;50
+	static pointsB := "▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏▏"
+
+	For freq, wordCount in Frequencies
+		maxWordCount := maxWordCount >= wordCount ? maxWordCount : wordCount
+	SciTEOutput(MaxWordCount)
+
+	For freq, wordCount in Frequencies {
+
+		pMaxWord    := (wordCount*100/maxWordCount)*100
+		perc        := Floor((pMaxWord*100)/maxWordCount)
+		drawLen     := Floor(500*(perc/100))+1
+		drawSmall   := drawLen - Floor(drawLen/7)*7
+		drawWide    := Floor(drawLen/7)
+
+		t .= Format("{:7}", Round(freq)) " " SubStr(pointsA, 1, drawWide) Substr(pointsB, 1, drawSmall) " " wordCount  "`n"
+
+	}
+
+return t
+}
+BefundOrdner(FilesP) {	; nicht bearbeitete Textdateien zusammenstellen	;{
+
+	FilesT := Array()
+
+	if !adm.ScanPath
+		return
+
+	SciTEOutput("bisher verarbeitete Dokumente: " FilesP.Count() "`nstelle Dokumente im Posteingang zusammen (FilesT)" )
+	Loop, Files, % adm.ScanPath "\*.txt", R
+	{
+
+		If (Mod(A_Index, 200) < 2) {
+			MouseGetPos, mx, my
+			ToolTip, % FilesT.Count() " unverarbeitete Dateien von " A_Index " gesamt.`naktuelle Datei: " A_LoopFileFullPath, % mx-20 , % my+50, 5
 		}
 
-	 ; ToolTip Nr. 5 in 10s ausschalten
-		TTOff(5, 10000)
-		SciTEOutput("FilesT: " FilesT.Count() " unverarbeitete Posteingangsbefunde" )
+		fpath := RegExReplace(A_LoopFileFullPath, "^\w+?(:|\\)")
+		If inArr(fpath, FilesP)
+			continue
 
+		FilesT.Push(fpath)
 
-return 	;}
+	}
+
+ ; ToolTip Nr. 5 in 10s ausschalten
+	TTOff(5, 10000)
+	SciTEOutput("FilesT: " FilesT.Count() " unverarbeitete Posteingangsbefunde" )
+
+return FilesT
+}
+;}
+
 TTOff(TTNr, Delay) {
 	fn := Func("TTNrOff").Bind(TTNr)
 	SetTimer, % fn, % -1*Delay
@@ -228,18 +317,24 @@ SaveData2: ;{
 	cJSON.EscapeUnicode := "UTF-8"
 
 	MedicalNew	:= Medical.Count() - MedicalCountAtStart
-	OthersNew 	:= Others.Count() - OthersCountAtStart
+	OthersNew 	:= Others.Count()  - OthersCountAtStart
 
 	If IsObject(Medical) 	&& (MedicalNew || justreturn)
-		FileOpen(medicalWords	, "w", "UTF-8").Write(cJSON.Dump(Medical, 1))
-	If IsObject(Others) 	&& (OthersNew || justreturn)
-		FileOpen(othersWords    	, "w", "UTF-8").Write(cJSON.Dump(Others, 1))
-	;~ If IsObject(FilesP)   	&& FilesP.Count()
-		;~ FileOpen(FilesProcessed	, "w", "UTF-8").Write(cJSON.Dump(FilesP, 1))
+		FileOpen(adm.medicalWords, "w", "UTF-8").Write(cJSON.Dump(Medical, 1))
+	If IsObject(Others) 	&& (OthersNew || justreturn) {
+		if FileExist(adm.othersWords)
+			ObjectSaveBackup(Others, adm.othersWords)
+		FileOpen(adm.othersWords, "w", "UTF-8").Write(cJSON.Dump(Others, 1))
+	}
+	If IsObject(FilesP)   	&& FilesP.Count() {
+		if FileExist(adm.FilesProcessed)
+			ObjectSaveBackup(FilesP, adm.FilesProcessed)
+		FileOpen(adm.FilesProcessed	, "w", "UTF-8").Write(cJSON.Dump(FilesP, 1))
+	}
 	;~ If IsObject(FilesB)   	&& FilesB.Count()
-		;~ FileOpen(FilesFromAlbis	, "w", "UTF-8").Write(cJSON.Dump(FilesB, 1))
+		;~ FileOpen(adm.FilesFromAlbis	, "w", "UTF-8").Write(cJSON.Dump(FilesB, 1))
 	;~ If IsObject(FilesT)   	&& FilesT.Count()
-		;~ FileOpen(OCRspath      	, "w", "UTF-8").Write(cJSON.Dump(FilesT, 1))
+		;~ FileOpen(adm.OCRspath      	, "w", "UTF-8").Write(cJSON.Dump(FilesT, 1))
 
 	If justreturn
 		return
@@ -255,12 +350,14 @@ SaveData2: ;{
 
 ExitApp ;}
 
-CheckSyntax: ;{
+CheckSyntaxGui() {
+
+	static ngOut, ngInput, lastOK
 
 	WinGetPos, x, y, w, h, % "Wörterbucheditor ahk_class AutoHotkeyGUI"
 	Gui, ngram: new, -DPIScale
 	Gui, ngram: Font, s11 q5 cBlack, Arial
-	Gui, ngram: Add, Edit, xm ym    	w500 h600 	vngOut
+	Gui, ngram: Add, Edit, xm ym   	w500 h600 	vngOut
 	Gui, ngram: Add, Edit, xm y+10 	w500 r1    	vngInput gngInputValidate -AltSubmit
 	Gui, ngram: Show, % "x" x+w+5 " y" y " AutoSize NA", ngram-Syntaxchecker
 
@@ -269,12 +366,14 @@ CheckSyntax: ;{
 	Hotkey, IfWinActive
 
 
-return ;}
+return
 ngramSyntaxValidator: ;{
 
 	Gui, ngram: Submit, NoHide
+
 	ngLen := StrLen(ngInput)
-	out := ngInput "`n"
+	out   := ngInput "`n"
+
 	Loop 3 {
 
 		NgramSize := 2+A_Index
@@ -296,7 +395,8 @@ ngramSyntaxValidator: ;{
 
 
 return ;}
-ngInputValidate: ;{
+
+ngInputValidate: ;{ korrigiert während der Eingabe
 
 	Gui, ngram: Submit, NoHide
 	If RegExMatch(ngInput, "i)[^\pL]") {
@@ -309,46 +409,64 @@ ngInputValidate: ;{
 	} else {
 		Gui, ngram: Color, cFFFFFF
 		lastOK := true
-
 	}
 
-return
+return ;}
+
 ngramGuiClose:
 ngramGuiEscape:
-ExitApp ;}
+MsgBox, 0x1004, % A_ScriptName, % "Das Schließen dieses Fensters beendet das Skript.`n Sicher?"
+IfMsgBox, No
+	return
+ExitApp
+}
+
+DicEditorGui() {
+
+	global
+
+	Gui, EDT: new, -DPIScale
+	Gui, EDT: Font, % "s" (A_ScreenWidth>1920 ? 12 : 11) " q5 cBlack", Consolas
+	Gui, EDT: Add, ListView	, % "xm 	y18 	w500 r40 AltSubmit vEDT_LV gEDT_LV"	, Wort|GZ
+	; ----
+
+return
+EDT_LV:
+return
+}
 
 DicGui() {
 
 	global
 	static 	FNR := 1, DicInit := true
 
-	col1W1	:= 280, col1W2 := 60
-	col2W1	:= 80, col2W2 := 270, col2W3 := 40
+	col1W1	:= 380, col1W2 := 80
+	col2W1	:= 100, col2W2 := 370, col2W3 := 60
 	Lv1W  	:= col1W1 + col1W2 + 40
 	Lv2W  	:= col2W1 + col2W2 + col2W3 + 20
 
 	Gui, Dic: new, -DPIScale
-	Gui, Dic: Font, % "s" (A_ScreenWidth>1920 ? 12 : 11) " q5 cBlack", Arial
+	Gui, Dic: Font, % "s" (A_ScreenWidth>1920 ? 11 : 10) " q5 cBlack", Consolas
 	Gui, Dic: Add, ListView	, % "xm 	y18 	w" Lv1W " r40 AltSubmit vDIC_LVTXT1 	gDIC_LV"	, Wort|GZ
 	Gui, Dic: Add, ListView	, % "x+0 	    	w" Lv1W " r40 AltSubmit vDIC_LVTXT2 	gDIC_LV"	, Wort|GZ
 	Gui, Dic: Add, ListView	, % "x+0 	    	w" Lv2W " r40 AltSubmit vDIC_LVTXT3 	gDIC_LV"	, WBuch|Textwort|Z
-	Gui, Dic: Add, ListView	, % "x+5 		 	w" Lv2W " r40 AltSubmit vDIC_LVDIC  	gDIC_LV"	, WBuch|Med.Wörterbuch|Z
+	Gui, Dic: Add, ListView	, % "x+5 	  	 	w" Lv2W " r40 AltSubmit vDIC_LVDIC  	gDIC_LV"	, WBuch|Med.Wörterbuch|Z
 
 	Gui, Dic: Font, s8 q5 cBlack, Arial
 	GuiControlGet, cp2,	 Dic: Pos, DIC_LVTXT2
-	GuiControlGet, cp3, 	 Dic: Pos, DIC_LVTXT3
+	GuiControlGet, cp3,	 Dic: Pos, DIC_LVTXT3
 	Gui, Dic: Add, Edit    	, % "x+5 		 	w500 h" cp2H    "  vDIC_TXT   "                           	, % ""
 
 	Gui, Dic: Font, s9 q5 cBlack, Arial
 	Gui, Dic: Add, Text		, % "xm+20 y0 "	     		                        		    	            		, % "Medizin"
-	Gui, Dic: Add, Text		, % "x" cp2X+20 " y0 "	  		                       		    	            		, % "andere"
-	Gui, Dic: Add, Text		, % "x" cp3X+20 " y0 "	  		                       		    	            		, % "unbekannt/ngram"
+	Gui, Dic: Add, Text		, % "x" cp2X+20 " y0 "	  		                       		    	         		, % "andere"
+	Gui, Dic: Add, Text		, % "x" cp3X+20 " y0 "	  		                       		    	         		, % "unbekannt/ngram"
 
 	GuiControlGet, cp, DIC: pos, DIC_LVDIC
 	Gui, Dic: Font, s8 q5 cBlack, Arial
-	Gui, Dic: Add, Text		, % "x" cpX "	y0"				                        									, % "Datei:"
+	Gui, Dic: Add, Text		, % "x" cpX-100 "	y0"				                        		  			  				, % "Datei:"
 	Gui, Dic: Font, s8 q5 cBlack, Arial
-	Gui, Dic: Add, Text		, % "x+2 y0 w370             	vDIC_FN"		                        			, % FilesT[FNR]
+	Gui, Dic: Add, Text		, % "x+2 y0 w570             	vDIC_FN"		                          			, % adm.DriveLetter . FilesT[FNR]
 
 	GuiControlGet, cp, DIC: pos, DIC_TXT
 	Gui, Dic: Font, s8 q5 cBlack, Arial
@@ -358,21 +476,24 @@ DicGui() {
 
 	; Statistik
 	Gui, Dic: Font, s10 q5 cBlack, Arial
-	Gui, Dic: Add, Text		, % "x" cpX " y" cpY+cpH+10 " w300 Center"		    			 			, % "Gesamtstatistik"
+	Gui, Dic: Add, Text		, % "x" cpX " y" cpY+cpH+10 " w300 Center"		    			              			, % "Gesamtstatistik"
 	Gui, Dic: Font, s8 q5 cBlack, Arial
-	Gui, Dic: Add, Edit		, % "Y+5   w300  h120 vDIC_GS ReadOnly"									, % "-------"
+	Gui, Dic: Add, Edit		, % "Y+5   w300  h120 vDIC_GS ReadOnly"					                    				, % "-------"
 
 	GuiControlGet, cp, DIC: pos, DIC_WD
 	Y := cp2Y + cp2H + 20
 	Gui, Dic: Font, s10 q5 cBlack, Arial
-	Gui, Dic: Add, Button 	, % "xm     y" Y      "	vDIC_BBK    	gDIC_BTNS"	                         	, % "<<"
+	Gui, Dic: Add, Button 	, % "xm     y" Y      "	vDIC_BBK   	gDIC_BTNS"	                         	, % "<<"
 	Gui, Dic: Add, Button 	, % "x+10              	vDIC_BFW   	gDIC_BTNS"	                         	, % ">>"
 	Gui, Dic: Add, Button 	, % "x+30              	vDIC_SPDF  	gDIC_BTNS"	                         	, % "PDF-Datei ansehen"
 
 	GuiControlGet, cp, DIC: pos, DIC_WD
-	Gui, Dic: Add, Button 	, % "xm     y+10       	vDIC_BOK	gDIC_BTNS hwndDIC_hOK"		, Übernehmen
-	Gui, Dic: Add, Button 	, % "x+10 	     		vDIC_BCL 	gDIC_BTNS"	                         	, Abbrechen + Sichern
-	Gui, Dic: Add, Button 	, % "x+100 	    		vDIC_BXT  	gDIC_BTNS"	                        	, Beenden
+	Gui, Dic: Add, Button 	, % "xm     y+10       	vDIC_BOK  	gDIC_BTNS hwndDIC_hOK"            		, Übernehmen
+	Gui, Dic: Add, Button 	, % "x+10 	        		vDIC_BCL  	gDIC_BTNS"	                         	, Abbrechen + Sichern
+	Gui, Dic: Add, Button 	, % "x+100 	        		vDIC_BXT  	gDIC_BTNS"	                        	, Beenden
+
+	GuiControlGet, cp, DIC: pos, DIC_GS
+	Gui, Dic: Add, Button 	, % "xm     y+10       	vDIC_EDT  	gDIC_BTNS"                         		, Wörterbücher`nbearbeiten
 
 	Gui, Dic: ListView, % "DIC_LVTXT1"
 	LV_ModifyCol(1, col1W1)
@@ -523,7 +644,10 @@ DIC_BTNS: ;{
 			Run % popfile
 		else
 			MsgBox, % "Datei: " popfile " wurde nicht gefunden."
+	} else if (A_GuiControl = "DIC_EDT") {
+			DicEditorGui()
 	}
+
 
 
 return ;}
@@ -539,7 +663,7 @@ addToDictionary() {
 
 
 	global Dic, DIC_LVDIC, DIC_LVTXT, DIC_WB, FNR, popfile
-	global medicalWords, othersWords, FilesProcessed
+	;global medicalWords, othersWords, FilesProcessed
 	global Medical, Others, FilesP, FilesB, FilesT, AlbisBriefe
 
 	; Medizinwörterbuch ergänzen
@@ -547,7 +671,7 @@ addToDictionary() {
 		Loop, % LV_GetCount() {
 
 			LV_GetText(rword  	, A_Index, 2)
-			LV_GetText(rwcount  	, A_Index, 3)
+			LV_GetText(rwcount 	, A_Index, 3)
 
 			Medical[rword] := !Medical.haskey(rword) ? rwcount : Medical[rword] += rwcount
 			If Others.haskey[rword] {
@@ -618,10 +742,11 @@ LoadText() {
 			AlbisBriefe := true
 			FNR_Last	:= FNR
 			FileIndex	:= FNR := FileFoundIndex := 0
-			FilesB    	:= FileExist(FilesFromAlbis) ? cJSON.Load(FileOpen(FilesFromAlbis, "r", "UTF-8").Read()) : Array()
+			tempArr  	:= FileExist(adm.FilesFromAlbis) ? cJSON.Load(FileOpen(adm.FilesFromAlbis, "r", "UTF-8").Read()) : Array()
+			FilesB  	:= RemoveDriveLetter(tempArr)
 			FilesT		:= Array()
 
-			SciTEOutput("FilesB (verarbeitete Dateien im Verzeichnis - albiswin\Briefe): " FilesB.Count())
+			SciTEOutput("FilesB (bereits erfasste Dokumente im Verzeichnis 'albiswin\Briefe'): " FilesB.Count())
 
 			If !codetesting {
 
@@ -638,23 +763,17 @@ LoadText() {
 									. "aktuelles Verzeichnis: " rx_path "\" rx_fn, % mx + -20 , % my + 50, 5
 					}
 
-
-					FileFound := false
-					For fBidx, fBFilepath in FilesB {
-						If (fBFilepath = A_LoopFileFullPath) {
-							FileFound := true
-							FileFoundIndex ++
-							break
-						}
-					}
-					If FileFound
+					fpath := RegExReplace(A_LoopFileFullPath, "^\w+?(:|\\)")
+					If inArr(fpath, FilesP) {
+						FileFoundIndex ++
 						continue
+					}
 
-					FilesT.Push(A_LoopFileFullPath)
+					FilesT.Push(fpath)
 
 				}
 
-				SciTEOutput(FilesT.Count() " Dateien aus albiswin\Briefe wurden erfasst")
+				SciTEOutput(FilesT.Count() " Dateien im Verzeichnis 'albiswin\Briefe' erfasst")
 				ToolTip,,,, 5
 
 			}
@@ -664,27 +783,29 @@ LoadText() {
 		}
 
 	; letzte Datei wird geladen und unter Processed gespeichert
-		popfile := FilesT.pop()
+		popfile := adm.DriveLetter . FilesT.pop()
 
 	; Statistiken + aktuelle Datei
 		GuiControl, Dic:, DIC_WD	, % "[unverarbeitet: " FilesT.Count() " (Nr: " SubStr("         " FNR, -5) ")] "
 		If !popfile || !FileExist(popfile) {
 			dbg ? SciTEOutput("Datei nicht vorhanden: " (popfile ? popfile : "--empty--")) : ""
-			;~ LoadText()
 			return 0
 		}
+
 		FNR++
-		GuiControl, Dic:, DIC_FN	, % popfile
+		GuiControl, Dic:, DIC_FN, % popfile
 
 
 	; Worte werden untersucht
-		words := CollectWords(popfile)
-		If (!IsObject(words) || !words.Count()) {
-			;~ LoadText()
+		words := CollectWords(popfile,, errormsg)
+		If (!IsObject(words) || !words.Count() || errormsg) {
+			SciTEOutput(Format("{:6}", FNR) (errormsg ? errormsg "`n  " popfile : " - collected words object ist leer"))
 			return 0
 		}
-		GuiControl, Dic:, DIC_TXT, % thisText
-		GuiControl, Dic:, DIC_WB	, %  "[" wsCount " Worte] "
+		if thisText
+			GuiControl, Dic:, DIC_TXT , % thisText
+		GuiControl, Dic:, DIC_WB	, % "[" wsCount " Worte] "
+		thisText := ""
 
 	; Worte anzeigen
 		For word, wdata in words {
@@ -696,9 +817,9 @@ LoadText() {
 				continue
 
 			col1 := ( wdata.list=1 ? "unbekannt"
-						: wdata.list=2 ? "Medizin"
-						: wdata.list=3 ? "andere"
-											  : "ngram")  ; 4 = ngram
+				  		: wdata.list=2 ? "Medizin"
+				  		: wdata.list=3 ? "andere"
+					      						 : "ngram")  ; 4 = ngram
 
 			Gui, Dic: ListView, % "DIC_LVTxt" ( wdata.list=1 || wdata.list=4 ? "3" :  wdata.list=2 ? "1" : "2")
 			If (wdata.list=1 || wdata.list=4)
@@ -890,22 +1011,22 @@ ReIndexMedicalList() {   ;-- ### obsolet
 
 	}
 
-	FileOpen(medicalWords, "w", "UTF-8").Write(cJSON.Dump(Medical, 1))
-	;~ JSONData.Save(medicalWords	, Medical	, true,, 1, "UTF-8")
+	FileOpen(adm.medicalWords, "w", "UTF-8").Write(cJSON.Dump(Medical, 1))
+	;~ JSONData.Save(adm.medicalWords	, Medical	, true,, 1, "UTF-8")
 
 }
 
-CollectWords(filepath, debug:=false) {
+CollectWords(filepath, debug:=false, byref errorlist:="") {
 
-	;    phlie 				phie                	,      formuflar 		formular    	,    🗸Aiforderung 	Anforderung ,	🗸Aipträumen	Alpträumen
-	;    Akkordiohn		Akkordlohn   	,      Akkurdlohn	Akkordlohn
-	; 🗸Aklenzeichen	Aktenzeichen 	,      Nierenlaqer	Nierenlager	,	🗸Laqer              	Lager       	,	🗸Doniinikos   	Dominikus
-	; 🗸klinlk             	klinik             	, 	🗸Dlagnose      	Diagnose
-	; 🗸Leislung       	Leistung          	,	🗸Yberweisung	Überweisung	,	🗸protruslon     	protrusion  	,	🗸glelten         	gleiten
-	;🗸Multl             	Multi             	, 	🗸rhvthmus       	rhythmus
-	;    zeil               	zeit             -> wann ist aber zeile gemeint?
-	; 🗸FPisode        	Episode           	,	🗸koagulalion 	koagulation	,	🗸Operatlon    	Operation
-	; 🗸frcquenz        	frequenz			,	🗸Vundauflage	Wundauflage
+	;   phlie 				phie        	,   formuflar 		formular   	, 🗸Aiforderung    	Anforderung   ,	🗸Aipträumen   	Alpträumen
+	;   Akkordiohn		Akkordlohn   	,   Akkurdlohn  	Akkordlohn
+	; 🗸Aklenzeichen 	Aktenzeichen 	,   Nierenlaqer 	Nierenlager	,	🗸Laqer          	Lager       	,	🗸Doniinikos   	Dominikus
+	; 🗸klinlk        	klinik       	, 🗸Dlagnose      	Diagnose
+	; 🗸Leislung     	Leistung     	,	🗸Yberweisung  	Überweisung	,	🗸protruslon     	protrusion  	,	🗸glelten      	gleiten
+	; 🗸Multl        	Multi        	, 🗸rhvthmus     	rhythmus
+	;   zeil         	zeit         -> wann ist aber zeile gemeint?
+	; 🗸FPisode      	Episode     	,	🗸koagulalion  	koagulation	,	🗸Operatlon       	Operation
+	; 🗸frcquenz      	frequenz			,	🗸Vundauflage  	Wundauflage
 	;  Mldazolam, Gastroskople, Stimmllppe 	Stimmlippe
 
 	; RegEx Satztrennung: (\p{Lu}\p{Ll}.*?\p{Ll}\.)(\s|$) -> $1\n
@@ -913,87 +1034,102 @@ CollectWords(filepath, debug:=false) {
 	global AlbisBriefe, FilesB, FilesP, thisText, wsCount
 
 				            		; Wortanfang
-	static rxchanger := {	"\sAif":" Anf"					, "\sAip":" Alp"    					, "\sYbe":" Übe"					, "\sFp":" Ep", "\sVund":" Wund"
-									; überall im Wort
-								, 	"aqe":"age"					, "nii":"mi"           					, "islu":"istu"    					, "i)ultl":"ulti"								, "i)hvth":"hyth"
-								, 	"nlk":"nik"   					, "(\sD|d)j":"$1i"  					, "i)aklen":"akten"				, "i)lelten":"leiten"						, "i)laqe":"lage"
-								,	"i)slon":"sion"					, "([^aeiouäüö])vv":"$1w" 		, "q([^u])":"g$1"				, "(\p{Ll})B(\p{Ll})":"$1ß$2"		, "i)rcq":"req"
-								,	"i)klomie":"ktomie"        	, "i)(\p{Ll})clorf":"$1dorf"       	, "i)storung":"störung"       	, "i)slände":"stände"                  	, "i)otoge":"ologe"
-									; Wortende
-								, 	"nr(\s|\.)":"nummer "     	, "\-Teststr\s":"Teststreifen "    	, "Teststr\s":"Teststreifen "   	, "lalion\s":"lation " 	   				, "([ak])tlon\s":"$1tion "
-								,	"i)arztin\s":"ärztin "
-								,	"rlum\s":"rium "             	, "salion\s":"sation"              	, "\srichle\s":"richte "			, "(\p{Ll})B\s":"$1ß "     }
+	static rxchanger := {	"\sAif"    : " Anf"	   			, "\sAip":" Alp"    		      			, "\sYbe":" Übe"				      	, "\sFp":" Ep", "\sVund":" Wund"
+						      			; überall im Wort
+						       		, 	"aqe"    : "age"	    		, "nii":"mi"           		    			, "islu":"istu"    				    	, "i)ultl":"ulti"							    	, "i)hvth":"hyth"
+						       		, 	"nlk"    : "nik"     			, "(\sD|d)j":"$1i"  			       		, "i)aklen":"akten"		  	    	, "i)lelten":"leiten"					    	, "i)laqe":"lage"
+						       		,	"i)slon"   : "sion"		  		, "([^aeiouäüö])vv":"$1w" 	      	, "q([^u])":"g$1"		     	    	, "(\p{Ll})B(\p{Ll})":"$1ß$2"	    	, "i)rcq":"req"
+						       		,	"i)klomie" : "ktomie"      	, "i)(\p{Ll})clorf":"$1dorf"       	, "i)storung":"störung"        	, "i)slände":"stände"              	, "i)otoge":"ologe"
+						       			; Wortende
+						       		, "nr(\s|\.)"  : "nummer "  	, "\-Teststr\s":"Teststreifen "    	, "Teststr\s":"Teststreifen " 	, "lalion\s":"lation " 	   		    	, "([ak])tlon\s":"$1tion "
+						       		,	"i)arztin\s" : "ärztin "
+						       		,	"rlum\s"     : "rium "    	, "salion\s":"sation"              	, "\srichle\s":"richte "		   	, "(\p{Ll})B\s":"$1ß "     }
 	static vouwels    	:= "aeiouäöü"
 	static consonants 	:= "qwrtzpsdfghjklxcvbnm"
-	static clock := "\d{1,2}\s*[\:\;\.]\s*\d{1,2}"
-	static	ocrcorrection := {"rt":"h", "ri":"n", "x":"x", "x":"x", "x":"x"}
+	static clock        := "\d{1,2}\s*[\:\;\.]\s*\d{1,2}"
+	static ocrcorrection:= {"rt":"h", "ri":"n", "x":"x", "x":"x", "x":"x"}
 	static Delimiters 	:= "\-\/"
 	PNames    	:= Object()
 	MFreqLimit	:= 3
 	OFreqLimit 	:= 2
-	spos          	:= 1
+	spos       	:= 1
+	errorlist   := ""
+
+	if !FileExist(filepath) {
+		errorlist := "file not exists"
+		return
+	}
 
   ; Text aus der Datei laden
-	If RegExMatch(filePath, "\.(pdf|doc)$") {
+	If RegExMatch(filePath, "i)\.(pdf|doc|docx)$")  {
 
 		try {
 		  textO := IFilter(filepath)
 		}
-		catch {
+		catch e {
 			textO := ""
+			errorlist := "IFilter: " cJSON.dump(e)
 			return
 		}
 
 	}
-	else if RegExMatch(filePath, "\.txt$")
+	else if RegExMatch(filePath, "i)\.txt$")
 		textO := FileOpen(filepath, "r", "UTF-8").Read()
-
-	If (textO < 0 || StrLen(Trim(textO)) = 0)
+	else {
+		Splitpath, filePath, fdir, fName, fOutExt, fExt
+		errorlist := "unknown file extension: ." fExt
 		return
+	}
+
+
+	If (StrLen(Trim(textO)) < 3 ) {
+		errorlist := "text is read from file is empty"
+		return
+	}
 
   ; einfache Text/OCR Fehlerkorrekturen
 	textO := RegExReplace(" " textO " ", "[\n\r\f]+", " ")
-	text := StrReplace(textO, "ı", "i")                                                                                             	; ein i anstatt ı
-	text := RegExReplace(text, "(\p{Ll})(\d+)\s", "$1 $2 ")                                                             	; Nummer6 -> Nummer 6
-	text := RegExReplace(text, "\d{1,2}\s*\.\s*\d{1,2}\s*\.\s*(\d{4}|\d{2})", " ")                      	; entfernt Datumszahlen
-	text := RegExReplace(text, "i)(" clock ")(\s*\-\s*" clock ")*(\s*Uhr)*\s", " ")                                   	; entfernt Zahlenwerte und Uhrzeiten (12:30 Uhr* o. 12.30-14.30 Uhr)
-	;~ text := RegExReplaceAll(text, "\s(-[\p{Ll}\-]*|\p{Ll})\s", "  ")                                                  	; entfernt Folgen v. Kleinbuchstaben nach Leerzeichen
-																																				; gefolgt v. einem Minus ' -abcdef'
-	text := RegExReplace(text, "\s\p{Ll}\.\s", " ")                                                                         	; einbuchstabige Abkürzungen > v.
-	text := RegExReplaceAll(text, "(\s|\()\s*\d+\s*[\)\/\:]*[\s\d\:\.\,\-\/]+(\s|\))", " ")                  	; entfernt Telefonnummern > (040) 1234 56 78
-																																				; aber auch 040 - 1234 56 78
-	text := RegExReplace(text, "(\p{Ll})\-\s+(\p{Ll}{2,})", "$1$2")                                              	; mittel- gradige -> mittelgradige
-	text := RegExReplace(text, "(\d+\-|\p{Lu}\p{Ll}+\d*\-)\s+(\p{Lu}\p{Ll}{2,})", "$1-$2")      	; COVID-19-Schutzmaßnahmen-  Ausnahmeverordnung
-	text := RegExReplace(text, "(\p{Ll}{2,}|\p{Lu}\p{Ll})(\p{Lu}\p{Ll}{2,})", "$1 $2")                 	; trennt: rechtskonvexeSkoliose - aber auch > rechtskonveXeSkoliose
-	text := RegExReplace(text, "(\p{Lu}{2,}|[^\pL]\p{Lu})(\p{Lu}\p{Ll})", "$1 $2")                      	;  MNeurologie -> M Neurologie
-	text := RegExReplace(text, "(\p{Ll})q\s", "$1g ")                                                                   	; ausgiebiq -> ausgiebig
-	text := RegExReplace(text, "(\p{Ll}\d*)\s+(\-\p{Lu})", "$1$2")                                               	; Sauerstoff -Sättigung -> Sauerstoff-Sättigung
-	text := RegExReplace(text, "\s", "   ")                                                                                       	; Leerzeichen verdoppeln
+	text  := StrReplace(textO, "ı", "i")                                                                   	; ein i anstatt ı
+	text  := RegExReplace(text, "(\p{Ll})(\d+)\s", "$1 $2 ")                                               	; Nummer6 -> Nummer 6
+	text  := RegExReplace(text, "\d{1,2}\s*\.\s*\d{1,2}\s*\.\s*(\d{4}|\d{2})", " ")                        	; entfernt Datumszahlen
+	text  := RegExReplace(text, "i)(" clock ")(\s*\-\s*" clock ")*(\s*Uhr)*\s", " ")                       	; entfernt Zahlenwerte und Uhrzeiten (12:30 Uhr* o. 12.30-14.30 Uhr)
+	;~ text := RegExReplaceAll(text, "\s(-[\p{Ll}\-]*|\p{Ll})\s", "  ")                                    	; entfernt Folgen v. Kleinbuchstaben nach Leerzeichen
+																																																		  		;	gefolgt v. einem Minus ' -abcdef'
+	text  := RegExReplace(text, "\s\p{Ll}\.\s", " ")                                                       	; einbuchstabige Abkürzungen > v.
+	text  := RegExReplaceAll(text, "(\s|\()\s*\d+\s*[\)\/\:]*[\s\d\:\.\,\-\/]+(\s|\))", " ")               	; entfernt Telefonnummern > (040) 1234 56 78
+																																																			  	;	aber auch 040 - 1234 56 78
+	text  := RegExReplace(text, "(\p{Ll})\-\s+(\p{Ll}{2,})", "$1$2")                                       	; mittel- gradige -> mittelgradige
+	text  := RegExReplace(text, "(\d+\-|\p{Lu}\p{Ll}+\d*\-)\s+(\p{Lu}\p{Ll}{2,})", "$1-$2")                	; COVID-19-Schutzmaßnahmen-  Ausnahmeverordnung
+	text  := RegExReplace(text, "(\p{Ll}{2,}|\p{Lu}\p{Ll})(\p{Lu}\p{Ll}{2,})", "$1 $2")                    	; trennt: rechtskonvexeSkoliose - aber auch > rechtskonveXeSkoliose
+	text  := RegExReplace(text, "(\p{Lu}{2,}|[^\pL]\p{Lu})(\p{Lu}\p{Ll})", "$1 $2")                        	; MNeurologie -> M Neurologie
+	text  := RegExReplace(text, "(\p{Ll})q\s", "$1g ")                                                     	; ausgiebiq -> ausgiebig
+	text  := RegExReplace(text, "(\p{Ll}\d*)\s+(\-\p{Lu})", "$1$2")                                        	; Sauerstoff -Sättigung -> Sauerstoff-Sättigung
+	text  := RegExReplace(text, "\s", "   ")                                                               	; Leerzeichen verdoppeln
 
 	rtext := text
 	Loop {
 		ltext := rtext
-		rtext := RegExReplace(rtext, "\s\p{Lu}{6,}\s", "  ")                                                                	; DAEXXXMM
-		rtext := RegExReplace(rtext, "\s[\\/\-\s]+\s", "  ")                                                                  	; entfernt  - -D
-		rtext := RegExReplace(rtext, "\s(\d+)(\p{Lu}\p{Ll}{2,})\s", "  $1 $2  ")                                  	; 89Fortbildung 89 Fortbildung
-		rtext := RegExReplace(rtext, "(\p{Ll}{3,})\/(\p{Lu}\p{Ll}{2,})", "$1 / $2")                            	; Unterschrift/Stempel -> Unterschrift / Stempel
-		rtext := RegExReplace(rtext, "(\s|[^\pL\d])\d+[\.\,;]\d+(\s|[^\pL\d])", " $1  $2 ")               	; entfernt Werte wie 114,01
-		rtext := RegExReplace(rtext, "\s\d+\s*\-\s*\d+(\s*\-\s*\d+)*", "  ")                                        	; entfernt 0-0-1-0
-		rtext := RegExReplace(rtext, "\s\pL{1,2}\s", "  ")                                                                    	; entfernt Worte mit max 2 Buchstaben
-		rtext := RegExReplace(rtext, "\s\-\p{Lu}+\s", "  ")                                                                	; entfernt -JS
-		rtext := RegExReplace(rtext, "\s\-*(\p{Lu}+\d+|\d+\p{Lu}+)[\p{Lu}\d]*\s", "  ")                  	; entfernt -J7S
-		rtext := RegExReplace(rtext, "\-{2,}", "-")                                                                              	; --- -> -
-		rtext := RegExReplace(rtext, "\s\d+\s", "  ")                                                                         	; entfernt alle noch einzeln stehenden  Zahlen
+		rtext := RegExReplace(rtext, "\s\p{Lu}{6,}\s", "  ")                                                	; DAEXXXMM
+		rtext := RegExReplace(rtext, "\s[\\/\-\s]+\s", "  ")                                                 	; entfernt  - -D
+		rtext := RegExReplace(rtext, "\s(\d+)(\p{Lu}\p{Ll}{2,})\s", "  $1 $2  ")                             	; 89Fortbildung 89 Fortbildung
+		rtext := RegExReplace(rtext, "(\p{Ll}{3,})\/(\p{Lu}\p{Ll}{2,})", "$1 / $2")                         	; Unterschrift/Stempel -> Unterschrift / Stempel
+		rtext := RegExReplace(rtext, "(\s|[^\pL\d])\d+[\.\,;]\d+(\s|[^\pL\d])", " $1  $2 ")                  	; entfernt Werte wie 114,01
+		rtext := RegExReplace(rtext, "\s\d+\s*\-\s*\d+(\s*\-\s*\d+)*", "  ")                                	; entfernt 0-0-1-0
+		rtext := RegExReplace(rtext, "\s\pL{1,2}\s", "  ")                                                   	; entfernt Worte mit max 2 Buchstaben
+		rtext := RegExReplace(rtext, "\s\-\p{Lu}+\s", "  ")                                                  	; entfernt -JS
+		rtext := RegExReplace(rtext, "\s\-*(\p{Lu}+\d+|\d+\p{Lu}+)[\p{Lu}\d]*\s", "  ")                      	; entfernt -J7S
+		rtext := RegExReplace(rtext, "\-{2,}", "-")                                                          	; --- -> -
+		rtext := RegExReplace(rtext, "\s\d+\s", "  ")                                                        	; entfernt alle noch einzeln stehenden  Zahlen
 	} until (rtext = ltext)
 	text := RegExReplace(rtext, "\s{2,}", " ")
 
 	For rxmstring, rxrplstring in rxchanger
 		text := RegExReplace(text, rxmstring, rxrplstring)
 
-	text := RegExReplace(text, "(\p{Lu}\p{Ll}{2,})stra*s*s*e*\s", "$1straße ")                                	; Hauptstr     	-> Hauptstraße
-	text := RegExReplace(text, "(\s|\-)Str(\.|asse)*\s", "$1Straße ")                                                	; Adalbert-Sauerampfer-Str.     	-> Adalbert-Sauerampfer-Straße
-	text := StrReplace(text, "Teststraße", "Teststreifen")                                                               	; Teststraße     	-> Teststreifen
-	text := RegExReplace(text, "[^\pL\d\-\s\/]", " ")                                                                      	; alle Zeichen ausser diesen entfernen
+	text := RegExReplace(text, "(\p{Lu}\p{Ll}{2,})stra*s*s*e*\s", "$1straße ")                            	; Hauptstr     	-> Hauptstraße
+	text := RegExReplace(text, "(\s|\-)Str(\.|asse)*\s", "$1Straße ")                                      	; Adalbert-Sauerampfer-Str.     	-> Adalbert-Sauerampfer-Straße
+	text := StrReplace(text, "Teststraße", "Teststreifen")                                                	; Teststraße     	-> Teststreifen
+	text := RegExReplace(text, "[^\pL\d\-\s\/]", " ")                                                      	; alle Zeichen ausser diesen entfernen
 	text := RegExReplace(text, "\s{2,}", " ")
 
 	If (StrLen(Trim(text)) = 0) {
@@ -1145,7 +1281,8 @@ CollectWords(filepath, debug:=false) {
 	thisText .= "`n+ + + + + + + + + + + + + + +`n" RegExReplace(outwords, "[\n\r]{2,}", "`n")
 	thisText .= "`n~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~`n" knownwords
 
-	;~ ToolTip, % "Position: " spos "/" tLen, 900, 1
+	ToolTip, % "Position: " spos "/" tLen, 900, 1
+	TTOff(1, 5000)
 
 return PNames
 }
@@ -1249,8 +1386,8 @@ WordEndings(dictObject, EndingsObject:="") {
 	 */
 
 
-	If FileExist(PathWordEndings) && !IsObject(EndingsObject)
-		EndingsObject := cJSON.Load(FileOpen(PathWordEndings, "r", "UTF-8").Read())
+	If FileExist(adm.PathWordEndings) && !IsObject(EndingsObject)
+		EndingsObject := cJSON.Load(FileOpen(adm.PathWordEndings, "r", "UTF-8").Read())
 
 	SciTEOutput("splitting dictionary words....")
 
@@ -1379,7 +1516,7 @@ class stemmer{  ;;;???
 
 }
 
-IFilter(file, searchstring:="") {                                                                                 	;-- Textsuche/Textextraktion in PDF/Word Dokumenten
+IFilter(file, searchstring:="") {                                                                            	;-- Textsuche/Textextraktion in PDF/Word Dokumenten
 
 	static cchBufferSize              	:= 4 * 1024
 	static resultstriplinebreaks   	:= false
@@ -1489,10 +1626,12 @@ return filepos
 }
 
 inArr(str, arr) {
+
   For k,v in arr
-    If (str=v)
-      return true
-return false
+    if (str=v)
+      return k   ; Position zurückgeben
+
+return 0
 }
 
 RemoveDoublettes(objA, objB) {                                                                             	;-- entfernt doppelte Einträge
@@ -1513,6 +1652,24 @@ RemoveDoublettes(objA, objB) {                                                  
 return {"objA": objA, "objB":objBClone}
 }
 
+RemoveDriveLetter(filesArr) {
+
+	MouseGetPos, mx, my
+
+	steps := Floor(filesArr.Count() / 100)
+	showPrg := filesArr.Count() > 20000 ? true : false
+
+	for findex, filePath in filesArr {
+		filesArr[findex] := RegExReplace(filepath, "^\w+?(:|\\)")
+		if (showPrg && Mod(findex, steps) = 0)
+			ToolTip, % "Verzeichnisse bearbeitet: " findex "/" filesArr.Count(), % mx , % my, 13
+
+	}
+
+	ToolTip,,,,13
+
+return filesArr
+}
 
 ; ab hier Funktionen für ini-Read und AddendumBaseProperties
 IniReadExt(SectionOrFullFilePath, Key:="", DefaultValue:="", convert:=true) {            	;-- eigene IniRead funktion für Addendum
@@ -1654,14 +1811,26 @@ GetAppsInfo(infoType) {
 AddendumBaseProperties(AddendumDir) {                                                               	;-- Basiseinstellungen für jedes Addendum-Modul
 
 	; Hauptverzeichnis und ini Datei
-		props             	:= Object()
-		props.Dir         	:= AddendumDir
-		props.Ini          	:= props.Dir "\Addendum.ini"
+		props          	:= Object()
+		props.Dir      	:= AddendumDir
+		props.Ini      	:= props.Dir "\Addendum.ini"
 
 	; Log Dateipfad und Datenbankverzeichnis
-		workini := IniReadExt(props.Ini)
-		props.LogPath	:= IniReadExt("Addendum", "AddendumLogPath"	,, true)
+		workini         := IniReadExt(props.Ini)
+		props.LogPath 	:= IniReadExt("Addendum", "AddendumLogPath"	,, true)
 		props.DBPath  	:= IniReadExt("Addendum", "AddendumDBPath" 	,, true)
+		props.ScanPath 	:= IniReadExt("Scanpool", "Befundordner"  	,, true)
+
+		RegExMatch(AddendumDir, "i)^(?<Letter>\w+?(:|\\))", Drive)
+		if !Instr(FileExist(props.ScanPath), "D")
+			props.ScanPath := RegExReplace(props.ScanPath, "i)^\w+(:|\\)", DriveLetter)
+		if !Instr(FileExist(props.ScanPath), "D") {
+			SciTEOutput("Der Befundordner wurde nicht gefunden: " RegExReplace(props.ScanPath, "i)^\w+(:|\\)"))
+			props.ScanPath := ""
+		}
+		props.DriveLetter := DriveLetter
+
+
 
 	; Log Dateipfad prüfen und evtl. anlegen
 		If !RegExMatch(props.LogPath, "i)[A-Z]\:\\")
@@ -1678,14 +1847,53 @@ AddendumBaseProperties(AddendumDir) {                                           
 return props
 }
 
-GetAlbisPaths() {                                                                                                    	;-- Albisverzeichnisse
+GetAlbisPaths() {                                                                       	;-- ermittelt das Albisverzeichniss, sowie Unterverzeichnisse im albiswin Ordner
 
+	nr := 1
 	SetRegView	, % (A_PtrSize = 8 ? 64 : 32)
-	RegRead   	, MainPath	, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, 1-MainPath
-	RegRead    	, LocalPath 	, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, 1-LocalPath
-	RegRead   	, Exe         	, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, 1-Exe
 
-return {"MainPath":MainPath, "LocalPath":LocalPath, "Exe":Exe, "Briefe":MainPath "\Briefe", "db":MainPath "\db", "Vorlagen":MainPath "\tvl"}
+	regPathAlbis1 := "HKEY_CURRENT_USER\SOFTWARE\ALBIS\Albis on Windows\Albis_Versionen"
+
+	Loop {
+
+		nr := A_Index
+		RegRead, MainPath 	, % regPathAlbis1, % nr "-MainPath"
+		RegRead, LocalPath 	, % regPathAlbis1, % nr "-LocalPath"
+		RegRead, Exe       	, % regPathAlbis1, % nr "-Exe"
+
+		If  !(MainPath ~= "i)albis_demo") && InStr(FileExist(MainPath), "D") && FileExist(MainPath "\" Exe ){
+			albisfound := true
+			break
+		}
+		else if (A_Index > 10)
+			break
+	}
+
+
+ ; HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows,
+	If !albisfound {
+		RegRead, MainPath		, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, Installationspfad
+		RegRead, LocalPath	, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, % LocalPath-2
+		IF FileExist(MainPath "\albisCS.exe")
+			Exe := "albisCS.exe"
+		albisfound := true
+	}
+
+ ; Abbruch
+	If !albisfound {
+		throw "Der Dateipfad mit einer albis.exe oder albisCS.exe konnte nicht bestimmt werden"
+		return
+	}
+
+	albisPaths := {"MainPath":MainPath, "LocalPath":LocalPath, "Exe":Exe, "Briefe":MainPath "\Briefe", "db":MainPath "\db", "Vorlagen":MainPath "\tvl"}
+
+	RegExMatch(MainPath, "i)^(?<server>[A-Z]+?)((?<drive>:)|(?<smb>\\))", albis_)
+	if albis_drive
+		albisPaths["Drive"] := albis_server
+	else if albis_smb
+		albisPaths["smb"] 	:= albis_smb
+
+return albisPaths
 }
 
 

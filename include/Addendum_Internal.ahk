@@ -571,9 +571,9 @@ GetAlbisPaths() {                                                               
 	Loop {
 
 		nr := A_Index
-		RegRead, MainPath	, % regPathAlbis1, % nr "-MainPath"
+		RegRead, MainPath 	, % regPathAlbis1, % nr "-MainPath"
 		RegRead, LocalPath 	, % regPathAlbis1, % nr "-LocalPath"
-		RegRead, Exe         	, % regPathAlbis1, % nr "-Exe"
+		RegRead, Exe       	, % regPathAlbis1, % nr "-Exe"
 
 		If  !(MainPath ~= "i)albis_demo") && InStr(FileExist(MainPath), "D") && FileExist(MainPath "\" Exe ){
 			albisfound := true
@@ -587,7 +587,7 @@ GetAlbisPaths() {                                                               
  ; HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows,
 	If !albisfound {
 		RegRead, MainPath		, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, Installationspfad
-		RegRead, LocalPath		, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, % LocalPath-2
+		RegRead, LocalPath	, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, % LocalPath-2
 		IF FileExist(MainPath "\albisCS.exe")
 			Exe := "albisCS.exe"
 		albisfound := true
@@ -599,8 +599,15 @@ GetAlbisPaths() {                                                               
 		return
 	}
 
+	albisPaths := {"MainPath":MainPath, "LocalPath":LocalPath, "Exe":Exe, "Briefe":MainPath "\Briefe", "db":MainPath "\db", "Vorlagen":MainPath "\tvl"}
 
-return {"MainPath":MainPath, "LocalPath":LocalPath, "Exe":Exe, "Briefe":MainPath "\Briefe", "db":MainPath "\db", "Vorlagen":MainPath "\tvl"}
+	RegExMatch(MainPath, "i)^(?<server>[A-Z]+?)((?<drive>:)|(?<smb>\\))", albis_)
+	if albis_drive
+		albisPaths["Drive"] := albis_server
+	else if albis_smb
+		albisPaths["smb"] 	:= albis_smb
+
+return albisPaths
 }
 
 DriveLetterReplace(path, rplDriveLetter:="") {                                          	;-- Gerätebuchstaben im Pfad tauschen

@@ -76,23 +76,23 @@ AlbisReanimator(AlbisMainPath:="", AlbisLocalPath:="", AlbisExe:="") {          
   ; btt(Text:="", X:="", Y:="", WhichToolTip:="", BuiltInStyleOrStyles:="", BuiltInOptionOrOptions:="")
 	btt(" Albis Reanimator wurde gestartet.`nuntersuche laufende Prozesse...", mon.W-500, 20
 				;  Style
-			   ,1,  { Border:                                                     	5
-					, Rounded:                                                  	15
-					, Margin:                                                    	10
-					, BorderColor:                                            	0xffaabbcc
-					, TextColor:                                                	0xff112233
-					, BackgroundColor:                                    	0xff778899
-					, BackgroundColorLinearGradientStart:       	0xffF4CFC9
-					, BackgroundColorLinearGradientEnd:        	0xff8DA5D3
-					, BackgroundColorLinearGradientDirection:	1
-					, BackgroundColorLinearGradientAngle:     	135
-					, Font:                                                         	"Futura Bk Bt"
-					, FontSize:                                                  	 mon.W<=1920 ? 20 : mon.W<=2560 ? 22 : 24
-					, FontRender:                                               	5
-					, FontStyle:                                                 	"Normal"}
+			   ,1,  { Border:                               	5
+					    , Rounded:                               	15
+					    , Margin:                                	10
+					    , BorderColor:                          	0xffaabbcc
+					    , TextColor:                             	0xff112233
+					    , BackgroundColor:                       	0xff778899
+					    , BackgroundColorLinearGradientStart:    	0xffF4CFC9
+					    , BackgroundColorLinearGradientEnd:      	0xff8DA5D3
+					    , BackgroundColorLinearGradientDirection:	1
+					    , BackgroundColorLinearGradientAngle:    	135
+					    , Font:                                  	"Futura Bk Bt"
+					    , FontSize:                             	mon.W<=1920 ? 20 : mon.W<=2560 ? 22 : 24
+					    , FontRender:                            	5
+					    , FontStyle:                             	"Normal"}
 				;  Options
-			   ,   { CoordMode:                                              	"Screen"
-					, MouseNeverCoverToolTip:                         	""})
+			   ,   { CoordMode:                               "Screen"
+		   			,  MouseNeverCoverToolTip:                	""})
 
 	Sleep 3000
 
@@ -106,22 +106,22 @@ AlbisReanimator(AlbisMainPath:="", AlbisLocalPath:="", AlbisExe:="") {          
 		; Information
 			procView .= "Process " proc.Name "[" proc.PID "] wird gleich beendet`n"
 			btt(procView, mon.W-500, 20, 2
-				, {Border:                                                     	5
-				, Rounded:                                                  	15
-				, Margin:                                                    	10
-				, BorderColor:                                            	0xaaaabbcc
-				, TextColor:                                                	0xaa112233
-				, BackgroundColor:                                    	0xaa778899
-				, BackgroundColorLinearGradientStart:       	0xaaF4CFC9
-				, BackgroundColorLinearGradientEnd:        	0xaa8DA5D3
-				, BackgroundColorLinearGradientDirection:	1
-				, BackgroundColorLinearGradientAngle:     	45
-				, Font:                                                         	"Futura Bk Bt"
-				, FontSize:                                                  	 mon.W<=1920 ? 16 : mon.W<=2560 ? 18 : 20
-				, FontRender:                                               	5
-				, FontStyle:                                                 	"Normal"}
-				, { CoordMode:                                           	"Screen"
-				, MouseNeverCoverToolTip:                         	""})
+				, {Border:                                     	5
+				, Rounded:                                    	15
+				, Margin:                                      	10
+				, BorderColor:                                 	0xaaaabbcc
+				, TextColor:                                   	0xaa112233
+				, BackgroundColor:                            	0xaa778899
+				, BackgroundColorLinearGradientStart:         	0xaaF4CFC9
+				, BackgroundColorLinearGradientEnd:           	0xaa8DA5D3
+				, BackgroundColorLinearGradientDirection:     	1
+				, BackgroundColorLinearGradientAngle:          	45
+				, Font:                                       	"Futura Bk Bt"
+				, FontSize:                                   	mon.W<=1920 ? 16 : mon.W<=2560 ? 18 : 20
+				, FontRender:                                  	5
+				, FontStyle:                                  	"Normal"}
+				, { CoordMode:                                	"Screen"
+				, MouseNeverCoverToolTip:                      	""})
 
 		; Versuch per Process WaitClose
 			Process, WaitClose, % proc.PID, 5
@@ -287,9 +287,9 @@ GetAlbisPaths() {                                                               
 	Loop {
 
 		nr := A_Index
-		RegRead, MainPath	, % regPathAlbis1, % nr "-MainPath"
+		RegRead, MainPath 	, % regPathAlbis1, % nr "-MainPath"
 		RegRead, LocalPath 	, % regPathAlbis1, % nr "-LocalPath"
-		RegRead, Exe         	, % regPathAlbis1, % nr "-Exe"
+		RegRead, Exe       	, % regPathAlbis1, % nr "-Exe"
 
 		If  !(MainPath ~= "i)albis_demo") && InStr(FileExist(MainPath), "D") && FileExist(MainPath "\" Exe ){
 			albisfound := true
@@ -302,7 +302,7 @@ GetAlbisPaths() {                                                               
 
  ; HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows,
 	If !albisfound {
-		RegRead, MainPath		, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, Installationspfad
+		RegRead, MainPath	  	, HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\CG\ALBIS\Albis on Windows, Installationspfad
 		RegRead, LocalPath		, HKEY_CURRENT_USER\Software\ALBIS\Albis on Windows\Albis_Versionen, % LocalPath-2
 		IF FileExist(MainPath "\albisCS.exe")
 			Exe := "albisCS.exe"

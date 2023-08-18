@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . .
 ; . . . . .                                   	ADDENDUM HAUPTSKRIPT
-global                           AddendumVersion:= "2.6" , DatumVom:= "31.07.2023"
+global                           AddendumVersion:= "2.6" , DatumVom:= "14.08.2023"
 ; . . . . .
 ; . . . . .           ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . .           BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -21,54 +21,7 @@ global                           AddendumVersion:= "2.6" , DatumVom:= "31.07.202
 ⬝ ▪ ▫ ◽ ⬞
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-**27.04.2023** | **QuickExporter**	▪	finales Skript für Albis. Kartenkartenexport mit Dokumentation z.B. bei Beendigung der Praxistätigkeit. Daten tausender Patienten ohne Mühe exportieren und dabei
-													        		jederzeit die Übersicht behalten. Exportiert Tagesprotokoll, Labor, externe sowie eigene Befunde soweit diese in der Karteikarte mit einem Kürzel hinterlegt sind.
-																			Leicht verwendbare Filterfunktionen filtert nicht nur nach Karteikartenkürzel sondern auch im Inhalt. **Addendum**
-
-					        		**Addendum**	▪	Patientendaten für Copy-Paste-Vorgänge. Name, Geburtsdatum, Postanschrift, Behandlungsbeginn, letzter Tag der Behandlung und andere Daten an die man sonst nicht gelangt,
-																			lassen sich mit 2-3 Klicks aus der Patientenakte heraus ins Clipboard kopieren
-																	  ▪	Hotkey-Kombination: "Strg + Alt + J" öffnet den Dialog "Formular/Privat-AU" ähnlich dem vorgegebenen "Strg+J" jetzt für die eAU (aka AU)
-																		▪	Diagnosen Hotstrings - ICD-10-GM 2023 ist implementiert. Für manuelle Zwischenupdates gibt es jetzt ein Skript,
-																			welches eine Textdatei herausgegeben vom BfArM (dimdi.de) als alphabetisches ICD-10-GM Verzeiches für die
-																			Verwendung durch Addendum aufbereitet.
-																			Diagnosenauswahlboxen werden im HotstringViewer angezeigt<br>
-																			▪	Die Ausführbarkeit von Addendum unter einem Window Server Betriebssystem (ab WinServer 2019+) ist möglich, es sind aber noch nicht alle
-																		   	Skripte für den Einsatz auf einem  Windowsserver Betriebssystemen eingerichtet
-																			▪	Pfadvariabilität für das Addendum- und das Albsverzeichnis, die Laufwerkbuchstaben (also die Pfade) können jetzt auf
-																	    	jedem Client im Rechner unterschiedlich sein (in der Addendum.ini unter Clientname/Laufwerksbuchstabe=D z.B. eintragen)
-																		   	automatische Erkennung ist geplant
-																		▪	Autologin - das automatische Einloggen in Albis durch Addendum kann jetzt per Traymenu an- oder abgeschaltet werden.
-																			Ausserdem wird ein Autologin ohne Logindaten nicht mehr ausgefüht.
-																		▪	Druckausgabe - mehr automatisierte Dateinamensvorschläge beim PDF-Druck |
-																		▪	Hotstrings: **GOÄ** - automatisiert altersabhängige Gebühreneintragen aktuell Gebühren für die OP-Vorbereitung |
-																		▪	Dialog Leistungskette bestätigen - automatische Anpassung der Fenstergröße hinzugefügt |
-																		▪	Funktion um Karteikarten aus dem Text im Clipboardinhalt anzeigen zu lassen erweitert. Sammelt jetzt alle Patienten ein und
-																			bietet die Möglichkeit die jeweilige Karteikarte zu öffnen. |
-																		▪	erste Implementierung für eigene Texthinweise zu festgelegten AU Diagnosen um z.B. die Ausstellung von
-																			AU-Bescheinigungen einzuschränken oder ganz zu verhindern |
-																		▪	versieht PDF Namen bei der Druckausgabe mit einem Zähler um manuelle Anpassungen von Dateinamen vermeiden zu können
-				**Abrechnungsassistent**  	▪ Kürzel werden bei Ausgabe von Behandlungsdaten in derselben Reihenfolge wie in der Albiskarteikarte angezeigt   |
-					**Fritz!AnrufMonitor**   	▪ verwendet jetzt auch Daten aus der UEBARZT.dbf für die Identifikation der Anrufer |
-								**Gebuehren**      	▪ 	Fehler beim Erstellen der Ausgabestrings behoben |
-						   **Quicksearch**    	▪ 	merkt sich für jede Datenbank den angezeigten Datenblock und stellt ihn nach einem Neustart wieder her <br>
-								        						▪ 	Information zu Spaltentiteln werden jetzt mit ausgegeben |
-  **Verordnungsplan verschönern** 	▪	Ausgabelayout übersichtlicher gestaltet. Medikamentenbezeichnungen sind jetzt ausführlicher.|
-							 **Addendum_Albis**  	▪	AlbisResizeLeistungskette()  	- verbreitert das Fenster und das Steuerelement für die Ziffernliste <br>
-		            	**Addendum_DB**  	▪	AlbisDB.GetDocuments()    	- Methode um alle Dokumentverknüfpungen in allen Karteikarten auszulesen <br>
-												        		▪	AlbisDB.AUDiagnosen()     	- ermittelt die Krankschreibungsdiagnosen eines oder aller Patienten <br>
-												        		▪	AlbisDB.GetPatExtra() 	    	- alle Daten aller Patienten oder eines Patienten aus der PatExtra Datenbank erhalten
-												        		▪	AlbisBD.PatientDiagnoses()	- Filter um Patienten mit bestimmten Diagnosen zu finden
-												        		▪	PatDB.StringSimilarityPlus()		- eine weitere Funktion für eine unscharfe Suche nach Patientennamen. Die Funktion vergleicht alle
-													        		der Funktionen übergebenen Namen mit jedem Vor- und Zunamen aus der Albisdatenbank...###					|
-												        		▪	GetAlbisPath() - erkennt das echte Installationsverzeichnis und nicht das Verzeichnis mit der albis demo<br>
-												        		▪	xstring.get.AllDates() - ### <br>
-												        		▪	xstring.get.AllNames() - ###<br>
-												        		▪	xstring.replace.MonthNames() - ### |
-				**Addendum_Albis**        	▪	AlbisPatientAlter() - ermittelt das Alter des Patienten, entweder über das aktuelle Tagesdatum, das Datum in der Karteikarte
-														        	oder über ein beliebiges, übergebenes Datum |
-												        		▪	AlbisLaborblattExport()/AlbisSaveAsPDF() - RPA der Steuerelemente zuverlässiger gemacht |
-				**Addendum_Windows**      	▪	WinSetStyle() - setzt oder entfernt einen Window(Control) Ex/Style|
-											        			▪	**Addendum V2.27** |
+FINAL VERSION - KEINE WEITERENTWICKLUNG MEHR
 
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
