@@ -1,10 +1,10 @@
 ﻿; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;                           	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
 ;                                              	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                          by Ixiko started in September 2017 - last change 01.01.2023 - this file runs under Lexiko's GNU Licence
+;                          by Ixiko started in September 2017 - last change 19.08.2023 - this file runs under Lexiko's GNU Licence
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ListLines, Off
-; FENSTER                                                                                                                    	(46)
+; FENSTER                                                                                                                    	(47)
 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; ----- Get -----
 ; GetAncestor                 GetLastActivePopup             	GetParentList	             	GetParentClassList             	GetParent
@@ -17,10 +17,10 @@ ListLines, Off
 ; WinIsBlocked                WinSetStyle
 
 ; ----- Set -----
-; SetWindowPos                WinMoveZ								      	MoveWinToCenterScreen				UpdateWindow			       				Redraw
+; SetWindowPos                WinMoveZ								      	MoveWinToCenterScreen				MoveWinTo
 ; SetParentByID
-; WaitForNewPopUpWindow       WaitAndActivate               	ActivateAndWait
-; AnimateWindow               VerifiedWindowClose
+; ActivateAndWait             WaitAndActivate                	WaitForNewPopUpWindow
+; AnimateWindow               VerifiedWindowClose           	Redraw                    	UpdateWindow
 
 
 ; ---- get informations ----
@@ -132,18 +132,18 @@ GetWindowSpot(hWnd) {                                                           
     wi := Object()
     wi.X    	:= NumGet(WININFO, 4	, "Int")
     wi.Y    	:= NumGet(WININFO, 8	, "Int")
-    wi.W   	:= NumGet(WININFO, 12, "Int") 	- wi.X
+    wi.W     	:= NumGet(WININFO, 12, "Int") 	- wi.X
     wi.H    	:= NumGet(WININFO, 16, "Int") 	- wi.Y
-    wi.CX  	:= NumGet(WININFO, 20, "Int")
-    wi.CY  	:= NumGet(WININFO, 24, "Int")
-    wi.CW	:= NumGet(WININFO, 28, "Int") 	- wi.CX
-    wi.CH  	:= NumGet(WININFO, 32, "Int") 	- wi.CY
-	wi.S    	:= NumGet(WININFO, 36, "UInt")
+    wi.CX    	:= NumGet(WININFO, 20, "Int")
+    wi.CY   	:= NumGet(WININFO, 24, "Int")
+    wi.CW   	:= NumGet(WININFO, 28, "Int") 	- wi.CX
+    wi.CH    	:= NumGet(WININFO, 32, "Int") 	- wi.CY
+  	wi.S    	:= NumGet(WININFO, 36, "UInt")
     wi.ES   	:= NumGet(WININFO, 40, "UInt")
-	wi.Ac  	:= NumGet(WININFO, 44, "UInt")
-    wi.BW 	:= NumGet(WININFO, 48, "UInt")
-    wi.BH  	:= NumGet(WININFO, 52, "UInt")
-	wi.A    	:= NumGet(WININFO, 56, "UShort")
+  	wi.Ac    	:= NumGet(WININFO, 44, "UInt")
+    wi.BW   	:= NumGet(WININFO, 48, "UInt")
+    wi.BH    	:= NumGet(WININFO, 52, "UInt")
+  	wi.A    	:= NumGet(WININFO, 56, "UShort")
     wi.V    	:= NumGet(WININFO, 58, "UShort")
 Return wi
 }
@@ -744,6 +744,42 @@ MoveWinToCenterScreen(hWin) {                                                   
 
 
 return {hwnd:hWIN, X:w.X, Y:w.Y, W:w.W, H:w.H}
+}
+
+MoveWinTo(hwin, x, y) {                                                                                     ;-- moves a window to new x and y position but new moves out of screen context
+
+	if !hwin
+		return {"failure": "hwin is empty or 0"}
+
+	wp  := GetWindowSpot(hwin)
+	mon := GetMonitorIndexFromWindow(hwin, true)
+	if !isObject(mon) || !IsObject(wp)
+		return {"failure": "can't get " (!isObject(mon) ? "monInfo" : "window position for id: " hwin)}
+
+	tbh := TaskbarHeight(mon.MonIndex)
+	xD := yD := 0
+
+	if (x~="i)Monitor") {
+		if RegExMatch(x, "(?<Z>\-|\+)\s*(?<A>\d+)", xC)
+			xD := xCZ = "-" ? -1*xCA : xCA
+		x := x~="i)MonitorRight"  ? mon.X+mon.W-wp.W+xD : mon.X+xD
+	}
+
+	if (y~="i)Monitor") {
+		if RegExMatch(y, "(?<Z>\-|\+)\s*(?<A>\d+)", yC)
+			yD := yCZ = "-" ? -1*yCA : yCA
+		y := y~="i)MonitorBottom" ? mon.Y+mon.H-tbh-wp.H+yD : mon.Y+yD
+	}
+
+	x := x < mon.X ? mon.X : x
+	y := y < mon.Y ? mon.Y : y
+	x := X+wp.W > mon.W ? mon.W-wp.W : x
+	y := y+wp.H > mon.H ? mon.H-wp.H-tbh : y
+
+
+	SetWindowPos(hWin, x, y, wp.W, wp.H)
+
+return {"failure": 0, "X":x, "Y":y, "W":wp.W, "H":wp.H}
 }
 
 ActivateAndWait(WinTitle, MaxSecondsToWait) {                                                             	;-- activates a window and wait for activation

@@ -2,7 +2,7 @@
 ; . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 ; . . . . .
 ; . . . . .                                   	ADDENDUM HAUPTSKRIPT
-global                           AddendumVersion:= "2.6" , DatumVom:= "14.08.2023"
+global                           AddendumVersion:= "2.61" , DatumVom:= "19.08.2023"
 ; . . . . .
 ; . . . . .           ROBOTIC PROCESS AUTOMATION FOR THE GERMAN MEDICAL SOFTWARE "ALBIS ON WINDOWS"
 ; . . . . .           BY IXIKO STARTED IN SEPTEMBER 2017 - THIS FILE RUNS UNDER LEXIKO'S GNU LICENCE
@@ -21,7 +21,54 @@ global                           AddendumVersion:= "2.6" , DatumVom:= "14.08.202
 ⬝ ▪ ▫ ◽ ⬞
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-FINAL VERSION - KEINE WEITERENTWICKLUNG MEHR
+**27.04.2023** | **QuickExporter**	▪	finales Skript für Albis. Kartenkartenexport mit Dokumentation z.B. bei Beendigung der Praxistätigkeit. Daten tausender Patienten ohne Mühe exportieren und dabei
+													        		jederzeit die Übersicht behalten. Exportiert Tagesprotokoll, Labor, externe sowie eigene Befunde soweit diese in der Karteikarte mit einem Kürzel hinterlegt sind.
+																			Leicht verwendbare Filterfunktionen filtert nicht nur nach Karteikartenkürzel sondern auch im Inhalt. **Addendum**
+
+					        		**Addendum**	▪	Patientendaten für Copy-Paste-Vorgänge. Name, Geburtsdatum, Postanschrift, Behandlungsbeginn, letzter Tag der Behandlung und andere Daten an die man sonst nicht gelangt,
+																			lassen sich mit 2-3 Klicks aus der Patientenakte heraus ins Clipboard kopieren
+																	  ▪	Hotkey-Kombination: "Strg + Alt + J" öffnet den Dialog "Formular/Privat-AU" ähnlich dem vorgegebenen "Strg+J" jetzt für die eAU (aka AU)
+																		▪	Diagnosen Hotstrings - ICD-10-GM 2023 ist implementiert. Für manuelle Zwischenupdates gibt es jetzt ein Skript,
+																			welches eine Textdatei herausgegeben vom BfArM (dimdi.de) als alphabetisches ICD-10-GM Verzeiches für die
+																			Verwendung durch Addendum aufbereitet.
+																			Diagnosenauswahlboxen werden im HotstringViewer angezeigt<br>
+																			▪	Die Ausführbarkeit von Addendum unter einem Window Server Betriebssystem (ab WinServer 2019+) ist möglich, es sind aber noch nicht alle
+																		   	Skripte für den Einsatz auf einem  Windowsserver Betriebssystemen eingerichtet
+																			▪	Pfadvariabilität für das Addendum- und das Albsverzeichnis, die Laufwerkbuchstaben (also die Pfade) können jetzt auf
+																	    	jedem Client im Rechner unterschiedlich sein (in der Addendum.ini unter Clientname/Laufwerksbuchstabe=D z.B. eintragen)
+																		   	automatische Erkennung ist geplant
+																		▪	Autologin - das automatische Einloggen in Albis durch Addendum kann jetzt per Traymenu an- oder abgeschaltet werden.
+																			Ausserdem wird ein Autologin ohne Logindaten nicht mehr ausgefüht.
+																		▪	Druckausgabe - mehr automatisierte Dateinamensvorschläge beim PDF-Druck |
+																		▪	Hotstrings: **GOÄ** - automatisiert altersabhängige Gebühreneintragen aktuell Gebühren für die OP-Vorbereitung |
+																		▪	Dialog Leistungskette bestätigen - automatische Anpassung der Fenstergröße hinzugefügt |
+																		▪	Funktion um Karteikarten aus dem Text im Clipboardinhalt anzeigen zu lassen erweitert. Sammelt jetzt alle Patienten ein und
+																			bietet die Möglichkeit die jeweilige Karteikarte zu öffnen. |
+																		▪	erste Implementierung für eigene Texthinweise zu festgelegten AU Diagnosen um z.B. die Ausstellung von
+																			AU-Bescheinigungen einzuschränken oder ganz zu verhindern |
+																		▪	versieht PDF Namen bei der Druckausgabe mit einem Zähler um manuelle Anpassungen von Dateinamen vermeiden zu können
+				**Abrechnungsassistent**  	▪ Kürzel werden bei Ausgabe von Behandlungsdaten in derselben Reihenfolge wie in der Albiskarteikarte angezeigt   |
+					**Fritz!AnrufMonitor**   	▪ verwendet jetzt auch Daten aus der UEBARZT.dbf für die Identifikation der Anrufer |
+								**Gebuehren**      	▪ 	Fehler beim Erstellen der Ausgabestrings behoben |
+						   **Quicksearch**    	▪ 	merkt sich für jede Datenbank den angezeigten Datenblock und stellt ihn nach einem Neustart wieder her <br>
+								        						▪ 	Information zu Spaltentiteln werden jetzt mit ausgegeben |
+  **Verordnungsplan verschönern** 	▪	Ausgabelayout übersichtlicher gestaltet. Medikamentenbezeichnungen sind jetzt ausführlicher.|
+							 **Addendum_Albis**  	▪	AlbisResizeLeistungskette()  	- verbreitert das Fenster und das Steuerelement für die Ziffernliste <br>
+		            	**Addendum_DB**  	▪	AlbisDB.GetDocuments()    	- Methode um alle Dokumentverknüfpungen in allen Karteikarten auszulesen <br>
+												        		▪	AlbisDB.AUDiagnosen()     	- ermittelt die Krankschreibungsdiagnosen eines oder aller Patienten <br>
+												        		▪	AlbisDB.GetPatExtra() 	    	- alle Daten aller Patienten oder eines Patienten aus der PatExtra Datenbank erhalten
+												        		▪	AlbisBD.PatientDiagnoses()	- Filter um Patienten mit bestimmten Diagnosen zu finden
+												        		▪	PatDB.StringSimilarityPlus()		- eine weitere Funktion für eine unscharfe Suche nach Patientennamen. Die Funktion vergleicht alle
+													        		der Funktionen übergebenen Namen mit jedem Vor- und Zunamen aus der Albisdatenbank...###					|
+												        		▪	GetAlbisPath() - erkennt das echte Installationsverzeichnis und nicht das Verzeichnis mit der albis demo<br>
+												        		▪	xstring.get.AllDates() - ### <br>
+												        		▪	xstring.get.AllNames() - ###<br>
+												        		▪	xstring.replace.MonthNames() - ### |
+				**Addendum_Albis**        	▪	AlbisPatientAlter() - ermittelt das Alter des Patienten, entweder über das aktuelle Tagesdatum, das Datum in der Karteikarte
+														        	oder über ein beliebiges, übergebenes Datum |
+												        		▪	AlbisLaborblattExport()/AlbisSaveAsPDF() - RPA der Steuerelemente zuverlässiger gemacht |
+				**Addendum_Windows**      	▪	WinSetStyle() - setzt oder entfernt einen Window(Control) Ex/Style|
+											        			▪	**Addendum V2.27** |
 
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -35,6 +82,9 @@ FINAL VERSION - KEINE WEITERENTWICKLUNG MEHR
  ▌   	CGM_ALBIS_SMARTUPDATE_SERVICE		    		▌   	S-1-5-80-4281495583-391623409-1399029959-4115513306-232410700   	 ▌
  ▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▟
 
+
+	postgreSQL
+		psql -U cgm_albis_user -d "cgm_albis_db" -w -o  ; -p 5432 - überföüssig
 
 	Ifap
 	  Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Classes\TypeLib\{3BA8167C-E0D3-4020-AFAF-BD0AF2BCB984}\1.1\0\win32
@@ -729,7 +779,7 @@ HotkeyLabel:
 		SetTimer, % func_call, % -1*TimerTime("00:00 Uhr")
 
 	; Albis einmal täglich neu starten (abschaltbar)
-	; läuft Albis auf einem Client welcher TI Geräte nutzt, lassen sich keine Versichertenkarten mehr einlesen
+	; um für den notwendigen Zeitabgleich zwischen Albis und TI-Geräten zu sorgen (andernfalls sind die Lesegeräte nicht ansprechbar)
 		if Addendum.Albis.AutoRestart
 			AlbisDailyRestart()
 
@@ -7033,79 +7083,111 @@ WinEventProc(hHook, event, hwnd, idObject, idChild, eventThread, eventTime) {   
 
 	*/
 
+		static wait_evhwh := Func("Wait_EventHook_WinHandler")
+
 	; Filter für Fensterklassen
-		static class_filter	:= [ "OptoAppClass", "#32770", "Teamviewer", "WindowsForms10.Window", "Qt5QWindowIcon", "Qt5152QWindowIcon"
-	                            	, "AutohotkeyGui", "SciTEWindow", "classFoxitReader", "IEFrame", "SUMATRA_PDF_FRAME"]
+		static class_filter	:= [ "OptoAppClass" , "#32770"     , "Teamviewer"      , "WindowsForms10.Window", "Qt5QWindowIcon"   , "Qt5152QWindowIcon"
+													,  "AutohotkeyGui", "SciTEWindow", "classFoxitReader", "IEFrame"              , "SUMATRA_PDF_FRAME"]
 
 	; Filter für App-Namen (# Filter wird nicht verwendet)
-		static app_filter 		:= [	"albis"	,  "albiscs"     	, "wkflsr32"	,  "AOWDump2"	, "Teamviewer"	, "infoBoxWebClient"	, "ifap"          	, "Autohotkey"
-									,  	 	"SciTE"	,  "FoxitReader"	, "word"     	,  "mDicom"    		, "iexplore"    	,  "EXPLORER"        	,  "OUTLOOK"	,  "InternalAHK"]
+		static app_filter 	:= [	"albis"	,  "albiscs"     	, "wkflsr32"	,  "AOWDump2"	, "Teamviewer"	, "infoBoxWebClient"	, "ifap"     	, "Autohotkey"
+								      	,  	 	"SciTE"	,  "FoxitReader"	, "word"     	,  "mDicom"   , "iexplore"   	,  "EXPLORER"        	, "OUTLOOK" 	,  "InternalAHK"]
 
-		static classes := Object(), thistick := 1
+		static LastHwnd, LastEvent
+		static PDFViewer   	:= [ "classFoxitReader"        , "SUMATRA_PDF_FRAME" ]
 
 		Critical
+		Critical 30
 
-	; Ausschluß
-		If !hwnd || (Addendum.LastHookHwnd = (EHookHwnd := Format("0x{:x}", hwnd)))
+		Addendum.timeA := timeA := A_TickCount
+
+	; Ausschluß + Fensterklassen Filter
+		EHookHwnd  	:= Format("0x{:x}", hwnd)
+		EHookEvent 	:= Format("0x{:x}", event)
+
+
+		If (!EHookHwnd){ ;  || (LastHwnd=EHookHwnd && LastEvent=EHookEvent)) {
+			Critical Off
 			return 0
+		}
 
-	; Fensterklassen Filter
-		If !(cClass := WinGetClass(hwnd))
-			return 0
+		LastHwnd  := EHookHwnd
+		LastEvent := EHookEvent
 
-		known := false
-		For fnr, filterclass in class_filter
-			If (cClass = filterclass) {
-				For snr, item in EHStack
-					If (item.Hwnd = EHookHwnd)
-						known := true, break
-
-				If !known {
-					event := Format("0x{:x}", event)
-					eventNr := "#" event
-					If (StrLen((HTitle := WinGetTitle(EHookHwnd)) . (HText := WinGetText(EHookHwnd))) > 0) {
-						EHStack.InsertAt(1, {"Hwnd"	: EHookHwnd
-													, "Event"	: event
-													, "Title"   	: HTitle
-													, "Text"   	: HText := StrReplace(HText, "`r`n", " ")
-													, "Class"	: cClass})
-						If (EHStack.1.Text ~= "i)ADT\-Abrechnungsdatei" && EHStack.1.Class ~= "OptoAppClass")
-							SciTEOutput(SubStr("000" EHStack.Count(), -2) ": event: " GetHex(event)  ", hwnd: " EHookHwnd "; Txt: " EHStack.1.Text)
-						If !EHWHState
-							SetTimer, EventHook_WinHandler, -1
-					}
-				}
+		WinGetClass, cClass, % "ahk_id " EHookHwnd
+		If !(cClass) {
+				Critical Off
+				return 0
 			}
+
+		Addendum.timeA := timeA := A_TickCount
+		; normales abfangen
+		known := false
+		For fnr, filterclass in class_filter {
+			If (cClass = filterclass)
+				For snr, item in EHStack
+					If (item.Hwnd = EHookHwnd && item.Event = EHookEvent) {
+						known := true
+						Critical Off
+						return 0
+					}
+			}
+
+		WinGetText , HText , % "ahk_id " EHookHwnd
+		WinGetTitle, HTitle, % "ahk_id " EHookHwnd
+		HText 	:= RegExReplace(SubStr(HText,1,150), "[\r\n]", " ")
+		If (StrLen(HTitle . HText) > 0) {
+			WinGet, EHproc, ProcessName, % "ahk_id " EHookHwnd
+			if !EHProc
+				WinGet, EHproc, ProcessName, % "ahk_id " (Parent:=GetParent(EHookHwnd))
+			if !EHProc {
+				Critical, Off
+				return 0
+			}
+			EHStack.InsertAt(1, {"Hwnd" : EHookHwnd
+												,  "Event": EHookEvent
+												,  "Title": HTitle
+												,  "Text" : HText
+												,  "Class": cClass
+												,  "Proc" : RegExReplace(EHProc, "\.\w+$")})
+			Critical, Off
+			SetTimer, % wait_evhwh, -1
+		}
+
+
+
+
 
 
 	; Callback für PDF Funktionabilität
-		If (StrLen(Addendum.FuncCallback) > 0) {
-			For idx, viewerclass in PDFViewer
-				If InStr(cClass, viewerclass) {
-					If InStr(Addendum.FuncCallback, "|") {
-						callbackParam := StrSplit(Addendum.FuncCallback, "|")
-						If IsFunc(callbackParam[1])
-							func_Call 	:= Func(callbackParam[1]).Bind(callbackParam[2], cClass, SHookHwnd)
-					} else {
-						If IsFunc(fnName := Addendum.FuncCallback)
-							func_Call 	:= Func(fnName).Bind(cClass, SHookHwnd)
-					}
-					SetTimer, % func_Call, -200
-					break
-				}
-		}
+		;~ If (StrLen(Addendum.FuncCallback) > 0) {
+			;~ For idx, viewerclass in PDFViewer
+				;~ If InStr(cClass, viewerclass) {
+					;~ If InStr(Addendum.FuncCallback, "|") {
+						;~ callbackParam := StrSplit(Addendum.FuncCallback, "|")
+						;~ If IsFunc(callbackParam[1])
+							;~ func_Call 	:= Func(callbackParam[1]).Bind(callbackParam[2], cClass, SHookHwnd)
+					;~ } else {
+						;~ fnName := Addendum.FuncCallback
+						;~ If IsFunc(fnName)
+							;~ func_Call 	:= Func(fnName).Bind(cClass, SHookHwnd)
+					;~ }
+					;~ SetTimer, % func_Call, -100
+					;~ break
+				;~ }
+		;~ }
 
-	; Order & Entry Programm läßt sich nicht filtern
-		WinGet, EHproc, ProcessName, % "ahk_id " EHookHwnd
-		If Instr(EHProc, "infoBoxWebClient") {
-			EHStack.InsertAt(1	, {"Hwnd"	: EHookHwnd
-										, 	"Event"	: event
-										, 	"Title"	: HTitle
-										, 	"Text"	: HText
-										, 	"Class"	:cClass})
-			If !EHWHState
-				SetTimer, EventHook_WinHandler, -1
-		}
+	;~ ; Order & Entry Programm läßt sich nicht filtern
+		;~ WinGet, EHproc, ProcessName, % "ahk_id " EHookHwnd
+		;~ If Instr(EHProc, "infoBoxWebClient") {
+			;~ EHStack.InsertAt(1	, {"Hwnd"  	: EHookHwnd
+					      					;~ ,	 "Event"	: event
+					      					;~ ,  "Title"	: HTitle
+					      					;~ ,  "Text" 	: HText
+					      					;~ ,  "Class"	: cClass})
+			;~ If !EHWHState
+				;~ SetTimer, EventHook_WinHandler, -1
+		;~ }
 
 return 0
 }
@@ -7388,15 +7470,20 @@ ShellHookProc(lParam, wParam) {                                                 
 return
 }
 
-WaitEH_WinHandler:                                                                           	;{
+Wait_EventHook_WinHandler() {                                                               	;
 
-	If (EHStack.Count() > 0 && !EHWHState) {
-		SetTimer, WaitEH_WinHandler, Off
+	static wait_evhwh := Func("Wait_EventHook_WinHandler")
+
+	if !EHStack.Count()
+		return
+
+	If !EHWHState
 		gosub EventHook_WinHandler
-	} else if (EHStack.Count() = 0)
-		SetTimer, WaitEH_WinHandler, Off
+	else
+		SetTimer, % wait_evhwh, -30
 
-return ;}
+return
+}
 
 
 ; ----------------------- Automatisierungsroutinen / Fensterhandler
@@ -7406,28 +7493,38 @@ return ;}
 ;
 EventHook_WinHandler:                                                                       	;{ Eventhookhandler - Popupblocker/Fensterhandler
 
-	StackEntry:
-	Critical 20
-	EHWHState :=true, thisWin := EHStack.Pop()
-	EHWT := thisWin.title, EHWText := thisWin.Text, EHWClass := thisWin.Class
-	Addendum.LastHookHwnd := hHookedWin := thisWin.Hwnd
+	Critical Off
+	Critical 50
 
-	If (StrLen(EHWT . EHWText) = 0) || InStr(EHWText, "SkinLoader")
-		If (EHStack.Count() = 0) {
-			EHWHState := Addendum.LastHookHwnd := false
-			return
-		} else
-			goto StackEntry
+	timeB := A_TickCount
 
-	WinGet, EHproc1, ProcessName, % "ahk_id " hHookedWin
-	If (EHWT && !EHproc1) {
-		WinGet, EHproc1, ProcessName, % "ahk_id " GetParent(hHookedWin)
-		If !EHproc1 && !EHStack.Count() {
-			EHWHState := Addendum.LastHookHwnd := false
-			return
-		} else if !EHproc1 && (EHStack.Count() > 0)
-			goto StackEntry
+	if !EHStack {
+		Critical Off
+		return
 	}
+
+	EHWHState := true
+	thisWin   := EHStack.Pop()
+	EHWT  	  := thisWin.title
+	EHWText   := thisWin.Text ? thisWin.Text :  RegexReplace(WinGetText(thisWin.hwnd), "[\n\r]+", " ")
+	EHWClass  := thisWin.Class
+	EHProc1		:= thisWin.Proc
+
+
+		;SciTEOutput(EHWT ": '" Substr(EHWText, 1, 70) "'")
+	EHWHbreak := true
+	If (StrLen(EHWT . EHWText) > 0) || !InStr(EHWText, "SkinLoader") || !EHProc1 || !thisWin.Hwnd || !(thisWin.hwnd = Addendum.LastHookHwnd && thisWin.Event = Addendum.LastHookEvent) {
+		EHWHBreak := false
+	}
+	If (EHWHBreak && EHStack.Count() > 0) {
+		goto EventHook_WinHandler
+	} else if (EHWHBreak && EHStack.Count() = 0) {
+		EHWHState := false
+		return
+	}
+
+	Addendum.LastHookHwnd  := hHookedWin := thisWin.Hwnd
+	Addendum.LastHookEvent := thisWin.Event
 
 	If      InStr(EHproc1, "albis")                                                                                         	{        	; ALBIS
 
@@ -7504,6 +7601,13 @@ EventHook_WinHandler:                                                           
 			VerifiedClick("Button1", hHookedWin)
 		}
 		; Hinweise ------------------------------------------------------------------------------------------------------------------------------
+		else If InStr(EHWText	, "Serververbindung konnte nicht erstellt werden")                                                              	{
+			SetTimer(Func("MoveWinTo").Bind(hHookedWin, "MonitorRight", "MonitorBottom-70"), -1, A_LineNumber)
+		}
+		else If InStr(EHWText	, "Folgende eAU-Tabelle konnte nicht gefunden werden")                                                           	{
+			if !VerifiedClick("OK", hHookedWin)
+				VerifiedClick("Button1", hHookedWin)
+		}
 		else If InStr(EHWText	, "Fehler beim Aufruf dppivassist")                                                                              	{
 		  ; Fenster wird geschlossen
 			VerifiedClick("Button1", hHookedWin)
@@ -7560,7 +7664,7 @@ EventHook_WinHandler:                                                           
 		}
 		else If InStr(EHWT   	, "Muster G1204")                                                                                               	{
 		; Reha-Antrag Dialog an Hochkantmonitore anpassen
-			SetTimer(Func("AlbisRehaDialog").Bind(hHookedWin), -100)
+			SetTimer(Func("AlbisRehaDialog").Bind(hHookedWin), -100, A_LineNumber)
 		}
 		else if InStr(EHWT   	, "Muster 13")                                             	&& Addendum.HMV                                     	{
 
@@ -7638,11 +7742,11 @@ EventHook_WinHandler:                                                           
 			VerifiedClick("Ja", hWinEventHook)
 		}
 		else If InStr(EHWT  	, "Leistungskette bestätigen")                                                                                		{	; Autogröße
-			SetTimer(Func("AlbisResizeLeistungskette"), -100)
+			SetTimer(Func("AlbisResizeLeistungskette"), -100, A_LineNumber)
 		}
 		else If InStr(EHWT  	, "CGM HEILMITTELKATALOG")                                                                                    		{	; ##
 			If (Addendum.Windows["Albis_CGMHeilmittelkatalog"].AutoPos & Addendum.MonSize)
-				SetTimer(Func("AlbisFormularPosition").Bind(hHookedWin, Addendum.Windows["Albis_CGMHeilmittelkatalog"][Addendum.Resolution]), -400)
+				SetTimer(Func("AlbisFormularPosition").Bind(hHookedWin, Addendum.Windows["Albis_CGMHeilmittelkatalog"][Addendum.Resolution]), -400, A_LineNumber)
 		}
 		else If InStr(EHWT  	, "Karteikartendaten von")                           	                                                           	{
 			If Addendum.Karteikartenexport && InStr(FileExist(Addendum.Karteikartenexport "\"), "D") {
@@ -7941,9 +8045,9 @@ EventHook_WinHandler:                                                           
 	}
 
 	If (EHStack.Count() > 0)
-		goto StackEntry
+		goto EventHook_WinHandler
 
-	Addendum.LastHookHwnd := 0
+	;Addendum.LastHookHwnd := 0
 	EHWHState := false
 
 return
@@ -7969,7 +8073,7 @@ AlbisFormularPosition(hwnd, Settings) {
 
 }
 
-SetTimer(boundFunc, delay)                                                                   	{	;-- SetTimer Wrapper für BoundFunc-Aufrufe
+SetTimer(boundFunc, delay, lnr:=0)                                                           	{	;-- SetTimer Wrapper für BoundFunc-Aufrufe
 	SetTimer, % boundFunc, % delay
 }
 

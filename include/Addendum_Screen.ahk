@@ -1,52 +1,44 @@
-﻿;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-;                              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
-;                                                              	!diese Bibliothek wird von fast allen Skripten benötigt!
-;                             	by Ixiko started in September 2017 - last change 16.11.2021 - this file runs under Lexiko's GNU Licence
-;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+﻿;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;              	Automatisierungs- oder Informations Funktionen für das AIS-Addon: "Addendum für Albis on Windows"
+;                                   	!diese Bibliothek wird von fast allen Skripten benötigt!
+;             	by Ixiko started in September 2017 - last change 19.08.2023 - this file runs under Lexiko's GNU Licence
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-;	MONITOR / SCREEN                                                                                                                                                                    	(10)
-; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-; (01) GetMonitorIndexFromWindow   	(02) GetMonitorAt                         	(03) screenDims                              	(04) MonitorScreenShot
-; (05) TaskbarHeight                          	(06) DPIFactor                                	(07) DPI
-; (08) MonitorFromWindow                   	(09) GetMonitorInfo   				    	(10) IsInsideVisibleArea
-; __________________________________________________________________________________________________________________________
+;	MONITOR / SCREEN                                                                                                               	(10)
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; (01) GetMonitorIndexFromWindow   	(02) GetMonitorAt                  	(03) screenDims                       	(04) MonitorScreenShot
+; (05) TaskbarHeight               	(06) DPIFactor                     	(07) DPI
+; (08) MonitorFromWindow           	(09) GetMonitorInfo   				    	(10) IsInsideVisibleArea
+; _____________________________________________________________________________________________________________________________________
 
 GetMonitorIndexFromWindow(windowHandle, getInfos := false) {
 
 	; Starts with 1.
 	; https://autohotkey.com/board/topic/69464-how-to-determine-a-window-is-in-which-monitor/
 
-	;~ monitorIndex := 1
-	VarSetCapacity(monitorInfo, 40)
-	NumPut(40, monitorInfo)
+	if (monitorHandle := DllCall("MonitorFromWindow", "uint", windowHandle, "uint", 0x2))
+		mon := GetMonitorInfo(monitorHandle, dummy:="")
 
-	if (monitorHandle := DllCall("MonitorFromWindow", "uint", windowHandle, "uint", 0x2)) && DllCall("GetMonitorInfo", "uint", monitorHandle, "uint", &monitorInfo) {
+	if !IsObject(mon)
+		return 0
 
-		monitorLeft  		:= NumGet(monitorInfo,  4, "Int")
-		monitorTop    	:= NumGet(monitorInfo,  8, "Int")
-		monitorRight  	:= NumGet(monitorInfo, 12, "Int")
-		monitorBottom 	:= NumGet(monitorInfo, 16, "Int")
-		workLeft     		:= NumGet(monitorInfo, 20, "Int")
-		workTop       	:= NumGet(monitorInfo, 24, "Int")
-		workRight    		:= NumGet(monitorInfo, 28, "Int")
-		workBottom    	:= NumGet(monitorInfo, 32, "Int")
-		isPrimary    		:= NumGet(monitorInfo, 36, "Int") & 1
-
-		SysGet, MonCount, MonitorCount
-		Loop % MonCount 	{                                    		; Compare location to determine the monitor index.
-			SysGet, tempMon, Monitor, % A_Index
-			if ((monitorLeft = tempMonLeft) && (monitorTop = tempMonTop) && (monitorRight = tempMonRight) && (monitorBottom = tempMonBottom))
-				return monitorIndex
+	monIndex := 0
+	SysGet, MonCount, MonitorCount
+	Loop % MonCount 	{                                    		; Compare location to determine the monitor index.
+		SysGet, tempMon, Monitor, % A_Index
+		if ((mon.L = tempMonLeft) && (mon.T = tempMonTop) && (mon.R = tempMonRight) && (mon.B = tempMonBottom)){
+			monIndex := A_Index
+			break
 		}
-
 	}
 
-	If getInfos
-		return {L: monitorLeft, R: monitorRight, T: monitorTop, B: monitorBottom, WL: workLeft, WR: workRight, WT: wortTop, WB: workBottom
-					, DPI: A_ScreenDPI, Primary: NumGet(monitorInfo, 36, "Int"), yEdge:	DllCall("GetSystemMetrics", "Int", SM_CYEDGE)
-					, yBorder: DllCall("GetSystemMetrics", "Int", SM_CYBORDER), isPrimary: isPrimary, monIndex: monIndex, MonCount: MonCount}
+	if !monIndex
+		return 0
 
-return monitorIndex
+	mon.monIndex := monIndex
+	mon.MonCount := monCount
+
+return !getInfos ? monIndex : mon
 }
 
 GetMonitorAt(Lx, Ly, Ldefault:=1) {                                               	;-- get  index of the monitor containing the specified x and y co-ordinates.
@@ -70,7 +62,7 @@ MonitorFromWindow(Hwnd := 0) {
  return DllCall("User32.dll\MonitorFromWindow", "Ptr", Hwnd, "UInt", Hwnd?2:1)
 }
 
-GetMonitorInfo(hMonitor) {
+GetMonitorInfo(hMonitor, dummy:="") {
 
     VarSetCapacity(MONITORINFOEX, 104)
     NumPut(104, &MONITORINFOEX, "UInt")
@@ -84,12 +76,14 @@ GetMonitorInfo(hMonitor) {
 		       	, WT: 	     	NumGet(&MONITORINFOEX+24    	, "Int")
 		       	, WR:	      	NumGet(&MONITORINFOEX+28    	, "Int")
 		     		, WB: 	     	NumGet(&MONITORINFOEX+32    	, "Int")
-		       	, Primary:   	NumGet(&MONITORINFOEX+36   	, "UInt")
+		       	, Primary:   	NumGet(&MONITORINFOEX+36    	, "UInt")
 		       	, Name:     	StrGet(&MONITORINFOEX+40,64  	, "UTF-16")
 		     		, X:         	NumGet(&MONITORINFOEX+ 4     	, "Int")
 		       	, Y:        	NumGet(&MONITORINFOEX+ 8     	, "Int")
 		       	, W:       	 	NumGet(&MONITORINFOEX+12    	, "Int") - NumGet(&MONITORINFOEX+4, "Int")
 		       	, H:       	 	NumGet(&MONITORINFOEX+16    	, "Int") - NumGet(&MONITORINFOEX+8, "Int")
+		    		, xEdge:  	 	DllCall("GetSystemMetrics", "Int", SM_CXEDGE)
+		    		, xBorder: 	 	DllCall("GetSystemMetrics", "Int", SM_CXBORDER)
 		    		, yEdge:  	 	DllCall("GetSystemMetrics", "Int", SM_CYEDGE)
 		    		, yBorder: 	 	DllCall("GetSystemMetrics", "Int", SM_CYBORDER)
 		    		, DPI:     	 	A_ScreenDPI
@@ -97,8 +91,9 @@ GetMonitorInfo(hMonitor) {
 
 }
 
-GetMonitorInfoFromWindow(Hwnd) {                                         	;-- wrapper für MonitorFromWindow & GetMonitorInfo
-return GetMonitorInfo(MonitorFromWindow(Hwnd))
+GetMonitorInfoFromWindow(Hwnd, getInfos := false) {                             	;-- wrapper für MonitorFromWindow & GetMonitorInfo
+	monitorhandle := MonitorFromWindow(Hwnd)
+return GetMonitorIndexFromWindow(monitorhandle, getInfos)
 }
 
 IsInsideVisibleArea(x, y, w, h, ByRef CoordInjury) {

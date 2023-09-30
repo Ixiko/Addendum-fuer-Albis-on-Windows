@@ -1034,16 +1034,16 @@ CollectWords(filepath, debug:=false, byref errorlist:="") {
 	global AlbisBriefe, FilesB, FilesP, thisText, wsCount
 
 				            		; Wortanfang
-	static rxchanger := {	"\sAif"    : " Anf"	   			, "\sAip":" Alp"    		      			, "\sYbe":" Übe"				      	, "\sFp":" Ep", "\sVund":" Wund"
+	static rxchanger := {	"\sAif"    : " Anf"	   			, "\sAip":" Alp"    		      	    		, "\sYbe"     	: " Übe"			     	, "\sFp":" Ep", "\sVund":" Wund"
 						      			; überall im Wort
-						       		, 	"aqe"    : "age"	    		, "nii":"mi"           		    			, "islu":"istu"    				    	, "i)ultl":"ulti"							    	, "i)hvth":"hyth"
-						       		, 	"nlk"    : "nik"     			, "(\sD|d)j":"$1i"  			       		, "i)aklen":"akten"		  	    	, "i)lelten":"leiten"					    	, "i)laqe":"lage"
-						       		,	"i)slon"   : "sion"		  		, "([^aeiouäüö])vv":"$1w" 	      	, "q([^u])":"g$1"		     	    	, "(\p{Ll})B(\p{Ll})":"$1ß$2"	    	, "i)rcq":"req"
-						       		,	"i)klomie" : "ktomie"      	, "i)(\p{Ll})clorf":"$1dorf"       	, "i)storung":"störung"        	, "i)slände":"stände"              	, "i)otoge":"ologe"
+						       		, 	"aqe"    : "age"	    		, "nii"           	: "mi"    	    		, "islu"      	: "istu"    	    	, "i)ultl":"ulti"							    	, "i)hvth":"hyth"
+						       		, 	"nlk"    : "nik"     			, "(\sD|d)j"      	: "$1i"  			  		, "i)aklen"   	: "akten"		      	, "i)lelten":"leiten"					    	, "i)laqe":"lage"
+						       		,	"i)slon"   : "sion"		  		, "([^aeiouäüö])vv"	: "$1w" 	         	, "q([^u])"   	: "g$1"		         	, "(\p{Ll})B(\p{Ll})":"$1ß$2"	    	, "i)rcq":"req"
+						       		,	"i)klomie" : "ktomie"      	, "i)(\p{Ll})clorf"	: "$1dorf"        	, "i)storung" 	: "störung"        	, "i)slände":"stände"              	, "i)otoge":"ologe"
 						       			; Wortende
-						       		, "nr(\s|\.)"  : "nummer "  	, "\-Teststr\s":"Teststreifen "    	, "Teststr\s":"Teststreifen " 	, "lalion\s":"lation " 	   		    	, "([ak])tlon\s":"$1tion "
-						       		,	"i)arztin\s" : "ärztin "
-						       		,	"rlum\s"     : "rium "    	, "salion\s":"sation"              	, "\srichle\s":"richte "		   	, "(\p{Ll})B\s":"$1ß "     }
+						       		, "nr(\s|\.)"  : "nummer "  	, "\-Teststr\s"   	: "Teststreifen " 	, "Teststr\s" 	: "Teststreifen " 	, "lalion\s":"lation " 	   		   	, "([ak])tlon\s":"$1tion "
+						       		,	"i)arztin\s" : "ärztin "		, "ungs[\s\.,:;]" 	: "ung "
+						       		,	"rlum\s"     : "rium "    	, "salion\s"      	: "sation "        	, "\srichle\s"	: "richte "		    	, "(\p{Ll})B\s":"$1ß "     }
 	static vouwels    	:= "aeiouäöü"
 	static consonants 	:= "qwrtzpsdfghjklxcvbnm"
 	static clock        := "\d{1,2}\s*[\:\;\.]\s*\d{1,2}"
